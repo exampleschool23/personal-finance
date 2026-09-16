@@ -11,18 +11,20 @@ import { formatDate, formatMonthYear, parseCalendarDate, calendarIso } from '@/l
 export function DatePicker({ value, onChange, min, required = true }: { value: string; onChange: (value: string) => void; min?: string; required?: boolean }) {
   const { locale, t } = useLanguage();
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState(value);
   const [month, setMonth] = useState<Date>(() => parseCalendarDate(value) || new Date());
   const [compact, setCompact] = useState(true);
   useEffect(() => { const media = window.matchMedia('(max-width: 720px)'); const update = () => setCompact(media.matches); update(); media.addEventListener('change', update); return () => media.removeEventListener('change', update); }, []);
-  const valid = (!required && !draft) || (!!parseCalendarDate(draft) && (!min || draft >= min));
-  const preset = (offset: number) => { const day = new Date(); day.setDate(day.getDate() + offset); const iso = calendarIso(day); if (!min || iso >= min) { setDraft(iso); setMonth(day); } };
-  return <Popover open={open} onOpenChange={next => { if (next) { setDraft(value); setMonth(parseCalendarDate(value) || parseCalendarDate(min || '') || new Date()); } setOpen(next); }}>
+  const selectDate = (date: string) => {
+    if (date ? !parseCalendarDate(date) || (!!min && date < min) : required) return;
+    onChange(date);
+    setOpen(false);
+  };
+  const preset = (offset: number) => { const day = new Date(); day.setDate(day.getDate() + offset); const iso = calendarIso(day); if (!min || iso >= min) { selectDate(iso); } };
+  return <Popover open={open} onOpenChange={next => { if (next) { setMonth(parseCalendarDate(value) || parseCalendarDate(min || '') || new Date()); } setOpen(next); }}>
     <PopoverTrigger asChild><button type="button" className="date-picker-trigger" aria-label={value ? formatDate(value, locale) : t('Select date')} aria-required={required}><span>{value ? formatDate(value, locale) : t('Select date')}</span><CalendarDays size={17}/></button></PopoverTrigger>
     <PopoverContent className="finance-date-picker" align="start" collisionPadding={12} aria-label={t('Select date')}>
-      <div className="date-picker-body"><MonthCalendar monthKey={calendarIso(month).slice(0, 7)} draft={draft} min={min} onSelect={setDraft} previous={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), -1) + '-01')!)} next={compact ? () => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!) : undefined}/>{!compact && <MonthCalendar monthKey={shiftCalendarMonth(calendarIso(month).slice(0, 7), 1)} draft={draft} min={min} onSelect={setDraft} next={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!)}/>}
-      <aside className="date-picker-presets"><strong>{t('Presets')}</strong>{[[0,'Today'],[1,'Tomorrow'],[7,'In one week']].map(([offset,label]) => { const day = new Date(); day.setDate(day.getDate() + Number(offset)); return <Button key={label} type="button" variant="ghost" disabled={!!min && calendarIso(day) < min} onClick={() => preset(Number(offset))}>{t(String(label))}</Button>; })}{!required && <Button type="button" variant="ghost" onClick={() => setDraft('')}>{t('Clear date')}</Button>}</aside></div>
-      <footer className="date-picker-footer"><span>{draft ? formatDate(draft, locale) : t('No due date')}</span><div><Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('Cancel')}</Button><Button type="button" className="primary" disabled={!valid} onClick={() => { onChange(draft); setOpen(false); }}>{t('Apply date')}</Button></div></footer>
+      <div className="date-picker-body"><MonthCalendar monthKey={calendarIso(month).slice(0, 7)} draft={value} min={min} onSelect={selectDate} previous={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), -1) + '-01')!)} next={compact ? () => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!) : undefined}/>{!compact && <MonthCalendar monthKey={shiftCalendarMonth(calendarIso(month).slice(0, 7), 1)} draft={value} min={min} onSelect={selectDate} next={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!)}/>}
+      <aside className="date-picker-presets"><strong>{t('Presets')}</strong>{[[0,'Today'],[1,'Tomorrow'],[7,'In one week']].map(([offset,label]) => { const day = new Date(); day.setDate(day.getDate() + Number(offset)); return <Button key={label} type="button" variant="ghost" disabled={!!min && calendarIso(day) < min} onClick={() => preset(Number(offset))}>{t(String(label))}</Button>; })}{!required && <Button type="button" variant="ghost" onClick={() => selectDate('')}>{t('Clear date')}</Button>}</aside></div>
     </PopoverContent>
   </Popover>;
 }
