@@ -102,3 +102,51 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 .login-box .google-form{margin-top:24px}.google-button{width:100%;min-height:46px;border:1px solid #526357;background:#202a23;color:#edf3ef}.google-button:hover{background:#2a372e}.login-divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:#a1afa5;font-size:14px}.login-divider::before,.login-divider::after{content:"";height:1px;background:#354239;flex:1}.login-divider+form{margin-top:0}
 
 .entry-actions{display:flex;gap:12px;align-items:center}.entry-actions button{min-height:46px}.recurring-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.recurrence-help{font-size:14px;color:#a1afa5;line-height:1.6;margin:0 0 20px}@media(max-width:640px){.entry-actions{width:100%;flex-wrap:wrap}.entry-actions button{flex:1}.entry-actions .primary{width:auto}.recurring-metrics{grid-template-columns:1fr}}
+
+/* Appearance preference applies to the workspace and portaled dialogs. */
+:root{color-scheme:dark}
+.theme-toggle{flex-shrink:0;width:40px;height:40px;color:var(--foreground);border-color:var(--border)}
+.theme-moon{display:none}
+[data-theme="light"] .theme-sun{display:none}
+[data-theme="light"] .theme-moon{display:block}
+:root[data-theme="light"]{
+ color-scheme:light;
+ --background:#f5f7f5;--foreground:#1b2920;--card:#ffffff;--card-foreground:#1b2920;
+ --popover:#ffffff;--popover-foreground:#1b2920;--primary:#35691e;--primary-foreground:#ffffff;
+ --secondary:#eaf0e9;--secondary-foreground:#263b2b;--muted:#eaf0e9;--muted-foreground:#56675c;
+ --accent:#e2eedb;--accent-foreground:#31551d;--border:#d3ddd4;--input:#c9d6cb;--ring:#427526;
+ --sidebar:#ffffff;--sidebar-foreground:#34483a;--sidebar-primary:#35691e;--sidebar-primary-foreground:#ffffff;
+ --sidebar-accent:#e2eedb;--sidebar-accent-foreground:#31551d;--sidebar-border:#d3ddd4;--sidebar-ring:#427526;
+}
+[data-theme="light"] .intro{color:#edf3ef}
+[data-theme="light"] :is(.metrics article,.panel){background:#fff;border-color:var(--border)}
+[data-theme="light"] .metrics .net-worth{background:#c4f36b;color:#1b290f}
+[data-theme="light"] :is(.muted,.login-note,.recurrence-help,.footnote,.bottom-note,.nav-label,.currency-bar>span,.panel-title>span,.metrics small,.metrics p,.cash-row small,.record-name small,.user-line p,.allocation-list span:last-child){color:#56675c}
+[data-theme="light"] :is(.eyebrow,.positive,.login-icon,.empty svg,.demo-button,.cash-footer strong){color:#376b20}
+[data-theme="light"] .intro :is(.eyebrow,.muted){color:#c4d8be}
+[data-theme="light"] .brand small{color:#637469}
+[data-theme="light"] .intro .brand small{color:#a1afa5}
+[data-theme="light"] :is(input,select,textarea){background:#fff!important;color:#1b2920;border-color:#c9d6cb}
+[data-theme="light"] :is(.topbar,.cash-footer,td){border-color:var(--border)}
+[data-theme="light"] th{background:#edf2ed;color:#526356;border-color:var(--border)}
+[data-theme="light"] :is(.record-icon,.badge,.count,.avatar){background:#e9f0e5;color:#365b26;border-color:#cbd9c5}
+[data-theme="light"] .sidebar-card{background:#edf4e7;border-color:#d1dfc7}
+[data-theme="light"] :is(.sidebar-card p,.row-actions){color:#52654f}
+[data-theme="light"] .sidebar-card svg{color:#467429}
+[data-theme="light"] .currency-switch{border-color:var(--border)}
+[data-theme="light"] .currency-switch button{color:#526356}
+[data-theme="light"] .currency-switch .selected{background:#deedcf;color:#31551d}
+[data-theme="light"] .demo-banner{background:#edf4e7;border-color:#d1dfc7;color:#47603a}
+[data-theme="light"] .demo-banner span{color:#31551d}
+[data-theme="light"] .icon-box{background:#e4efdc;color:#376b20}
+[data-theme="light"] .outgoing{background:#f8ebda;color:#805218}
+[data-theme="light"] .negative{color:#b33d33}
+[data-theme="light"] .error{background:#fce9e7;color:#9a3028}
+[data-theme="light"] .setup-note{color:#85591c}
+[data-theme="light"] .empty{color:#56675c}
+[data-theme="light"] .empty h3{color:#1b2920}
+[data-theme="light"] .google-button{background:#fff;color:#1b2920;border-color:#c9d6cb}
+[data-theme="light"] .google-button:hover{background:#eaf0e9}
+[data-theme="light"] .login-divider{color:#56675c}
+[data-theme="light"] .login-divider::before,[data-theme="light"] .login-divider::after{background:var(--border)}
+[data-theme="light"] :is(button,select,textarea):focus-visible{outline-color:#427526}
