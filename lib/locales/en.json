@@ -203,5 +203,8 @@
   "Where your money is": "Where your money is",
   "Grouped by name and category": "Grouped by name and category",
   "Asset distribution. Amounts and percentages are listed alongside.": "Asset distribution. Amounts and percentages are listed alongside.",
-  "Add an asset to see where your money is.": "Add an asset to see where your money is."
+  "Add an asset to see where your money is.": "Add an asset to see where your money is.",
+  "This name already exists. You can add another record.": "This name already exists. You can add another record.",
+  "Matching existing names": "Matching existing names",
+  "Existing records: {count}": "Existing records: {count}"
 }

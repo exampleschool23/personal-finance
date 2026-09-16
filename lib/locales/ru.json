@@ -203,5 +203,8 @@
   "Where your money is": "Где ваши деньги",
   "Grouped by name and category": "По названию и категории",
   "Asset distribution. Amounts and percentages are listed alongside.": "Распределение активов. Суммы и доли указаны рядом.",
-  "Add an asset to see where your money is.": "Добавьте актив, чтобы увидеть распределение денег."
+  "Add an asset to see where your money is.": "Добавьте актив, чтобы увидеть распределение денег.",
+  "This name already exists. You can add another record.": "Это имя уже существует. Можно добавить ещё одну запись.",
+  "Matching existing names": "Совпадающие имена",
+  "Existing records: {count}": "Существующих записей: {count}"
 }
