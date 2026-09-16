@@ -237,5 +237,13 @@
   "Choose a language and at least one currency.": "Til va kamida bitta valyuta tanlang.",
   "Currencies without an available exchange rate keep their original amounts and are excluded from converted totals.": "Kursi mavjud bo‘lmagan valyutalar asl summada qoladi va aylantirilgan jami summaga kiritilmaydi.",
   "Some currencies could not be converted and are excluded from totals.": "Ayrim valyutalarni aylantirib bo‘lmadi, ular jami summaga kiritilmagan.",
-  "Daily exchange rates · {date}": "Kunlik valyuta kurslari · {date}"
+  "Daily exchange rates · {date}": "Kunlik valyuta kurslari · {date}",
+  "Business": "Biznes",
+  "Linked business (optional)": "Bog‘langan biznes (ixtiyoriy)",
+  "No linked business": "Biznesga bog‘lanmagan",
+  "Current business value": "Biznesning joriy qiymati",
+  "e.g. Solar panels, café, or game club": "Masalan, quyosh panellari, kafe yoki o‘yin klubi",
+  "Enter the value of your ownership. Record revenue and costs separately in Income & expenses, linked to this business.": "O‘zingizga tegishli ulush qiymatini kiriting. Daromad va xarajatlarni tegishli bo‘limda ushbu biznesga bog‘lab alohida kiriting.",
+  "Business: {name}": "Biznes: {name}",
+  "This business has linked records. Unlink them before deleting or changing its category.": "Biznesga bog‘langan yozuvlar bor. Uni o‘chirish yoki toifasini o‘zgartirishdan oldin ularni ajrating."
 }

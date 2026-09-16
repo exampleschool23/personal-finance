@@ -86,3 +86,13 @@ deploying Settings. This creates owner-only account preferences and broadens
 record/RPC currency validation. The language switcher is temporary; Settings
 stores the account default. At least one preferred currency is required.
 See `docs/currencies.md` for ISO catalogue provenance and rate-provider rules.
+
+## Business assets
+
+Run `migrations/005_business_assets.sql` after migration 004 before deploying.
+Business assets store current ownership value. Income and expense records may
+reference a business through `business_id`; this does not change asset values.
+The database enforces same-owner links to Business records. Linked businesses
+cannot be deleted or recategorized until their income/expense links are cleared.
+The paginated summary includes a lightweight list of all owned businesses, so
+link selectors work even when a business is on another record page.

@@ -237,5 +237,13 @@
   "Choose a language and at least one currency.": "Выберите язык и хотя бы одну валюту.",
   "Currencies without an available exchange rate keep their original amounts and are excluded from converted totals.": "Валюты без доступного курса сохраняют исходные суммы и не включаются в пересчитанные итоги.",
   "Some currencies could not be converted and are excluded from totals.": "Некоторые валюты не удалось пересчитать, они не включены в итоги.",
-  "Daily exchange rates · {date}": "Ежедневные курсы · {date}"
+  "Daily exchange rates · {date}": "Ежедневные курсы · {date}",
+  "Business": "Бизнес",
+  "Linked business (optional)": "Связанный бизнес (необязательно)",
+  "No linked business": "Без привязки к бизнесу",
+  "Current business value": "Текущая стоимость бизнеса",
+  "e.g. Solar panels, café, or game club": "Например, солнечные панели, кафе или игровой клуб",
+  "Enter the value of your ownership. Record revenue and costs separately in Income & expenses, linked to this business.": "Укажите стоимость вашей доли. Доходы и расходы добавляйте отдельно в разделе «Доходы и расходы» с привязкой к этому бизнесу.",
+  "Business: {name}": "Бизнес: {name}",
+  "This business has linked records. Unlink them before deleting or changing its category.": "У бизнеса есть связанные записи. Отвяжите их перед удалением или изменением категории."
 }

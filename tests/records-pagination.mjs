@@ -4,12 +4,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
 import { z } from 'zod';
-import { kinds } from '../lib/finance.ts';
+import { kinds, income, expenses } from '../lib/finance.ts';
 let source=fs.readFileSync(new URL('../app/api/records/route.ts',import.meta.url),'utf8').replace(/^import .*;\n/gm,'').replace(/export const /g,'const ');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let calls=[];
 const supa=async(path,init,token)=>{calls.push({path,body:JSON.parse(init.body),token});return Response.json({records:[],total:45,page:2,pageSize:20});};
-const get=new Function('z','kinds','session','supa','sameOrigin','isCurrency',js+';return GET;')(z,kinds,async()=>({user:{id:'owner'},token:'test-token'}),supa,()=>true,isCurrency);
+const get=new Function('z','kinds','session','supa','sameOrigin','isCurrency','income','expenses',js+';return GET;')(z,kinds,async()=>({user:{id:'owner'},token:'test-token'}),supa,()=>true,isCurrency,income,expenses);
 test('requests a bounded server page with section and optional currency',async()=>{
  calls=[];const response=await get(new Request('https://local/api/records?page=2&section=assets&currency=UZS&summary=1'));
  assert.equal(response.status,200);assert.equal(calls.length,1);

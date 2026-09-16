@@ -237,5 +237,13 @@
   "Choose a language and at least one currency.": "Choose a language and at least one currency.",
   "Currencies without an available exchange rate keep their original amounts and are excluded from converted totals.": "Currencies without an available exchange rate keep their original amounts and are excluded from converted totals.",
   "Some currencies could not be converted and are excluded from totals.": "Some currencies could not be converted and are excluded from totals.",
-  "Daily exchange rates · {date}": "Daily exchange rates · {date}"
+  "Daily exchange rates · {date}": "Daily exchange rates · {date}",
+  "Business": "Business",
+  "Linked business (optional)": "Linked business (optional)",
+  "No linked business": "No linked business",
+  "Current business value": "Current business value",
+  "e.g. Solar panels, café, or game club": "e.g. Solar panels, café, or game club",
+  "Enter the value of your ownership. Record revenue and costs separately in Income & expenses, linked to this business.": "Enter the value of your ownership. Record revenue and costs separately in Income & expenses, linked to this business.",
+  "Business: {name}": "Business: {name}",
+  "This business has linked records. Unlink them before deleting or changing its category.": "This business has linked records. Unlink them before deleting or changing its category."
 }
