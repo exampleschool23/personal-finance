@@ -70,7 +70,7 @@ Code checks: `node --experimental-strip-types --test tests/market*.mjs`.
 
 Before deploying pagination, run `migrations/003_record_pagination.sql`
 in Supabase SQL Editor (after `migrations/001_lending_dates.sql` and `migrations/002_charity.sql`). It adds an
-RLS-protected, invoker-rights RPC and a date-sort index. The API requests 20 records
+RLS-protected, invoker-rights RPC and a date-sort index. The API requests 10 records
 per page, filtered by section and, when FX is unavailable, display currency.
 Money lent sorts by lending date (falling back to the legacy due date); other
 records sort by their date. UUID breaks equal-date ties. Newest dates come first.
@@ -96,3 +96,5 @@ The database enforces same-owner links to Business records. Linked businesses
 cannot be deleted or recategorized until their income/expense links are cleared.
 The paginated summary includes a lightweight list of all owned businesses, so
 link selectors work even when a business is on another record page.
+
+Run `migrations/007_estimated_asset_income.sql`, then `migrations/008_ten_records_per_page.sql` to enable estimates and the 10-record page limit.

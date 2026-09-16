@@ -250,5 +250,11 @@
   "Full business value": "Полная стоимость бизнеса",
   "Your share: {amount}": "Ваша доля: {amount}",
   "Ownership: {percentage}%": "Доля владения: {percentage}%",
-  "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses.": "Укажите полную стоимость бизнеса и процент владения. Вашу долю доходов и расходов добавляйте отдельно с привязкой к бизнесу."
+  "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses.": "Укажите полную стоимость бизнеса и процент владения. Вашу долю доходов и расходов добавляйте отдельно с привязкой к бизнесу.",
+  "Estimated monthly income (your share)": "Ожидаемый месячный доход (ваша доля)",
+  "For planning only. Enter what you expect to receive each month; do not also add the same estimate as recurring income.": "Для планирования. Укажите ожидаемый доход за месяц; не дублируйте эту оценку в регулярных доходах.",
+  "Estimated monthly cash flow": "Прогноз денежного потока за месяц",
+  "Asset income estimates plus other recurring income, minus recurring expenses. Linked business income is counted once.": "Ожидаемый доход от активов плюс прочие регулярные доходы минус регулярные расходы. Доход связанного бизнеса учитывается один раз.",
+  "Estimated asset income: {amount}": "Ожидаемый доход от активов: {amount}",
+  "Estimated income: {amount}/month": "Ожидаемый доход: {amount}/мес."
 }

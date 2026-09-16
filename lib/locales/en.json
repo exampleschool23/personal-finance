@@ -250,5 +250,11 @@
   "Full business value": "Full business value",
   "Your share: {amount}": "Your share: {amount}",
   "Ownership: {percentage}%": "Ownership: {percentage}%",
-  "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses.": "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses."
+  "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses.": "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses.",
+  "Estimated monthly income (your share)": "Estimated monthly income (your share)",
+  "For planning only. Enter what you expect to receive each month; do not also add the same estimate as recurring income.": "For planning only. Enter what you expect to receive each month; do not also add the same estimate as recurring income.",
+  "Estimated monthly cash flow": "Estimated monthly cash flow",
+  "Asset income estimates plus other recurring income, minus recurring expenses. Linked business income is counted once.": "Asset income estimates plus other recurring income, minus recurring expenses. Linked business income is counted once.",
+  "Estimated asset income: {amount}": "Estimated asset income: {amount}",
+  "Estimated income: {amount}/month": "Estimated income: {amount}/month"
 }

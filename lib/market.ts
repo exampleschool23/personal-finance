@@ -35,6 +35,7 @@ export function marketEntry(entry: Entry, currency: Entry['currency'], market: M
   const quote = instrument ? market?.quotes[instrumentKey(instrument)] : undefined;
   const amount = (quote ? convertAmount(quote.usd, 'USD', currency, (market?.rates ?? market?.fx?.rate)) : null) ?? convertAmount(entry.amount, entry.currency, currency, (market?.rates ?? market?.fx?.rate));
   const cost = convertAmount(entry.cost, entry.currency, currency, (market?.rates ?? market?.fx?.rate));
+  const estimatedMonthlyIncome = convertAmount(entry.estimated_monthly_income ?? 0, entry.currency, currency, market?.rates ?? market?.fx?.rate);
   // Never mix currencies when the exchange-rate feed is unavailable.
-  return amount === null || cost === null ? null : { ...entry, amount, cost, currency };
+  return amount === null || cost === null || estimatedMonthlyIncome === null ? null : { ...entry, amount, cost, currency, estimated_monthly_income: estimatedMonthlyIncome };
 }

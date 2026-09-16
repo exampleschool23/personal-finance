@@ -250,5 +250,11 @@
   "Full business value": "Biznesning to‘liq qiymati",
   "Your share: {amount}": "Sizning ulushingiz: {amount}",
   "Ownership: {percentage}%": "Egalik ulushi: {percentage}%",
-  "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses.": "Biznesning to‘liq qiymatini va egalik foizingizni kiriting. Daromad va xarajatlardagi ulushingizni biznesga bog‘lab alohida kiriting."
+  "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses.": "Biznesning to‘liq qiymatini va egalik foizingizni kiriting. Daromad va xarajatlardagi ulushingizni biznesga bog‘lab alohida kiriting.",
+  "Estimated monthly income (your share)": "Taxminiy oylik daromad (sizning ulushingiz)",
+  "For planning only. Enter what you expect to receive each month; do not also add the same estimate as recurring income.": "Rejalashtirish uchun. Har oy olishingiz kutilgan summani kiriting; uni takroriy daromad sifatida yana qo‘shmang.",
+  "Estimated monthly cash flow": "Taxminiy oylik pul oqimi",
+  "Asset income estimates plus other recurring income, minus recurring expenses. Linked business income is counted once.": "Aktivlardan taxminiy daromad va boshqa takroriy daromadlar, takroriy xarajatlar ayirilgan. Bog‘langan biznes daromadi bir marta hisoblanadi.",
+  "Estimated asset income: {amount}": "Aktivlardan taxminiy daromad: {amount}",
+  "Estimated income: {amount}/month": "Taxminiy daromad: oyiga {amount}"
 }
