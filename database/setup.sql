@@ -3,7 +3,7 @@ create table if not exists public.finance_records (
  id uuid primary key,
  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
  name text not null check (length(name) between 1 and 120),
- kind text not null check (kind in ('Cash','Stock','Crypto','Deposit','Property','Money lent','Mortgage','Loan','Debt','Salary','Rent income','Other income','Rent expense','Living expense','Other expense')),
+ kind text not null check (kind in ('Cash','Stock','Crypto','Deposit','Property','Money lent','Mortgage','Loan','Debt','Salary','Rent income','Other income','Rent expense','Living expense','Charity','Other expense')),
  currency text not null check (currency in ('USD','UZS')),
  amount numeric not null check (amount>=0),
  quantity numeric not null default 1 check(quantity>=0),
@@ -22,3 +22,8 @@ create policy "Owners delete their records" on public.finance_records for delete
 revoke all on public.finance_records from anon;
 grant select,insert,update,delete on public.finance_records to authenticated;
 create index finance_records_user_date on public.finance_records(user_id,date desc);
+
+-- Support separate lending dates and optional due dates.
+alter table public.finance_records add column if not exists lent_date date;
+alter table public.finance_records alter column date drop not null;
+alter table public.finance_records add constraint finance_records_required_date check (kind = 'Money lent' or date is not null);

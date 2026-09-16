@@ -182,5 +182,22 @@
   "Stock prices need a market-data API key.": "Aksiya narxlari uchun bozor ma’lumotlari API kaliti kerak.",
   "Sign in to fetch stock prices.": "Aksiya narxlarini olish uchun tizimga kiring.",
   "Market prices unavailable. Saved prices are shown.": "Bozor narxlari mavjud emas. Saqlangan narxlar ko‘rsatilgan.",
-  "Refresh supports up to 20 stock symbols.": "20 tagacha aksiya tikerini yangilash mumkin."
+  "Refresh supports up to 20 stock symbols.": "20 tagacha aksiya tikerini yangilash mumkin.",
+  "Loading your workspace…": "Ish maydoningiz yuklanmoqda…",
+  "Date lent": "Qarz berilgan sana",
+  "Due date (optional)": "Qaytarish sanasi (ixtiyoriy)",
+  "Lent: {date}": "Berilgan: {date}",
+  "Due: {date}": "Qaytarish: {date}",
+  "No due date": "Qaytarish sanasi belgilanmagan",
+  "Charity": "Xayriya",
+  "Select date": "Sanani tanlang",
+  "Presets": "Tezkor tanlov",
+  "Today": "Bugun",
+  "Tomorrow": "Ertaga",
+  "In one week": "Bir haftadan so‘ng",
+  "Clear date": "Sanani tozalash",
+  "Cancel": "Bekor qilish",
+  "Apply date": "Qo‘llash",
+  "Next month": "Keyingi oy",
+  "Previous month": "Oldingi oy"
 }

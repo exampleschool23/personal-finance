@@ -182,5 +182,22 @@
   "Stock prices need a market-data API key.": "Stock prices need a market-data API key.",
   "Sign in to fetch stock prices.": "Sign in to fetch stock prices.",
   "Market prices unavailable. Saved prices are shown.": "Market prices unavailable. Saved prices are shown.",
-  "Refresh supports up to 20 stock symbols.": "Refresh supports up to 20 stock symbols."
+  "Refresh supports up to 20 stock symbols.": "Refresh supports up to 20 stock symbols.",
+  "Loading your workspace…": "Loading your workspace…",
+  "Date lent": "Date lent",
+  "Due date (optional)": "Due date (optional)",
+  "Lent: {date}": "Lent: {date}",
+  "Due: {date}": "Due: {date}",
+  "No due date": "No due date",
+  "Charity": "Charity",
+  "Select date": "Select date",
+  "Presets": "Presets",
+  "Today": "Today",
+  "Tomorrow": "Tomorrow",
+  "In one week": "In one week",
+  "Clear date": "Clear date",
+  "Cancel": "Cancel",
+  "Apply date": "Apply date",
+  "Next month": "Next month",
+  "Previous month": "Previous month"
 }

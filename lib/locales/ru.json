@@ -182,5 +182,22 @@
   "Stock prices need a market-data API key.": "Для цен акций нужен API-ключ рыночных данных.",
   "Sign in to fetch stock prices.": "Войдите, чтобы загрузить цены акций.",
   "Market prices unavailable. Saved prices are shown.": "Рыночные цены недоступны. Показаны сохранённые цены.",
-  "Refresh supports up to 20 stock symbols.": "Можно обновить до 20 тикеров акций."
+  "Refresh supports up to 20 stock symbols.": "Можно обновить до 20 тикеров акций.",
+  "Loading your workspace…": "Загрузка вашего пространства…",
+  "Date lent": "Дата выдачи",
+  "Due date (optional)": "Срок возврата (необязательно)",
+  "Lent: {date}": "Выдано: {date}",
+  "Due: {date}": "Возврат: {date}",
+  "No due date": "Без срока возврата",
+  "Charity": "Благотворительность",
+  "Select date": "Выберите дату",
+  "Presets": "Быстрый выбор",
+  "Today": "Сегодня",
+  "Tomorrow": "Завтра",
+  "In one week": "Через неделю",
+  "Clear date": "Очистить дату",
+  "Cancel": "Отмена",
+  "Apply date": "Применить",
+  "Next month": "Следующий месяц",
+  "Previous month": "Предыдущий месяц"
 }

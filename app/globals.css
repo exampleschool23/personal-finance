@@ -161,3 +161,10 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 
 .market-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:-8px 0 22px; color:var(--muted-foreground); font-size:12px; }
 .record-name small { display:block; }
+
+.session-loading{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px}
+
+.date-picker-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--background);color:var(--foreground);text-align:left;font-size:14px}
+.finance-date-picker{width:min(860px,calc(100vw - 24px));max-height:var(--radix-popover-content-available-height);overflow:auto;border-radius:18px;padding:16px;background:var(--background);color:var(--foreground);z-index:70}
+.date-picker-body{display:flex;gap:16px}.date-picker-body [data-slot=calendar]{flex:1}.date-picker-body .rdp-months{display:flex;flex-direction:row;gap:20px}.date-picker-body .rdp-month{flex:1}.date-picker-body [data-slot=calendar]{--cell-size:36px}.date-picker-body button[data-day]{border-radius:12px}.date-picker-presets{display:flex;flex-direction:column;gap:6px;border-left:1px solid var(--border);padding-left:16px;min-width:130px}.date-picker-presets strong{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted-foreground);margin-bottom:8px}.date-picker-presets button{justify-content:flex-start}.date-picker-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--border);padding-top:14px;margin-top:14px;font-size:13px}.date-picker-footer>div{display:flex;gap:8px}
+@media(max-width:720px){.finance-date-picker{width:min(380px,calc(100vw - 24px))}.date-picker-body{flex-direction:column}.date-picker-body .rdp-months{flex-direction:column}.date-picker-presets{border-left:0;border-top:1px solid var(--border);padding:12px 0 0;flex-direction:row;flex-wrap:wrap}.date-picker-presets strong{width:100%}.date-picker-footer{flex-wrap:wrap}}
