@@ -212,5 +212,10 @@
   "Borrower name": "Borrower name",
   "e.g. Full name": "e.g. Full name",
   "Amount still owed": "Amount still owed",
-  "Notes (optional)": "Notes (optional)"
+  "Notes (optional)": "Notes (optional)",
+  "Loading records…": "Loading records…",
+  "Record pages": "Record pages",
+  "Page {page} of {pages} · {count} records": "Page {page} of {pages} · {count} records",
+  "Previous": "Previous",
+  "Next": "Next"
 }

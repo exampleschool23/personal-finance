@@ -65,3 +65,16 @@ currency, purchase cost, or balances. Coin/ticker identity uses the record name,
 so this feature needs no database migration.
 
 Code checks: `node --experimental-strip-types --test tests/market*.mjs`.
+
+## Record pagination
+
+Before deploying pagination, run `database/migrations/20260916_record_pagination.sql`
+in Supabase SQL Editor (after lending-date and charity migrations). It adds an
+RLS-protected, invoker-rights RPC and a date-sort index. The API requests 20 records
+per page, filtered by section and, when FX is unavailable, display currency.
+Money lent sorts by lending date (falling back to the legacy due date); other
+records sort by their date. UUID breaks equal-date ties. Newest dates come first.
+Grouped summaries load once per workspace session and after record mutations,
+so totals, fetched valuations, chart groups, and name suggestions span all pages.
+Summary responses omit transaction notes and dates. Pagination cannot run until
+the SQL function is installed; there is no unbounded-fetch fallback.

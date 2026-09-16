@@ -1,6 +1,6 @@
 export const kinds = ['Cash','Stock','Crypto','Deposit','Property','Money lent','Mortgage','Loan','Debt','Salary','Rent income','Other income','Rent expense','Living expense','Charity','Other expense'] as const;
 export type Kind = typeof kinds[number];
-export type Entry = {id:string;name:string;kind:Kind;currency:'USD'|'UZS';amount:number;quantity:number;cost:number;rate:number;date:string;lent_date?:string;frequency:'Once'|'Monthly'|'Yearly';notes:string};
+export type Entry = {id:string;record_count?:number;name:string;kind:Kind;currency:'USD'|'UZS';amount:number;quantity:number;cost:number;rate:number;date:string;lent_date?:string;frequency:'Once'|'Monthly'|'Yearly';notes:string};
 export const assets:readonly string[] = ['Cash','Stock','Crypto','Deposit','Property','Money lent'];
 export const liabilities:readonly string[] = ['Mortgage','Loan','Debt'];
 export const income:readonly string[] = ['Salary','Rent income','Other income'];

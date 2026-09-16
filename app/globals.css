@@ -198,3 +198,5 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 .record-dialog .record-form-footer button{min-height:44px;border-radius:10px;padding-inline:22px}
 .record-dialog .record-form-footer .primary{min-width:160px}
 @media(max-width:480px){.record-dialog{padding:20px;width:calc(100vw - 20px);max-height:calc(100dvh - 20px)}.record-dialog .record-form .form-grid{grid-template-columns:1fr;gap:18px}.record-dialog .record-form-footer button{flex:1;min-width:0!important}}
+
+.records-pagination{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 24px;border-top:1px solid var(--border);font-size:12px;color:var(--muted-foreground)}.records-pagination>div{display:flex;gap:8px}.records-pagination button{font-size:13px}@media(max-width:600px){.records-pagination{flex-wrap:wrap;padding:16px}.records-pagination>div{margin-left:auto}}

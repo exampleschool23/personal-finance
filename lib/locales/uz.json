@@ -212,5 +212,10 @@
   "Borrower name": "Qarz oluvchining ismi",
   "e.g. Full name": "Masalan, to‘liq ism",
   "Amount still owed": "Qolgan qarz miqdori",
-  "Notes (optional)": "Izohlar (ixtiyoriy)"
+  "Notes (optional)": "Izohlar (ixtiyoriy)",
+  "Loading records…": "Yozuvlar yuklanmoqda…",
+  "Record pages": "Yozuvlar sahifalari",
+  "Page {page} of {pages} · {count} records": "{page} / {pages} sahifa · {count} ta yozuv",
+  "Previous": "Oldingi",
+  "Next": "Keyingi"
 }

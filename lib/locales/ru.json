@@ -212,5 +212,10 @@
   "Borrower name": "Имя заёмщика",
   "e.g. Full name": "Например, полное имя",
   "Amount still owed": "Остаток долга",
-  "Notes (optional)": "Заметки (необязательно)"
+  "Notes (optional)": "Заметки (необязательно)",
+  "Loading records…": "Загрузка записей…",
+  "Record pages": "Страницы записей",
+  "Page {page} of {pages} · {count} records": "Страница {page} из {pages} · Записей: {count}",
+  "Previous": "Назад",
+  "Next": "Далее"
 }
