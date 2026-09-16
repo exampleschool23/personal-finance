@@ -245,5 +245,10 @@
   "e.g. Solar panels, café, or game club": "e.g. Solar panels, café, or game club",
   "Enter the value of your ownership. Record revenue and costs separately in Income & expenses, linked to this business.": "Enter the value of your ownership. Record revenue and costs separately in Income & expenses, linked to this business.",
   "Business: {name}": "Business: {name}",
-  "This business has linked records. Unlink them before deleting or changing its category.": "This business has linked records. Unlink them before deleting or changing its category."
+  "This business has linked records. Unlink them before deleting or changing its category.": "This business has linked records. Unlink them before deleting or changing its category.",
+  "Ownership (%)": "Ownership (%)",
+  "Full business value": "Full business value",
+  "Your share: {amount}": "Your share: {amount}",
+  "Ownership: {percentage}%": "Ownership: {percentage}%",
+  "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses.": "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses."
 }

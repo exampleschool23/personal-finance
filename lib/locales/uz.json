@@ -245,5 +245,10 @@
   "e.g. Solar panels, café, or game club": "Masalan, quyosh panellari, kafe yoki o‘yin klubi",
   "Enter the value of your ownership. Record revenue and costs separately in Income & expenses, linked to this business.": "O‘zingizga tegishli ulush qiymatini kiriting. Daromad va xarajatlarni tegishli bo‘limda ushbu biznesga bog‘lab alohida kiriting.",
   "Business: {name}": "Biznes: {name}",
-  "This business has linked records. Unlink them before deleting or changing its category.": "Biznesga bog‘langan yozuvlar bor. Uni o‘chirish yoki toifasini o‘zgartirishdan oldin ularni ajrating."
+  "This business has linked records. Unlink them before deleting or changing its category.": "Biznesga bog‘langan yozuvlar bor. Uni o‘chirish yoki toifasini o‘zgartirishdan oldin ularni ajrating.",
+  "Ownership (%)": "Egalik ulushi (%)",
+  "Full business value": "Biznesning to‘liq qiymati",
+  "Your share: {amount}": "Sizning ulushingiz: {amount}",
+  "Ownership: {percentage}%": "Egalik ulushi: {percentage}%",
+  "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses.": "Biznesning to‘liq qiymatini va egalik foizingizni kiriting. Daromad va xarajatlardagi ulushingizni biznesga bog‘lab alohida kiriting."
 }

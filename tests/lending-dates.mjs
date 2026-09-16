@@ -30,3 +30,10 @@ test('business assets and optional cashflow links validate separately',()=>{
  assert.equal(schema.safeParse({...business,business_id:record.id}).success,false);
  assert.equal(schema.safeParse({...business,kind:'Other expense',business_id:'invalid'}).success,false);
 });
+
+test('ownership is constrained to 0–100 and defaults to full ownership',()=>{
+ const business={...record,kind:'Business',date:'2026-09-01'};
+ assert.equal(schema.parse(business).ownership_percentage,100);
+ for(const percentage of [-1,100.1,Infinity]) assert.equal(schema.safeParse({...business,ownership_percentage:percentage}).success,false);
+ for(const percentage of [0,40,100]) assert.equal(schema.safeParse({...business,ownership_percentage:percentage}).success,true);
+});

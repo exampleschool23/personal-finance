@@ -245,5 +245,10 @@
   "e.g. Solar panels, café, or game club": "Например, солнечные панели, кафе или игровой клуб",
   "Enter the value of your ownership. Record revenue and costs separately in Income & expenses, linked to this business.": "Укажите стоимость вашей доли. Доходы и расходы добавляйте отдельно в разделе «Доходы и расходы» с привязкой к этому бизнесу.",
   "Business: {name}": "Бизнес: {name}",
-  "This business has linked records. Unlink them before deleting or changing its category.": "У бизнеса есть связанные записи. Отвяжите их перед удалением или изменением категории."
+  "This business has linked records. Unlink them before deleting or changing its category.": "У бизнеса есть связанные записи. Отвяжите их перед удалением или изменением категории.",
+  "Ownership (%)": "Доля владения (%)",
+  "Full business value": "Полная стоимость бизнеса",
+  "Your share: {amount}": "Ваша доля: {amount}",
+  "Ownership: {percentage}%": "Доля владения: {percentage}%",
+  "Enter the full business value and your ownership percentage. Record your share of revenue and costs separately as linked income and expenses.": "Укажите полную стоимость бизнеса и процент владения. Вашу долю доходов и расходов добавляйте отдельно с привязкой к бизнесу."
 }

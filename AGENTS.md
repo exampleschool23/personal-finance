@@ -27,3 +27,5 @@ Account defaults live in `user_preferences` with owner RLS. The top-right
 language selector changes only the current visit; saving Settings changes the
 default. Keep at least one preferred currency; the first is the primary currency.
 Removing a preferred currency must never delete or change existing records.
+
+Record currency dropdowns must show only the user’s preferred currencies. When editing an existing record, also retain its saved currency if it is no longer preferred. The full fiat catalogue belongs only in Settings.
