@@ -19,8 +19,8 @@ test('money preserves unit-price precision and uses currency formatting',()=>{
  assert.equal(formatMoney(NaN,'USD','en-US'),'—');
 });
 test('dates validate calendar days and handle empty values',()=>{
- assert.equal(formatDate('2026-09-16','en-US'),'09/16/2026');
- assert.equal(formatDate('2026-09-16','ru-RU'),'16.09.2026');
+ assert.equal(formatDate('2026-09-16','en-US'),'16 September 2026');
+ assert.equal(formatDate('2026-09-16','ru-RU'),'16 сентября 2026');
  assert.equal(formatDate('','en-US'),'—');
  assert.equal(formatDate('2026-02-30','en-US'),'—');
  assert.equal(formatDateTime('invalid','en-US'),'—');
@@ -32,4 +32,10 @@ test('calendar dates round-trip without timezone shifts',async()=>{
  assert.equal(parseCalendarDate('2026-02-29'),undefined);
  assert.equal(parseCalendarDate(''),undefined);
  assert.equal(formatMonthYear('2026-09-01','en-US'),'September 2026');
+});
+
+test('matches POS translated dates and Tashkent timestamp rules',()=>{
+ assert.equal(formatDate('2026-09-16','uz-UZ'),'16 sentabr 2026');
+ assert.equal(formatDateTime('2026-09-15T20:30:00Z','en-US'),'16 September 2026 01:30');
+ assert.equal(formatDateTime('2026-09-16 09:30:00','ru-RU'),'16 сентября 2026 09:30');
 });

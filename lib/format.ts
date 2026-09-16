@@ -1,3 +1,4 @@
+import { formatLongDate, formatLongDateTime, formatMonthYear as posMonthYear } from './pos-date-format.js';
 // All user-facing numeric and date formatting belongs here.
 export function numberSymbols(locale: string) {
   const parts = new Intl.NumberFormat(locale).formatToParts(12345.6);
@@ -11,14 +12,11 @@ export function formatMoney(value: number, currency: string, locale: string, uni
   return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: currency === 'UZS' ? 0 : 2, maximumFractionDigits: unitPrice ? 8 : currency === 'UZS' ? 0 : 2 }).format(value);
 }
 export function formatDate(value: string, locale: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return '—';
-  const date = new Date(value + 'T00:00:00Z');
-  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) return '—';
-  return new Intl.DateTimeFormat(locale, { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' }).format(date);
+  if (!parseCalendarDate(value)) return '—';
+  return formatLongDate(value, locale, '—');
 }
 export function formatDateTime(value: string, locale: string) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat(locale, { dateStyle: 'short', timeStyle: 'short' }).format(date);
+  return formatLongDateTime(value, locale, '—');
 }
 // Keep fractional digits and a trailing decimal while typing; never round stored input.
 export function formatNumberInput(raw: string, locale: string): { text: string; value: number | null } | null {
@@ -49,6 +47,6 @@ export function calendarIso(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 export function formatMonthYear(value: string, locale: string) {
-  const date = parseCalendarDate(value);
-  return date ? new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date) : '—';
+  const normalized = /^\d{4}-\d{2}$/.test(value) ? value + '-01' : value;
+  return parseCalendarDate(normalized) ? posMonthYear(normalized, locale, '—') : '—';
 }
