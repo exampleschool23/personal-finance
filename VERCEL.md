@@ -47,3 +47,21 @@ Run `npx next build --webpack`, then `node --test tests/google-auth.mjs`.
 The test runs Next.js on localhost:5189 against an isolated mock Supabase server;
 it covers disabled providers, cross-origin rejection, PKCE binding, cancellation,
 missing verifier, failed exchanges, secure cookies, and redirect confinement.
+
+## Market prices
+
+Set `TWELVE_DATA_API_KEY` in Vercel Production (and Preview if needed), then
+redeploy. For local stock quotes, set it in `.env` and restart the dev server.
+The server-only key is never returned to the browser. Stock requests require
+sign-in and support USD-listed ticker symbols. Provider plan limits and quote
+delays apply; up to 20 unique stock tickers are requested per refresh.
+
+Crypto spot prices use Coinbase's public feed; USD/UZS uses the CBU official
+rate and displays its effective date. The app refreshes every five minutes
+while visible, with upstream caching (five minutes for quotes, one hour for FX).
+Saved values are used when a quote fails. Without FX, only records in the
+selected currency are included. Display conversion never rewrites stored
+currency, purchase cost, or balances. Coin/ticker identity uses the record name,
+so this feature needs no database migration.
+
+Code checks: `node --experimental-strip-types --test tests/market*.mjs`.

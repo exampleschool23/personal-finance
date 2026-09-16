@@ -158,3 +158,6 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 .topbar>div:first-child{min-width:0}
 .topbar>div:first-child>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:640px){.topbar{gap:8px}.preferences{gap:6px}.preferences .language-selector{max-width:126px}.topbar>div:first-child>span:first-of-type{display:none}.entry-actions button{white-space:normal;height:auto}.metrics h2{overflow-wrap:anywhere}.login-preferences{right:24px}}
+
+.market-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:-8px 0 22px; color:var(--muted-foreground); font-size:12px; }
+.record-name small { display:block; }
