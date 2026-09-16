@@ -206,5 +206,11 @@
   "Add an asset to see where your money is.": "Add an asset to see where your money is.",
   "This name already exists. You can add another record.": "This name already exists. You can add another record.",
   "Matching existing names": "Matching existing names",
-  "Existing records: {count}": "Existing records: {count}"
+  "Existing records: {count}": "Existing records: {count}",
+  "Add money lent": "Add money lent",
+  "Keep track of who owes you, how much, and when.": "Keep track of who owes you, how much, and when.",
+  "Borrower name": "Borrower name",
+  "e.g. Full name": "e.g. Full name",
+  "Amount still owed": "Amount still owed",
+  "Notes (optional)": "Notes (optional)"
 }

@@ -206,5 +206,11 @@
   "Add an asset to see where your money is.": "Pulingiz taqsimotini ko‘rish uchun aktiv qo‘shing.",
   "This name already exists. You can add another record.": "Bu nom allaqachon mavjud. Yana bir yozuv qo‘shishingiz mumkin.",
   "Matching existing names": "Mavjud mos nomlar",
-  "Existing records: {count}": "Mavjud yozuvlar: {count}"
+  "Existing records: {count}": "Mavjud yozuvlar: {count}",
+  "Add money lent": "Berilgan qarzni qo‘shish",
+  "Keep track of who owes you, how much, and when.": "Kim sizga qancha va qachon qaytarishi kerakligini kuzating.",
+  "Borrower name": "Qarz oluvchining ismi",
+  "e.g. Full name": "Masalan, to‘liq ism",
+  "Amount still owed": "Qolgan qarz miqdori",
+  "Notes (optional)": "Izohlar (ixtiyoriy)"
 }

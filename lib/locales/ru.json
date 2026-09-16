@@ -206,5 +206,11 @@
   "Add an asset to see where your money is.": "Добавьте актив, чтобы увидеть распределение денег.",
   "This name already exists. You can add another record.": "Это имя уже существует. Можно добавить ещё одну запись.",
   "Matching existing names": "Совпадающие имена",
-  "Existing records: {count}": "Существующих записей: {count}"
+  "Existing records: {count}": "Существующих записей: {count}",
+  "Add money lent": "Добавить выданный займ",
+  "Keep track of who owes you, how much, and when.": "Отслеживайте, кто вам должен, сколько и к какому сроку.",
+  "Borrower name": "Имя заёмщика",
+  "e.g. Full name": "Например, полное имя",
+  "Amount still owed": "Остаток долга",
+  "Notes (optional)": "Заметки (необязательно)"
 }
