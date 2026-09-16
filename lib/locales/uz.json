@@ -199,5 +199,9 @@
   "Cancel": "Bekor qilish",
   "Apply date": "Qo‘llash",
   "Next month": "Keyingi oy",
-  "Previous month": "Oldingi oy"
+  "Previous month": "Oldingi oy",
+  "Where your money is": "Pulingiz qayerda",
+  "Grouped by name and category": "Nom va toifa bo‘yicha",
+  "Asset distribution. Amounts and percentages are listed alongside.": "Aktivlar taqsimoti. Summalar va foizlar yonida ko‘rsatilgan.",
+  "Add an asset to see where your money is.": "Pulingiz taqsimotini ko‘rish uchun aktiv qo‘shing."
 }
