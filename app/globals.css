@@ -217,3 +217,6 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 .ownership-summary{padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:var(--accent);font-size:15px;font-weight:600;margin-top:-8px}
 
 .forecast-panel{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:24px}.forecast-panel h2{font-size:17px;margin-bottom:8px}.forecast-panel p{font-size:12px;max-width:650px}.forecast-panel>div:last-child{text-align:right;flex-shrink:0}.forecast-panel strong{display:block;font-size:26px}.forecast-panel small{display:block;color:var(--muted-foreground);font-size:12px;margin-top:6px}@media(max-width:700px){.forecast-panel{align-items:flex-start;flex-direction:column}.forecast-panel>div:last-child{text-align:left}}
+
+.badge.category-badge{background:hsl(var(--category-hue) 38% 18%);color:hsl(var(--category-hue) 75% 82%);border-color:hsl(var(--category-hue) 36% 35%);font-weight:500;white-space:nowrap}
+[data-theme="light"] .badge.category-badge{background:hsl(var(--category-hue) 65% 95%);color:hsl(var(--category-hue) 75% 27%);border-color:hsl(var(--category-hue) 42% 80%)}
