@@ -202,3 +202,14 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 .records-pagination{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 24px;border-top:1px solid var(--border);font-size:12px;color:var(--muted-foreground)}.records-pagination>div{display:flex;gap:8px}.records-pagination button{font-size:13px}@media(max-width:600px){.records-pagination{flex-wrap:wrap;padding:16px}.records-pagination>div{margin-left:auto}}
 
 .settings-page{max-width:880px;margin:auto}.settings-form{display:grid;gap:18px}.settings-form>label{margin:0;max-width:480px}.settings-form h2{font-size:18px;margin-top:12px}.settings-form>.muted{font-size:13px;margin-top:-8px}.currency-catalogue{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:360px;overflow:auto;border:1px solid var(--border);padding:12px;border-radius:12px}.currency-catalogue label{display:flex;align-items:center;gap:10px;margin:0;padding:10px;border-radius:8px;font-size:13px}.currency-catalogue label:hover{background:var(--accent)}.currency-catalogue input[type=checkbox]{min-height:18px!important;width:18px;height:18px;padding:0;flex-shrink:0;accent-color:#79ac43}.selected-currencies{display:flex;gap:8px;flex-wrap:wrap}.selected-currencies button{padding:7px 12px;border-radius:8px;border:1px solid var(--border);font-size:13px}.currency-switch{flex-wrap:wrap;max-height:150px;overflow:auto}.fx-attribution{font-size:11px;color:var(--muted-foreground);margin:-12px 0 18px}.fx-attribution a{text-decoration:underline}@media(max-width:600px){.currency-catalogue{grid-template-columns:1fr}.settings-form{padding:18px}}
+
+.overview-content{padding-top:22px}
+.overview-content .page-heading{margin-bottom:16px}
+.overview-content .page-heading .eyebrow{margin-bottom:6px}
+.overview-content .page-heading h1{margin-bottom:4px}
+.overview-content .workspace-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:20px;row-gap:8px;margin-bottom:18px}
+.overview-content .currency-bar{margin:0;gap:14px;flex-wrap:wrap}
+.overview-content .market-bar{margin:0;gap:12px;justify-content:flex-end}
+.overview-content .fx-attribution{grid-column:1/-1;margin:0}
+.overview-content .metrics{margin-bottom:18px}
+@media(max-width:900px){.overview-content .workspace-controls{grid-template-columns:1fr}.overview-content .market-bar{justify-content:flex-start}.overview-content .currency-bar>span{max-width:none}}
