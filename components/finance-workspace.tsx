@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { ArrowUpRight, ArrowDownLeft, ChartNoAxesCombined, Wallet, ShieldCheck, LayoutDashboard, Landmark, HandCoins, Plus, LogOut, Pencil, Trash2, ChevronRight, Bitcoin, Building2, X, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LanguageSelector, useLanguage } from '@/components/language-provider';
+import { LanguageProvider, LanguageSelector, useLanguage } from '@/components/language-provider';
 import { ThemeToggle } from '@/components/theme-provider';
 import { formatMoney, formatNumber, formatDate as sharedFormatDate, formatDateTime } from '@/lib/format';
 import { FormattedNumberInput } from '@/components/formatted-number-input';
@@ -29,6 +29,10 @@ const sample = (): Entry[] => [
 ].map((a, i) => ({ ...fresh(), name: String(a[0]), kind: a[1] as Entry['kind'], currency: a[2] as Entry['currency'], amount: Number(a[3]), quantity: Number(a[4] ?? 1), cost: Number(a[5] ?? 0), frequency: i >= 6 ? 'Monthly' : 'Once' }));
 const sections = [['Overview', LayoutDashboard, '/'], ['Assets & investments', ChartNoAxesCombined, '/assets'], ['Income & expenses', ArrowDownLeft, '/income-expenses'], ['Loans & debts', HandCoins, '/loans-debts'], ['Settings', Settings, '/settings']] as const;
 export default function FinanceWorkspace() {
+    return <LanguageProvider><WorkspaceContent /></LanguageProvider>;
+}
+
+function WorkspaceContent() {
     const pathname = usePathname();
     const section = sections.find(([, , path]) => path === pathname)?.[0] || 'Overview';
     const { t, locale, setDefaultLanguage, setLanguage } = useLanguage();

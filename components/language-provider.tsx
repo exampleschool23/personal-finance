@@ -3,11 +3,13 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { isLanguage, Language, locales, translate } from '@/lib/i18n';
 
-const LanguageContext = createContext({
-  language: 'en' as Language,
-  setLanguage: (_language: Language) => {},
-  setDefaultLanguage: (_language: Language) => {},
-});
+type LanguageState = {
+  language: Language;
+  setLanguage: (language: Language) => void;
+  setDefaultLanguage: (language: Language) => void;
+};
+
+const LanguageContext = createContext<LanguageState | null>(null);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, updateLanguage] = useState<Language>('en');
@@ -33,6 +35,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
 export function useLanguage() {
   const context = useContext(LanguageContext);
+  if (!context) throw new Error('useLanguage must be used within LanguageProvider');
   return { ...context, locale: locales[context.language], t: (key: string, params?: Record<string, string | number>) => translate(context.language, key, params) };
 }
 
