@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { CalendarDays } from 'lucide-react';
-import { enUS, ru, uz } from 'date-fns/locale';
-import { Calendar } from '@/components/ui/calendar';
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { buildRangeCalendar, shiftCalendarMonth } from '@/lib/date-picker-calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
@@ -21,9 +20,32 @@ export function DatePicker({ value, onChange, min, required = true }: { value: s
   return <Popover open={open} onOpenChange={next => { if (next) { setDraft(value); setMonth(parseCalendarDate(value) || parseCalendarDate(min || '') || new Date()); } setOpen(next); }}>
     <PopoverTrigger asChild><button type="button" className="date-picker-trigger" aria-label={value ? formatDate(value, locale) : t('Select date')} aria-required={required}><span>{value ? formatDate(value, locale) : t('Select date')}</span><CalendarDays size={17}/></button></PopoverTrigger>
     <PopoverContent className="finance-date-picker" align="start" collisionPadding={12} aria-label={t('Select date')}>
-      <div className="date-picker-body"><Calendar mode="single" selected={parseCalendarDate(draft)} onSelect={day => setDraft(day ? calendarIso(day) : '')} month={month} onMonthChange={setMonth} numberOfMonths={compact ? 1 : 2} weekStartsOn={1} fixedWeeks locale={locale.startsWith('ru') ? ru : locale.startsWith('uz') ? uz : enUS} disabled={min ? { before: parseCalendarDate(min)! } : undefined} formatters={{ formatCaption: day => formatMonthYear(calendarIso(day), locale), formatMonthDropdown: day => formatMonthYear(calendarIso(day), locale) }} labels={{ labelNext: () => t('Next month'), labelPrevious: () => t('Previous month') }}/>
+      <div className="date-picker-body"><MonthCalendar monthKey={calendarIso(month).slice(0, 7)} draft={draft} min={min} onSelect={setDraft} previous={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), -1) + '-01')!)} next={compact ? () => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!) : undefined}/>{!compact && <MonthCalendar monthKey={shiftCalendarMonth(calendarIso(month).slice(0, 7), 1)} draft={draft} min={min} onSelect={setDraft} next={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!)}/>}
       <aside className="date-picker-presets"><strong>{t('Presets')}</strong>{[[0,'Today'],[1,'Tomorrow'],[7,'In one week']].map(([offset,label]) => { const day = new Date(); day.setDate(day.getDate() + Number(offset)); return <Button key={label} type="button" variant="ghost" disabled={!!min && calendarIso(day) < min} onClick={() => preset(Number(offset))}>{t(String(label))}</Button>; })}{!required && <Button type="button" variant="ghost" onClick={() => setDraft('')}>{t('Clear date')}</Button>}</aside></div>
       <footer className="date-picker-footer"><span>{draft ? formatDate(draft, locale) : t('No due date')}</span><div><Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('Cancel')}</Button><Button type="button" className="primary" disabled={!valid} onClick={() => { onChange(draft); setOpen(false); }}>{t('Apply date')}</Button></div></footer>
     </PopoverContent>
   </Popover>;
+}
+
+// Port of the POS MonthCalendar markup and 42-day, Monday-first grid.
+// Radix only handles positioning/focus; no third-party calendar renderer is used.
+function MonthCalendar({ monthKey, draft, min, onSelect, previous, next }: { monthKey: string; draft: string; min?: string; onSelect: (date: string) => void; previous?: () => void; next?: () => void }) {
+  const { locale, t } = useLanguage();
+  const weekdays = locale.startsWith('ru') ? ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'] : locale.startsWith('uz') ? ['Du','Se','Ch','Pa','Ju','Sh','Ya'] : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const today = calendarIso(new Date());
+  return <section className="pos-month"><div className="pos-month-heading">
+    {previous ? <button type="button" onClick={previous} aria-label={t('Previous month')}><ChevronLeft size={17}/></button> : <span/>}
+    <p>{formatMonthYear(monthKey, locale)}</p>
+    {next ? <button type="button" onClick={next} aria-label={t('Next month')}><ChevronRight size={17}/></button> : <span/>}
+  </div><div className="pos-month-grid" aria-label={formatMonthYear(monthKey, locale)}>
+    {weekdays.map(day => <span className="pos-weekday" key={day}>{day}</span>)}
+    {buildRangeCalendar(monthKey).map(day => <button key={day.date} type="button" disabled={!day.inMonth || (!!min && day.date < min)} aria-label={formatDate(day.date, locale)} aria-current={day.date === today ? 'date' : undefined} aria-pressed={day.date === draft} className={'pos-day' + (day.date === draft ? ' pos-selected' : day.date === today ? ' pos-today' : '')} onClick={() => onSelect(day.date)} onKeyDown={event => {
+      const offset = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[event.key];
+      if (offset === undefined) return;
+      event.preventDefault();
+      const buttons = Array.from(event.currentTarget.parentElement!.querySelectorAll<HTMLButtonElement>('button'));
+      const target = buttons[buttons.indexOf(event.currentTarget) + offset];
+      if (target && !target.disabled) target.focus();
+    }}>{day.day}</button>)}
+  </div></section>;
 }
