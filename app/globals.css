@@ -222,3 +222,16 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 [data-theme="light"] .badge.category-badge{background:hsl(var(--category-hue) 65% 95%);color:hsl(var(--category-hue) 75% 27%);border-color:hsl(var(--category-hue) 42% 80%)}
 
 .money-category-list{max-height:440px;overflow-y:auto}.money-category+.money-category{margin-top:20px}.money-category header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 12px;border-radius:8px;background:var(--accent)}.money-category h3{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}.money-category h3 i{width:10px;height:10px;border-radius:50%;flex-shrink:0}.money-category ul{list-style:none;margin:0;padding:0 12px 0 32px}.money-category li{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px}.money-category li:last-child{border:0}.money-category .money-location-value strong{font-size:13px}.money-category .money-location-value small{display:block;font-size:11px;color:var(--muted-foreground);margin-top:3px}
+
+/* Category groups are columns, with all items visible rather than a scroll box. */
+.money-location-body{grid-template-columns:240px minmax(0,1fr);align-items:start;gap:28px}
+.money-location-body .money-donut{width:230px;height:230px;margin-top:10px;padding:27px}
+.money-category-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;max-height:none;overflow:visible;align-items:start;min-width:0}
+.money-category+.money-category{margin-top:0}
+.money-category{min-width:0}
+.money-category header{align-items:flex-start;gap:10px}
+.money-category ul{padding:0 10px}
+.money-category li{align-items:flex-start;gap:10px}
+.money-category .money-location-value{flex-shrink:0}
+@media(max-width:1100px){.money-location-body{grid-template-columns:1fr}.money-location-body .money-donut{justify-self:center;margin:0}.money-category-list{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}
+@media(max-width:560px){.money-category-list{grid-template-columns:1fr}.money-location-body{padding:16px}}
