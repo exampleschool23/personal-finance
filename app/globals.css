@@ -150,3 +150,11 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 [data-theme="light"] .login-divider{color:#56675c}
 [data-theme="light"] .login-divider::before,[data-theme="light"] .login-divider::after{background:var(--border)}
 [data-theme="light"] :is(button,select,textarea):focus-visible{outline-color:#427526}
+
+.preferences{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.preferences .language-selector{min-height:40px!important;height:40px;padding:6px 28px 6px 10px;font-size:14px;max-width:160px}
+.login-panel{position:relative;padding-top:96px}
+.login-preferences{position:absolute;right:24px;top:24px}
+.topbar>div:first-child{min-width:0}
+.topbar>div:first-child>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:640px){.topbar{gap:8px}.preferences{gap:6px}.preferences .language-selector{max-width:126px}.topbar>div:first-child>span:first-of-type{display:none}.entry-actions button{white-space:normal;height:auto}.metrics h2{overflow-wrap:anywhere}.login-preferences{right:24px}}

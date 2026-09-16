@@ -1,0 +1,44 @@
+"use client";
+
+import { createContext, useContext, useEffect, useState } from 'react';
+import { isLanguage, Language, locales, translate } from '@/lib/i18n';
+
+const LanguageContext = createContext({
+  language: 'en' as Language,
+  setLanguage: (_language: Language) => {},
+});
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [language, updateLanguage] = useState<Language>('en');
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('hoggish-language');
+      if (isLanguage(saved)) updateLanguage(saved);
+    } catch { /* Language selection also works when browser storage is blocked. */ }
+    const sync = (event: StorageEvent) => {
+      if (event.key === 'hoggish-language' && isLanguage(event.newValue)) updateLanguage(event.newValue);
+    };
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+  useEffect(() => { document.documentElement.lang = language; }, [language]);
+  const setLanguage = (next: Language) => {
+    updateLanguage(next);
+    try { localStorage.setItem('hoggish-language', next); } catch {}
+  };
+  return <LanguageContext.Provider value={{ language, setLanguage }}>{children}</LanguageContext.Provider>;
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  return { ...context, locale: locales[context.language], t: (key: string, params?: Record<string, string | number>) => translate(context.language, key, params) };
+}
+
+export function LanguageSelector() {
+  const { language, setLanguage, t } = useLanguage();
+  return <select className="language-selector" aria-label={t('Language')} title={t('Language')} value={language} onChange={event => { if (isLanguage(event.target.value)) setLanguage(event.target.value); }}>
+    <option value="en" lang="en">EN · English</option>
+    <option value="ru" lang="ru">RU · Русский</option>
+    <option value="uz" lang="uz">UZ · O‘zbekcha</option>
+  </select>;
+}
