@@ -13,3 +13,7 @@ All user-facing prices, amounts, exchange rates, quantities, percentages, and da
 # Verification preference
 
 Do not perform browser debugging without asking the user first. Prefer focused code checks and production builds.
+
+# Database migrations
+
+Keep all incremental SQL migrations in the root `migrations/` folder. Name them with sequential three-digit prefixes and descriptive snake_case names: `001_lending_dates.sql`, `002_charity.sql`, `003_record_pagination.sql`. Use the next available number for new migrations, in execution order. Do not use date prefixes or create another migrations folder. `database/setup.sql` is the fresh-database setup script, not an incremental migration.

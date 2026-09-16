@@ -68,8 +68,8 @@ Code checks: `node --experimental-strip-types --test tests/market*.mjs`.
 
 ## Record pagination
 
-Before deploying pagination, run `database/migrations/20260916_record_pagination.sql`
-in Supabase SQL Editor (after lending-date and charity migrations). It adds an
+Before deploying pagination, run `migrations/003_record_pagination.sql`
+in Supabase SQL Editor (after `migrations/001_lending_dates.sql` and `migrations/002_charity.sql`). It adds an
 RLS-protected, invoker-rights RPC and a date-sort index. The API requests 20 records
 per page, filtered by section and, when FX is unavailable, display currency.
 Money lent sorts by lending date (falling back to the legacy due date); other
