@@ -32,6 +32,15 @@ export async function GET(req: Request) {
       data.fx = { rate: positive(usd.Rate) / positive(usd.Nominal), date: usd.Date.split('.').reverse().join('-'), source: 'CBU' };
     } catch { data.errors.fx = 'Exchange rate unavailable.'; }
   }];
+  jobs.push(async () => {
+    try {
+      const result = await read('https://open.er-api.com/v6/latest/USD', 86400) as { result: string; base_code: string; rates: Record<string, number>; time_last_update_unix: number };
+      if (result.result !== 'success' || result.base_code !== 'USD' || !Number.isFinite(result.time_last_update_unix)) throw Error('invalid_fx');
+      data.rates = Object.fromEntries(Object.entries(result.rates).filter(([code, rate]) => /^[A-Z]{3}$/.test(code) && typeof rate === 'number' && Number.isFinite(rate) && rate > 0));
+      data.rates.USD = 1;
+      data.ratesDate = new Date(result.time_last_update_unix * 1000).toISOString().slice(0, 10);
+    } catch { data.errors.rates = 'Exchange rate unavailable.'; }
+  });
   for (const symbol of crypto) jobs.push(async () => {
     try {
       const result = await read(`https://api.coinbase.com/v2/prices/${symbol}-USD/spot`, 300) as { data?: { base: string; currency: string; amount: string } };
@@ -56,5 +65,6 @@ export async function GET(req: Request) {
   // Bound upstream concurrency; individual failures do not hide successful prices.
   let index = 0;
   await Promise.all(Array.from({ length: Math.min(4, jobs.length) }, async () => { while (index < jobs.length) await jobs[index++](); }));
+  if (data.fx) data.rates = { ...data.rates, USD: 1, UZS: data.fx.rate };
   return Response.json(data, { headers: { 'Cache-Control': 'private, no-store' } });
 }

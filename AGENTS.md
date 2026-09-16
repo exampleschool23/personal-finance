@@ -17,3 +17,13 @@ Do not perform browser debugging without asking the user first. Prefer focused c
 # Database migrations
 
 Keep all incremental SQL migrations in the root `migrations/` folder. Name them with sequential three-digit prefixes and descriptive snake_case names: `001_lending_dates.sql`, `002_charity.sql`, `003_record_pagination.sql`. Use the next available number for new migrations, in execution order. Do not use date prefixes or create another migrations folder. `database/setup.sql` is the fresh-database setup script, not an incremental migration.
+
+# Account settings and fiat currencies
+
+Use `lib/currencies.ts` for the fiat catalogue and localized currency names. Never
+hard-code a USD/UZS-only selector or validation rule. `formatMoney` uses ISO minor
+units, and conversions require explicit positive rates; never infer a rate.
+Account defaults live in `user_preferences` with owner RLS. The top-right
+language selector changes only the current visit; saving Settings changes the
+default. Keep at least one preferred currency; the first is the primary currency.
+Removing a preferred currency must never delete or change existing records.

@@ -78,3 +78,11 @@ Grouped summaries load once per workspace session and after record mutations,
 so totals, fetched valuations, chart groups, and name suggestions span all pages.
 Summary responses omit transaction notes and dates. Pagination cannot run until
 the SQL function is installed; there is no unbounded-fetch fallback.
+
+## Settings and fiat currencies
+
+Run `migrations/004_settings_and_fiat_currencies.sql` after migration 003 before
+deploying Settings. This creates owner-only account preferences and broadens
+record/RPC currency validation. The language switcher is temporary; Settings
+stores the account default. At least one preferred currency is required.
+See `docs/currencies.md` for ISO catalogue provenance and rate-provider rules.

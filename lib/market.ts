@@ -9,7 +9,7 @@ export const coins = [
 export const coinName = (coin: readonly [string, string]) => `${coin[1]} (${coin[0]})`;
 export type Instrument = { kind: 'Crypto' | 'Stock'; symbol: string };
 export type Quote = { usd: number; source: string; fetchedAt: string; marketTime?: string };
-export type MarketData = { fx: { rate: number; date: string; source: string } | null; quotes: Record<string, Quote>; errors: Record<string, string>; stocksConfigured: boolean };
+export type MarketData = { rates?: Record<string, number>; ratesDate?: string; fx: { rate: number; date: string; source: string } | null; quotes: Record<string, Quote>; errors: Record<string, string>; stocksConfigured: boolean };
 export const instrumentKey = (instrument: Instrument) => `${instrument.kind}:${instrument.symbol}`;
 export function instrumentFor(entry: Pick<Entry, 'kind' | 'name'>): Instrument | null {
   if (entry.kind === 'Crypto') {
@@ -22,16 +22,19 @@ export function instrumentFor(entry: Pick<Entry, 'kind' | 'name'>): Instrument |
   }
   return null;
 }
-export function convertAmount(amount: number, from: Entry['currency'], to: Entry['currency'], rate?: number) {
+export function convertAmount(amount: number, from: Entry['currency'], to: Entry['currency'], rate?: number | Record<string, number>) {
   if (from === to) return amount;
-  if (!rate || !Number.isFinite(rate) || rate <= 0) return null;
-  return from === 'USD' ? amount * rate : amount / rate;
+  const rates = typeof rate === 'number' ? { USD: 1, UZS: rate } as Record<string, number> : rate;
+  const fromRate = from === 'USD' ? 1 : rates?.[from];
+  const toRate = to === 'USD' ? 1 : rates?.[to];
+  if (!fromRate || !toRate || !Number.isFinite(fromRate) || !Number.isFinite(toRate) || fromRate <= 0 || toRate <= 0) return null;
+  return amount / fromRate * toRate;
 }
 export function marketEntry(entry: Entry, currency: Entry['currency'], market: MarketData | null): Entry | null {
   const instrument = instrumentFor(entry);
   const quote = instrument ? market?.quotes[instrumentKey(instrument)] : undefined;
-  const amount = (quote ? convertAmount(quote.usd, 'USD', currency, market?.fx?.rate) : null) ?? convertAmount(entry.amount, entry.currency, currency, market?.fx?.rate);
-  const cost = convertAmount(entry.cost, entry.currency, currency, market?.fx?.rate);
+  const amount = (quote ? convertAmount(quote.usd, 'USD', currency, (market?.rates ?? market?.fx?.rate)) : null) ?? convertAmount(entry.amount, entry.currency, currency, (market?.rates ?? market?.fx?.rate));
+  const cost = convertAmount(entry.cost, entry.currency, currency, (market?.rates ?? market?.fx?.rate));
   // Never mix currencies when the exchange-rate feed is unavailable.
   return amount === null || cost === null ? null : { ...entry, amount, cost, currency };
 }

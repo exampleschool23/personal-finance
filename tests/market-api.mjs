@@ -14,6 +14,7 @@ test('market endpoint validates symbols, isolates failures, and protects stock a
   process.env.TWELVE_DATA_API_KEY='test-only';globalThis.marketTestSession=null;
   let stockCalls=0;
   globalThis.fetch=async(url)=>{
+   if(url.includes('open.er-api.com')) return Response.json({result:'success',base_code:'USD',rates:{USD:1,EUR:.9,UZS:11000,BAD:-1},time_last_update_unix:1700000000});
    if(url.includes('cbu.uz')) return Response.json([{Ccy:'USD',Rate:'12000',Nominal:'1',Date:'16.09.2026'}]);
    if(url.includes('twelvedata')) {stockCalls++;return Response.json({symbol:'AAPL',currency:'USD',close:'200',timestamp:1700000000});}
    if(url.includes('ETH-USD')) return Response.json({data:{base:'ETH',currency:'USD',amount:'NaN'}});
@@ -21,7 +22,7 @@ test('market endpoint validates symbols, isolates failures, and protects stock a
   };
   assert.equal((await GET(new Request('http://localhost/api/market?stocks=bad%20symbol'))).status,400);
   let data=await (await GET(new Request('http://localhost/api/market?crypto=BTC,ETH&stocks=AAPL'))).json();
-  assert.equal(data.fx.rate,12000);assert.equal(data.quotes['Crypto:BTC'].usd,60000);
+  assert.equal(data.fx.rate,12000);assert.equal(data.rates.EUR,.9);assert.equal(data.rates.UZS,12000);assert.equal(data.rates.BAD,undefined);assert.equal(data.quotes['Crypto:BTC'].usd,60000);
   assert.ok(data.errors['Crypto:ETH']);assert.equal(stockCalls,0);assert.ok(data.errors['Stock:AAPL']);
   globalThis.marketTestSession={user:{id:'test'}};
   data=await (await GET(new Request('http://localhost/api/market?stocks=AAPL'))).json();
