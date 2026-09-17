@@ -1,4 +1,3 @@
-import { currencyDigits } from './currency-digits.js';
 import { formatLongDate, formatLongDateTime, formatMonthYear as posMonthYear } from './pos-date-format.js';
 // All user-facing numeric and date formatting belongs here.
 export function numberSymbols(locale: string) {
@@ -10,7 +9,10 @@ export function formatNumber(value: number, locale: string, maximumFractionDigit
 }
 export function formatMoney(value: number, currency: string, locale: string, unitPrice = false) {
   if (!Number.isFinite(value)) return '—';
-  return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: currencyDigits(currency), maximumFractionDigits: unitPrice ? 8 : currencyDigits(currency) }).format(value);
+  // Round balances for display only. Unit quotes retain small crypto prices,
+  // while neither mode pads whole amounts with unnecessary decimal zeros.
+  const displayed = !unitPrice && Math.abs(value) < 0.5 ? 0 : value;
+  return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: unitPrice ? 8 : 0 }).format(displayed);
 }
 export function formatDate(value: string, locale: string) {
   if (!parseCalendarDate(value)) return '—';

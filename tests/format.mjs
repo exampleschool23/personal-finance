@@ -14,9 +14,27 @@ test('amount entry groups digits and round-trips supported locales',()=>{
  assert.equal(formatNumberInput('1.2.3','en-US'),null);
 });
 test('money preserves unit-price precision and uses currency formatting',()=>{
- assert.equal(formatMoney(9300,'USD','en-US'),'$9,300.00');
+ assert.equal(formatMoney(9300,'USD','en-US'),'$9,300');
  assert.equal(formatMoney(0.00001234,'USD','en-US',true),'$0.00001234');
  assert.equal(formatMoney(NaN,'USD','en-US'),'—');
+});
+test('balances display whole amounts across languages without changing input precision',()=>{
+ const expected={
+  'en-US':['$9,300','$3,174','$0.00001234'],
+  'ru-RU':['9\u00a0300\u00a0$','3\u00a0174\u00a0$','0,00001234\u00a0$'],
+  'uz-UZ':['9\u00a0300\u00a0US$','3\u00a0174\u00a0US$','0,00001234\u00a0US$'],
+ };
+ for(const [locale,[whole,rounded,smallQuote]] of Object.entries(expected)){
+  assert.equal(formatMoney(9300,'USD',locale),whole);
+  assert.equal(formatMoney(9300,'USD',locale,true),whole);
+  assert.equal(formatMoney(3173.82,'USD',locale),rounded);
+  assert.equal(formatMoney(.00001234,'USD',locale,true),smallQuote);
+  assert.equal(formatNumberInput(numberInputValue(3173.82,locale),locale).value,3173.82);
+ }
+ assert.equal(formatMoney(310894.33,'USD','en-US'),'$310,894');
+ assert.equal(formatMoney(-3173.82,'USD','en-US'),'-$3,174');
+ assert.equal(formatMoney(-.2,'USD','en-US'),'$0');
+ assert.equal(formatMoney(Infinity,'USD','en-US'),'—');
 });
 test('dates validate calendar days and handle empty values',()=>{
  assert.equal(formatDate('2026-09-16','en-US'),'16 September 2026');

@@ -8,7 +8,8 @@ test('fiat catalogue excludes metals and supports common and minor currencies',(
  for(const code of ['USD','UZS','EUR','GBP','JPY','KWD','RUB']) assert(isCurrency(code));
  for(const code of ['BTC','XAU','XXX','ZZZ']) assert(!isCurrency(code));
  assert.equal(formatMoney(1234.5,'JPY','en-US'),'¥1,235');
- assert.equal(formatMoney(1.234,'KWD','en-US'),'KWD 1.234');
+ assert.equal(formatMoney(1.234,'KWD','en-US'),'KWD 1');
+ assert.equal(formatMoney(1.234,'KWD','en-US',true),'KWD 1.234');
 });
 test('cross-currency conversions are USD-relative and never assume missing rates',()=>{
  const rates={USD:1,EUR:.8,GBP:.5,UZS:12000};

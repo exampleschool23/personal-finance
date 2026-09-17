@@ -21,8 +21,10 @@ Keep all incremental SQL migrations in the root `migrations/` folder. Name them 
 # Account settings and fiat currencies
 
 Use `lib/currencies.ts` for the fiat catalogue and localized currency names. Never
-hard-code a USD/UZS-only selector or validation rule. `formatMoney` uses ISO minor
-units, and conversions require explicit positive rates; never infer a rate.
+hard-code a USD/UZS-only selector or validation rule. `formatMoney` displays whole
+amounts by default; unit quotes retain up to eight decimals without trailing zeros.
+Stored values and inputs retain their precision. Conversions require explicit
+positive rates; never infer a rate.
 Account defaults live in `user_preferences` with owner RLS. The top-right
 language selector changes only the current visit; saving Settings changes the
 default. Keep at least one preferred currency; the first is the primary currency.
