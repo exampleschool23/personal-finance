@@ -3,5 +3,11 @@
   "framework": "nextjs",
   "buildCommand": "npx next build --webpack",
   "devCommand": "npx next dev --port 5173",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "crons": [
+    {
+      "path": "/api/cron/portfolio-snapshots",
+      "schedule": "0 18 * * *"
+    }
+  ]
 }

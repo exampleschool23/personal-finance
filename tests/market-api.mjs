@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import ts from 'typescript';
 import { coins } from '../lib/market.ts';
 let source=fs.readFileSync(new URL('../app/api/market/route.ts',import.meta.url),'utf8');
+source=fs.readFileSync(new URL('../lib/server-market.ts',import.meta.url),'utf8')+'\n'+source;
 source=source.replace(/import .* from .*;\n/g,'');
 source='const coins = '+JSON.stringify(coins)+'; const session=async()=>globalThis.marketTestSession;\n'+source;
 const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;

@@ -1,0 +1,58 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+
+test('accounts, transfers, repayment, goals, budgets and imports remain atomic and owner private',{skip:!process.env.PGLITE_MODULE},async()=>{
+ const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
+ const id=n=>`10000000-0000-4000-8000-${String(n).padStart(12,'0')}`;const owner=id(1),other=id(2);
+ try{
+ await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${owner}'),('${other}');`);
+ await db.exec(fs.readFileSync('database/setup.sql','utf8'));
+ await db.exec(`GRANT SELECT,INSERT,UPDATE,DELETE ON finance_records TO authenticated;SET ROLE authenticated;SET request.jwt.claim.sub='${owner}';`);
+ const today=(await db.query("SELECT (now() AT TIME ZONE 'Asia/Tashkent')::date::text AS day")).rows[0].day;
+ async function record(n,kind,amount,currency='USD',extra={}){await db.query('INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency,account_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[id(n),owner,'Record '+n,kind,currency,amount,extra.date??today,extra.frequency??'Once',extra.account??null]);}
+ const balance=async n=>Number((await db.query('SELECT amount FROM finance_records WHERE id=$1',[id(n)])).rows[0].amount);
+ const action=async(action,data)=>(await db.query('SELECT planning_action($1,$2) AS result',[action,data])).rows[0].result;
+ await record(10,'Cash',1000);await record(11,'Cash',100);await record(12,'Cash',0,'EUR');await record(13,'Loan',500);await record(14,'Money lent',200);await record(15,'Mortgage',1000);
+ await record(20,'Other expense',50,'USD',{account:id(10)});assert.equal(await balance(10),950);
+ await db.query('UPDATE finance_records SET amount=70 WHERE id=$1',[id(20)]);assert.equal(await balance(10),930);
+ await db.query('DELETE FROM finance_records WHERE id=$1',[id(20)]);assert.equal(await balance(10),1000);
+ const transfer={id:id(30),account_id:id(10),target_id:id(11),amount:100,received:100,fee:5,date:today,notes:''};
+ await action('transfer',transfer);await action('transfer',transfer);
+ await assert.rejects(db.query('DELETE FROM finance_records WHERE operation_id=$1',[id(30)]),/cannot be edited/);
+assert.equal(await balance(10),895);assert.equal(await balance(11),200);
+ await assert.rejects(action('transfer',{...transfer,amount:101}),/different details/);
+ await assert.rejects(action('transfer',{...transfer,id:id(31),amount:9999,received:9999}),/check constraint/);assert.equal(await balance(10),895);assert.equal(await balance(11),200);
+ await action('transfer',{...transfer,id:id(32),target_id:id(12),amount:100,received:90,fee:0});assert.equal(await balance(12),90);
+ await action('repayment',{...transfer,id:id(33),target_id:id(13),amount:50,received:0,fee:2});assert.equal(await balance(13),450);assert.equal(await balance(10),743);
+ await action('repayment',{...transfer,id:id(34),target_id:id(14),amount:20,received:0,fee:1});assert.equal(await balance(14),180);assert.equal(await balance(10),764);
+ await action('mortgage',{...transfer,id:id(35),target_id:id(15),amount:50,received:0,fee:3});assert.equal(await balance(15),950);assert.equal(await balance(10),711);
+ await action('mortgage',{...transfer,id:id(36),target_id:id(15),amount:0,received:0,fee:3});assert.equal(await balance(10),708);
+ await assert.rejects(action('mortgage',{...transfer,id:id(38),target_id:id(13),amount:10,received:0,fee:1}),/Mortgage not found/);
+ await action('reconcile',{id:id(37),account_id:id(10),amount:900,date:today});assert.equal(await balance(10),900);
+ await action('goal',{id:id(40),name:'Emergency',account_id:id(10),target:1000,allocated:800,target_date:null,archived:false});assert.equal(await balance(10),900);
+ await assert.rejects(action('goal',{id:id(41),name:'Holiday',account_id:id(10),target:500,allocated:200,target_date:null}),/exceed/);
+ await action('category',{id:id(42),name:'Travel'});
+ await record(50,'Salary',100,'USD',{frequency:'Monthly'});
+ await action('occurrence',{id:id(51),account_id:id(10),target_id:id(50),date:today});await action('occurrence',{id:id(52),account_id:id(10),target_id:id(50),date:today});assert.equal(await balance(10),1000);
+ const plan={id:id(60),name:'Food',category:'Groceries',currency:'USD',amount:100,start_date:'2025-01-01',end_date:null};
+ await db.query('SELECT save_budget_plan($1,$2,$3)',[plan,'2025-01-01',true]);await db.query('SELECT save_budget_plan($1,$2,$3)',[{...plan,amount:200},'2025-03-01',true]);
+ const month=async day=>(await db.query('SELECT expense_plan_month($1) AS plans',[day])).rows[0].plans[0];
+ assert.equal(Number((await month('2025-02-01')).amount),100);assert.equal(Number((await month('2025-02-01')).carryover),100);assert.equal(Number((await month('2025-03-01')).amount),200);assert.equal(Number((await month('2025-03-01')).carryover),200);
+ const importRows=[{name:'Import',date:today,amount:-10,notes:'',key:'a'.repeat(64)}];
+ const imported=async()=>(await db.query('SELECT import_account_transactions($1,$2) AS result',[id(10),importRows])).rows[0].result;
+ assert.deepEqual(await imported(),{added:1,skipped:0});assert.deepEqual(await imported(),{added:0,skipped:1});assert.equal(await balance(10),990);
+ await record(70,'Deposit',100);
+ await db.query('SELECT record_investment_with_account($1,$2,$3,$4,$5,$6,$7,$8)',[id(71),id(70),'contribution',today,10,110,'',id(10)]);
+ await db.query('SELECT record_investment_with_account($1,$2,$3,$4,$5,$6,$7,$8)',[id(71),id(70),'contribution',today,10,110,'',id(10)]);assert.equal(await balance(10),980);assert.equal(await balance(70),110);
+ const backup=(await db.query('SELECT export_finance_backup() AS data')).rows[0].data;
+ assert.equal(backup.version,1);for(const table of ['investment_account_links','finance_records','expense_plan_versions','custom_categories','savings_goals'])assert.ok(backup.tables[table].length>0);
+ for(const rows of Object.values(backup.tables))assert.ok(rows.every(row=>row.user_id===owner));
+ await db.exec(`SET request.jwt.claim.sub='${other}';`);
+ const emptyBackup=(await db.query('SELECT export_finance_backup() AS data')).rows[0].data;assert.ok(Object.values(emptyBackup.tables).every(rows=>rows.length===0));
+ for(const table of ['account_activity','custom_categories','savings_goals','payment_occurrences','expense_plan_versions','investment_account_links'])assert.equal((await db.query('SELECT * FROM '+table)).rows.length,0);
+ await assert.rejects(action('transfer',{...transfer,id:id(90)}),/cash accounts/);
+ await assert.rejects(action('goal',{id:id(91),name:'Stolen',account_id:id(10),target:10,allocated:0,target_date:null}),/cash accounts/);
+ await assert.rejects(db.query('SELECT import_account_transactions($1,$2)',[id(10),importRows]),/cash accounts/);
+ }finally{await db.close();}
+});

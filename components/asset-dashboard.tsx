@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState, type CSSProperties } from 'react';
-import { ArrowDownLeft, ArrowUpRight, Bitcoin, Building2, ChartNoAxesCombined, ChevronDown, Ellipsis, Landmark, LayoutGrid, List, Pencil, Search, Store, Trash2, Wallet, X } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, ChevronDown, Ellipsis, LayoutGrid, List, Search, Wallet, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AssetIcon } from '@/components/asset-icon';
 import { CategoryBadge } from '@/components/category-badge';
 import { LoadingPlaceholder } from '@/components/loading-placeholder';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -20,7 +21,6 @@ type Props = {
  onAdd: () => void; onEdit: (entry: Entry) => void; onTrack: (entry: Entry) => void; onDelete: (entry: Entry) => void;
  quoteLabel: (entry: Entry) => string;
 };
-const icons = { Cash: Wallet, Stock: ChartNoAxesCombined, Crypto: Bitcoin, Deposit: Landmark, Property: Building2, Business: Store };
 
 export function AssetDashboard({ records, currency, market, netWorth, debt, forecast, forecastReady, loading, demo, onAdd, onEdit, onTrack, onDelete, quoteLabel }: Props) {
  const { t, locale } = useLanguage();
@@ -61,18 +61,17 @@ export function AssetDashboard({ records, currency, market, netWorth, debt, fore
    <p className="asset-result-count" role="status">{t('{shown} of {total} assets', { shown: formatNumber(Math.min(limit, filtered.length), locale, 0), total: formatNumber(filtered.length, locale, 0) })}{(query || category !== 'all') && <button onClick={clearFilters}>{t('Clear filters')}</button>}</p>
    {loading ? <LoadingPlaceholder label={t('Loading records…')}/> : !filtered.length ? <div className="asset-empty"><Search size={26}/><h3>{t(holdings.length ? 'No matching assets' : 'A fresh start.')}</h3><p>{t(holdings.length ? 'Try another name or category.' : 'Add your first asset to start building your portfolio.')}</p><Button variant="outline" onClick={holdings.length ? clearFilters : onAdd}>{t(holdings.length ? 'Clear filters' : 'Add your first record')}</Button></div> : <div className={'asset-card-grid asset-layout-' + layout}>{visible.map(({ original, converted }) => {
     const record = converted ?? original;
-    const Icon = icons[original.kind as keyof typeof icons] ?? Wallet;
     const worth = value(record);
     const share = converted && total > 0 ? worth / total * 100 : null;
     const hasQuote = ['Stock', 'Crypto'].includes(record.kind);
     const gain = hasQuote && record.cost > 0 ? (record.amount - record.cost) * record.quantity : null;
     return <article key={original.id} className="asset-card" style={{ '--asset-color': categoryColor(original.kind) } as CSSProperties}>
-     <header className="asset-card-header"><span className="asset-type-icon"><Icon size={23}/></span><div><CategoryBadge kind={record.kind} label={t(record.kind)}/><h3>{original.name}</h3></div><DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={t('Actions for {name}', { name: original.name })}><Ellipsis size={20}/></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => onEdit(original)}><Pencil size={15}/>{t('Edit {name}', { name: original.name })}</DropdownMenuItem>{!original.history_event_id && <DropdownMenuItem className="negative" onSelect={() => onDelete(original)}><Trash2 size={15}/>{t('Delete {name}', { name: original.name })}</DropdownMenuItem>}</DropdownMenuContent></DropdownMenu></header>
+     <header className="asset-card-header"><AssetIcon record={original}/><div><CategoryBadge kind={record.kind} label={t(record.kind)}/><h3>{original.name}</h3></div><DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={t('Actions for {name}', { name: original.name })}><Ellipsis size={20}/></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => onEdit(original)}>{t('Edit {name}', { name: original.name })}</DropdownMenuItem>{!original.history_event_id && <DropdownMenuItem className="negative" onSelect={() => onDelete(original)}>{t('Delete {name}', { name: original.name })}</DropdownMenuItem>}</DropdownMenuContent></DropdownMenu></header>
      <div className="asset-card-worth"><span>{t('Current value')}</span><strong>{money(worth, record.currency)}</strong>{!converted && <small>{t('Saved currency · Conversion unavailable')}</small>}</div>
-     <div className="asset-card-insight">{gain !== null ? <><ChartNoAxesCombined size={16}/><span>{t('Gain/loss')}</span><strong className={gain >= 0 ? 'positive' : 'negative'}>{money(gain, record.currency)}</strong></> : (record.estimated_monthly_income ?? 0) > 0 ? <><ArrowDownLeft size={16}/><span>{t('Estimated monthly income')}</span><strong>{money(record.estimated_monthly_income!, record.currency)}</strong></> : record.kind === 'Deposit' && record.rate > 0 ? <><Landmark size={16}/><span>{t('Annual interest')}</span><strong>{formatNumber(record.rate, locale)}%</strong></> : <><Icon size={16}/><span>{record.kind === 'Business' ? t('Ownership') : t('Category')}</span><strong>{record.kind === 'Business' ? formatNumber(record.ownership_percentage ?? 100, locale) + '%' : t(record.kind)}</strong></>}</div>
+     <div className="asset-card-insight">{gain !== null ? <><span>{t('Gain/loss')}</span><strong className={gain >= 0 ? 'positive' : 'negative'}>{money(gain, record.currency)}</strong></> : (record.estimated_monthly_income ?? 0) > 0 ? <><span>{t('Estimated monthly income')}</span><strong>{money(record.estimated_monthly_income!, record.currency)}</strong></> : record.kind === 'Deposit' && record.rate > 0 ? <><span>{t('Annual interest')}</span><strong>{formatNumber(record.rate, locale)}%</strong></> : <><span>{record.kind === 'Business' ? t('Ownership') : t('Category')}</span><strong>{record.kind === 'Business' ? formatNumber(record.ownership_percentage ?? 100, locale) + '%' : t(record.kind)}</strong></>}</div>
      <div className="asset-card-share"><span>{t('Share of holdings')}</span><strong>{share === null ? '—' : formatNumber(share, locale, 1) + '%'}</strong><div aria-hidden="true"><i style={{ width: `${Math.max(0, Math.min(100, share ?? 0))}%` }}/></div></div>
      <details className="asset-card-details"><summary>{t('Asset details')}<ChevronDown size={15}/></summary><dl><div><dt>{t('Date / due date')}</dt><dd>{formatDate(original.date, locale)}</dd></div>{record.kind === 'Business' && <div><dt>{t('Ownership')}</dt><dd>{formatNumber(record.ownership_percentage ?? 100, locale)}%</dd></div>}{hasQuote && <><div><dt>{t('Quantity')}</dt><dd>{formatNumber(record.quantity, locale)}</dd></div><div><dt>{t('Price per unit')}</dt><dd>{formatMoney(record.amount, record.currency, locale, true)}</dd></div><div><dt>{t('Price source')}</dt><dd>{quoteLabel(record)}</dd></div></>}{original.currency !== currency && <div><dt>{t('Saved value')}</dt><dd>{money(value(original), original.currency)}</dd></div>}{original.notes && <div><dt>{t('Notes')}</dt><dd>{original.notes}</dd></div>}</dl></details>
-     <footer className="asset-card-actions"><Button variant="ghost" onClick={() => onEdit(original)} aria-label={t('Edit {name}', { name: original.name })}><Pencil size={14}/>{t('Edit')}</Button>{!demo && <Button variant="outline" onClick={() => onTrack(original)} aria-label={t('Open Tracker for {name}', { name: original.name })}>{t('Tracker')}<ArrowUpRight size={15}/></Button>}</footer>
+     <footer className="asset-card-actions"><Button variant="ghost" onClick={() => onEdit(original)} aria-label={t('Edit {name}', { name: original.name })}>{t('Edit')}</Button>{!demo && <Button variant="outline" onClick={() => onTrack(original)} aria-label={t('Open Tracker for {name}', { name: original.name })}>{t('Tracker')}</Button>}</footer>
     </article>;
    })}</div>}
    {!loading && filtered.length > limit && <div className="asset-load-more"><Button variant="outline" onClick={() => setLimit(previous => previous + 12)}>{t('Show more assets')}<ChevronDown size={16}/></Button></div>}

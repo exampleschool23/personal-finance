@@ -1,17 +1,7 @@
+import { loadMarket } from '@/lib/server-market';
 import { session } from '@/lib/supabase';
-import { coins, type MarketData, type Quote } from '@/lib/market';
+import { coins } from '@/lib/market';
 
-async function read(url: string, seconds: number): Promise<unknown> {
-  const response = await fetch(url, { next: { revalidate: seconds }, signal: AbortSignal.timeout(8000) });
-  if (!response.ok) throw new Error('feed_unavailable');
-  return response.json();
-}
-function positive(value: unknown) {
-  if (typeof value !== 'string' && typeof value !== 'number') throw new Error('invalid_price');
-  const number = Number(value);
-  if (!Number.isFinite(number) || number <= 0) throw new Error('invalid_price');
-  return number;
-}
 export async function GET(req: Request) {
   const params = new URL(req.url).searchParams;
   const crypto = [...new Set((params.get('crypto') || '').split(',').filter(Boolean))];
@@ -19,52 +9,8 @@ export async function GET(req: Request) {
   if (crypto.length > 16 || stocks.length > 20 || crypto.some(s => !coins.some(c => c[0] === s)) || stocks.some(s => !/^[A-Z][A-Z0-9.-]{0,14}$/.test(s))) {
     return Response.json({ error: 'Invalid market symbols.' }, { status: 400 });
   }
-  const key = process.env.TWELVE_DATA_API_KEY;
-  const data: MarketData = { fx: null, quotes: {}, errors: {}, stocksConfigured: !!key };
-  // Paid stock quotes require an authenticated account. Crypto and CBU feeds are public.
-  let stockAccess = false;
-  if (stocks.length && key) { try { stockAccess = !!(await session()); } catch {} }
-  const jobs: Array<() => Promise<void>> = [async () => {
-    try {
-      const rows = await read('https://cbu.uz/uz/arkhiv-kursov-valyut/json/USD/', 3600) as Array<{ Ccy: string; Rate: string; Nominal: string; Date: string }>;
-      const usd = rows.find(row => row.Ccy === 'USD');
-      if (!usd || !/^\d{2}\.\d{2}\.\d{4}$/.test(usd.Date)) throw new Error('invalid_fx');
-      data.fx = { rate: positive(usd.Rate) / positive(usd.Nominal), date: usd.Date.split('.').reverse().join('-'), source: 'CBU' };
-    } catch { data.errors.fx = 'Exchange rate unavailable.'; }
-  }];
-  jobs.push(async () => {
-    try {
-      const result = await read('https://open.er-api.com/v6/latest/USD', 86400) as { result: string; base_code: string; rates: Record<string, number>; time_last_update_unix: number };
-      if (result.result !== 'success' || result.base_code !== 'USD' || !Number.isFinite(result.time_last_update_unix)) throw Error('invalid_fx');
-      data.rates = Object.fromEntries(Object.entries(result.rates).filter(([code, rate]) => /^[A-Z]{3}$/.test(code) && typeof rate === 'number' && Number.isFinite(rate) && rate > 0));
-      data.rates.USD = 1;
-      data.ratesDate = new Date(result.time_last_update_unix * 1000).toISOString().slice(0, 10);
-    } catch { data.errors.rates = 'Exchange rate unavailable.'; }
-  });
-  for (const symbol of crypto) jobs.push(async () => {
-    try {
-      const result = await read(`https://api.coinbase.com/v2/prices/${symbol}-USD/spot`, 300) as { data?: { base: string; currency: string; amount: string } };
-      if (result.data?.base !== symbol || result.data.currency !== 'USD') throw new Error('invalid_quote');
-      data.quotes[`Crypto:${symbol}`] = { usd: positive(result.data.amount), source: 'Coinbase', fetchedAt: new Date().toISOString() };
-    } catch { data.errors[`Crypto:${symbol}`] = 'Price unavailable. Saved price is shown.'; }
-  });
-  for (const symbol of stocks) jobs.push(async () => {
-    if (!key) { data.errors[`Stock:${symbol}`] = 'Stock prices need a market-data API key.'; return; }
-    if (!stockAccess) { data.errors[`Stock:${symbol}`] = 'Sign in to fetch stock prices.'; return; }
-    try {
-      const url = new URL('https://api.twelvedata.com/quote');
-      url.searchParams.set('symbol', symbol); url.searchParams.set('apikey', key!);
-      const result = await read(url.href, 300) as { symbol?: string; currency?: string; close?: string; datetime?: string; timestamp?: number; is_market_open?: boolean };
-      // Only USD-denominated stocks are supported; never treat a foreign quote as USD.
-      if (result.symbol !== symbol || result.currency !== 'USD') throw new Error('invalid_quote');
-      const quote: Quote = { usd: positive(result.close), source: 'Twelve Data', fetchedAt: new Date().toISOString() };
-      if (Number.isFinite(result.timestamp)) quote.marketTime = new Date(result.timestamp! * 1000).toISOString();
-      data.quotes[`Stock:${symbol}`] = quote;
-    } catch { data.errors[`Stock:${symbol}`] = 'Price unavailable. Saved price is shown.'; }
-  });
-  // Bound upstream concurrency; individual failures do not hide successful prices.
-  let index = 0;
-  await Promise.all(Array.from({ length: Math.min(4, jobs.length) }, async () => { while (index < jobs.length) await jobs[index++](); }));
-  if (data.fx) data.rates = { ...data.rates, USD: 1, UZS: data.fx.rate };
-  return Response.json(data, { headers: { 'Cache-Control': 'private, no-store' } });
+  let stockAccess=false;
+  if(stocks.length&&process.env.TWELVE_DATA_API_KEY){try{stockAccess=!!(await session());}catch{}}
+  const data=await loadMarket(crypto,stocks,stockAccess);
+  return Response.json(data,{headers:{'Cache-Control':'private, no-store'}});
 }

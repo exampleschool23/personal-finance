@@ -9,4 +9,5 @@ export const categoryHues: Record<CategoryKind, number> = {
   Salary: 120, 'Rent income': 165, 'Other income': 85,
   'Rent expense': 310, 'Living expense': 48, Charity: 290, 'Other expense': 330,
 };
-export const categoryColor = (kind: string) => `hsl(${categoryHues[kind as Kind] ?? 210} 60% 48%)`;
+export function categoryHue(kind:string){ if(Object.hasOwn(categoryHues,kind))return categoryHues[kind as CategoryKind]; let hash=0;for(const char of kind)hash=(hash*31+char.charCodeAt(0))>>>0;return hash%360; }
+export const categoryColor = (kind: string) => `hsl(${categoryHue(kind)} 60% 48%)`;

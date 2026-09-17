@@ -3,7 +3,7 @@ import { isCurrency } from '@/lib/currencies';
 import { expensePlanCategories, expensePlanMonth } from '@/lib/expense-plans';
 import { session, supa, sameOrigin } from '@/lib/supabase';
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>Number.isFinite(Date.parse(v)) && new Date(v).toISOString().slice(0,10)===v);
-const schema = z.object({id:z.string().uuid(),name:z.string().trim().min(1).max(120),category:z.enum(expensePlanCategories),currency:z.string().refine(isCurrency),amount:z.number().finite().positive().max(1e15),start_date:date,end_date:date.nullable()}).refine(p=>!p.end_date || p.end_date>=p.start_date);
+const schema = z.object({id:z.string().uuid(),name:z.string().trim().min(1).max(120),category:z.enum(expensePlanCategories),currency:z.string().refine(isCurrency),amount:z.number().finite().positive().max(1e15),start_date:date,end_date:date.nullable(),month:z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),rollover:z.boolean().optional()}).refine(p=>!p.end_date || p.end_date>=p.start_date);
 async function handle(req:Request, method:string) {
  if(method!=='GET'&&!sameOrigin(req))return new Response(null,{status:403});
  try {
@@ -18,12 +18,12 @@ async function handle(req:Request, method:string) {
    path='/rest/v1/rpc/move_item_to_deleted';init={method:'POST',body:JSON.stringify({p_id:id,p_source:'expense_plans'})};
   } else {
    const parsed=schema.safeParse(await req.json());if(!parsed.success)return Response.json({error:'Check the plan fields.'},{status:400});
-   path+='?on_conflict=id';init={method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({...parsed.data,user_id:auth.user.id})};
+   if(parsed.data.month){const {month,rollover,...plan}=parsed.data;path='/rest/v1/rpc/save_budget_plan';init={method:'POST',body:JSON.stringify({p_plan:plan,p_month:month+'-01',p_rollover:rollover??false})};}else {path+='?on_conflict=id';init={method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({...parsed.data,user_id:auth.user.id})};}
   }
   const result=await supa(path,init,auth.token);
   if(!result.ok){
    const detail=await result.json().catch(()=>({})) as {message?:string;code?:string};
-   const message=detail.code==='23503'?'This plan has spending. Set an end date instead of deleting it.':detail.message==='Keep the currency and dates compatible with recorded spending.'?detail.message:'Could not load or save expense plans. Please try again.';
+   const message=detail.code==='23503'?'This plan has spending. Set an end date instead of deleting it.':detail.code==='P0001'?detail.message:'Could not load or save expense plans. Please try again.';
    return Response.json({error:message},{status:detail.code==='23503'||detail.code==='P0001'?409:503});
   }
   return Response.json(method==='GET'?await result.json():{ok:true});

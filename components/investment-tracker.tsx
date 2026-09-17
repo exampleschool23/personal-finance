@@ -13,8 +13,8 @@ import { historySeries, historyChartDate, historyLabels, type HistoryEvent } fro
 import { depositInterest, depositToday } from '@/lib/deposit-interest';
 import type { Entry } from '@/lib/finance';
 
-type Draft={id:string;record_id:string;type:'valuation'|'contribution'|'withdrawal'|'income'|'expense';date:string;amount:number;balance:number|null;notes:string};
-export function InvestmentTracker({record,onClose,onSaved,onPayment}:{record:Entry;onClose:()=>void;onSaved:()=>void;onPayment:()=>void}){
+type Draft={account_id?:string;id:string;record_id:string;type:'valuation'|'contribution'|'withdrawal'|'income'|'expense';date:string;amount:number;balance:number|null;notes:string};
+export function InvestmentTracker({record,accounts=[],onClose,onSaved,onPayment}:{accounts?:Entry[];record:Entry;onClose:()=>void;onSaved:()=>void;onPayment:()=>void}){
  const {t,locale}=useLanguage();
  const [events,setEvents]=useState<HistoryEvent[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[busy,setBusy]=useState(false),[submitted,setSubmitted]=useState(false),[reload,setReload]=useState(0);
  const makeDraft=():Draft=>({id:crypto.randomUUID(),record_id:record.id,type:'valuation',date:depositToday(),amount:0,balance:0,notes:''});
@@ -66,15 +66,15 @@ export function InvestmentTracker({record,onClose,onSaved,onPayment}:{record:Ent
   <form className="record-form" onSubmit={save}>
    <h3>{t('Add a dated update')}</h3>
    <fieldset disabled={busy||submitted||loading} className="tracker-fields">
-    <div className="form-grid"><label>{t('Update type')}<NativeSelect value={draft.type} onChange={e=>{const type=e.target.value as Draft['type'];setDraft({...draft,type,amount:0,balance:['valuation','contribution','withdrawal'].includes(type)?0:null});}}>
+    <div className="form-grid"><label>{t('Update type')}<NativeSelect value={draft.type} onChange={e=>{const type=e.target.value as Draft['type'];setDraft({...draft,type,account_id:undefined,amount:0,balance:['valuation','contribution','withdrawal'].includes(type)?0:null});}}>
      {(['valuation',...(!mortgage?['contribution','withdrawal','income','expense']:[])] as Draft['type'][]).map(type=><option key={type} value={type}>{t(historyLabels[type])}</option>)}
     </NativeSelect></label><label>{t('Date')}<DatePicker value={draft.date} onChange={date=>setDraft({...draft,date})}/></label></div>
     {hasBalance&&<label>{t(deposit?'Account balance after update':mortgage?'Outstanding balance after update':'Full asset value after update')}<FormattedNumberInput value={draft.balance??0} required={false} onValueChange={balance=>setDraft({...draft,balance})}/></label>}
-    {draft.type!=='valuation'&&<label>{t('Cash amount (your share)')}<FormattedNumberInput value={draft.amount} onValueChange={amount=>setDraft({...draft,amount})}/></label>}
+    {draft.type!=='valuation'&&['Stock','Crypto','Deposit','Property','Business'].includes(record.kind)&&<label>{t('Cash account')}<NativeSelect value={draft.account_id??''} onChange={e=>setDraft({...draft,account_id:e.target.value||undefined})}><option value="">{t('No account balance change')}</option>{accounts.filter(a=>a.kind==='Cash'&&a.currency===record.currency).map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</NativeSelect></label>}{draft.type!=='valuation'&&<label>{t('Cash amount (your share)')}<FormattedNumberInput value={draft.amount} onValueChange={amount=>setDraft({...draft,amount})}/></label>}
     <label>{t('Notes (optional)')}<textarea rows={2} maxLength={2000} value={draft.notes} onChange={e=>setDraft({...draft,notes:e.target.value})}/></label>
    </fieldset>
    {deposit&&<p className="muted tracker-help">{t('For a withdrawal or top-up, enter the date, cash amount and remaining account balance. The estimate changes from that date. Do not add the same interest estimate as recurring income.')}</p>}
-   <p className="muted tracker-help">{t('For births or market changes, use Value update. For purchases or sales, enter the cash amount and the new total value. Income and expenses also appear as one-time records. Cash balances are not changed automatically.')}</p>
+   <p className="muted tracker-help">{t('For births or market changes, use Value update. For purchases or sales, enter the cash amount and the new total value. Income and expenses also appear as one-time records. The selected cash account updates automatically.')}</p>
    <p className="muted tracker-help">{t('Past valuations do not replace a newer balance. Business valuations use the current ownership share. Saved history is permanent.')}</p>
    {error&&<p className="error" role="alert">{t(error)}</p>}
    {submitted&&<p className="muted tracker-help">{t('Retry with the same details to avoid duplicates.')}</p>}

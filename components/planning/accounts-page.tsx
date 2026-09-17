@@ -1,0 +1,19 @@
+"use client";
+import { compareRecordDates } from '@/lib/record-dates';
+import { useState } from 'react';
+import { useLanguage } from '@/components/language-provider';
+import { Button } from '@/components/ui/button';
+import { formatDate,formatMoney } from '@/lib/format';
+import { AccountOperation,type Operation } from './account-operation';
+import type { PlanningData } from '@/lib/planning';
+import type { Entry } from '@/lib/finance';
+export function AccountsPage({data,save,onAdd,onEdit}:{data:PlanningData;save:(action:string,data:unknown)=>Promise<void>;onAdd:()=>void;onEdit:(record:Entry)=>void}){
+ const {t,locale}=useLanguage();const [operation,setOperation]=useState<Operation|null>(null);
+ const accounts=data.records.filter(r=>r.kind==='Cash');
+ return <><div className="page-heading"><div><h1>{t('Accounts')}</h1><p className="muted">{t('Your cash balances, transfers and statement checks.')}</p></div><div className="entry-actions"><Button variant="outline" disabled={accounts.length<2} onClick={()=>setOperation({action:'transfer'})}>{t('Transfer money')}</Button><Button onClick={onAdd}>{t('Add account')}</Button></div></div>
+ <div className="planning-cards">{accounts.map(a=><article className="panel" key={a.id}><h2>{a.name}</h2><strong className="planning-value">{formatMoney(a.amount,a.currency,locale)}</strong><p className="muted">{t('Allocated to goals')}: {formatMoney(data.goals.filter(g=>g.account_id===a.id&&!g.archived).reduce((sum,g)=>sum+Number(g.allocated),0),a.currency,locale)}</p><div className="row-actions"><Button variant="outline" onClick={()=>setOperation({action:'reconcile',account_id:a.id,amount:a.amount})}>{t('Reconcile balance')}</Button><Button variant="ghost" onClick={()=>onEdit(a)}>{t('Edit')}</Button></div></article>)}</div>
+ {!accounts.length&&<div className="panel empty"><p>{t('Add a cash account to connect your income, expenses and goals.')}</p><Button onClick={onAdd}>{t('Add account')}</Button></div>}
+ <section className="panel"><h2>{t('Account activity')}</h2><div className="table-scroll"><table><thead><tr><th>{t('Date')}</th><th>{t('Account')}</th><th>{t('Activity')}</th><th>{t('Amount')}</th><th>{t('Balance after')}</th></tr></thead><tbody>{[...data.activity].sort((a,b)=>b.occurred_on.localeCompare(a.occurred_on)).map(item=>{const a=accounts.find(a=>a.id===item.account_id);return <tr key={item.id}><td>{formatDate(item.occurred_on,locale)}</td><td>{a?.name}</td><td>{t(({transfer:'Transfer money',reconcile:'Reconcile balance',repayment:'Record repayment',mortgage:'Record mortgage payment'} as Record<string,string>)[item.action]??item.action)}{item.target_id&&<small className="block">{data.records.find(r=>r.id===item.target_id)?.name}</small>}{item.notes&&<small className="block">{item.notes}</small>}</td><td>{formatMoney(item.amount,a?.currency??'USD',locale)}</td><td>{formatMoney(item.after_balance,a?.currency??'USD',locale)}</td></tr>;})}</tbody></table></div>{!data.activity.length&&<p className="muted">{t('No account operations yet.')}</p>}
+ <h3>{t('Income & expenses')}</h3><div className="table-scroll"><table><tbody>{data.records.filter(r=>r.account_id).sort((a,b)=>compareRecordDates(a.date,b.date)).map(r=><tr key={r.id}><td>{formatDate(r.date,locale)}</td><td>{r.name}</td><td>{accounts.find(a=>a.id===r.account_id)?.name}</td><td>{formatMoney(r.amount,r.currency,locale)}</td></tr>)}{(data.investmentLinks??[]).map(link=>{const a=accounts.find(a=>a.id===link.account_id);return <tr key={link.id}><td>{formatDate(link.investment_history.occurred_on,locale)}</td><td>{data.records.find(r=>r.id===link.investment_history.record_id)?.name}</td><td>{a?.name}</td><td>{formatMoney(link.amount,a?.currency??'USD',locale)}</td></tr>;})}</tbody></table></div></section>
+ {operation&&<AccountOperation operation={operation} records={data.records} save={save} onClose={()=>setOperation(null)}/>}</>;
+}

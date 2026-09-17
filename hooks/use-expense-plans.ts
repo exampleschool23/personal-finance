@@ -24,7 +24,7 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
    if(rows.some(r=>r.expense_plan_id===plan.id&&(r.currency!==plan.currency||r.date<plan.start_date||(plan.end_date&&r.date>plan.end_date))))throw Error('Keep the currency and dates compatible with recorded spending.');
    setDemoPlans(prev=>[...prev.filter(p=>p.id!==plan.id),plan]);
   } else {
-   const response=await fetch('/api/expense-plans',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(plan)});
+   const response=await fetch('/api/expense-plans',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...plan,amount:plan.amount||plan.base_amount,month:month<plan.start_date.slice(0,7)?plan.start_date.slice(0,7):month})});
    const result=await response.json() as {error?:string};if(!response.ok)throw Error(result.error);
   }
   onSaved();

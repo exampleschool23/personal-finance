@@ -1,6 +1,11 @@
 export const kinds = ['Cash','Stock','Crypto','Deposit','Property','Business','Money lent','Mortgage','Loan','Debt','Salary','Rent income','Other income','Rent expense','Living expense','Charity','Other expense'] as const;
 export type Kind = typeof kinds[number];
-export type Entry = {id:string;end_date?:string|null;expense_plan_id?:string|null;history_event_id?:string|null;mortgage_payment_id?:string|null;payment_principal?:number;payment_interest?:number;record_count?:number;name:string;kind:Kind;currency:string;amount:number;quantity:number;cost:number;rate:number;date:string;lent_date?:string;frequency:'Once'|'Monthly'|'Yearly';notes:string;business_id?:string|null;ownership_percentage?:number;estimated_monthly_payment?:number;estimated_monthly_income?:number};
+export type Entry = {id:string;operation_id?:string|null;account_id?:string|null;custom_category_id?:string|null;import_key?:string|null;end_date?:string|null;expense_plan_id?:string|null;history_event_id?:string|null;mortgage_payment_id?:string|null;payment_principal?:number;payment_interest?:number;record_count?:number;name:string;kind:Kind;currency:string;amount:number;quantity:number;cost:number;rate:number;date:string;lent_date?:string;frequency:'Once'|'Monthly'|'Yearly';notes:string;business_id?:string|null;ownership_percentage?:number;estimated_monthly_payment?:number;estimated_monthly_income?:number};
+// PostgreSQL permits a null due date for lending records. Keep the same client
+// representation for both paginated records and the planning data feed.
+export function normalizeEntry(entry: Omit<Entry, 'date' | 'lent_date'> & {date?:string|null;lent_date?:string|null}): Entry {
+ return {...entry,date:entry.date??'',lent_date:entry.lent_date??'',amount:Number(entry.amount),quantity:Number(entry.quantity),cost:Number(entry.cost),rate:Number(entry.rate),ownership_percentage:Number(entry.ownership_percentage??100),estimated_monthly_income:Number(entry.estimated_monthly_income??0),estimated_monthly_payment:Number(entry.estimated_monthly_payment??0)};
+}
 export const assets:readonly string[] = ['Cash','Stock','Crypto','Deposit','Property','Business','Money lent'];
 export const liabilities:readonly string[] = ['Mortgage','Loan','Debt'];
 // Navigation groups are separate from accounting classifications.

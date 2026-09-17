@@ -1,0 +1,24 @@
+"use client";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Dialog,DialogContent,DialogTitle,DialogDescription } from '@/components/ui/dialog';
+import { DatePicker } from '@/components/date-picker';
+import { FormattedNumberInput } from '@/components/formatted-number-input';
+import { useLanguage } from '@/components/language-provider';
+import { formatDate,formatMoney,formatNumber } from '@/lib/format';
+import { goalProgress,type Goal,type PlanningData } from '@/lib/planning';
+export function GoalsPage({data,save}:{data:PlanningData;save:(action:string,data:unknown)=>Promise<void>}){
+ const {t,locale}=useLanguage();const [draft,setDraft]=useState<Goal|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[archived,setArchived]=useState(false);
+ const accounts=data.records.filter(r=>r.kind==='Cash');
+ const open=(goal?:Goal)=>{setError('');setDraft(goal??{id:crypto.randomUUID(),name:'',account_id:accounts[0]?.id??'',target:0,allocated:0,target_date:null,archived:false});};
+ return <><div className="page-heading"><div><h1>{t('Savings goals')}</h1><p className="muted">{t('Reserve existing cash for what matters. Allocations do not change your net worth.')}</p></div><Button disabled={!accounts.length} onClick={()=>open()}>{t('Add goal')}</Button></div>
+ {!accounts.length&&<p className="panel">{t('Add a cash account to connect your income, expenses and goals.')}</p>}
+ <label className="planning-check"><input type="checkbox" checked={archived} onChange={e=>setArchived(e.target.checked)}/>{t('Show archived goals')}</label>
+ <div className="planning-cards">{data.goals.filter(g=>archived||!g.archived).map(goal=>{const account=accounts.find(a=>a.id===goal.account_id),stats=goalProgress(goal),money=(n:number)=>formatMoney(n,account?.currency??'USD',locale);const reserved=data.goals.filter(g=>g.account_id===goal.account_id&&!g.archived).reduce((n,g)=>n+Number(g.allocated),0);return <article className="panel" key={goal.id}><div className="panel-title"><h2>{goal.name}</h2><Button variant="ghost" onClick={()=>open(goal)}>{t('Edit')}</Button></div><p>{account?.name}</p><strong className="planning-value">{money(goal.allocated)} / {money(goal.target)}</strong><progress value={goal.allocated} max={goal.target} aria-label={goal.name}/><p>{formatNumber(stats.percent,locale,1)}% · {t('Remaining')}: {money(stats.remaining)}</p>{goal.target_date&&<p>{t('Target date')}: {formatDate(goal.target_date,locale)}</p>}{stats.monthly!==null&&<p>{t('Monthly contribution needed')}: {money(stats.monthly)}</p>}{account&&reserved>account.amount&&!goal.archived&&<p role="alert" className="negative">{t('Your goal allocations exceed the current account balance. Update the allocations.')}</p>}{goal.archived&&<p>{t('Archived')}</p>}</article>;})}</div>
+ <Dialog open={!!draft} onOpenChange={open=>{if(!open&&!busy)setDraft(null);}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t('Savings goal')}</DialogTitle><DialogDescription>{t('Allocated money stays in the selected account.')}</DialogDescription>{draft&&<form className="record-form" onSubmit={async e=>{e.preventDefault();setBusy(true);setError('');try{await save('goal',draft);setDraft(null);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}}><fieldset className="tracker-fields" disabled={busy}>
+ <label>{t('Name')}<Input required maxLength={120} value={draft.name} onChange={e=>setDraft({...draft,name:e.target.value})}/></label><label>{t('Cash account')}<NativeSelect required value={draft.account_id} onChange={e=>setDraft({...draft,account_id:e.target.value})}>{accounts.map(a=><option key={a.id} value={a.id}>{a.name} · {a.currency}</option>)}</NativeSelect></label>
+ <label>{t('Target amount')}<FormattedNumberInput value={draft.target} onValueChange={target=>setDraft({...draft,target})}/></label><label>{t('Allocated amount')}<FormattedNumberInput required={false} value={draft.allocated} max={draft.target||1e15} onValueChange={allocated=>setDraft({...draft,allocated})}/></label><label>{t('Target date')}<DatePicker required={false} value={draft.target_date??''} onChange={date=>setDraft({...draft,target_date:date||null})}/></label><label className="planning-check"><input type="checkbox" checked={draft.archived} onChange={e=>setDraft({...draft,archived:e.target.checked})}/>{t('Archived')}</label></fieldset>
+ {error&&<p className="error" role="alert">{t(error)}</p>}<div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={()=>setDraft(null)}>{t('Cancel')}</Button><Button disabled={busy||draft.target<=0}>{t(busy?'Saving…':'Save')}</Button></div></form>}</DialogContent></Dialog></>;
+}

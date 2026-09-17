@@ -115,10 +115,21 @@ be deleted; their currency and dates must remain compatible with those payments.
 
 The current month (Asia/Tashkent) shows planned, spent and remaining amounts per
 plan. A full monthly budget applies in every overlapping start/end month, with
-no proration or carryover. Forecast expenses include the greater of planned and
+no proration. Migration 019 adds optional positive-balance carryover. Forecast expenses include the greater of planned and
 spent per plan, plus existing recurring expenses and mortgage estimates. Plans
 do not create transactions or affect asset balances. Remove a replaced recurring
-expense yourself to avoid budgeting the same expense twice. Editing a plan
-changes its current monthly budget; this feature does not store historical budget
-versions. Missing exchange rates exclude that plan from converted forecasts with
+expense yourself to avoid budgeting the same expense twice. With migration 019, amount and rollover changes apply from the selected forecast
+month, preserving earlier budget versions. Missing exchange rates exclude that plan from converted forecasts with
 an explicit message; failed plan reads leave projected totals unavailable.
+
+## Accounts, goals and data tools
+
+After migration 017, apply migrations 018–022 in numeric order. These enable
+linked cash accounts, transfers and repayments, in-app payment reminders,
+versioned budgets, goals, statement imports, and consistent complete backups.
+See [the upgrade guide](docs/planning-upgrade.md) for behavior and migration order.
+
+For daily portfolio capture while the app is closed, configure server-only
+`CRON_SECRET` and `SUPABASE_SERVICE_ROLE_KEY`, then deploy. The daily schedule
+is already declared in `vercel.json`; missing prices leave prior observations
+intact and cause a failure response for monitoring.
