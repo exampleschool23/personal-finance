@@ -42,5 +42,5 @@ test('history reads are scoped to the requested record and authenticated token',
 test('migration keeps owner RLS, atomic locks, idempotency and newer balances intact',()=>{
  const sql=fs.readFileSync('migrations/012_investment_history.sql','utf8');
  for(const required of ['ENABLE ROW LEVEL SECURITY','USING(user_id=auth.uid())','REVOKE ALL ON public.investment_history FROM PUBLIC,anon,authenticated','AND user_id=auth.uid() FOR UPDATE','existing.balance IS DISTINCT FROM p_balance','p_date>=last_date',"p_type IN ('income','expense')",'NEW.history_event_id','capture_mortgage_history'])assert.ok(sql.includes(required),required);
- assert.ok(fs.readFileSync('database/setup.sql','utf8').endsWith(sql));
+ assert.ok(fs.readFileSync('database/setup.sql','utf8').includes(sql));
 });

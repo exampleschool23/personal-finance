@@ -1,6 +1,8 @@
 import type { Kind } from './finance';
 // Stable colors shared by badges and category charts; never derive from row order.
-export const categoryHues: Record<Kind, number> = {
+export type CategoryKind = Kind | 'Groceries' | 'Family support' | 'Household' | 'Other';
+export const categoryHues: Record<CategoryKind, number> = {
+  Groceries: 48, 'Family support': 195, Household: 270, Other: 330,
   Cash: 145, Stock: 215, Crypto: 32, Deposit: 180,
   Property: 270, Business: 240, 'Money lent': 195,
   Mortgage: 350, Loan: 15, Debt: 0,

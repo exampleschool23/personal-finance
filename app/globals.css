@@ -287,3 +287,15 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 .tracker-history time,.tracker-history span,.tracker-history small{display:block;color:var(--muted-foreground);font-size:12px;margin-top:4px}
 .tracker-history p{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px;color:var(--muted-foreground)}
 @media(max-width:600px){.tracker-metrics{grid-template-columns:1fr}.tracker-metrics>div{display:flex;align-items:center;justify-content:space-between;gap:12px}.tracker-metrics small{margin:0}.tracker-history li{flex-direction:column;gap:4px}.tracker-history li>div:last-child{text-align:left}}
+
+/* Monthly expense planning shares the record table and finance theme. */
+.expense-plans { margin: 24px 0; }
+.expense-plans > .muted { margin: 12px 0; }
+.expense-plans .table-scroll { margin-top: 20px; }
+.expense-plans td { vertical-align: middle; }
+.expense-plan-name { display: flex; align-items: flex-start; flex-direction: column; gap: 6px; min-width: 170px; }
+.expense-plans-empty { padding: 24px 0; color: var(--muted-foreground); }
+@media (max-width: 640px) {
+ .expense-plans .panel-title { align-items: flex-start; gap: 12px; flex-direction: column; }
+ .expense-plans .row-actions { flex-wrap: wrap; }
+}
