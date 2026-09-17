@@ -9,10 +9,13 @@ const id='10000000-0000-4000-8000-000000000001';
 const req=(body,origin='https://local')=>new Request('https://local',{method:'POST',headers:{origin},body:JSON.stringify(body)});
 test('planning API rejects anonymous, cross-origin and malformed operations and ignores forged ownership',async()=>{
  let authenticated=true,calls=[];
- const api=new Function('z','session','supa','sameOrigin','readOwnerRows',compile('app/api/planning/route.ts')+';return {GET,POST};')(z,async()=>authenticated?{token:'owner'}:null,async(path,init,token)=>{calls.push({path,body:JSON.parse(init.body),token});return Response.json({ok:true});},r=>r.headers.get('origin')==='https://local',async()=>[]);
+ const api=new Function('z','session','supa','sameOrigin','readOwnerRows','isCurrency',compile('app/api/planning/route.ts')+';return {GET,POST};')(z,async()=>authenticated?{token:'owner'}:null,async(path,init,token)=>{calls.push({path,body:JSON.parse(init.body),token});return Response.json({ok:true});},r=>r.headers.get('origin')==='https://local',async()=>[],code=>['USD','EUR','UZS'].includes(code));
  authenticated=false;assert.equal((await api.GET()).status,401);assert.equal((await api.POST(req({}))).status,401);authenticated=true;
  assert.equal((await api.POST(req({},'https://elsewhere'))).status,403);
  for(const body of [{action:'unknown',data:{}},{action:'transfer',data:{id}},{action:'goal',data:{id,name:'Goal',account_id:id,target:10,allocated:11,target_date:null}},{action:'category',data:{id,name:''}}])assert.equal((await api.POST(req(body))).status,400);
+ const goal={id,name:'Million',kind:'net_worth',currency:'USD',account_id:null,target:1000000,allocated:0,target_date:'2030-12-31',monthly_contribution:2000,annual_return:5};
+ for(const data of [{...goal,currency:'XXX'},{...goal,account_id:id},{...goal,target_date:null},{...goal,allocated:1},{...goal,annual_return:101},{...goal,monthly_contribution:-1}])assert.equal((await api.POST(req({action:'goal',data}))).status,400);
+ assert.equal((await api.POST(req({action:'goal',data:goal}))).status,200);assert.equal(calls.pop().body.p_data.kind,'net_worth');
  assert.equal(calls.length,0);assert.equal((await api.POST(req({action:'category',data:{id,name:'Travel',user_id:'attacker'}}))).status,200);assert.deepEqual(calls[0].body,{p_action:'category',p_data:{id,name:'Travel'}});assert.equal(calls[0].token,'owner');
 });
 test('statement import produces stable distinct duplicate keys and authenticates before any write',async()=>{

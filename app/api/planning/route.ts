@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isCurrency } from '@/lib/currencies';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { readOwnerRows } from '@/lib/server-records';
 const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v);
@@ -12,7 +13,7 @@ const schemas={
  occurrence:z.object({id,account_id:id,target_id:id,date,notes:z.string().max(2000).default('')}),
  dismiss:z.object({id,target_id:id,date}),
  category:z.object({id,name:z.string().trim().min(1).max(80)}),
- goal:z.object({id,name:z.string().trim().min(1).max(120),account_id:id,target:amount.positive(),allocated:amount,target_date:date.nullable(),archived:z.boolean().default(false)}).refine(v=>v.allocated<=v.target),
+ goal:z.object({id,name:z.string().trim().min(1).max(120),account_id:id.nullable(),kind:z.enum(['savings','net_worth']).default('savings'),currency:z.string().refine(isCurrency).optional(),target:amount.positive(),allocated:amount,target_date:date.nullable(),archived:z.boolean().default(false),monthly_contribution:amount.nullable().default(null),annual_return:z.number().finite().min(0).max(100).default(0)}).refine(v=>v.allocated<=v.target&&(v.kind==='net_worth'?v.account_id===null&&v.allocated===0&&!!v.currency&&!!v.target_date:!!v.account_id)),
 };
 export async function GET(){
  try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});

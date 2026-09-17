@@ -18,7 +18,7 @@ A private, multilingual personal-finance workspace built with React, Next.js and
 
 Use Node.js 24 (minimum supported version: 22.13). Run `npm ci`, copy `.env.example` to `.env.local`, and configure your own Supabase URL and publishable key. Enable the desired sign-in providers in Supabase. Never commit credentials.
 
-For a fresh database, run `database/setup.sql` once in Supabase. For an existing database, apply only unapplied files from `migrations/` in ascending numeric order. Do not run the fresh setup over an existing installation. See [the planning upgrade](docs/planning-upgrade.md) for migrations 018–022.
+For a fresh database, run `database/setup.sql` once in Supabase. For an existing database, apply only unapplied files from `migrations/` in ascending numeric order. Do not run the fresh setup over an existing installation. See [the planning upgrade](docs/planning-upgrade.md) for migrations 018–023.
 
 - `npm run dev`: portable Vinext development server on localhost.
 - `npm run build:production`: production Next.js build used by Vercel.

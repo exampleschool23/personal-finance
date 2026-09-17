@@ -1,7 +1,7 @@
 import { income, expenses, type Entry } from './finance';
 import { depositToday } from './deposit-interest';
 export type Category = {id:string;name:string};
-export type Goal = {id:string;name:string;account_id:string;target:number;allocated:number;target_date:string|null;archived:boolean};
+export type Goal = {id:string;name:string;account_id:string|null;target:number;allocated:number;target_date:string|null;archived:boolean;kind?:'savings'|'net_worth';currency?:string;monthly_contribution?:number|null;annual_return?:number};
 export type Occurrence = {id:string;record_id:string;due_on:string;status:'paid'|'dismissed'};
 export type Activity = {id:string;action:string;account_id:string;target_id:string|null;amount:number;received:number;fee:number;occurred_on:string;notes:string;before_balance:number;after_balance:number};
 export type PlanningData = {records:Entry[];categories:Category[];goals:Goal[];occurrences:Occurrence[];activity:Activity[];investmentLinks?:Array<{id:string;account_id:string;amount:number;investment_history:{occurred_on:string;record_id:string;event_type:string}}>};

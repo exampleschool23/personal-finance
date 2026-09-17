@@ -7,6 +7,7 @@ Apply migrations after 017, in this order:
 3. `020_statement_import.sql`: atomic, idempotent statement imports.
 4. `021_linked_investment_accounts.sql`: cash-linked investment activity and explicit service-role snapshot grants.
 5. `022_consistent_backups.sql`: a complete owner backup read from one database snapshot.
+6. `023_net_worth_goals.sql`: net-worth goals without cash accounts and saved monthly contribution/return scenarios.
 
 The same SQL is appended to the fresh-database setup. Existing records remain unlinked: adding this feature never retroactively changes cash balances. Cash records are accounts, so they stay in existing asset totals exactly once. Link an existing actual transaction deliberately: saving it then applies its amount to the selected account.
 
@@ -31,6 +32,12 @@ Mortgage and loan reminders use the existing due date and outstanding balance; a
 Changing a plan's amount or rollover setting takes effect from the selected forecast month and continues until the next version. Existing budgets are seeded with their currently known amount; previous edits cannot be reconstructed. The start date and currency of an existing budget remain fixed. Positive unused allowance carries forward when rollover is enabled; overspending is not carried as a negative allowance. Earlier months can be reviewed using the existing forecast-month controls. Ending a plan retains earlier spending and versions.
 
 Goal allocations are reservations within an existing cash account, not new assets or transfers. Combined active allocations cannot exceed the account balance when saving. If later spending reduces cash below the reserved total, the goal cards flag the shortfall. Archiving a goal releases its reservation while retaining the goal.
+
+Net-worth goals measure all current assets minus debt in the goal currency, including stock quantities and business ownership. They require no cash account and do not change balances. Existing goals retain their cash reservations and account currency. Select a goal to explore its actual snapshot history, projected path, required path and monthly milestones. Changes to the target, currency, date, archive state and scenario can be saved.
+
+The projection holds existing wealth constant and compounds only new monthly investments at the chosen effective annual return (zero by default). Contributions start on the next monthly anniversary, clip short months without drifting, and earn through the exact deadline using a 365.25-day year. No contribution is assumed immediately. Deadlines before the first contribution cannot be solved by a monthly plan. Planning horizons are limited to 100 years. Taxes, fees, inflation and future FX changes are excluded.
+
+Available surplus uses the current month’s income estimates, active recurring entries, expense plans and mortgage commitments. Missing FX or unavailable budget data prevents a partial surplus estimate; a manual monthly contribution still permits scenario exploration. Net-worth projections pause if any holding cannot be converted. Each goal is a separate scenario, so the same surplus must not be allocated to several savings goals. Savings reservations are already included in net worth. Saving a plan never moves or invests money automatically.
 
 ## Imports and backups
 
