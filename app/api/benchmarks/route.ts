@@ -3,9 +3,25 @@ import { depositToday } from '@/lib/deposit-interest';
 import { checkpointDates, dateMillis, dayMillis, shiftDay, validDay, type BenchmarkData, type PricePoint, type FxPoint } from '@/lib/benchmark-data';
 
 async function read(url: string): Promise<unknown> {
- const response = await fetch(url, { next: { revalidate: 3600 }, signal: AbortSignal.timeout(6000) });
- if (!response.ok) throw Error('Unavailable');
- return response.json();
+ for (let attempt = 0; attempt < 2; attempt++) {
+  try {
+   const response = await fetch(url, { next: { revalidate: 3600 }, signal: AbortSignal.timeout(6000) });
+   if (response.ok) return await response.json();
+   if (attempt === 0 && (response.status === 429 || response.status >= 500)) {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    continue;
+   }
+   // Never log the full URL: some market providers include API keys in it.
+   console.warn('Market feed unavailable', new URL(url).hostname, response.status);
+   throw new Error('feed_http_error');
+  } catch (error) {
+   if (error instanceof Error && error.message === 'feed_http_error') throw error;
+   if (attempt === 0) { await new Promise(resolve => setTimeout(resolve, 300)); continue; }
+   console.warn('Market feed unavailable', new URL(url).hostname, 'network_or_response_error');
+   throw error;
+  }
+ }
+ throw new Error('feed_unavailable');
 }
 const positive = (value: unknown) => (typeof value === 'number' || typeof value === 'string') && Number.isFinite(Number(value)) && Number(value) > 0;
 async function stockHistory(symbol: string, start: string, end: string, key: string): Promise<PricePoint[]> {

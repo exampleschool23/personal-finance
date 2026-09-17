@@ -33,3 +33,15 @@ test('market endpoint validates symbols, isolates failures, and protects stock a
   assert.equal(data.fx,null);assert.deepEqual(data.quotes,{});assert.ok(data.errors.fx);
  } finally {globalThis.fetch=original;delete globalThis.marketTestSession;if(key===undefined)delete process.env.TWELVE_DATA_API_KEY;else process.env.TWELVE_DATA_API_KEY=key;}
 });
+
+test('BTC spot recovers from temporary rate limiting',async()=>{
+ const original=globalThis.fetch;let attempts=0;
+ try{
+  globalThis.fetch=async url=>{
+   if(url.includes('/BTC-USD/spot'))return ++attempts===1?new Response('',{status:429}):Response.json({data:{base:'BTC',currency:'USD',amount:'60000'}});
+   return new Response('',{status:404});
+  };
+  const data=await(await GET(new Request('http://localhost/api/market?crypto=BTC'))).json();
+  assert.equal(attempts,2);assert.equal(data.quotes['Crypto:BTC'].usd,60000);assert.equal(data.errors['Crypto:BTC'],undefined);
+ }finally{globalThis.fetch=original;}
+});

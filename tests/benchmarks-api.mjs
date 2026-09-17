@@ -50,3 +50,18 @@ test('first-day comparison uses the latest completed BTC candle, while interior 
   const gaps=await(await GET(request('start=2026-09-14&end=2026-09-17&benchmarks=BTC'))).json();assert.equal(gaps.prices.BTC,undefined);assert.ok(gaps.errors.BTC);
  }finally{globalThis.fetch=original;}
 });
+
+test('BTC comparison recovers from a temporary provider failure',async()=>{
+ const original=globalThis.fetch;let attempts=0;
+ try{
+  globalThis.fetch=async raw=>{
+   if(new URL(raw).hostname==='api.exchange.coinbase.com'){
+    if(++attempts===1)return new Response('',{status:503});
+    return Response.json(['2026-09-14','2026-09-15','2026-09-16','2026-09-17'].map(date=>[dates.dateMillis(date)/1000,0,0,0,50000,1]));
+   }
+   return new Response('',{status:404});
+  };
+  const data=await(await GET(request('start=2026-09-14&end=2026-09-17&benchmarks=BTC'))).json();
+  assert.equal(attempts,2);assert.equal(data.prices.BTC.length,4);assert.equal(data.errors.BTC,undefined);
+ }finally{globalThis.fetch=original;}
+});
