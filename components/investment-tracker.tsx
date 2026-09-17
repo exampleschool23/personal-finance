@@ -51,8 +51,8 @@ export function InvestmentTracker({record,onClose,onSaved,onPayment}:{record:Ent
    {stats.points.length>0&&<div className="tracker-chart" aria-label={t('Investment history chart')}>
     <ResponsiveContainer width="100%" height={270}><LineChart data={stats.points} margin={{top:12,right:18,bottom:12,left:18}} accessibilityLayer>
      <CartesianGrid stroke="var(--border)" strokeDasharray="3 3"/>
-     <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin','dataMax']} tickFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} minTickGap={60} tick={{fontSize:11}}/>
-     <YAxis width={105} tickFormatter={money} tick={{fontSize:11}}/>
+     <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin','dataMax']} tickFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} minTickGap={80}/>
+     <YAxis width={120} tickFormatter={money}/>
      <Tooltip labelFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} formatter={v=>money(Number(v))} contentStyle={{background:'var(--background)',borderColor:'var(--border)',borderRadius:10}}/>
      <Legend/>
      <Line type="linear" dataKey="balance" name={t(mortgage?'Outstanding balance':'Value (your share)')} stroke="var(--primary)" strokeWidth={2} dot={{r:3}} connectNulls={false}/>

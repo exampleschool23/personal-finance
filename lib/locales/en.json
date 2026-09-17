@@ -603,5 +603,22 @@
   "Make this workspace yours.": "Make this workspace yours.",
   "Choose how you measure progress.": "Choose how you measure progress.",
   "Benchmarks": "Benchmarks",
-  "Compare your investment returns with Bitcoin and other assets, using the same money on the same dates.": "Compare your investment returns with Bitcoin and other assets, using the same money on the same dates."
+  "Compare your investment returns with Bitcoin and other assets, using the same money on the same dates.": "Compare your investment returns with Bitcoin and other assets, using the same money on the same dates.",
+  "Daily portfolio history is awaiting setup.": "Daily portfolio history is awaiting setup.",
+  "Complete prices and exchange rates are needed to save today’s portfolio.": "Complete prices and exchange rates are needed to save today’s portfolio.",
+  "Could not save today’s portfolio. Live values are still shown.": "Could not save today’s portfolio. Live values are still shown.",
+  "Live prices refresh while the app is open. Daily snapshots keep the last observed portfolio value and exchange rates for each day. Earlier manual balances use today’s rates. Changes include money added or removed.": "Live prices refresh while the app is open. Daily snapshots keep the last observed portfolio value and exchange rates for each day. Earlier manual balances use today’s rates. Changes include money added or removed.",
+  "Income over time": "Income over time",
+  "Salary, dividends, rent, business income, interest and other income.": "Salary, dividends, rent, business income, interest and other income.",
+  "Dividends": "Dividends",
+  "Business income": "Business income",
+  "Interest income": "Interest income",
+  "{count} months": "{count} months",
+  "Recorded income in this period": "Recorded income in this period",
+  "Monthly estimate · {month}": "Monthly estimate · {month}",
+  "Dividends received": "Dividends received",
+  "Some income cannot be converted. Displayed chart amounts are incomplete.": "Some income cannot be converted. Displayed chart amounts are incomplete.",
+  "Income source": "Income source",
+  "Solid bars show recorded one-time income and Tracker receipts. The outlined bar is this month’s estimate, including recurring salary and asset income; it is not added to received income. Older months show recorded payments only.": "Solid bars show recorded one-time income and Tracker receipts. The outlined bar is this month’s estimate, including recurring salary and asset income; it is not added to received income. Older months show recorded payments only.",
+  "Record stock dividends as Income received in the stock’s Tracker. Salary and other recurring plans are managed in Income & expenses. Current exchange rates are used for this chart.": "Record stock dividends as Income received in the stock’s Tracker. Salary and other recurring plans are managed in Income & expenses. Current exchange rates are used for this chart."
 }

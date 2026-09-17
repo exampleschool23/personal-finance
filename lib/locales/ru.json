@@ -603,5 +603,22 @@
   "Make this workspace yours.": "Настройте рабочее пространство под себя.",
   "Choose how you measure progress.": "Выберите ориентиры для оценки результатов.",
   "Benchmarks": "Сравнение инвестиций",
-  "Compare your investment returns with Bitcoin and other assets, using the same money on the same dates.": "Сравнивайте доходность своих инвестиций с Bitcoin и другими активами при вложении тех же сумм в те же даты."
+  "Compare your investment returns with Bitcoin and other assets, using the same money on the same dates.": "Сравнивайте доходность своих инвестиций с Bitcoin и другими активами при вложении тех же сумм в те же даты.",
+  "Daily portfolio history is awaiting setup.": "Ежедневная история портфеля ожидает настройки.",
+  "Complete prices and exchange rates are needed to save today’s portfolio.": "Для сохранения портфеля за сегодня нужны все цены и курсы валют.",
+  "Could not save today’s portfolio. Live values are still shown.": "Не удалось сохранить портфель за сегодня. Текущие значения по-прежнему отображаются.",
+  "Live prices refresh while the app is open. Daily snapshots keep the last observed portfolio value and exchange rates for each day. Earlier manual balances use today’s rates. Changes include money added or removed.": "Цены обновляются, пока приложение открыто. Ежедневные снимки сохраняют последние полученные стоимость портфеля и курсы валют за день. Более ранние ручные балансы используют текущие курсы. Изменения включают внесение и снятие средств.",
+  "Income over time": "Доходы во времени",
+  "Salary, dividends, rent, business income, interest and other income.": "Зарплата, дивиденды, аренда, доход бизнеса, проценты и прочие доходы.",
+  "Dividends": "Дивиденды",
+  "Business income": "Доход бизнеса",
+  "Interest income": "Процентный доход",
+  "{count} months": "{count} мес.",
+  "Recorded income in this period": "Записанный доход за период",
+  "Monthly estimate · {month}": "Оценка за месяц · {month}",
+  "Dividends received": "Полученные дивиденды",
+  "Some income cannot be converted. Displayed chart amounts are incomplete.": "Не все доходы удалось конвертировать. Суммы на графике неполные.",
+  "Income source": "Источник дохода",
+  "Solid bars show recorded one-time income and Tracker receipts. The outlined bar is this month’s estimate, including recurring salary and asset income; it is not added to received income. Older months show recorded payments only.": "Сплошные столбцы показывают разовые доходы и поступления из Трекера. Контурный столбец — оценка за текущий месяц, включая регулярную зарплату и доход от активов; она не прибавляется к полученным средствам. Для прошлых месяцев показаны только записанные поступления.",
+  "Record stock dividends as Income received in the stock’s Tracker. Salary and other recurring plans are managed in Income & expenses. Current exchange rates are used for this chart.": "Записывайте дивиденды как «Полученный доход» в Трекере акции. Зарплата и другие регулярные планы настраиваются в разделе «Доходы и расходы». График использует текущие курсы валют."
 }

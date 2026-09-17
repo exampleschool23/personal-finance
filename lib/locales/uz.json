@@ -603,5 +603,22 @@
   "Make this workspace yours.": "Ish maydonini o‘zingizga moslang.",
   "Choose how you measure progress.": "Natijalarni qanday taqqoslashingizni tanlang.",
   "Benchmarks": "Investitsiyalarni taqqoslash",
-  "Compare your investment returns with Bitcoin and other assets, using the same money on the same dates.": "Bir xil summalarni bir xil sanalarda kiritgan holda investitsiyalaringiz daromadini Bitcoin va boshqa aktivlar bilan taqqoslang."
+  "Compare your investment returns with Bitcoin and other assets, using the same money on the same dates.": "Bir xil summalarni bir xil sanalarda kiritgan holda investitsiyalaringiz daromadini Bitcoin va boshqa aktivlar bilan taqqoslang.",
+  "Daily portfolio history is awaiting setup.": "Portfelning kunlik tarixi sozlanishi kutilmoqda.",
+  "Complete prices and exchange rates are needed to save today’s portfolio.": "Bugungi portfelni saqlash uchun barcha narxlar va valyuta kurslari kerak.",
+  "Could not save today’s portfolio. Live values are still shown.": "Bugungi portfelni saqlab bo‘lmadi. Joriy qiymatlar ko‘rsatilmoqda.",
+  "Live prices refresh while the app is open. Daily snapshots keep the last observed portfolio value and exchange rates for each day. Earlier manual balances use today’s rates. Changes include money added or removed.": "Ilova ochiq paytda narxlar yangilanadi. Kunlik qaydlar har kun uchun so‘nggi kuzatilgan portfel qiymati va valyuta kurslarini saqlaydi. Avvalgi qo‘lda kiritilgan balanslar bugungi kurslardan foydalanadi. O‘zgarishlar kiritilgan yoki yechilgan mablag‘larni ham hisobga oladi.",
+  "Income over time": "Vaqt davomida daromadlar",
+  "Salary, dividends, rent, business income, interest and other income.": "Maosh, dividendlar, ijara, biznes daromadi, foizlar va boshqa daromadlar.",
+  "Dividends": "Dividendlar",
+  "Business income": "Biznes daromadi",
+  "Interest income": "Foiz daromadi",
+  "{count} months": "{count} oy",
+  "Recorded income in this period": "Davr uchun qayd etilgan daromad",
+  "Monthly estimate · {month}": "Oylik taxmin · {month}",
+  "Dividends received": "Olingan dividendlar",
+  "Some income cannot be converted. Displayed chart amounts are incomplete.": "Ayrim daromadlarni konvertatsiya qilib bo‘lmadi. Grafikdagi summalar to‘liq emas.",
+  "Income source": "Daromad manbasi",
+  "Solid bars show recorded one-time income and Tracker receipts. The outlined bar is this month’s estimate, including recurring salary and asset income; it is not added to received income. Older months show recorded payments only.": "To‘liq ustunlar bir martalik daromadlar va Trekerdagi tushumlarni ko‘rsatadi. Konturli ustun — joriy oy uchun muntazam maosh va aktivlar daromadi taxmini; u olingan daromadga qo‘shilmaydi. O‘tgan oylar faqat qayd etilgan tushumlarni ko‘rsatadi.",
+  "Record stock dividends as Income received in the stock’s Tracker. Salary and other recurring plans are managed in Income & expenses. Current exchange rates are used for this chart.": "Aksiya dividendlarini uning Trekerida «Olingan daromad» sifatida qayd eting. Maosh va boshqa muntazam rejalar «Daromad va xarajatlar» bo‘limida boshqariladi. Grafik joriy valyuta kurslaridan foydalanadi."
 }
