@@ -39,3 +39,8 @@ test('matches POS translated dates and Tashkent timestamp rules',()=>{
  assert.equal(formatDateTime('2026-09-15T20:30:00Z','en-US'),'16 September 2026 01:30');
  assert.equal(formatDateTime('2026-09-16 09:30:00','ru-RU'),'16 сентября 2026 09:30');
 });
+
+test('year labels do not contain numeric grouping separators', async () => {
+ const { formatYear } = await import('../lib/format.ts');
+ for (const locale of ['en-US','ru-RU','uz-UZ']) assert.equal(formatYear(2026, locale), '2026');
+});

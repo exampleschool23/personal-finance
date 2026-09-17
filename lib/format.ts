@@ -51,3 +51,7 @@ export function formatMonthYear(value: string, locale: string) {
   const normalized = /^\d{4}-\d{2}$/.test(value) ? value + '-01' : value;
   return parseCalendarDate(normalized) ? posMonthYear(normalized, locale, '—') : '—';
 }
+
+export function formatYear(year: number, locale: string) {
+  return new Intl.NumberFormat(locale, { useGrouping: false, maximumFractionDigits: 0 }).format(year);
+}

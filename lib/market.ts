@@ -37,5 +37,5 @@ export function marketEntry(entry: Entry, currency: Entry['currency'], market: M
   const cost = convertAmount(entry.cost, entry.currency, currency, (market?.rates ?? market?.fx?.rate));
   const estimatedMonthlyIncome = convertAmount(entry.estimated_monthly_income ?? 0, entry.currency, currency, market?.rates ?? market?.fx?.rate);
   // Never mix currencies when the exchange-rate feed is unavailable.
-  return amount === null || cost === null || estimatedMonthlyIncome === null ? null : { ...entry, amount, cost, currency, estimated_monthly_income: estimatedMonthlyIncome };
+  return amount === null || cost === null || estimatedMonthlyIncome === null ? null : { ...entry, amount, cost, currency, payment_principal: entry.payment_principal == null ? undefined : convertAmount(Number(entry.payment_principal), entry.currency, currency, market?.rates ?? market?.fx?.rate)!, payment_interest: entry.payment_interest == null ? undefined : convertAmount(Number(entry.payment_interest), entry.currency, currency, market?.rates ?? market?.fx?.rate)!, estimated_monthly_payment: convertAmount(entry.estimated_monthly_payment ?? 0, entry.currency, currency, market?.rates ?? market?.fx?.rate)!, estimated_monthly_income: estimatedMonthlyIncome };
 }

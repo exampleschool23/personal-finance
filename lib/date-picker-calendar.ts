@@ -16,3 +16,8 @@ export function buildRangeCalendar(monthKey: string) {
     return { date: iso, day: date.getUTCDate(), inMonth: iso.slice(0, 7) === monthKey };
   });
 }
+
+// Keep the chosen panel's month while anchoring the two consecutive calendars.
+export function calendarYearAnchor(monthKey: string, year: number, panel: 0 | 1) {
+  return shiftCalendarMonth(`${String(year).padStart(4, '0')}-${monthKey.slice(5)}`, -panel);
+}
