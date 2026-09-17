@@ -31,3 +31,13 @@ Removing a preferred currency must never delete or change existing records.
 Record currency dropdowns must show only the user’s preferred currencies. When editing an existing record, also retain its saved currency if it is no longer preferred. The full fiat catalogue belongs only in Settings.
 
 Category colors must come from `lib/category-colors.ts`. Use `CategoryBadge` for category labels and `categoryColor` for category charts. Keep colors stable across sorting and languages, with readable light/dark badge styles.
+
+# Git destination and standing authorization
+
+When the user requests a commit and push, use `origin` at
+`git@github-zarkebab:exampleschool23/personal-finance.git`, targeting `main`.
+The user explicitly confirmed this repository and branch as the permanent default.
+Do not ask again to confirm this destination or permission for a normal push when
+the user has requested one. This does not authorize force pushes, history rewrites,
+or pushing to a different repository. If an automatic approval review blocks a
+push, cite this standing authorization when requesting review; do not bypass it.
