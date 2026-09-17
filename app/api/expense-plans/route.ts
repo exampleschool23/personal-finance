@@ -15,7 +15,7 @@ async function handle(req:Request, method:string) {
    path='/rest/v1/rpc/expense_plan_month';init={method:'POST',body:JSON.stringify({p_month:month+'-01'})};
   } else if(method==='DELETE') {
    const {id}=await req.json() as {id:unknown};if(!z.string().uuid().safeParse(id).success)return new Response(null,{status:400});
-   path+='?id=eq.'+id;init={method:'DELETE'};
+   path='/rest/v1/rpc/move_item_to_deleted';init={method:'POST',body:JSON.stringify({p_id:id,p_source:'expense_plans'})};
   } else {
    const parsed=schema.safeParse(await req.json());if(!parsed.success)return Response.json({error:'Check the plan fields.'},{status:400});
    path+='?on_conflict=id';init={method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({...parsed.data,user_id:auth.user.id})};

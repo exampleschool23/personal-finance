@@ -11,10 +11,10 @@ let calls=[];
 const supa=async(path,init,token)=>{calls.push({path,body:JSON.parse(init.body),token});return Response.json({records:[],total:45,page:2,pageSize:10});};
 const get=new Function('z','kinds','session','supa','sameOrigin','isCurrency','income','expenses',js+';return GET;')(z,kinds,async()=>({user:{id:'owner'},token:'test-token'}),supa,()=>true,isCurrency,income,expenses);
 test('requests a bounded server page with section and optional currency',async()=>{
- calls=[];const response=await get(new Request('https://local/api/records?page=2&section=assets&currency=UZS&summary=1'));
+ calls=[];const response=await get(new Request('https://local/api/records?page=2&section=cashflow&currency=UZS&summary=1'));
  assert.equal(response.status,200);assert.equal(calls.length,1);
  assert.equal(calls[0].path,'/rest/v1/rpc/finance_records_page');
- assert.deepEqual(calls[0].body,{p_page:2,p_section:'assets',p_currency:'UZS',p_summary:true});
+ assert.deepEqual(calls[0].body,{p_page:2,p_section:'cashflow',p_currency:'UZS',p_summary:true});
  assert.equal(calls[0].token,'test-token');
 });
 test('rejects invalid pagination rather than issuing an unrestricted query',async()=>{

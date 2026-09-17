@@ -1,4 +1,5 @@
 "use client";
+import { LoadingPlaceholder } from '@/components/loading-placeholder';
 import { useEffect, useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -40,7 +41,7 @@ export function InvestmentTracker({record,onClose,onSaved,onPayment}:{record:Ent
  return <Dialog open onOpenChange={open=>{if(!open&&!busy)onClose();}}><DialogContent className="record-dialog investment-tracker" showCloseButton={!busy}>
   <DialogTitle>{record.name} · {t('Tracker')}</DialogTitle>
   <DialogDescription>{t('Dated values and actual cash movements. Estimates stay separate.')}</DialogDescription>
-  {loading?<p role="status">{t('Loading history…')}</p>:<>
+  {loading?<LoadingPlaceholder label={t('Loading history…')}/>:<>
    {deposit&&<div className="ownership-summary"><p>{t('Estimated interest for {month}: {amount}', {month:formatMonthYear(depositToday().slice(0,7),locale),amount:money(depositInterest(events,record.rate))})}</p><p className="muted">{t('Annual rate divided by twelve, weighted by days at each recorded balance. The latest balance continues to month-end. No compounding; changing the rate recalculates the whole month.')}</p><p className="muted">{t('Estimates start at the first dated balance. Add an earlier Value update if this account was already open. Interest is not automatically added to your balance.')}</p></div>}
    <div className="tracker-metrics">
     <div><small>{t(mortgage?'Outstanding balance':'Latest tracked value (your share)')}</small><strong>{stats.balance===null?'—':money(stats.balance)}</strong></div>

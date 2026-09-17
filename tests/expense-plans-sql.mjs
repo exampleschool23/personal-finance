@@ -11,7 +11,10 @@ test('expense plan migration: ownership, spending links, month totals and update
   await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${owner}'),('${other}');`);
   // Exercise the incremental migration against the previous fresh setup.
   const migration=fs.readFileSync('migrations/013_monthly_expense_plans.sql','utf8');
-  const setup=fs.readFileSync('database/setup.sql','utf8');assert.ok(setup.endsWith(migration));
+  const fullSetup=fs.readFileSync('database/setup.sql','utf8');
+  const nextMigration=fs.readFileSync('migrations/014_recurring_stop_dates.sql','utf8');
+  assert.ok(fullSetup.includes(nextMigration));
+  const setup=fullSetup.slice(0,fullSetup.indexOf(nextMigration)).trimEnd()+'\n';assert.ok(setup.endsWith(migration));
   await db.exec(setup.slice(0,-migration.length));await db.exec(migration);
   await db.exec(`SET ROLE authenticated; SET request.jwt.claim.sub='${owner}';INSERT INTO expense_plans(id,name,category,currency,amount,start_date) VALUES('${plan}','Mum','Family support','USD',500,'2026-09-01');`);
   const spend=(n,amount,date='2026-09-10',extra={})=>db.query('INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency,expense_plan_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[id(n),owner,'Mum',extra.kind||'Other expense',extra.currency||'USD',amount,date,extra.frequency||'Once',extra.plan||plan]);

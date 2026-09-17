@@ -34,3 +34,18 @@ test('record API preserves the expense plan link and rejects linked recurring or
  calls=[];assert.equal((await post(request(record))).status,200);assert.equal(JSON.parse(calls[0].init.body).expense_plan_id,plan.id);
  for(const patch of [{frequency:'Monthly'},{kind:'Salary'},{business_id:plan.id},{expense_plan_id:'bad'}])assert.equal((await post(request({...record,...patch}))).status,400);
 });
+
+test('recurring stop date saves without deleting and rejects invalid intervals',async()=>{
+ const post=new Function('z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;')(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
+ const record={id:plan.id,name:'Salary',kind:'Salary',currency:'EUR',amount:100,quantity:1,cost:0,rate:0,date:'2026-09-10',frequency:'Monthly',notes:'',end_date:'2026-09-30'};
+ calls=[];assert.equal((await post(request(record))).status,200);assert.equal(calls[0].init.method,'POST');assert.equal(JSON.parse(calls[0].init.body).end_date,record.end_date);
+ for(const patch of [{end_date:'2026-09-09'},{end_date:'2026-02-30'},{frequency:'Once'},{kind:'Cash'}]){calls=[];assert.equal((await post(request({...record,...patch}))).status,400);assert.equal(calls.length,0);}
+ assert.equal((await post(request({...record,end_date:null}))).status,200);
+});
+test('delete endpoints require the recoverable deletion RPC',async()=>{
+ calls=[];assert.equal((await api.DELETE(request({id:plan.id},'DELETE'))).status,200);
+ assert.equal(calls[0].path,'/rest/v1/rpc/move_item_to_deleted');assert.deepEqual(JSON.parse(calls[0].init.body),{p_id:plan.id,p_source:'expense_plans'});
+ const remove=new Function('z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return DELETE;')(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
+ calls=[];assert.equal((await remove(request({id:plan.id},'DELETE'))).status,200);
+ assert.equal(calls[0].path,'/rest/v1/rpc/move_item_to_deleted');assert.deepEqual(JSON.parse(calls[0].init.body),{p_id:plan.id,p_source:'finance_records'});
+});

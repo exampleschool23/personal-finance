@@ -1,0 +1,40 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+test('deletion archives atomically; owner-only restore keeps details, dependencies and duplicate safety',{skip:!process.env.PGLITE_MODULE},async()=>{
+ const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
+ const owner='10000000-0000-4000-8000-000000000001',other='10000000-0000-4000-8000-000000000002';
+ const record='20000000-0000-4000-8000-000000000001',plan='20000000-0000-4000-8000-000000000002',payment='20000000-0000-4000-8000-000000000003';
+ try{
+  await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${owner}'),('${other}');`);
+  await db.exec(fs.readFileSync('database/setup.sql','utf8'));
+  await db.exec(`SET ROLE authenticated;SET request.jwt.claim.sub='${owner}';INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,end_date,frequency,notes) VALUES('${record}','${owner}','Salary','Salary','USD',1234,'2026-01-01','2026-09-30','Monthly','original');`);
+  const original=(await db.query('SELECT * FROM finance_records WHERE id=$1',[record])).rows[0];
+  await db.query("SELECT move_item_to_deleted($1,'finance_records')",[record]);
+  assert.equal((await db.query('SELECT * FROM finance_records WHERE id=$1',[record])).rows.length,0);
+  const archived=(await db.query('SELECT * FROM deleted_items')).rows[0];assert.equal(archived.data.notes,'original');
+  await db.exec(`SET request.jwt.claim.sub='${other}'`);
+  assert.equal((await db.query('SELECT * FROM deleted_items')).rows.length,0);
+  await db.query('SELECT restore_deleted_item($1)',[archived.id]);
+  assert.equal((await db.query('SELECT * FROM finance_records')).rows.length,0);
+  await db.exec(`SET request.jwt.claim.sub='${owner}'`);
+  assert.equal((await db.query('SELECT * FROM deleted_items')).rows.length,1);
+  await assert.rejects(db.query("UPDATE deleted_items SET data='{}'"),/permission denied/);
+  await db.query('SELECT restore_deleted_item($1)',[archived.id]);await db.query('SELECT restore_deleted_item($1)',[archived.id]);
+  assert.deepEqual((await db.query('SELECT * FROM finance_records WHERE id=$1',[record])).rows[0],original);
+  assert.equal((await db.query('SELECT * FROM deleted_items')).rows.length,0);
+  await db.exec(`INSERT INTO expense_plans(id,name,category,currency,amount,start_date) VALUES('${plan}','Food','Groceries','USD',500,'2026-01-01');INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,expense_plan_id) VALUES('${payment}','${owner}','Food','Living expense','USD',100,'2026-09-01','${plan}');`);
+  await assert.rejects(db.query("SELECT move_item_to_deleted($1,'expense_plans')",[plan]),/foreign key/);
+  assert.equal((await db.query('SELECT * FROM deleted_items')).rows.length,0);
+  await db.query("SELECT move_item_to_deleted($1,'finance_records')",[payment]);
+  const removedPayment=(await db.query("SELECT id FROM deleted_items WHERE source='finance_records'")).rows[0].id;
+  await db.query("SELECT move_item_to_deleted($1,'expense_plans')",[plan]);
+  const removedPlan=(await db.query("SELECT id FROM deleted_items WHERE source='expense_plans'")).rows[0].id;
+  await assert.rejects(db.query('SELECT restore_deleted_item($1)',[removedPayment]),/Check the expense plan/);
+  assert.equal((await db.query('SELECT * FROM deleted_items')).rows.length,2);
+  await db.query('SELECT restore_deleted_item($1)',[removedPlan]);
+  await db.query('SELECT restore_deleted_item($1)',[removedPayment]);
+  assert.equal((await db.query('SELECT * FROM deleted_items')).rows.length,0);
+  assert.equal((await db.query('SELECT expense_plan_id FROM finance_records WHERE id=$1',[payment])).rows[0].expense_plan_id,plan);
+ }finally{await db.close();}
+});

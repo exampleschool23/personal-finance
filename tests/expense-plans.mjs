@@ -24,3 +24,14 @@ test('multiple plans and legacy recurring expenses add without double counting',
  assert.equal(convertAmount(totals[0].projected,'USD','UZS',12000),6000000);
  assert.equal(convertAmount(500,'EUR','USD'),null);
 });
+
+test('selecting October adds future plans to mortgage estimates and uses that month spending',()=>{
+ const future={...plan,start_date:'2026-10-19',spent:0};
+ const mortgage={kind:'Mortgage',amount:90000,estimated_monthly_payment:1600};
+ const september=estimatedCashFlow([mortgage],expensePlanTotals(future,'2026-09').projected);
+ const october=estimatedCashFlow([mortgage],expensePlanTotals(future,'2026-10').projected);
+ assert.equal(september.monthlyExpenses+september.mortgagePayments,1600);
+ assert.equal(october.monthlyExpenses+october.mortgagePayments,2100);
+ const overspent=estimatedCashFlow([mortgage],expensePlanTotals({...future,spent:650},'2026-10').projected);
+ assert.equal(overspent.monthlyExpenses+overspent.mortgagePayments,2250);
+});
