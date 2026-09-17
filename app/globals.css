@@ -982,3 +982,29 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .asset-account-section .asset-card-actions :is(button,a){min-height:44px}
 @media(min-width:1800px){.asset-account-section>.asset-card-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:760px){.asset-account-section>.asset-card-grid{grid-template-columns:1fr}}
+
+.expense-plan-choice{display:grid;gap:10px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--accent)}
+.expense-plan-choice p{font-size:var(--type-small);line-height:1.5;margin:0}
+
+.record-dialog.expense-dialog{display:flex;flex-direction:column;overflow:hidden}
+.expense-dialog>[data-slot="dialog-title"],.expense-dialog>[data-slot="dialog-description"]{flex-shrink:0}
+.expense-dialog .expense-form{display:flex;flex-direction:column;min-height:0;overflow:hidden;gap:16px}
+.expense-form-scroll{display:grid;gap:20px;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px}
+.expense-form-actions{flex-shrink:0}
+.expense-plan-hint{font-size:var(--type-small);margin:-8px 0 0}
+.record-dialog .record-form .expense-amount-row{grid-template-columns:minmax(0,1fr) 112px;align-items:start}
+.expense-amount-row>.expense-amount-field:only-child{grid-column:1/-1}
+.expense-amount-row>label{min-width:0}
+.expense-amount-row :is(input,select){height:46px;min-height:46px!important;font-size:var(--type-body)}
+.expense-optional-details{border-top:1px solid var(--border);padding-top:12px}
+.expense-optional-details>summary{cursor:pointer;font-weight:500;min-height:44px;align-content:center}
+.expense-optional-fields{display:grid;gap:18px;padding:12px 0 4px}
+
+.expense-mode-tabs{min-height:0;overflow:hidden;gap:16px}
+.expense-mode-tabs>[data-slot="tabs-list"]{width:100%;height:48px;flex-shrink:0;padding:4px}
+.expense-mode-tabs [data-slot="tabs-trigger"]{font-size:var(--type-body);min-height:40px}
+.expense-mode-tabs>.expense-form-scroll{margin:0}
+
+.cash-account-field{display:grid;gap:8px;min-width:0;align-content:start}.cash-account-field p{font-size:var(--type-small);line-height:1.5;margin:0}
+
+.monthly-mortgage-payments{margin-bottom:24px;min-width:0}.monthly-mortgage-payments .panel-title p{margin-top:8px;font-size:var(--type-small);max-width:760px}

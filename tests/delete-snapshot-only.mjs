@@ -7,8 +7,8 @@ test('automatic opening snapshots can be deleted and restored without losing dat
  const owner=id(900),other=id(901);
  try{
   await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${owner}'),('${other}');`);
-  const setup=fs.readFileSync('database/setup.sql','utf8'),migration=fs.readFileSync('migrations/032_delete_snapshot_only_records.sql','utf8');assert.ok(setup.endsWith(migration));
-  await db.exec(setup.slice(0,-migration.length));
+  const setup=fs.readFileSync('database/setup.sql','utf8'),migration=fs.readFileSync('migrations/032_delete_snapshot_only_records.sql','utf8');assert.ok(setup.includes(migration));
+  await db.exec(setup.slice(0,setup.indexOf(migration)));
   await db.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date) VALUES($1,$2,'Debt for car','Debt','UZS',140000000,'2030-01-01')",[id(0),owner]);
   await db.exec(migration);
   await db.exec(`SET ROLE authenticated;SET request.jwt.claim.sub='${owner}';`);

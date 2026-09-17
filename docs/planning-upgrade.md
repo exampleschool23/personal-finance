@@ -113,3 +113,9 @@ Cards show each target's held and desired quantities. Overall progress is the eq
 Targets are saved atomically inside the owner-scoped goal. Database validation checks all account ownership/type references; linked accounts cannot change identity/type or be removed until their targets are updated, including archived goals. Legacy scalar columns mirror the first target for compatibility. An older client cannot overwrite a multi-holding goal with a single target accidentally. JSON backups include every target automatically.
 
 If additional coins disappear after Save, check that migration 027 has actually been applied to the connected database. The older save function accepts the targets payload but ignores it, retaining only the first holding. The API now checks for the targets column before saving investment targets, so a missing migration leaves the editor open with an error rather than reporting success. The goal editor keeps Save and errors outside the scrolling fields. Regression coverage reproduces the old behavior and verifies editing a 4 BTC goal to include 30,000 TON after migration.
+
+## Cash account linking across currencies
+
+Apply `034_cashflow_account_conversion.sql` after migration 033 before deploying this app update. It adds stored dated conversion metadata for linked income/expenses and scheduled payments, and atomic cross-currency repayments with interest. Existing same-currency records retain their original values. Fresh databases include this change in `database/setup.sql`.
+
+All cash accounts are offered regardless of currency. The form previews the dated rate and cash amount; the server independently verifies it before saving. Edits reverse the original stored conversion before applying the new amount. Retries reuse saved rates, and missing rates prevent a cross-currency write.
