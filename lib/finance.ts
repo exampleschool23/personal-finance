@@ -11,11 +11,15 @@ export const expenses:readonly string[] = ['Rent expense','Living expense','Char
 export const value=(e:Entry)=>['Stock','Crypto'].includes(e.kind)?e.amount*e.quantity:e.kind==='Business'?e.amount*(e.ownership_percentage ?? 100)/100:e.amount;
 export const monthly=(e:Entry,month?:string)=>month && ((e.date && e.date.slice(0,7)>month) || (e.end_date && e.end_date.slice(0,7)<month)) ? 0 : e.frequency==='Yearly'?e.amount/12:e.frequency==='Monthly'?e.amount:0;
 
+// Salary is pay for work, even when its employer is a business the user owns.
+// Only linked business distributions replace the business income estimate.
+export const duplicatesBusinessEstimate = (entry: Entry, businessIds: Set<string>) => entry.kind === 'Other income' && !!entry.business_id && businessIds.has(entry.business_id);
+
 export function estimatedCashFlow(entries: Entry[], expensePlanProjection = 0, month?: string) {
  const estimatedAssets = entries.filter(e => ['Business','Property','Deposit'].includes(e.kind) && (e.estimated_monthly_income ?? 0) > 0);
  const businessIds = new Set(estimatedAssets.filter(e => e.kind === 'Business').map(e => e.id));
  const estimatedIncome = estimatedAssets.reduce((sum,e) => sum + (e.estimated_monthly_income ?? 0), 0);
- const otherIncome = entries.filter(e => income.includes(e.kind) && !(e.business_id && businessIds.has(e.business_id))).reduce((sum,e) => sum + monthly(e, month), 0);
+ const otherIncome = entries.filter(e => income.includes(e.kind) && !duplicatesBusinessEstimate(e, businessIds)).reduce((sum,e) => sum + monthly(e, month), 0);
  const monthlyExpenses = entries.filter(e => expenses.includes(e.kind) && !e.expense_plan_id).reduce((sum,e) => sum + monthly(e, month), expensePlanProjection);
  const mortgagePayments = entries.filter(e => e.kind === 'Mortgage' && e.amount > 0).reduce((sum,e) => sum + (e.estimated_monthly_payment ?? 0), 0);
  return { estimatedAssets, otherIncome, plannedIncome: estimatedIncome + otherIncome, monthlyExpenses, mortgagePayments, estimatedIncome, forecast: estimatedIncome + otherIncome - monthlyExpenses - mortgagePayments };

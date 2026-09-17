@@ -9,9 +9,9 @@ import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
 import { portfolioHistory, portfolioWindow } from '@/lib/portfolio-history';
 import { historyChartDate, type HistoryEvent } from '@/lib/investment-history';
-import type { MarketData } from '@/lib/market';
+import { type MarketData } from '@/lib/market';
 
-type History = { records: Entry[]; events: HistoryEvent[] };
+type History = { records: Entry[]; events: HistoryEvent[]; cashflows?: Entry[] };
 export function PortfolioOverview({ entries, currency, market, demo, revision }: { entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
  const { t, locale } = useLanguage();
  const [history, setHistory] = useState<History | null>(null);
