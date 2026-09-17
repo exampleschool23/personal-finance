@@ -6,7 +6,7 @@ const schema = z.object({
  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v => !Number.isNaN(Date.parse(v)) && new Date(v).toISOString().slice(0,10) === v),
  notes: z.string().max(2000),
 }).refine(v => v.principal + v.interest > 0 && v.principal + v.interest <= 1e15);
-const errors = ['Mortgage not found.', 'Principal exceeds the outstanding balance.', 'This payment was already saved with different details.', 'Check the payment fields.'];
+const errors = ['Payment date cannot precede the start date.','Mortgage not found.', 'Principal exceeds the outstanding balance.', 'This payment was already saved with different details.', 'Check the payment fields.'];
 export async function POST(req: Request) {
  if (!sameOrigin(req)) return new Response(null, { status: 403 });
  try {

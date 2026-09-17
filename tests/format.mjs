@@ -62,3 +62,15 @@ test('year labels do not contain numeric grouping separators', async () => {
  const { formatYear } = await import('../lib/format.ts');
  for (const locale of ['en-US','ru-RU','uz-UZ']) assert.equal(formatYear(2026, locale), '2026');
 });
+
+test('planner input display hides calculated decimal tails without changing precision', () => {
+ const calculated = 13782.113487716848;
+ for (const locale of ['en-US', 'ru-RU', 'uz-UZ']) {
+  assert.equal(numberInputValue(calculated, locale, 0), numberInputValue(13782, locale));
+  assert.equal(numberInputValue(3173.82, locale, 0), numberInputValue(3174, locale));
+  assert.equal(numberInputValue(0, locale, 0), '0');
+  assert.equal(formatNumberInput(numberInputValue(calculated, locale), locale).value, calculated);
+  assert.equal(formatNumberInput(numberInputValue(0.00001234, locale), locale).value, 0.00001234);
+  assert.equal(formatNumberInput(numberInputValue(123.45, locale), locale).value, 123.45);
+ }
+});

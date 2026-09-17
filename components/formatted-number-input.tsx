@@ -4,15 +4,16 @@ import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/components/language-provider';
 import { formatNumberInput, numberInputValue, numberSymbols } from '@/lib/format';
 
-export function FormattedNumberInput({ value, onValueChange, max = 1e15, required = true }: { value: number; onValueChange: (value: number) => void; max?: number; required?: boolean }) {
+export function FormattedNumberInput({ value, onValueChange, max = 1e15, required = true, displayFractionDigits = 20 }: { value: number; onValueChange: (value: number) => void; max?: number; required?: boolean; displayFractionDigits?: number }) {
   const { locale } = useLanguage();
-  const [text, setText] = useState(() => value === 0 ? '' : numberInputValue(value, locale));
+  const [text, setText] = useState(() => value === 0 ? '' : numberInputValue(value, locale, displayFractionDigits));
   const lastEmitted = useRef(value);
   const previousLocale = useRef(locale);
+  const previousDisplayFractionDigits = useRef(displayFractionDigits);
   useEffect(() => {
-    if (value !== lastEmitted.current || locale !== previousLocale.current) setText(value === 0 ? '' : numberInputValue(value, locale));
-    lastEmitted.current = value; previousLocale.current = locale;
-  }, [value, locale]);
+    if (value !== lastEmitted.current || locale !== previousLocale.current || displayFractionDigits !== previousDisplayFractionDigits.current) setText(value === 0 ? '' : numberInputValue(value, locale, displayFractionDigits));
+    lastEmitted.current = value; previousLocale.current = locale; previousDisplayFractionDigits.current = displayFractionDigits;
+  }, [value, locale, displayFractionDigits]);
   return <Input type="text" inputMode="decimal" autoComplete="off" placeholder="0" value={text} required={required && value !== 0} onChange={event => {
     const input = event.currentTarget;
     const raw = input.value, cursor = input.selectionStart ?? raw.length;
@@ -29,5 +30,5 @@ export function FormattedNumberInput({ value, onValueChange, max = 1e15, require
       while (position < parsed.text.length && significant(parsed.text.slice(0, position)) < before) position++;
       if (document.activeElement === input) input.setSelectionRange(position, position);
     });
-  }} onBlur={() => { if (text !== '') setText(value === 0 ? '' : numberInputValue(value, locale)); }} />;
+  }} onBlur={() => { if (text !== '') setText(value === 0 ? '' : numberInputValue(value, locale, displayFractionDigits)); }} />;
 }

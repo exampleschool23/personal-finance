@@ -5,6 +5,14 @@ export const coins = [
   ['USDC', 'USD Coin'], ['XRP', 'XRP'], ['DOGE', 'Dogecoin'], ['ADA', 'Cardano'],
   ['AVAX', 'Avalanche'], ['LINK', 'Chainlink'], ['LTC', 'Litecoin'], ['BCH', 'Bitcoin Cash'],
   ['DOT', 'Polkadot'], ['XLM', 'Stellar'], ['SHIB', 'Shiba Inu'], ['UNI', 'Uniswap'],
+  ['TON', 'Toncoin'], ['BNB', 'BNB'], ['TRX', 'TRON'], ['SUI', 'Sui'],
+  ['NEAR', 'NEAR Protocol'], ['APT', 'Aptos'], ['ATOM', 'Cosmos'], ['INJ', 'Injective'],
+  ['ARB', 'Arbitrum'], ['OP', 'Optimism'], ['POL', 'Polygon'], ['AAVE', 'Aave'],
+  ['ICP', 'Internet Computer'], ['FIL', 'Filecoin'], ['HBAR', 'Hedera'], ['ALGO', 'Algorand'],
+  ['ETC', 'Ethereum Classic'], ['XTZ', 'Tezos'], ['XMR', 'Monero'], ['DAI', 'Dai'],
+  ['WBTC', 'Wrapped Bitcoin'], ['PAXG', 'PAX Gold'], ['PEPE', 'Pepe'], ['BONK', 'Bonk'],
+  ['RENDER', 'Render'], ['SEI', 'Sei'], ['STX', 'Stacks'], ['GRT', 'The Graph'],
+  ['CRV', 'Curve DAO'], ['LDO', 'Lido DAO'], ['TAO', 'Bittensor'], ['JUP', 'Jupiter'],
 ] as const;
 export const coinName = (coin: readonly [string, string]) => `${coin[1]} (${coin[0]})`;
 export type Instrument = { kind: 'Crypto' | 'Stock'; symbol: string };

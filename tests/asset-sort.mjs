@@ -24,19 +24,20 @@ test('asset API supplies all holdings across database batches with owner authent
  const supa=async(path, init, token)=>{
   calls.push({path,token});
   if(path.includes('/rpc/')) return Response.json({records:[],total:501,page:1});
-  return Response.json(new URL('https://db'+path).searchParams.get('offset') === '0' ? batch : [{id:'last'}]);
+  return Response.json(new URL('https://db'+path).searchParams.get('offset') === '0' ? batch : [{id:'last',kind:'Crypto',currency:'EUR',name:'Bitcoin (BTC)',amount:50000,quantity:1,holding_account_id:'exchange'},{id:'stock',kind:'Stock',currency:'UZS',name:'AAPL',amount:100,quantity:2,holding_account_id:'broker'}]);
  };
  const api=new Function('z','isCurrency','kinds','income','expenses','assetRecordKinds','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return GET;')(z,isCurrency,kinds,income,expenses,assetRecordKinds,async()=>({token:'owner',user:{id:'owner'}}),supa,()=>true,async()=>[]);
  const response=await api(new Request('https://local/api/records?section=assets&currency=USD'));
  assert.equal(response.status,200);
  const data=await response.json();
- assert.equal(data.records.length,501);
- assert.equal(data.total,501);
+ assert.equal(data.records.length,502);
+ assert.equal(data.total,502);
  assert.equal(calls.length,3);
+ assert.deepEqual(data.records.slice(-2).map(row=>[row.kind,row.currency,row.holding_account_id]),[['Crypto','EUR','exchange'],['Stock','UZS','broker']]);
  for(const call of calls.slice(1)){
   const params=new URL('https://db'+call.path).searchParams;
   assert.equal(call.token,'owner');
-  assert.equal(params.get('currency'),'eq.USD');
+  assert.equal(params.get('currency'),null);
   assert.equal(params.get('kind'),`in.(${assetRecordKinds.join(',')})`);
  }
 });

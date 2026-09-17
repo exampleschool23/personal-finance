@@ -37,3 +37,15 @@ test('ownership is constrained to 0–100 and defaults to full ownership',()=>{
  for(const percentage of [-1,100.1,Infinity]) assert.equal(schema.safeParse({...business,ownership_percentage:percentage}).success,false);
  for(const percentage of [0,40,100]) assert.equal(schema.safeParse({...business,ownership_percentage:percentage}).success,true);
 });
+
+
+test('debts, loans and mortgages keep a separate historical start date and later due date',()=>{
+ for(const kind of ['Debt','Loan','Mortgage']){
+  const loan={...record,kind,opened_on:'2026-08-01',date:'2026-12-01'};
+  const parsed=schema.parse(loan);assert.equal(parsed.opened_on,'2026-08-01');assert.equal(parsed.date,'2026-12-01');
+  assert.equal(schema.safeParse({...loan,date:'2026-07-31'}).success,false);
+  assert.equal(schema.safeParse({...loan,opened_on:'2026-02-30'}).success,false);
+  assert.equal(schema.safeParse({...loan,opened_on:null}).success,true); // Legacy unknown dates stay valid.
+ }
+ assert.equal(schema.safeParse({...record,kind:'Salary',date:'2026-12-01',opened_on:'2026-08-01'}).success,false);
+});

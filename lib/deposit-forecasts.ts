@@ -21,7 +21,7 @@ export async function depositForecasts(token: string): Promise<Entry[]> {
   const events = await readAll<HistoryEvent>(`/rest/v1/investment_history?record_id=in.(${batch.map(d=>d.id).join(',')})&select=*&order=occurred_on.asc,created_at.asc,id.asc`, token);
   const byRecord = new Map<string, HistoryEvent[]>();
   for (const event of events) { const group = byRecord.get(event.record_id) ?? []; group.push(event); byRecord.set(event.record_id, group); }
-  for (const deposit of batch) deposit.estimated_monthly_income = depositInterest(byRecord.get(deposit.id) ?? [], Number(deposit.rate));
+  for (const deposit of batch) deposit.estimated_monthly_income = depositInterest(byRecord.get(deposit.id) ?? [], Number(deposit.rate), undefined, deposit.deposit_compounding);
  }
- return deposits.map(deposit => ({id:deposit.id,name:deposit.name,kind:deposit.kind,currency:deposit.currency,amount:deposit.amount,quantity:deposit.quantity,cost:deposit.cost,rate:deposit.rate,date:deposit.date,frequency:deposit.frequency,notes:'',estimated_monthly_income:deposit.estimated_monthly_income,record_count:1}));
+ return deposits.map(deposit => ({id:deposit.id,name:deposit.name,kind:deposit.kind,currency:deposit.currency,amount:deposit.amount,quantity:deposit.quantity,cost:deposit.cost,rate:deposit.rate,date:deposit.date,frequency:deposit.frequency,notes:'',estimated_monthly_income:deposit.estimated_monthly_income,deposit_compounding:deposit.deposit_compounding,record_count:1}));
 }

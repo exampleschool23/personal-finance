@@ -22,16 +22,24 @@ test('mortgage payments show principal and interest without inventing a historic
 });
 const source=fs.readFileSync('app/api/investment-history/route.ts','utf8').replace(/^import .*;\n/gm,'').replace(/export async function/g,'async function');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-let signedIn=true,calls=[];
-const api=new Function('z','session','supa','sameOrigin',js+';return {GET,POST};')(z,async()=>signedIn?{token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return Response.json(path.includes('/rpc/')?{ok:true}:[]);},req=>req.headers.get('origin')==='https://local');
+let signedIn=true,calls=[],rpcError=null;
+const api=new Function('z','session','supa','sameOrigin',js+';return {GET,POST};')(z,async()=>signedIn?{token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return rpcError&&path.includes('/rpc/')?Response.json({message:rpcError},{status:400}):Response.json(path.includes('/rpc/')?{ok:true}:[]);},req=>req.headers.get('origin')==='https://local');
 const body={id:'10000000-0000-4000-8000-000000000001',record_id:'10000000-0000-4000-8000-000000000002',type:'income',date:'2026-01-01',amount:400,balance:null,notes:'Rent'};
 const request=patch=>new Request('https://local/api/investment-history',{method:'POST',headers:{origin:'https://local','Content-Type':'application/json'},body:JSON.stringify({...body,...patch})});
 test('saves a cash receipt through the owner-scoped atomic RPC with a stable request id',async()=>{
  calls=[];assert.equal((await api.POST(request({}))).status,200);
  assert.equal(calls[0].token,'owner-token');assert.equal(calls[0].path,'/rest/v1/rpc/record_investment_event');assert.equal(JSON.parse(calls[0].init.body).p_id,body.id);
 });
+test('principal additions and repayments send an amount without a client-supplied balance',async()=>{
+ for(const type of ['contribution','withdrawal']){
+  calls=[];assert.equal((await api.POST(request({type,amount:123.45,balance:null,account_id:'10000000-0000-4000-8000-000000000003'}))).status,200);
+  const payload=JSON.parse(calls[0].init.body);
+  assert.equal(calls[0].path,'/rest/v1/rpc/record_investment_with_account');assert.equal(payload.p_account,'10000000-0000-4000-8000-000000000003');
+  assert.equal(payload.p_type,type);assert.equal(payload.p_amount,123.45);assert.equal(payload.p_balance,null);
+ }
+});
 test('rejects invalid dates, mismatched balances, negative amounts, unauthenticated and cross-origin writes',async()=>{
- for(const patch of [{date:'2026-02-30'},{amount:-1},{amount:0},{balance:100},{type:'valuation',amount:0,balance:null},{record_id:'bad'}])assert.equal((await api.POST(request(patch))).status,400);
+ for(const patch of [{date:'2026-02-30'},{amount:-1},{amount:0},{balance:100},{type:'valuation',amount:0,balance:null},{record_id:'bad'},{type:'withdrawal',amount:100,balance:null},{type:'contribution',amount:100,balance:null},{account_id:'bad'}])assert.equal((await api.POST(request(patch))).status,400);
  signedIn=false;assert.equal((await api.POST(request({}))).status,401);signedIn=true;
  assert.equal((await api.POST(new Request('https://local',{method:'POST'}))).status,403);
 });
@@ -43,4 +51,13 @@ test('migration keeps owner RLS, atomic locks, idempotency and newer balances in
  const sql=fs.readFileSync('migrations/012_investment_history.sql','utf8');
  for(const required of ['ENABLE ROW LEVEL SECURITY','USING(user_id=auth.uid())','REVOKE ALL ON public.investment_history FROM PUBLIC,anon,authenticated','AND user_id=auth.uid() FOR UPDATE','existing.balance IS DISTINCT FROM p_balance','p_date>=last_date',"p_type IN ('income','expense')",'NEW.history_event_id','capture_mortgage_history'])assert.ok(sql.includes(required),required);
  assert.ok(fs.readFileSync('database/setup.sql','utf8').includes(sql));
+});
+
+test('account failures are confirmed validation errors so the user can correct the selection',async()=>{
+ try{
+  for(const error of ['Choose a cash account in the record currency.','Not enough money in the selected cash account.','Enter transactions on or after the latest cash balance date.','This update was already saved without an account.']){
+   rpcError=error;const result=await api.POST(request({account_id:'10000000-0000-4000-8000-000000000003'}));
+   assert.equal(result.status,400);assert.equal((await result.json()).error,error);
+  }
+ }finally{rpcError=null;}
 });

@@ -34,9 +34,9 @@ export function formatNumberInput(raw: string, locale: string): { text: string; 
   const grouped = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(BigInt(integer));
   return { text: grouped + (pieces.length === 2 ? decimal + pieces[1] : ''), value };
 }
-export function numberInputValue(value: number, locale: string) {
-  // Expand exponent notation without losing the precision already present in a JS number.
-  return new Intl.NumberFormat(locale, { maximumFractionDigits: 20, useGrouping: true }).format(value);
+export function numberInputValue(value: number, locale: string, maximumFractionDigits = 20) {
+  // Preserve precision by default. An explicit display limit only changes text, never the stored value.
+  return new Intl.NumberFormat(locale, { maximumFractionDigits, useGrouping: true }).format(value);
 }
 
 // Calendar controls use local dates; serialization never converts them through UTC.

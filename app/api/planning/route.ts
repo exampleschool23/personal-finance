@@ -1,10 +1,14 @@
+import { depositForecasts } from '@/lib/deposit-forecasts';
+import type { Entry } from '@/lib/finance';
 import { z } from 'zod';
+import { instrumentFor } from '@/lib/market';
 import { isCurrency } from '@/lib/currencies';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { readOwnerRows } from '@/lib/server-records';
 const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v);
 const id=z.string().uuid(), amount=z.number().finite().min(0).max(1e15);
 const base=z.object({id,account_id:id,target_id:id.nullable().optional(),amount,received:amount.default(0),fee:amount.default(0),date,notes:z.string().max(2000).default('')});
+const investmentTarget=z.object({holding_account_id:id,asset_kind:z.enum(['Stock','Crypto']),asset_symbol:z.string().trim().max(15),target:amount.positive().max(1e12),monthly_contribution:amount.max(1e12).nullable().default(null)}).refine(v=>instrumentFor({kind:v.asset_kind,name:v.asset_symbol})?.symbol===v.asset_symbol);
 const schemas={
  transfer:base.refine(v=>!!v.target_id&&v.target_id!==v.account_id&&v.amount>0&&v.received>0),
  reconcile:base.refine(v=>!v.target_id&&v.received===0&&v.fee===0),
@@ -13,13 +17,26 @@ const schemas={
  occurrence:z.object({id,account_id:id,target_id:id,date,notes:z.string().max(2000).default('')}),
  dismiss:z.object({id,target_id:id,date}),
  category:z.object({id,name:z.string().trim().min(1).max(80)}),
- goal:z.object({id,name:z.string().trim().min(1).max(120),account_id:id.nullable(),kind:z.enum(['savings','net_worth']).default('savings'),currency:z.string().refine(isCurrency).optional(),target:amount.positive(),allocated:amount,target_date:date.nullable(),archived:z.boolean().default(false),monthly_contribution:amount.nullable().default(null),annual_return:z.number().finite().min(0).max(100).default(0)}).refine(v=>v.allocated<=v.target&&(v.kind==='net_worth'?v.account_id===null&&v.allocated===0&&!!v.currency&&!!v.target_date:!!v.account_id)),
+ goal:z.object({investment_targets:z.array(investmentTarget).max(50).optional(),id,name:z.string().trim().min(1).max(120),account_id:id.nullable(),kind:z.enum(['savings','net_worth','investment']).default('savings'),currency:z.string().refine(isCurrency).optional(),target:amount.positive(),allocated:amount,target_date:date.nullable(),archived:z.boolean().default(false),monthly_contribution:amount.nullable().default(null),annual_return:z.number().finite().min(0).max(100).default(0),holding_account_id:id.nullable().default(null),asset_kind:z.enum(['Stock','Crypto']).nullable().default(null),asset_symbol:z.string().trim().max(15).nullable().default(null)}).transform(v=>v.kind==='investment'&&v.investment_targets?.length?{...v,...v.investment_targets[0]}:v).refine(v=>{
+  if(v.investment_targets!==undefined){
+   if(v.kind==='investment'&&!v.investment_targets.length)return false;
+   if(v.kind!=='investment'&&v.investment_targets.length)return false;
+   if(new Set(v.investment_targets.map(item=>item.holding_account_id.toLowerCase()+':'+item.asset_symbol)).size!==v.investment_targets.length)return false;
+  }
+  if(v.allocated>v.target)return false;
+  if(v.kind==='investment')return v.account_id===null&&v.allocated===0&&!!v.holding_account_id&&!!v.asset_kind&&!!v.asset_symbol&&instrumentFor({kind:v.asset_kind,name:v.asset_symbol})?.symbol===v.asset_symbol&&v.annual_return===0&&v.target<=1e12&&(v.monthly_contribution===null||v.monthly_contribution<=1e12);
+  if(v.holding_account_id!==null||v.asset_kind!==null||v.asset_symbol!==null)return false;
+  return v.kind==='net_worth'?v.account_id===null&&v.allocated===0&&!!v.currency&&!!v.target_date:!!v.account_id;
+ }),
 };
 export async function GET(){
  try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
- const tables={records:'finance_records',categories:'custom_categories',goals:'savings_goals',occurrences:'payment_occurrences',activity:'account_activity',investmentLinks:'investment_account_links'};
+ const tables={movements:'asset_movements',holdingAccounts:'holding_accounts',records:'finance_records',categories:'custom_categories',goals:'savings_goals',occurrences:'payment_occurrences',activity:'account_activity',investmentLinks:'investment_account_links'};
  const results=await Promise.all(Object.entries(tables).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,table==='investment_account_links'?{select:'*,investment_history(occurred_on,record_id,event_type)'}:{})]));
- return Response.json(Object.fromEntries(results),{headers:{'Cache-Control':'no-store'}});
+ const data=Object.fromEntries(results);
+ const estimates=new Map((await depositForecasts(auth.token)).map(record=>[record.id,record.estimated_monthly_income]));
+ data.records=(data.records as Entry[]).map(record=>record.kind==='Deposit'?{...record,estimated_monthly_income:estimates.get(record.id)??0}:record);
+ return Response.json(data,{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Could not load planning data. Check that the latest migrations are installed.'},{status:503});}
 }
 export async function POST(req:Request){
@@ -28,8 +45,15 @@ export async function POST(req:Request){
  const body=await req.json() as {action:keyof typeof schemas;data:unknown};
  if(!Object.hasOwn(schemas,body.action))return Response.json({error:'Check the account fields.'},{status:400});
  const parsed=schemas[body.action].safeParse(body.data);if(!parsed.success)return Response.json({error:'Check the account fields.'},{status:400});
- const result=await supa('/rest/v1/rpc/planning_action',{method:'POST',body:JSON.stringify({p_action:body.action,p_data:parsed.data})},auth.token);
- if(!result.ok){const error=await result.json() as {code?:string;message?:string};return Response.json({error:error.code==='P0001'?error.message:error.code==='23514'?'Insufficient balance or invalid amount.':error.code==='23505'?'This name or payment already exists.':'Could not save the operation. Please try again.'},{status:409});}
+ // Older planning_action versions accept unknown JSON keys and silently discard
+ // additional holdings. Check schema support before allowing any such write.
+ if(body.action==='goal'&&'investment_targets' in parsed.data&&Array.isArray(parsed.data.investment_targets)&&parsed.data.investment_targets.length){
+  const support=await supa('/rest/v1/savings_goals?select=investment_targets&limit=0',{},auth.token);
+  if(!support.ok)return Response.json({error:'Goal holdings could not be saved. Please try again after the app database is updated.'},{status:503});
+ }
+ const multiGoal=body.action==='goal'&&'kind' in parsed.data&&parsed.data.kind==='investment'&&'investment_targets' in parsed.data&&Array.isArray(parsed.data.investment_targets);
+ const result=await supa(multiGoal?'/rest/v1/rpc/planning_investment_goal':'/rest/v1/rpc/planning_action',{method:'POST',body:JSON.stringify(multiGoal?{p_data:parsed.data}:{p_action:body.action,p_data:parsed.data})},auth.token);
+ if(!result.ok){const error=await result.json() as {code?:string;message?:string};return Response.json({error:multiGoal&&error.code==='PGRST202'?'Could not save the goal. Check that the latest migrations are installed.':error.code==='P0001'?error.message:error.code==='23514'?'Insufficient balance or invalid amount.':error.code==='23505'?'This name or payment already exists.':'Could not save the operation. Please try again.'},{status:409});}
  return Response.json(await result.json());
  }catch{return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
 }

@@ -8,6 +8,7 @@ Apply migrations after 017, in this order:
 4. `021_linked_investment_accounts.sql`: cash-linked investment activity and explicit service-role snapshot grants.
 5. `022_consistent_backups.sql`: a complete owner backup read from one database snapshot.
 6. `023_net_worth_goals.sql`: net-worth goals without cash accounts and saved monthly contribution/return scenarios.
+7. `024_holding_accounts.sql`: owner-private brokerage/crypto accounts, holding membership and complete backups. Apply this before deploying the updated Accounts page.
 
 The same SQL is appended to the fresh-database setup. Existing records remain unlinked: adding this feature never retroactively changes cash balances. Cash records are accounts, so they stay in existing asset totals exactly once. Link an existing actual transaction deliberately: saving it then applies its amount to the selected account.
 
@@ -20,6 +21,16 @@ Transfers update both accounts in one database transaction. For different curren
 Repayments reduce the outstanding principal and update cash together. Principal is not investment income. Interest received on money lent is recorded as income; interest paid on a loan is recorded as expense. Existing mortgage reporting continues to show the full payment with its principal/interest breakdown. Reconciliation records today's corrected balance, not an income or expense. Operations have stable request IDs: retries do not repeat them. Saved operations are immutable; a subsequent correction is recorded separately.
 
 Investment Tracker optionally uses a same-currency cash account for contributions, withdrawals, actual income and expenses. Its existing dated valuation behavior remains in place. Account-linked events have a separate immutable link so retries cannot move cash twice.
+
+## Investment accounts and deposits
+
+Accounts now includes cash balances, interest-bearing deposits, and named stock/crypto accounts. Investment accounts are containers, not extra finance records: they have no independent balance and do not add to net worth. Their display currency converts the sum of their holdings using explicit available rates. If any holding cannot be converted, the total is unavailable rather than partial. Quotes use the existing market data with saved-price fallback.
+
+Choose Stock account or Crypto account, name it, then add multiple holdings. Existing holdings remain unassigned until the user deliberately assigns them. Holdings can be moved or unlinked from Accounts or the record form without changing value, purchase cost, history, income, or cash. A composite owner foreign key and type guards reject foreign-owner and wrong-kind links. Containers cannot change kind while populated. Cash balances can also belong to these accounts. Savings reservations still use actual cash accounts only.
+
+Choose Interest-bearing deposit to enter a balance, annual interest rate and maturity date. Manage deposit opens the existing dated tracker for top-ups, withdrawals and interest received. Estimates follow dated balances and the selected monthly, daily, or non-compounding schedule. Projected interest does not mutate confirmed bank balances. Recording income can credit an explicitly selected cash account in the same currency. For capitalized interest, use Record capitalized interest once; it credits the deposit and records the income atomically. Do not also add the estimate as recurring income. The planning data includes deposit estimates once, so the goal surplus includes them. Stock tracker income is labeled Dividends / income.
+
+Cash/deposit records and new holdings use the existing record API; containers and assignments use `/api/holding-accounts`. Account containers and record membership are included in JSON backups. Restoring a holding still requires its original matching account. Demo containers and assignments stay in memory; dated investment tracking requires sign-in.
 
 ## Upcoming payments
 
@@ -52,3 +63,53 @@ CSV exports include records. JSON backups read all owner-readable record/history
 Set `CRON_SECRET` and `SUPABASE_SERVICE_ROLE_KEY` only in the server environment and deploy the configured Vercel job. The cron endpoint rejects missing or incorrect credentials before any privileged access. It reads holdings on the server, fetches market data with bounded concurrency, and writes only today's Tashkent observation. Missing prices or rates skip affected portfolios and return a failure status with aggregate counts, without exposing account details. Configure hosting alerts for failed cron invocations. Large deployments should replace the single invocation with a queued, paginated worker before exceeding the hosting time limit.
 
 [Vercel cron configuration and authentication](https://vercel.com/docs/cron-jobs/manage-cron-jobs).
+
+
+## Trades, proceeds and deposit movements
+
+Apply `025_asset_movements.sql` after `024_holding_accounts.sql`. Fresh databases use the updated `database/setup.sql`.
+
+If SQL Editor reports a deadlock (`40P01`) while running the entire migration, that transaction is aborted; its schema changes do not commit. Run `ROLLBACK;` if the editor still has an aborted transaction, then rerun the full updated migration. Close active finance app tabs and let other SQL queries finish first; do not run concurrent copies. The migration now acquires its main table locks with `NOWAIT`, releasing all preflight locks between bounded retries. Later implicit lock waits are limited to 500 ms. A busy-database (`55P03` / lock timeout) failure remains safe to retry in full after contention clears. Do not drop existing tables or terminate database sessions. A successful migration is applied once; this file is not a general-purpose rerunnable setup script.
+
+Stock and crypto accounts can contain fiat Cash records as well as holdings. Create a zero-balance cash record inside the account to hold proceeds. Cash is counted once in asset totals. USDT and USDC remain Crypto records with their own quantities and fiat valuations; they are never treated as dollars automatically.
+
+Use Buy or Sell / convert on a holding. A sale reduces its quantity and credits the selected fiat balance or crypto holding. A purchase debits cash or crypto and increases the bought holding's quantity and weighted purchase cost. Full sales retain the holding with zero units and its unit quote unchanged. Crypto-to-crypto trades require explicit fiat values; conversions between valuation currencies require an explicit value on each side. Fees are included in the entered totals and recorded as expenses without a second deduction. For example: sell BTC for USDT, sell USDT into a fiat cash balance, then transfer that cash to a deposit or select it for a mortgage payment. Stock sale proceeds follow the same cash path. These actions record transactions; they do not execute orders with a broker or bank.
+
+Transfer money supports Cash and Deposit sources/destinations, including cash inside investment accounts. Enter the total debited and net amount credited; in the same currency, net credit equals total debit minus the included fee. Other currencies require the actual net amount received. Deposit cards and the tracker provide Top-up, Withdraw and Record capitalized interest actions. Mortgage payments continue to debit the selected same-currency cash account and split principal from interest.
+
+An explicit Opening balance date is available when creating a Cash, Deposit, Stock or Crypto record. Without it the initial balance is observed today. Enter transactions in chronological order: a movement earlier than either account's latest balance snapshot is rejected, rather than silently overwriting newer history. Existing snapshots and balances are not rewritten.
+
+Deposit projections apply changes at the start of the recorded date. Monthly compounding uses annual rate / twelve weighted by the number of days at each balance; earned interest joins the projected principal at the next month boundary. Daily compounding uses the actual calendar year's day count. No compounding estimates interest without adding it to principal. Current annual rates apply throughout the projection; historical rate changes are not modeled. A confirmed valuation or capitalized-interest credit replaces the projected balance so the same interest is not added twice. Confirm actual bank interest with Record capitalized interest before spending it; the estimated balance is clearly labeled in the tracker. These projections are separate from the confirmed account balances used in net worth and transfers.
+
+The movement ledger, quantity/cost changes, dated histories, fees and interest income commit in one transaction with owner checks and repeat-safe IDs. Failures roll back all changes. The immutable ledger is included in JSON backups.
+
+
+## Instrument selection
+
+The holding form has searchable crypto and stock/ETF pickers. The crypto catalogue contains 48 named coins, including Toncoin (TON); the stock catalogue contains 68 USD-listed stock/ETF suggestions. Search by company/coin name or symbol. A stock ticker outside the suggestions can still be selected by typing it and choosing Use ticker. Existing crypto names and stored stock symbols remain compatible, and selecting the same instrument preserves its saved unit price.
+
+The catalogue does not guarantee a live price for every listing. Crypto quotes use Coinbase's public USD spot endpoint; stock quotes use the existing authenticated Twelve Data connection and require `TWELVE_DATA_API_KEY`. Missing prices retain the entered/saved price. TON/USD was verified against Coinbase's live endpoint during this change. Refreshes use sequential batches within the existing endpoint limits, covering portfolios beyond the previous 16-crypto/20-stock boundary; failed batches identify missing prices without hiding successful quotes. These picker changes require no database migration.
+
+
+## Stock and crypto accumulation goals
+
+Apply `026_investment_goals.sql` after migration 025. It adds investment goals without rewriting existing cash or net-worth goals. As with migration 025, run the complete file once and allow other queries to finish first. The migration takes its required locks with `NOWAIT` before changing the schema and limits implicit lock waits; if contention aborts it, roll back the failed transaction and retry the entire file after contention clears.
+
+Choose Stock / crypto accumulation, select the investment account and coin or stock, and enter the target quantity. For example, target 1 BTC or 100 AAPL shares. Empty investment accounts are allowed: the goal starts at zero until matching holdings are added or purchased. Holdings with the same symbol in the chosen account are summed, including legacy crypto names. Other coins, other accounts and cash balances are excluded. Stock/crypto price changes do not advance a quantity goal. Buying, selling or reassigning holdings updates progress when the records refresh.
+
+The accumulation plan uses units per month and an optional target date. It assumes no investment return and does not place trades, reserve holdings or change balances. The required monthly quantity rounds upward to eight decimals; explicitly entered quantities retain their precision. Multiple tracking goals can observe the same holdings. Archived goals retain their settings. Account ownership and matching investment kind are enforced when saving; changing an account type is blocked while goals refer to it. The existing backup includes all goal fields.
+
+The Archived and Show archived goals controls use the shared checkbox component with fixed checkbox sizing, avoiding the monetary-input styles that previously enlarged the Archived checkbox.
+
+
+## Multiple holdings in one goal
+
+Apply `027_multi_holding_goals.sql` after `026_investment_goals.sql`, then deploy the updated app. The fresh setup includes both migrations. Existing single-holding goals are backfilled without changing their quantities, monthly contributions, names, dates, or archive status.
+
+Use **Add another holding** in the goal editor to add a separate account, coin/stock, and target quantity (up to 50 targets). A goal can combine crypto and stock accounts. Repeating the same instrument in the same account is rejected; the same symbol can be tracked separately in different accounts. Removing a target removes only that goal target, not its holdings or transactions.
+
+Cards show each target's held and desired quantities. Overall progress is the equally weighted average of the targets' completion percentages, each capped at 100%; excess BTC cannot compensate for missing shares. Each target has an independent monthly unit contribution and projection, with the common goal deadline. No quantities of different instruments are summed and no market return is assumed to create units.
+
+Targets are saved atomically inside the owner-scoped goal. Database validation checks all account ownership/type references; linked accounts cannot change identity/type or be removed until their targets are updated, including archived goals. Legacy scalar columns mirror the first target for compatibility. An older client cannot overwrite a multi-holding goal with a single target accidentally. JSON backups include every target automatically.
+
+If additional coins disappear after Save, check that migration 027 has actually been applied to the connected database. The older save function accepts the targets payload but ignores it, retaining only the first holding. The API now checks for the targets column before saving investment targets, so a missing migration leaves the editor open with an error rather than reporting success. The goal editor keeps Save and errors outside the scrolling fields. Regression coverage reproduces the old behavior and verifies editing a 4 BTC goal to include 30,000 TON after migration.

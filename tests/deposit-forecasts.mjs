@@ -15,7 +15,7 @@ test('forecast reader uses owner token, paginates history, and excludes private 
  const supa=async(path,init,token)=>{calls.push({path,token});if(path.includes('finance_records'))return Response.json([deposit]);return Response.json(path.includes('offset=0')?Array.from({length:500},(_,i)=>({...event,id:String(i).padStart(3,'0')})):[]);};
  const read=new Function('supa','depositInterest',compile('lib/deposit-forecasts.ts')+';return depositForecasts;')(supa,depositInterest);
  const records=await read('owner-token');
- assert.equal(records[0].estimated_monthly_income,140000);assert.equal(records[0].user_id,undefined);assert.equal(records[0].notes,'');
+ assert.ok(Math.abs(records[0].estimated_monthly_income-140000)<1e-6);assert.equal(records[0].user_id,undefined);assert.equal(records[0].notes,'');
  assert.equal(calls.length,3);assert.ok(calls.every(c=>c.token==='owner-token'));assert.ok(calls[2].path.includes('offset=500'));
  assert.ok(calls[1].path.includes('record_id=in.(d)'));
 });

@@ -16,7 +16,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem('hoggish-default-language');
-      if (isLanguage(saved)) updateLanguage(saved);
+      if (isLanguage(saved)) queueMicrotask(() => updateLanguage(saved));
     } catch { /* Language selection also works when browser storage is blocked. */ }
     const sync = (event: StorageEvent) => {
       if (event.key === 'hoggish-default-language' && isLanguage(event.newValue)) updateLanguage(event.newValue);

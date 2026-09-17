@@ -6,13 +6,16 @@ import { cn } from "@/lib/utils"
 function NativeSelect({
   className,
   size = "default",
+  leadingIcon,
   ...props
-}: Omit<React.ComponentProps<"select">, "size"> & { size?: "sm" | "default" }) {
+}: Omit<React.ComponentProps<"select">, "size"> & { size?: "sm" | "default"; leadingIcon?: React.ReactNode }) {
   return (
     <div
       className="group/native-select relative w-fit has-[select:disabled]:opacity-50"
       data-slot="native-select-wrapper"
+      data-has-leading-icon={leadingIcon ? "true" : undefined}
     >
+      {leadingIcon && <span className="native-select-leading-icon" aria-hidden="true">{leadingIcon}</span>}
       <select
         data-slot="native-select"
         data-size={size}
