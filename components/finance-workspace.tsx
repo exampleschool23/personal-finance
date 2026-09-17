@@ -238,7 +238,7 @@ function WorkspaceContent() {
         const previewRate=Number(new FormData(e.currentTarget as HTMLFormElement).get('account_exchange_rate'));
         const cashAccount=planning.data.records.find(record=>record.id===editing.account_id);
         if(editing.account_id&&cashAccount?.currency!==editing.currency&&(!Number.isFinite(previewRate)||previewRate<=0))throw Error('Historical exchange rates are unavailable.');
-        const savedRecord={...editing,account_exchange_rate:editing.account_id&&cashAccount?.currency!==editing.currency?previewRate:undefined,...(liabilities.includes(editing.kind)&&!rows.some(row=>row.id===editing.id)?{opened_on:editing.opened_on??today()}:{})};
+        const savedRecord={...editing,name:expenses.includes(editing.kind)&&!editing.name.trim()?(editing.notes.trim().slice(0,120)||t(editing.kind)):editing.name,account_exchange_rate:editing.account_id&&cashAccount?.currency!==editing.currency?previewRate:undefined,...(liabilities.includes(editing.kind)&&!rows.some(row=>row.id===editing.id)?{opened_on:editing.opened_on??today()}:{})};
         if(liabilities.includes(savedRecord.kind)&&savedRecord.opened_on&&(savedRecord.opened_on>today()||savedRecord.date<savedRecord.opened_on))throw Error('Check the start and due dates.');
         if (!demo) {
             const r = await fetch('/api/records', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(savedRecord) });

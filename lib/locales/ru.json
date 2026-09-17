@@ -1025,7 +1025,7 @@
   "Add a holding to start tracking this account.": "Добавьте актив, чтобы начать отслеживать этот счёт.",
   "Choose a monthly plan to count this expense toward its spending.": "Выберите месячный план, чтобы учесть этот расход в его тратах.",
   "No monthly expense plans available.": "Нет доступных месячных планов расходов.",
-  "Choose a plan or describe your expense, then enter the amount.": "Выберите план или опишите расход, затем укажите сумму.",
+  "Choose a plan or enter an expense amount. Add notes if needed.": "Выберите план или введите сумму расхода. При необходимости добавьте заметки.",
   "The plan supplies the name and currency. Enter the amount you spent.": "Название и валюта взяты из плана. Укажите потраченную сумму.",
   "What was this expense for?": "На что потрачены деньги?",
   "e.g. Groceries or lunch": "Например, продукты или обед",

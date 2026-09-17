@@ -1025,7 +1025,7 @@
   "Add a holding to start tracking this account.": "Bu hisobni kuzatishni boshlash uchun aktiv qo‘shing.",
   "Choose a monthly plan to count this expense toward its spending.": "Bu xarajatni reja sarfiga kiritish uchun oylik rejani tanlang.",
   "No monthly expense plans available.": "Oylik xarajat rejalari mavjud emas.",
-  "Choose a plan or describe your expense, then enter the amount.": "Rejani tanlang yoki xarajatni tavsiflang, so‘ng summani kiriting.",
+  "Choose a plan or enter an expense amount. Add notes if needed.": "Rejani tanlang yoki xarajat summasini kiriting. Kerak bo‘lsa, izoh qo‘shing.",
   "The plan supplies the name and currency. Enter the amount you spent.": "Nom va valyuta rejadan olinadi. Sarflangan summani kiriting.",
   "What was this expense for?": "Bu xarajat nima uchun?",
   "e.g. Groceries or lunch": "Masalan, oziq-ovqat yoki tushlik",
