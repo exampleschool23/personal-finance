@@ -1368,3 +1368,6 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .portfolio-allocation-percent { color:var(--muted-foreground); text-align:right; font-variant-numeric:tabular-nums; }
 @media(max-width:760px) { .portfolio-summary { grid-template-columns:1fr; } .portfolio-summary-main,.portfolio-summary-allocation { padding:24px; } .portfolio-summary-allocation { border-left:0; border-top:1px solid var(--border); } }
 @media(max-width:400px) { .portfolio-allocation-row { grid-template-columns:minmax(0,1fr) auto; } .portfolio-allocation-percent { grid-column:2; } }
+
+/* Keep the upcoming-payment count readable beside wrapping navigation text. */
+.nav-item > span.count:last-child { flex: 0 0 auto; min-width: max-content; max-width: none; overflow: visible; text-overflow: clip; white-space: nowrap; }

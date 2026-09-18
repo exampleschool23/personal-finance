@@ -1440,5 +1440,6 @@
   "Income received this month": "Доход получен в этом месяце",
   "No income received this month": "Доход в этом месяце ещё не получен",
   "Amount paid": "Уплаченная сумма",
-  "Try another category.": "Попробуйте другую категорию."
+  "Try another category.": "Попробуйте другую категорию.",
+  "A positive estimate creates a monthly income plan. Saving the record date also updates linked fixed-income start dates. Recorded payments stay unchanged.": "Положительная оценка создаёт ежемесячный план дохода. Сохранение даты записи также обновляет даты начала связанных фиксированных доходов. Записанные платежи не меняются."
 }

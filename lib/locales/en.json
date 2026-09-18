@@ -1440,5 +1440,6 @@
   "Income received this month": "Income received this month",
   "No income received this month": "No income received this month",
   "Amount paid": "Amount paid",
-  "Try another category.": "Try another category."
+  "Try another category.": "Try another category.",
+  "A positive estimate creates a monthly income plan. Saving the record date also updates linked fixed-income start dates. Recorded payments stay unchanged.": "A positive estimate creates a monthly income plan. Saving the record date also updates linked fixed-income start dates. Recorded payments stay unchanged."
 }

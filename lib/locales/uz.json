@@ -1440,5 +1440,6 @@
   "Income received this month": "Bu oy daromad olindi",
   "No income received this month": "Bu oy hali daromad olinmagan",
   "Amount paid": "To‘langan summa",
-  "Try another category.": "Boshqa toifani tanlang."
+  "Try another category.": "Boshqa toifani tanlang.",
+  "A positive estimate creates a monthly income plan. Saving the record date also updates linked fixed-income start dates. Recorded payments stay unchanged.": "Musbat taxmin oylik daromad rejasini yaratadi. Yozuv sanasini saqlash bog‘langan qat’iy daromadlarning boshlanish sanalarini ham yangilaydi. Qayd etilgan to‘lovlar o‘zgarmaydi."
 }
