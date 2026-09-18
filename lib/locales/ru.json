@@ -1667,5 +1667,14 @@
   "Dedicated savings": "Выделенные сбережения",
   "Goal estimates: existing wealth stays fixed; only new monthly contributions earn the stated return. No fees or taxes. Savings are already part of assets; net-worth goals use the overview values.": "Прогноз целей: текущий капитал неизменен; доходность только на новые взносы. Без налогов и комиссий. Сбережения уже входят в активы; цели капитала используют значения обзора.",
   "Net worth = assets - debt. Cash flow = income - expenses - principal repayments. Own-account transfers and investment purchases are excluded.": "Капитал = активы - долг. Поток = доход - расходы - основной долг. Внутренние переводы и покупка инвестиций исключены.",
-  "Each row shows only records in that currency. Assets are what you own; outstanding debt is what you owe; net worth is assets minus debt. The consolidated total below combines currencies after conversion.": "Каждая строка содержит только записи в этой валюте. Активы — то, чем вы владеете; долг — то, что вы должны; чистый капитал — активы минус долг. Сводный итог ниже объединяет валюты после пересчёта."
+  "Each row shows only records in that currency. Assets are what you own; outstanding debt is what you owe; net worth is assets minus debt. The consolidated total below combines currencies after conversion.": "Каждая строка содержит только записи в этой валюте. Активы — то, чем вы владеете; долг — то, что вы должны; чистый капитал — активы минус долг. Сводный итог ниже объединяет валюты после пересчёта.",
+  "About you": "О вас",
+  "A little personal touch. Everything here is optional.": "Немного о вас. Все поля здесь необязательны.",
+  "Your name (optional)": "Ваше имя (необязательно)",
+  "What should we call you?": "Как к вам обращаться?",
+  "Used to greet you on Overview. You can clear it anytime.": "Для приветствия на странице обзора. Можно удалить в любой момент.",
+  "Profile & preferences": "Профиль и настройки",
+  "Hi, {name}!": "Привет, {name}!",
+  "Hi there!": "Привет!",
+  "Choose a language, at least one currency, and a name of up to 80 characters.": "Выберите язык, хотя бы одну валюту и имя длиной до 80 символов."
 }

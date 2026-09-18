@@ -1667,5 +1667,14 @@
   "Dedicated savings": "Ajratilgan jamg‘arma",
   "Goal estimates: existing wealth stays fixed; only new monthly contributions earn the stated return. No fees or taxes. Savings are already part of assets; net-worth goals use the overview values.": "Maqsad prognozi: joriy kapital o‘zgarmaydi; daromad faqat yangi badallarga. Soliq va komissiyasiz. Jamg‘arma aktivlar tarkibida; kapital maqsadlari umumiy qiymatlarni oladi.",
   "Net worth = assets - debt. Cash flow = income - expenses - principal repayments. Own-account transfers and investment purchases are excluded.": "Sof kapital = aktivlar - qarz. Pul oqimi = daromad - xarajat - asosiy qarz to‘lovi. Ichki o‘tkazma va investitsiya xaridlari kiritilmaydi.",
-  "Each row shows only records in that currency. Assets are what you own; outstanding debt is what you owe; net worth is assets minus debt. The consolidated total below combines currencies after conversion.": "Har bir qatorda faqat shu valyutadagi yozuvlar bor. Aktivlar — sizga tegishli mablag‘ va mulk; qarz — to‘lashingiz kerak bo‘lgan summa; sof kapital — aktivlar minus qarz. Quyidagi jamlangan natija valyutalar aylantirilgandan keyingi jami."
+  "Each row shows only records in that currency. Assets are what you own; outstanding debt is what you owe; net worth is assets minus debt. The consolidated total below combines currencies after conversion.": "Har bir qatorda faqat shu valyutadagi yozuvlar bor. Aktivlar — sizga tegishli mablag‘ va mulk; qarz — to‘lashingiz kerak bo‘lgan summa; sof kapital — aktivlar minus qarz. Quyidagi jamlangan natija valyutalar aylantirilgandan keyingi jami.",
+  "About you": "Siz haqingizda",
+  "A little personal touch. Everything here is optional.": "Biroz shaxsiylik. Bu yerdagi barcha maydonlar ixtiyoriy.",
+  "Your name (optional)": "Ismingiz (ixtiyoriy)",
+  "What should we call you?": "Sizga qanday murojaat qilaylik?",
+  "Used to greet you on Overview. You can clear it anytime.": "Umumiy ko‘rinish sahifasida salomlashish uchun. Istalgan payt o‘chirishingiz mumkin.",
+  "Profile & preferences": "Profil va sozlamalar",
+  "Hi, {name}!": "Salom, {name}!",
+  "Hi there!": "Salom!",
+  "Choose a language, at least one currency, and a name of up to 80 characters.": "Til, kamida bitta valyuta va 80 belgigacha bo‘lgan ismni kiriting."
 }

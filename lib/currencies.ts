@@ -8,5 +8,5 @@ export function currencyLabel(code: string, locale: string) {
   try { return `${code} · ${new Intl.DisplayNames([locale], { type: 'currency' }).of(code) || code}`; }
   catch { return `${code} · ${catalogue.find(c => c.code === code)?.name || code}`; }
 }
-export type Preferences = { language: 'en' | 'ru' | 'uz'; currencies: string[] };
+export type Preferences = { display_name?: string; language: 'en' | 'ru' | 'uz'; currencies: string[] };
 export const defaultPreferences: Preferences = { language: 'en', currencies: ['USD', 'UZS'] };

@@ -1475,3 +1475,13 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
  .category-settings .category-badges li:nth-child(even) .category-badge:has(.category-remove){animation-delay:-.15s}
  .category-settings .category-badge:has(.category-remove):is(:hover,:focus-within){animation-play-state:paused}
 }
+
+/* Personal welcome and optional profile details. */
+.overview-content .overview-welcome{padding:22px 24px;border:1px solid var(--border);border-radius:20px;background:linear-gradient(120deg,var(--muted),var(--background));margin-bottom:22px}
+.overview-welcome .welcome-eyebrow{font-size:12px;font-weight:600;color:var(--muted-foreground);margin-bottom:8px}
+.overview-welcome h1{display:flex;align-items:center;gap:12px;letter-spacing:-.035em}
+.overview-welcome h1>span:first-child{min-width:0;overflow-wrap:anywhere}
+.welcome-wave{font-size:.8em;flex-shrink:0}
+.profile-settings{display:grid;gap:10px;padding-bottom:24px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+.profile-settings h2,.profile-settings p{margin:0}
+@media(max-width:600px){.overview-content .overview-welcome{padding:18px}.overview-welcome h1{font-size:28px}}

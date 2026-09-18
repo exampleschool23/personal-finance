@@ -5,7 +5,7 @@ import { useLanguage } from '@/components/language-provider';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const sections = [
- {id:'preferences',label:'Language & currencies',icon:Globe2},
+ {id:'preferences',label:'Profile & preferences',icon:Globe2},
  {id:'benchmarks',label:'Investment benchmarks',icon:SlidersHorizontal},
  {id:'security',label:'Account security',icon:ShieldCheck},
  {id:'categories',label:'Categories',icon:Tags},

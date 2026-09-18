@@ -1667,5 +1667,14 @@
   "Dedicated savings": "Dedicated savings",
   "Goal estimates: existing wealth stays fixed; only new monthly contributions earn the stated return. No fees or taxes. Savings are already part of assets; net-worth goals use the overview values.": "Goal estimates: existing wealth stays fixed; only new monthly contributions earn the stated return. No fees or taxes. Savings are already part of assets; net-worth goals use the overview values.",
   "Net worth = assets - debt. Cash flow = income - expenses - principal repayments. Own-account transfers and investment purchases are excluded.": "Net worth = assets - debt. Cash flow = income - expenses - principal repayments. Own-account transfers and investment purchases are excluded.",
-  "Each row shows only records in that currency. Assets are what you own; outstanding debt is what you owe; net worth is assets minus debt. The consolidated total below combines currencies after conversion.": "Each row shows only records in that currency. Assets are what you own; outstanding debt is what you owe; net worth is assets minus debt. The consolidated total below combines currencies after conversion."
+  "Each row shows only records in that currency. Assets are what you own; outstanding debt is what you owe; net worth is assets minus debt. The consolidated total below combines currencies after conversion.": "Each row shows only records in that currency. Assets are what you own; outstanding debt is what you owe; net worth is assets minus debt. The consolidated total below combines currencies after conversion.",
+  "About you": "About you",
+  "A little personal touch. Everything here is optional.": "A little personal touch. Everything here is optional.",
+  "Your name (optional)": "Your name (optional)",
+  "What should we call you?": "What should we call you?",
+  "Used to greet you on Overview. You can clear it anytime.": "Used to greet you on Overview. You can clear it anytime.",
+  "Profile & preferences": "Profile & preferences",
+  "Hi, {name}!": "Hi, {name}!",
+  "Hi there!": "Hi there!",
+  "Choose a language, at least one currency, and a name of up to 80 characters.": "Choose a language, at least one currency, and a name of up to 80 characters."
 }
