@@ -81,3 +81,24 @@ test('source loading and save failures remain owner-isolated, including late res
  assert.deepEqual(run('other').sources,[]);requests[2].reply({error:'Unavailable'},503);await flush();assert.equal(run('other').error,'Unavailable');assert.deepEqual(run('other').sources,[]);
  run('third');run('fourth');assert.equal(requests[3].options.signal.aborted,true);requests[3].reply([variable]);requests[4].reply([]);await flush();assert.deepEqual(run('fourth').sources,[]);
 });
+
+test('receipt scheduled dates are read-only while the received date remains editable',()=>{
+ const ui=fs.readFileSync('components/income-record-form.tsx','utf8');
+ assert.match(ui,/<ScheduledPaymentSummary[^>]*date=\{editing\.earning_due_on\?\?''\}/);
+ assert.match(ui,/<ScheduledPaymentSummary[^>]*date=\{editing\.income_due_on\?\?''\}/);
+ assert.doesNotMatch(ui,/<DatePicker[^>]*value=\{editing\.(earning_due_on|income_due_on)/);
+ assert.match(ui,/<DatePicker value=\{editing\.date\}/);
+});
+
+test('picker paid status matches the exact schedule and period, excluding dismissed payments',()=>{
+ const {earningSourcePaymentStatus:status}=loadTS('lib/earning-sources.ts');
+ const source={...fixed,schedule_id:id(90)};
+ const paid={record_id:id(90),due_on:'2020-02-29',status:'paid'};
+ assert.deepEqual(status(source,'2020-02-10',[paid]),{due:'2020-02-29',paid:true});
+ assert.equal(status(source,'2020-03-10',[paid]).paid,false);
+ assert.equal(status(source,'2020-02-10',[{...paid,status:'dismissed'}]).paid,false);
+ assert.equal(status(source,'2020-02-10',[{...paid,record_id:id(91)}]).paid,false);
+ assert.equal(status(variable,'2020-02-10',[paid]),null);
+ assert.equal(status(source,'2019-12-10',[paid]),null);
+ assert.equal(status({...source,end_date:'2020-02-29'},'2020-03-10',[paid]),null);
+});

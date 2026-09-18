@@ -19,15 +19,18 @@ import type { AssetMovement } from '@/lib/asset-movements';
 import type { Entry } from '@/lib/finance';
 
 type Draft={exchange_rate?:number;account_id?:string;id:string;record_id:string;type:HistoryUpdateType;date:string;amount:number;balance:number|null;notes:string};
-export function InvestmentTracker({record,accounts=[],accountsReady=true,onClose,onSaved,onPayment}:{accounts?:Entry[];accountsReady?:boolean;record:Entry;onClose:()=>void;onSaved:()=>void;onPayment:()=>void}){
+export function InvestmentTracker({inline=false,onDraftState,initialType,record,accounts=[],accountsReady=true,onClose,onSaved,onPayment}:{inline?:boolean;onDraftState?:(dirty:boolean,busy:boolean)=>void;initialType?:HistoryUpdateType;accounts?:Entry[];accountsReady?:boolean;record:Entry;onClose:()=>void;onSaved:()=>void;onPayment:()=>void}){
  const {t,locale}=useLanguage();
  const [events,setEvents]=useState<HistoryEvent[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[busy,setBusy]=useState(false),[submitted,setSubmitted]=useState(false),[reload,setReload]=useState(0);
  const lending=isLendingKind(record.kind);
  const cash=record.kind==='Cash';
  const updateTypes=historyUpdateTypes(record.kind);
- const makeDraft=():Draft=>({id:crypto.randomUUID(),record_id:record.id,type:updateTypes[0],date:depositToday(),amount:0,balance:lending?null:0,notes:''});
+ const makeDraft=():Draft=>({id:crypto.randomUUID(),record_id:record.id,type:initialType&&updateTypes.includes(initialType)?initialType:updateTypes[0],date:depositToday(),amount:0,balance:lending?null:0,notes:''});
  const [draft,setDraft]=useState<Draft>(makeDraft);
  const guard=useDraftDialog(draft,onClose,busy);
+ const [initialDraft]=useState(()=>JSON.stringify(draft));
+ const dirty=JSON.stringify(draft)!==initialDraft;
+ useEffect(()=>{onDraftState?.(dirty,busy);},[dirty,busy,onDraftState]);
  const [movement,setMovement]=useState<MovementDraft|null>(null);
  const mortgage=record.kind==='Mortgage';
  const deposit=record.kind==='Deposit';
@@ -62,16 +65,38 @@ export function InvestmentTracker({record,accounts=[],accountsReady=true,onClose
  const cashOutgoing=historyCashDelta(record.kind,draft.type,1)<0;
  const cashAfter=selectedAccount&&cashDelta!==null?Number(selectedAccount.amount)+cashDelta:null;
  const canSave=!busy&&(submitted||(!loading&&!!draft.date&&draft.date<=depositToday()&&updateTypes.includes(draft.type)&&(draft.type==='valuation'||draft.amount>0)&&(!draft.account_id||(accountsReady&&cashAfter!==null&&cashAfter>=0&&cashAfter<=1e15))&&(!lending||(accountsReady&&!!selectedAccount&&draft.date>=latestBalanceDate&&remainingBalance>=0&&remainingBalance<=1e15))));
- async function save(event:React.FormEvent){
-  event.preventDefault();if(!canSave)return;setBusy(true);setSubmitted(true);setError('');
+ async function save(event?:React.FormEvent){
+  event?.preventDefault();if(!canSave)return;setBusy(true);setSubmitted(true);setError('');
   try{
    const payload=submitted?draft:{...draft,...(crossCurrency?{exchange_rate:fx.rate!}:{})};
    setDraft(payload);
    const response=await fetch(payload.exchange_rate!==undefined?'/api/investment-history/exchange':'/api/investment-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
    const result=await response.json() as {error?:string};if(!response.ok){if(response.status>=400&&response.status<500){setSubmitted(false);if(crossCurrency)fx.retry();}throw Error(result.error);}
-   setDraft(makeDraft());setSubmitted(false);setLoading(true);setReload(n=>n+1);onSaved();
+   setDraft(makeDraft());setSubmitted(false);setLoading(true);setReload(n=>n+1);onSaved();if(inline)onClose();
   }catch(e){setError((e as Error).message);}finally{setBusy(false);}
  }
+ const paymentFields=<div className="record-form">
+   {!inline&&<h3>{t('Add a dated update')}</h3>}{inline&&<p className="muted">{t('Enter any amount up to the outstanding balance. You can repay the rest later.')}</p>}
+   <fieldset disabled={busy||submitted||loading} className="tracker-fields">
+    <div className="form-grid">{!inline&&<label>{t('Update type')}<NativeSelect value={draft.type} onChange={e=>{const type=e.target.value as Draft['type'];setDraft({...draft,type,account_id:undefined,exchange_rate:undefined,amount:0,balance:!lending&&['valuation','contribution','withdrawal'].includes(type)?0:null});}}>
+     {updateTypes.map(type=><option key={type} value={type}>{t(eventLabel(type))}</option>)}
+    </NativeSelect></label>}<label>{t(inline?'Payment date':'Date')}<DatePicker value={draft.date} min={lending?latestBalanceDate:undefined} max={depositToday()} onChange={date=>setDraft({...draft,date,exchange_rate:undefined})}/></label></div>
+    {hasBalance&&<label>{t(deposit||cash?'Account balance after update':'Full asset value after update')}<FormattedNumberInput value={draft.balance??0} required={false} onValueChange={balance=>setDraft({...draft,balance})}/></label>}
+    {draft.type!=='valuation'&&<label>{t(lending?(cashOutgoing?'Pay from cash account':'Receive into cash account'):'Cash account')}<NativeSelect required={lending} disabled={!accountsReady} value={draft.account_id??''} onChange={e=>setDraft({...draft,account_id:e.target.value||undefined,exchange_rate:undefined})}><option value="">{t(lending?'Select account':'No account balance change')}</option>{cashAccounts.map(a=><option key={a.id} value={a.id}>{a.name} · {formatMoney(Number(a.amount),a.currency,locale)}</option>)}</NativeSelect>{lending&&accountsReady&&!cashAccounts.length&&<small>{t('Add a cash account to record this transaction.')}</small>}{!accountsReady&&<small>{t('Waiting for current cash account balances.')}</small>}</label>}{draft.type!=='valuation'&&<label>{t(lending?'Principal amount':'Cash amount (your share)')} · {record.currency}<FormattedNumberInput value={draft.amount} max={lending&&draft.type==='withdrawal'?currentBalance:1e15} onValueChange={amount=>setDraft({...draft,amount})}/></label>}
+    {crossCurrency&&<ExchangeRatePreview fx={fx}/>}
+    {selectedAccount&&cashOutgoing&&fx.rate&&<p className="muted">{t('Available for this payment')}: {money(Number(selectedAccount.amount)*fx.rate)}</p>}
+    {lending&&<p aria-live="polite">{t('Outstanding balance after update')}: {money(remainingBalance)}</p>}
+    {selectedAccount&&cashAfter!==null&&cashDelta!==null&&draft.type!=='valuation'&&<div className="ownership-summary" aria-live="polite"><p>{t(cashOutgoing?'Cash deducted from {account}: {amount}':'Cash added to {account}: {amount}',{account:selectedAccount.name,amount:accountMoney(Math.abs(cashDelta))})}</p><p>{t('Cash balance after update')}: {accountMoney(cashAfter!)}</p>{cashAfter!<0&&<p className="error" role="alert">{t('Not enough money in the selected cash account.')}</p>}</div>}
+    <label>{t('Notes (optional)')}<textarea rows={2} maxLength={2000} value={draft.notes} onChange={e=>setDraft({...draft,notes:e.target.value})}/></label>
+   </fieldset>
+   {deposit&&<p className="muted tracker-help">{t('Use Top-up or Withdraw to move money between accounts. Use Record capitalized interest when interest stays in the deposit; Income received is for interest paid out.')}</p>}
+   <p className="muted tracker-help">{t(lending?'Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.':cash?'Use Balance update to confirm a cash balance, or Transfer money to move funds between accounts.':security?'Use Value update for a valuation, Buy or Sell / convert for trades, and income or expenses for actual cash payments.':deposit?'Use Balance update for a confirmed bank balance. Record paid-out interest and fees separately.':'Use Value update for a valuation. Record invested money, sale proceeds, income and expenses separately.')}</p>
+   <p className="muted tracker-help">{t(lending?'Enter updates on or after the latest balance date. Repayments cannot exceed the outstanding balance. Saved history is permanent.':record.kind==='Business'?'Past valuations do not replace a newer balance. Business valuations use the current ownership share. Saved history is permanent.':'Past valuations do not replace a newer balance. Saved history is permanent.')}</p>
+   {error&&<p className="error" role="alert">{t(error)}</p>}
+   {submitted&&<p className="muted tracker-help">{t('Retry with the same details to avoid duplicates.')}</p>}
+   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Close')}</Button><Button type="button" onClick={()=>void save()} disabled={!canSave}>{t(busy?'Saving…':submitted?'Retry update':inline?'Save payment':'Save update')}</Button></div>
+  </div>;
+ if(inline)return <>{paymentFields}{guard.confirmation}</>;
  if(movement)return <AssetMovementDialog initial={movement} records={movementRecords} save={saveMovement} onClose={()=>setMovement(null)}/>;
  return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog investment-tracker" showCloseButton={!busy}>
   <DialogTitle>{record.name} · {t('Tracker')}</DialogTitle>
@@ -100,27 +125,7 @@ export function InvestmentTracker({record,accounts=[],accountsReady=true,onClose
   {cash&&<Button type="button" variant="outline" disabled={busy} onClick={()=>setMovement({kind:'transfer',source_id:record.id})}>{t('Transfer money')}</Button>}
   {(deposit||security)&&<div className="entry-actions"><Button variant="outline" onClick={()=>setMovement({kind:deposit?'transfer':'buy',target_id:record.id})}>{t(deposit?'Top-up':'Buy')}</Button><Button variant="outline" onClick={()=>setMovement({kind:deposit?'transfer':'sell',source_id:record.id})}>{t(deposit?'Withdraw':'Sell / convert')}</Button>{deposit&&<Button variant="outline" onClick={()=>setMovement({kind:'interest',source_id:record.id})}>{t('Record capitalized interest')}</Button>}</div>}
   {mortgage&&<Button type="button" variant="outline" disabled={busy} onClick={onPayment}>{t('Record payment')}</Button>}
-  <form className="record-form" onSubmit={save}>
-   <h3>{t('Add a dated update')}</h3>
-   <fieldset disabled={busy||submitted||loading} className="tracker-fields">
-    <div className="form-grid"><label>{t('Update type')}<NativeSelect value={draft.type} onChange={e=>{const type=e.target.value as Draft['type'];setDraft({...draft,type,account_id:undefined,exchange_rate:undefined,amount:0,balance:!lending&&['valuation','contribution','withdrawal'].includes(type)?0:null});}}>
-     {updateTypes.map(type=><option key={type} value={type}>{t(eventLabel(type))}</option>)}
-    </NativeSelect></label><label>{t('Date')}<DatePicker value={draft.date} min={lending?latestBalanceDate:undefined} max={depositToday()} onChange={date=>setDraft({...draft,date,exchange_rate:undefined})}/></label></div>
-    {hasBalance&&<label>{t(deposit||cash?'Account balance after update':'Full asset value after update')}<FormattedNumberInput value={draft.balance??0} required={false} onValueChange={balance=>setDraft({...draft,balance})}/></label>}
-    {draft.type!=='valuation'&&<label>{t(lending?(cashOutgoing?'Pay from cash account':'Receive into cash account'):'Cash account')}<NativeSelect required={lending} disabled={!accountsReady} value={draft.account_id??''} onChange={e=>setDraft({...draft,account_id:e.target.value||undefined,exchange_rate:undefined})}><option value="">{t(lending?'Select account':'No account balance change')}</option>{cashAccounts.map(a=><option key={a.id} value={a.id}>{a.name} · {formatMoney(Number(a.amount),a.currency,locale)}</option>)}</NativeSelect>{lending&&accountsReady&&!cashAccounts.length&&<small>{t('Add a cash account to record this transaction.')}</small>}{!accountsReady&&<small>{t('Waiting for current cash account balances.')}</small>}</label>}{draft.type!=='valuation'&&<label>{t(lending?'Principal amount':'Cash amount (your share)')} · {record.currency}<FormattedNumberInput value={draft.amount} max={lending&&draft.type==='withdrawal'?currentBalance:1e15} onValueChange={amount=>setDraft({...draft,amount})}/></label>}
-    {crossCurrency&&<ExchangeRatePreview fx={fx}/>}
-    {selectedAccount&&cashOutgoing&&fx.rate&&<p className="muted">{t('Available for this payment')}: {money(Number(selectedAccount.amount)*fx.rate)}</p>}
-    {lending&&<p aria-live="polite">{t('Outstanding balance after update')}: {money(remainingBalance)}</p>}
-    {selectedAccount&&cashAfter!==null&&cashDelta!==null&&draft.type!=='valuation'&&<div className="ownership-summary" aria-live="polite"><p>{t(cashOutgoing?'Cash deducted from {account}: {amount}':'Cash added to {account}: {amount}',{account:selectedAccount.name,amount:accountMoney(Math.abs(cashDelta))})}</p><p>{t('Cash balance after update')}: {accountMoney(cashAfter!)}</p>{cashAfter!<0&&<p className="error" role="alert">{t('Not enough money in the selected cash account.')}</p>}</div>}
-    <label>{t('Notes (optional)')}<textarea rows={2} maxLength={2000} value={draft.notes} onChange={e=>setDraft({...draft,notes:e.target.value})}/></label>
-   </fieldset>
-   {deposit&&<p className="muted tracker-help">{t('Use Top-up or Withdraw to move money between accounts. Use Record capitalized interest when interest stays in the deposit; Income received is for interest paid out.')}</p>}
-   <p className="muted tracker-help">{t(lending?'Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.':cash?'Use Balance update to confirm a cash balance, or Transfer money to move funds between accounts.':security?'Use Value update for a valuation, Buy or Sell / convert for trades, and income or expenses for actual cash payments.':deposit?'Use Balance update for a confirmed bank balance. Record paid-out interest and fees separately.':'Use Value update for a valuation. Record invested money, sale proceeds, income and expenses separately.')}</p>
-   <p className="muted tracker-help">{t(lending?'Enter updates on or after the latest balance date. Repayments cannot exceed the outstanding balance. Saved history is permanent.':record.kind==='Business'?'Past valuations do not replace a newer balance. Business valuations use the current ownership share. Saved history is permanent.':'Past valuations do not replace a newer balance. Saved history is permanent.')}</p>
-   {error&&<p className="error" role="alert">{t(error)}</p>}
-   {submitted&&<p className="muted tracker-help">{t('Retry with the same details to avoid duplicates.')}</p>}
-   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Close')}</Button><Button type="submit" disabled={!canSave}>{t(busy?'Saving…':submitted?'Retry update':'Save update')}</Button></div>
-  </form>
+  {paymentFields}
   <div className="tracker-history"><h3>{t('History')}</h3>{!events.length&&!loading&&<p>{t('No history yet.')}</p>}
    <ul>{[...events].reverse().map(e=><li key={e.id}><div><strong>{t(eventLabel(e.event_type))}</strong><time>{formatDate(e.occurred_on,locale)}</time>{e.notes&&<p>{e.notes}</p>}{e.account_link&&<small>{t(Number(e.account_link.amount)<0?'Cash deducted from {account}: {amount}':'Cash added to {account}: {amount}',{account:accounts.find(account=>account.id===e.account_link?.account_id)?.name??t('Cash account'),amount:formatMoney(Math.abs(Number(e.account_link.amount)),e.account_link.account_currency??record.currency,locale)})}</small>}</div><div>{e.balance!==null&&<strong>{money(Number(e.balance)*Number(e.ownership_percentage)/100)}</strong>}{e.amount>0&&<span>{t(lending&&['contribution','withdrawal'].includes(e.event_type)?'Principal amount':'Cash amount (your share)')}: {money(Number(e.amount))}</span>}{e.event_type==='mortgage_payment'&&<small>{t('Principal repayment')}: {money(Number(e.principal))} · {t('Interest paid')}: {money(Number(e.interest))}</small>}</div></li>)}</ul>
   </div>

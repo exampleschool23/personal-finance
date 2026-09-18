@@ -20,9 +20,11 @@ export function incomeHistory(records:Entry[],events:HistoryEvent[],incomeRecord
  const points:IncomePoint[]=[];
  for(let index=0;index<months;index++){const date=new Date(startDate);date.setUTCMonth(date.getUTCMonth()+index);points.push({month:date.toISOString().slice(0,7),...blank(),estimate:null});}
  const byMonth=new Map(points.map(point=>[point.month,point])),byId=new Map(records.map(record=>[record.id,record]));
- let missing=0,estimateMissing=0;
+ let missing=0;
+ const recordedMonths=new Set<string>();
  const add=(date:string,amount:number,unit:string,kind:IncomeGroup)=>{
   const point=byMonth.get(date.slice(0,7));if(!point||date>today)return;
+  recordedMonths.add(point.month);
   const converted=convertAmount(Number(amount),unit,currency,rates);
   if(converted===null||!Number.isFinite(converted)){missing++;return;}point[kind]+=converted;
  };
@@ -37,18 +39,35 @@ export function incomeHistory(records:Entry[],events:HistoryEvent[],incomeRecord
   if(seen.has(entry.id)||!income.includes(entry.kind))continue;seen.add(entry.id);
   if(entry.frequency==='Once'&&!(entry.history_event_id&&eventIds.has(entry.history_event_id)))add(entry.date,entry.amount,entry.currency,group(entry));
  }
- const expected=blank();
- const estimates=records.filter(record=>['Business','Property','Deposit'].includes(record.kind)).map(record=>({record,amount:record.kind==='Deposit'?depositInterest(events.filter(event=>event.record_id===record.id),Number(record.rate),end):Number(record.estimated_monthly_income??0)}));
- const businessIds=new Set(estimates.filter(({record,amount})=>record.kind==='Business'&&amount>0).map(({record})=>record.id));
- const propertyIds=new Set(estimates.filter(({record,amount})=>record.kind==='Property'&&amount>0).map(({record})=>record.id));
- const addEstimate=(entry:Entry,amount:number)=>{
-  if(!amount)return;const converted=convertAmount(amount,entry.currency,currency,rates);
-  if(converted===null||!Number.isFinite(converted)){estimateMissing++;return;}expected[group(entry)]+=converted;
+ const estimateForMonth=(month:string)=>{
+  let estimateMissing=0;
+  const expected=blank();
+  const estimates=records.filter(record=>['Business','Property','Deposit'].includes(record.kind)).map(record=>({record,amount:record.kind==='Deposit'?depositInterest(events.filter(event=>event.record_id===record.id),Number(record.rate),month):Number(record.estimated_monthly_income??0)}));
+  const businessIds=new Set(estimates.filter(({record,amount})=>record.kind==='Business'&&amount>0).map(({record})=>record.id));
+  const propertyIds=new Set(estimates.filter(({record,amount})=>record.kind==='Property'&&amount>0).map(({record})=>record.id));
+  const addEstimate=(entry:Entry,amount:number)=>{
+   if(!amount)return;const converted=convertAmount(amount,entry.currency,currency,rates);
+   if(converted===null||!Number.isFinite(converted)){estimateMissing++;return;}expected[group(entry)]+=converted;
+  };
+  for(const {record,amount} of estimates)addEstimate(record,amount);
+  for(const entry of incomeRecords)if(income.includes(entry.kind)&&!duplicatesAssetEstimate(entry,businessIds,propertyIds))addEstimate(entry,monthly(entry,month));
+  const estimatedTotal=Object.values(expected).reduce((sum,amount)=>sum+amount,0);
+  return {expected,estimatedTotal,estimateMissing};
  };
- for(const {record,amount} of estimates)addEstimate(record,amount);
- for(const entry of incomeRecords)if(income.includes(entry.kind)&&!duplicatesAssetEstimate(entry,businessIds,propertyIds))addEstimate(entry,monthly(entry,end));
+ // Keep a continuous timeline from the first receipt, filling unused history slots with forecasts.
+ const firstRecorded=points.findIndex(point=>recordedMonths.has(point.month));
+ points.splice(0,firstRecorded<0?points.length-1:firstRecorded);
+ while(points.length<months){
+  const next=new Date(points.at(-1)!.month+'-01T00:00:00Z');next.setUTCMonth(next.getUTCMonth()+1);
+  points.push({month:next.toISOString().slice(0,7),...blank(),estimate:null});
+ }
+ const {expected,estimatedTotal,estimateMissing}=estimateForMonth(end);
+ let forecastMissing=0;
+ for(const point of points)if(point.month>=end){
+  const estimate=point.month===end?{estimatedTotal,estimateMissing}:estimateForMonth(point.month);
+  point.estimate=estimate.estimateMissing?null:estimate.estimatedTotal;
+  if(point.month>end)forecastMissing+=estimate.estimateMissing;
+ }
  const received=blank();for(const point of points)for(const key of incomeGroups)received[key]+=point[key];
- const estimatedTotal=Object.values(expected).reduce((sum,amount)=>sum+amount,0);
- points.at(-1)!.estimate=estimateMissing?null:estimatedTotal;
- return {points,received,expected,estimatedTotal,totalReceived:Object.values(received).reduce((sum,amount)=>sum+amount,0),missing,estimateMissing};
+ return {points,received,expected,estimatedTotal,totalReceived:Object.values(received).reduce((sum,amount)=>sum+amount,0),missing,estimateMissing,forecastMissing};
 }

@@ -6,31 +6,19 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {loadTS} from './helpers/load-ts.mjs';
 const language={useLanguage:()=>({locale:'en-US',t:(text,values={})=>text.replace(/\{(\w+)\}/g,(_,key)=>values[key]??key)})};
 const {MonthlyReview}=loadTS('components/financial-review.tsx',{'@/components/language-provider':language,'@/lib/deposit-interest':{depositToday:()=> '2026-09-18'}});
-const props={data:{records:[],categories:[],goals:[],occurrences:[],activity:[]},tools:{data:{splits:[]},loading:false,error:'',retry(){}},snapshots:[],historyError:'',currency:'USD',onAddExpense(){}};
+const props={data:{records:[],categories:[],goals:[],occurrences:[],activity:[]},tools:{data:{splits:[]},loading:false,error:'',retry(){}},snapshots:[],historyError:'',currency:'USD'};
 const render=overrides=>renderToStaticMarkup(React.createElement(MonthlyReview,{...props,...overrides}));
 const record=(id,amount,extra={})=>({id,name:id,amount,currency:'USD',kind:'Living expense',frequency:'Once',date:'2026-09-10',...extra});
-test('empty spending explains the selected period and currency and offers adding an expense',()=>{
- const html=render({data:{...props.data,records:[record('salary',9150,{kind:'Salary'}),record('planned',500,{frequency:'Monthly'})]}});
- assert.match(html,/\$9,150/);assert.match(html,/No recorded spending this month/);
- assert.match(html,/No expense transactions were recorded in USD for September 2026/);
- assert.match(html,/Recurring plans appear here only after a payment is recorded/);
- assert.match(html,/Add expense/);assert.doesNotMatch(html,/<ul/);
+test('monthly review retains totals without the spending category section',()=>{
+ const html=render({data:{...props.data,records:[record('salary',9150,{kind:'Salary'}),record('expense',100.25),record('planned',500,{frequency:'Monthly'})]}});
+ assert.match(html,/\$9,150/);assert.match(html,/\$100/);
+ assert.match(html,/Actual spending/);assert.match(html,/Net-worth change/);
+ assert.doesNotMatch(html,/Spending by category|No recorded spending|monthly-category|Add expense/);
  assert.match(html,/aria-label="How this review is calculated"[^>]*[\s\S]*?aria-haspopup="dialog"/);
- assert.doesNotMatch(html,/<details|<summary/);
 });
-test('category breakdown reconciles splits while excluding recurring, future and other-currency expenses',()=>{
- const html=render({data:{...props.data,categories:[{id:'food',name:'Food'},{id:'travel',name:'Travel'}],records:[record('split',100.25),record('rent',200,{kind:'Rent expense'}),record('planned',9000,{frequency:'Monthly'}),record('future',8000,{date:'2026-09-20'}),record('eur',7000,{currency:'EUR'})]},tools:{...props.tools,data:{splits:[{record_id:'split',category_id:'food',amount:60},{record_id:'split',category_id:'travel',amount:40.25}]}}});
- assert.match(html,/\$300/);assert.match(html,/Food/);assert.match(html,/Travel/);assert.match(html,/\$60/);assert.match(html,/\$40/);assert.match(html,/\$200/);
- assert.match(html,/monthly-category-track/);assert.doesNotMatch(html,/No recorded spending|\$9,000|\$8,000|€7,000/);
-});
-test('loading and failed category requests do not appear as an empty breakdown',()=>{
- const loading=render({tools:{...props.tools,loading:true}});assert.match(loading,/Loading spending categories/);assert.doesNotMatch(loading,/No recorded spending|monthly-category-list/);
- const failure=render({tools:{...props.tools,error:'Offline'}});assert.match(failure,/role="alert"/);assert.match(failure,/Retry/);assert.doesNotMatch(failure,/No recorded spending|monthly-category-list/);
- const history=render({historyError:'Offline'});assert.match(history,/Net-worth history could not be loaded/);assert.doesNotMatch(history,/Two recorded balances are needed/);
-});
-test('zero-interest principal payments do not create misleading spending categories',()=>{
- const html=render({data:{...props.data,records:[record('mortgage',500,{mortgage_payment_id:'payment',payment_interest:0})]}});
- assert.match(html,/No recorded spending/);assert.doesNotMatch(html,/monthly-category-list/);
+test('net-worth history failures remain visible',()=>{
+ const html=render({historyError:'Offline'});
+ assert.match(html,/Net-worth history could not be loaded/);assert.doesNotMatch(html,/Two recorded balances are needed/);
 });
 test('monthly review copy is translated in EN, RU and UZ and uses shared controls and formatting',()=>{
  const source=fs.readFileSync('components/financial-review.tsx','utf8');
@@ -41,4 +29,14 @@ test('monthly review selects a month without showing a day',()=>{
  const html=render({});
  assert.match(html,/class="date-picker-trigger"[^>]*aria-label="Month"[^>]*><span>September 2026<\/span>/);
  assert.doesNotMatch(html,/18 September 2026/);
+});
+test('review receives rates and repayment activity and flags incomplete conversion',()=>{
+ const data={...props.data,records:[record('cash',100,{kind:'Cash'}),record('loan',1000,{kind:'Loan'}),record('groceries',125000,{currency:'UZS'})],activity:[{id:'paid',action:'repayment',target_id:'loan',account_id:'cash',amount:50,fee:0,occurred_on:'2026-09-10'}]};
+ const html=render({data,market:{rates:{USD:1,UZS:12500}}});
+ assert.match(html,/\$60/);assert.doesNotMatch(html,/totals are incomplete/);
+ assert.match(render({data}),/Current or previous month totals are incomplete/);
+});
+test('monthly review passes tracker car payments into actual spending',()=>{
+ const data={...props.data,records:[record('cash',1000,{kind:'Cash'}),record('car',5000,{kind:'Loan'})],investmentLinks:[{id:'paid',account_id:'cash',amount:-250,investment_history:{record_id:'car',event_type:'withdrawal',occurred_on:'2026-09-10'}}]};
+ assert.match(render({data}),/\$250/);
 });

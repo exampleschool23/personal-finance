@@ -16,7 +16,7 @@ import type { Entry } from '@/lib/finance';
 export type Operation = {action:'transfer'|'reconcile'|'repayment'|'mortgage'|'occurrence';account_id?:string;target_id?:string;date?:string;amount?:number};
 export function AccountOperation({operation,records,save,onClose}:{operation:Operation;records:Entry[];save:(action:string,data:unknown)=>Promise<void>;onClose:()=>void}){
  const {t,locale}=useLanguage();
- const [draft,setDraft]=useState(()=>({id:crypto.randomUUID(),account_id:operation.account_id??'',target_id:operation.target_id??'',date:operation.date??depositToday(),amount:operation.amount??0,received:0,fee:0,notes:''}));
+ const [draft,setDraft]=useState(()=>({id:crypto.randomUUID(),account_id:operation.account_id??'',target_id:operation.target_id??'',date:operation.date??depositToday(),amount:operation.amount??(operation.action==='occurrence'?records.find(record=>record.id===operation.target_id)?.amount:0)??0,received:0,fee:0,notes:''}));
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[submitted,setSubmitted]=useState(false);
  const target=records.find(r=>r.id===draft.target_id),account=records.find(r=>r.id===draft.account_id);
  const accounts=records.filter(r=>r.kind==='Cash');
@@ -33,15 +33,16 @@ export function AccountOperation({operation,records,save,onClose}:{operation:Ope
  <label>{t('Cash account')}<NativeSelect required value={draft.account_id} onChange={e=>setDraft({...draft,account_id:e.target.value})}><option value="">{t('Select account')}</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.name} · {formatMoney(a.amount,a.currency,locale)}</option>)}</NativeSelect></label>
  {operation.action==='transfer'&&<label>{t('Destination account')}<NativeSelect required value={draft.target_id} onChange={e=>setDraft({...draft,target_id:e.target.value})}><option value="">{t('Select account')}</option>{targets.map(a=><option key={a.id} value={a.id}>{a.name} · {a.currency}</option>)}</NativeSelect></label>}
  {target&&operation.action!=='transfer'&&<p>{target.name} · {formatMoney(target.amount,target.currency,locale)}</p>}
+ {operation.action==='occurrence'&&<label>{t(target&&['Salary','Rent income','Business income','Other income'].includes(target.kind)?'Amount received':'Amount paid')} {target?.currency}<FormattedNumberInput value={draft.amount} max={1e15} onValueChange={amount=>setDraft({...draft,amount})}/></label>}
  {operation.action!=='occurrence'&&<label>{t(operation.action==='reconcile'?'Statement balance':operation.action==='transfer'?'Amount sent':'Principal repayment')} {operation.action==='repayment'||operation.action==='mortgage'?target?.currency:account?.currency}<FormattedNumberInput value={draft.amount} required={operation.action!=='reconcile'&&operation.action!=='mortgage'} onValueChange={amount=>setDraft({...draft,amount})}/></label>}
  {crossCurrency&&<><label>{t('Amount received')} {target.currency}<FormattedNumberInput value={draft.received} onValueChange={received=>setDraft({...draft,received})}/></label>{draft.amount>0&&draft.received>0&&<p>{t('Exchange rate')}: {formatNumber(draft.received/draft.amount,locale,8)} {target.currency}/{account.currency}</p>}</>}
  {['transfer','repayment','mortgage'].includes(operation.action)&&<label>{t(operation.action==='transfer'?'Transfer fee':target?.kind==='Money lent'?'Interest received':'Interest paid')} {operation.action==='repayment'||operation.action==='mortgage'?target?.currency:account?.currency}<FormattedNumberInput required={false} value={draft.fee} onValueChange={fee=>setDraft({...draft,fee})}/></label>}
  {operation.action!=='occurrence'&&operation.action!=='reconcile'&&<label>{t('Date')}<DatePicker value={draft.date} onChange={date=>setDraft({...draft,date})}/></label>}
  <label>{t('Notes (optional)')}<Input value={draft.notes} maxLength={2000} onChange={e=>setDraft({...draft,notes:e.target.value})}/></label>
  </fieldset>
- {convertedPayment&&<><ExchangeRatePreview fx={fx}/>{fx.rate&&account&&<p className="muted">{t('Account amount')}: {formatMoney((operation.action==='occurrence'?target!.amount:draft.amount+draft.fee)/fx.rate,account.currency,locale)}</p>}</>}
+ {convertedPayment&&<><ExchangeRatePreview fx={fx}/>{fx.rate&&account&&<p className="muted">{t('Account amount')}: {formatMoney((operation.action==='occurrence'?draft.amount:draft.amount+draft.fee)/fx.rate,account.currency,locale)}</p>}</>}
  {operation.action==='reconcile'&&<p className="muted">{t('This records a balance correction today. It is not income or spending.')}</p>}
  {error&&<p role="alert" className="error">{t(error)}</p>}
- <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||!draft.account_id||(convertedPayment&&!fx.rate)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></div>
+ <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||!draft.account_id||(operation.action==='occurrence'&&draft.amount<=0)||(convertedPayment&&!fx.rate)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></div>
  </form></DialogContent></Dialog>{guard.confirmation}</>;
 }

@@ -15,7 +15,7 @@ const schemas={
  reconcile:base.refine(v=>!v.target_id&&v.received===0&&v.fee===0),
  repayment:base.refine(v=>!!v.target_id&&v.amount>0&&v.received===0),
  mortgage:base.refine(v=>!!v.target_id&&v.amount+v.fee>0&&v.received===0),
- occurrence:z.object({exchange_rate:z.number().finite().positive().max(1e15).optional(),id,account_id:id,target_id:id,date,notes:z.string().max(2000).default('')}),
+ occurrence:z.object({amount:z.number().finite().positive().max(1e15),exchange_rate:z.number().finite().positive().max(1e15).optional(),id,account_id:id,target_id:id,date,notes:z.string().max(2000).default('')}),
  dismiss:z.object({id,target_id:id,date}),
  category:z.object({id,name:z.string().trim().min(1).max(80)}),
  goal:z.object({investment_targets:z.array(investmentTarget).max(50).optional(),id,name:z.string().trim().min(1).max(120),account_id:id.nullable(),kind:z.enum(['savings','net_worth','investment']).default('savings'),currency:z.string().refine(isCurrency).optional(),target:amount.positive(),allocated:amount,target_date:date.nullable(),archived:z.boolean().default(false),monthly_contribution:amount.nullable().default(null),annual_return:z.number().finite().min(0).max(100).default(0),holding_account_id:id.nullable().default(null),asset_kind:z.enum(['Stock','Crypto']).nullable().default(null),asset_symbol:z.string().trim().max(15).nullable().default(null)}).transform(v=>v.kind==='investment'&&v.investment_targets?.length?{...v,...v.investment_targets[0]}:v).refine(v=>{
@@ -84,7 +84,7 @@ export async function POST(req:Request){
   if(!support.ok)return Response.json({error:'Goal holdings could not be saved. Please try again after the app database is updated.'},{status:503});
  }
  const multiGoal=body.action==='goal'&&'kind' in parsed.data&&parsed.data.kind==='investment'&&'investment_targets' in parsed.data&&Array.isArray(parsed.data.investment_targets);
- const result=await supa(multiGoal?'/rest/v1/rpc/planning_investment_goal':'/rest/v1/rpc/planning_action',{method:'POST',body:JSON.stringify(multiGoal?{p_data:parsed.data}:{p_action:body.action,p_data:paymentData})},auth.token);
+ const result=await supa(multiGoal?'/rest/v1/rpc/planning_investment_goal':body.action==='occurrence'?'/rest/v1/rpc/planning_action_with_actual_amount':'/rest/v1/rpc/planning_action',{method:'POST',body:JSON.stringify(multiGoal?{p_data:parsed.data}:{p_action:body.action,p_data:paymentData})},auth.token);
  if(!result.ok){const error=await result.json() as {code?:string;message?:string};return Response.json({error:multiGoal&&error.code==='PGRST202'?'Could not save the goal. Check that the latest migrations are installed.':error.code==='P0001'?error.message:error.code==='23514'?'Insufficient balance or invalid amount.':error.code==='23505'?'This name or payment already exists.':'Could not save the operation. Please try again.'},{status:409});}
  return Response.json(await result.json());
  }catch{return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}

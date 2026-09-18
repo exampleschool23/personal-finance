@@ -1,11 +1,9 @@
 "use client";
-import Link from 'next/link';
 import { PartialTotal } from '@/components/partial-total';
 
 import { useMemo, useState, type CSSProperties } from 'react';
-import { ArrowDownLeft, ArrowUpRight, ChevronDown, Ellipsis, LayoutGrid, List, Search, Wallet, X } from 'lucide-react';
+import { ChevronDown, Ellipsis, LayoutGrid, List, Search, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { AssetAccounts } from '@/components/asset-accounts';
 import type { HoldingAccount } from '@/lib/holding-accounts';
 import { AssetIcon } from '@/components/asset-icon';
@@ -28,9 +26,8 @@ type Props = {
  quoteLabel: (entry: Entry) => string;
 };
 
-export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoading, accountsError, onRetryAccounts, onAddHolding, records, currency, market, netWorth, debt, forecast, forecastReady, loading, demo, onAdd, onEdit, onTrack, onDelete, quoteLabel }: Props) {
+export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoading, accountsError, onRetryAccounts, onAddHolding, records, currency, market, netWorth, debt, loading, demo, onAdd, onEdit, onTrack, onDelete, quoteLabel }: Props) {
  const { t, locale } = useLanguage();
- const [query, setQuery] = useState('');
  const [category, setCategory] = useState('all');
  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
  const [limit, setLimit] = useState(12);
@@ -41,11 +38,11 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
  const accountRecords = holdings.filter(({original})=>['Cash','Deposit'].includes(original.kind)&&!groupedIds.has(original.id));
  const otherHoldings = holdings.filter(({original})=>!['Cash','Deposit'].includes(original.kind)&&!groupedIds.has(original.id));
  const otherCategories = categories.map(group=>({...group,count:otherHoldings.filter(({original})=>original.kind===group.kind).length})).filter(group=>group.count);
- const filtered = otherHoldings.filter(({ original }) => (category === 'all' || original.kind === category) && `${original.name} ${t(original.kind)}`.toLocaleLowerCase(locale).includes(query.trim().toLocaleLowerCase(locale)));
+ const filtered = otherHoldings.filter(({ original }) => category === 'all' || original.kind === category);
  const visible = filtered.slice(0, limit);
  const money = (amount: number, unit = currency) => formatMoney(amount, unit, locale);
  const selectCategory = (kind: string) => { setCategory(kind); setLimit(12); };
- const clearFilters = () => { setCategory('all'); setQuery(''); setLimit(12); };
+ const clearFilters = () => { setCategory('all'); setLimit(12); };
 
  const renderCard = ({ original, converted }: (typeof holdings)[number]) => {
     const record = converted ?? original;
@@ -64,30 +61,32 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
    };
 
  return <div className="asset-dashboard" aria-busy={loading}>
-  <div className="asset-summary-grid">
-   <section className="asset-hero" aria-label={t('Your holdings')}>
-    <div className="asset-hero-top"><span><Wallet size={18}/>{t('Your holdings')}</span><span className="asset-hero-count">{t('{count} assets', { count: formatNumber(holdings.length, locale, 0) })}</span></div>
-    <p className="muted">{t('Accounts group your cash and holdings without adding extra assets.')} <Link href="/accounts">{t('Manage accounts')}</Link></p><strong className="asset-hero-value">{loading ? '—' : money(total)}</strong><PartialTotal currencies={excludedCurrencies}/>
-    <p>{t('Assets in this view · Lending is tracked in Loans & debts.')}</p>
-    <div className="asset-mix" aria-label={t('Asset allocation')}>{categories.filter(group => group.amount > 0).map(group => <span key={group.kind} title={t(group.kind)} style={{ flexGrow: group.amount, background: categoryColor(group.kind) }}/>)}</div>
-    <div className="asset-hero-footer"><div><span>{t('NET WORTH')}</span><strong>{money(netWorth)}</strong><PartialTotal currencies={excludedCurrencies}/></div><div><span>{t('Outstanding debt')}</span><strong>{money(debt)}</strong></div></div>
-   </section>
-   <section className="asset-cashflow">
-    <div className="asset-cashflow-title"><span className="asset-cashflow-icon"><ArrowUpRight size={22}/></span><h2>{t('Estimated monthly cash flow')}</h2></div>
-    <strong className={'asset-cashflow-value ' + (forecast.forecast >= 0 ? 'positive' : 'negative')}>{forecastReady ? money(forecast.forecast) : '—'}</strong>
-    <div className="asset-flow-pair"><div><ArrowDownLeft size={16}/><span>{t('Income')}</span><strong>{money(forecast.plannedIncome)}</strong></div><div><ArrowUpRight size={16}/><span>{t('Expenses')}</span><strong>{forecastReady ? money(forecast.monthlyExpenses + forecast.mortgagePayments) : '—'}</strong></div></div>
-    <details className="asset-flow-details"><summary>{t('View cash flow breakdown')}<ChevronDown size={16}/></summary><div><p>{t('Estimated asset income: {amount}', { amount: money(forecast.estimatedIncome) })}</p><p>{t('Other recurring income: {amount}', { amount: money(forecast.otherIncome) })}</p><p>{t('Recurring and planned expenses: {amount}', { amount: forecastReady ? money(forecast.monthlyExpenses) : '—' })}</p><p>{t('Estimated mortgage payments: {amount}', { amount: money(forecast.mortgagePayments) })}</p><p>{t('Includes asset estimates; linked business income counted once.')}</p><p>{t('One-time entries are excluded')}</p></div></details>
-   </section>
-  </div>
+  <section className="portfolio-summary" aria-label={t('Your holdings')}>
+   <div className="portfolio-summary-main">
+    <div className="portfolio-summary-heading"><span className="portfolio-summary-icon"><Wallet size={21} aria-hidden="true"/></span><h2>{t('Your holdings')}</h2><span className="count">{formatNumber(holdings.length, locale, 0)}</span></div>
+    <strong className="portfolio-summary-value">{loading ? '—' : money(total)}</strong>
+    <PartialTotal currencies={excludedCurrencies}/>
+    <p className="portfolio-summary-caption">{t('Assets in this view · Lending is tracked in Loans & debts.')}</p>
+    <div className="portfolio-summary-metrics"><div><span>{t('NET WORTH')}</span><strong>{loading ? '—' : money(netWorth)}</strong></div><div><span>{t('Outstanding debt')}</span><strong>{loading ? '—' : money(debt)}</strong></div></div>
+   </div>
+   <div className="portfolio-summary-allocation">
+    <h3>{t('Asset allocation')}</h3>
+    <div className="portfolio-allocation-bar" aria-hidden="true">{categories.filter(group=>group.amount>0).map(group=><span key={group.kind} style={{flexGrow:group.amount,background:categoryColor(group.kind)}}/>)}</div>
+    <div className="portfolio-allocation-list">{categories.map(group=><div className="portfolio-allocation-row" key={group.kind}>
+     <span className="portfolio-allocation-label"><i style={{background:categoryColor(group.kind)}} aria-hidden="true"/>{t(group.kind)}</span>
+     <strong>{loading ? '—' : money(group.amount)}</strong><span className="portfolio-allocation-percent">{loading || total<=0 ? '—' : `${formatNumber(group.amount/total*100,locale,1)}%`}</span>
+    </div>)}</div>
+   </div>
+  </section>
 
   <AssetAccounts accounts={accounts} records={records} market={market} loading={accountsLoading || loading} error={accountsError} onRetry={onRetryAccounts} onAdd={onAddHolding} currency={currency} portfolioTotal={total} accountCount={accountRecords.length} onEdit={onEdit} onTrack={onTrack} demo={demo} >{accountRecords.map(renderCard)}</AssetAccounts>
 
   <section className="asset-holdings" aria-label={t('Assets & investments')}>
-   <div className="asset-holdings-heading"><div><h2>{t('Other assets')} <span className="count">{formatNumber(otherHoldings.length, locale, 0)}</span></h2><p>{t('Highest value first. Find an asset, update its value, or follow its progress.')}</p></div><div className="asset-layout-switch" aria-label={t('Asset layout')}><Button variant="ghost" size="icon" aria-label={t('Card view')} aria-pressed={layout === 'grid'} onClick={() => setLayout('grid')}><LayoutGrid size={17}/></Button><Button variant="ghost" size="icon" aria-label={t('Compact view')} aria-pressed={layout === 'list'} onClick={() => setLayout('list')}><List size={18}/></Button></div></div>
-   <div className="asset-toolbar"><div className="asset-search"><Search size={17} aria-hidden="true"/><Input aria-label={t('Search assets')} placeholder={t('Search assets')} value={query} onChange={event => { setQuery(event.target.value); setLimit(12); }}/>{query && <button type="button" aria-label={t('Clear search')} onClick={() => setQuery('')}><X size={16}/></button>}</div><span className="asset-sort-note"><ArrowDownLeft size={14}/>{t('Highest value first')}</span></div>
+   <div className="asset-holdings-heading"><div><h2>{t('Other assets')} <span className="count">{formatNumber(otherHoldings.length, locale, 0)}</span></h2></div><div className="asset-layout-switch" aria-label={t('Asset layout')}><Button variant="ghost" size="icon" aria-label={t('Card view')} aria-pressed={layout === 'grid'} onClick={() => setLayout('grid')}><LayoutGrid size={17}/></Button><Button variant="ghost" size="icon" aria-label={t('Compact view')} aria-pressed={layout === 'list'} onClick={() => setLayout('list')}><List size={18}/></Button></div></div>
+
    <div className="asset-category-filters" aria-label={t('Filter assets by category')}><button type="button" aria-pressed={category === 'all'} onClick={() => selectCategory('all')}>{t('All assets')}<span>{formatNumber(otherHoldings.length, locale, 0)}</span></button>{otherCategories.map(group => <button key={group.kind} type="button" aria-pressed={category === group.kind} onClick={() => selectCategory(group.kind)} style={{ '--asset-color': categoryColor(group.kind) } as CSSProperties}><i/>{t(group.kind)}<span>{formatNumber(group.count, locale, 0)}</span></button>)}</div>
-   <p className="asset-result-count" role="status">{t('{shown} of {total} assets', { shown: formatNumber(Math.min(limit, filtered.length), locale, 0), total: formatNumber(filtered.length, locale, 0) })}{(query || category !== 'all') && <button onClick={clearFilters}>{t('Clear filters')}</button>}</p>
-   {loading ? <LoadingPlaceholder label={t('Loading records…')}/> : !filtered.length ? <div className="asset-empty"><Search size={26}/><h3>{t(otherHoldings.length ? 'No matching assets' : 'A fresh start.')}</h3><p>{t(otherHoldings.length ? 'Try another name or category.' : 'Add your first asset to start building your portfolio.')}</p><Button variant="outline" onClick={otherHoldings.length ? clearFilters : onAdd}>{t(otherHoldings.length ? 'Clear filters' : 'Add your first record')}</Button></div> : <div className={'asset-card-grid asset-layout-' + layout}>{visible.map(renderCard)}</div>}
+   <p className="asset-result-count" role="status">{t('{shown} of {total} assets', { shown: formatNumber(Math.min(limit, filtered.length), locale, 0), total: formatNumber(filtered.length, locale, 0) })}{(category !== 'all') && <button onClick={clearFilters}>{t('Clear filters')}</button>}</p>
+   {loading ? <LoadingPlaceholder label={t('Loading records…')}/> : !filtered.length ? <div className="asset-empty"><Search size={26}/><h3>{t(otherHoldings.length ? 'No matching assets' : 'A fresh start.')}</h3><p>{t(otherHoldings.length ? 'Try another category.' : 'Add your first asset to start building your portfolio.')}</p><Button variant="outline" onClick={otherHoldings.length ? clearFilters : onAdd}>{t(otherHoldings.length ? 'Clear filters' : 'Add your first record')}</Button></div> : <div className={'asset-card-grid asset-layout-' + layout}>{visible.map(renderCard)}</div>}
    {!loading && filtered.length > limit && <div className="asset-load-more"><Button variant="outline" onClick={() => setLimit(previous => previous + 12)}>{t('Show more assets')}<ChevronDown size={16}/></Button></div>}
   </section>
  </div>;

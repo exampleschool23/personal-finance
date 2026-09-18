@@ -21,7 +21,7 @@ test('recurring salary is forecast-only, ownership is not reapplied to personal 
  const cash=[payment('salary','Salary',24000,{frequency:'Yearly',business_id:'b',date:'2026-01-01'}),payment('distribution','Other income',1000,{frequency:'Monthly',business_id:'b'}),payment('ended','Salary',1000,{frequency:'Monthly',date:'2026-01-01',end_date:'2026-08-31'})];
  const result=history(records,[],cash,'USD',undefined,'2026-09-17');
  assert.equal(result.expected.salary,2000);assert.equal(result.expected.business,1000);assert.equal(result.estimatedTotal,3000);assert.equal(result.totalReceived,0);
- assert.ok(result.points.slice(0,-1).every(point=>point.estimate===null));assert.equal(result.points.at(-1).estimate,3000);
+ assert.ok(result.points.every(point=>point.estimate===3000));assert.equal(result.points[0].month,'2026-09');
 });
 test('dated deposit balances estimate interest but do not invent a received payment',()=>{
  const result=history([{id:'d',kind:'Deposit',currency:'USD',rate:12}],[{...event('base','d',0,'baseline'),balance:1000,occurred_on:'2026-09-01'}],[],'USD',undefined,'2026-09-17');
@@ -29,6 +29,29 @@ test('dated deposit balances estimate interest but do not invent a received paym
 });
 test('date ranges, foreign income and missing rates are handled explicitly',()=>{
  const cash=[payment('foreign','Salary',12000000,{currency:'UZS'}),payment('future','Other income',999,{date:'2026-09-20'}),payment('old','Other income',888,{date:'2026-01-01'})];
- const result=history([],[],cash,'USD',{UZS:12000},'2026-09-17',3);assert.equal(result.totalReceived,1000);assert.equal(result.points.length,3);assert.equal(result.points[0].month,'2026-07');
+ const result=history([],[],cash,'USD',{UZS:12000},'2026-09-17',3);assert.equal(result.totalReceived,1000);assert.equal(result.points.length,3);assert.equal(result.points[0].month,'2026-09');
  const missing=history([],[],cash,'USD',undefined,'2026-09-17',3);assert.equal(missing.missing,1);
+});
+
+test('empty history is replaced by future estimates with calendar year rollover',()=>{
+ const result=history([],[],[payment('salary','Salary',1000,{frequency:'Monthly'})],'USD',undefined,'2026-09-17',6);
+ assert.deepEqual(result.points.map(point=>point.month),['2026-09','2026-10','2026-11','2026-12','2027-01','2027-02']);
+ assert.ok(result.points.every(point=>point.estimate===1000 && point.salary===0));
+ assert.equal(result.totalReceived,0);
+});
+test('first receipt anchors history and gaps remain chronologically accurate',()=>{
+ const result=history([],[],[payment('old','Salary',123.456,{date:'2026-07-01'}),payment('now','Salary',200)],'USD',undefined,'2026-09-17',6);
+ assert.deepEqual(result.points.map(point=>point.month),['2026-07','2026-08','2026-09','2026-10','2026-11','2026-12']);
+ assert.equal(result.points[1].salary,0);assert.equal(result.points[0].estimate,null);
+ assert.equal(result.totalReceived,323.456);
+});
+test('future estimates respect source start and end dates and missing exchange rates',()=>{
+ const cash=[payment('ends','Salary',1000,{frequency:'Monthly',end_date:'2026-09-30'}),payment('starts','Rent income',500,{frequency:'Monthly',date:'2026-11-01'}),payment('foreign','Salary',100,{frequency:'Monthly',date:'2026-11-01',currency:'EUR'})];
+ const result=history([],[],cash,'USD',undefined,'2026-09-17',3);
+ assert.deepEqual(result.points.map(point=>point.estimate),[1000,0,null]);
+ assert.equal(result.estimatedTotal,1000);assert.equal(result.estimateMissing,0);assert.equal(result.forecastMissing,1);assert.equal(result.totalReceived,0);
+});
+test('unconvertible recorded receipts retain their month instead of being hidden',()=>{
+ const result=history([],[],[payment('foreign','Salary',100,{date:'2026-08-01',currency:'EUR'})],'USD',undefined,'2026-09-17',3);
+ assert.equal(result.points[0].month,'2026-08');assert.equal(result.missing,1);
 });

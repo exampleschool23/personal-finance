@@ -38,3 +38,21 @@ export function resolveEarningSource(entry:Entry,sources:EarningSource[],origina
 export function legacyEarningSources(records:Entry[]):EarningSource[]{
  return records.filter(row=>!row.source_paused&&row.frequency!=='Once'&&row.amount>0&&(row.kind==='Salary'||row.kind==='Other income'||(row.kind==='Business income'&&row.business_id)||(row.kind==='Rent income'&&row.income_source_id))).map(row=>({id:row.id,schedule_id:row.id,name:row.name,kind:row.kind as EarningSource['kind'],currency:row.currency,mode:'fixed',archived:false,amount:row.amount,frequency:row.frequency as 'Monthly'|'Yearly',start_date:row.date,end_date:row.end_date??null,linked_record_id:row.kind==='Business income'?row.business_id!:row.kind==='Rent income'?row.income_source_id!:null}));
 }
+
+// Demo equivalent of the atomic asset-plan trigger. The schedule is reused on later edits.
+export function withAssetIncomePlans(records:Entry[],sources:EarningSource[]=[]):Entry[]{
+ const additions:Entry[]=[];
+ for(const asset of records){
+  if(!['Property','Business'].includes(asset.kind)||!(Number(asset.estimated_monthly_income)>0))continue;
+  if(sources.some(source=>source.linked_record_id===asset.id)||records.some(row=>row.frequency!=='Once'&&(asset.kind==='Business'?row.kind==='Business income'&&row.business_id===asset.id:row.kind==='Rent income'&&row.income_source_id===asset.id)))continue;
+  additions.push({...asset,id:crypto.randomUUID(),kind:asset.kind==='Business'?'Business income':'Rent income',amount:asset.estimated_monthly_income!,frequency:'Monthly',estimated_monthly_income:0,ownership_percentage:100,quantity:1,cost:0,rate:0,business_id:asset.kind==='Business'?asset.id:null,income_source_id:asset.kind==='Property'?asset.id:null,notes:''});
+ }
+ return additions.length?[...records,...additions]:records;
+}
+
+export function earningSourcePaymentStatus(source:EarningSource,date:string,occurrences:readonly {record_id:string;due_on:string;status:string}[]){
+ if(source.mode!=='fixed'||!source.start_date||!source.frequency)return null;
+ const due=salaryDueDate({date:source.start_date,frequency:source.frequency},date);
+ if(due<source.start_date||(source.end_date&&due>source.end_date))return null;
+ return {due,paid:!!source.schedule_id&&occurrences.some(item=>item.record_id===source.schedule_id&&item.due_on===due&&item.status==='paid')};
+}
