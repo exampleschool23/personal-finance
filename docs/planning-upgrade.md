@@ -123,3 +123,7 @@ All cash accounts are offered regardless of currency. The form previews the date
 ## Income and expense categories (050)
 
 Apply `050_income_expense_categories.sql` before deploying this category UI. Settings now adds named categories separately for income and expenses. The migration replaces `custom_categories` with `transaction_categories`, removes the categorization rules table and trigger, and updates backup and planning functions. Existing references remain valid; categories used for both income and expenses receive a separate income copy, including references in Recently deleted. The legacy `custom_category_id` reference column is retained for existing records and CSV compatibility. Transaction amounts and cash-flow calculations are unchanged.
+
+## Category deletion (051)
+
+Apply `051_category_deletion.sql` before using category deletion. Added categories show a remove button. The confirmation checks active transactions/schedules (including splits), Recently deleted records and spending watchlists. Used categories require a same-direction replacement, either existing or created in the dialog. The RPC rechecks usage and performs reassignment and deletion atomically under the owner lock. Generated payment records permit category-only updates; their financial fields remain protected. Direct category deletion is revoked for authenticated users. Built-in financial kinds are not deleted by this migration.

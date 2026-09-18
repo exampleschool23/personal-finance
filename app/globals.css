@@ -1461,3 +1461,17 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 @media(max-width:600px){.data-import-fields{grid-template-columns:1fr}.data-backup-actions{flex-direction:column}.data-backup-actions a{width:100%}}
 
 .recovery-card>.recovery-actions{display:flex;flex-wrap:wrap;gap:8px;flex:0 1 auto}.recovery-card .recovery-actions button{margin:0}
+
+/* Compact category tags; remove buttons keep the same height as plain tags. */
+.category-settings .category-badges{align-items:center;gap:8px;padding-top:0}
+.category-settings .category-badges .category-badge{position:relative;display:inline-flex;align-items:center;box-sizing:border-box;height:28px;padding:3px 9px;gap:5px;line-height:20px;vertical-align:middle}
+.category-settings .category-badges .category-remove{position:relative;display:inline-flex;flex-shrink:0;align-items:center;justify-content:center;width:20px;height:20px;min-width:20px;min-height:20px;padding:0;margin:0 -4px 0 0;border:0;border-radius:3px;background:transparent;color:var(--destructive)}
+.category-settings .category-remove:hover{opacity:.7}
+.category-settings .category-remove:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.category-settings .category-remove:disabled{opacity:.45;cursor:wait}
+@keyframes category-wiggle{from{transform:rotate(-1.2deg)}to{transform:rotate(1.2deg)}}
+@media(prefers-reduced-motion:no-preference){
+ .category-settings .category-badge:has(.category-remove:not(:disabled)){animation:category-wiggle .3s ease-in-out infinite alternate;transform-origin:50% 60%}
+ .category-settings .category-badges li:nth-child(even) .category-badge:has(.category-remove){animation-delay:-.15s}
+ .category-settings .category-badge:has(.category-remove):is(:hover,:focus-within){animation-play-state:paused}
+}

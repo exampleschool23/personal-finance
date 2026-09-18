@@ -18,8 +18,8 @@ test('typed category migration preserves assignments, splits, recovery and owner
  const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
  try{
  await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${id(1)}'),('${id(2)}');`);
- const setup=fs.readFileSync('database/setup.sql','utf8'),migration=fs.readFileSync('migrations/050_income_expense_categories.sql','utf8');assert.ok(setup.endsWith(migration));
- await db.exec(setup.slice(0,-migration.length));
+ const setup=fs.readFileSync('database/setup.sql','utf8'),migration=fs.readFileSync('migrations/050_income_expense_categories.sql','utf8');assert.ok(setup.includes(migration));
+ await db.exec(setup.slice(0,setup.indexOf(migration)));
  await db.exec(`SET ROLE authenticated;SET request.jwt.claim.sub='${id(1)}';`);
  const category=(n,name,direction)=>db.query("SELECT planning_action('category',$1)",[{id:id(n),name,direction}]);
  await category(10,'Shared');await category(11,'Second');

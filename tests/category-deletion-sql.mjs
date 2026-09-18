@@ -1,0 +1,63 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const id=n=>`d0000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+test('category deletion is atomic, reassigns every reference, preserves amounts, and isolates owners',{skip:!process.env.PGLITE_MODULE},async()=>{
+ const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
+ try{
+ await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${id(1)}'),('${id(2)}');`);
+ const setup=fs.readFileSync('database/setup.sql','utf8'),migration=fs.readFileSync('migrations/051_category_deletion.sql','utf8');assert.ok(setup.endsWith(migration));
+ await db.exec(setup.slice(0,-migration.length));await db.exec(migration);
+ await db.exec(`SET ROLE authenticated;SET request.jwt.claim.sub='${id(1)}';`);
+ const category=(n,name,direction='expense')=>db.query("SELECT planning_action('category',$1)",[{id:id(n),name,direction}]);
+ await category(10,'Leisure');await category(11,'Travel');await category(12,'Freelance','income');await category(13,'Unused');
+ await db.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency) VALUES($1,$2,'Cash','Cash','USD',100,'2026-09-01','Once')",[id(20),id(1)]);
+ const record=(n,extra={})=>db.query('INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency,custom_category_id,account_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[id(n),id(1),'Entry','Other expense','USD',.3,'2026-09-01',extra.frequency??'Once',id(10),extra.frequency?null:id(20)]);
+ await record(21);await record(22);await record(23,{frequency:'Monthly'});
+ const parts=[{category_id:id(10),amount:.1},{category_id:id(11),amount:.2}];
+ await db.query('SELECT save_transaction_splits($1,$2)',[id(21),parts]);await db.query('SELECT save_transaction_splits($1,$2)',[id(22),parts]);
+ await db.query('DELETE FROM finance_records WHERE id=$1',[id(22)]);
+ await db.query("INSERT INTO workspace_preferences(user_id,key,data) VALUES($1,'watchlists',$2)",[id(1),{items:[{id:id(40),name:'Watch',query:'',category:id(10),currency:'USD',target:30}]}]);
+ const usage=async n=>(await db.query('SELECT category_usage($1) AS data',[id(n)])).rows[0].data;
+ assert.deepEqual(await usage(10),{records:2,deleted:1,watchlists:1});
+ const remove=(n,replacement=null,name=null)=>db.query('SELECT delete_transaction_category($1,$2,$3) AS data',[id(n),replacement,name]);
+ const balance=async()=>(await db.query('SELECT amount FROM finance_records WHERE id=$1',[id(20)])).rows[0].amount;
+ const initialBalance=await balance();
+ await assert.rejects(remove(10),/in use/);await assert.rejects(remove(10,id(10)),/different category/);await assert.rejects(remove(10,id(12)),/same type/);
+ await assert.rejects(db.query('DELETE FROM transaction_categories WHERE id=$1',[id(13)]),/permission denied/);
+ assert.deepEqual(await usage(10),{records:2,deleted:1,watchlists:1});
+ await remove(13);assert.equal((await db.query('SELECT * FROM transaction_categories WHERE id=$1',[id(13)])).rows.length,0);
+ // A record arriving after an empty preview must prevent an unassigned delete.
+ await category(14,'Race');assert.equal((await usage(14)).records,0);
+ await db.query('UPDATE finance_records SET custom_category_id=$1 WHERE id=$2',[id(14),id(23)]);await assert.rejects(remove(14),/in use/);
+ await remove(14,id(10));
+ await db.exec(`SET request.jwt.claim.sub='${id(2)}';`);await category(15,'Other owner');
+ await assert.rejects(remove(10,id(15)),/not found/);await assert.rejects(usage(10),/not found/);
+ await db.exec(`SET request.jwt.claim.sub='${id(1)}';`);await assert.rejects(remove(10,id(15)),/same type/);
+ await remove(10,id(11));assert.equal(await balance(),initialBalance);
+ assert.equal((await db.query('SELECT * FROM transaction_categories WHERE id=$1',[id(10)])).rows.length,0);
+ const records=(await db.query('SELECT * FROM finance_records WHERE id IN ($1,$2)',[id(21),id(23)])).rows;
+ assert.ok(records.every(row=>row.custom_category_id===id(11)&&Number(row.amount)===.3&&row.kind==='Other expense'));
+ assert.ok((await db.query('SELECT * FROM transaction_splits WHERE record_id=$1',[id(21)])).rows.every(row=>row.category_id===id(11)));
+ const deleted=(await db.query("SELECT * FROM deleted_items WHERE data->>'id'=$1",[id(22)])).rows[0];
+ assert.equal(deleted.data.custom_category_id,id(11));assert.ok(deleted.splits.every(part=>part.category_id===id(11)));
+ assert.equal((await db.query("SELECT data FROM workspace_preferences WHERE key='watchlists'")).rows[0].data.items[0].category,id(11));
+ await db.query('SELECT restore_deleted_item($1)',[deleted.id]);assert.equal(Number(await balance()),99.4);
+ const before=(await db.query('SELECT export_finance_backup() AS data')).rows[0].data;
+ await assert.rejects(remove(11,null,'Travel'),/unique/);
+ assert.equal((await usage(11)).records,3);
+ const renamed=(await db.query('SELECT delete_transaction_category($1,NULL,$2) AS data',[id(11),'Recreation'])).rows[0].data.replacement;
+ assert.ok(renamed);assert.equal(Number(await balance()),99.4);
+ assert.equal((await db.query('SELECT count(*) AS count FROM finance_records')).rows[0].count,before.tables.finance_records.length);
+ const backup=(await db.query('SELECT export_finance_backup() AS data')).rows[0].data;assert.ok(backup.tables.transaction_categories.some(row=>row.id===renamed));
+ await assert.rejects(remove(11),/not found/);
+ // Generated fees allow reassignment without unlocking financial edits.
+ await db.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency) VALUES($1,$2,'Second cash','Cash','USD',0,'2026-09-01','Once')",[id(60),id(1)]);
+ await db.query("SELECT planning_action('transfer',$1)",[{id:id(61),account_id:id(20),target_id:id(60),amount:10,received:10,fee:1,date:'2026-09-01',notes:''}]);
+ const fee=(await db.query('SELECT * FROM finance_records WHERE operation_id=$1',[id(61)])).rows[0];
+ await category(62,'Fees');await db.query('UPDATE finance_records SET custom_category_id=$1 WHERE id=$2',[id(62),fee.id]);
+ await assert.rejects(db.query('UPDATE finance_records SET amount=2 WHERE id=$1',[fee.id]),/cannot be edited/);
+ const feeBalance=await balance();await remove(62,renamed);assert.equal(await balance(),feeBalance);
+ assert.equal((await db.query('SELECT custom_category_id FROM finance_records WHERE id=$1',[fee.id])).rows[0].custom_category_id,renamed);
+ }finally{await db.close();}
+});

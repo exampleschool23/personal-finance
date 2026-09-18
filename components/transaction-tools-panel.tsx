@@ -1,4 +1,6 @@
 "use client";
+import { X } from 'lucide-react';
+import { DeleteCategoryDialog } from '@/components/delete-category-dialog';
 import { useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
@@ -14,21 +16,22 @@ import type { Category } from '@/lib/planning';
 import { income, expenses, type Entry } from '@/lib/finance';
 import type { TransactionTools } from '@/lib/transaction-tools';
 export type ToolsController={data:TransactionTools;loading:boolean;error:string;save:(action:string,data:unknown)=>Promise<void>;retry:()=>void};
-export function TransactionToolsPanel({categories,saveCategory,loading,error,onRetry}:{categories:Category[];saveCategory:(name:string,direction:Category['direction'])=>Promise<void>;loading:boolean;error:string;onRetry:()=>void}){
- const {t}=useLanguage();
+export function TransactionToolsPanel({categories,saveCategory,loading,error,onRetry,onDeleted}:{categories:Category[];saveCategory:(name:string,direction:Category['direction'])=>Promise<void>;loading:boolean;error:string;onRetry:()=>void;onDeleted:()=>void}){
+ const {t}=useLanguage();const [deleting,setDeleting]=useState<Category|null>(null);
  return <section id="categories" className="panel tools-panel category-settings"><h2>{t('Categories')}</h2><p className="muted">{t('Add income and expense categories to use when recording transactions.')}</p>
  {error&&<p role="alert" className="error">{t(error)} <Button onClick={onRetry}>{t('Retry')}</Button></p>}
- {(['income','expense'] as const).map(direction=><CategoryGroup key={direction} direction={direction} categories={categories.filter(category=>category.direction===direction)} saveCategory={saveCategory} disabled={loading||!!error}/>)}
+ {(['income','expense'] as const).map(direction=><CategoryGroup key={direction} direction={direction} categories={categories.filter(category=>category.direction===direction)} saveCategory={saveCategory} disabled={loading||!!error} onDelete={setDeleting}/>)}
+ {deleting&&<DeleteCategoryDialog key={deleting.id} category={deleting} categories={categories} onClose={()=>setDeleting(null)} onDeleted={onDeleted}/>}
  </section>;
 }
-function CategoryGroup({direction,categories,saveCategory,disabled}:{direction:Category['direction'];categories:Category[];saveCategory:(name:string,direction:Category['direction'])=>Promise<void>;disabled:boolean}){
+function CategoryGroup({direction,categories,saveCategory,disabled,onDelete}:{direction:Category['direction'];categories:Category[];saveCategory:(name:string,direction:Category['direction'])=>Promise<void>;disabled:boolean;onDelete:(category:Category)=>void}){
  const {t}=useLanguage();const [name,setName]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const confirmation=useUnsavedNavigation(!!name.trim());
  const defaults=direction==='income'?income:expenses;
  return <section className="category-group"><h3>{t(direction==='income'?'Income categories':'Expense categories')}</h3>
- <ul className="category-badges">{defaults.map(kind=><li key={kind}><CategoryBadge kind={kind} label={t(kind)}/></li>)}{categories.map(category=><li key={category.id}><CategoryBadge kind={category.id} label={category.name}/></li>)}</ul>
+ <ul className="category-badges">{defaults.map(kind=><li key={kind}><CategoryBadge kind={kind} label={t(kind)}/></li>)}{categories.map(category=><li key={category.id}><CategoryBadge kind={category.id} label={category.name}><button type="button" className="category-remove" disabled={disabled||busy} aria-label={t('Delete {name}',{name:category.name})} onClick={()=>onDelete(category)}><X size={12} aria-hidden="true"/></button></CategoryBadge></li>)}</ul>
  <form className="category-create-form" onSubmit={async event=>{event.preventDefault();if(disabled||busy||!name.trim())return;setBusy(true);setError('');try{await saveCategory(name.trim(),direction);setName('');}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}>
- <label>{t(direction==='income'?'New income category':'New expense category')}<Input required maxLength={80} value={name} disabled={disabled||busy} placeholder={t(direction==='income'?'e.g. Freelance':'e.g. Leisure')} onChange={event=>setName(event.target.value)}/></label>
+ <label>{t(direction==='income'?'New income category':'New expense category')}<Input required maxLength={80} value={name} disabled={busy} placeholder={t(direction==='income'?'e.g. Freelance':'e.g. Leisure')} onChange={event=>setName(event.target.value)}/></label>
  <Button disabled={disabled||busy||!name.trim()}>{t(busy?'Saving…':direction==='income'?'Add income category':'Add expense category')}</Button></form>
  {error&&<p className="error" role="alert">{t(error)}</p>}{confirmation}</section>;
 }
