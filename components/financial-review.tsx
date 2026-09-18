@@ -36,6 +36,7 @@ export function MonthlyReview({data,tools,snapshots,historyError,currency,market
    </Dialog></div><p className="muted">{t('Recorded income and spending converted to {currency}. Includes principal and interest payments.',{currency})}</p></div>
    <label>{t('Month')}<DatePicker mode="month" value={month} max={today} onChange={setMonth}/></label>
   </header>
+  {tools.error&&<p className="error" role="alert">{t(tools.error)} <Button type="button" variant="outline" onClick={tools.retry}>{t('Retry')}</Button></p>}
   <div className="review-grid monthly-review-metrics">{[
    {label:'Income received',value:result.received,previous:previous.received},
    {label:'Actual spending',value:result.spent,previous:previous.spent},

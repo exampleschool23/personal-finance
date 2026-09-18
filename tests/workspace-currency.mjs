@@ -193,7 +193,7 @@ test('reusable sources expose variable receipts and bonuses without scheduled da
  let tree=render.tree({...props,editing});
  assert.equal(find(tree,node=>node.type?.name==='RecordNameInput'),undefined);
  assert.equal(find(tree,node=>node.props?.min===fixed.start_date),undefined);
- const selector=find(tree,node=>node.props?.value==='freelance'&&node.props?.onChange);selector.props.onChange({target:{value:'epam'}});
+ const selector=find(tree,node=>node.props?.value==='freelance'&&node.props?.onChange);selector.props.onChange('epam');
  tree=render.tree({...props,editing});assert.equal(editing.earning_due_on,'2026-09-18');assert.equal(editing.amount,400);
  const type=find(tree,node=>node.props?.value==='regular'&&node.props?.onChange);type.props.onChange({target:{value:'bonus'}});
  tree=render.tree({...props,editing});assert.equal(editing.payment_type,'bonus');assert.equal(editing.earning_source_id,'epam');assert.equal(editing.kind,'Other income');assert.equal(editing.earning_due_on,null);
@@ -216,9 +216,9 @@ test('income receipt has one source choice, hides category and linked selectors,
  const props={currencies:['USD'],rows:[],planning:{data:{records:[],categories:[]}},earningSources:{sources:[fixed],loading:false,error:'',retry(){retries++;},save:async()=>{}},setEditing:value=>{editing=value;}};
  const label=(tree,text)=>find(tree,node=>node.type==='label'&&React.Children.toArray(node.props.children).includes(text));
  let tree=render.tree({...props,editing});
- assert.ok(label(tree,'Income source'));assert.equal(label(tree,'Category'),undefined);assert.equal(label(tree,'Repeats'),undefined);
- const sourceSelect=find(label(tree,'Income source'),node=>!!node.props?.onChange);
- sourceSelect.props.onChange({target:{value:'epam'}});
+ assert.ok(find(tree,node=>node.type?.name==='IncomeSourcePicker'));assert.equal(label(tree,'Category'),undefined);assert.equal(label(tree,'Repeats'),undefined);
+ const sourceSelect=find(tree,node=>node.type?.name==='IncomeSourcePicker');
+ sourceSelect.props.onChange('epam');
  tree=render.tree({...props,editing});
  assert.equal(editing.kind,'Salary');assert.equal(editing.amount,400.125);
  assert.equal(label(tree,'Category'),undefined);assert.equal(label(tree,'Linked salary'),undefined);assert.equal(find(tree,node=>node.type?.name==='RecordNameInput'),undefined);
@@ -226,7 +226,7 @@ test('income receipt has one source choice, hides category and linked selectors,
  assert.equal(label(tree,'Category'),undefined);assert.equal(label(tree,'Linked salary'),undefined);
  assert.ok(find(tree,node=>node.props?.children==='Save income').props.disabled);
  find(tree,node=>node.props?.children==='Retry').props.onClick();assert.equal(retries,1);
- find(label(tree,'Income source'),node=>!!node.props?.onChange).props.onChange({target:{value:''}});
+ find(tree,node=>node.type?.name==='IncomeSourcePicker').props.onChange('');
  tree=render.tree({...props,editing,earningSources:{...props.earningSources,sources:[],error:'Could not load income sources.'}});
  assert.equal(editing.kind,'Other income');assert.equal(editing.earning_source_id,null);assert.equal(editing.earning_due_on,null);assert.equal(editing.frequency,'Once');assert.equal(editing.amount,400.125);
  assert.ok(find(tree,node=>node.type?.name==='RecordNameInput'));
@@ -243,9 +243,9 @@ test('editing an existing linked receipt preserves its source without duplicate 
  assert.deepEqual(editing,original);
  assert.equal(find(tree,node=>node.type==='label'&&React.Children.toArray(node.props.children).includes('Linked rental')),undefined);
  const select=find(tree,node=>node.props?.value==='saved'&&node.props?.onChange);
- assert.ok(select);select.props.onChange({target:{value:''}});
+ assert.ok(select);select.props.onChange('');
  assert.equal(editing.income_source_id,null);assert.equal(editing.kind,'Other income');
- select.props.onChange({target:{value:'saved'}});
+ select.props.onChange('saved');
  assert.equal(editing.income_source_id,'rental');assert.equal(editing.kind,'Rent income');assert.equal(editing.name,'Apartment');
 });
 

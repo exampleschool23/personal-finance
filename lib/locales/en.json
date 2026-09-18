@@ -1676,5 +1676,12 @@
   "Profile & preferences": "Profile & preferences",
   "Hi, {name}!": "Hi, {name}!",
   "Hi there!": "Hi there!",
-  "Choose a language, at least one currency, and a name of up to 80 characters.": "Choose a language, at least one currency, and a name of up to 80 characters."
+  "Choose a language, at least one currency, and a name of up to 80 characters.": "Choose a language, at least one currency, and a name of up to 80 characters.",
+  "What your investments are worth compared with investing the same amounts on the same dates in each benchmark.": "What your investments are worth compared with investing the same amounts on the same dates in each benchmark.",
+  "Value including payouts": "Value including payouts",
+  "Values include remaining holdings and recorded investment income, minus investment costs. Gains also account for withdrawals.": "Values include remaining holdings and recorded investment income, minus investment costs. Gains also account for withdrawals.",
+  "Time buttons zoom the chart. Values always use your original investment amounts and dates.": "Time buttons zoom the chart. Values always use your original investment amounts and dates.",
+  "Ahead / behind benchmark": "Ahead / behind benchmark",
+  "Each benchmark shows what the same dated investments would be worth in your selected currency. The difference from your investments shows how much money you are ahead or behind. Investment gain is value including payouts minus net contributions.": "Each benchmark shows what the same dated investments would be worth in your selected currency. The difference from your investments shows how much money you are ahead or behind. Investment gain is value including payouts minus net contributions.",
+  "Compare what your investments are worth with the same money invested in benchmarks on the same dates.": "Compare what your investments are worth with the same money invested in benchmarks on the same dates."
 }

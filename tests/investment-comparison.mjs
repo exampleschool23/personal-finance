@@ -54,7 +54,7 @@ test('cashflow-only investing can start at zero and earns nothing before the con
  const result=compareInvestments(0,[{date:'2025-01-02',amount:100}],[],data('2025-01-01','2025-01-03',{BTC:[{date:'2025-01-01',close:100},{date:'2025-01-02',close:200},{date:'2025-01-03',close:220}]}),'USD');
  assert.equal(result.points[0].BTC,0);assert.equal(result.points[1].BTC,100);near(result.points[2].BTC,110);assert.equal(result.netCashFlow,100);
 });
-test('comparison UI translates literal messages and uses a fixed account start instead of editable dates',()=>{
+test('comparison UI translates literal messages and uses recorded investment dates instead of editable starting capital',()=>{
  const source=fs.readFileSync('components/investment-comparison.tsx','utf8');
  const messages=[...source.matchAll(/\bt\('([^']+)'/g)].map(match=>match[1]);
  for(const language of ['en','ru','uz']){const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));for(const message of messages)assert.ok(labels[message],`${language}: ${message}`);}

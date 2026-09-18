@@ -32,7 +32,7 @@ export function BenchmarksPage({currency,market,demo,revision}:Props) {
   return()=>controller.abort();
  },[demo,revision,retry]);
  return <>
-  <div className="page-heading"><div><h1>{t('Benchmarks')}</h1><p className="muted">{t('Compare your investment returns with Bitcoin and other assets, using the same money on the same dates.')}</p></div></div>
+  <div className="page-heading"><div><h1>{t('Benchmarks')}</h1><p className="muted">{t('Compare what your investments are worth with the same money invested in benchmarks on the same dates.')}</p></div></div>
   {error?<section className="panel"><p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={()=>{setError(false);setHistory(null);setRetry(n=>n+1);}}>{t('Retry')}</Button></p></section>:!demo&&!history?<section className="panel"><LoadingPlaceholder label={t('Loading history…')}/></section>:<InvestmentComparison key={currency} history={history??{records:[],events:[]}} today={depositToday()} currency={currency} market={market} demo={demo}/>}
  </>;
 }

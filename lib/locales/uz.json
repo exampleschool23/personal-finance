@@ -1676,5 +1676,12 @@
   "Profile & preferences": "Profil va sozlamalar",
   "Hi, {name}!": "Salom, {name}!",
   "Hi there!": "Salom!",
-  "Choose a language, at least one currency, and a name of up to 80 characters.": "Til, kamida bitta valyuta va 80 belgigacha bo‘lgan ismni kiriting."
+  "Choose a language, at least one currency, and a name of up to 80 characters.": "Til, kamida bitta valyuta va 80 belgigacha bo‘lgan ismni kiriting.",
+  "What your investments are worth compared with investing the same amounts on the same dates in each benchmark.": "Investitsiyalaringiz qiymatini xuddi shu summalar ayni sanalarda har bir mezonga kiritilgandagi qiymat bilan solishtiring.",
+  "Value including payouts": "To‘lovlar bilan birga qiymat",
+  "Values include remaining holdings and recorded investment income, minus investment costs. Gains also account for withdrawals.": "Qiymat qolgan aktivlar va qayd etilgan investitsiya daromadlarini xarajatlar chegirilgan holda o‘z ichiga oladi. Foyda yechib olingan mablag‘larni ham hisobga oladi.",
+  "Time buttons zoom the chart. Values always use your original investment amounts and dates.": "Davr tugmalari grafik ko‘lamini o‘zgartiradi. Hisob-kitob doim dastlabki investitsiya summalari va sanalaridan foydalanadi.",
+  "Ahead / behind benchmark": "Mezondan oldinda / ortda",
+  "Each benchmark shows what the same dated investments would be worth in your selected currency. The difference from your investments shows how much money you are ahead or behind. Investment gain is value including payouts minus net contributions.": "Har bir mezon ayni sanalardagi bir xil investitsiyalarning tanlangan valyutadagi qiymatini ko‘rsatadi. Farq qancha pulga oldinda yoki ortda ekaningizni bildiradi. Investitsiya foydasi — to‘lovlar bilan birga qiymatdan sof badallar ayirmasi.",
+  "Compare what your investments are worth with the same money invested in benchmarks on the same dates.": "Investitsiyalaringiz qiymatini ayni sanalarda mezonlarga kiritilgan bir xil mablag‘ qiymati bilan solishtiring."
 }

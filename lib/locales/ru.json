@@ -471,8 +471,8 @@
   "Ending value": "Итоговая стоимость",
   "Gain after cash flows": "Прирост без пополнений и снятий",
   "Your result versus alternative": "Ваш результат относительно альтернативы",
-  "Ahead by {amount}": "Выше на {amount}",
-  "Behind by {amount}": "Ниже на {amount}",
+  "Ahead by {amount}": "Впереди на {amount}",
+  "Behind by {amount}": "Позади на {amount}",
   "Exchange rates": "Курсы валют",
   "Some lines stop because prices or exchange rates are missing, or withdrawals exceed the available balance.": "Некоторые линии обрываются из-за отсутствия цен или курсов либо из-за снятий, превышающих доступный баланс.",
   "How this comparison works": "Как устроено сравнение",
@@ -1676,5 +1676,12 @@
   "Profile & preferences": "Профиль и настройки",
   "Hi, {name}!": "Привет, {name}!",
   "Hi there!": "Привет!",
-  "Choose a language, at least one currency, and a name of up to 80 characters.": "Выберите язык, хотя бы одну валюту и имя длиной до 80 символов."
+  "Choose a language, at least one currency, and a name of up to 80 characters.": "Выберите язык, хотя бы одну валюту и имя длиной до 80 символов.",
+  "What your investments are worth compared with investing the same amounts on the same dates in each benchmark.": "Стоимость ваших инвестиций в сравнении с вложением тех же сумм в те же даты в каждый ориентир.",
+  "Value including payouts": "Стоимость с учётом выплат",
+  "Values include remaining holdings and recorded investment income, minus investment costs. Gains also account for withdrawals.": "Стоимость включает оставшиеся активы и записанный инвестиционный доход за вычетом расходов. Прибыль также учитывает выведенные средства.",
+  "Time buttons zoom the chart. Values always use your original investment amounts and dates.": "Кнопки периода меняют масштаб графика. Расчёт всегда использует исходные суммы и даты инвестиций.",
+  "Ahead / behind benchmark": "Опережение / отставание от ориентира",
+  "Each benchmark shows what the same dated investments would be worth in your selected currency. The difference from your investments shows how much money you are ahead or behind. Investment gain is value including payouts minus net contributions.": "Каждый ориентир показывает стоимость тех же вложений в те же даты в выбранной валюте. Разница с вашими инвестициями показывает опережение или отставание в деньгах. Прибыль — стоимость с учётом выплат минус чистые взносы.",
+  "Compare what your investments are worth with the same money invested in benchmarks on the same dates.": "Сравните стоимость своих инвестиций с вложением тех же денег в ориентиры в те же даты."
 }

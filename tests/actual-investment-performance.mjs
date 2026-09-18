@@ -21,12 +21,15 @@ test('money added is capital and withdrawals preserve realized profit, including
  const result=performance(records,[opening,event('contribution','2026-09-02',100,500),event('withdrawal','2026-09-03',600,0),event('expense','2026-09-03',10,null)],[{...holding,balance:0}],[],'USD','2026-09-03');
  const sim=compareInvestments(0,result.flows,result.points,{start:result.start,end:'2026-09-03',fx:[],prices:{},errors:{}},'USD',true);
  const last=percentagePerformance(sim.points,result.flows).at(-1);
+ assert.equal(sim.points.at(-1).actual-sim.points.at(-1).contributed,90);
  assert.equal(last.invested,500);assert.equal(last.contributed,-100);assert.equal(last.actual,18);
 });
-test('two purchases buy BTC at their own prices and compare cumulative returns in percentage points',()=>{
+test('two purchases buy BTC at their own prices and show monetary values and the shortfall',()=>{
  const result=performance(records,[event('contribution','2026-09-01',1000,1000),event('contribution','2026-09-02',500,1500),event('valuation','2026-09-03',0,1700)],[{...holding,balance:1700}],[],'USD','2026-09-03');
  const sim=compareInvestments(0,result.flows,result.points,{start:result.start,end:'2026-09-03',fx:[],prices:{BTC:[{date:'2026-09-01',close:100},{date:'2026-09-02',close:200},{date:'2026-09-03',close:220}]},errors:{}},'USD',true);
  const returns=percentagePerformance(sim.points,result.flows),last=returns.at(-1);
+ const values=sim.points.at(-1);
+ assert.equal(values.actual,1700);assert.equal(values.BTC,2750);assert.equal(values.actual-values.contributed,200);assert.equal(values.BTC-values.contributed,1250);assert.equal(values.actual-values.BTC,-1050);
  assert.equal(sim.points.at(-1).BTC,2750);assert.equal(last.invested,1500);near(last.actual,200/1500*100);near(last.BTC,1250/1500*100);near(last.actual-last.BTC,-70);
  assert.equal(returns[0].actual,0);assert.equal(returns[0].BTC,0);
 });
@@ -60,4 +63,24 @@ test('same-day sales and purchases preserve gross invested capital even when cas
  const flows=[{date:'2026-09-01',amount:100},{date:'2026-09-02',amount:-50},{date:'2026-09-02',amount:50}];
  const last=percentagePerformance([{date:'2026-09-01',actual:100,contributed:100},{date:'2026-09-02',actual:130,contributed:100}],flows).at(-1);
  assert.equal(last.invested,150);assert.equal(last.actual,20);
+});
+
+test('monetary comparison retains small-price precision and unavailable benchmark gaps',()=>{
+ const flows=[{date:'2026-09-01',amount:100.125},{date:'2026-09-02',amount:50.375}];
+ const data={start:'2026-09-01',end:'2026-09-02',fx:[],prices:{BTC:[{date:'2026-09-01',close:.000001},{date:'2026-09-02',close:.000002}]},errors:{}};
+ const result=compareInvestments(0,flows,[{date:'2026-09-01',amount:100.125},{date:'2026-09-02',amount:190.75}],data,'USD',true);
+ near(result.points.at(-1).BTC,250.625);
+ near(result.points.at(-1).actual-result.points.at(-1).BTC,-59.875);
+ assert.equal(result.points.at(-1).depositUZS,null);
+});
+test('benchmark presentation uses monetary values throughout and includes original investment dates',()=>{
+ const source=fs.readFileSync('components/investment-comparison.tsx','utf8');
+ assert.ok(source.includes('const points=result?.points??[]'));
+ assert.ok(source.includes('tickFormatter={money}'));
+ assert.ok(source.includes('money(Number(amount))'));
+ assert.ok(source.includes("t('Ahead / behind benchmark')"));
+ assert.ok(source.includes('):start;'));
+ assert.ok(!source.includes('percentagePerformance'));
+ assert.ok(!source.includes('tickFormatter={percent}'));
+ assert.ok(!source.includes('percentage points'));
 });
