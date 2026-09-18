@@ -17,10 +17,10 @@ export function goalProgress(goal:Goal,today=depositToday()) {
 export type DueItem = {key:string;record:Entry;date:string;overdue:boolean;type:'scheduled'|'repayment'|'maturity'};
 export function upcomingPayments(records:Entry[],occurrences:Occurrence[],today=depositToday(),through?:string):DueItem[] {
  const end=through??new Date(Date.parse(today+'T00:00:00Z')+31*86400000).toISOString().slice(0,10);
- const settled=new Set(occurrences.map(o=>o.record_id+':'+o.due_on));
+ const settled=new Set([...occurrences.map(o=>o.record_id+':'+o.due_on),...records.filter(r=>r.kind==='Salary'&&r.frequency==='Once'&&r.income_source_id).map(r=>r.income_source_id+':'+(r.income_due_on??r.date))]);
  const result:DueItem[]=[];
  for(const record of records){
-  if(!record.date)continue;
+  if(!record.date||record.source_paused)continue;
   const recurring=[...income,...expenses].includes(record.kind)&&record.frequency!=='Once';
   const add=(date:string,type:DueItem['type'])=>{const key=record.id+':'+date;if(date<=end&&!settled.has(key))result.push({key,record,date,type,overdue:date<today});};
   if(recurring){

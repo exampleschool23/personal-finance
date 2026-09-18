@@ -1,4 +1,5 @@
 "use client";
+import {useGoalLayoutAnimation} from '@/hooks/use-goal-layout-animation';
 import { GoalDragHandle } from './goal-drag-handle';
 import { GoalCard } from './goal-card';
 import { useGoalOrder } from '@/hooks/use-goal-order';
@@ -51,6 +52,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
  const open=(goal?:Goal)=>{setError('');setDraft(goal?{...goal,kind:goal.kind??'savings',currency:goalCurrency(goal),investment_targets:investmentGoalTargets(goal)}:{id:crypto.randomUUID(),name:'',kind:'net_worth',currency:currency,account_id:null,target:0,allocated:0,target_date:null,archived:false,monthly_contribution:null,annual_return:0});};
  const order=useGoalOrder(data.goals,preferences,owner,demo);
  const visible=order.goals.filter(goal=>archived||!goal.archived),active=visible.find(goal=>goal.id===selected)??visible[0];
+ const cardsRef=useGoalLayoutAnimation(JSON.stringify(visible.map(goal=>goal.id)));
  const totals=new Map([...new Set([...currencies,...data.goals.map(goalCurrency)])].map(currency=>[currency,goalFinancials(data.records,plans,today.slice(0,7),currency,market,plansReady)]));
  const financials=active?totals.get(goalCurrency(active)):null;
  return <>
@@ -61,7 +63,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
   {preferences.error&&!demo&&<p className="error" role="alert">{t('Load saved preferences before making changes.')} <Button onClick={preferences.retry}>{t('Retry')}</Button></p>}
   <div className="goal-list-toolbar"><p className="muted">{t(demo?'Drag the handles to reorder goals. Demo changes last for this visit.':'Drag the handles to reorder goals. Your order is saved automatically.')}</p><label className="planning-check"><Checkbox checked={archived} onCheckedChange={checked=>setArchived(checked===true)}/>{t('Show archived goals')}</label></div>
   {!visible.length&&<section className="panel goal-empty"><h2>{t('What are you working toward?')}</h2><p>{t('Set a target amount and date, then explore how monthly investments can get you there.')}</p><Button onClick={()=>open()}>{t('Add goal')}</Button></section>}
-  <div className="planning-cards goal-cards goal-cards-compact">{visible.map(goal=>{
+  <div ref={cardsRef} className="planning-cards goal-cards goal-cards-compact">{visible.map(goal=>{
    const investment=goal.kind==='investment',holdingItems=investmentGoalItems(goal,data);
    const currency=goalCurrency(goal),account=accounts.find(account=>account.id===goal.account_id),current=goal.kind==='net_worth'?totals.get(currency)?.netWorth??null:Number(goal.allocated),money=(n:number)=>formatMoney(n,currency,locale);
    const percent=investment?investmentGoalCompletion(goal,data):current===null?null:Math.max(0,Math.min(100,current/goal.target*100));

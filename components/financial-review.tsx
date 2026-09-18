@@ -1,9 +1,10 @@
 "use client";
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChartNoAxesCombined, ChevronDown, Plus } from 'lucide-react';
+import { ChartNoAxesCombined, CircleHelp, CalendarDays, ReceiptText, Plus, X } from 'lucide-react';
 import { categoryColor } from '@/lib/category-colors';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { NativeSelect } from '@/components/ui/native-select';
 import { DatePicker } from '@/components/date-picker';
 import { CategoryBadge } from '@/components/category-badge';
@@ -17,7 +18,7 @@ import type { PortfolioSnapshot } from '@/lib/portfolio-snapshots';
 export function AccountForecast({data,tools}:{data:PlanningData;tools:ToolsController}){
  const {t,locale}=useLanguage();const today=depositToday();const [through,setThrough]=useState(()=>new Date(Date.parse(today+'T00:00:00Z')+30*86400000).toISOString().slice(0,10));const [busy,setBusy]=useState(false),[error,setError]=useState('');
  const forecast=accountForecast(data.records,data.occurrences,tools.data.assignments,today,through);
- const schedules=data.records.filter(record=>record.frequency!=='Once'&&['Salary','Rent income','Other income','Rent expense','Living expense','Charity','Other expense'].includes(record.kind));
+ const schedules=data.records.filter(record=>!record.source_paused&&record.frequency!=='Once'&&['Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense'].includes(record.kind));
  return <section className="panel tools-panel"><div className="review-heading"><div><h2>{t('Account balance forecast')}</h2><p className="muted">{t('A projection from current cash and unpaid recurring schedules. Overdue items are included today. Budgets, unscheduled costs and maturity reminders are excluded. No money moves automatically.')}</p></div><label>{t('Forecast through')}<DatePicker value={through} min={today} onChange={setThrough}/></label></div>
  {tools.error&&<p className="error" role="alert">{t(tools.error)} <Button onClick={tools.retry}>{t('Retry')}</Button></p>}
  {!tools.loading&&!tools.error&&<><div className="review-grid">{forecast.accounts.map(item=><article key={item.account.id}><h3>{item.account.name}</h3><p>{t('Current balance')}: {formatMoney(item.current,item.account.currency,locale)}</p><strong className={item.lowest<0?'negative':''}>{formatMoney(item.ending,item.account.currency,locale)}</strong><p>{t('Lowest projected balance')}: {formatMoney(item.lowest,item.account.currency,locale)}</p>{item.lowest<0&&<p role="status">{t('A payment may exceed the available balance.')}</p>}<details><summary>{t('Projected activity')}</summary><ol className="tool-list">{item.events.map(event=><li key={event.key}><span>{formatDate(event.date,locale)} · {event.name}{event.overdue&&` · ${t('Overdue')}`}</span><span>{formatMoney(event.amount,item.account.currency,locale)} → {formatMoney(event.balance,item.account.currency,locale)}</span></li>)}</ol></details></article>)}</div>
@@ -29,8 +30,7 @@ export function AccountForecast({data,tools}:{data:PlanningData;tools:ToolsContr
 export function MonthlyReview({data,tools,snapshots,historyError,currency,onAddExpense}:{data:PlanningData;tools:ToolsController;snapshots:PortfolioSnapshot[];historyError:string;currency:string;onAddExpense?:()=>void}){
  const {t,locale}=useLanguage();
  const today=depositToday();
- const [date,setDate]=useState(today);
- const month=date.slice(0,7);
+ const [month,setMonth]=useState(()=>today.slice(0,7));
  const result=monthlyReview(data.records,tools.data.splits,snapshots,month,currency,today);
  const priorDate=new Date(month+'-01T00:00:00Z');priorDate.setUTCMonth(priorDate.getUTCMonth()-1);
  const previous=monthlyReview(data.records,tools.data.splits,snapshots,priorDate.toISOString().slice(0,7),currency,today);
@@ -38,8 +38,19 @@ export function MonthlyReview({data,tools,snapshots,historyError,currency,onAddE
  const categories=result.categories.filter(category=>category.amount>0);
  return <section className="panel tools-panel monthly-review">
   <header className="monthly-review-heading">
-   <div><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2><p className="muted">{t('Recorded income and expenses in {currency}. Recurring plans are shown separately.',{currency})}</p></div>
-   <label>{t('Month')}<DatePicker value={date} max={today} onChange={setDate}/></label>
+   <div><div className="monthly-review-title"><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2><Dialog>
+    <DialogTrigger asChild><Button type="button" variant="ghost" size="icon" className="monthly-review-help" aria-label={t('How this review is calculated')} title={t('How this review is calculated')}><CircleHelp size={19} aria-hidden="true"/></Button></DialogTrigger>
+    <DialogContent className="monthly-review-help-dialog" showCloseButton={false}>
+     <DialogClose className="monthly-review-help-close" aria-label={t('Close')}><X size={18} aria-hidden="true"/></DialogClose>
+     <div className="monthly-review-help-icon"><CircleHelp size={26} aria-hidden="true"/></div>
+     <DialogTitle>{t('How this review is calculated')}</DialogTitle>
+     <DialogDescription>{t('Recorded income and expenses in {currency}. Recurring plans are shown separately.',{currency})}</DialogDescription>
+     <div className="monthly-review-help-note"><ReceiptText size={21} aria-hidden="true"/><p>{t('Actual transactions in the selected currency only. Recurring plans are excluded. Savings means income minus expenses; principal repayments are not expenses.')}</p></div>
+     <div className="monthly-review-help-note"><CalendarDays size={21} aria-hidden="true"/><p>{t('The current month includes transactions through today; the previous month is a full month. Net-worth observations may not fall on month boundaries.')}</p></div>
+     <DialogClose asChild><Button type="button" className="monthly-review-help-done">{t('Close')}</Button></DialogClose>
+    </DialogContent>
+   </Dialog></div><p className="muted">{t('Recorded income and expenses in {currency}. Recurring plans are shown separately.',{currency})}</p></div>
+   <label>{t('Month')}<DatePicker mode="month" value={month} max={today} onChange={setMonth}/></label>
   </header>
   <div className="review-grid monthly-review-metrics">{[
    {label:'Income received',value:result.received,previous:previous.received},
@@ -57,6 +68,6 @@ export function MonthlyReview({data,tools,snapshots,historyError,currency,onAddE
     : <div className="monthly-review-empty"><ChartNoAxesCombined size={24} aria-hidden="true"/><div><strong>{t('No recorded spending this month')}</strong><p>{t('No expense transactions were recorded in {currency} for {month}. Recurring plans appear here only after a payment is recorded.',{currency,month:formatMonthYear(month,locale)})}</p>{onAddExpense&&<Button type="button" variant="outline" onClick={onAddExpense}><Plus size={16} aria-hidden="true"/>{t('Add expense')}</Button>}</div></div>}
   </section>
   <div className="monthly-review-net-worth"><strong>{t('Net-worth change')}: {historyError||result.netWorthChange===null?'—':money(result.netWorthChange)}</strong><p className="muted">{historyError?t('Net-worth history could not be loaded.'):result.netWorthChange!==null?t('Observed between {from} and {to}',{from:formatDate(result.from!,locale),to:formatDate(result.to!,locale)}):t('Two recorded balances are needed to show a change.')}</p></div>
-  <details className="monthly-review-method"><summary><span>{t('How this review is calculated')}</span><ChevronDown size={16} aria-hidden="true"/></summary><p className="muted">{t('Actual transactions in the selected currency only. Recurring plans are excluded. Savings means income minus expenses; principal repayments are not expenses.')}</p><p className="muted">{t('The current month includes transactions through today; the previous month is a full month. Net-worth observations may not fall on month boundaries.')}</p></details>
+
  </section>;
 }

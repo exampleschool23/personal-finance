@@ -1,0 +1,83 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {PGlite} from '@electric-sql/pglite';
+import {loadTS} from './helpers/load-ts.mjs';
+const {earningSourceSchema,sourceSchedule,selectEarningSource,resolveEarningSource}=loadTS('lib/earning-sources.ts');
+const {monthly}=loadTS('lib/finance.ts');
+const id=n=>`53000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+const variable={id:id(20),name:'Freelance interviews',kind:'Other income',currency:'USD',mode:'variable',archived:false,amount:null,frequency:null,start_date:null,end_date:null,linked_record_id:null};
+const fixed={...variable,id:id(21),name:'EPAM',kind:'Salary',mode:'fixed',amount:1000,frequency:'Monthly',start_date:'2020-01-31'};
+test('variable sources never forecast or schedule, and bonuses do not settle fixed income',()=>{
+ assert.ok(earningSourceSchema.safeParse(variable).success);assert.equal(sourceSchedule(variable),null);
+ assert.equal(earningSourceSchema.safeParse({...variable,amount:400}).success,false);
+ assert.equal(earningSourceSchema.safeParse({...fixed,amount:0}).success,false);
+ assert.equal(monthly({...sourceSchedule(fixed),source_paused:true}),0);
+ const entry={id:id(30),date:'2020-02-20',amount:400,frequency:'Once'};
+ const payment={...entry,...selectEarningSource(entry,variable)};assert.equal(payment.amount,400);assert.equal(payment.earning_due_on,null);assert.equal(payment.name,variable.name);
+ const bonus={...entry,...selectEarningSource(entry,fixed,true)};assert.equal(bonus.kind,'Other income');assert.equal(bonus.payment_type,'bonus');assert.equal(bonus.earning_due_on,null);assert.equal(resolveEarningSource(bonus,[fixed]).earning_due_on,null);
+ const salary={...entry,...selectEarningSource(entry,fixed)};assert.equal(salary.earning_due_on,'2020-02-29');assert.throws(()=>resolveEarningSource({...salary,earning_due_on:'2020-02-28'},[fixed]),/scheduled/);
+ assert.throws(()=>resolveEarningSource(payment,[{...variable,archived:true}]),/active/);
+ assert.equal(resolveEarningSource(payment,[{...variable,archived:true}],payment).name,variable.name);
+});
+test('income source API authenticates, validates modes and sends only validated fields',async()=>{
+ let authenticated=true,calls=[];
+ const {GET,POST}=loadTS('app/api/income-sources/route.ts',{'@/lib/supabase':{session:async()=>authenticated?{token:'owner'}:null,sameOrigin:req=>req.headers.get('origin')==='https://local',supa:async(path,init,token)=>{calls.push({path,body:JSON.parse(init.body),token});return Response.json(variable);}},'@/lib/server-records':{readOwnerRows:async(table,token)=>{assert.equal(table,'income_sources');assert.equal(token,'owner');return [variable];}}});
+ const post=(body,origin='https://local')=>POST(new Request('https://local/api/income-sources',{method:'POST',headers:{origin},body:JSON.stringify(body)}));
+ authenticated=false;assert.equal((await GET()).status,401);assert.equal((await post(variable)).status,401);authenticated=true;
+ assert.equal((await post(variable,'https://other')).status,403);assert.equal((await post({...variable,amount:400})).status,400);
+ assert.equal((await post({...variable,user_id:id(999),schedule_id:id(900)})).status,200);
+ assert.equal(calls[0].body.p_data.user_id,undefined);assert.equal(calls[0].body.p_data.schedule_id,undefined);assert.equal(calls[0].token,'owner');
+});
+test('sources support irregular receipts, bonuses, schedules, archiving and owner isolation atomically',async()=>{
+ const db=new PGlite();
+ try{
+ await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${id(1)}'),('${id(2)}');`);
+ await db.exec(fs.readFileSync('database/setup.sql','utf8').split('-- Reusable fixed/variable sources;')[0]);
+ await db.exec(`SET request.jwt.claim.sub='${id(1)}';INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency) VALUES('${id(10)}','${id(1)}','Cash','Cash','USD',1000,'2020-01-01','Once'),('${id(11)}','${id(1)}','Existing salary','Salary','USD',500,'2020-01-01','Monthly');`);
+ await db.exec(fs.readFileSync('migrations/043_reusable_income_sources.sql','utf8'));
+ await db.exec('SET ROLE authenticated');
+ const save=async source=>(await db.query('SELECT save_income_source($1) AS source',[source])).rows[0].source;
+ assert.equal((await db.query('SELECT schedule_id FROM income_sources WHERE id=$1',[id(11)])).rows[0].schedule_id,id(11));
+ const v=await save(variable),f=await save(fixed);
+ const balance=async()=>Number((await db.query('SELECT amount FROM finance_records WHERE id=$1',[id(10)])).rows[0].amount);
+ assert.equal(await balance(),1000);assert.equal(v.schedule_id,null);assert.ok(f.schedule_id);
+ await assert.rejects(db.query('UPDATE finance_records SET amount=999 WHERE id=$1',[f.schedule_id]),/Income sources/);
+ const receipt=(n,source,amount,date,due=null,type='regular')=>db.query(`INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency,earning_source_id,earning_due_on,payment_type,account_id) VALUES($1,$2,'Ignored','Other income','USD',$3,$4,'Once',$5,$6,$7,$8)`,[id(n),id(1),amount,date,source,due,type,id(10)]);
+ await receipt(30,v.id,400,'2020-02-10');await receipt(31,v.id,200,'2020-03-10');await receipt(32,v.id,1000,'2020-04-10');await receipt(33,v.id,25.125,'2020-04-10');assert.equal(await balance(),2625.125);
+ assert.equal((await db.query('SELECT count(*) AS n FROM payment_occurrences')).rows[0].n,0);
+ await receipt(34,f.id,150,'2020-02-10',null,'bonus');assert.equal(await balance(),2775.125);
+ assert.equal((await db.query('SELECT count(*) AS n FROM payment_occurrences')).rows[0].n,0);
+ await receipt(35,f.id,1000,'2020-03-02','2020-02-29');assert.equal(await balance(),3775.125);
+ await assert.rejects(receipt(36,f.id,1000,'2020-03-02','2020-02-29'),/already recorded/);assert.equal(await balance(),3775.125);
+ await db.query('UPDATE finance_records SET amount=500 WHERE id=$1',[id(30)]);assert.equal(await balance(),3875.125);
+ await db.query('DELETE FROM finance_records WHERE id=$1',[id(33)]);assert.equal(await balance(),3850);
+ await assert.rejects(save({...variable,currency:'EUR'}),/compatible/);
+ await save({...fixed,archived:true});assert.equal((await db.query('SELECT source_paused FROM finance_records WHERE id=$1',[f.schedule_id])).rows[0].source_paused,true);
+ await assert.rejects(receipt(37,f.id,25,'2020-03-02',null,'bonus'),/active/);
+ await db.query('UPDATE finance_records SET amount=200 WHERE id=$1',[id(34)]);assert.equal(await balance(),3900);
+ await save({...fixed,archived:false});
+ const occurrence={id:id(38),target_id:f.schedule_id,account_id:id(10),date:'2020-03-31',notes:''};
+ await db.query("SELECT planning_action('occurrence',$1)",[occurrence]);assert.equal(await balance(),4900);
+ await db.query("SELECT planning_action('occurrence',$1)",[occurrence]);assert.equal(await balance(),4900);
+ const april=await save({...fixed,id:id(22),name:'Switchable',start_date:'2020-04-30'});
+ await save({...variable,id:april.id,name:'Switchable'});assert.equal((await db.query('SELECT source_paused FROM finance_records WHERE id=$1',[april.schedule_id])).rows[0].source_paused,true);
+ const backup=(await db.query('SELECT export_finance_backup() AS data')).rows[0].data;assert.ok(backup.income_sources.some(row=>row.id===v.id));
+ await db.exec(`SET request.jwt.claim.sub='${id(2)}'`);assert.equal((await db.query('SELECT * FROM income_sources')).rows.length,0);
+ await assert.rejects(save({...variable,name:'Hijacked'}),/not found/);
+ await assert.rejects(receipt(40,v.id,400,'2020-05-01'));
+ await db.exec(`RESET ROLE;DELETE FROM auth.users WHERE id='${id(1)}';`);assert.equal((await db.query('SELECT * FROM income_sources')).rows.length,0);
+ }finally{await db.close();}
+});
+
+import {harness} from './helpers/hooks.mjs';
+test('source loading and save failures remain owner-isolated, including late responses',async()=>{
+ const requests=[];const fetch=(url,options={})=>new Promise(resolve=>requests.push({url,options,reply:(body,status=200)=>resolve(Response.json(body,{status}))}));
+ const render=harness('hooks/use-earning-sources.ts','useEarningSources',{fetch,earningSourceSchema});
+ const flush=()=>new Promise(resolve=>setImmediate(resolve));
+ const run=(owner='owner')=>render(owner,false,0,()=>{},()=>{});
+ assert.equal(run().loading,true);requests[0].reply([variable]);await flush();assert.equal(run().sources[0].name,variable.name);
+ const saving=run().save({...variable,name:'Changed'});requests[1].reply({error:'Save failed'},409);await assert.rejects(saving,/Save failed/);assert.equal(run().sources[0].name,variable.name);
+ assert.deepEqual(run('other').sources,[]);requests[2].reply({error:'Unavailable'},503);await flush();assert.equal(run('other').error,'Unavailable');assert.deepEqual(run('other').sources,[]);
+ run('third');run('fourth');assert.equal(requests[3].options.signal.aborted,true);requests[3].reply([variable]);requests[4].reply([]);await flush();assert.deepEqual(run('fourth').sources,[]);
+});

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { BadgeDollarSign, BanknoteArrowDown, BanknoteArrowUp, CirclePlus, CreditCard, HandHeart, House, HousePlus, KeyRound, ReceiptText, ShoppingBasket, type LucideIcon } from 'lucide-react';
+import { BriefcaseBusiness, BadgeDollarSign, BanknoteArrowDown, BanknoteArrowUp, CirclePlus, CreditCard, HandHeart, House, HousePlus, KeyRound, ReceiptText, ShoppingBasket, type LucideIcon } from 'lucide-react';
 import { AssetIcon } from '@/components/asset-icon';
 import { categoryHue } from '@/lib/category-colors';
 import type { Entry, Kind } from '@/lib/finance';
@@ -12,6 +12,7 @@ const recordSymbols = {
  Debt: CreditCard,
  Salary: BadgeDollarSign,
  'Rent income': HousePlus,
+ 'Business income': BriefcaseBusiness,
  'Other income': CirclePlus,
  'Rent expense': KeyRound,
  'Living expense': ShoppingBasket,

@@ -7,8 +7,44 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
 import { formatDate, formatMonthYear, formatYear, parseCalendarDate, calendarIso } from '@/lib/format';
 
+type DatePickerProps = { value: string; onChange: (value: string) => void; min?: string; max?: string; required?: boolean; mode?: 'date' | 'month' };
+
+export function DatePicker({ mode = 'date', ...props }: DatePickerProps) {
+  return mode === 'month' ? <MonthSelection {...props}/> : <DayPicker {...props}/>;
+}
+
+function MonthSelection({ value, onChange, min, max }: DatePickerProps) {
+  const { locale, t } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const initialMonth = () => value || calendarIso(new Date()).slice(0, 7);
+  const [anchor, setAnchor] = useState(initialMonth);
+  const year = Number(anchor.slice(0, 4));
+  const first = calendarYearAnchor('2000-01', year, 0);
+  const months = Array.from({ length: 12 }, (_, index) => shiftCalendarMonth(first, index));
+  return <Popover open={open} onOpenChange={next => { if (next) setAnchor(initialMonth()); setOpen(next); }}>
+    <PopoverTrigger asChild><button type="button" className="date-picker-trigger" aria-label={t('Month')}><span>{formatMonthYear(value, locale)}</span><CalendarDays size={17}/></button></PopoverTrigger>
+    <PopoverContent className="finance-month-picker" align="start" collisionPadding={12} aria-label={t('Month')}>
+      <section className="pos-month">
+        <div className="pos-month-heading">
+          <button type="button" aria-label={t('Previous year')} disabled={year <= 100 || (!!min && year <= Number(min.slice(0, 4)))} onClick={() => setAnchor(shiftCalendarMonth(anchor, -12))}><ChevronLeft size={17}/></button>
+          <p aria-live="polite">{formatYear(year, locale)}</p>
+          <button type="button" aria-label={t('Next year')} disabled={year >= 9999 || (!!max && year >= Number(max.slice(0, 4)))} onClick={() => setAnchor(shiftCalendarMonth(anchor, 12))}><ChevronRight size={17}/></button>
+        </div>
+        <div className="month-selection-grid">{months.map(month => <button type="button" key={month} className={'pos-day' + (month === value ? ' pos-selected' : '')} aria-pressed={month === value} disabled={(!!min && month < min.slice(0, 7)) || (!!max && month > max.slice(0, 7))} onClick={() => { onChange(month); setOpen(false); }} onKeyDown={event => {
+          const offset = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -3, ArrowDown: 3 }[event.key];
+          if (offset === undefined) return;
+          event.preventDefault();
+          const buttons = Array.from(event.currentTarget.parentElement!.querySelectorAll<HTMLButtonElement>('button'));
+          const target = buttons[buttons.indexOf(event.currentTarget) + offset];
+          if (target && !target.disabled) target.focus();
+        }}>{formatMonthYear(month, locale)}</button>)}</div>
+      </section>
+    </PopoverContent>
+  </Popover>;
+}
+
 // Single-date adaptation of zar-kebab-pos/src/components/DateRangePicker.jsx.
-export function DatePicker({ value, onChange, min, max, required = true }: { value: string; onChange: (value: string) => void; min?: string; max?: string; required?: boolean }) {
+function DayPicker({ value, onChange, min, max, required = true }: { value: string; onChange: (value: string) => void; min?: string; max?: string; required?: boolean }) {
   const { locale, t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState<Date>(() => parseCalendarDate(value) || new Date());

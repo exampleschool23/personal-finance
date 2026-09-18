@@ -34,3 +34,12 @@ export function portfolioWindow(points: PortfolioPoint[], days: number | null, t
  const previous = points.filter(point => point.date < start).at(-1);
  return [...(previous ? [{ ...previous, date: start }] : []), ...points.filter(point => point.date >= start)];
 }
+
+// Fit only the selected series, so a small balance change is not lost against zero.
+export function portfolioChartDomain(points: PortfolioPoint[], keys: readonly ('net' | 'assets' | 'debt')[]): [number, number] {
+ const values = points.flatMap(point => keys.map(key => point[key])).filter(Number.isFinite);
+ if (!values.length) return [0, 1];
+ const min = Math.min(...values), max = Math.max(...values);
+ const padding = Math.max((max - min) * 0.15, Math.abs(max) * 0.001, Math.abs(min) * 0.001, 1);
+ return [Math.floor(min - padding), Math.ceil(max + padding)];
+}

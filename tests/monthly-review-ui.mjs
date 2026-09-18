@@ -15,7 +15,8 @@ test('empty spending explains the selected period and currency and offers adding
  assert.match(html,/No expense transactions were recorded in USD for September 2026/);
  assert.match(html,/Recurring plans appear here only after a payment is recorded/);
  assert.match(html,/Add expense/);assert.doesNotMatch(html,/<ul/);
- assert.match(html,/<details class="monthly-review-method"><summary>/);
+ assert.match(html,/aria-label="How this review is calculated"[^>]*[\s\S]*?aria-haspopup="dialog"/);
+ assert.doesNotMatch(html,/<details|<summary/);
 });
 test('category breakdown reconciles splits while excluding recurring, future and other-currency expenses',()=>{
  const html=render({data:{...props.data,categories:[{id:'food',name:'Food'},{id:'travel',name:'Travel'}],records:[record('split',100.25),record('rent',200,{kind:'Rent expense'}),record('planned',9000,{frequency:'Monthly'}),record('future',8000,{date:'2026-09-20'}),record('eur',7000,{currency:'EUR'})]},tools:{...props.tools,data:{splits:[{record_id:'split',category_id:'food',amount:60},{record_id:'split',category_id:'travel',amount:40.25}]}}});
@@ -35,4 +36,9 @@ test('monthly review copy is translated in EN, RU and UZ and uses shared control
  const source=fs.readFileSync('components/financial-review.tsx','utf8');
  assert.doesNotMatch(source,/toFixed|toLocaleString|new Intl\.|type="(?:number|date)"/);
  for(const lang of ['en','ru','uz']){const labels=JSON.parse(fs.readFileSync(`lib/locales/${lang}.json`));for(const [,key] of source.matchAll(/\bt\('([^']+)'/g))assert.ok(labels[key],`${lang}: ${key}`);}
+});
+test('monthly review selects a month without showing a day',()=>{
+ const html=render({});
+ assert.match(html,/class="date-picker-trigger"[^>]*aria-label="Month"[^>]*><span>September 2026<\/span>/);
+ assert.doesNotMatch(html,/18 September 2026/);
 });

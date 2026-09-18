@@ -48,10 +48,12 @@ test('grab handle drops only real drags, supports cancel, and does not open the 
  try{
   const {GoalDragHandle}=loadTS('components/planning/goal-drag-handle.tsx',{react:{...React,useRef:value=>({current:value}),useState:value=>[value,()=>{}]},'@/components/language-provider':{useLanguage:()=>({t:key=>key})}});
   const handle=GoalDragHandle({name:'Goal',disabled:false,onDrop:id=>dropped.push(id),onTarget:id=>targets.push(id),onMove:direction=>moves.push(direction)});
-  const event={button:0,pointerId:1,clientX:100,clientY:200,stopPropagation(){stopped++;},currentTarget:{setPointerCapture(){},hasPointerCapture:()=>true,releasePointerCapture(){}}};
+  const event={button:0,pointerId:1,clientX:100,clientY:200,stopPropagation(){stopped++;},currentTarget:{closest:()=>({querySelectorAll:()=>[{dataset:{goalId:'target'},getBoundingClientRect:()=>({left:250,right:450,top:100,bottom:400})}]}),setPointerCapture(){},hasPointerCapture:()=>true,releasePointerCapture(){}}};
   handle.props.onPointerDown(event);handle.props.onPointerUp(event);assert.deepEqual(dropped,[]);
   handle.props.onPointerDown(event);handle.props.onPointerMove({...event,clientX:300});handle.props.onPointerCancel();handle.props.onPointerUp(event);assert.deepEqual(dropped,[]);
-  handle.props.onPointerDown(event);handle.props.onPointerMove({...event,clientX:300});handle.props.onPointerUp(event);assert.deepEqual(dropped,['target']);assert.ok(targets.includes('target'));
+  handle.props.onPointerDown(event);handle.props.onPointerMove({...event,clientX:300});handle.props.onPointerUp({...event,clientX:300});assert.deepEqual(dropped,['target']);assert.ok(targets.includes('target'));
+  handle.props.onPointerDown(event);handle.props.onPointerMove({...event,clientX:300});handle.props.onPointerUp({...event,clientX:700});assert.deepEqual(dropped,['target']);
+  handle.props.onPointerDown(event);handle.props.onPointerMove({...event,clientX:300,pointerId:2});handle.props.onPointerUp({...event,clientX:300});assert.deepEqual(dropped,['target']);
   handle.props.onKeyDown({key:'ArrowUp',preventDefault(){},stopPropagation(){}});assert.deepEqual(moves,[-1]);handle.props.onClick(event);assert.ok(stopped>0);
  }finally{globalThis.document=previousDocument;globalThis.window=previousWindow;}
 });

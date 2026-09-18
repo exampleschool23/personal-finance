@@ -1,3 +1,5 @@
+import {loadTS as loadCashAccountTS} from './helpers/load-ts.mjs';
+const {requiresCashAccount}=loadCashAccountTS('lib/cash-account-required.ts');
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -77,7 +79,7 @@ test('record saves preserve holding membership and accept cash balances',async()
  const {kinds,income,expenses}=await import('../lib/finance.ts');
  const owner='50000000-0000-4000-8000-000000000001',accountId='50000000-0000-4000-8000-000000000002';
  let saved;
- const post=new Function('z','kinds','income','expenses','isCurrency','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;')(z,kinds,income,expenses,c=>c==='USD',async()=>({user:{id:owner},token:'owner-token'}),async(path,init,token)=>{assert.equal(token,'owner-token');saved=JSON.parse(init.body);return Response.json([saved]);},()=>true,async()=>[]);
+ const post=new Function('requiresCashAccount','z','kinds','income','expenses','isCurrency','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;').bind(null,requiresCashAccount)(z,kinds,income,expenses,c=>c==='USD',async()=>({user:{id:owner},token:'owner-token'}),async(path,init,token)=>{assert.equal(token,'owner-token');saved=JSON.parse(init.body);return Response.json([saved]);},()=>true,async()=>[]);
  const holding={...record('50000000-0000-4000-8000-000000000003',accountId,'Stock',13.45,2.5),notes:''};
  const request=body=>new Request('https://local/api/records',{method:'POST',body:JSON.stringify(body)});
  assert.equal((await post(request(holding))).status,200);assert.equal(saved.holding_account_id,accountId);assert.equal(saved.user_id,owner);assert.equal(saved.amount,13.45);assert.equal(saved.quantity,2.5);

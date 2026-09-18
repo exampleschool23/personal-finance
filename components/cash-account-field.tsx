@@ -1,4 +1,5 @@
 "use client";
+import { requiresCashAccount } from '@/lib/cash-account-required';
 import { NativeSelect } from '@/components/ui/native-select';
 import { useLanguage } from '@/components/language-provider';
 import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
@@ -15,7 +16,7 @@ export function CashAccountField({entry,records,loading,error,busy,onChange}:{en
  const fx=useDatedExchangeRate(savedRate?undefined:account?.currency,entry.currency,entry.date);
  const cross=!!account&&account.currency!==entry.currency;
  const rate=savedRate??fx.rate;
- return <div className="cash-account-field"><label>{t('Cash account')}<NativeSelect disabled={busy||loading||!!error||entry.frequency!=='Once'} value={entry.account_id||''} onChange={event=>onChange(event.target.value||null)}><option value="">{t('No account balance change')}</option>{accounts.map(account=><option key={account.id} value={account.id}>{account.name} · {formatMoney(account.amount,account.currency,locale)} · {account.currency}</option>)}</NativeSelect></label>
+ return <div className="cash-account-field"><label>{t('Cash account')}<NativeSelect required={requiresCashAccount(entry)} disabled={busy||loading||!!error||entry.frequency!=='Once'} value={entry.account_id||''} onChange={event=>onChange(event.target.value||null)}><option value="" disabled>{t('Choose a cash account')}</option>{accounts.map(account=><option key={account.id} value={account.id}>{account.name} · {formatMoney(account.amount,account.currency,locale)} · {account.currency}</option>)}</NativeSelect></label>
   {!loading&&!error&&!accounts.length&&<p className="muted">{t('Add a cash account to record this transaction.')}</p>}
   {loading&&<p className="muted">{t('Waiting for current cash account balances.')}</p>}
   {error&&<p className="error" role="alert">{t(error)}</p>}

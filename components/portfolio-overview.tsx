@@ -10,7 +10,7 @@ import { assets, liabilities, value, type Entry } from '@/lib/finance';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
 import { snapshotPoints, mergePortfolioPoints, type PortfolioSnapshot } from '@/lib/portfolio-snapshots';
-import { portfolioHistory, portfolioWindow } from '@/lib/portfolio-history';
+import { portfolioHistory, portfolioWindow, portfolioChartDomain } from '@/lib/portfolio-history';
 import { historyChartDate, type HistoryEvent } from '@/lib/investment-history';
 import { type MarketData } from '@/lib/market';
 
@@ -20,6 +20,7 @@ export function PortfolioOverview({ excludedCurrencies=[], entries, currency, ma
  const [history, setHistory] = useState<History | null>(null);
  const [error, setError] = useState(false);
  const [retry, setRetry] = useState(0);
+ const [series, setSeries] = useState<'net' | 'assets' | 'debt' | 'all'>('net');
  const [range, setRange] = useState<number | null>(null);
  useEffect(() => {
   if (demo) return;
@@ -43,6 +44,8 @@ export function PortfolioOverview({ excludedCurrencies=[], entries, currency, ma
  const points = mergePortfolioPoints(tracked.points, snapshotPoints(snapshots, currency), { date: today, assets: assetTotal, debt, net: assetTotal - debt });
  const visible = portfolioWindow(points, range, today);
  const change = visible.length > 1 ? visible.at(-1)!.net - visible[0].net : null;
+ const chartKeys = series === 'all' ? ['net', 'assets', 'debt'] as const : [series];
+ const chartDomain = portfolioChartDomain(visible, chartKeys);
  const onlyPoint = visible.length === 1;
  const startingTime = Date.parse(today + 'T00:00:00Z');
  const startingDot = ({cx,cy,stroke}:{cx?:number;cy?:number;stroke?:string}) => <g><line x1={cx} x2={(cx??0)+48} y1={cy} y2={cy} stroke={stroke} strokeWidth={3} strokeLinecap="round"/><circle cx={cx} cy={cy} r={4} fill={stroke}/></g>;
@@ -52,15 +55,17 @@ export function PortfolioOverview({ excludedCurrencies=[], entries, currency, ma
    <div className="panel-title"><div><h2>{t('Portfolio over time')}</h2><p className="muted">{t('Recorded balances of your current holdings')}</p></div><div className="portfolio-ranges" aria-label={t('History period')}>{[30, 90, 365, null].map(days => <Button key={String(days)} size="sm" variant={range === days ? 'default' : 'outline'} aria-pressed={range === days} onClick={() => setRange(days)}>{days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) })}</Button>)}</div></div>
    <div className="portfolio-headline"><div><span>{t('Net worth today')}</span><strong>{money(assetTotal - debt)}</strong><PartialTotal currencies={excludedCurrencies}/></div>{!loading && !error && change !== null && <div><span>{t('Change in selected period')}</span><strong className={change >= 0 ? 'positive' : 'negative'}>{money(change)}</strong></div>}</div>
    {loading ? <LoadingPlaceholder label={t('Loading history…')}/> : error ? <p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}>{t('Retry')}</Button></p> : <>
+    <div className="portfolio-ranges" role="group" aria-label={t('Chart series')}>{([{key:'net',label:'NET WORTH'},{key:'assets',label:'Total assets'},{key:'debt',label:'Outstanding debt'},{key:'all',label:'All'}] as const).map(item=><Button key={item.key} size="sm" variant={series===item.key?'default':'outline'} aria-pressed={series===item.key} onClick={()=>setSeries(item.key)}>{t(item.label)}</Button>)}</div>
+    <p className="footnote">{t('Scale follows recorded balances. Points show daily observations; lines connect them.')}</p>
     <div className="portfolio-chart" aria-label={t('Portfolio over time')}><ResponsiveContainer width="100%" height={310}><LineChart data={visible.map(point => ({ ...point, timestamp: Date.parse(point.date + 'T00:00:00Z') }))} accessibilityLayer margin={{ top: 15, right: 15, left: 5, bottom: 10 }}>
      <CartesianGrid stroke="var(--border)" strokeDasharray="3 5" vertical={false}/>
      <XAxis dataKey="timestamp" type="number" scale="time" domain={onlyPoint ? [startingTime,startingTime+86400000] : ['dataMin', 'dataMax']} ticks={onlyPoint ? [startingTime] : undefined} tickFormatter={date => formatDate(historyChartDate(Number(date)), locale)} minTickGap={80}/>
-     <YAxis width={120} tickFormatter={money}/>
+     <YAxis width={120} domain={chartDomain} allowDataOverflow tickCount={5} tickFormatter={money}/>
      <Tooltip labelFormatter={date => formatDate(historyChartDate(Number(date)), locale)} formatter={amount => money(Number(amount))} contentStyle={{ background: 'var(--background)', borderColor: 'var(--border)', borderRadius: 12 }}/>
      <Legend/>
-     <Line type="stepAfter" dataKey="assets" name={t('Total assets')} stroke="#0d9488" strokeWidth={2} dot={onlyPoint ? startingDot : false}/>
-     <Line type="stepAfter" dataKey="debt" name={t('Outstanding debt')} stroke="#e18445" strokeWidth={2} strokeDasharray="5 4" dot={onlyPoint ? startingDot : false}/>
-     <Line type="stepAfter" dataKey="net" name={t('NET WORTH')} stroke="var(--primary)" strokeWidth={3} dot={onlyPoint ? startingDot : visible.length < 15} activeDot={{ r: 5 }}/>
+     {chartKeys.includes('assets') && <Line type="linear" isAnimationActive={false} dataKey="assets" name={t('Total assets')} stroke="#0d9488" strokeWidth={2} dot={onlyPoint ? startingDot : false}/>}
+     {chartKeys.includes('debt') && <Line type="linear" isAnimationActive={false} dataKey="debt" name={t('Outstanding debt')} stroke="#e18445" strokeWidth={2} strokeDasharray="5 4" dot={onlyPoint ? startingDot : false}/>}
+     {chartKeys.includes('net') && <Line type="linear" isAnimationActive={false} dataKey="net" name={t('NET WORTH')} stroke="var(--primary)" strokeWidth={3} dot={onlyPoint ? startingDot : visible.length < 15} activeDot={{ r: 5 }}/>}
     </LineChart></ResponsiveContainer></div>
     {tracked.missing > 0 && <p className="muted">{t('{count} holdings need a dated balance in Tracker.', { count: formatNumber(tracked.missing, locale, 0) })}</p>}
     {tracked.excluded > 0 && <p className="muted">{t('Some currencies could not be converted and are excluded from totals.')}</p>}

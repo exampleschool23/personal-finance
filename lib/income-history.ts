@@ -1,4 +1,4 @@
-import { monthly, income, duplicatesBusinessEstimate, type Entry } from './finance';
+import { monthly, income, duplicatesAssetEstimate, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import { convertAmount } from './market';
 import { depositInterest } from './deposit-interest';
@@ -11,7 +11,7 @@ function group(entry:Entry,investment=false):IncomeGroup {
  if(entry.kind==='Salary')return 'salary';
  if(investment&&entry.kind==='Stock')return 'dividends';
  if(entry.kind==='Rent income'||entry.kind==='Property')return 'rent';
- if(entry.kind==='Business'||entry.business_id)return 'business';
+ if(entry.kind==='Business'||entry.kind==='Business income'||entry.business_id)return 'business';
  if(entry.kind==='Deposit'||entry.kind==='Money lent')return 'interest';
  return 'other';
 }
@@ -40,12 +40,13 @@ export function incomeHistory(records:Entry[],events:HistoryEvent[],incomeRecord
  const expected=blank();
  const estimates=records.filter(record=>['Business','Property','Deposit'].includes(record.kind)).map(record=>({record,amount:record.kind==='Deposit'?depositInterest(events.filter(event=>event.record_id===record.id),Number(record.rate),end):Number(record.estimated_monthly_income??0)}));
  const businessIds=new Set(estimates.filter(({record,amount})=>record.kind==='Business'&&amount>0).map(({record})=>record.id));
+ const propertyIds=new Set(estimates.filter(({record,amount})=>record.kind==='Property'&&amount>0).map(({record})=>record.id));
  const addEstimate=(entry:Entry,amount:number)=>{
   if(!amount)return;const converted=convertAmount(amount,entry.currency,currency,rates);
   if(converted===null||!Number.isFinite(converted)){estimateMissing++;return;}expected[group(entry)]+=converted;
  };
  for(const {record,amount} of estimates)addEstimate(record,amount);
- for(const entry of incomeRecords)if(income.includes(entry.kind)&&!duplicatesBusinessEstimate(entry,businessIds))addEstimate(entry,monthly(entry,end));
+ for(const entry of incomeRecords)if(income.includes(entry.kind)&&!duplicatesAssetEstimate(entry,businessIds,propertyIds))addEstimate(entry,monthly(entry,end));
  const received=blank();for(const point of points)for(const key of incomeGroups)received[key]+=point[key];
  const estimatedTotal=Object.values(expected).reduce((sum,amount)=>sum+amount,0);
  points.at(-1)!.estimate=estimateMissing?null:estimatedTotal;

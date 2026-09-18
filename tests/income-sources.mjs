@@ -1,0 +1,64 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {PGlite} from '@electric-sql/pglite';
+import {loadTS} from './helpers/load-ts.mjs';
+const {incomeSources,selectIncomeSource,changeIncomeKind,salaryDueDate,resolveIncomeSource}=loadTS('lib/income-sources.ts');
+const {estimatedCashFlow}=loadTS('lib/finance.ts');
+const {upcomingPayments}=loadTS('lib/planning.ts');
+const id=n=>`52000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+test('source types, category changes, salary periods and rental forecast deduplication',()=>{
+ const property={id:id(1),name:'Flat',kind:'Property',estimated_monthly_income:1000};
+ const plan={id:id(2),name:'Employer',kind:'Salary',date:'2024-01-31',frequency:'Monthly'};
+ const payment={id:id(3),name:'',kind:'Salary',date:'2024-02-29',frequency:'Once',amount:12.125};
+ assert.deepEqual(incomeSources('Salary',[property,plan,payment],id(3)),[plan]);
+ assert.equal(salaryDueDate(plan,'2024-02-20'),'2024-02-29');assert.equal(salaryDueDate(plan,'2025-02-20'),'2025-02-28');
+ assert.equal(salaryDueDate({...plan,date:'2024-02-29',frequency:'Yearly'},'2025-09-20'),'2025-02-28');
+ assert.throws(()=>selectIncomeSource(payment,property));
+ const selected={...payment,...selectIncomeSource(payment,plan)};assert.equal(selected.name,'Employer');assert.equal(selected.income_source_id,plan.id);assert.equal(selected.amount,12.125);assert.equal(selected.frequency,'Once');
+ assert.throws(()=>resolveIncomeSource({...selected,income_due_on:'2024-02-28'},[plan]),/scheduled salary/);
+ assert.equal(resolveIncomeSource({...selected,date:'2024-03-03',income_due_on:'2024-02-29'},[plan]).income_due_on,'2024-02-29');
+ assert.equal(upcomingPayments([plan,selected],[],'2024-02-29','2024-02-29').some(row=>row.date==='2024-02-29'),false);
+ const changed=changeIncomeKind(selected,'Other income');assert.equal(changed.income_source_id,null);assert.equal(changed.name,'');assert.equal(changed.amount,12.125);assert.equal(changed.income_due_on,null);
+ const rent={id:id(4),kind:'Rent income',income_source_id:property.id,frequency:'Monthly',amount:1000};
+ assert.equal(estimatedCashFlow([property,rent]).plannedIncome,1000);
+});
+test('record API resolves owned matching source names and fails closed',async()=>{
+ let source={id:id(1),name:'Apartment',kind:'Property'},failed=false,calls=[];
+ const {POST}=loadTS('app/api/records/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner',user:{id:id(10)}}),sameOrigin:()=>true,supa:async(path,init,token)=>{assert.equal(token,'owner');if(path.includes('account_exchange_rate'))return Response.json([{id:id(9),kind:'Cash',currency:'USD'}]);if(init.method!=='POST')return failed?Response.json({}, {status:503}):Response.json(source?[source]:[]);calls.push(JSON.parse(init.body));return Response.json([]);}}});
+ const entry={account_id:id(9),id:id(2),kind:'Rent income',name:'Forged name',income_source_id:id(1),currency:'USD',amount:12.125,quantity:1,cost:0,rate:0,date:'2020-02-02',frequency:'Once',notes:''};
+ const post=entry=>POST(new Request('https://local/api/records',{method:'POST',body:JSON.stringify(entry)}));
+ assert.equal((await post(entry)).status,200);assert.equal(calls[0].name,'Apartment');assert.equal(calls[0].amount,12.125);
+ source=null;assert.equal((await post(entry)).status,400);
+ source={id:id(1),name:'Wrong kind',kind:'Business'};assert.equal((await post(entry)).status,400);
+ failed=true;assert.equal((await post(entry)).status,503);assert.equal(calls.length,1);
+});
+test('linked income migration preserves ownership, salary settlement, edits and account balances',async()=>{
+ const db=new PGlite();
+ try{
+  await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${id(1)}'),('${id(2)}');`);
+  await db.exec(fs.readFileSync('database/setup.sql','utf8').split('-- Income receipts select owned properties')[0]);
+  await db.exec(fs.readFileSync('migrations/042_linked_income_sources.sql','utf8'));
+  await db.exec(`SET request.jwt.claim.sub='${id(1)}';INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency) VALUES('${id(10)}','${id(1)}','Cash','Cash','USD',1000,'2020-01-01','Once'),('${id(11)}','${id(1)}','Apartment','Property','USD',10000,'2020-01-01','Once'),('${id(12)}','${id(1)}','Employer','Salary','USD',500,'2020-01-31','Monthly'),('${id(13)}','${id(2)}','Private apartment','Property','USD',10000,'2020-01-01','Once');SET ROLE authenticated;`);
+  const balance=async()=>Number((await db.query('SELECT amount FROM finance_records WHERE id=$1',[id(10)])).rows[0].amount);
+  const insert=(n,kind,source,due=null)=>db.query(`INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency,income_source_id,income_due_on,account_id) VALUES($1,$2,'Override me',$3,'USD',12.125,'2020-03-02','Once',$4,$5,$6)`,[id(n),id(1),kind,source,due,id(10)]);
+  await insert(20,'Rent income',id(11));assert.equal(await balance(),1012.125);
+  assert.equal((await db.query('SELECT name FROM finance_records WHERE id=$1',[id(20)])).rows[0].name,'Apartment');
+  await assert.rejects(insert(21,'Rent income',id(13)));await assert.rejects(insert(22,'Rent income',id(12)));await assert.rejects(insert(23,'Salary',id(11),'2020-02-29'));
+  await insert(24,'Salary',id(12),'2020-02-29');assert.equal(await balance(),1024.25);
+  let occurrence=(await db.query('SELECT * FROM payment_occurrences WHERE transaction_id=$1',[id(24)])).rows[0];assert.equal(occurrence.record_id,id(12));assert.equal(occurrence.status,'paid');
+  await assert.rejects(insert(25,'Salary',id(12),'2020-02-29'),/already recorded/);
+  await assert.rejects(insert(26,'Salary',id(12),'2020-02-28'),/scheduled salary/);
+  assert.equal(await balance(),1024.25);
+  await db.query('UPDATE finance_records SET amount=20.25 WHERE id=$1',[id(24)]);assert.equal(await balance(),1032.375);
+  await db.query('UPDATE finance_records SET income_due_on=$1 WHERE id=$2',['2020-03-31',id(24)]);
+  assert.equal((await db.query('SELECT count(*) AS n FROM payment_occurrences WHERE transaction_id=$1',[id(24)])).rows[0].n,1);
+  await assert.rejects(db.query("UPDATE finance_records SET kind='Other income' WHERE id=$1",[id(12)]),/linked records/);
+  await db.query('DELETE FROM finance_records WHERE id=$1',[id(24)]);assert.equal(await balance(),1012.125);
+  assert.equal((await db.query('SELECT count(*) AS n FROM payment_occurrences WHERE transaction_id=$1',[id(24)])).rows[0].n,0);
+  await insert(27,'Salary',id(12),'2020-02-29');
+  const result=(await db.query("SELECT finance_records_page(1,'cashflow',NULL,true) AS data")).rows[0].data;assert.ok(result.records.some(row=>row.income_source_id===id(12)));
+  await db.exec(`RESET ROLE;DELETE FROM auth.users WHERE id='${id(1)}';`);
+  assert.equal((await db.query('SELECT count(*) AS n FROM finance_records WHERE user_id=$1',[id(1)])).rows[0].n,0);
+ }finally{await db.close();}
+});

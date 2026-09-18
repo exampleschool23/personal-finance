@@ -2,8 +2,8 @@ import {expenses,income,type Entry} from './finance';
 const normalize=(name:string)=>name.trim().toLowerCase().replace(/\s+/g,' ');
 const key=(row:Entry)=>JSON.stringify([normalize(row.name),row.kind,row.currency]);
 export function recurringSuggestions(records:Entry[],today:string){
- const scheduled=new Set(records.filter(r=>r.frequency!=='Once'&&(!r.end_date||r.end_date>=today)).map(key));
- const groups=new Map<string,Entry[]>();for(const row of records){if(![...expenses,...income].includes(row.kind)||row.frequency!=='Once'||row.date>today||!row.date||row.operation_id||row.history_event_id||row.mortgage_payment_id||row.movement_id)continue;const id=key(row);if(scheduled.has(id))continue;const list=groups.get(id)??[];list.push(row);groups.set(id,list);}
+ const scheduled=new Set(records.filter(r=>!r.source_paused&&r.frequency!=='Once'&&(!r.end_date||r.end_date>=today)).map(key));
+ const groups=new Map<string,Entry[]>();for(const row of records){if(row.earning_source_id||![...expenses,...income].includes(row.kind)||row.frequency!=='Once'||row.date>today||!row.date||row.operation_id||row.history_event_id||row.mortgage_payment_id||row.movement_id)continue;const id=key(row);if(scheduled.has(id))continue;const list=groups.get(id)??[];list.push(row);groups.set(id,list);}
  return [...groups].flatMap(([id,rows])=>{
   rows.sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));const recent=rows.slice(-4);if(recent.length<3)return [];
   const gaps=recent.slice(1).map((row,index)=>(Date.parse(row.date)-Date.parse(recent[index].date))/86400000);const frequency=gaps.every(n=>n>=25&&n<=35)?'Monthly':gaps.every(n=>n>=350&&n<=380)?'Yearly':null;if(!frequency)return [];

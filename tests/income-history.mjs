@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
-import {monthly,income,duplicatesBusinessEstimate} from '../lib/finance.ts';
+import {monthly,income,duplicatesAssetEstimate} from '../lib/finance.ts';
 import {convertAmount} from '../lib/market.ts';
 import {depositInterest} from '../lib/deposit-interest.ts';
 const source=ts.transpileModule(fs.readFileSync('lib/income-history.ts','utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const history=new Function('monthly','income','duplicatesBusinessEstimate','convertAmount','depositInterest',source+';return incomeHistory;')(monthly,income,duplicatesBusinessEstimate,convertAmount,depositInterest);
+const history=new Function('monthly','income','duplicatesAssetEstimate','convertAmount','depositInterest',source+';return incomeHistory;')(monthly,income,duplicatesAssetEstimate,convertAmount,depositInterest);
 const event=(id,record_id,amount,type='income')=>({id,record_id,event_type:type,amount,occurred_on:'2026-09-10',balance:null});
 const payment=(id,kind,amount,extra={})=>({id,kind,amount,currency:'USD',frequency:'Once',date:'2026-09-10',...extra});
 test('income includes dividends, salaries, rent, business and interest without counting Tracker copies twice',()=>{

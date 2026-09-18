@@ -1,3 +1,5 @@
+import {loadTS as loadCashAccountTS} from './helpers/load-ts.mjs';
+const {requiresCashAccount}=loadCashAccountTS('lib/cash-account-required.ts');
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -9,7 +11,7 @@ import {kinds,income,expenses} from '../lib/finance.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let auth=true,calls=[];
 const session=async()=>auth?{token:'owner-token',user:{id:'owner'}}:null;
-const supa=async(path,init,token)=>{calls.push({path,init,token});return Response.json([]);};
+const supa=async(path,init,token)=>{if(path.includes('account_exchange_rate'))return Response.json([{id:plan.id,kind:'Cash',currency:'EUR'}]);calls.push({path,init,token});return Response.json([]);};
 const sameOrigin=req=>req.headers.get('origin')==='https://local';
 const api=new Function('z','isCurrency','expensePlanCategories','expensePlanMonth','session','supa','sameOrigin',compile('app/api/expense-plans/route.ts')+';return {GET,POST,DELETE};')(z,isCurrency,expensePlanCategories,expensePlanMonth,session,supa,sameOrigin);
 const plan={id:'10000000-0000-4000-8000-000000000001',name:'Mum',category:'Family support',currency:'EUR',amount:500,start_date:'2026-09-01',end_date:null};
@@ -29,14 +31,14 @@ test('authentication, origin checks and month-scoped reads',async()=>{
  calls=[];assert.equal((await api.GET(new Request('https://local?month=2026-09'))).status,200);assert.equal(calls[0].path,'/rest/v1/rpc/expense_plan_month');assert.deepEqual(JSON.parse(calls[0].init.body),{p_month:'2026-09-01'});
 });
 test('record API preserves the expense plan link and rejects linked recurring or income entries',async()=>{
- const post=new Function('z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;')(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
- const record={id:plan.id,name:'Mum payment',kind:'Other expense',currency:'EUR',amount:100,quantity:1,cost:0,rate:0,date:'2026-09-10',frequency:'Once',notes:'',expense_plan_id:plan.id};
+ const post=new Function('requiresCashAccount','z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;').bind(null,requiresCashAccount)(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
+ const record={account_id:plan.id,id:plan.id,name:'Mum payment',kind:'Other expense',currency:'EUR',amount:100,quantity:1,cost:0,rate:0,date:'2026-09-10',frequency:'Once',notes:'',expense_plan_id:plan.id};
  calls=[];assert.equal((await post(request(record))).status,200);assert.equal(JSON.parse(calls[0].init.body).expense_plan_id,plan.id);
  for(const patch of [{frequency:'Monthly'},{kind:'Salary'},{business_id:plan.id},{expense_plan_id:'bad'}])assert.equal((await post(request({...record,...patch}))).status,400);
 });
 
 test('recurring stop date saves without deleting and rejects invalid intervals',async()=>{
- const post=new Function('z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;')(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
+ const post=new Function('requiresCashAccount','z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;').bind(null,requiresCashAccount)(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
  const record={id:plan.id,name:'Salary',kind:'Salary',currency:'EUR',amount:100,quantity:1,cost:0,rate:0,date:'2026-09-10',frequency:'Monthly',notes:'',end_date:'2026-09-30'};
  calls=[];assert.equal((await post(request(record))).status,200);assert.equal(calls[0].init.method,'POST');assert.equal(JSON.parse(calls[0].init.body).end_date,record.end_date);
  for(const patch of [{end_date:'2026-09-09'},{end_date:'2026-02-30'},{frequency:'Once'},{kind:'Cash'}]){calls=[];assert.equal((await post(request({...record,...patch}))).status,400);assert.equal(calls.length,0);}
@@ -45,7 +47,7 @@ test('recurring stop date saves without deleting and rejects invalid intervals',
 test('delete endpoints require the recoverable deletion RPC',async()=>{
  calls=[];assert.equal((await api.DELETE(request({id:plan.id},'DELETE'))).status,200);
  assert.equal(calls[0].path,'/rest/v1/rpc/move_item_to_deleted');assert.deepEqual(JSON.parse(calls[0].init.body),{p_id:plan.id,p_source:'expense_plans'});
- const remove=new Function('z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return DELETE;')(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
+ const remove=new Function('requiresCashAccount','z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return DELETE;').bind(null,requiresCashAccount)(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
  calls=[];assert.equal((await remove(request({id:plan.id},'DELETE'))).status,200);
  assert.equal(calls[0].path,'/rest/v1/rpc/move_item_to_deleted');assert.deepEqual(JSON.parse(calls[0].init.body),{p_id:plan.id,p_source:'finance_records'});
 });
