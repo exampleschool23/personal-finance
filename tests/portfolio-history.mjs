@@ -5,7 +5,7 @@ import ts from 'typescript';
 import { assets, liabilities } from '../lib/finance.ts';
 const compile = path => ts.transpileModule(fs.readFileSync(new URL(path, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/export /g, ''), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
 const convertAmount = new Function(compile('../lib/market.ts') + ';return convertAmount;')();
-const { portfolioHistory, portfolioWindow } = new Function('assets', 'liabilities', 'convertAmount', compile('../lib/portfolio-history.ts') + ';return {portfolioHistory,portfolioWindow};')(assets, liabilities, convertAmount);
+const { portfolioHistory, portfolioWindow, portfolioChartDomain } = new Function('assets', 'liabilities', 'convertAmount', compile('../lib/portfolio-history.ts') + ';return {portfolioHistory,portfolioWindow,portfolioChartDomain};')(assets, liabilities, convertAmount);
 const record = (id, kind, currency = 'USD') => ({ id, kind, currency });
 const event = (record_id, date, balance, ownership_percentage = 100) => ({ id: record_id + date, record_id, occurred_on: date, balance, ownership_percentage, created_at: date });
 test('waits for full coverage, applies ownership and FX, and carries debt forward', () => {
@@ -26,4 +26,32 @@ test('period starts with last known balance, without inventing pre-history', () 
  assert.deepEqual(portfolioWindow(points,30,'2026-09-17'),[{date:'2026-08-18',net:100},...points.slice(1)]);
  assert.deepEqual(portfolioWindow(points.slice(1),30,'2026-09-17'),points.slice(1));
  assert.deepEqual(portfolioWindow(points,null,'2026-09-17'),points);
+});
+
+test('chart focuses on the selected balances and preserves the observed change', () => {
+ const points = [{date:'2026-09-17',assets:398000,debt:87106,net:310894},{date:'2026-09-18',assets:398000,debt:91560,net:306440}];
+ const before = structuredClone(points);
+ const [low,high] = portfolioChartDomain(points,['net']);
+ assert.ok(low > 300000 && low < 306440);
+ assert.ok(high > 310894 && high < 320000);
+ assert.ok(4454 / (high-low) > 0.5);
+ const [allLow,allHigh] = portfolioChartDomain(points,['net','assets','debt']);
+ assert.ok(allLow < 87106 && allHigh > 398000);
+ assert.deepEqual(points,before);
+});
+test('chart scale handles zero, negative, constant, precise and missing balances', () => {
+ for (const net of [0,-300000,300000,0.12345678]) {
+  const [low,high] = portfolioChartDomain([{net}],['net']);
+  assert.ok(Number.isFinite(low) && Number.isFinite(high) && low < net && high > net);
+ }
+ assert.deepEqual(portfolioChartDomain([],['net']),[0,1]);
+ assert.deepEqual(portfolioChartDomain([{net:NaN}],['net']),[0,1]);
+});
+test('portfolio chart connects observations and scales the chosen series', () => {
+ const ui = fs.readFileSync(new URL('../components/portfolio-overview.tsx',import.meta.url),'utf8');
+ assert.match(ui,/useState<[^;]+>\('net'\)/);
+ assert.match(ui,/portfolioChartDomain\(visible, chartKeys\)/);
+ assert.match(ui,/domain=\{chartDomain\}/);
+ assert.equal((ui.match(/type="linear"/g)||[]).length,3);
+ assert.doesNotMatch(ui,/stepAfter/);
 });
