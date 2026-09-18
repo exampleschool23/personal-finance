@@ -22,3 +22,15 @@ export async function POST(req:Request) {
   return Response.json({ok:true});
  } catch {return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
 }
+
+export async function DELETE(req:Request) {
+ if(!sameOrigin(req))return new Response(null,{status:403});
+ try {
+  const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
+  const parsed=z.object({id:z.string().uuid()}).safeParse(await req.json());
+  if(!parsed.success)return Response.json({error:'Check the record fields.'},{status:400});
+  const result=await supa('/rest/v1/rpc/permanently_delete_item',{method:'POST',body:JSON.stringify({p_id:parsed.data.id})},auth.token);
+  if(!result.ok)return Response.json({error:'Could not permanently delete this item. Check that database update 048 is installed and try again.'},{status:409});
+  return Response.json({ok:true});
+ } catch {return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
+}

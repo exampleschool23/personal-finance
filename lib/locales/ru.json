@@ -1454,5 +1454,12 @@
   "Add a custom category first to create a categorization rule.": "Сначала добавьте пользовательскую категорию, чтобы создать правило.",
   "Import transactions": "Импорт операций",
   "No imports yet": "Импортов пока нет",
-  "Imported statements will appear here so you can review or undo them.": "Импортированные выписки появятся здесь для просмотра или отмены."
+  "Imported statements will appear here so you can review or undo them.": "Импортированные выписки появятся здесь для просмотра или отмены.",
+  "Delete permanently": "Удалить навсегда",
+  "Permanently delete {name}?": "Удалить {name} навсегда?",
+  "This permanently removes the saved item and its recovery data from the database. This cannot be undone.": "Элемент и данные для его восстановления будут навсегда удалены из базы данных. Это действие нельзя отменить.",
+  "Restore deleted items to bring them back, or permanently delete them to remove their recovery data.": "Восстановите удалённые элементы или удалите их навсегда вместе с данными восстановления.",
+  "Could not permanently delete this item. Check that database update 048 is installed and try again.": "Не удалось удалить элемент навсегда. Проверьте установку обновления базы данных 048 и повторите попытку.",
+  "Account actions": "Действия со счётом",
+  "About account totals": "О расчёте суммы"
 }

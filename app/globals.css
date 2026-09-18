@@ -812,17 +812,27 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 @media(prefers-reduced-motion:reduce){.goal-forecast *{transition:none!important}}
 
 /* Cash, deposit and grouped investment accounts. */
-.account-cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr))}
-.account-card{display:flex;flex-direction:column;gap:12px;font-size:16px}
+.account-cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));grid-auto-rows:1fr;align-items:stretch}
+.account-card{display:flex;flex-direction:column;gap:10px;font-size:16px;align-self:stretch}
 .account-card>header{display:flex;gap:14px;align-items:start;margin-bottom:10px}
 .account-card>header>div{min-width:0}
-.account-card h2{font-size:24px;font-weight:600;line-height:1.4;overflow-wrap:anywhere;margin-top:8px}
+.account-card-heading{flex:1}
+.account-card .account-card-menu{flex-shrink:0;width:44px;height:44px;padding:0;margin-top:-6px}
+.account-menu-content{max-width:calc(100vw - 32px)}
+.account-menu-content [data-slot=dropdown-menu-item]{min-height:44px;white-space:normal}
+.account-card-facts{display:grid;gap:14px;margin:8px 0 0}
+.account-card-facts>div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px}
+.account-card-facts dt{color:var(--muted-foreground);font-size:14px}
+.account-card-facts dd{margin:0;font-size:14px;font-weight:500}
+.account-overview-links{display:flex;align-items:center;gap:8px}
+.account-card .account-details-trigger{align-self:flex-start;margin-top:auto}
+.account-card h2{font-size:20px;font-weight:600;line-height:1.4;overflow-wrap:anywhere;margin-top:6px}
 .account-card-icon{display:grid;place-items:center;flex-shrink:0;width:48px;height:48px;border-radius:14px;background:var(--accent);color:var(--primary)}
 .account-card-value{display:block;font-size:34px;font-weight:600;letter-spacing:-.8px;line-height:1.3;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .account-card-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px}
 .account-card [data-slot=button],.account-unassigned [data-slot=button]{font-size:16px;min-height:44px;height:auto;white-space:normal}
 .account-holdings-details{margin-top:8px;border-top:1px solid var(--border);padding-top:16px}
-.account-holdings-details>summary{cursor:pointer;font-size:18px;font-weight:500;min-height:44px}
+.account-holdings-details>summary{cursor:pointer;font-size:14px;font-weight:500;min-height:44px;align-content:center}
 .account-holdings-details>p{margin-top:10px}
 .account-holdings{list-style:none;padding:0;margin:12px 0 0}
 .account-holding-row{display:flex;align-items:start;gap:12px 18px;flex-wrap:wrap;padding:18px 0;border-top:1px solid var(--border);font-size:16px}
@@ -1449,3 +1459,5 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .import-history-empty{padding:24px;border:1px dashed var(--border);border-radius:12px;background:var(--background);margin-top:16px}
 .import-history-empty p{margin:8px 0 0;line-height:1.6}
 @media(max-width:600px){.data-import-fields{grid-template-columns:1fr}.data-backup-actions{flex-direction:column}.data-backup-actions a{width:100%}}
+
+.recovery-card>.recovery-actions{display:flex;flex-wrap:wrap;gap:8px;flex:0 1 auto}.recovery-card .recovery-actions button{margin:0}

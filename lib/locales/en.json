@@ -1454,5 +1454,12 @@
   "Add a custom category first to create a categorization rule.": "Add a custom category first to create a categorization rule.",
   "Import transactions": "Import transactions",
   "No imports yet": "No imports yet",
-  "Imported statements will appear here so you can review or undo them.": "Imported statements will appear here so you can review or undo them."
+  "Imported statements will appear here so you can review or undo them.": "Imported statements will appear here so you can review or undo them.",
+  "Delete permanently": "Delete permanently",
+  "Permanently delete {name}?": "Permanently delete {name}?",
+  "This permanently removes the saved item and its recovery data from the database. This cannot be undone.": "This permanently removes the saved item and its recovery data from the database. This cannot be undone.",
+  "Restore deleted items to bring them back, or permanently delete them to remove their recovery data.": "Restore deleted items to bring them back, or permanently delete them to remove their recovery data.",
+  "Could not permanently delete this item. Check that database update 048 is installed and try again.": "Could not permanently delete this item. Check that database update 048 is installed and try again.",
+  "Account actions": "Account actions",
+  "About account totals": "About account totals"
 }

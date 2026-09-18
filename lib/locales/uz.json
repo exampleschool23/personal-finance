@@ -1454,5 +1454,12 @@
   "Add a custom category first to create a categorization rule.": "Qoida yaratish uchun avval maxsus toifa qo‘shing.",
   "Import transactions": "Amaliyotlarni import qilish",
   "No imports yet": "Hali importlar yo‘q",
-  "Imported statements will appear here so you can review or undo them.": "Import qilingan ko‘chirmalar ko‘rib chiqish yoki bekor qilish uchun shu yerda ko‘rinadi."
+  "Imported statements will appear here so you can review or undo them.": "Import qilingan ko‘chirmalar ko‘rib chiqish yoki bekor qilish uchun shu yerda ko‘rinadi.",
+  "Delete permanently": "Butunlay o‘chirish",
+  "Permanently delete {name}?": "{name} butunlay o‘chirilsinmi?",
+  "This permanently removes the saved item and its recovery data from the database. This cannot be undone.": "Yozuv va uni tiklash ma’lumotlari bazadan butunlay o‘chiriladi. Bu amalni bekor qilib bo‘lmaydi.",
+  "Restore deleted items to bring them back, or permanently delete them to remove their recovery data.": "O‘chirilgan yozuvlarni tiklang yoki tiklash ma’lumotlari bilan birga butunlay o‘chiring.",
+  "Could not permanently delete this item. Check that database update 048 is installed and try again.": "Yozuvni butunlay o‘chirib bo‘lmadi. Baza yangilanishi 048 o‘rnatilganini tekshiring va qayta urinib ko‘ring.",
+  "Account actions": "Hisob amallari",
+  "About account totals": "Hisob jami haqida"
 }

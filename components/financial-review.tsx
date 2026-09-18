@@ -1,31 +1,17 @@
 "use client";
 import type { MarketData } from '@/lib/market';
-import { ForecastAccountAssignment } from '@/components/forecast-account-assignment';
 import { useState } from 'react';
-import Link from 'next/link';
 import { CircleHelp, CalendarDays, ReceiptText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { DatePicker } from '@/components/date-picker';
 import { useLanguage } from '@/components/language-provider';
-import { accountForecast, monthlyReview } from '@/lib/transaction-tools';
+import { monthlyReview } from '@/lib/transaction-tools';
 import type { ToolsController } from '@/components/transaction-tools-panel';
 import type { PlanningData } from '@/lib/planning';
 import { depositToday } from '@/lib/deposit-interest';
-import { formatDate, formatMoney, formatMonthYear, formatNumber } from '@/lib/format';
+import { formatDate, formatMoney, formatMonthYear } from '@/lib/format';
 import type { PortfolioSnapshot } from '@/lib/portfolio-snapshots';
-export function AccountForecast({data,tools}:{data:PlanningData;tools:ToolsController}){
- const {t,locale}=useLanguage();const today=depositToday();const [through,setThrough]=useState(()=>new Date(Date.parse(today+'T00:00:00Z')+30*86400000).toISOString().slice(0,10));
- const forecast=accountForecast(data.records,data.occurrences,tools.data.assignments,today,through);
- const schedules=data.records.filter(record=>!record.source_paused&&record.frequency!=='Once'&&['Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense'].includes(record.kind));
- return <section className="panel tools-panel"><div className="review-heading"><div><h2>{t('Account balance forecast')}</h2><p className="muted">{t('A projection from current cash and unpaid recurring schedules. Overdue items are included today. Budgets, unscheduled costs and maturity reminders are excluded. No money moves automatically.')}</p></div><label>{t('Forecast through')}<DatePicker value={through} min={today} onChange={setThrough}/></label></div>
- {tools.error&&<p className="error" role="alert">{t(tools.error)} <Button onClick={tools.retry}>{t('Retry')}</Button></p>}
- {!tools.loading&&!tools.error&&<><div className="review-grid">{forecast.accounts.map(item=><article key={item.account.id}><h3>{item.account.name}</h3><p>{t('Current balance')}: {formatMoney(item.current,item.account.currency,locale)}</p><strong className={item.lowest<0?'negative':''}>{formatMoney(item.ending,item.account.currency,locale)}</strong><p>{t('Lowest projected balance')}: {formatMoney(item.lowest,item.account.currency,locale)}</p>{item.lowest<0&&<p role="status">{t('A payment may exceed the available balance.')}</p>}<details><summary>{t('Projected activity')}</summary><ol className="tool-list">{item.events.map(event=><li key={event.key}><span>{formatDate(event.date,locale)} · {event.name}{event.overdue&&` · ${t('Overdue')}`}</span><span>{formatMoney(event.amount,item.account.currency,locale)} → {formatMoney(event.balance,item.account.currency,locale)}</span></li>)}</ol></details></article>)}</div>
- {!!forecast.unassigned.length&&<p className="partial-total" role="status">{t('{count} payments are not assigned to an account and are excluded.',{count:formatNumber(forecast.unassigned.length,locale,0)})}</p>}
- <details open={forecast.unassigned.length>0}><summary>{t('Assign schedules to cash accounts')}</summary><p className="muted">{t('Choose any cash account. Cross-currency forecasts use the rate saved with the assignment. Actual payments use their payment-date rate.')}</p><div className="review-grid">{schedules.map(record=><ForecastAccountAssignment key={record.id+':'+(tools.data.assignments.find(item=>item.record_id===record.id)?.account_id??'')} record={record} accounts={data.records.filter(account=>account.kind==='Cash')} assignment={tools.data.assignments.find(item=>item.record_id===record.id)} today={today} tools={tools}/>)}</div></details></>}
- {!forecast.accounts.length&&<Link href="/accounts">{t('Add account')}</Link>}
- </section>;
-}
 export function MonthlyReview({data,tools,snapshots,historyError,currency,market}:{data:PlanningData;tools:ToolsController;snapshots:PortfolioSnapshot[];historyError:string;currency:string;market?:MarketData|null}){
  const {t,locale}=useLanguage();
  const today=depositToday();

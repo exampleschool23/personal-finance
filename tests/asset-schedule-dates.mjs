@@ -20,6 +20,20 @@ test('asset date saves update linked schedules without changing receipts or othe
  const receipt=(await db.query('SELECT * FROM finance_records WHERE id=$1',[id(20)])).rows[0];
  assert.equal(new Date(receipt.date).toISOString().slice(0,10),'2020-02-11');assert.equal(Number(receipt.amount),1250);
  assert.equal((await db.query('SELECT * FROM payment_occurrences')).rows.length,1);
+ // Simulate a date saved before the synchronization migration was installed.
+ await db.exec('RESET ROLE; ALTER TABLE finance_records DISABLE TRIGGER sync_asset_income_schedule_date');
+ await db.query("UPDATE finance_records SET date='2020-12-01' WHERE id=$1",[id(10)]);
+ await db.exec('ALTER TABLE finance_records ENABLE TRIGGER sync_asset_income_schedule_date');
+ await db.exec(fs.readFileSync('migrations/049_repair_asset_income_schedule_dates.sql','utf8'));
+ assert.equal(new Date((await source()).start_date).toISOString().slice(0,10),'2020-12-01');
+ const repaired=(await db.query('SELECT date FROM finance_records WHERE id=$1',[original.schedule_id])).rows[0];
+ assert.equal(new Date(repaired.date).toISOString().slice(0,10),'2020-12-01');
+ assert.equal(new Date((await db.query('SELECT date FROM finance_records WHERE id=$1',[id(20)])).rows[0].date).toISOString().slice(0,10),'2020-02-11');
+ assert.equal((await db.query('SELECT * FROM payment_occurrences')).rows.length,1);
+ // The repair is safe to rerun.
+ await db.exec(fs.readFileSync('migrations/049_repair_asset_income_schedule_dates.sql','utf8'));
+ await db.exec('SET ROLE authenticated');
+
  await db.exec(`SET request.jwt.claim.sub='${id(2)}'`);
  assert.equal((await db.query("UPDATE finance_records SET date='2020-11-01' WHERE id=$1 RETURNING id",[id(10)])).rows.length,0);
  assert.equal((await db.query('SELECT * FROM income_sources')).rows.length,0);
