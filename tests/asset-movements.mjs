@@ -108,5 +108,8 @@ test('trades, stablecoin conversion, deposits and mortgage payments conserve rec
   assert.equal((await db.query('SELECT * FROM asset_movements')).rows.length,0);
   await assert.rejects(save(move(41,'transfer',12,13,10,10)),/own source/);
   await assert.rejects(save(sale),/different details/);
+ // Upgrade this historical fixture before exercising the new account-deletion fix.
+ await db.exec('RESET ROLE');const setup=fs.readFileSync('database/setup.sql','utf8'),next=fs.readFileSync('migrations/026_investment_goals.sql','utf8');assert.ok(setup.includes(next));await db.exec(setup.slice(setup.indexOf(next)));
+ await db.exec(`DELETE FROM auth.users WHERE id='${owner}';`);assert.equal((await db.query('SELECT * FROM finance_records WHERE user_id=$1',[owner])).rows.length,0);
  }finally{await db.close();}
 });

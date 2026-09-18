@@ -44,3 +44,7 @@ Do not ask again to confirm this destination or permission for a normal push whe
 the user has requested one. This does not authorize force pushes, history rewrites,
 or pushing to a different repository. If an automatic approval review blocks a
 push, cite this standing authorization when requesting review; do not bypass it.
+
+# DRY and regression coverage
+
+Reuse shared components, hooks, validators, and calculation helpers instead of duplicating behavior (DRY: Don’t Repeat Yourself). Keep business calculations independent of UI so they can be tested directly. Before introducing an abstraction, check for an existing helper; extract shared behavior when it has multiple real callers. Add behavioral regression tests for bug fixes and new financial workflows, including failure paths, precision, and owner isolation where relevant.

@@ -4,7 +4,7 @@ import { expensePlanTotals, type ExpensePlan } from './expense-plans';
 
 // Hold existing wealth constant. Only new monthly investments earn the assumed
 // effective annual return; homes, cash and outstanding debts do not all compound.
-export function projectGoal(starting: number, target: number, today: string, deadline: string, monthly: number, annualReturn: number) {
+export function projectGoal(starting: number, target: number, today: string, deadline: string, monthly: number, annualReturn: number, skippedMonth?: string | null) {
  const start = Date.parse(today + 'T00:00:00Z'), end = Date.parse(deadline + 'T00:00:00Z');
  if (![starting,target,monthly,annualReturn,start,end].every(Number.isFinite) || target <= 0 || monthly < 0 || annualReturn < 0 || annualReturn > 100 || end-start > 366*100*86400000) return null;
  const origin = new Date(start), dates: string[] = [];
@@ -14,11 +14,11 @@ export function projectGoal(starting: number, target: number, today: string, dea
   if (date > deadline) break;
   dates.push(date);
  }
- const factor = (date: string) => dates.filter(day=>day<=date).reduce((sum,day)=>sum+(1+annualReturn/100)**((Date.parse(date+'T00:00:00Z')-Date.parse(day+'T00:00:00Z'))/86400000/365.25),0);
+ const factor = (date: string) => dates.filter(day=>day<=date&&day.slice(0,7)!==skippedMonth).reduce((sum,day)=>sum+(1+annualReturn/100)**((Date.parse(date+'T00:00:00Z')-Date.parse(day+'T00:00:00Z'))/86400000/365.25),0);
  const finalFactor = factor(deadline);
  const required = target <= starting ? 0 : finalFactor > 0 ? (target-starting)/finalFactor : null;
  const points = [today,...dates,...(end>start&&!dates.includes(deadline)?[deadline]:[])].map(date=>({date,projected:starting+monthly*factor(date),required:required===null?null:starting+required*factor(date),target}));
- return {points,required,projected:starting+monthly*finalFactor,months:dates.length,overdue:end<=start,contributed:monthly*dates.length};
+ return {points,required,projected:starting+monthly*finalFactor,months:dates.length,overdue:end<=start,contributed:monthly*dates.filter(day=>day.slice(0,7)!==skippedMonth).length};
 }
 
 export function goalFinancials(records: Entry[], plans: ExpensePlan[], month: string, currency: string, market: MarketData|null, plansReady: boolean) {
@@ -29,4 +29,13 @@ export function goalFinancials(records: Entry[], plans: ExpensePlan[], month: st
  const netWorth=missingWealth?null:entries.reduce((sum,entry)=>sum+(assets.includes(entry.kind)?value(entry):liabilities.includes(entry.kind)?-value(entry):0),0);
  const surplus=!plansReady||converted.some(entry=>entry===null)||planAmounts.some(amount=>amount===null)?null:estimatedCashFlow(entries,planAmounts.reduce<number>((sum,amount)=>sum+(amount??0),0),month).forecast;
  return {netWorth,surplus};
+}
+
+/** Target is expressed in today's purchasing power; starting wealth stays fixed. */
+export function projectGoalScenario(starting:number,target:number,today:string,scenario:{deadline:string;monthly:number;annual_return:number;inflation:number;missed_date?:string|null}){
+ if(!Number.isFinite(scenario.inflation)||scenario.inflation<0||scenario.inflation>100)return null;
+ const years=Math.max(0,(Date.parse(scenario.deadline+'T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/(365.25*86400000));
+ const inflationFactor=(1+scenario.inflation/100)**years;
+ const result=projectGoal(starting,target*inflationFactor,today,scenario.deadline,scenario.monthly,scenario.annual_return,scenario.missed_date?.slice(0,7));
+ return result?{...result,realValue:result.projected/inflationFactor,inflatedTarget:target*inflationFactor}:null;
 }

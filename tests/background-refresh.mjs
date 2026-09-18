@@ -1,24 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import ts from 'typescript';
+import {harness} from './helpers/hooks.mjs';
 
 // Exercise hook state transitions with manually controlled network responses.
-function harness(file,name,dependencies){
- const slots=[],pending=[];let cursor=0;
- const changed=(a,b)=>!a||a.length!==b.length||a.some((value,i)=>!Object.is(value,b[i]));
- const hooks={
-  useState(initial){const index=cursor++;if(!(index in slots))slots[index]=typeof initial==='function'?initial():initial;return [slots[index],value=>{slots[index]=typeof value==='function'?value(slots[index]):value;}];},
-  useRef(initial){const index=cursor++;return slots[index]??(slots[index]={current:initial});},
-  useCallback(callback,deps){const index=cursor++;if(changed(slots[index]?.deps,deps))slots[index]={deps,callback};return slots[index].callback;},
-  useEffect(effect,deps){const index=cursor++;if(changed(slots[index]?.deps,deps)){const old=slots[index];slots[index]={deps};pending.push(()=>{old?.cleanup?.();slots[index].cleanup=effect();});}},
- };
- const bindings={...hooks,...dependencies};
- const source=fs.readFileSync(file,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,'');
- const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
- const hook=new Function(...Object.keys(bindings),js+`;return ${name};`)(...Object.values(bindings));
- return (...args)=>{cursor=0;const result=hook(...args);while(pending.length)pending.shift()();return result;};
-}
 function network(){const requests=[];return {requests,fetch:(url,options={})=>new Promise(resolve=>requests.push({url,options,reply:(data,status=200)=>resolve(Response.json(data,{status}))}))};}
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
 const emptyPlanning={records:[],occurrences:[],goals:[],categories:[],activity:[]};

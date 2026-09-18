@@ -1,5 +1,7 @@
 "use client";
+import { useUnsavedNavigation } from '@/components/discard-changes';
 
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useId, useMemo, useState, type CSSProperties } from 'react';
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from 'recharts';
 import { ArrowUpRight, Check, ChevronDown, CircleHelp, RotateCcw, Save, SlidersHorizontal, Target, TrendingUp, Wallet } from 'lucide-react';
@@ -18,6 +20,7 @@ type Props = {
 };
 
 export function GoalForecast({ goal, starting, surplus, currency, today, snapshots, historyError, save, onEdit }: Props) {
+ const compact=useIsMobile();
  const { t, locale } = useLanguage();
  const id = useId();
  const [monthly, setMonthly] = useState<number | null>(goal.monthly_contribution ?? null);
@@ -26,6 +29,7 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
  const [busy, setBusy] = useState(false), [error, setError] = useState('');
  const [hidden, setHidden] = useState<string[]>([]), [view, setView] = useState<'chart' | 'table'>('chart');
  const dirty = monthly !== savedPlan.monthly || rate !== savedPlan.rate;
+ const confirmation=useUnsavedNavigation(dirty);
  const contribution = monthly ?? (surplus === null ? null : Math.max(0, surplus));
  const result = useMemo(() => starting !== null && contribution !== null && goal.target_date
   ? projectGoal(starting, goal.target, today, goal.target_date, contribution, rate) : null,
@@ -122,14 +126,14 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
 
   {result && <section className="goal-chart-section" aria-labelledby={`${id}-chart-title`}>
    <div className="goal-chart-heading"><h3 id={`${id}-chart-title`}>{t('Your path to the goal')}</h3><div className="goal-view-switch" role="group" aria-label={t('Projection view')}><button type="button" aria-pressed={view === 'chart'} onClick={() => setView('chart')}>{t('Chart')}</button><button type="button" aria-pressed={view === 'table'} onClick={() => setView('table')}>{t('Monthly milestones')}</button></div></div>
-   {view === 'chart' ? <>
+   {compact&&<p className="goal-help">{t('Tap the chart for exact amounts, or open Monthly milestones.')}</p>}{view === 'chart' ? <>
     <div className="comparison-legend goal-chart-legend">{lines.map(line => <button key={line.key} type="button" aria-pressed={!hidden.includes(line.key)} onClick={() => setHidden(previous => previous.includes(line.key) ? previous.filter(key => key !== line.key) : [...previous, line.key])}><svg width="24" height="12" viewBox="0 0 24 12" aria-hidden="true">{line.key === 'actual' ? <circle cx="12" cy="6" r="4" fill={line.color} /> : <line x1="0" y1="6" x2="24" y2="6" stroke={line.color} strokeWidth="2" strokeDasharray={line.dash} />}</svg>{t(line.label)}</button>)}</div>
     {goal.kind === 'net_worth' && <p className="goal-help">{t('Actual net worth today: {amount}. Actual values stop at today; future values are forecasts.', { amount: starting === null ? '—' : money(starting) })}</p>}
-    <div className="goal-projection-chart" role="region" aria-label={t('Your path to the goal')} tabIndex={0}><div className="goal-chart-canvas"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={points} accessibilityLayer margin={{ top: 24, right: 24, left: 8, bottom: 12 }}>
+    <div className="goal-projection-chart" role="region" aria-label={t('Your path to the goal')} tabIndex={0}><div className="goal-chart-canvas"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={points} accessibilityLayer margin={{ top: 24, right: compact?8:24, left: compact?0:8, bottom: 12 }}>
      <defs><linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity={0.18} /><stop offset="100%" stopColor="var(--primary)" stopOpacity={0.01} /></linearGradient></defs>
      <CartesianGrid stroke="var(--border)" strokeDasharray="3 5" vertical={false} />
-     <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={time => formatMonthYear(isoDate(Number(time)), locale)} minTickGap={80} height={64} tickLine={false} axisLine={false} tickMargin={16} tick={{ fill: 'var(--foreground)', fontSize: 16 }} />
-     <YAxis width="auto" tickMargin={12} tickFormatter={money} domain={['auto', 'auto']} tickCount={5} tickLine={false} axisLine={false} tick={{ fill: 'var(--foreground)', fontSize: 16 }} />
+     <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={time => formatMonthYear(isoDate(Number(time)), locale)} minTickGap={compact?40:80} tickCount={compact?2:5} height={64} tickLine={false} axisLine={false} tickMargin={16} tick={{ fill: 'var(--foreground)', fontSize: 16 }} />
+     <YAxis hide={compact} width="auto" tickMargin={12} tickFormatter={money} domain={['auto', 'auto']} tickCount={5} tickLine={false} axisLine={false} tick={{ fill: 'var(--foreground)', fontSize: 16 }} />
      <Tooltip labelFormatter={time => formatDate(isoDate(Number(time)), locale)} formatter={(amount, name) => [money(Number(amount)), t(lines.find(line => line.key === name)?.label ?? String(name))]} contentStyle={{ background: 'var(--popover)', color: 'var(--popover-foreground)', borderColor: 'var(--border)', borderRadius: 14, boxShadow: '0 8px 32px #00000014', fontSize: 16, lineHeight: 1.7, padding: 16 }} />
      <ReferenceLine x={Date.parse(today + 'T00:00:00Z')} stroke="var(--muted-foreground)" strokeDasharray="4 4" label={{ value: t('Today'), position: 'bottom', offset: 22, fill: 'var(--foreground)', fontSize: 16 }} />
      {!hidden.includes('projected') && <Area dataKey="projected" stroke="var(--primary)" strokeWidth={3} fill={`url(#${id}-fill)`} isAnimationActive={false} />}
@@ -145,5 +149,5 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
   <details className="goal-method"><summary><CircleHelp size={17} aria-hidden="true" />{t('How this projection works')}<ChevronDown size={16} aria-hidden="true" /></summary><div><p>{t('Existing wealth stays constant. New investments are added on each monthly anniversary and compound at your assumed annual return. Taxes, fees, inflation and future exchange-rate changes are excluded. Returns are assumptions, not guarantees.')}</p><p>{t('Each goal is a separate scenario. Do not allocate the same surplus to multiple savings goals. Savings allocations already belong to your net worth.')}</p></div></details>
   <footer className="goal-save-bar"><span className="goal-save-status" role="status">{goal.archived ? t('Archived') : dirty ? <><i />{t('Unsaved changes')}</> : <><Check size={16} aria-hidden="true" />{t('Plan saved')}</>}</span><div><Button variant="ghost" disabled={busy || !dirty || goal.archived} onClick={() => { setMonthly(savedPlan.monthly); setRate(savedPlan.rate); setError(''); }}><RotateCcw size={15} aria-hidden="true" />{t('Reset changes')}</Button><Button disabled={busy || goal.archived || !dirty} onClick={savePlan}><Save size={16} aria-hidden="true" />{t(busy ? 'Saving…' : 'Save plan')}</Button></div></footer>
   {error && <p className="error" role="alert">{t(error)}</p>}
- </section>;
+ {confirmation}</section>;
 }

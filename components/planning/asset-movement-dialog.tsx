@@ -1,6 +1,7 @@
 "use client";
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
 import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
+import { useDiscardChanges } from '@/components/discard-changes';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -40,7 +41,9 @@ export function AssetMovementDialog({initial,records,accounts=[],save,onClose}:{
  const accountName=(record:Entry)=>{const parent=accounts.find(account=>account.id===record.holding_account_id);return `${parent?parent.name+' · ':''}${record.name} · ${record.currency}`;};
  const units=(record:Entry,amount:number)=>isHolding(record)?t('{quantity} units',{quantity:formatNumber(amount,locale,8)}):formatMoney(amount,record.currency,locale);
  const change=(name:keyof typeof draft,value:string|number)=>setDraft({...draft,[name]:value});
- return <Dialog open onOpenChange={open=>{if(!open&&!busy)onClose();}}><DialogContent className="record-dialog" showCloseButton={!busy}>
+ const [initialDraft]=useState(()=>JSON.stringify(draft));
+ const guard=useDiscardChanges(JSON.stringify(draft)!==initialDraft,onClose,busy);
+ return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}>
   <DialogTitle>{t(title)}</DialogTitle><DialogDescription>{t(interest?'Record interest your bank has added to this deposit. It will earn interest from this date.':'Both sides are saved together. Enter the actual amounts from your transaction.')}</DialogDescription>
   <form className="record-form" onSubmit={async event=>{
    event.preventDefault();if((!valid&&!submitted)||busy)return;setBusy(true);setSubmitted(true);setError('');
@@ -67,7 +70,7 @@ export function AssetMovementDialog({initial,records,accounts=[],save,onClose}:{
    {source&&target&&valid&&<div className="ownership-summary">{!interest&&<p>{source.name}: {units(source,available-draft.sent)}</p>}<p>{target.name}: {units(target,(isHolding(target)?target.quantity:target.amount)+received)}</p><small>{t('Balances after this transaction')}</small></div>}
    {!interest&&(!movementSources(draft.kind,records).length||!movementTargets(draft.kind,source,records).length)&&<p className="muted">{t('Add the source and destination first. For a new holding or proceeds balance, start at zero.')}</p>}
    {error&&<p role="alert" className="error">{t(error)}</p>}
-   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t('Cancel')}</Button><Button disabled={busy||(!valid&&!submitted)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></div>
+   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||(!valid&&!submitted)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></div>
   </form>
- </DialogContent></Dialog>;
+ </DialogContent></Dialog>{guard.confirmation}</>;
 }

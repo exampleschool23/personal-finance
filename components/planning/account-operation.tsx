@@ -1,6 +1,7 @@
 "use client";
 import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
+import { useDiscardChanges } from '@/components/discard-changes';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +25,9 @@ export function AccountOperation({operation,records,save,onClose}:{operation:Ope
  const crossCurrency=operation.action==='transfer'&&account&&target&&account.currency!==target.currency;
  const convertedPayment=['repayment','mortgage','occurrence'].includes(operation.action)&&!!account&&!!target&&account.currency!==target.currency;
  const fx=useDatedExchangeRate(convertedPayment?account?.currency:undefined,target?.currency,draft.date);
- return <Dialog open onOpenChange={open=>{if(!open&&!busy)onClose();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(title)}</DialogTitle><DialogDescription>{t('Review the amounts before saving. Both balances update together.')}</DialogDescription>
+ const [initialDraft]=useState(()=>JSON.stringify(draft));
+ const guard=useDiscardChanges(JSON.stringify(draft)!==initialDraft,onClose,busy);
+ return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(title)}</DialogTitle><DialogDescription>{t('Review the amounts before saving. Both balances update together.')}</DialogDescription>
  <form className="record-form" onSubmit={async e=>{e.preventDefault();setBusy(true);setSubmitted(true);setError('');try{await save(operation.action,{...draft,...(convertedPayment?{exchange_rate:fx.rate}:{}),target_id:draft.target_id||null,received:operation.action==='transfer'?(crossCurrency?draft.received:draft.amount):0});onClose();}catch(e){setError((e as Error).message);if((e as Error & {confirmedFailure?:boolean}).confirmedFailure)setSubmitted(false);}finally{setBusy(false);}}}>
  <fieldset disabled={busy||submitted} className="tracker-fields">
  <label>{t('Cash account')}<NativeSelect required value={draft.account_id} onChange={e=>setDraft({...draft,account_id:e.target.value})}><option value="">{t('Select account')}</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.name} · {formatMoney(a.amount,a.currency,locale)}</option>)}</NativeSelect></label>
@@ -39,6 +42,6 @@ export function AccountOperation({operation,records,save,onClose}:{operation:Ope
  {convertedPayment&&<><ExchangeRatePreview fx={fx}/>{fx.rate&&account&&<p className="muted">{t('Account amount')}: {formatMoney((operation.action==='occurrence'?target!.amount:draft.amount+draft.fee)/fx.rate,account.currency,locale)}</p>}</>}
  {operation.action==='reconcile'&&<p className="muted">{t('This records a balance correction today. It is not income or spending.')}</p>}
  {error&&<p role="alert" className="error">{t(error)}</p>}
- <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t('Cancel')}</Button><Button disabled={busy||!draft.account_id||(convertedPayment&&!fx.rate)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></div>
- </form></DialogContent></Dialog>;
+ <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||!draft.account_id||(convertedPayment&&!fx.rate)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></div>
+ </form></DialogContent></Dialog>{guard.confirmation}</>;
 }

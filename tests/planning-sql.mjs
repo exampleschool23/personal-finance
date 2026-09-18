@@ -54,5 +54,7 @@ assert.equal(await balance(10),895);assert.equal(await balance(11),200);
  await assert.rejects(action('transfer',{...transfer,id:id(90)}),/cash accounts/);
  await assert.rejects(action('goal',{id:id(91),name:'Stolen',account_id:id(10),target:10,allocated:0,target_date:null}),/cash accounts/);
  await assert.rejects(db.query('SELECT import_account_transactions($1,$2)',[id(10),importRows]),/cash accounts/);
+ await db.exec(`RESET ROLE;DELETE FROM auth.users WHERE id='${owner}';`);
+ assert.equal((await db.query('SELECT * FROM finance_records WHERE user_id=$1',[owner])).rows.length,0);
  }finally{await db.close();}
 });

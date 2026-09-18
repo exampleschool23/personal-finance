@@ -2330,3 +2330,369 @@ GRANT EXECUTE ON FUNCTION public.record_repayment_with_fx(jsonb,numeric,date,tex
 
 NOTIFY pgrst,'reload schema';
 COMMIT;
+BEGIN;
+CREATE TABLE public.category_rules (
+ id uuid PRIMARY KEY, user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+ pattern text NOT NULL CHECK(length(trim(pattern)) BETWEEN 1 AND 120),
+ direction text NOT NULL CHECK(direction IN ('income','expense','all')),
+ category_id uuid NOT NULL, priority integer NOT NULL DEFAULT 0 CHECK(priority BETWEEN 0 AND 1000), enabled boolean NOT NULL DEFAULT true,
+ FOREIGN KEY(category_id,user_id) REFERENCES public.custom_categories(id,user_id) ON DELETE CASCADE
+);
+CREATE TABLE public.transaction_splits (
+ record_id uuid NOT NULL, user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+ position integer NOT NULL CHECK(position BETWEEN 0 AND 49), category_id uuid NOT NULL,
+ amount numeric NOT NULL CHECK(amount>0 AND amount<=1e15),
+ PRIMARY KEY(record_id,position),
+ FOREIGN KEY(user_id,record_id) REFERENCES public.finance_records(user_id,id) ON DELETE CASCADE,
+ FOREIGN KEY(category_id,user_id) REFERENCES public.custom_categories(id,user_id)
+);
+CREATE TABLE public.forecast_assignments (
+ record_id uuid PRIMARY KEY, user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE, account_id uuid NOT NULL,
+ FOREIGN KEY(user_id,record_id) REFERENCES public.finance_records(user_id,id) ON DELETE CASCADE,
+ FOREIGN KEY(user_id,account_id) REFERENCES public.finance_records(user_id,id) ON DELETE CASCADE
+);
+CREATE INDEX category_rules_owner_priority ON public.category_rules(user_id,priority,id);
+CREATE INDEX transaction_splits_owner_record ON public.transaction_splits(user_id,record_id,position);
+CREATE INDEX forecast_assignments_owner_record ON public.forecast_assignments(user_id,record_id);
+ALTER TABLE public.category_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.transaction_splits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.forecast_assignments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY owner_rules ON public.category_rules FOR ALL TO authenticated USING(user_id=auth.uid()) WITH CHECK(user_id=auth.uid());
+CREATE POLICY owner_splits ON public.transaction_splits FOR SELECT TO authenticated USING(user_id=auth.uid());
+CREATE POLICY owner_forecasts ON public.forecast_assignments FOR SELECT TO authenticated USING(user_id=auth.uid());
+GRANT SELECT,INSERT,UPDATE,DELETE ON public.category_rules TO authenticated;
+GRANT SELECT ON public.transaction_splits,public.forecast_assignments TO authenticated;
+
+-- One classifier serves manual entry, scheduled receipts and bank imports.
+CREATE FUNCTION public.classify_new_transaction() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ -- PostgREST saves use INSERT ... ON CONFLICT. BEFORE INSERT also runs
+ -- for existing rows, so edits must not reclassify historical transactions.
+ IF EXISTS(SELECT 1 FROM public.finance_records WHERE id=NEW.id AND user_id=NEW.user_id) THEN RETURN NEW; END IF;
+ IF coalesce(current_setting('finance.restore_transaction',true),'0')<>'1' AND NEW.custom_category_id IS NULL AND NEW.frequency='Once' AND NEW.kind IN ('Salary','Rent income','Other income','Rent expense','Living expense','Charity','Other expense') THEN
+  SELECT category_id INTO NEW.custom_category_id FROM public.category_rules
+  WHERE user_id=NEW.user_id AND enabled AND strpos(lower(NEW.name),lower(trim(pattern)))>0
+   AND (direction='all' OR direction=CASE WHEN NEW.kind IN ('Salary','Rent income','Other income') THEN 'income' ELSE 'expense' END)
+  ORDER BY priority,id LIMIT 1;
+ END IF;
+ RETURN NEW;
+END $$;
+CREATE TRIGGER classify_transaction BEFORE INSERT ON public.finance_records FOR EACH ROW EXECUTE FUNCTION public.classify_new_transaction();
+
+CREATE FUNCTION public.save_transaction_splits(p_record uuid,p_splits jsonb) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE owner uuid:=auth.uid(); r public.finance_records; part jsonb; n integer:=0; total numeric:=0;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ SELECT * INTO r FROM public.finance_records WHERE id=p_record AND user_id=owner FOR UPDATE;
+ IF NOT FOUND OR r.movement_id IS NOT NULL OR r.operation_id IS NOT NULL OR r.mortgage_payment_id IS NOT NULL OR r.history_event_id IS NOT NULL OR r.frequency<>'Once' OR r.kind NOT IN ('Salary','Rent income','Other income','Rent expense','Living expense','Charity','Other expense') THEN RAISE EXCEPTION 'Choose an actual transaction.'; END IF;
+ IF jsonb_typeof(p_splits) IS DISTINCT FROM 'array' OR jsonb_array_length(p_splits)>50 OR jsonb_array_length(p_splits)=1 THEN RAISE EXCEPTION 'Use at least two split categories, or clear the split.'; END IF;
+ DELETE FROM public.transaction_splits WHERE record_id=r.id AND user_id=owner;
+ FOR part IN SELECT value FROM jsonb_array_elements(p_splits) LOOP
+  IF (part->>'amount') IS NULL OR (part->>'amount')::numeric<=0 OR (part->>'amount')::numeric>1e15 THEN RAISE EXCEPTION 'Check the split amounts.'; END IF;
+  INSERT INTO public.transaction_splits(record_id,user_id,position,category_id,amount) VALUES(r.id,owner,n,(part->>'category_id')::uuid,(part->>'amount')::numeric);
+  total:=total+(part->>'amount')::numeric;n:=n+1;
+ END LOOP;
+ IF n>0 AND total<>r.amount THEN RAISE EXCEPTION 'Split amounts must equal the transaction amount.'; END IF;
+ RETURN jsonb_build_object('ok',true);
+END $$;
+-- A split must not silently become inconsistent after a parent transaction edit.
+CREATE FUNCTION public.protect_split_total() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ IF (NEW.amount,NEW.currency,NEW.kind,NEW.frequency) IS DISTINCT FROM (OLD.amount,OLD.currency,OLD.kind,OLD.frequency) AND EXISTS(SELECT 1 FROM public.transaction_splits WHERE record_id=OLD.id) THEN RAISE EXCEPTION 'Clear the split before changing the transaction amount or type.'; END IF;
+ RETURN NEW;
+END $$;
+CREATE TRIGGER protect_split_total BEFORE UPDATE ON public.finance_records FOR EACH ROW EXECUTE FUNCTION public.protect_split_total();
+CREATE FUNCTION public.save_forecast_assignment(p_record uuid,p_account uuid) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE owner uuid:=auth.uid(); r public.finance_records;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ SELECT * INTO r FROM public.finance_records WHERE id=p_record AND user_id=owner FOR UPDATE;
+ IF NOT FOUND OR r.frequency='Once' OR r.kind NOT IN ('Salary','Rent income','Other income','Rent expense','Living expense','Charity','Other expense') THEN RAISE EXCEPTION 'Choose a recurring schedule.'; END IF;
+ IF p_account IS NULL THEN DELETE FROM public.forecast_assignments WHERE record_id=p_record AND user_id=owner;
+ ELSE
+  PERFORM 1 FROM public.finance_records WHERE id=p_account AND user_id=owner AND kind='Cash' AND currency=r.currency FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Choose a cash account in the schedule currency.'; END IF;
+  INSERT INTO public.forecast_assignments(record_id,user_id,account_id) VALUES(p_record,owner,p_account) ON CONFLICT(record_id) DO UPDATE SET account_id=EXCLUDED.account_id;
+ END IF;
+ RETURN jsonb_build_object('ok',true);
+END $$;
+REVOKE ALL ON FUNCTION public.save_transaction_splits(uuid,jsonb),public.save_forecast_assignment(uuid,uuid),public.classify_new_transaction(),public.protect_split_total() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.save_transaction_splits(uuid,jsonb),public.save_forecast_assignment(uuid,uuid) TO authenticated;
+ALTER FUNCTION public.export_finance_backup() RENAME TO export_finance_backup_before_transaction_tools;
+CREATE FUNCTION public.export_finance_backup() RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path=public AS $$
+DECLARE result jsonb;
+BEGIN
+ result:=public.export_finance_backup_before_transaction_tools();
+ result:=jsonb_set(result,'{tables,category_rules}',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM public.category_rules r));
+ result:=jsonb_set(result,'{tables,transaction_splits}',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM public.transaction_splits r));
+ result:=jsonb_set(result,'{tables,forecast_assignments}',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM public.forecast_assignments r));
+ RETURN result;
+END $$;
+REVOKE ALL ON FUNCTION public.export_finance_backup() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.export_finance_backup() TO authenticated;
+
+-- Preserve category allocations when a transaction is moved to Recently deleted.
+ALTER TABLE public.deleted_items ADD COLUMN splits jsonb NOT NULL DEFAULT '[]'::jsonb CHECK(jsonb_typeof(splits)='array');
+CREATE FUNCTION public.archive_transaction_splits() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ IF OLD.user_id=auth.uid() THEN
+  UPDATE public.deleted_items SET splits=(SELECT coalesce(jsonb_agg(jsonb_build_object('category_id',category_id,'amount',amount) ORDER BY position),'[]'::jsonb) FROM public.transaction_splits WHERE record_id=OLD.id AND user_id=OLD.user_id)
+  WHERE id=(SELECT id FROM public.deleted_items WHERE user_id=OLD.user_id AND source='finance_records' AND data->>'id'=OLD.id::text ORDER BY deleted_at DESC,id DESC LIMIT 1);
+ END IF;
+ RETURN OLD;
+END $$;
+-- Trigger names are ordered: archive_deleted_record creates the archive first.
+CREATE TRIGGER archive_transaction_splits BEFORE DELETE ON public.finance_records FOR EACH ROW EXECUTE FUNCTION public.archive_transaction_splits();
+ALTER FUNCTION public.restore_deleted_item(uuid) RENAME TO restore_deleted_item_before_transaction_tools;
+CREATE FUNCTION public.restore_deleted_item(p_id uuid) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE item public.deleted_items; previous_restore text;
+BEGIN
+ IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ SELECT * INTO item FROM public.deleted_items WHERE id=p_id AND user_id=auth.uid() FOR UPDATE;
+ IF NOT FOUND THEN RETURN; END IF;
+ previous_restore:=coalesce(current_setting('finance.restore_transaction',true),'0');
+ PERFORM set_config('finance.restore_transaction','1',true);
+ PERFORM public.restore_deleted_item_before_transaction_tools(p_id);
+ PERFORM set_config('finance.restore_transaction',previous_restore,true);
+ IF item.source='finance_records' AND jsonb_array_length(item.splits)>0 THEN PERFORM public.save_transaction_splits((item.data->>'id')::uuid,item.splits); END IF;
+END $$;
+REVOKE ALL ON FUNCTION public.archive_transaction_splits(),public.restore_deleted_item(uuid) FROM PUBLIC,anon;
+REVOKE ALL ON FUNCTION public.restore_deleted_item_before_transaction_tools(uuid) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.restore_deleted_item(uuid) TO authenticated;
+
+NOTIFY pgrst,'reload schema';
+COMMIT;
+-- Shared goal funding settings and an allocation audit trail. No cash moves.
+BEGIN;
+ALTER TABLE public.savings_goals ADD COLUMN funding_priority integer NOT NULL DEFAULT 100 CHECK(funding_priority BETWEEN 0 AND 10000),
+ ADD COLUMN funding_monthly numeric CHECK(funding_monthly BETWEEN 0 AND 1e15),
+ ADD COLUMN funding_enabled boolean NOT NULL DEFAULT false,
+ ADD COLUMN paused_until date,
+ ADD COLUMN completed_on date,
+ ADD COLUMN funding_mode text NOT NULL DEFAULT 'one_time' CHECK(funding_mode IN ('one_time','refill'));
+ALTER TABLE public.savings_goals ADD CONSTRAINT savings_goals_id_owner_unique UNIQUE(id,user_id);
+CREATE TABLE public.goal_operations (
+ id uuid PRIMARY KEY, user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+ payload jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE public.goal_events (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+ goal_id uuid NOT NULL, operation_id uuid REFERENCES public.goal_operations(id),
+ occurred_on date NOT NULL, delta numeric NOT NULL, balance numeric NOT NULL CHECK(balance>=0),
+ event_type text NOT NULL CHECK(event_type IN ('opening','adjustment','contribution','withdrawal','transfer')),
+ notes text NOT NULL DEFAULT '' CHECK(length(notes)<=2000),
+ source_id uuid REFERENCES public.finance_records(id) ON DELETE SET NULL,
+ source_name text, created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ FOREIGN KEY(goal_id,user_id) REFERENCES public.savings_goals(id,user_id) ON DELETE CASCADE
+);
+CREATE INDEX goal_events_owner_date ON public.goal_events(user_id,occurred_on DESC,created_at DESC,id);
+CREATE INDEX goal_operations_owner ON public.goal_operations(user_id);
+ALTER TABLE public.goal_operations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.goal_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY owner_read ON public.goal_operations FOR SELECT TO authenticated USING(user_id=auth.uid());
+CREATE POLICY owner_read ON public.goal_events FOR SELECT TO authenticated USING(user_id=auth.uid());
+GRANT SELECT ON public.goal_operations,public.goal_events TO authenticated;
+INSERT INTO public.goal_events(user_id,goal_id,occurred_on,delta,balance,event_type,notes)
+ SELECT user_id,id,(now() AT TIME ZONE 'Asia/Tashkent')::date,allocated,allocated,'opening','Opening allocation; earlier contribution dates are unknown.' FROM public.savings_goals WHERE kind='savings';
+CREATE FUNCTION public.mark_goal_complete() RETURNS trigger LANGUAGE plpgsql SET search_path=public AS $$
+BEGIN
+ IF NEW.kind='savings' AND NEW.allocated>=NEW.target THEN NEW.completed_on:=coalesce(NEW.completed_on,(now() AT TIME ZONE 'Asia/Tashkent')::date);
+ ELSIF TG_OP='UPDATE' AND NEW.target>OLD.target THEN NEW.completed_on:=NULL; END IF;
+ RETURN NEW;
+END $$;
+CREATE TRIGGER mark_goal_complete BEFORE INSERT OR UPDATE ON public.savings_goals FOR EACH ROW EXECUTE FUNCTION public.mark_goal_complete();
+UPDATE public.savings_goals SET completed_on=(now() AT TIME ZONE 'Asia/Tashkent')::date WHERE kind='savings' AND allocated>=target;
+REVOKE ALL ON FUNCTION public.mark_goal_complete() FROM PUBLIC,anon,authenticated;
+CREATE FUNCTION public.audit_goal_allocation() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE context jsonb:=coalesce(nullif(current_setting('finance.goal_event',true),''),'{}')::jsonb; difference numeric;
+BEGIN
+ IF TG_OP='UPDATE' AND (NEW.kind,NEW.account_id,NEW.currency) IS DISTINCT FROM (OLD.kind,OLD.account_id,OLD.currency)
+  AND EXISTS(SELECT 1 FROM public.goal_events WHERE goal_id=OLD.id) THEN RAISE EXCEPTION 'Archive this goal and create another to change its account, currency or type.'; END IF;
+ IF NEW.kind<>'savings' THEN RETURN NEW; END IF;
+ difference:=NEW.allocated-CASE WHEN TG_OP='INSERT' THEN 0 ELSE OLD.allocated END;
+ IF TG_OP='INSERT' OR difference<>0 THEN
+ INSERT INTO public.goal_events(user_id,goal_id,operation_id,occurred_on,delta,balance,event_type,notes,source_id,source_name)
+ VALUES(NEW.user_id,NEW.id,(context->>'operation_id')::uuid,coalesce((context->>'date')::date,(now() AT TIME ZONE 'Asia/Tashkent')::date),difference,NEW.allocated,
+ coalesce(context->>'type',CASE WHEN TG_OP='INSERT' THEN 'opening' ELSE 'adjustment' END),coalesce(context->>'notes',''),(context->>'source_id')::uuid,context->>'source_name');
+ END IF;
+ RETURN NEW;
+END $$;
+CREATE TRIGGER audit_goal_allocation AFTER INSERT OR UPDATE ON public.savings_goals FOR EACH ROW EXECUTE FUNCTION public.audit_goal_allocation();
+CREATE FUNCTION public.configure_goal_funding(p_data jsonb) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE owner uuid:=auth.uid();
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ UPDATE public.savings_goals SET funding_priority=(p_data->>'priority')::integer,funding_monthly=(p_data->>'monthly')::numeric,
+ funding_enabled=(p_data->>'enabled')::boolean,paused_until=(p_data->>'paused_until')::date,funding_mode=p_data->>'mode'
+ WHERE id=(p_data->>'goal_id')::uuid AND user_id=owner;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Goal not found.'; END IF;
+END $$;
+CREATE FUNCTION public.record_goal_activity(p_data jsonb) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE owner uuid:=auth.uid(); g public.savings_goals; destination public.savings_goals; account public.finance_records; source public.finance_records;
+ item uuid:=(p_data->>'id')::uuid; qty numeric:=(p_data->>'amount')::numeric; day date:=(p_data->>'date')::date; action text:=p_data->>'type';
+ prior public.goal_operations; next_balance numeric; previous_context text;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ IF item IS NULL OR qty IS NULL OR qty<=0 OR qty>1e15 OR qty::text IN ('NaN','Infinity','-Infinity') OR action NOT IN ('contribution','withdrawal','transfer') OR action IS NULL OR day IS NULL OR day>(now() AT TIME ZONE 'Asia/Tashkent')::date OR length(coalesce(p_data->>'notes',''))>2000 THEN RAISE EXCEPTION 'Check the goal activity.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ SELECT * INTO prior FROM public.goal_operations WHERE id=item;
+ IF FOUND THEN
+ IF prior.user_id<>owner OR prior.payload<>p_data THEN RAISE EXCEPTION 'This operation was already saved with different details.'; END IF;
+ RETURN jsonb_build_object('ok',true);
+ END IF;
+ SELECT * INTO g FROM public.savings_goals WHERE id=(p_data->>'goal_id')::uuid AND user_id=owner AND kind='savings' AND NOT archived FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Choose an active savings goal.'; END IF;
+ SELECT * INTO account FROM public.finance_records WHERE id=g.account_id AND user_id=owner AND kind='Cash' FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Choose one of your cash accounts.'; END IF;
+ IF p_data->>'source_id' IS NOT NULL THEN
+ SELECT * INTO source FROM public.finance_records WHERE id=(p_data->>'source_id')::uuid AND user_id=owner AND account_id=g.account_id AND frequency='Once' AND currency=g.currency AND date<=day;
+ IF NOT FOUND OR action<>'contribution' OR source.kind NOT IN ('Salary','Rent income','Other income') THEN RAISE EXCEPTION 'Choose an income transaction from the goal account.'; END IF;
+ IF qty+(SELECT coalesce(sum(delta),0) FROM public.goal_events WHERE source_id=source.id AND user_id=owner)>source.amount THEN RAISE EXCEPTION 'This transaction is already allocated.'; END IF;
+ END IF;
+ IF action='transfer' THEN
+ SELECT * INTO destination FROM public.savings_goals WHERE id=(p_data->>'target_id')::uuid AND user_id=owner AND kind='savings' AND NOT archived AND account_id=g.account_id AND id<>g.id FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Choose another savings goal in the same account.'; END IF;
+ ELSIF p_data->>'target_id' IS NOT NULL THEN RAISE EXCEPTION 'Check the goal activity.'; END IF;
+ next_balance:=g.allocated+CASE WHEN action='contribution' THEN qty ELSE -qty END;
+ IF next_balance<0 OR next_balance>g.target OR (action='transfer' AND destination.allocated+qty>destination.target) THEN RAISE EXCEPTION 'The activity exceeds the goal balance or target.'; END IF;
+ IF action='contribution' AND qty+(SELECT coalesce(sum(allocated),0) FROM public.savings_goals WHERE account_id=g.account_id AND user_id=owner AND NOT archived)>account.amount THEN RAISE EXCEPTION 'Allocations exceed the account balance.'; END IF;
+ INSERT INTO public.goal_operations(id,user_id,payload) VALUES(item,owner,p_data);
+ previous_context:=coalesce(current_setting('finance.goal_event',true),'');
+ PERFORM set_config('finance.goal_event',(p_data||jsonb_build_object('operation_id',item,'source_name',source.name))::text,true);
+ UPDATE public.savings_goals SET allocated=next_balance WHERE id=g.id;
+ IF action='transfer' THEN UPDATE public.savings_goals SET allocated=allocated+qty WHERE id=destination.id; END IF;
+ PERFORM set_config('finance.goal_event',previous_context,true);
+ RETURN jsonb_build_object('ok',true);
+END $$;
+REVOKE ALL ON FUNCTION public.audit_goal_allocation(),public.configure_goal_funding(jsonb),public.record_goal_activity(jsonb) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.configure_goal_funding(jsonb),public.record_goal_activity(jsonb) TO authenticated;
+ALTER FUNCTION public.export_finance_backup() RENAME TO export_finance_backup_before_goal_activity;
+CREATE FUNCTION public.export_finance_backup() RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path=public AS $$
+DECLARE result jsonb:=public.export_finance_backup_before_goal_activity();
+BEGIN
+ result:=jsonb_set(result,'{tables,goal_events}',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM public.goal_events r));
+ result:=jsonb_set(result,'{tables,goal_operations}',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM public.goal_operations r));
+ RETURN result;
+END $$;
+REVOKE ALL ON FUNCTION public.export_finance_backup() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.export_finance_backup() TO authenticated;
+NOTIFY pgrst,'reload schema';
+COMMIT;
+BEGIN;
+CREATE TABLE public.workspace_preferences (
+ user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+ key text NOT NULL CHECK(key IN ('allocation','watchlists','import_profiles','debt_plan','goal_scenarios')),
+ data jsonb NOT NULL CHECK(jsonb_typeof(data)='object' AND octet_length(data::text)<=65536),
+ PRIMARY KEY(user_id,key)
+);
+ALTER TABLE public.workspace_preferences ENABLE ROW LEVEL SECURITY;
+CREATE POLICY owner_preferences ON public.workspace_preferences FOR ALL TO authenticated USING(user_id=auth.uid()) WITH CHECK(user_id=auth.uid());
+GRANT SELECT,INSERT,UPDATE,DELETE ON public.workspace_preferences TO authenticated;
+ALTER FUNCTION public.export_finance_backup() RENAME TO export_finance_backup_before_workspace_preferences;
+CREATE FUNCTION public.export_finance_backup() RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path=public AS $$
+DECLARE result jsonb:=public.export_finance_backup_before_workspace_preferences();
+BEGIN
+ RETURN jsonb_set(result,'{tables,workspace_preferences}',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM public.workspace_preferences r));
+END $$;
+REVOKE ALL ON FUNCTION public.export_finance_backup() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.export_finance_backup() TO authenticated;
+NOTIFY pgrst,'reload schema';
+COMMIT;
+-- Import provenance and atomic undo for unchanged imported transactions.
+BEGIN;
+CREATE TABLE public.import_batches (
+ id uuid PRIMARY KEY, user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+ account_id uuid NOT NULL, payload jsonb NOT NULL, result jsonb NOT NULL,
+ created_at timestamptz NOT NULL DEFAULT now(), undone_at timestamptz,
+ FOREIGN KEY(account_id,user_id) REFERENCES public.finance_records(id,user_id) ON DELETE CASCADE
+);
+CREATE TABLE public.import_batch_items (
+ batch_id uuid NOT NULL REFERENCES public.import_batches(id) ON DELETE CASCADE,
+ user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+ record_id uuid NOT NULL, original jsonb NOT NULL, PRIMARY KEY(batch_id,record_id)
+);
+CREATE INDEX import_batches_owner ON public.import_batches(user_id,created_at DESC,id);
+CREATE INDEX import_batch_items_owner ON public.import_batch_items(user_id,batch_id);
+ALTER TABLE public.import_batches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.import_batch_items ENABLE ROW LEVEL SECURITY;
+CREATE POLICY owner_read ON public.import_batches FOR SELECT TO authenticated USING(user_id=auth.uid());
+CREATE POLICY owner_read ON public.import_batch_items FOR SELECT TO authenticated USING(user_id=auth.uid());
+GRANT SELECT ON public.import_batches,public.import_batch_items TO authenticated;
+CREATE FUNCTION public.import_statement(p_batch uuid,p_account uuid,p_rows jsonb) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE owner uuid:=auth.uid(); previous public.import_batches; existing public.finance_records; r jsonb; before_ids uuid[]; result jsonb;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ IF p_batch IS NULL OR jsonb_typeof(p_rows) IS DISTINCT FROM 'array' OR jsonb_array_length(p_rows) NOT BETWEEN 1 AND 500 THEN RAISE EXCEPTION 'Check the import fields.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ SELECT * INTO previous FROM public.import_batches WHERE id=p_batch;
+ IF FOUND THEN
+  IF previous.user_id<>owner OR previous.account_id<>p_account OR previous.payload<>p_rows THEN RAISE EXCEPTION 'This import identifier was used with different details.'; END IF;
+  IF previous.undone_at IS NOT NULL THEN RAISE EXCEPTION 'This import was undone. Start a new import.'; END IF;
+  RETURN previous.result;
+ END IF;
+ IF NOT EXISTS(SELECT 1 FROM public.finance_records WHERE id=p_account AND user_id=owner AND kind='Cash') THEN RAISE EXCEPTION 'Choose one of your cash accounts.'; END IF;
+ IF EXISTS(SELECT 1 FROM jsonb_array_elements(p_rows) value GROUP BY value->>'key' HAVING count(*)>1) THEN RAISE EXCEPTION 'Duplicate source identifiers in this statement.'; END IF;
+ SELECT coalesce(array_agg(id),'{}') INTO before_ids FROM public.finance_records WHERE user_id=owner AND import_key IN (SELECT value->>'key' FROM jsonb_array_elements(p_rows));
+ FOR r IN SELECT value FROM jsonb_array_elements(p_rows) LOOP
+  SELECT * INTO existing FROM public.finance_records WHERE user_id=owner AND import_key=r->>'key' FOR UPDATE;
+  IF FOUND AND (existing.account_id IS DISTINCT FROM p_account OR existing.amount<>abs((r->>'amount')::numeric) OR existing.date<>(r->>'date')::date OR existing.name<>r->>'name' OR existing.kind<>CASE WHEN (r->>'amount')::numeric>0 THEN 'Other income' ELSE 'Other expense' END) THEN RAISE EXCEPTION 'An imported transaction with this source identifier has different details. Review it before importing.'; END IF;
+ END LOOP;
+ result:=public.import_account_transactions(p_account,p_rows);
+ INSERT INTO public.import_batches(id,user_id,account_id,payload,result) VALUES(p_batch,owner,p_account,p_rows,result);
+ INSERT INTO public.import_batch_items(batch_id,user_id,record_id,original)
+ SELECT p_batch,owner,id,to_jsonb(f) FROM public.finance_records f WHERE user_id=owner AND NOT(id=ANY(before_ids)) AND import_key IN (SELECT value->>'key' FROM jsonb_array_elements(p_rows));
+ RETURN result;
+END $$;
+CREATE FUNCTION public.undo_statement_import(p_batch uuid) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE owner uuid:=auth.uid(); batch public.import_batches; item public.import_batch_items; current_record jsonb;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ SELECT * INTO batch FROM public.import_batches WHERE id=p_batch AND user_id=owner FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Import not found.'; END IF;
+ IF batch.undone_at IS NOT NULL THEN RETURN; END IF;
+ -- Lock and check everything before deleting anything. Later edits must be reviewed.
+ FOR item IN SELECT * FROM public.import_batch_items WHERE batch_id=p_batch AND user_id=owner ORDER BY record_id LOOP
+  SELECT to_jsonb(f) INTO current_record FROM public.finance_records f WHERE id=item.record_id AND user_id=owner FOR UPDATE;
+  IF NOT FOUND OR current_record<>item.original OR EXISTS(SELECT 1 FROM public.transaction_splits WHERE record_id=item.record_id) OR EXISTS(SELECT 1 FROM public.goal_events WHERE source_id=item.record_id) THEN RAISE EXCEPTION 'An imported transaction has changed or is linked to a goal. Review these records individually.'; END IF;
+ END LOOP;
+ -- Remove outflows first so undoing a balanced batch does not transiently overdraw.
+ FOR item IN SELECT * FROM public.import_batch_items WHERE batch_id=p_batch AND user_id=owner ORDER BY CASE WHEN original->>'kind'='Other expense' THEN 0 ELSE 1 END,record_id LOOP
+  DELETE FROM public.finance_records WHERE id=item.record_id AND user_id=owner;
+ END LOOP;
+ UPDATE public.import_batches SET undone_at=now() WHERE id=p_batch;
+END $$;
+REVOKE ALL ON FUNCTION public.import_statement(uuid,uuid,jsonb),public.undo_statement_import(uuid) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.import_statement(uuid,uuid,jsonb),public.undo_statement_import(uuid) TO authenticated;
+ALTER FUNCTION public.export_finance_backup() RENAME TO export_finance_backup_before_import_review;
+CREATE FUNCTION public.export_finance_backup() RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path=public AS $$
+DECLARE result jsonb:=public.export_finance_backup_before_import_review();
+BEGIN
+ result:=jsonb_set(result,'{tables,import_batches}',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM public.import_batches r));
+ RETURN jsonb_set(result,'{tables,import_batch_items}',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]') FROM public.import_batch_items r));
+END $$;
+REVOKE ALL ON FUNCTION public.export_finance_backup() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.export_finance_backup() TO authenticated;
+NOTIFY pgrst,'reload schema';
+COMMIT;
+-- Financial invariants still apply to ordinary record deletion. During the
+-- administrator's auth.users cascade the owner is already gone, so there is no
+-- surviving balance to reverse and immutable child rows must be removable.
+BEGIN;
+DO $$
+DECLARE function_name text; definition text; insertion integer;
+BEGIN
+ FOREACH function_name IN ARRAY ARRAY['apply_account_cashflow','guard_operation_record','guard_movement_record','guard_mortgage_payment_record','guard_investment_history_record','guard_goal_target_account'] LOOP
+  SELECT pg_get_functiondef(p.oid) INTO definition FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname=function_name AND p.pronargs=0 AND p.prosecdef;
+  IF definition IS NULL THEN RAISE EXCEPTION 'Expected security-definer trigger missing: %',function_name; END IF;
+  insertion:=strpos(definition,E'\nBEGIN\n');
+  IF insertion=0 THEN RAISE EXCEPTION 'Unexpected trigger definition: %',function_name; END IF;
+  definition:=overlay(definition PLACING E'\nBEGIN\n IF TG_OP=''DELETE'' AND NOT EXISTS(SELECT 1 FROM auth.users WHERE id=OLD.user_id) THEN RETURN OLD; END IF;\n' FROM insertion FOR length(E'\nBEGIN\n'));
+  EXECUTE definition;
+ END LOOP;
+END $$;
+NOTIFY pgrst,'reload schema';
+COMMIT;

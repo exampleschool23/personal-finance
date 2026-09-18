@@ -19,6 +19,7 @@ export function actualInvestmentPerformance(records:Entry[],events:HistoryEvent[
  for(const event of sorted)if(event.event_type==='contribution'&&!firstPurchase.has(event.record_id))firstPurchase.set(event.record_id,event.occurred_on);
  const balances=new Map<string,number>(),liveById=new Map(live.map(holding=>[holding.id,holding]));
  const observed=new Set<string>();
+ const distributions:CashFlow[]=[];
  const flows:CashFlow[]=[],points:WealthPoint[]=[];
  let missing=false,cursor=0,distributed=0;
  for(let date=start;date<=end;date=shiftDay(date,1)){
@@ -36,7 +37,7 @@ export function actualInvestmentPerformance(records:Entry[],events:HistoryEvent[
    if(flow){const amount=convertHistorical(flow,record.currency,currency,date,fx);if(amount===null)missing=true;else flows.push({date,amount});}
    if(event.event_type==='income'||event.event_type==='expense'){
     const amount=convertHistorical(Number(event.amount),record.currency,currency,date,fx);
-    if(amount===null)missing=true;else distributed+=event.event_type==='income'?amount:-amount;
+    if(amount===null)missing=true;else{const payout=event.event_type==='income'?amount:-amount;distributed+=payout;distributions.push({date,amount:payout});}
    }
    if(balance!==null)balances.set(record.id,balance);
   }
@@ -52,5 +53,5 @@ export function actualInvestmentPerformance(records:Entry[],events:HistoryEvent[
   if(date===end&&balances.size!==byId.size)complete=false;
   points.push({date,amount:complete?total:null});
  }
- return {start,points,flows,missing:missing||points.at(-1)?.amount===null,observed:[...observed]};
+ return {start,points,flows,distributions,distributed,missing:missing||points.at(-1)?.amount===null,observed:[...observed]};
 }

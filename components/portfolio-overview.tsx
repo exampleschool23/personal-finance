@@ -1,4 +1,5 @@
 "use client";
+import { PartialTotal } from '@/components/partial-total';
 import { IncomeHistoryChart } from '@/components/income-history-chart';
 import { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -14,7 +15,7 @@ import { historyChartDate, type HistoryEvent } from '@/lib/investment-history';
 import { type MarketData } from '@/lib/market';
 
 type History = { records: Entry[]; events: HistoryEvent[]; cashflows?: Entry[]; incomeRecords?: Entry[] };
-export function PortfolioOverview({ entries, currency, market, demo, revision, snapshots, snapshotError, onSnapshotRetry }: { snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
+export function PortfolioOverview({ excludedCurrencies=[], entries, currency, market, demo, revision, snapshots, snapshotError, onSnapshotRetry }: { excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
  const { t, locale } = useLanguage();
  const [history, setHistory] = useState<History | null>(null);
  const [error, setError] = useState(false);
@@ -49,7 +50,7 @@ export function PortfolioOverview({ entries, currency, market, demo, revision, s
  return <>
   <section className="panel portfolio-trend">
    <div className="panel-title"><div><h2>{t('Portfolio over time')}</h2><p className="muted">{t('Recorded balances of your current holdings')}</p></div><div className="portfolio-ranges" aria-label={t('History period')}>{[30, 90, 365, null].map(days => <Button key={String(days)} size="sm" variant={range === days ? 'default' : 'outline'} aria-pressed={range === days} onClick={() => setRange(days)}>{days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) })}</Button>)}</div></div>
-   <div className="portfolio-headline"><div><span>{t('Net worth today')}</span><strong>{money(assetTotal - debt)}</strong></div>{!loading && !error && change !== null && <div><span>{t('Change in selected period')}</span><strong className={change >= 0 ? 'positive' : 'negative'}>{money(change)}</strong></div>}</div>
+   <div className="portfolio-headline"><div><span>{t('Net worth today')}</span><strong>{money(assetTotal - debt)}</strong><PartialTotal currencies={excludedCurrencies}/></div>{!loading && !error && change !== null && <div><span>{t('Change in selected period')}</span><strong className={change >= 0 ? 'positive' : 'negative'}>{money(change)}</strong></div>}</div>
    {loading ? <LoadingPlaceholder label={t('Loading history…')}/> : error ? <p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}>{t('Retry')}</Button></p> : <>
     <div className="portfolio-chart" aria-label={t('Portfolio over time')}><ResponsiveContainer width="100%" height={310}><LineChart data={visible.map(point => ({ ...point, timestamp: Date.parse(point.date + 'T00:00:00Z') }))} accessibilityLayer margin={{ top: 15, right: 15, left: 5, bottom: 10 }}>
      <CartesianGrid stroke="var(--border)" strokeDasharray="3 5" vertical={false}/>

@@ -5,6 +5,7 @@ import ts from 'typescript';
 import {z} from 'zod';
 import {instrumentFor} from '../lib/market.ts';
 import {timingSafeEqual} from 'node:crypto';
+import {exportCSV,parseCSV,mapCSV,FINANCE_RECORD_CSV_COLUMNS} from '../lib/csv.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const id='10000000-0000-4000-8000-000000000001';
 const req=(body,origin='https://local')=>new Request('https://local',{method:'POST',headers:{origin},body:JSON.stringify(body)});
@@ -32,7 +33,7 @@ test('planning API rejects anonymous, cross-origin and malformed operations and 
 test('statement import produces stable distinct duplicate keys and authenticates before any write',async()=>{
  let calls=[];
  const api=new Function('z','session','supa','sameOrigin',compile('app/api/import/route.ts')+';return POST;')(z,async()=>({token:'owner'}),async(path,init,token)=>{calls.push({body:JSON.parse(init.body),token});return Response.json({added:2,skipped:0});},r=>r.headers.get('origin')==='https://local');
- const row={name:'Shop',amount:-20,date:'2026-09-01',notes:''};const data={account_id:id,rows:[row,row]};
+ const row={name:'Shop',amount:-20,date:'2026-09-01',notes:''};const data={batch_id:id,account_id:id,rows:[row,row]};
  assert.equal((await api(req(data))).status,200);assert.equal((await api(req(data))).status,200);const keys=calls[0].body.p_rows.map(r=>r.key);assert.notEqual(keys[0],keys[1]);assert.deepEqual(keys,calls[1].body.p_rows.map(r=>r.key));assert.equal(calls[0].token,'owner');
  assert.equal((await api(req({...data,rows:[{...row,date:'2026-02-30'}]}))).status,400);
  assert.equal((await api(req(data,'https://elsewhere'))).status,403);
@@ -47,6 +48,12 @@ test('backup uses one owner-scoped database snapshot and fails closed on incompl
  const api=new Function('session','supa','readOwnerRows','exportCSV',compile('app/api/backup/route.ts')+';return GET;')(async()=>({token:'owner'}),async(path,init,token)=>{calls.push({path,token});return fail?Response.json({error:'offline'},{status:503}):Response.json({version:1,tables:{finance_records:[]}});},async()=>[],()=> 'csv');
  let response=await api(new Request('https://local'));assert.equal(response.status,200);assert.equal((await response.json()).version,1);assert.deepEqual(calls,[{path:'/rest/v1/rpc/export_finance_backup',token:'owner'}]);
  fail=true;response=await api(new Request('https://local'));assert.equal(response.status,503);assert.equal((await response.json()).tables,undefined);
+});
+test('CSV backup exports owner records and cannot be misread as a signed bank statement',async()=>{
+ const api=new Function('session','supa','readOwnerRows','exportCSV','FINANCE_RECORD_CSV_COLUMNS',compile('app/api/backup/route.ts')+';return GET;')(async()=>({token:'owner'}),()=>{throw Error('unexpected');},async(table,token)=>{assert.equal(table,'finance_records');assert.equal(token,'owner');return [{name:'Groceries',kind:'Other expense',currency:'USD',amount:42,date:'2026-09-18'}];},exportCSV,FINANCE_RECORD_CSV_COLUMNS);
+ const response=await api(new Request('https://local?format=csv'));assert.equal(response.status,200);assert.equal(response.headers.get('Cache-Control'),'no-store');
+ const rows=parseCSV(await response.text());assert.deepEqual(rows[0],[...FINANCE_RECORD_CSV_COLUMNS]);assert.equal(rows[1][4],'42');
+ assert.throws(()=>mapCSV(rows,{name:1,date:8,amount:4,notes:11,dateFormat:'iso',decimal:'.'}),/records export, not a bank statement/);
 });
 
 test('planning reads include holding accounts and computed deposit income exactly once',async()=>{

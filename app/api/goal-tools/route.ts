@@ -1,0 +1,10 @@
+import { z } from 'zod';
+import { uuid,isoDate,nonnegativeAmount,notes } from '@/lib/api-validation';
+import { session,supa,sameOrigin } from '@/lib/supabase';
+import { readOwnerRows } from '@/lib/server-records';
+const schema=z.discriminatedUnion('action',[
+ z.object({action:z.literal('funding'),data:z.object({goal_id:uuid,priority:z.number().int().min(0).max(10000),monthly:nonnegativeAmount.nullable(),enabled:z.boolean(),paused_until:isoDate.nullable(),mode:z.enum(['one_time','refill'])})}),
+ z.object({action:z.literal('activity'),data:z.object({id:uuid,goal_id:uuid,target_id:uuid.nullable(),source_id:uuid.nullable(),amount:nonnegativeAmount.positive(),date:isoDate,type:z.enum(['contribution','withdrawal','transfer']),notes})})
+]);
+export async function GET(){try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});return Response.json({events:await readOwnerRows('goal_events',auth.token,{order:'occurred_on.desc,created_at.desc,id.asc'})},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Could not load goal activity. Check the latest migrations.'},{status:503});}}
+export async function POST(req:Request){if(!sameOrigin(req))return new Response(null,{status:403});try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});const parsed=schema.safeParse(await req.json());if(!parsed.success)return Response.json({error:'Check the goal activity.'},{status:400});const result=await supa('/rest/v1/rpc/'+(parsed.data.action==='funding'?'configure_goal_funding':'record_goal_activity'),{method:'POST',body:JSON.stringify({p_data:parsed.data.data})},auth.token);if(!result.ok){const error=await result.json() as {code?:string;message?:string};return Response.json({error:error.code==='P0001'?error.message:'Could not save goal changes. Check the latest migrations.'},{status:409});}return Response.json({ok:true});}catch{return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}}

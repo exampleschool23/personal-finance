@@ -3,6 +3,7 @@ import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
 import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
 import { NativeSelect } from '@/components/ui/native-select';
 import { depositToday } from '@/lib/deposit-interest';
+import { useDiscardChanges } from '@/components/discard-changes';
 import { useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -24,7 +25,9 @@ export function MortgagePaymentDialog({ mortgage, accounts = [], onClose, onSave
  const crossCurrency=!!selectedAccount&&selectedAccount.currency!==mortgage.currency;
  const debit=fx.rate?(payment.principal+payment.interest)/fx.rate:null;
  const valid = submitted||( payment.principal <= mortgage.amount && payment.principal + payment.interest > 0 && !!payment.date && (!mortgage.opened_on||payment.date>=mortgage.opened_on)&&(!payment.account_id||(!!selectedAccount&&debit!==null&&debit<=selectedAccount.amount)));
- return <Dialog open onOpenChange={open => { if (!open && !busy) onClose(); }}><DialogContent className="record-dialog" showCloseButton={!busy}>
+ const [initialDraft]=useState(()=>JSON.stringify(payment));
+ const guard=useDiscardChanges(JSON.stringify(payment)!==initialDraft,onClose,busy);
+ return <><Dialog open onOpenChange={open => { if (!open && !busy) guard.close(); }}><DialogContent className="record-dialog" showCloseButton={!busy}>
   <DialogTitle>{t('Record mortgage payment')}</DialogTitle>
   <DialogDescription>{mortgage.name} · {t('Outstanding balance: {amount}', { amount: money(mortgage.amount) })}</DialogDescription>
   <form className="record-form" onSubmit={async event => {
@@ -44,7 +47,7 @@ export function MortgagePaymentDialog({ mortgage, accounts = [], onClose, onSave
    <div className="ownership-summary"><p>{t('Total payment: {amount}', { amount: money(payment.principal + payment.interest) })}</p><p>{t('Remaining balance: {amount}', { amount: money(mortgage.amount - payment.principal) })}</p></div>
    <p className="muted">{t('Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.')}</p>
    {error && <p className="error" role="alert">{t(error)} {t('Retry the same payment to avoid duplicates.')}</p>}
-   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t('Cancel')}</Button><Button disabled={busy || !valid} type="submit">{t(busy ? 'Saving…' : 'Record payment')}</Button></div>
+   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy || !valid} type="submit">{t(busy ? 'Saving…' : 'Record payment')}</Button></div>
   </form>
- </DialogContent></Dialog>;
+ </DialogContent></Dialog>{guard.confirmation}</>;
 }

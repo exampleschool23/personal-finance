@@ -17,9 +17,14 @@ export function parseCSV(text:string,delimiter=','):string[][] {
  if(rows.some(r=>r.length!==rows[0].length))throw Error('CSV rows must have the same number of columns.');
  return rows;
 }
-export type ImportRow={name:string;date:string;amount:number;notes:string};
-export type ColumnMapping={name:number;date:number;amount:number;notes:number;dateFormat:'iso'|'dmy'|'mdy';decimal:'.'|','};
+export type ImportRow={name:string;date:string;amount:number;notes:string;sourceId?:string};
+export type ColumnMapping={name:number;date:number;amount:number;notes:number;sourceId?:number;dateFormat:'iso'|'dmy'|'mdy';decimal:'.'|','};
+export const FINANCE_RECORD_CSV_COLUMNS=['id','name','kind','currency','amount','quantity','cost','rate','date','frequency','end_date','notes','account_id','custom_category_id','expense_plan_id'] as const;
 export function mapCSV(rows:string[][],mapping:ColumnMapping):ImportRow[]{
+ // A raw records export contains positive expense amounts, multiple currencies,
+ // assets and schedules. Treating it as a bank statement would create bad entries.
+ const headers=new Set(rows[0]?.map(header=>header.trim().toLowerCase()));
+ if(FINANCE_RECORD_CSV_COLUMNS.every(column=>headers.has(column)))throw Error('This is a records export, not a bank statement. Import a bank statement CSV instead.');
  return rows.slice(1).map(row=>{
   let date=row[mapping.date]?.trim()??'';
   if(mapping.dateFormat!=='iso'){
@@ -34,8 +39,10 @@ export function mapCSV(rows:string[][],mapping:ColumnMapping):ImportRow[]{
   const amount=Number(value),name=row[mapping.name]?.trim();
   if(!name||name.length>120||!Number.isFinite(amount)||amount===0||Math.abs(amount)>1e15)throw Error('Check the import fields.');
   const notes=mapping.notes<0?'':row[mapping.notes]??'';if(notes.length>2000)throw Error('Check the import fields.');
-  return {date,name,amount,notes};
+  const sourceId=mapping.sourceId===undefined||mapping.sourceId<0?undefined:row[mapping.sourceId]?.trim();
+  if(mapping.sourceId!==undefined&&mapping.sourceId>=0&&(!sourceId||sourceId.length>200))throw Error('Check the source transaction identifiers.');
+  return {date,name,amount,notes,...(sourceId?{sourceId}:{})};
  });
 }
 export function csvCell(value:unknown){let text=String(value??'');if(/^[\s]*[=+@-]/.test(text)&&typeof value!=='number')text="'"+text;return '"'+text.replace(/"/g,'""')+'"';}
-export function exportCSV(rows:Record<string,unknown>[],columns:string[]){return [columns.map(csvCell).join(','),...rows.map(row=>columns.map(c=>csvCell(row[c])).join(','))].join('\r\n');}
+export function exportCSV(rows:Record<string,unknown>[],columns:readonly string[]){return [columns.map(csvCell).join(','),...rows.map(row=>columns.map(c=>csvCell(row[c])).join(','))].join('\r\n');}

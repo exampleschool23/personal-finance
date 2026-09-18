@@ -1,4 +1,5 @@
 "use client";
+import { useDraftDialog } from '@/components/discard-changes';
 import { StopScheduleDialog } from '@/components/stop-schedule-dialog';
 import { LoadingPlaceholder } from '@/components/loading-placeholder';
 import { useState } from 'react';
@@ -21,6 +22,7 @@ type Props={plans:ExpensePlan[];month:string;currencies:string[];loading:boolean
 export function ExpensePlans({plans,month,currencies,loading,error,save,remove,onSpend,onRetry}:Props) {
  const {t,locale}=useLanguage();
  const [draft,setDraft]=useState<ExpensePlan|null>(null),[deleting,setDeleting]=useState<ExpensePlan|null>(null),[busy,setBusy]=useState(false),[failure,setFailure]=useState('');
+ const guard=useDraftDialog(draft,()=>setDraft(null),busy);
  const [stopping,setStopping]=useState<ExpensePlan|null>(null);
  const money=(amount:number,currency:string)=>formatMoney(amount,currency,locale);
  const open=(plan?:ExpensePlan)=>{setFailure('');setDraft(plan?{...plan,amount:plan.amount||plan.base_amount||0}:{id:crypto.randomUUID(),name:'',category:'Groceries',currency:currencies[0],amount:0,start_date:month+'-01',end_date:null});};
@@ -39,14 +41,14 @@ export function ExpensePlans({plans,month,currencies,loading,error,save,remove,o
   <p className="muted tracker-help">{t('The forecast uses the higher of planned or spent. Optional rollover carries positive unused amounts forward. Plans do not move money.')}</p>
   <p className="muted tracker-help">{t('If a plan replaces an existing recurring expense, remove that recurring entry to avoid counting both.')}</p>
   {stopping&&<StopScheduleDialog name={stopping.name} start={stopping.start_date} onClose={()=>setStopping(null)} onSave={end_date=>save({...stopping,end_date})}/>}
-  <Dialog open={!!draft} onOpenChange={open=>{if(!open&&!busy)setDraft(null);}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(draft&&plans.some(p=>p.id===draft.id)?'Edit monthly plan':'Add monthly plan')}</DialogTitle><DialogDescription>{t('Keep each person or purpose as a separate plan. The amount repeats every month.')}</DialogDescription>
+  <Dialog open={!!draft} onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(draft&&plans.some(p=>p.id===draft.id)?'Edit monthly plan':'Add monthly plan')}</DialogTitle><DialogDescription>{t('Keep each person or purpose as a separate plan. The amount repeats every month.')}</DialogDescription>
    {draft&&<form className="record-form" onSubmit={submit}><fieldset className="tracker-fields" disabled={busy}>
     <label>{t('Plan name')}<Input required maxLength={120} value={draft.name} placeholder={t('e.g. Groceries or Mum’s allowance')} onChange={e=>setDraft({...draft,name:e.target.value})}/></label>
     <div className="form-grid"><label>{t('Category')}<NativeSelect value={draft.category} onChange={e=>setDraft({...draft,category:e.target.value as ExpensePlan['category']})}>{expensePlanCategories.map(category=><option key={category} value={category}>{t(category)}</option>)}</NativeSelect></label><label>{t('Currency')}<NativeSelect value={draft.currency} onChange={e=>setDraft({...draft,currency:e.target.value})}>{[...new Set([...currencies,draft.currency])].map(c=><option value={c} key={c}>{currencyLabel(c,locale)}</option>)}</NativeSelect></label></div>
     <label>{t('Monthly amount')}<FormattedNumberInput value={draft.amount} onValueChange={amount=>setDraft({...draft,amount})}/></label>
     <label className="planning-check"><Checkbox checked={draft.rollover??false} disabled={busy} onCheckedChange={checked=>setDraft({...draft,rollover:checked===true})}/><span>{t('Carry unused budget into the next month')}</span></label><p className="muted">{t('Amount changes apply from the selected forecast month. Earlier months keep their budgets.')}</p><div className="form-grid"><label>{t('Start date')}<DatePicker value={draft.start_date} onChange={start_date=>setDraft({...draft,start_date})}/></label><label>{t('End date (optional)')}<DatePicker value={draft.end_date||''} required={false} min={draft.start_date} onChange={end_date=>setDraft({...draft,end_date:end_date||null})}/></label></div>
-   </fieldset>{failure&&<p role="alert" className="error">{t(failure)}</p>}<div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={()=>setDraft(null)}>{t('Cancel')}</Button><Button disabled={busy||!draft.amount||!draft.name.trim()||!!(draft.end_date&&draft.end_date<draft.start_date)}>{t(busy?'Saving…':'Save plan')}</Button></div></form>}
-  </DialogContent></Dialog>
+   </fieldset>{failure&&<p role="alert" className="error">{t(failure)}</p>}<div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||!draft.amount||!draft.name.trim()||!!(draft.end_date&&draft.end_date<draft.start_date)}>{t(busy?'Saving…':'Save plan')}</Button></div></form>}
+  </DialogContent></Dialog>{guard.confirmation}
   <AlertDialog open={!!deleting} onOpenChange={open=>{if(!open&&!busy)setDeleting(null);}}><AlertDialogContent><AlertDialogTitle>{t('Delete monthly plan?')}</AlertDialogTitle><AlertDialogDescription>{t('This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.')}</AlertDialogDescription>{failure&&<p role="alert" className="error">{t(failure)}</p>}<AlertDialogFooter><AlertDialogCancel disabled={busy}>{t('Cancel')}</AlertDialogCancel><AlertDialogAction disabled={busy} onClick={async e=>{e.preventDefault();if(!deleting)return;setBusy(true);setFailure('');try{await remove(deleting.id);setDeleting(null);}catch(e){setFailure((e as Error).message);}finally{setBusy(false);}}}>{t('Delete plan')}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
  </section>;
 }

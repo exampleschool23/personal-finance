@@ -1,4 +1,5 @@
 "use client";
+import Link from 'next/link';
 import { useState } from 'react';
 import { Bitcoin, ChartNoAxesCombined, Landmark, Plus, Wallet } from 'lucide-react';
 import { compareRecordDates } from '@/lib/record-dates';
@@ -47,6 +48,7 @@ export function AccountsPage({ data, save, onAdd, onEdit, onTrack, market, curre
  const rows = (records: Entry[]) => <ul className="account-holdings">{records.map(record=><HoldingRow key={record.id} record={record} accounts={investmentAccounts} market={market} onEdit={onEdit} onTrack={onTrack} assignHolding={assignHolding} onMove={setMovement}/>)}</ul>;
  return <>
   <div className="page-heading"><div><h1>{t('Accounts')}</h1><p className="muted">{t('Cash, deposits and investment accounts in one place.')}</p></div><div className="entry-actions"><Button variant="outline" onClick={()=>setMovement({kind:'transfer'})}>{t('Transfer money')}</Button><Button onClick={()=>setChoosing(true)}><Plus size={18} aria-hidden="true" />{t('Add account')}</Button></div></div>
+  <p className="account-method muted">{t('Accounts organize where your money is held. Assets show what you own; each holding is counted once.')} <Link href="/assets">{t('View all assets')}</Link></p>
   <div className="planning-cards account-cards">
    {balances.map(account=><article className="panel account-card" key={account.id}>
     <header><span className="account-card-icon">{account.kind==='Deposit'?<Landmark aria-hidden="true" />:<Wallet aria-hidden="true" />}</span><div><CategoryBadge kind={account.kind} label={t(account.kind==='Deposit'?'Interest-bearing deposit':'Cash account')}/><h2>{account.name}</h2></div></header>

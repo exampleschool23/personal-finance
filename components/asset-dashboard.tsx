@@ -1,4 +1,6 @@
 "use client";
+import Link from 'next/link';
+import { PartialTotal } from '@/components/partial-total';
 
 import { useMemo, useState, type CSSProperties } from 'react';
 import { ArrowDownLeft, ArrowUpRight, ChevronDown, Ellipsis, LayoutGrid, List, Search, Wallet, X } from 'lucide-react';
@@ -18,6 +20,7 @@ import { sortAssetsByWorth } from '@/lib/asset-sort';
 import { marketEntry, type MarketData } from '@/lib/market';
 
 type Props = {
+ excludedCurrencies?:string[];
  accounts: HoldingAccount[]; accountsLoading:boolean; accountsError:string; onRetryAccounts:()=>void; onAddHolding:(kind:'Stock'|'Crypto',accountId:string)=>void;
  records: Entry[]; currency: string; market: MarketData | null; netWorth: number; debt: number;
  forecast: ReturnType<typeof estimatedCashFlow>; forecastReady: boolean; loading: boolean; demo: boolean;
@@ -25,7 +28,7 @@ type Props = {
  quoteLabel: (entry: Entry) => string;
 };
 
-export function AssetDashboard({ accounts, accountsLoading, accountsError, onRetryAccounts, onAddHolding, records, currency, market, netWorth, debt, forecast, forecastReady, loading, demo, onAdd, onEdit, onTrack, onDelete, quoteLabel }: Props) {
+export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoading, accountsError, onRetryAccounts, onAddHolding, records, currency, market, netWorth, debt, forecast, forecastReady, loading, demo, onAdd, onEdit, onTrack, onDelete, quoteLabel }: Props) {
  const { t, locale } = useLanguage();
  const [query, setQuery] = useState('');
  const [category, setCategory] = useState('all');
@@ -64,10 +67,10 @@ export function AssetDashboard({ accounts, accountsLoading, accountsError, onRet
   <div className="asset-summary-grid">
    <section className="asset-hero" aria-label={t('Your holdings')}>
     <div className="asset-hero-top"><span><Wallet size={18}/>{t('Your holdings')}</span><span className="asset-hero-count">{t('{count} assets', { count: formatNumber(holdings.length, locale, 0) })}</span></div>
-    <strong className="asset-hero-value">{loading ? '—' : money(total)}</strong>
+    <p className="muted">{t('Accounts group your cash and holdings without adding extra assets.')} <Link href="/accounts">{t('Manage accounts')}</Link></p><strong className="asset-hero-value">{loading ? '—' : money(total)}</strong><PartialTotal currencies={excludedCurrencies}/>
     <p>{t('Assets in this view · Lending is tracked in Loans & debts.')}</p>
     <div className="asset-mix" aria-label={t('Asset allocation')}>{categories.filter(group => group.amount > 0).map(group => <span key={group.kind} title={t(group.kind)} style={{ flexGrow: group.amount, background: categoryColor(group.kind) }}/>)}</div>
-    <div className="asset-hero-footer"><div><span>{t('NET WORTH')}</span><strong>{money(netWorth)}</strong></div><div><span>{t('Outstanding debt')}</span><strong>{money(debt)}</strong></div></div>
+    <div className="asset-hero-footer"><div><span>{t('NET WORTH')}</span><strong>{money(netWorth)}</strong><PartialTotal currencies={excludedCurrencies}/></div><div><span>{t('Outstanding debt')}</span><strong>{money(debt)}</strong></div></div>
    </section>
    <section className="asset-cashflow">
     <div className="asset-cashflow-title"><span className="asset-cashflow-icon"><ArrowUpRight size={22}/></span><h2>{t('Estimated monthly cash flow')}</h2></div>

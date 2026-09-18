@@ -1008,3 +1008,54 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .cash-account-field{display:grid;gap:8px;min-width:0;align-content:start}.cash-account-field p{font-size:var(--type-small);line-height:1.5;margin:0}
 
 .monthly-mortgage-payments{margin-bottom:24px;min-width:0}.monthly-mortgage-payments .panel-title p{margin-top:8px;font-size:var(--type-small);max-width:760px}
+
+/* Shared review and tools layout, sized to the content container. */
+.tools-panel{padding:24px;margin-block:24px;min-width:0;container-type:inline-size}
+.tools-panel h2{font-size:24px;font-weight:600;margin-bottom:12px}
+.tools-panel h3{font-size:18px;font-weight:500;margin-bottom:8px}
+.tools-panel p{line-height:1.65;margin-block:8px}
+.tools-panel a,.account-method a,.asset-hero a{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+.review-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:20px;margin-block:20px}
+.review-grid>article{padding:18px;border:1px solid var(--border);border-radius:14px;min-width:0}
+.review-grid strong{display:block;font-size:26px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.review-grid label,.inline-tool-form label{display:grid;gap:8px;min-width:0}
+.review-heading{display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:20px}
+.review-heading>div:first-child{flex:1 1 300px}
+.review-heading>label{min-width:200px}
+.inline-tool-form{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin-block:16px}
+.inline-tool-form>label{flex:1 1 160px}
+.inline-tool-form :is(input,select){max-width:100%}
+.tool-list{list-style:none;margin:16px 0;padding:0}
+.tool-list li{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);overflow-wrap:anywhere}
+.tool-list li>label{max-width:100px}
+.tools-panel details>summary{cursor:pointer;min-height:44px;padding:12px 0;font-weight:500}
+.partial-total{display:block;font-size:var(--type-small);font-weight:500;line-height:1.6;color:var(--foreground);background:var(--accent);border:1px solid var(--border);padding:8px 12px;border-radius:8px;margin-block:8px;overflow-wrap:anywhere}
+.setup-checklist ol{padding-left:24px;display:grid;gap:18px}
+.review-content{padding-top:0!important;padding-bottom:0!important}
+.cashflow-explainer{padding:18px;border-left:3px solid var(--primary);margin-bottom:20px;background:var(--accent);border-radius:10px}
+.cashflow-explainer h2{font-size:22px;margin-bottom:8px}
+.cashflow-explainer p{line-height:1.6;margin-bottom:12px}
+.cashflow-explainer a{color:var(--primary);text-decoration:underline}
+.import-preview{max-height:400px;margin-block:16px}
+.workspace .content .records .record-filters{grid-template-columns:minmax(180px,1fr) minmax(0,3fr)}
+.record-filter-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:12px;align-items:end}
+.record-filter-options>label{display:grid;gap:8px;min-width:0}
+.record-filter-options>button{min-height:44px}
+.record-filters .mobile-filter-toggle{display:none}
+.goal-chart-canvas{min-width:0}
+@media(max-width:1200px){.workspace .content .records .record-filters{grid-template-columns:1fr}.record-filter-options{grid-template-columns:repeat(2,minmax(0,1fr)) auto}}
+@media(max-width:640px){
+ .tools-panel{padding:18px}
+ .workspace .content .records .record-filters{grid-template-columns:minmax(0,1fr) auto}
+ .workspace .content .record-filters .record-filter-search{grid-column:auto}
+ .record-filters .mobile-filter-toggle{display:inline-flex}
+ .record-filter-options{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .record-filter-options[data-expanded=false]{display:none}
+ .record-filter-options>button{grid-column:1/-1}
+ .goal-projection-chart{height:300px;overflow:visible}
+ .goal-chart-canvas{min-width:0}
+ .review-heading>label{width:100%}
+}
+.tools-panel :is(button,input,select){min-height:44px}
+.tools-panel .inline-tool-form fieldset{max-width:120px}
+.tools-panel [aria-disabled=true]{opacity:.6;cursor:not-allowed}

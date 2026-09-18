@@ -4,7 +4,7 @@ Overview always draws its chart. A single observation uses a short horizontal ma
 
 Migration `017_portfolio_snapshots.sql` adds durable daily snapshots. Apply it after migration 016 (fresh databases use `database/setup.sql`). Until it is applied, the current chart continues to work and explains that daily history cannot be saved.
 
-The signed-in workspace captures a snapshot after market refreshes and record changes on any page. The server reads all owner-scoped holdings, applies ownership and quantities, and uses the fetched market prices and explicit FX rates. Missing prices for nonzero stock/crypto positions, or missing required FX, prevent an incomplete snapshot from replacing a good one. The original investment records and Tracker entries are not changed.
+The signed-in workspace captures a snapshot after market refreshes and record changes on any page. The server reads all owner-scoped holdings, applies ownership and quantities, and fetches market prices and explicit FX rates on the server. Browser-supplied quotes, totals and dates are ignored. Missing prices for nonzero stock/crypto positions, or missing required FX, prevent an incomplete snapshot from replacing a good one. The original investment records and Tracker entries are not changed.
 
 The snapshot contains assets and debts valued in USD plus the observed exchange rates. The database determines the date in Asia/Tashkent and updates only today's row. Each user's prior days remain unchanged; snapshot reads enforce owner RLS and direct table writes are disabled. The authenticated capture function cannot accept a target owner or historical date.
 

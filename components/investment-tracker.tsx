@@ -1,4 +1,5 @@
 "use client";
+import { useDraftDialog } from '@/components/discard-changes';
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
 import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
 import { LoadingPlaceholder } from '@/components/loading-placeholder';
@@ -26,6 +27,7 @@ export function InvestmentTracker({record,accounts=[],accountsReady=true,onClose
  const updateTypes=historyUpdateTypes(record.kind);
  const makeDraft=():Draft=>({id:crypto.randomUUID(),record_id:record.id,type:updateTypes[0],date:depositToday(),amount:0,balance:lending?null:0,notes:''});
  const [draft,setDraft]=useState<Draft>(makeDraft);
+ const guard=useDraftDialog(draft,onClose,busy);
  const [movement,setMovement]=useState<MovementDraft|null>(null);
  const mortgage=record.kind==='Mortgage';
  const deposit=record.kind==='Deposit';
@@ -71,7 +73,7 @@ export function InvestmentTracker({record,accounts=[],accountsReady=true,onClose
   }catch(e){setError((e as Error).message);}finally{setBusy(false);}
  }
  if(movement)return <AssetMovementDialog initial={movement} records={movementRecords} save={saveMovement} onClose={()=>setMovement(null)}/>;
- return <Dialog open onOpenChange={open=>{if(!open&&!busy)onClose();}}><DialogContent className="record-dialog investment-tracker" showCloseButton={!busy}>
+ return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog investment-tracker" showCloseButton={!busy}>
   <DialogTitle>{record.name} · {t('Tracker')}</DialogTitle>
   <DialogDescription>{t(lending?'Track additions and repayments against the outstanding balance.':cash?'Track your cash balance and transfers between accounts.':'Dated values and actual cash movements. Estimates stay separate.')}</DialogDescription>
   {loading?<LoadingPlaceholder label={t('Loading history…')}/>:<>
@@ -117,10 +119,10 @@ export function InvestmentTracker({record,accounts=[],accountsReady=true,onClose
    <p className="muted tracker-help">{t(lending?'Enter updates on or after the latest balance date. Repayments cannot exceed the outstanding balance. Saved history is permanent.':record.kind==='Business'?'Past valuations do not replace a newer balance. Business valuations use the current ownership share. Saved history is permanent.':'Past valuations do not replace a newer balance. Saved history is permanent.')}</p>
    {error&&<p className="error" role="alert">{t(error)}</p>}
    {submitted&&<p className="muted tracker-help">{t('Retry with the same details to avoid duplicates.')}</p>}
-   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t('Close')}</Button><Button type="submit" disabled={!canSave}>{t(busy?'Saving…':submitted?'Retry update':'Save update')}</Button></div>
+   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Close')}</Button><Button type="submit" disabled={!canSave}>{t(busy?'Saving…':submitted?'Retry update':'Save update')}</Button></div>
   </form>
   <div className="tracker-history"><h3>{t('History')}</h3>{!events.length&&!loading&&<p>{t('No history yet.')}</p>}
    <ul>{[...events].reverse().map(e=><li key={e.id}><div><strong>{t(eventLabel(e.event_type))}</strong><time>{formatDate(e.occurred_on,locale)}</time>{e.notes&&<p>{e.notes}</p>}{e.account_link&&<small>{t(Number(e.account_link.amount)<0?'Cash deducted from {account}: {amount}':'Cash added to {account}: {amount}',{account:accounts.find(account=>account.id===e.account_link?.account_id)?.name??t('Cash account'),amount:formatMoney(Math.abs(Number(e.account_link.amount)),e.account_link.account_currency??record.currency,locale)})}</small>}</div><div>{e.balance!==null&&<strong>{money(Number(e.balance)*Number(e.ownership_percentage)/100)}</strong>}{e.amount>0&&<span>{t(lending&&['contribution','withdrawal'].includes(e.event_type)?'Principal amount':'Cash amount (your share)')}: {money(Number(e.amount))}</span>}{e.event_type==='mortgage_payment'&&<small>{t('Principal repayment')}: {money(Number(e.principal))} · {t('Interest paid')}: {money(Number(e.interest))}</small>}</div></li>)}</ul>
   </div>
- </DialogContent></Dialog>;
+ </DialogContent></Dialog>{guard.confirmation}</>;
 }

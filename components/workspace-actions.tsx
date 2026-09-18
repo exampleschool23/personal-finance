@@ -1,0 +1,17 @@
+"use client";
+import Link from 'next/link';
+import { useState } from 'react';
+import { useLanguage } from '@/components/language-provider';
+import { Button } from '@/components/ui/button';
+import { formatDate, formatMoney, formatNumber } from '@/lib/format';
+import { upcomingPayments, type PlanningData } from '@/lib/planning';
+import { expensePlanTotals, type ExpensePlan } from '@/lib/expense-plans';
+import { depositToday } from '@/lib/deposit-interest';
+import { expenses } from '@/lib/finance';
+export function WorkspaceActions({data,plans,plansReady,onAddAccount,settingsReady}:{data:PlanningData;plans:ExpensePlan[];plansReady:boolean;onAddAccount:()=>void;settingsReady:boolean}){
+ const {t,locale}=useLanguage();const [showSetup,setShowSetup]=useState(false);const accounts=data.records.filter(record=>record.kind==='Cash'||record.kind==='Deposit');const today=depositToday();const due=upcomingPayments(data.records,data.occurrences,today).filter(item=>item.type!=='scheduled'||expenses.includes(item.record.kind));
+ const overdue=due.filter(item=>item.overdue);const month=today.slice(0,7);const byCurrency=new Map<string,number>();for(const plan of plans){const totals=expensePlanTotals(plan,month);byCurrency.set(plan.currency,(byCurrency.get(plan.currency)??0)+totals.remaining);}
+ const needsSetup=!accounts.length||(plansReady&&!plans.length);
+ return <><section className="panel tools-panel action-panel"><h2>{t('Your next steps')}</h2><div className="review-grid"><article><h3>{t('Upcoming obligations')}</h3><strong>{formatNumber(due.length,locale,0)}</strong><p>{t('{count} overdue',{count:formatNumber(overdue.length,locale,0)})}</p>{due.slice(0,3).map(item=><p key={item.key}>{item.record.name} · {formatDate(item.date,locale)} · {formatMoney(item.record.amount,item.record.currency,locale)}</p>)}<Link href="/upcoming">{t('Review and record payments')}</Link></article><article><h3>{t('Remaining monthly budget')}</h3>{plansReady?[...byCurrency].map(([currency,amount])=><strong className={amount<0?'negative':''} key={currency}>{formatMoney(amount,currency,locale)}</strong>):<p>{t('Budget data is unavailable.')}</p>}{plansReady&&!plans.length&&<p>{t('Set a monthly spending plan to track what remains.')}</p>}<Link href="/income-expenses">{t('Review budgets')}</Link></article><article><h3>{t('Needs attention')}</h3><p>{overdue.length?t('Review overdue items before recording payments.'):t('No overdue obligations.')}</p>{!settingsReady&&<Link href="/settings">{t('Retry loading settings')}</Link>}<Button variant="outline" onClick={()=>setShowSetup(!showSetup)}>{t('Setup checklist')}</Button></article></div></section>
+ {(showSetup||needsSetup)&&<section className="panel tools-panel setup-checklist"><h2>{t('Set up your workspace')}</h2><p className="muted">{t('Follow these steps to make your balances and budget useful.')}</p><ol><li><Link href="/settings">{t('Choose your language and currencies')}</Link></li><li><Button variant="outline" onClick={onAddAccount}>{t('Add a cash account and its opening balance')}</Button>{!!accounts.length&&<span> · {t('Done')}</span>}</li><li><Link href="/accounts">{t('Check opening balances against your bank')}</Link><p>{t('Use the balance from the day before your imported transactions. This avoids counting the same money twice.')}</p></li><li><Link href="/income-expenses">{t('Create your first monthly budget')}</Link>{!!plans.length&&<span> · {t('Done')}</span>}</li><li><Link href="/settings#data-tools">{t('Import transactions or add them manually')}</Link></li></ol></section>}</>;
+}

@@ -23,11 +23,12 @@ export function usePortfolioSnapshots(account:string|null,market:MarketData|null
  },[account,retry,merge]);
  useEffect(()=>{
   if(!account||!ready||!market)return;const controller=new AbortController();
-  fetch('/api/portfolio-snapshots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(market),signal:controller.signal}).then(async response=>{
+  fetch('/api/portfolio-snapshots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({}),signal:controller.signal}).then(async response=>{
    const data=await response.json() as {snapshot:PortfolioSnapshot;error:string};if(!response.ok)throw Error(data.error);
    if(!controller.signal.aborted){merge(account,[data.snapshot]);setFailure(null);}
   }).catch(reason=>{if(!controller.signal.aborted)setFailure({account,message:reason.message});});
   return()=>controller.abort();
  },[account,market,ready,revision,retry,merge]);
+ if(!account&&state.account!==null){setState({account:null,snapshots:[]});setFailure(null);}
  return {snapshots:state.account===account?state.snapshots:[],error:failure?.account===account?failure?.message??'':'',retry:refresh};
 }
