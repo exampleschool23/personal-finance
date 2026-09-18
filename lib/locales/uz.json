@@ -1461,5 +1461,17 @@
   "Restore deleted items to bring them back, or permanently delete them to remove their recovery data.": "O‘chirilgan yozuvlarni tiklang yoki tiklash ma’lumotlari bilan birga butunlay o‘chiring.",
   "Could not permanently delete this item. Check that database update 048 is installed and try again.": "Yozuvni butunlay o‘chirib bo‘lmadi. Baza yangilanishi 048 o‘rnatilganini tekshiring va qayta urinib ko‘ring.",
   "Account actions": "Hisob amallari",
-  "About account totals": "Hisob jami haqida"
+  "About account totals": "Hisob jami haqida",
+  "Add income and expense categories to use when recording transactions.": "Operatsiyalarni qayd etish uchun daromad va xarajat toifalarini qo‘shing.",
+  "Income categories": "Daromad toifalari",
+  "Expense categories": "Xarajat toifalari",
+  "New income category": "Yangi daromad toifasi",
+  "New expense category": "Yangi xarajat toifasi",
+  "Add income category": "Daromad toifasini qo‘shish",
+  "Add expense category": "Xarajat toifasini qo‘shish",
+  "e.g. Freelance": "Masalan, frilans",
+  "e.g. Leisure": "Masalan, dam olish",
+  "Add income or expense categories in Settings first.": "Avval sozlamalarda daromad yoki xarajat toifalarini qo‘shing.",
+  "Choose a category matching the transaction type.": "Operatsiya turiga mos toifani tanlang.",
+  "Check the category name and type.": "Toifa nomi va turini tekshiring."
 }

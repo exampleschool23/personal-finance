@@ -2,16 +2,10 @@ import { convertAmount } from './market';
 import { income, expenses, type Entry } from './finance';
 import { upcomingPayments, type Occurrence, type Activity, type PlanningData } from './planning';
 import { snapshotPoints, type PortfolioSnapshot } from './portfolio-snapshots';
-export type CategoryRule={id:string;pattern:string;category_id:string;direction:'income'|'expense'|'all';priority:number;enabled:boolean};
 export type TransactionSplit={record_id:string;position:number;category_id:string;amount:number};
 export type ForecastAssignment={record_id:string;account_id:string;exchange_rate?:number;from_currency?:string;to_currency?:string};
-export type TransactionTools={rules:CategoryRule[];splits:TransactionSplit[];assignments:ForecastAssignment[]};
-export const emptyTransactionTools:TransactionTools={rules:[],splits:[],assignments:[]};
-export function matchingCategory(name:string,kind:string,rules:CategoryRule[]) {
- const direction=income.includes(kind)?'income':expenses.includes(kind)?'expense':null;
- if(!direction)return null;
- return [...rules].sort((a,b)=>a.priority-b.priority||a.id.localeCompare(b.id)).find(rule=>rule.enabled&&(rule.direction==='all'||rule.direction===direction)&&name.toLowerCase().includes(rule.pattern.trim().toLowerCase()))?.category_id??null;
-}
+export type TransactionTools={splits:TransactionSplit[];assignments:ForecastAssignment[]};
+export const emptyTransactionTools:TransactionTools={splits:[],assignments:[]};
 export function accountForecast(records:Entry[],occurrences:Occurrence[],assignments:ForecastAssignment[],today:string,through:string) {
  const accounts=records.filter(record=>record.kind==='Cash');
  const schedules=upcomingPayments(records,occurrences,today,through).filter(item=>item.type==='scheduled');

@@ -2,7 +2,7 @@ import { income, expenses, type Entry } from './finance';
 import type { AssetMovement } from './asset-movements';
 import type { HoldingAccount } from './holding-accounts';
 import { depositToday } from './deposit-interest';
-export type Category = {id:string;name:string};
+export type Category = {id:string;name:string;direction:'income'|'expense'};
 export type InvestmentTarget = {holding_account_id:string;asset_kind:'Stock'|'Crypto';asset_symbol:string;target:number;monthly_contribution?:number|null};
 export type Goal = {completed_on?:string|null;funding_priority?:number;funding_monthly?:number|null;funding_enabled?:boolean;paused_until?:string|null;funding_mode?:'one_time'|'refill';investment_targets?:InvestmentTarget[];id:string;name:string;account_id:string|null;target:number;allocated:number;target_date:string|null;archived:boolean;kind?:'savings'|'net_worth'|'investment';holding_account_id?:string|null;asset_kind?:'Stock'|'Crypto'|null;asset_symbol?:string|null;currency?:string;monthly_contribution?:number|null;annual_return?:number};
 export type Occurrence = {id:string;record_id:string;due_on:string;status:'paid'|'dismissed'};

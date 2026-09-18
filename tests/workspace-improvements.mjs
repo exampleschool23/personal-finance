@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
 const {emptyRecordFilters,changeFilterStart,filterRecords,recordsRequestKey,activeFilterCount}=loadTS('lib/record-filters.ts');
-const {matchingCategory,accountForecast,monthlyReview}=loadTS('lib/transaction-tools.ts');
+const {accountForecast,monthlyReview}=loadTS('lib/transaction-tools.ts');
 const {decimalTotalEquals}=loadTS('lib/decimal-amounts.ts');
 const entry=(id,kind,amount,extra={})=>({id,name:id,kind,amount,currency:'USD',date:'2026-09-01',frequency:'Once',quantity:1,cost:0,notes:'',rate:0,...extra});
 test('filters clear contradictory end dates and changing local search never changes request identity',()=>{
@@ -20,14 +20,6 @@ test('decimal split equality preserves small, fractional and very large entered 
  assert.equal(decimalTotalEquals([.1,.2],.3),true);assert.equal(decimalTotalEquals([1e-8,2e-8],3e-8),true);
  assert.equal(decimalTotalEquals([100000000000000,.25],100000000000000.25),true);
  assert.equal(decimalTotalEquals([.1,.2000000001],.3),false);assert.equal(decimalTotalEquals([NaN],1),false);
-});
-test('classification uses deterministic priority, direction and literal contains matching',()=>{
- const rules=[{id:'b',pattern:'SHOP',direction:'expense',priority:2,enabled:true,category_id:'food'},{id:'a',pattern:'shop',direction:'all',priority:1,enabled:true,category_id:'general'}];
- assert.equal(matchingCategory('The Shop','Other expense',rules),'general');
- assert.equal(matchingCategory('The Shop','Salary',[rules[0]]),null);
- assert.equal(matchingCategory('The Shop','Cash',rules),null);
- assert.equal(matchingCategory('The Shop','Other expense',[{...rules[0],enabled:false}]),null);
- assert.equal(matchingCategory('Anything','Other expense',[{...rules[0],pattern:'%'}]),null);
 });
 test('forecasts exclude settled items, show overdue and unassigned schedules, and never count actual transactions twice',()=>{
  const records=[entry('cash','Cash',100),entry('rent','Rent expense',150,{frequency:'Monthly'}),entry('salary','Salary',200,{frequency:'Monthly'}),entry('paid','Other expense',20,{account_id:'cash'}),entry('foreign','Other expense',10,{currency:'EUR',frequency:'Monthly'}),entry('deposit','Deposit',1000)];

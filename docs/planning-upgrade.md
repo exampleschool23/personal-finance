@@ -119,3 +119,7 @@ If additional coins disappear after Save, check that migration 027 has actually 
 Apply `034_cashflow_account_conversion.sql` after migration 033 before deploying this app update. It adds stored dated conversion metadata for linked income/expenses and scheduled payments, and atomic cross-currency repayments with interest. Existing same-currency records retain their original values. Fresh databases include this change in `database/setup.sql`.
 
 All cash accounts are offered regardless of currency. The form previews the dated rate and cash amount; the server independently verifies it before saving. Edits reverse the original stored conversion before applying the new amount. Retries reuse saved rates, and missing rates prevent a cross-currency write.
+
+## Income and expense categories (050)
+
+Apply `050_income_expense_categories.sql` before deploying this category UI. Settings now adds named categories separately for income and expenses. The migration replaces `custom_categories` with `transaction_categories`, removes the categorization rules table and trigger, and updates backup and planning functions. Existing references remain valid; categories used for both income and expenses receive a separate income copy, including references in Recently deleted. The legacy `custom_category_id` reference column is retained for existing records and CSV compatibility. Transaction amounts and cash-flow calculations are unchanged.

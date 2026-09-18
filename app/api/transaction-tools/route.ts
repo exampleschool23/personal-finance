@@ -3,15 +3,13 @@ import { sameOrigin, session, supa } from '@/lib/supabase';
 import { readOwnerRows } from '@/lib/server-records';
 const id=z.string().uuid();
 const schema=z.discriminatedUnion('action',[
- z.object({action:z.literal('rule'),data:z.object({id,pattern:z.string().trim().min(1).max(120),category_id:id,direction:z.enum(['income','expense','all']),priority:z.number().int().min(0).max(1000),enabled:z.boolean()})}),
- z.object({action:z.literal('delete_rule'),data:z.object({id})}),
  z.object({action:z.literal('split'),data:z.object({record_id:id,splits:z.array(z.object({category_id:id,amount:z.number().finite().positive().max(1e15)})).max(50).refine(rows=>rows.length!==1)})}),
  z.object({action:z.literal('forecast'),data:z.object({record_id:id,account_id:id.nullable(),exchange_rate:z.number().finite().positive().max(1e15).optional(),from_currency:z.string().optional(),to_currency:z.string().optional()})})
 ]);
 export async function GET(){
  try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
- const [rules,splits,assignments]=await Promise.all(['category_rules','transaction_splits','forecast_assignments'].map(table=>readOwnerRows(table,auth.token,{order:table==='category_rules'?'priority.asc,id.asc':table==='transaction_splits'?'record_id.asc,position.asc':'record_id.asc'})));
- return Response.json({rules,splits,assignments},{headers:{'Cache-Control':'no-store'}});
+ const [splits,assignments]=await Promise.all(['transaction_splits','forecast_assignments'].map(table=>readOwnerRows(table,auth.token,{order:table==='transaction_splits'?'record_id.asc,position.asc':'record_id.asc'})));
+ return Response.json({splits,assignments},{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Could not load transaction tools. Check that the latest migrations are installed.'},{status:503});}
 }
 export async function POST(req:Request){
@@ -19,7 +17,7 @@ export async function POST(req:Request){
  try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
  const parsed=schema.safeParse(await req.json());if(!parsed.success)return Response.json({error:'Check the transaction tools fields.'},{status:400});
  const {action,data}=parsed.data;
- const response=action==='rule'?await supa('/rest/v1/category_rules?on_conflict=id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({...data,user_id:auth.user.id})},auth.token):action==='delete_rule'?await supa('/rest/v1/category_rules?id=eq.'+data.id,{method:'DELETE'},auth.token):await supa('/rest/v1/rpc/'+(action==='split'?'save_transaction_splits':'save_forecast_assignment'),{method:'POST',body:JSON.stringify(action==='split'?{p_record:data.record_id,p_splits:data.splits}:{p_record:data.record_id,p_account:data.account_id,p_rate:data.exchange_rate??null,p_from:data.from_currency??null,p_to:data.to_currency??null})},auth.token);
+ const response=await supa('/rest/v1/rpc/'+(action==='split'?'save_transaction_splits':'save_forecast_assignment'),{method:'POST',body:JSON.stringify(action==='split'?{p_record:data.record_id,p_splits:data.splits}:{p_record:data.record_id,p_account:data.account_id,p_rate:data.exchange_rate??null,p_from:data.from_currency??null,p_to:data.to_currency??null})},auth.token);
  if(!response.ok){
   const failure=await response.json() as {code?:string;message?:string};
   if(action==='forecast'){

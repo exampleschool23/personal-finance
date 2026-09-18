@@ -1,0 +1,57 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {loadTS} from './helpers/load-ts.mjs';
+const {selectTransactionCategory}=loadTS('lib/transaction-categories.ts');
+const id=n=>`c0000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+test('category choices retain precision and separate income from expenses',()=>{
+ const categories=[{id:'leisure',name:'Leisure',direction:'expense'},{id:'freelance',name:'Freelance',direction:'income'}];
+ const entry={kind:'Charity',amount:12.12345678,currency:'UZS',custom_category_id:null};
+ const expense=selectTransactionCategory(entry,'leisure',categories,'expense');
+ assert.equal(expense.kind,'Other expense');assert.equal(expense.custom_category_id,'leisure');assert.equal(expense.amount,entry.amount);
+ assert.equal(selectTransactionCategory(entry,'freelance',categories,'expense'),entry);
+ const income=selectTransactionCategory(entry,'freelance',categories,'income');assert.equal(income.kind,'Other income');assert.equal(income.custom_category_id,'freelance');
+ assert.equal(selectTransactionCategory(income,'Salary',categories,'income').custom_category_id,null);
+ assert.equal(selectTransactionCategory(entry,'unknown',categories,'expense'),entry);
+});
+test('typed category migration preserves assignments, splits, recovery and owner isolation; removes rules',{skip:!process.env.PGLITE_MODULE},async()=>{
+ const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
+ try{
+ await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${id(1)}'),('${id(2)}');`);
+ const setup=fs.readFileSync('database/setup.sql','utf8'),migration=fs.readFileSync('migrations/050_income_expense_categories.sql','utf8');assert.ok(setup.endsWith(migration));
+ await db.exec(setup.slice(0,-migration.length));
+ await db.exec(`SET ROLE authenticated;SET request.jwt.claim.sub='${id(1)}';`);
+ const category=(n,name,direction)=>db.query("SELECT planning_action('category',$1)",[{id:id(n),name,direction}]);
+ await category(10,'Shared');await category(11,'Second');
+ const record=(n,kind,categoryId)=>db.query('INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency,custom_category_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[id(n),id(1),'Leisure shop',kind,'USD',.3,'2026-09-01','Once',categoryId]);
+ await record(20,'Other expense',id(10));await record(21,'Other income',id(10));await record(22,'Other income',id(10));
+ const parts=[{category_id:id(10),amount:.1},{category_id:id(11),amount:.2}];
+ await db.query('SELECT save_transaction_splits($1,$2)',[id(22),parts]);
+ await db.query('DELETE FROM finance_records WHERE id=$1',[id(22)]);
+ await db.exec('RESET ROLE;');await db.exec(migration);
+ assert.equal((await db.query("SELECT to_regclass('public.custom_categories') AS old,to_regclass('public.category_rules') AS rules")).rows[0].old,null);
+ assert.equal((await db.query("SELECT to_regclass('public.category_rules') AS rules")).rows[0].rules,null);
+ await db.exec(`SET ROLE authenticated;SET request.jwt.claim.sub='${id(1)}';`);
+ const rows=(await db.query('SELECT * FROM transaction_categories')).rows;
+ const copied=rows.find(row=>row.name==='Shared'&&row.direction==='income');assert.ok(copied);assert.notEqual(copied.id,id(10));
+ assert.equal((await db.query('SELECT custom_category_id FROM finance_records WHERE id=$1',[id(21)])).rows[0].custom_category_id,copied.id);
+ const deleted=(await db.query("SELECT id FROM deleted_items WHERE data->>'id'=$1",[id(22)])).rows[0].id;
+ await db.query('SELECT restore_deleted_item($1)',[deleted]);assert.equal((await db.query('SELECT * FROM transaction_splits WHERE record_id=$1',[id(22)])).rows.length,2);
+ await category(30,'Leisure','expense');await category(31,'Freelance','income');await category(32,'Leisure','income');
+ await assert.rejects(category(33,'Leisure','expense'),/unique/);
+ await assert.rejects(category(34,'Wrong','all'),/check constraint/);
+ await assert.rejects(category(35,'Missing'),/not-null/);
+ await assert.rejects(category(30,'Leisure','income'),/cannot be changed/);
+ await record(40,'Other expense',id(30));await record(41,'Other income',id(31));
+ await assert.rejects(record(42,'Other expense',id(31)),/matching the transaction type/);
+ await assert.rejects(record(43,'Cash',id(30)),/matching the transaction type/);
+ await assert.rejects(db.query('SELECT save_transaction_splits($1,$2)',[id(40),[{category_id:id(31),amount:.1},{category_id:id(30),amount:.2}]]),/matching the transaction type/);
+ await record(44,'Other expense',null);assert.equal((await db.query('SELECT custom_category_id FROM finance_records WHERE id=$1',[id(44)])).rows[0].custom_category_id,null);
+ const backup=(await db.query('SELECT export_finance_backup() AS data')).rows[0].data;
+ assert.ok(backup.tables.transaction_categories.length);assert.equal(backup.tables.custom_categories,undefined);assert.equal(backup.tables.category_rules,undefined);
+ await db.exec(`SET request.jwt.claim.sub='${id(2)}';`);
+ assert.equal((await db.query('SELECT * FROM transaction_categories')).rows.length,0);
+ await assert.rejects(category(30,'Stolen','expense'),/not found/);
+ await assert.rejects(db.query('INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency,custom_category_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[id(50),id(2),'Stolen','Other expense','USD',1,'2026-09-01','Once',id(30)]),/matching the transaction type/);
+ }finally{await db.close();}
+});

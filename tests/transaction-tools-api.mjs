@@ -14,10 +14,9 @@ test('transaction tools reject anonymous, cross-origin, malformed and non-finite
  for(const data of [{action:'unknown',data:{}},{...rule,data:{...rule.data,pattern:' '}},{action:'split',data:{record_id:id(4),splits:[{category_id:id(3),amount:2}]}},{action:'forecast',data:{record_id:'invalid',account_id:null}}]){const app=api();assert.equal((await app.POST(request(data))).status,400);assert.equal(app.calls.length,0);}
 });
 test('reads use owner token and stable unique pagination orders; writes pass only validated owner data',async()=>{
- const app=api();assert.equal((await app.GET()).status,200);assert.equal(app.calls.length,3);assert.ok(app.calls.every(call=>call.token==='owner-token'));
+ const app=api();assert.equal((await app.GET()).status,200);assert.equal(app.calls.length,2);assert.ok(app.calls.every(call=>call.token==='owner-token'));
  assert.equal(app.calls.find(call=>call.table==='transaction_splits').options.order,'record_id.asc,position.asc');
- await app.POST(request({action:'rule',data:{id:id(2),category_id:id(3),pattern:' Shop ',direction:'expense',priority:0,enabled:true,user_id:id(99)}}));
- const payload=JSON.parse(app.calls.at(-1).init.body);assert.equal(payload.user_id,id(1));assert.equal(payload.pattern,'Shop');
+ const before=app.calls.length;assert.equal((await app.POST(request({action:'rule',data:{id:id(2),category_id:id(3),pattern:'Shop',direction:'expense',priority:0,enabled:true}}))).status,400);assert.equal(app.calls.length,before);
  const failed=api({failure:true});assert.equal((await failed.POST(request({action:'split',data:{record_id:id(4),splits:[{category_id:id(3),amount:1},{category_id:id(3),amount:1}]}}))).status,409);
 });
 

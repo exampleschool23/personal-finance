@@ -17,7 +17,7 @@ const schemas={
  mortgage:base.refine(v=>!!v.target_id&&v.amount+v.fee>0&&v.received===0),
  occurrence:z.object({amount:z.number().finite().positive().max(1e15),exchange_rate:z.number().finite().positive().max(1e15).optional(),id,account_id:id,target_id:id,date,notes:z.string().max(2000).default('')}),
  dismiss:z.object({id,target_id:id,date}),
- category:z.object({id,name:z.string().trim().min(1).max(80)}),
+ category:z.object({id,name:z.string().trim().min(1).max(80),direction:z.enum(['income','expense'])}),
  goal:z.object({investment_targets:z.array(investmentTarget).max(50).optional(),id,name:z.string().trim().min(1).max(120),account_id:id.nullable(),kind:z.enum(['savings','net_worth','investment']).default('savings'),currency:z.string().refine(isCurrency).optional(),target:amount.positive(),allocated:amount,target_date:date.nullable(),archived:z.boolean().default(false),monthly_contribution:amount.nullable().default(null),annual_return:z.number().finite().min(0).max(100).default(0),holding_account_id:id.nullable().default(null),asset_kind:z.enum(['Stock','Crypto']).nullable().default(null),asset_symbol:z.string().trim().max(15).nullable().default(null)}).transform(v=>v.kind==='investment'&&v.investment_targets?.length?{...v,...v.investment_targets[0]}:v).refine(v=>{
   if(v.investment_targets!==undefined){
    if(v.kind==='investment'&&!v.investment_targets.length)return false;
@@ -32,7 +32,7 @@ const schemas={
 };
 export async function GET(){
  try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
- const tables={movements:'asset_movements',holdingAccounts:'holding_accounts',records:'finance_records',categories:'custom_categories',goals:'savings_goals',occurrences:'payment_occurrences',activity:'account_activity',investmentLinks:'investment_account_links'};
+ const tables={movements:'asset_movements',holdingAccounts:'holding_accounts',records:'finance_records',categories:'transaction_categories',goals:'savings_goals',occurrences:'payment_occurrences',activity:'account_activity',investmentLinks:'investment_account_links'};
  const results=await Promise.all(Object.entries(tables).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,table==='investment_account_links'?{select:'*,investment_history(occurred_on,record_id,event_type)'}:{})]));
  const data=Object.fromEntries(results);
  const estimates=new Map((await depositForecasts(auth.token)).map(record=>[record.id,record.estimated_monthly_income]));

@@ -102,7 +102,7 @@ test('expense currency selector uses preferences, retains saved currency, and pr
 });
 
 test('expense uses one category above amount, including user categories and safe fallback changes',()=>{
- const category={id:'category-food',name:'Eating out'};
+ const category={id:'category-food',name:'Eating out',direction:'expense'};
  const editing={id:'expense',kind:'Living expense',custom_category_id:category.id,currency:'USD',amount:12.125,frequency:'Once',date:'2026-09-18',notes:''};
  let updated;
  const props={editing,setEditing:value=>{updated=value;},rows:[editing],currencies:['USD'],recordKinds:[],expensePlans:{plans:[]},planning:{data:{records:[],categories:[category]}}};
@@ -119,8 +119,8 @@ test('expense uses one category above amount, including user categories and safe
  selector.props.onChange({target:{value:'Other expense'}});
  assert.equal(updated.custom_category_id,null);assert.equal(updated.kind,'Other expense');assert.equal(updated.amount,12.125);
  selector.props.onChange({target:{value:category.id}});
- assert.equal(updated.custom_category_id,category.id);assert.equal(updated.kind,'Living expense');
- const previous=updated;selector.props.onChange({target:{value:'unknown-category'}});assert.equal(updated,previous);
+ assert.equal(updated.custom_category_id,category.id);assert.equal(updated.kind,'Other expense');
+ selector.props.onChange({target:{value:'unknown-category'}});assert.deepEqual(updated,props.editing);
  assert.equal(find(tree,node=>node.props?.href==='/settings#categories').props.children,'Manage categories in Settings');
  for(const state of [{loading:true},{error:'Unable to load'}]){
   const unavailable=expenseForm({...props,planning:{...props.planning,...state}});
@@ -129,11 +129,11 @@ test('expense uses one category above amount, including user categories and safe
 });
 test('Settings exposes added categories beside the category creation form',()=>{
  const render=component('components/transaction-tools-panel.tsx','TransactionToolsPanel');
- const html=render({tools:{data:{rules:[]},loading:false,error:'',retry(){},save:async()=>{}},categories:[{id:'food',name:'Eating out'}],saveCategory:async()=>{}});
+ const html=render({tools:{data:{rules:[]},loading:false,error:'',retry(){},save:async()=>{}},categories:[{id:'food',name:'Eating out',direction:'expense'}],saveCategory:async()=>{}});
  assert.ok(html.includes('id="categories"'));
  assert.ok(html.includes('Eating out'));
- assert.ok(html.includes('Add category'));
- assert.ok(html.indexOf('Categories')<html.indexOf('Categorization rules'));
+ assert.ok(html.includes('Add expense category'));assert.ok(html.includes('Add income category'));
+ assert.ok(!html.includes('Categorization rules'));assert.ok(!html.includes('Custom categories'));
 });
 
 test('income source selectors match category, supply the name, and keep Name for Other income',()=>{
@@ -287,4 +287,20 @@ test('overview remaining budget converts all plans to the header currency and pr
  assert.ok(budget(render({...props,currency:'USD',plans:[{...plans[1],spent:200}],market:null})).includes('class="negative"'));
  assert.ok(budget(render({...props,currency:'USD',plansReady:false})).includes('Budget data is unavailable.'));
  assert.ok(budget(render({...props,currency:'USD',plans:[]})).includes('Set a monthly spending plan'));
+});
+
+
+test('new income categories appear in the receipt picker and save as income without losing precision',()=>{
+ const render=component('components/income-record-form.tsx','IncomeRecordForm');
+ const categories=[{id:'freelance',name:'Freelance',direction:'income'},{id:'leisure',name:'Leisure',direction:'expense'}];
+ const editing={id:'receipt',name:'Work',kind:'Other income',amount:12.12345678,currency:'USD',frequency:'Once',date:'2026-09-18',notes:''};
+ let updated;
+ const props={editing,setEditing:value=>{updated=value;},rows:[],currencies:['USD'],planning:{data:{records:[],categories},loading:false,error:''},earningSources:{sources:[],loading:false,error:''}};
+ const tree=render.tree(props),picker=find(tree,node=>node.type?.name==='IncomeSourcePicker');
+ assert.ok(picker.props.options.some(option=>option.id==='freelance'&&option.categoryLabel==='Freelance'));
+ assert.ok(!picker.props.options.some(option=>option.id==='leisure'));
+ picker.props.onChange('freelance');assert.equal(updated.kind,'Other income');assert.equal(updated.custom_category_id,'freelance');assert.equal(updated.amount,editing.amount);
+ const saved=render.tree({...props,editing:updated});assert.equal(find(saved,node=>node.type?.name==='IncomeSourcePicker').props.value,'freelance');
+ picker.props.onChange('');assert.equal(updated.custom_category_id,null);
+ const failed=render.tree({...props,planning:{...props.planning,error:'Unavailable'}});assert.equal(find(failed,node=>node.type?.name==='IncomeSourcePicker').props.disabled,true);
 });

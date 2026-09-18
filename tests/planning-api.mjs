@@ -28,7 +28,7 @@ test('planning API rejects anonymous, cross-origin and malformed operations and 
  const multiCall=calls.pop();assert.equal(multiCall.path,'/rest/v1/rpc/planning_investment_goal');assert.equal(multiCall.body.p_action,undefined);const saved=multiCall.body.p_data;assert.equal(saved.target,4);assert.equal(saved.monthly_contribution,.1);assert.deepEqual(saved.investment_targets,[target,more]);
  for(const investment_targets of [[],[target,target],[target,{...more,target:0}],[target,{...more,monthly_contribution:-1}],[target,{...more,holding_account_id:'missing'}],[target,{...target,asset_symbol:'UNKNOWNCOIN'}],Array(51).fill(target)])assert.equal((await api.POST(req({action:'goal',data:{...accumulation,investment_targets}}))).status,400);
  assert.equal((await api.POST(req({action:'goal',data:{...goal,investment_targets:[target]}}))).status,400);
- assert.equal(calls.length,0);assert.equal((await api.POST(req({action:'category',data:{id,name:'Travel',user_id:'attacker'}}))).status,200);assert.deepEqual(calls[0].body,{p_action:'category',p_data:{id,name:'Travel'}});assert.equal(calls[0].token,'owner');
+ assert.equal(calls.length,0);assert.equal((await api.POST(req({action:'category',data:{id,name:'Travel',direction:'expense',user_id:'attacker'}}))).status,200);assert.deepEqual(calls[0].body,{p_action:'category',p_data:{id,name:'Travel',direction:'expense'}});assert.equal(calls[0].token,'owner');
 });
 test('statement import produces stable distinct duplicate keys and authenticates before any write',async()=>{
  let calls=[];

@@ -1461,5 +1461,17 @@
   "Restore deleted items to bring them back, or permanently delete them to remove their recovery data.": "Восстановите удалённые элементы или удалите их навсегда вместе с данными восстановления.",
   "Could not permanently delete this item. Check that database update 048 is installed and try again.": "Не удалось удалить элемент навсегда. Проверьте установку обновления базы данных 048 и повторите попытку.",
   "Account actions": "Действия со счётом",
-  "About account totals": "О расчёте суммы"
+  "About account totals": "О расчёте суммы",
+  "Add income and expense categories to use when recording transactions.": "Добавляйте категории доходов и расходов для записи операций.",
+  "Income categories": "Категории доходов",
+  "Expense categories": "Категории расходов",
+  "New income category": "Новая категория дохода",
+  "New expense category": "Новая категория расхода",
+  "Add income category": "Добавить категорию дохода",
+  "Add expense category": "Добавить категорию расхода",
+  "e.g. Freelance": "Например, фриланс",
+  "e.g. Leisure": "Например, досуг",
+  "Add income or expense categories in Settings first.": "Сначала добавьте категории доходов или расходов в настройках.",
+  "Choose a category matching the transaction type.": "Выберите категорию, соответствующую типу операции.",
+  "Check the category name and type.": "Проверьте название и тип категории."
 }

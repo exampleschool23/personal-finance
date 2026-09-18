@@ -1461,5 +1461,17 @@
   "Restore deleted items to bring them back, or permanently delete them to remove their recovery data.": "Restore deleted items to bring them back, or permanently delete them to remove their recovery data.",
   "Could not permanently delete this item. Check that database update 048 is installed and try again.": "Could not permanently delete this item. Check that database update 048 is installed and try again.",
   "Account actions": "Account actions",
-  "About account totals": "About account totals"
+  "About account totals": "About account totals",
+  "Add income and expense categories to use when recording transactions.": "Add income and expense categories to use when recording transactions.",
+  "Income categories": "Income categories",
+  "Expense categories": "Expense categories",
+  "New income category": "New income category",
+  "New expense category": "New expense category",
+  "Add income category": "Add income category",
+  "Add expense category": "Add expense category",
+  "e.g. Freelance": "e.g. Freelance",
+  "e.g. Leisure": "e.g. Leisure",
+  "Add income or expense categories in Settings first.": "Add income or expense categories in Settings first.",
+  "Choose a category matching the transaction type.": "Choose a category matching the transaction type.",
+  "Check the category name and type.": "Check the category name and type."
 }

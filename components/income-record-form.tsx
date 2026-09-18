@@ -1,4 +1,5 @@
 "use client";
+import { selectTransactionCategory } from '@/lib/transaction-categories';
 import { IncomeSourcePicker } from '@/components/income-source-picker';
 import Link from 'next/link';
 import { Settings2, ArrowRight, CalendarDays } from 'lucide-react';
@@ -46,26 +47,29 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
  const sourceLabel=editing.kind==='Salary'?'Linked salary':editing.kind==='Rent income'?'Linked rental':'Linked business';
  const sourcePlaceholder=editing.kind==='Salary'?'Choose a salary plan':editing.kind==='Rent income'?'Choose a rental':'Choose a business';
  return <form className="record-form" onSubmit={save}>
-  {simple&&earningSources&&<div><IncomeSourcePicker value={editing.earning_source_id??(retained?'saved':editing.kind==='Other income'?'':'choose')} disabled={busy||earningSources.loading||!!earningSources.error} options={[
+  {simple&&earningSources&&<div><IncomeSourcePicker value={editing.custom_category_id??editing.earning_source_id??(retained?'saved':editing.kind==='Other income'?'':'choose')} disabled={busy||earningSources.loading||!!earningSources.error||planning.loading||!!planning.error} options={[
    {id:'',name:t('Other income'),kind:'Other income'},
+   ...planning.data.categories.filter(category=>category.direction==='income').map(category=>({id:category.id,name:category.name,kind:category.id,categoryLabel:category.name})),
    ...(original&&!original.earning_source_id&&original.kind!=='Other income'?[{id:'saved',name:original.name,kind:original.kind}]:[]),
    ...(editing.earning_source_id&&!reusable?[{id:editing.earning_source_id,name:editing.name,kind:editing.kind,disabled:true}]:[]),
    ...earningSources.sources.filter(item=>!item.archived||item.id===original?.earning_source_id).map(item=>({id:item.id,name:item.name,kind:item.kind,estimate:item.mode==='fixed'?item.amount:null,currency:item.currency,frequency:item.frequency,payment:planning.loading||planning.error?null:earningSourcePaymentStatus(item,editing.date,planning.data.occurrences)}))
   ]} onChange={id=>{
    const item=earningSources.sources.find(source=>source.id===id);
    setSalaryPlan(false);
-   if(item)update(selectEarningSource(editing,item));
-   else if(id==='saved'&&original)update({kind:original.kind,name:original.name,business_id:original.business_id,income_source_id:original.income_source_id,income_due_on:original.income_due_on,earning_source_id:null,earning_due_on:null,payment_type:'regular'});
-   else setEditing({...changeIncomeKind(editing,'Other income'),earning_source_id:null,earning_due_on:null,payment_type:'regular'});
+   if(planning.data.categories.some(category=>category.id===id&&category.direction==='income'))setEditing(selectTransactionCategory({...changeIncomeKind(editing,'Other income'),earning_source_id:null,earning_due_on:null,payment_type:'regular'},id,planning.data.categories,'income'));
+   else if(item)update({...selectEarningSource(editing,item),custom_category_id:null});
+   else if(id==='saved'&&original)update({custom_category_id:null,kind:original.kind,name:original.name,business_id:original.business_id,income_source_id:original.income_source_id,income_due_on:original.income_due_on,earning_source_id:null,earning_due_on:null,payment_type:'regular'});
+   else setEditing({...changeIncomeKind(editing,'Other income'),custom_category_id:null,earning_source_id:null,earning_due_on:null,payment_type:'regular'});
   }}/>
   <Button asChild variant="outline" className="mt-3 min-h-11 w-full" disabled={busy}><Link href="/income-expenses#income-sources" aria-disabled={busy} onNavigate={event=>{if(busy){event.preventDefault();return;}(onNavigateToSources??(()=>setEditing(null)))();}}><Settings2 aria-hidden="true"/>{t('Manage income sources')}<ArrowRight aria-hidden="true"/></Link></Button>
    {earningSources.loading&&<p className="muted" role="status">{t('Loading income sources…')}</p>}
    {earningSources.error&&<div className="error" role="alert">{t(earningSources.error)} <Button type="button" variant="outline" disabled={busy} onClick={earningSources.retry}>{t('Retry')}</Button></div>}
   </div>}
+  <Link className="muted" href="/settings#categories">{t('Manage categories in Settings')}</Link>
   {reusable&&<label>{t('Payment type')}<NativeSelect value={editing.payment_type??'regular'} disabled={busy} onChange={event=>update(selectEarningSource(editing,reusable,event.target.value==='bonus'))}><option value="regular">{t('Regular income')}</option><option value="bonus">{t('Bonus')}</option></NativeSelect></label>}
   {reusable&&editing.payment_type!=='bonus'&&reusable.mode==='fixed'&&<ScheduledPaymentSummary label={t('Scheduled payment date')} date={editing.earning_due_on??''}/>}
   {salaryPlan&&<p className="muted">{t('Set up the recurring salary plan you will select when recording payments.')}</p>}
-  {!simple&&<label>{t('Category')}<NativeSelect value={editing.kind} disabled={busy||!!reusable} leadingIcon={<RecordIcon record={editing}/>} onChange={event=>{setSalaryPlan(false);setEditing(changeIncomeKind(editing,event.target.value as Entry['kind']));}}>{income.map(kind=><option key={kind} value={kind}>{t(kind)}</option>)}</NativeSelect></label>}
+  {!simple&&<label>{t('Category')}<NativeSelect value={editing.custom_category_id??editing.kind} disabled={busy||!!reusable||planning.loading||!!planning.error} leadingIcon={<RecordIcon record={editing}/>} onChange={event=>{setSalaryPlan(false);const selected=selectTransactionCategory(editing,event.target.value,planning.data.categories,'income');setEditing({...changeIncomeKind(editing,selected.kind),custom_category_id:selected.custom_category_id});}}>{income.map(kind=><option key={kind} value={kind}>{t(kind)}</option>)}{planning.data.categories.filter(category=>category.direction==='income').map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</NativeSelect></label>}
   {!reusable&&(named?<RecordNameInput label={salaryPlan?t('Salary plan name'):t('Name')} entry={editing} rows={planning.data.records} original={original} placeholder={t(salaryPlan?'e.g. Monthly salary':'e.g. Freelance payment')} onChange={name=>update({name})}/>:!simple&&<div><label>{t(sourceLabel)}<NativeSelect required={!legacy} value={sourceId??''} disabled={busy||planning.loading||!!planning.error} onChange={event=>{const selected=sources.find(row=>row.id===event.target.value);if(selected)update(selectIncomeSource(editing,selected));else update({name:'',business_id:null,income_source_id:null});}}><option value="">{legacy?original.name:t(sourcePlaceholder)}</option>{sources.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</NativeSelect></label>
    {!planning.loading&&!planning.error&&!sources.length&&<p className="muted">{t(editing.kind==='Salary'?'Add a salary plan before recording its income.':editing.kind==='Rent income'?'Add a property in Assets & investments first.':'Add a business in Assets & investments first.')}</p>}
    {editing.kind==='Salary'?earningSources?<Link href="/income-expenses#income-sources">{t('Add income source')}</Link>:!original&&<Button type="button" variant="outline" disabled={busy} onClick={()=>{setSalaryPlan(true);update({name:'',income_source_id:null,income_due_on:null,business_id:null,frequency:'Monthly',end_date:null,account_id:null});}}>{t('Add salary plan')}</Button>:<Link href="/assets">{t('Assets & investments')}</Link>}

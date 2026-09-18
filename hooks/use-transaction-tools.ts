@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
-import { emptyTransactionTools, type TransactionTools, type CategoryRule, type TransactionSplit, type ForecastAssignment } from '@/lib/transaction-tools';
+import { emptyTransactionTools, type TransactionTools, type TransactionSplit, type ForecastAssignment } from '@/lib/transaction-tools';
 export function useTransactionTools(user:string|null,demo:boolean,revision:number,onSaved:()=>void){
  const request=useRef<AbortController|null>(null);
  const key=`${user}:${demo}:${revision}`;
@@ -17,8 +17,6 @@ export function useTransactionTools(user:string|null,demo:boolean,revision:numbe
   const owner=demo?'demo':user;
   setState(previous=>{
    const next={...(previous.owner===owner?previous.data:emptyTransactionTools)};
-   if(action==='rule'){const rule=data as CategoryRule;next.rules=[...next.rules.filter(item=>item.id!==rule.id),rule];}
-   if(action==='delete_rule')next.rules=next.rules.filter(item=>item.id!==(data as {id:string}).id);
    if(action==='split'){const payload=data as {record_id:string;splits:TransactionSplit[]};next.splits=[...next.splits.filter(item=>item.record_id!==payload.record_id),...payload.splits.map((part,position)=>({...part,position,record_id:payload.record_id}))];}
    if(action==='forecast'){const payload=data as ForecastAssignment;next.assignments=[...next.assignments.filter(item=>item.record_id!==payload.record_id),...(payload.account_id?[payload]:[])];}
    return {key,owner,data:next,error:''};

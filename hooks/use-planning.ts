@@ -1,6 +1,6 @@
 "use client";
 import { useCallback,useEffect,useRef,useState } from 'react';
-import { emptyPlanning,type PlanningData } from '@/lib/planning';
+import { emptyPlanning,type PlanningData, type Category } from '@/lib/planning';
 import type { HoldingAccount } from '@/lib/holding-accounts';
 import { normalizeEntry,type Entry } from '@/lib/finance';
 export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:number,onSaved:()=>void,holdingAccounts:HoldingAccount[]=[]){
@@ -29,6 +29,7 @@ export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:
    const {id,target_id,date}=payload;
    if(typeof id==='string'&&typeof target_id==='string'&&typeof date==='string')setState(previous=>previous.owner!==user?previous:{...previous,data:{...previous.data,occurrences:[...previous.data.occurrences.filter(item=>item.record_id!==target_id||item.due_on!==date),{id,record_id:target_id,due_on:date,status:action==='occurrence'?'paid':'dismissed'}]}});
   }
+  if(action==='category'){const category=payload as Category;setState(previous=>previous.owner!==user?previous:{...previous,data:{...previous.data,categories:[...previous.data.categories.filter(item=>item.id!==category.id),category]}});}
   onSaved();
  },[demo,onSaved,user]);
  return {data:demo?{...emptyPlanning,records:rows,holdingAccounts}:user&&state.owner===user?state.data:emptyPlanning,loading:!!user&&!demo&&state.owner!==user,refreshing:!!user&&!demo&&state.key!==key,error:state.key===key?state.error:'',save};
