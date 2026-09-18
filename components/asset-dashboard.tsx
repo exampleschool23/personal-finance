@@ -13,7 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useLanguage } from '@/components/language-provider';
 import { categoryColor } from '@/lib/category-colors';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
-import { assetRecordKinds, value, type Entry, type estimatedCashFlow } from '@/lib/finance';
+import { assetRecordKinds, value, totalValue, type Entry, type estimatedCashFlow } from '@/lib/finance';
 import { sortAssetsByWorth } from '@/lib/asset-sort';
 import { marketEntry, type MarketData } from '@/lib/market';
 
@@ -32,8 +32,8 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
  const [limit, setLimit] = useState(12);
  const holdings = useMemo(() => sortAssetsByWorth(records.filter(record => assetRecordKinds.includes(record.kind)), record => marketEntry(record, currency, market)).map(original => ({ original, converted: marketEntry(original, currency, market) })), [records, currency, market]);
- const total = holdings.reduce((sum, holding) => sum + (holding.converted ? value(holding.converted) : 0), 0);
- const categories = assetRecordKinds.map(kind => ({ kind, count: holdings.filter(h => h.original.kind === kind).length, amount: holdings.filter(h => h.original.kind === kind).reduce((sum, h) => sum + (h.converted ? value(h.converted) : 0), 0) })).filter(group => group.count).sort((a, b) => b.amount - a.amount);
+ const total = totalValue(holdings.flatMap(holding => holding.converted ? [holding.converted] : []));
+ const categories = assetRecordKinds.map(kind => ({ kind, count: holdings.filter(h => h.original.kind === kind).length, amount: totalValue(holdings.flatMap(holding => holding.converted ? [holding.converted] : []), [kind]) })).filter(group => group.count).sort((a, b) => b.amount - a.amount);
  const groupedIds = new Set(records.filter(record=>accounts.some(account=>account.id===record.holding_account_id&&(record.kind===account.kind||record.kind==='Cash'))).map(record=>record.id));
  const accountRecords = holdings.filter(({original})=>['Cash','Deposit'].includes(original.kind)&&!groupedIds.has(original.id));
  const otherHoldings = holdings.filter(({original})=>!['Cash','Deposit'].includes(original.kind)&&!groupedIds.has(original.id));

@@ -1441,5 +1441,18 @@
   "No income received this month": "No income received this month",
   "Amount paid": "Amount paid",
   "Try another category.": "Try another category.",
-  "A positive estimate creates a monthly income plan. Saving the record date also updates linked fixed-income start dates. Recorded payments stay unchanged.": "A positive estimate creates a monthly income plan. Saving the record date also updates linked fixed-income start dates. Recorded payments stay unchanged."
+  "A positive estimate creates a monthly income plan. Saving the record date also updates linked fixed-income start dates. Recorded payments stay unchanged.": "A positive estimate creates a monthly income plan. Saving the record date also updates linked fixed-income start dates. Recorded payments stay unchanged.",
+  "Forecast assignments require database update 045. Apply the pending database migrations and try again.": "Forecast assignments require database update 045. Apply the pending database migrations and try again.",
+  "Could not save the forecast assignment. Please try again.": "Could not save the forecast assignment. Please try again.",
+  "Use the balance from the day before your imported transactions.": "Use the balance from the day before your imported transactions.",
+  "No matching currencies.": "No matching currencies.",
+  "Import & backup": "Import & backup",
+  "Manage your preferences, security, and financial data.": "Manage your preferences, security, and financial data.",
+  "Default categories": "Default categories",
+  "These categories are already available when recording income and expenses.": "These categories are already available when recording income and expenses.",
+  "No custom categories yet. Add one below to organize your transactions.": "No custom categories yet. Add one below to organize your transactions.",
+  "Add a custom category first to create a categorization rule.": "Add a custom category first to create a categorization rule.",
+  "Import transactions": "Import transactions",
+  "No imports yet": "No imports yet",
+  "Imported statements will appear here so you can review or undo them.": "Imported statements will appear here so you can review or undo them."
 }

@@ -4,8 +4,9 @@ import fs from 'node:fs';
 import ts from 'typescript';
 import * as finance from '../lib/finance.ts';
 import * as market from '../lib/market.ts';
+import * as budgets from '../lib/expense-plans.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const dependencies={...finance,...market,expensePlanTotals:plan=>({projected:plan.amount})};
+const dependencies={...finance,...market,...budgets};
 const {projectGoal,goalFinancials}=new Function(...Object.keys(dependencies),compile('lib/goal-projection.ts')+';return {projectGoal,goalFinancials};')(...Object.values(dependencies));
 
 test('million-dollar goal compounds new monthly surplus and required path hits exact deadline',()=>{
@@ -30,10 +31,10 @@ test('zero return, negative net worth, reached targets and short or expired dead
 const record=(kind,amount,extra={})=>({id:kind,name:kind,kind,amount,cost:0,quantity:0,currency:'USD',date:'2026-01-01',frequency:'Once',...extra});
 test('goal baseline respects ownership, quantities, debt and complete FX coverage',()=>{
  const records=[record('Cash',100),record('Stock',10,{quantity:5}),record('Business',1000,{ownership_percentage:25}),record('Loan',200),record('Salary',500,{frequency:'Monthly'}),record('Living expense',100,{frequency:'Monthly'})];
- assert.deepEqual(goalFinancials(records,[{amount:50,currency:'USD'}],'2026-09','USD',null,true),{netWorth:200,surplus:350});
+ assert.deepEqual(goalFinancials(records,[{amount:50,currency:'USD',start_date:'2026-01-01'}],'2026-09','USD',null,true),{netWorth:200,surplus:350});
  assert.deepEqual(goalFinancials([...records,record('Property',100,{currency:'EUR'})],[],'2026-09','USD',null,true),{netWorth:null,surplus:null});
  assert.equal(goalFinancials(records,[],'2026-09','USD',null,false).surplus,null);
- assert.equal(goalFinancials(records,[{amount:50,currency:'EUR'}],'2026-09','USD',null,true).surplus,null);
+ assert.equal(goalFinancials(records,[{amount:50,currency:'EUR',start_date:'2026-01-01'}],'2026-09','USD',null,true).surplus,null);
  assert.equal(goalFinancials(records,[],'2026-09','EUR',{rates:{EUR:.9},quotes:{},fx:null},true).netWorth,180);
 });
 test('surplus excludes ended schedules and one-off income, and includes mortgage commitments',()=>{

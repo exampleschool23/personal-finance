@@ -1,6 +1,6 @@
-import { assets, liabilities, estimatedCashFlow, value, type Entry } from './finance';
+import { assets, liabilities, estimatedCashFlow, financialTotals, type Entry } from './finance';
 import { marketEntry, convertAmount, type MarketData } from './market';
-import { expensePlanTotals, type ExpensePlan } from './expense-plans';
+import { monthlyBudgetTotals, type ExpensePlan } from './expense-plans';
 
 // Hold existing wealth constant. Only new monthly investments earn the assumed
 // effective annual return; homes, cash and outstanding debts do not all compound.
@@ -24,10 +24,10 @@ export function projectGoal(starting: number, target: number, today: string, dea
 export function goalFinancials(records: Entry[], plans: ExpensePlan[], month: string, currency: string, market: MarketData|null, plansReady: boolean) {
  const converted=records.map(record=>marketEntry(record,currency,market));
  const missingWealth=records.some((record,i)=>(assets.includes(record.kind)||liabilities.includes(record.kind))&&!converted[i]);
- const planAmounts=plans.map(plan=>convertAmount(expensePlanTotals(plan,month).projected,plan.currency,currency,market?.rates??market?.fx?.rate));
+ const budget=monthlyBudgetTotals(plans,month,(amount,source)=>convertAmount(amount,source,currency,market?.rates??market?.fx?.rate));
  const entries=converted.filter((entry):entry is Entry=>entry!==null);
- const netWorth=missingWealth?null:entries.reduce((sum,entry)=>sum+(assets.includes(entry.kind)?value(entry):liabilities.includes(entry.kind)?-value(entry):0),0);
- const surplus=!plansReady||converted.some(entry=>entry===null)||planAmounts.some(amount=>amount===null)?null:estimatedCashFlow(entries,planAmounts.reduce<number>((sum,amount)=>sum+(amount??0),0),month).forecast;
+ const netWorth=missingWealth?null:financialTotals(entries).netWorth;
+ const surplus=!plansReady||converted.some(entry=>entry===null)||budget.projected===null?null:estimatedCashFlow(entries,budget.projected!,month).forecast;
  return {netWorth,surplus};
 }
 

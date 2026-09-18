@@ -31,3 +31,15 @@ export function estimatedCashFlow(entries: Entry[], expensePlanProjection = 0, m
  const mortgagePayments = entries.filter(e => e.kind === 'Mortgage' && e.amount > 0).reduce((sum,e) => sum + (e.estimated_monthly_payment ?? 0), 0);
  return { estimatedAssets, otherIncome, plannedIncome: estimatedIncome + otherIncome, monthlyExpenses, mortgagePayments, estimatedIncome, forecast: estimatedIncome + otherIncome - monthlyExpenses - mortgagePayments };
 }
+
+/** Entries must already be expressed in the same currency. Never round stored totals. */
+export function totalValue(entries: readonly Entry[], kinds?: readonly string[]) {
+ return entries.reduce((sum, entry) => sum + (!kinds || kinds.includes(entry.kind) ? value(entry) : 0), 0);
+}
+
+export function financialTotals(entries: readonly Entry[]) {
+ const totalAssets = totalValue(entries, assets);
+ const totalDebt = totalValue(entries, liabilities);
+ const receivable = totalValue(entries, ['Money lent']);
+ return { totalAssets, totalDebt, netWorth: totalAssets - totalDebt, receivable, netLending: receivable - totalDebt, cash: totalValue(entries, ['Cash']) };
+}

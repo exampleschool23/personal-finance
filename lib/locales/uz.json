@@ -1441,5 +1441,18 @@
   "No income received this month": "Bu oy hali daromad olinmagan",
   "Amount paid": "To‘langan summa",
   "Try another category.": "Boshqa toifani tanlang.",
-  "A positive estimate creates a monthly income plan. Saving the record date also updates linked fixed-income start dates. Recorded payments stay unchanged.": "Musbat taxmin oylik daromad rejasini yaratadi. Yozuv sanasini saqlash bog‘langan qat’iy daromadlarning boshlanish sanalarini ham yangilaydi. Qayd etilgan to‘lovlar o‘zgarmaydi."
+  "A positive estimate creates a monthly income plan. Saving the record date also updates linked fixed-income start dates. Recorded payments stay unchanged.": "Musbat taxmin oylik daromad rejasini yaratadi. Yozuv sanasini saqlash bog‘langan qat’iy daromadlarning boshlanish sanalarini ham yangilaydi. Qayd etilgan to‘lovlar o‘zgarmaydi.",
+  "Forecast assignments require database update 045. Apply the pending database migrations and try again.": "Prognozlarni bog‘lash uchun ma’lumotlar bazasining 045-yangilanishi kerak. Kutilayotgan baza yangilanishlarini qo‘llang va qayta urinib ko‘ring.",
+  "Could not save the forecast assignment. Please try again.": "Prognoz bog‘lanishini saqlab bo‘lmadi. Qayta urinib ko‘ring.",
+  "Use the balance from the day before your imported transactions.": "Import qilingan birinchi amaliyotdan oldingi kundagi qoldiqni kiriting.",
+  "No matching currencies.": "Mos valyutalar topilmadi.",
+  "Import & backup": "Import va zaxira nusxalari",
+  "Manage your preferences, security, and financial data.": "Sozlamalar, xavfsizlik va moliyaviy ma’lumotlarni boshqaring.",
+  "Default categories": "Standart toifalar",
+  "These categories are already available when recording income and expenses.": "Bu toifalar daromad va xarajatlarni kiritishda allaqachon mavjud.",
+  "No custom categories yet. Add one below to organize your transactions.": "Hali maxsus toifalar yo‘q. Amaliyotlarni tartiblash uchun quyida toifa qo‘shing.",
+  "Add a custom category first to create a categorization rule.": "Qoida yaratish uchun avval maxsus toifa qo‘shing.",
+  "Import transactions": "Amaliyotlarni import qilish",
+  "No imports yet": "Hali importlar yo‘q",
+  "Imported statements will appear here so you can review or undo them.": "Import qilingan ko‘chirmalar ko‘rib chiqish yoki bekor qilish uchun shu yerda ko‘rinadi."
 }

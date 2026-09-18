@@ -6,7 +6,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { LoadingPlaceholder } from '@/components/loading-placeholder';
-import { assets, liabilities, value, type Entry } from '@/lib/finance';
+import { financialTotals, type Entry } from '@/lib/finance';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
 import { snapshotPoints, mergePortfolioPoints, type PortfolioSnapshot } from '@/lib/portfolio-snapshots';
@@ -34,14 +34,13 @@ export function PortfolioOverview({ excludedCurrencies=[], entries, currency, ma
  }, [demo, revision, retry]);
  const today = depositToday();
  const money = (amount: number) => formatMoney(amount, currency, locale);
- const total = (kinds: readonly string[]) => entries.filter(entry => kinds.includes(entry.kind)).reduce((sum, entry) => sum + value(entry), 0);
- const assetTotal = total(assets), debt = total(liabilities), cash = total(['Cash']);
+ const {totalAssets:assetTotal,totalDebt:debt,cash,netWorth}=financialTotals(entries);
  const investments = entries.filter(entry => ['Stock', 'Crypto'].includes(entry.kind) && entry.cost > 0);
  const cost = investments.reduce((sum, entry) => sum + entry.cost * entry.quantity, 0);
  const gain = investments.reduce((sum, entry) => sum + (entry.amount - entry.cost) * entry.quantity, 0);
  const tracked = portfolioHistory(history?.records ?? [], history?.events ?? [], currency, market?.rates ?? market?.fx?.rate, today);
  // Today's quoted balances are a current snapshot, not a historical market-price feed.
- const points = mergePortfolioPoints(tracked.points, snapshotPoints(snapshots, currency), { date: today, assets: assetTotal, debt, net: assetTotal - debt });
+ const points = mergePortfolioPoints(tracked.points, snapshotPoints(snapshots, currency), { date: today, assets: assetTotal, debt, net: netWorth });
  const visible = portfolioWindow(points, range, today);
  const change = visible.length > 1 ? visible.at(-1)!.net - visible[0].net : null;
  const chartKeys = series === 'all' ? ['net', 'assets', 'debt'] as const : [series];
@@ -53,7 +52,7 @@ export function PortfolioOverview({ excludedCurrencies=[], entries, currency, ma
  return <>
   <section className="panel portfolio-trend">
    <div className="panel-title"><div><h2>{t('Portfolio over time')}</h2><p className="muted">{t('Recorded balances of your current holdings')}</p></div><div className="portfolio-ranges" aria-label={t('History period')}>{[30, 90, 365, null].map(days => <Button key={String(days)} size="sm" variant={range === days ? 'default' : 'outline'} aria-pressed={range === days} onClick={() => setRange(days)}>{days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) })}</Button>)}</div></div>
-   <div className="portfolio-headline"><div><span>{t('Net worth today')}</span><strong>{money(assetTotal - debt)}</strong><PartialTotal currencies={excludedCurrencies}/></div>{!loading && !error && change !== null && <div><span>{t('Change in selected period')}</span><strong className={change >= 0 ? 'positive' : 'negative'}>{money(change)}</strong></div>}</div>
+   <div className="portfolio-headline"><div><span>{t('Net worth today')}</span><strong>{money(netWorth)}</strong><PartialTotal currencies={excludedCurrencies}/></div>{!loading && !error && change !== null && <div><span>{t('Change in selected period')}</span><strong className={change >= 0 ? 'positive' : 'negative'}>{money(change)}</strong></div>}</div>
    {loading ? <LoadingPlaceholder label={t('Loading history…')}/> : error ? <p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}>{t('Retry')}</Button></p> : <>
     <div className="portfolio-ranges" role="group" aria-label={t('Chart series')}>{([{key:'net',label:'NET WORTH'},{key:'assets',label:'Total assets'},{key:'debt',label:'Outstanding debt'},{key:'all',label:'All'}] as const).map(item=><Button key={item.key} size="sm" variant={series===item.key?'default':'outline'} aria-pressed={series===item.key} onClick={()=>setSeries(item.key)}>{t(item.label)}</Button>)}</div>
     <p className="footnote">{t('Scale follows recorded balances. Points show daily observations; lines connect them.')}</p>

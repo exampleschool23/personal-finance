@@ -18,7 +18,7 @@ function component(file,name){
   '@/components/ui/checkbox':{Checkbox:()=>null},
   '@/components/ui/input':{Input:props=>React.createElement('input',props)},
   '@/components/formatted-number-input':{FormattedNumberInput:({value})=>React.createElement('input',{value,readOnly:true})},
-  '@/components/ui/dialog':Object.fromEntries(['Dialog','DialogTrigger','DialogContent','DialogTitle','DialogDescription','DialogClose'].map(name=>[name,passthrough])),
+  '@/components/ui/dialog':Object.fromEntries(['DialogHeader','Dialog','DialogTrigger','DialogContent','DialogTitle','DialogDescription','DialogClose'].map(name=>[name,passthrough])),
   '@/components/ui/alert-dialog':Object.fromEntries(['AlertDialog','AlertDialogContent','AlertDialogTitle','AlertDialogDescription','AlertDialogFooter','AlertDialogCancel','AlertDialogAction'].map(name=>[name,passthrough])),
   '@/components/ui/native-select':{NativeSelect:passthrough},
   '@/components/date-picker':{DatePicker:()=>React.createElement('button',null,'Month picker')},

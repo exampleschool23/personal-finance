@@ -11,3 +11,21 @@ export function expensePlanTotals(plan: ExpensePlan, month = expensePlanMonth())
  const spent = Number(plan.spent ?? 0);
  return { active, planned, spent, remaining: planned - spent, projected: Math.max(planned, spent) };
 }
+
+/** Convert each plan before adding it; null signals incomplete currency coverage.
+ * Partial totals are exposed separately for views that explicitly disclose exclusions.
+ */
+export function monthlyBudgetTotals(plans: readonly ExpensePlan[], month: string, convert: (amount: number, currency: string) => number | null) {
+ const partial = { planned: 0, spent: 0, remaining: 0, projected: 0 };
+ const missingCurrencies = new Set<string>();
+ for (const plan of plans) {
+  const totals = expensePlanTotals(plan, month);
+  for (const key of ['planned', 'spent', 'remaining', 'projected'] as const) {
+   const amount = convert(totals[key], plan.currency);
+   if (amount === null) missingCurrencies.add(plan.currency);
+   else partial[key] += amount;
+  }
+ }
+ const complete = missingCurrencies.size === 0;
+ return { planned: complete ? partial.planned : null, spent: complete ? partial.spent : null, remaining: complete ? partial.remaining : null, projected: complete ? partial.projected : null, partial, missingCurrencies: [...missingCurrencies] };
+}

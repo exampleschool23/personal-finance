@@ -20,7 +20,16 @@ export async function POST(req:Request){
  const parsed=schema.safeParse(await req.json());if(!parsed.success)return Response.json({error:'Check the transaction tools fields.'},{status:400});
  const {action,data}=parsed.data;
  const response=action==='rule'?await supa('/rest/v1/category_rules?on_conflict=id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({...data,user_id:auth.user.id})},auth.token):action==='delete_rule'?await supa('/rest/v1/category_rules?id=eq.'+data.id,{method:'DELETE'},auth.token):await supa('/rest/v1/rpc/'+(action==='split'?'save_transaction_splits':'save_forecast_assignment'),{method:'POST',body:JSON.stringify(action==='split'?{p_record:data.record_id,p_splits:data.splits}:{p_record:data.record_id,p_account:data.account_id,p_rate:data.exchange_rate??null,p_from:data.from_currency??null,p_to:data.to_currency??null})},auth.token);
- if(!response.ok){const failure=await response.json() as {code?:string;message?:string};return Response.json({error:failure.code==='P0001'?failure.message:'Could not save transaction tools. Check the categories and database update.'},{status:409});}
+ if(!response.ok){
+  const failure=await response.json() as {code?:string;message?:string};
+  if(action==='forecast'){
+   const missingMigration=['PGRST202','PGRST203','42883','42703'].includes(failure.code??'');
+   return Response.json({error:missingMigration
+    ?'Forecast assignments require database update 045. Apply the pending database migrations and try again.'
+    :failure.code==='P0001'&&failure.message?failure.message:'Could not save the forecast assignment. Please try again.'},{status:missingMigration?503:409});
+  }
+  return Response.json({error:failure.code==='P0001'?failure.message:'Could not save transaction tools. Check the categories and database update.'},{status:409});
+ }
  return Response.json({ok:true});
  }catch{return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
 }
