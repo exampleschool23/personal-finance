@@ -9,7 +9,7 @@ function component(file,name){
  const states=[];let cursor=0;
  const loaded=loadTS(file,{
   react:{...React,useState(initial){const index=cursor++;if(!(index in states))states[index]=typeof initial==='function'?initial():initial;return [states[index],value=>{states[index]=value;}];}},
-  'next/link':{default:passthrough},
+  'next/link':{__esModule:true,default:passthrough},
   '@/components/language-provider':{useLanguage:()=>({t:key=>key,locale:'en-US'})},
   '@/components/ui/button':{Button:passthrough},
   '@/components/discard-changes':{useDraftDialog:()=>({close(){},confirmation:null})},
@@ -69,4 +69,28 @@ test('new expense plans inherit current header currency while editing preserves 
  assert.equal(find(tree,node=>node.type?.name==='CurrencyValue').props.currency,'USD');
  assert.equal(find(tree,node=>node.props?.value===12.125).props.value,12.125);
  assert.equal(plan.currency,'USD');assert.equal(plan.amount,12.125);
+});
+
+test('overview remaining budget converts all plans to the header currency and preserves stored precision',()=>{
+ const render=component('components/workspace-actions.tsx','WorkspaceActions');
+ const plans=[
+  {id:'uzs',amount:5000000.125,spent:1000000,currency:'UZS',start_date:'2026-09-01',end_date:null},
+  {id:'usd',amount:100.125,spent:25,currency:'USD',start_date:'2026-09-01',end_date:null},
+ ];
+ const before=JSON.stringify(plans);
+ const props={data:{records:[],occurrences:[]},plans,plansReady:true,settingsReady:true,onAddAccount(){},market:{rates:{USD:1,UZS:10000,EUR:0.8}}};
+ const budget=html=>html.split('Remaining monthly budget</h3>')[1].split('</article>')[0];
+ assert.ok(budget(render({...props,currency:'USD'})).includes('$475'));
+ assert.ok(budget(render({...props,currency:'UZS'})).includes('4,751,250'));
+ assert.ok(budget(render({...props,currency:'EUR'})).includes('€380'));
+ assert.equal(JSON.stringify(plans),before);
+ for(const market of [null,{rates:{UZS:0}},{rates:{UZS:-1}},{rates:{UZS:Infinity}}]){
+  const html=budget(render({...props,currency:'USD',market}));
+  assert.ok(html.includes('Exchange rate unavailable.'));
+  assert.ok(!html.includes('<strong'));
+ }
+ assert.ok(budget(render({...props,currency:'USD',market:{fx:{rate:10000}}})).includes('$475'));
+ assert.ok(budget(render({...props,currency:'USD',plans:[{...plans[1],spent:200}],market:null})).includes('class="negative"'));
+ assert.ok(budget(render({...props,currency:'USD',plansReady:false})).includes('Budget data is unavailable.'));
+ assert.ok(budget(render({...props,currency:'USD',plans:[]})).includes('Set a monthly spending plan'));
 });
