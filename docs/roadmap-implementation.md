@@ -38,6 +38,7 @@ Apply only migrations missing from the target database, in this order after 034:
 3. `037_workspace_preferences.sql` — owner-scoped allocation, watchlist, import, debt and scenario settings.
 4. `038_import_review.sql` — statement provenance, changed-source conflict detection, atomic undo and backup integration.
 5. `039_account_deletion.sql` — auth-user cascade support while keeping ordinary financial guards.
+6. `040_goal_display_order.sql` — saved goal-card order using the existing owner-scoped preferences table. Display order does not change funding priority.
 
 Fresh setup contains the same SQL blocks in the same order. Migration 039 modifies only the named, existing security-definer trigger functions and refuses an unexpected definition. It does not delete any accounts itself. These migrations are transactional but not intended to be rerun. Back up first and record successful applications in the deployment ledger. Never run fresh setup over an existing database; migration 033 remains an installation-specific repair.
 

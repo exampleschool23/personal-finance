@@ -1,16 +1,15 @@
 "use client";
+import { CurrencyValue } from '@/components/currency-value';
 import { useDiscardChanges } from '@/components/discard-changes';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { NativeSelect } from '@/components/ui/native-select';
 import { useLanguage } from '@/components/language-provider';
-import { currencyLabel } from '@/lib/currencies';
 import { holdingAccountLabel, type HoldingAccount } from '@/lib/holding-accounts';
 
-export function HoldingAccountDialog({ account, existing, currencies, save, onClose }: { account: HoldingAccount; existing: boolean; currencies: string[]; save: (account: HoldingAccount) => Promise<void>; onClose: () => void }) {
- const { t, locale } = useLanguage();
+export function HoldingAccountDialog({ account, existing, save, onClose }: { account: HoldingAccount; existing: boolean; save: (account: HoldingAccount) => Promise<void>; onClose: () => void }) {
+ const { t } = useLanguage();
  const [draft, setDraft] = useState(account), [busy, setBusy] = useState(false), [error, setError] = useState('');
  const [initialDraft]=useState(()=>JSON.stringify(draft));
  const guard=useDiscardChanges(JSON.stringify(draft)!==initialDraft,onClose,busy);
@@ -20,7 +19,7 @@ export function HoldingAccountDialog({ account, existing, currencies, save, onCl
    <fieldset className="tracker-fields" disabled={busy}>
     <label>{t('Account type')}<Input readOnly value={t(holdingAccountLabel(draft.kind))} /></label>
     <label>{t('Account name')}<Input required maxLength={120} value={draft.name} placeholder={t('e.g. My brokerage or exchange')} onChange={event => setDraft({ ...draft, name: event.target.value })} /></label>
-    <label>{t('Display currency')}<NativeSelect value={draft.currency} onChange={event => setDraft({ ...draft, currency: event.target.value })}>{[...new Set([...currencies, draft.currency])].map(currency => <option key={currency} value={currency}>{currencyLabel(currency, locale)}</option>)}</NativeSelect></label>
+    <CurrencyValue currency={draft.currency}/>
    </fieldset>
    {error && <p role="alert" className="error">{t(error)}</p>}
    <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy || !draft.name.trim()}>{t(busy ? 'Saving…' : 'Save account')}</Button></div>

@@ -22,7 +22,7 @@ type Props = {
  data: PlanningData; save: (action: string, data: unknown) => Promise<void>;
  onAdd: (kind: 'Cash'|'Deposit'|'Stock'|'Crypto', accountId?: string) => void;
  onEdit: (record: Entry) => void; onTrack?: (record: Entry) => void;
- market: MarketData|null; currencies: string[];
+ market: MarketData|null; currencies: string[]; currency: string;
  saveAccount: (account: HoldingAccount) => Promise<void>;
  assignHolding: (record: Entry, accountId: string|null) => Promise<void>;
 };
@@ -37,7 +37,7 @@ function HoldingRow({ record, accounts, market, onEdit, onTrack, assignHolding, 
  </li>;
 }
 
-export function AccountsPage({ data, save, onAdd, onEdit, onTrack, market, currencies, saveAccount, assignHolding }: Props) {
+export function AccountsPage({ data, save, onAdd, onEdit, onTrack, market, currencies, currency, saveAccount, assignHolding }: Props) {
  const { t, locale } = useLanguage();
  const [movement,setMovement]=useState<MovementDraft|null>(null);
  const [operation, setOperation] = useState<Operation|null>(null), [choosing, setChoosing] = useState(false), [draft, setDraft] = useState<HoldingAccount|null>(null);
@@ -74,9 +74,9 @@ export function AccountsPage({ data, save, onAdd, onEdit, onTrack, market, curre
    {data.movements?.length ? <div className="table-scroll"><table><thead><tr><th>{t('Date')}</th><th>{t('Activity')}</th><th>{t('From')}</th><th>{t('To')}</th></tr></thead><tbody>{[...data.movements].sort((a,b)=>b.occurred_on.localeCompare(a.occurred_on)).map(item=>{const source=data.records.find(record=>record.id===item.source_id),target=data.records.find(record=>record.id===item.target_id);const amount=(record:Entry|undefined,n:number)=>record&&isHolding(record)?t('{quantity} units',{quantity:formatNumber(n,locale,8)}):formatMoney(n,record?.currency??currencies[0],locale);return <tr key={item.id}><td>{formatDate(item.occurred_on,locale)}</td><td>{t(({transfer:'Transfer money',buy:'Buy holding',sell:'Sell / convert holding',interest:'Record capitalized interest'})[item.kind])}{item.notes&&<small className="block">{item.notes}</small>}</td><td>{item.kind==='interest'?'—':<>{source?.name}<small className="block">{amount(source,item.sent)}</small></>}</td><td>{target?.name}<small className="block">{amount(target,item.received)}</small></td></tr>;})}</tbody></table></div>:null}<h3>{t('Income & expenses')}</h3><div className="table-scroll"><table><tbody>{data.records.filter(record=>record.account_id).sort((a,b)=>compareRecordDates(a.date,b.date)).map(record=><tr key={record.id}><td>{formatDate(record.date,locale)}</td><td>{record.name}</td><td>{cash.find(account=>account.id===record.account_id)?.name}</td><td>{formatMoney(record.amount,record.currency,locale)}</td></tr>)}{(data.investmentLinks??[]).map(link=>{const account=cash.find(a=>a.id===link.account_id);return <tr key={link.id}><td>{formatDate(link.investment_history.occurred_on,locale)}</td><td>{data.records.find(record=>record.id===link.investment_history.record_id)?.name}</td><td>{account?.name}</td><td>{formatMoney(link.amount,account?.currency??currencies[0],locale)}</td></tr>;})}</tbody></table></div>
   </section>
   <Dialog open={choosing} onOpenChange={setChoosing}><DialogContent className="record-dialog"><DialogTitle>{t('Add account')}</DialogTitle><DialogDescription>{t('Choose what you want to keep in this account.')}</DialogDescription><div className="account-type-options">
-   {([{kind:'Cash',title:'Cash account',description:'Money available for spending, transfers and savings goals.',Icon:Wallet},{kind:'Deposit',title:'Interest-bearing deposit',description:'A balance with an annual interest rate, top-ups and withdrawals.',Icon:Landmark},{kind:'Stock',title:'Stock account',description:'A brokerage account containing multiple stock holdings.',Icon:ChartNoAxesCombined},{kind:'Crypto',title:'Crypto account',description:'An exchange or wallet containing multiple crypto holdings.',Icon:Bitcoin}] as const).map(({kind,title,description,Icon})=><button key={kind} type="button" onClick={()=>{setChoosing(false);if(kind==='Cash'||kind==='Deposit')onAdd(kind);else setDraft({id:crypto.randomUUID(),kind,name:'',currency:currencies[0]});}}><Icon size={24} aria-hidden="true" /><span><strong>{t(title)}</strong><span>{t(description)}</span></span></button>)}
+   {([{kind:'Cash',title:'Cash account',description:'Money available for spending, transfers and savings goals.',Icon:Wallet},{kind:'Deposit',title:'Interest-bearing deposit',description:'A balance with an annual interest rate, top-ups and withdrawals.',Icon:Landmark},{kind:'Stock',title:'Stock account',description:'A brokerage account containing multiple stock holdings.',Icon:ChartNoAxesCombined},{kind:'Crypto',title:'Crypto account',description:'An exchange or wallet containing multiple crypto holdings.',Icon:Bitcoin}] as const).map(({kind,title,description,Icon})=><button key={kind} type="button" onClick={()=>{setChoosing(false);if(kind==='Cash'||kind==='Deposit')onAdd(kind);else setDraft({id:crypto.randomUUID(),kind,name:'',currency});}}><Icon size={24} aria-hidden="true" /><span><strong>{t(title)}</strong><span>{t(description)}</span></span></button>)}
   </div></DialogContent></Dialog>
-  {draft&&<HoldingAccountDialog account={draft} existing={investmentAccounts.some(account=>account.id===draft.id)} currencies={currencies} save={saveAccount} onClose={()=>setDraft(null)}/>}
+  {draft&&<HoldingAccountDialog account={draft} existing={investmentAccounts.some(account=>account.id===draft.id)} save={saveAccount} onClose={()=>setDraft(null)}/>}
   {movement&&<AssetMovementDialog initial={movement} records={data.records} accounts={investmentAccounts} save={payload=>save('movement',payload)} onClose={()=>setMovement(null)}/>}
   {operation&&<AccountOperation operation={operation} records={data.records} save={save} onClose={()=>setOperation(null)}/>}
  </>;

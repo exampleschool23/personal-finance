@@ -1,0 +1,30 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {loadTS} from './helpers/load-ts.mjs';
+const {investmentGoalPlan,investmentGoalStatus,investmentGoalProgress}=loadTS('lib/investment-goals.ts');
+const {holdingAccountValue}=loadTS('lib/holding-accounts.ts');
+const goal={kind:'investment',holding_account_id:'wallet',asset_kind:'Crypto',asset_symbol:'BTC',target:1,target_date:'2027-09-18'};
+test('goal status handles sufficient plans, shortfalls, missing accounts, no date and overdue goals',()=>{
+ const plan=monthly=>investmentGoalPlan(goal,.4,'2026-09-18',monthly);
+ assert.equal(investmentGoalStatus(1,.4,plan(.05)),'On track with this plan');
+ assert.equal(investmentGoalStatus(1,.4,plan(.01)),'Below target with this plan');
+ assert.equal(investmentGoalStatus(1,null,plan(.05)),'Progress unavailable');
+ assert.equal(investmentGoalStatus(1,.4,null),'Set a target date');
+ const overdue=investmentGoalPlan(goal,.4,'2027-09-19',.05);
+ assert.equal(investmentGoalStatus(1,.4,overdue),'Target date passed');
+ assert.equal(investmentGoalStatus(1,1.1,overdue),'Target reached');
+ const soon=investmentGoalPlan({...goal,target_date:'2026-09-19'},.4,'2026-09-18',1);
+ assert.equal(investmentGoalStatus(1,.4,soon),'Below target with this plan');
+});
+test('linked account balance includes its holdings and cash, uses display currency, and does not change unit progress',()=>{
+ const account={id:'wallet',kind:'Crypto',name:'Wallet',currency:'USD'};
+ const record={id:'btc',name:'BTC',kind:'Crypto',holding_account_id:'wallet',quantity:.4,amount:100,currency:'USD',cost:0};
+ const records=[record,{...record,id:'cash',kind:'Cash',amount:20,quantity:1},{...record,id:'elsewhere',holding_account_id:'other',quantity:100}];
+ const before=structuredClone(records),data={records,holdingAccounts:[account]};
+ assert.equal(holdingAccountValue(account,records,null).total,60);
+ assert.equal(holdingAccountValue({...account,currency:'EUR'},records,{rates:{USD:1,EUR:.9},quotes:{}}).total,54);
+ assert.equal(holdingAccountValue({...account,currency:'EUR'},records,null).total,null);
+ assert.equal(investmentGoalProgress(goal,data).current,.4);
+ assert.equal(investmentGoalProgress(goal,data).percent,40);
+ assert.deepEqual(records,before);
+});

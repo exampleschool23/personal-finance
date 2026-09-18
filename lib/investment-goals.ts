@@ -32,3 +32,13 @@ export function investmentGoalCompletion(goal:Goal,data:Pick<PlanningData,'recor
  // Different units cannot be summed; each target has equal weight, capped at 100%.
  return !items.length||items.some(item=>!item.progress)?null:items.reduce((sum,item)=>sum+item.progress!.percent,0)/items.length;
 }
+
+/** Describes the entered plan, not an inferred history of purchases. */
+export function investmentGoalStatus(target:number,current:number|null,plan:ReturnType<typeof investmentGoalPlan>){
+ if(current===null)return 'Progress unavailable';
+ if(current>=target)return 'Target reached';
+ if(plan?.overdue)return 'Target date passed';
+ if(!plan)return 'Set a target date';
+ const tolerance=Number.EPSILON*Math.max(1,target,plan.projected)*8;
+ return plan.projected+tolerance>=target?'On track with this plan':'Below target with this plan';
+}

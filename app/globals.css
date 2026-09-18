@@ -945,14 +945,16 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 @media(max-width:760px){.topbar{height:auto;min-height:76px;padding:12px 16px;flex-wrap:wrap}.topbar-actions{margin-left:auto;flex-wrap:wrap;justify-content:flex-end}}
 
 /* History filters align with the panel heading and share one control baseline. */
-.workspace .content .records .record-filters{display:grid;grid-template-columns:minmax(200px,2fr) repeat(4,minmax(140px,1fr)) auto;align-items:end;gap:12px;padding:0 24px 20px;margin:0}
-.workspace .content .record-filters>label{display:grid;gap:8px;min-width:0;margin:0}
+.workspace .content .records .record-filters{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,3fr);align-items:end;gap:12px;padding:0 24px 20px;margin:0}
+.workspace .content .record-filters label{display:grid;gap:8px;min-width:0;margin:0;line-height:1.5}
 .workspace .content .record-filters [data-slot="native-select-wrapper"]{width:100%;min-width:0}
-.workspace .content .record-filters :is(input,select,.date-picker-trigger){width:100%;min-width:0;height:44px;min-height:44px;padding-block:10px;font-size:var(--type-compact)}
+.workspace .content .record-filters :is(input,select,.date-picker-trigger){width:100%;min-width:0;height:46px;min-height:46px;padding-block:10px;font-size:var(--type-compact)}
 .workspace .content .record-filters select{padding-right:36px}
-.workspace .content .record-filters>button{height:44px;white-space:nowrap}
-@media(max-width:1200px){.workspace .content .records .record-filters{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:640px){.workspace .content .records .record-filters{grid-template-columns:repeat(2,minmax(0,1fr));padding:0 16px 16px}.workspace .content .record-filters .record-filter-search{grid-column:1/-1}}
+.workspace .content .record-filters button{min-height:46px}
+.workspace .content .record-filters .date-picker-trigger{height:46px}
+.workspace .content .record-filters .date-picker-trigger span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.workspace .content .record-filters .date-picker-trigger svg{flex-shrink:0}
+.workspace .content .record-filters>button,.record-filter-options>button{height:46px;white-space:nowrap}
 
 .asset-account-section{margin:24px 0 32px}.asset-account-section a{font-size:var(--type-small);color:var(--primary)}
 
@@ -1037,16 +1039,13 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .cashflow-explainer p{line-height:1.6;margin-bottom:12px}
 .cashflow-explainer a{color:var(--primary);text-decoration:underline}
 .import-preview{max-height:400px;margin-block:16px}
-.workspace .content .records .record-filters{grid-template-columns:minmax(180px,1fr) minmax(0,3fr)}
-.record-filter-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:12px;align-items:end}
-.record-filter-options>label{display:grid;gap:8px;min-width:0}
-.record-filter-options>button{min-height:44px}
+.record-filter-options{min-width:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:12px;align-items:end}
 .record-filters .mobile-filter-toggle{display:none}
 .goal-chart-canvas{min-width:0}
-@media(max-width:1200px){.workspace .content .records .record-filters{grid-template-columns:1fr}.record-filter-options{grid-template-columns:repeat(2,minmax(0,1fr)) auto}}
+@media(max-width:1200px){.workspace .content .records .record-filters{grid-template-columns:1fr}.record-filter-options{grid-template-columns:repeat(2,minmax(0,1fr))}.record-filter-options>button{grid-column:1/-1;justify-self:end}}
 @media(max-width:640px){
  .tools-panel{padding:18px}
- .workspace .content .records .record-filters{grid-template-columns:minmax(0,1fr) auto}
+ .workspace .content .records .record-filters{grid-template-columns:minmax(0,1fr) auto;padding:0 16px 16px}
  .workspace .content .record-filters .record-filter-search{grid-column:auto}
  .record-filters .mobile-filter-toggle{display:inline-flex}
  .record-filter-options{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -1056,6 +1055,223 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
  .goal-chart-canvas{min-width:0}
  .review-heading>label{width:100%}
 }
-.tools-panel :is(button,input,select){min-height:44px}
-.tools-panel .inline-tool-form fieldset{max-width:120px}
+/* Keep checkbox visuals square; their labels provide the larger touch target. */
+.tools-panel :is(button:not([role="checkbox"]),input,select){min-height:44px}
+.tools-panel .inline-tool-form>fieldset{flex:1 1 100%;width:100%;max-width:none}
+.tools-panel .inline-tool-form>fieldset.tracker-fields{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
 .tools-panel [aria-disabled=true]{opacity:.6;cursor:not-allowed}
+
+/* Goal funding: full-width, named cards instead of a narrow fieldset in a flex row. */
+.goal-funding-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.goal-funding-heading>div{flex:1 1 280px;min-width:0}
+.goal-funding-heading h2,.goal-funding-heading h3{margin:0}
+.goal-funding-heading p{max-width:75ch}
+.goal-funding-currency{border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:var(--type-small);color:var(--muted-foreground)}
+.goal-funding-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-block:20px 16px}
+.goal-funding-summary h3{font-size:var(--type-small);font-weight:500;line-height:1.5;color:var(--muted-foreground)}
+.goal-funding-summary strong{font-size:24px}
+.goal-funding-notice{padding:14px 16px;background:var(--accent);border:1px solid var(--border);border-radius:10px;font-size:var(--type-small)}
+.goal-funding-settings{margin-top:20px;border-top:1px solid var(--border)}
+.goal-funding-settings>summary,.goal-funding-advanced>summary{display:flex;align-items:center;gap:10px;list-style:none}
+.goal-funding-settings>summary::-webkit-details-marker,.goal-funding-advanced>summary::-webkit-details-marker{display:none}
+.goal-funding-settings>summary:focus-visible,.goal-funding-advanced>summary:focus-visible{outline:2px solid var(--ring);outline-offset:3px;border-radius:6px}
+.goal-disclosure-chevron{margin-left:auto;flex-shrink:0;transition:transform .15s ease}
+:is(.goal-funding-settings,.goal-funding-advanced)[open]>summary>.goal-disclosure-chevron{transform:rotate(180deg)}
+.goal-funding-help{font-size:var(--type-small)}
+.goal-funding-editors{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:16px}
+.goal-funding-editor{display:flex;flex-direction:column;gap:16px;min-width:0;padding:18px;border:1px solid var(--border);border-radius:12px;background:var(--background)}
+.goal-funding-editor header h3{font-size:var(--type-body);margin:0;overflow-wrap:anywhere}
+.goal-funding-editor header p{font-size:var(--type-small);margin:4px 0 0}
+.goal-funding-controls{display:grid;gap:12px;border:0;margin:0;padding:0;min-width:0}
+.goal-funding-enable{margin:0;display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;font-size:var(--type-small)}
+.goal-funding-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;border:0;margin:0;padding:0;min-width:0}
+.goal-funding-fields>label{margin:0;display:grid;align-content:start;gap:8px;min-width:0;font-size:var(--type-small);line-height:1.5}
+.goal-funding-fields :is(input,[data-slot="native-select-wrapper"],.date-picker-trigger){width:100%;min-width:0;max-width:100%}
+.goal-funding-advanced{border-top:1px solid var(--border)}
+.goal-funding-advanced>summary{font-size:var(--type-small);color:var(--muted-foreground)}
+.goal-funding-editor-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:12px;border-top:1px solid var(--border)}
+.goal-funding-editor-footer>span{font-size:var(--type-small);flex:1 1 100px}
+.goal-funding-editor-footer>div{display:flex;gap:8px;flex-wrap:wrap}
+.goal-cash-activity{padding-top:24px;margin-top:24px;border-top:1px solid var(--border)}
+.goal-cash-activity:first-child{padding-top:0;margin-top:0;border-top:0}
+.goal-cash-activity>.goal-funding-heading>button{white-space:normal;height:auto;min-width:0;text-align:left}
+.goal-cash-activity h3{font-size:var(--type-body)}
+.goal-cash-activity>.goal-funding-heading p{font-size:var(--type-small)}
+.goal-activity-empty{display:flex;align-items:flex-start;gap:12px;padding:18px;border:1px dashed var(--border);border-radius:12px;margin-top:12px;background:var(--accent)}
+.goal-activity-empty>svg{flex-shrink:0;color:var(--muted-foreground)}
+.goal-activity-empty strong{font-size:var(--type-body)}
+.goal-activity-empty p{font-size:var(--type-small);color:var(--muted-foreground);margin:4px 0 0}
+.goal-activity-form{padding:18px;border:1px solid var(--border);border-radius:12px;margin-top:16px}
+.goal-activity-form>p{font-size:var(--type-small);margin-top:0;margin-bottom:16px}
+.goal-field-wide{grid-column:1/-1}
+.goal-activity-actions{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+.goal-activity-actions>button{white-space:normal;height:auto}
+.goal-activity-amount{font-variant-numeric:tabular-nums}
+.goal-activity-list p{font-size:var(--type-small);margin:4px 0 0}
+@container(min-width:740px){.goal-funding-editors{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container(max-width:480px){
+ .goal-funding-summary{grid-template-columns:minmax(0,1fr);gap:8px}
+ .goal-funding-summary>article{padding:14px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+ .goal-funding-summary h3{margin:0;flex:1;min-width:0}
+ .goal-funding-summary strong{font-size:22px}
+ .goal-funding-editor{padding:14px}
+ .goal-funding-fields{grid-template-columns:minmax(0,1fr)}
+ .goal-activity-actions>button{width:100%}
+ .goal-cash-activity>.goal-funding-heading>button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.goal-disclosure-chevron{transition:none}}
+
+/* Currency is chosen once in the workspace header; editors show its unit. */
+.currency-value{display:grid;align-content:start;gap:8px;min-width:0;margin-bottom:20px;font-size:var(--type-body)}
+.currency-value>strong{display:flex;align-items:center;min-height:46px;font-size:var(--type-body);font-weight:500;overflow-wrap:anywhere}
+.review-heading>label{margin-bottom:0}
+
+/* Monthly review keeps the period control compact and explains missing activity. */
+.monthly-review-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.monthly-review-heading>div{flex:1 1 320px;min-width:0}
+.monthly-review-heading h2{margin:0}
+.monthly-review-heading p{font-size:var(--type-small);max-width:70ch}
+.monthly-review-heading>label{margin:0;flex:0 1 250px;min-width:0;gap:8px;font-size:var(--type-small)}
+.monthly-review-heading .date-picker-trigger{width:100%}
+.monthly-review-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-block:20px}
+.monthly-review-metrics h3{font-size:var(--type-small);color:var(--muted-foreground)}
+.monthly-review-metrics p{font-size:var(--type-small);margin-bottom:0}
+.monthly-review-categories{padding-top:20px;border-top:1px solid var(--border)}
+.monthly-review-empty{display:flex;align-items:flex-start;gap:14px;padding:18px;border:1px dashed var(--border);border-radius:12px;background:var(--accent)}
+.monthly-review-empty>svg{flex-shrink:0;color:var(--muted-foreground)}
+.monthly-review-empty>div{min-width:0}
+.monthly-review-empty p{font-size:var(--type-small);color:var(--muted-foreground);max-width:75ch}
+.monthly-review-empty button{margin-top:4px;white-space:normal;height:auto;max-width:100%}
+.monthly-category-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 32px;list-style:none;margin:16px 0 4px;padding:0}
+.monthly-category-list li{min-width:0}
+.monthly-category-list li>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:10px}
+.monthly-category-list .category-badge{white-space:normal;overflow-wrap:anywhere}
+.monthly-category-list strong{flex-shrink:0;font-variant-numeric:tabular-nums}
+.monthly-category-track{height:6px;border-radius:3px;background:var(--accent);overflow:hidden}
+.monthly-category-track>span{display:block;height:100%;border-radius:inherit}
+.monthly-review-net-worth{margin-top:24px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:baseline;gap:8px 20px;flex-wrap:wrap}
+.monthly-review-net-worth strong{font-size:var(--type-small);font-weight:500}
+.monthly-review-net-worth p{font-size:var(--type-small);margin:0}
+.monthly-review-method{margin-top:8px;font-size:var(--type-small)}
+.monthly-review-method>summary{display:flex;align-items:center;gap:10px;list-style:none;color:var(--muted-foreground)}
+.monthly-review-method>summary::-webkit-details-marker{display:none}
+.monthly-review-method>summary:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:6px}
+.monthly-review-method[open]>summary>svg{transform:rotate(180deg)}
+@container(max-width:600px){
+ .monthly-review-heading>label{flex:1 1 100%}
+ .monthly-review-metrics{grid-template-columns:minmax(0,1fr);gap:10px}
+ .monthly-review-metrics>article{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;padding:14px}
+ .monthly-review-metrics h3{margin:0;align-self:center}
+ .monthly-review-metrics p{grid-column:1/-1;margin:0}
+ .monthly-review-metrics strong{font-size:22px;max-width:100%;overflow-wrap:anywhere}
+ .monthly-category-list{grid-template-columns:minmax(0,1fr)}
+}
+
+/* Compact accumulation goals keep balances and progress visible without opening a chart. */
+.investment-goal-plan .investment-target-row{gap:12px;padding:16px}
+.investment-goal-plan .goal-card-values{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.investment-goal-plan .goal-card-values>div+div{padding-left:16px;border-left:1px solid var(--border)}
+.investment-goal-plan .goal-card-values dd{font-size:22px}
+.investment-goal-progress{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap;font-size:var(--type-small)}
+.investment-goal-progress progress{width:100%;height:6px;accent-color:var(--primary)}
+.investment-goal-progress strong{margin-left:auto;font-weight:500}
+.investment-goal-plan .investment-goal-fields{display:flex;align-items:end;flex-wrap:wrap;gap:12px;max-width:none;margin:0}
+.investment-goal-fields>label{flex:0 1 260px;margin:0;gap:6px}
+.investment-goal-fields .entry-actions{margin:0}
+.investment-goal-plan .ownership-summary{display:flex;flex-wrap:wrap;gap:6px 24px;margin:0;padding:10px 12px;font-size:var(--type-small)}
+.investment-goal-plan .ownership-summary p{margin:0}
+.investment-goal-plan .investment-goal-chart{margin:0;padding-top:8px}
+.investment-goal-chart>summary{cursor:pointer;min-height:36px;font-size:var(--type-compact)}
+.investment-goal-plan .goal-projection-chart{height:220px;margin:8px 0 0}
+.investment-goal-plan .goal-help{font-size:var(--type-small);margin-block:10px}
+@media(max-width:640px){
+ .investment-goal-plan .goal-card-values{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .investment-goal-plan .goal-card-values>div:nth-child(odd){border-left:0;padding-left:0}
+ .investment-goal-plan .goal-card-values dd{font-size:20px}
+ .investment-goal-fields>label{flex:1 1 100%}
+ .investment-goal-plan .goal-projection-chart{height:200px}
+}
+
+/* Compact goal summaries expand only when holding details are needed. */
+.goal-list-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 20px;margin-top:20px}
+.goal-list-toolbar p{font-size:var(--type-small);margin:0}
+.goal-list-toolbar .planning-check{margin:0;font-size:var(--type-small)}
+.goal-cards-compact{gap:16px;align-items:start;margin-top:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))}
+.workspace .content .goal-cards-compact .goal-card{padding:18px;gap:14px}
+.goal-cards-compact .goal-card-header{gap:10px}
+.goal-cards-compact .goal-card-icon{width:34px;height:34px;border-radius:10px}
+.goal-cards-compact .goal-card-icon svg{width:19px;height:19px}
+.goal-cards-compact .goal-card-identity{gap:10px}
+.goal-cards-compact .goal-card-identity h2{font-size:20px;letter-spacing:-.2px}
+.goal-cards-compact .goal-card-kind,.goal-cards-compact .goal-card-account{font-size:13px;margin:0 0 4px}
+.goal-card-actions{display:flex;flex-shrink:0;gap:2px}
+.goal-cards-compact .goal-card-actions button{width:32px;min-height:36px;height:36px;padding:4px}
+.goal-cards-compact .goal-card-values{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.goal-cards-compact .goal-card-values .goal-card-current{grid-column:auto}
+.goal-cards-compact .goal-card-values>div{gap:4px}
+.goal-cards-compact .goal-card-values>div+div{padding-left:12px;border-left:1px solid var(--border)}
+.goal-cards-compact .goal-card-values dt{font-size:13px}
+.goal-cards-compact .goal-card-values dd,.goal-cards-compact .goal-card-values .goal-card-current dd{font-size:20px;letter-spacing:-.3px}
+.goal-cards-compact .goal-card-progress>div{margin-bottom:7px;gap:6px}
+.goal-cards-compact .goal-card-progress strong,.goal-cards-compact .goal-card-progress span{font-size:13px}
+.goal-cards-compact .goal-card-progress progress{height:7px}
+.goal-cards-compact .goal-card-footer{padding-top:12px;margin-top:0;gap:10px}
+.goal-cards-compact .goal-card-deadline{gap:8px}
+.goal-cards-compact .goal-card-deadline span,.goal-cards-compact .goal-card-deadline strong{font-size:13px}
+.goal-cards-compact .goal-card-footer button{min-height:38px;padding:7px 12px;gap:8px;font-size:13px}
+.goal-holdings-details{font-size:var(--type-small)}
+.goal-holdings-details>summary{cursor:pointer;padding:6px 0;min-height:36px;color:var(--muted-foreground)}
+.goal-holdings-details>summary:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.goal-holdings-details .goal-help{font-size:13px;margin-top:10px}
+.goal-holdings-details .investment-target-summary{padding:8px 0;font-size:13px}
+@container(max-width:380px){
+ .goal-cards-compact .goal-card-header{flex-wrap:wrap}
+ .goal-card-actions{margin-left:auto}
+ .goal-cards-compact .goal-card-values{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .goal-cards-compact .goal-card-values .goal-card-current{grid-column:1/-1}
+ .goal-cards-compact .goal-card-values>div:nth-child(2){padding-left:0;border-left:0}
+}
+
+/* Goal cards open their plan; their edit/reorder/disclosure controls stay independent. */
+.goal-card{cursor:pointer}
+.goal-card:has(.goal-card-footer button:focus-visible){outline:2px solid var(--ring);outline-offset:3px}
+.investment-plan-body{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,1.5fr);gap:24px;align-items:center;min-width:0}
+.investment-plan-controls{display:grid;gap:12px;min-width:0}
+.investment-goal-plan .goal-card-values{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.investment-goal-plan .goal-card-values>div:nth-child(odd){border-left:0;padding-left:0}
+.investment-goal-plan .goal-card-values dt{font-size:var(--type-small)}
+.investment-goal-plan .goal-card-values dd{font-size:20px}
+.investment-goal-plan .investment-goal-chart{border:0;padding:0;margin:0;min-width:0}
+.investment-goal-chart h4{font-size:var(--type-small);font-weight:500;color:var(--muted-foreground)}
+.investment-goal-plan .goal-projection-chart{height:240px}
+.investment-goal-plan .investment-goal-fields{gap:8px}
+.investment-goal-fields>label{flex:1 1 160px;font-size:var(--type-small)}
+.investment-goal-plan .ownership-summary{display:block;background:transparent;border:0;padding:0;font-weight:400}
+.investment-plan-method{font-size:var(--type-small);color:var(--muted-foreground);margin-top:12px}
+.investment-plan-method summary{cursor:pointer;min-height:32px}
+.investment-goal-progress progress{appearance:none;border:0;border-radius:8px;overflow:hidden;background:var(--muted)}
+.investment-goal-progress progress::-webkit-progress-bar{background:var(--muted);border-radius:8px}
+.investment-goal-progress progress::-webkit-progress-value{background:var(--primary);border-radius:8px}
+.investment-goal-progress progress::-moz-progress-bar{background:var(--primary);border-radius:8px}
+@container(max-width:720px){.investment-plan-body{grid-template-columns:minmax(0,1fr);gap:12px}.investment-goal-plan .goal-projection-chart{height:220px}}
+
+/* Keep account security a compact settings form rather than a full-width worksheet. */
+.workspace .content .account-security-panel{max-width:880px;padding:20px;margin-inline:auto}
+.account-security-panel h2{font-size:20px;margin-bottom:4px}
+.account-security-panel>p:not(.error){font-size:var(--type-small);color:var(--muted-foreground);margin:4px 0 16px}
+.account-security-panel .record-form{margin:0}
+.account-security-panel .tracker-fields{gap:12px;margin-bottom:14px}
+.account-security-panel[data-mode="change_password"] .tracker-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+.account-security-panel .tracker-fields label{min-width:0;margin:0;gap:6px;font-size:var(--type-compact)}
+.account-security-panel .tracker-fields input{width:100%;min-width:0}
+.account-security-panel>.entry-actions{margin-bottom:14px}
+@media(max-width:700px){
+ .workspace .content .account-security-panel{padding:16px}
+ .account-security-panel[data-mode="change_password"] .tracker-fields{grid-template-columns:1fr}
+}
+
+.goal-drag-handle{touch-action:none;cursor:grab;user-select:none}
+.goal-drag-handle[data-dragging=true]{cursor:grabbing}
+.goal-card:has(.goal-drag-handle[data-dragging=true]){opacity:.65}
+.goal-cards-compact .goal-card[data-drop-target=true]{outline:2px dashed var(--primary);outline-offset:3px}
+.goal-card:focus-visible{outline:2px solid var(--ring);outline-offset:3px}

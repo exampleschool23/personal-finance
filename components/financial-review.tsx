@@ -1,6 +1,8 @@
 "use client";
 import { useState } from 'react';
 import Link from 'next/link';
+import { ChartNoAxesCombined, ChevronDown, Plus } from 'lucide-react';
+import { categoryColor } from '@/lib/category-colors';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
 import { DatePicker } from '@/components/date-picker';
@@ -24,13 +26,37 @@ export function AccountForecast({data,tools}:{data:PlanningData;tools:ToolsContr
  {!forecast.accounts.length&&<Link href="/accounts">{t('Add account')}</Link>}{error&&<p className="error" role="alert">{t(error)}</p>}
  </section>;
 }
-export function MonthlyReview({data,tools,snapshots,historyError,currencies,currency}:{data:PlanningData;tools:ToolsController;snapshots:PortfolioSnapshot[];historyError:string;currencies:string[];currency:string}){
- const {t,locale}=useLanguage();const today=depositToday();const [date,setDate]=useState(today),[selected,setSelected]=useState(currency);const month=date.slice(0,7);const result=monthlyReview(data.records,tools.data.splits,snapshots,month,selected,today);
- const priorDate=new Date(month+'-01T00:00:00Z');priorDate.setUTCMonth(priorDate.getUTCMonth()-1);const previous=monthlyReview(data.records,tools.data.splits,snapshots,priorDate.toISOString().slice(0,7),selected,today);
- const money=(amount:number)=>formatMoney(amount,selected,locale);
- return <section className="panel tools-panel"><div className="review-heading"><div><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2><p className="muted">{t('Actual transactions in the selected currency only. Recurring plans are excluded. Savings means income minus expenses; principal repayments are not expenses.')}</p></div><div className="inline-tool-form"><label>{t('Month')}<DatePicker value={date} max={today} onChange={setDate}/></label><label>{t('Currency')}<NativeSelect value={selected} onChange={event=>setSelected(event.target.value)}>{[...new Set([...currencies,selected,...data.records.map(record=>record.currency)])].map(code=><option key={code}>{code}</option>)}</NativeSelect></label></div></div>
- <div className="review-grid">{[{label:'Income received',value:result.received,previous:previous.received},{label:'Actual spending',value:result.spent,previous:previous.spent},{label:'Income minus expenses',value:result.saved,previous:previous.saved}].map(item=><article key={item.label}><h3>{t(item.label)}</h3><strong>{money(item.value)}</strong><p>{t('Previous month')}: {money(item.previous)}</p></article>)}<article><h3>{t('Net-worth change')}</h3><strong>{historyError?'—':result.netWorthChange===null?'—':money(result.netWorthChange)}</strong><p>{!historyError&&result.netWorthChange!==null?t('Observed between {from} and {to}',{from:formatDate(result.from!,locale),to:formatDate(result.to!,locale)}):t('Two recorded balances are needed to show a change.')}</p></article></div>
- <p className="muted">{t('The current month includes transactions through today; the previous month is a full month. Net-worth observations may not fall on month boundaries.')}</p>
- <details><summary>{t('Spending by category')}</summary>{tools.error?<p className="error">{t(tools.error)} <Button onClick={tools.retry}>{t('Retry')}</Button></p>:<ul className="tool-list">{result.categories.map(category=><li key={category.id}><CategoryBadge kind={category.id} label={data.categories.find(item=>item.id===category.id)?.name??t(category.id)}/><strong>{money(category.amount)}</strong></li>)}</ul>}</details>
+export function MonthlyReview({data,tools,snapshots,historyError,currency,onAddExpense}:{data:PlanningData;tools:ToolsController;snapshots:PortfolioSnapshot[];historyError:string;currency:string;onAddExpense?:()=>void}){
+ const {t,locale}=useLanguage();
+ const today=depositToday();
+ const [date,setDate]=useState(today);
+ const month=date.slice(0,7);
+ const result=monthlyReview(data.records,tools.data.splits,snapshots,month,currency,today);
+ const priorDate=new Date(month+'-01T00:00:00Z');priorDate.setUTCMonth(priorDate.getUTCMonth()-1);
+ const previous=monthlyReview(data.records,tools.data.splits,snapshots,priorDate.toISOString().slice(0,7),currency,today);
+ const money=(amount:number)=>formatMoney(amount,currency,locale);
+ const categories=result.categories.filter(category=>category.amount>0);
+ return <section className="panel tools-panel monthly-review">
+  <header className="monthly-review-heading">
+   <div><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2><p className="muted">{t('Recorded income and expenses in {currency}. Recurring plans are shown separately.',{currency})}</p></div>
+   <label>{t('Month')}<DatePicker value={date} max={today} onChange={setDate}/></label>
+  </header>
+  <div className="review-grid monthly-review-metrics">{[
+   {label:'Income received',value:result.received,previous:previous.received},
+   {label:'Actual spending',value:result.spent,previous:previous.spent},
+   {label:'Income minus expenses',value:result.saved,previous:previous.saved},
+  ].map(item=><article key={item.label}><h3>{t(item.label)}</h3><strong className={item.value<0?'negative':undefined}>{money(item.value)}</strong><p className="muted">{t('Previous month')}: {money(item.previous)}</p></article>)}</div>
+  <section className="monthly-review-categories" aria-label={t('Spending by category')}>
+   <h3>{t('Spending by category')}</h3>
+   {tools.error ? <div className="error" role="alert"><p>{t('Category breakdown could not be loaded. Please try again.')}</p><p>{t(tools.error)}</p><Button type="button" variant="outline" onClick={tools.retry}>{t('Retry')}</Button></div>
+    : tools.loading ? <p className="muted" role="status">{t('Loading spending categories…')}</p>
+    : categories.length>0 ? <ul className="monthly-category-list">{categories.map(category=><li key={category.id}>
+      <div><CategoryBadge kind={category.id} label={data.categories.find(item=>item.id===category.id)?.name??t(category.id)}/><strong>{money(category.amount)}</strong></div>
+      <div className="monthly-category-track" aria-hidden="true"><span style={{width:`${Math.min(100,category.amount/result.spent*100)}%`,background:categoryColor(category.id)}}/></div>
+     </li>)}</ul>
+    : <div className="monthly-review-empty"><ChartNoAxesCombined size={24} aria-hidden="true"/><div><strong>{t('No recorded spending this month')}</strong><p>{t('No expense transactions were recorded in {currency} for {month}. Recurring plans appear here only after a payment is recorded.',{currency,month:formatMonthYear(month,locale)})}</p>{onAddExpense&&<Button type="button" variant="outline" onClick={onAddExpense}><Plus size={16} aria-hidden="true"/>{t('Add expense')}</Button>}</div></div>}
+  </section>
+  <div className="monthly-review-net-worth"><strong>{t('Net-worth change')}: {historyError||result.netWorthChange===null?'—':money(result.netWorthChange)}</strong><p className="muted">{historyError?t('Net-worth history could not be loaded.'):result.netWorthChange!==null?t('Observed between {from} and {to}',{from:formatDate(result.from!,locale),to:formatDate(result.to!,locale)}):t('Two recorded balances are needed to show a change.')}</p></div>
+  <details className="monthly-review-method"><summary><span>{t('How this review is calculated')}</span><ChevronDown size={16} aria-hidden="true"/></summary><p className="muted">{t('Actual transactions in the selected currency only. Recurring plans are excluded. Savings means income minus expenses; principal repayments are not expenses.')}</p><p className="muted">{t('The current month includes transactions through today; the previous month is a full month. Net-worth observations may not fall on month boundaries.')}</p></details>
  </section>;
 }
