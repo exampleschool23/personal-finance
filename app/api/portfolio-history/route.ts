@@ -23,8 +23,8 @@ export async function GET() {
    const ids = records.slice(offset, offset + 100).map(record => record.id).join(',');
    events.push(...await readAll<HistoryEvent>(`/rest/v1/investment_history?record_id=in.(${ids})&select=*&order=occurred_on.asc,created_at.asc,id.asc`, auth.token));
   }
-  const cashflows = await readAll<Entry>('/rest/v1/finance_records?kind=in.(Salary,Rent%20income,Other%20income,Rent%20expense,Living%20expense,Charity,Other%20expense)&frequency=eq.Once&select=*&order=date.asc,id.asc', auth.token);
-  const recurringIncome = await readAll<Entry>('/rest/v1/finance_records?kind=in.(Salary,Rent%20income,Other%20income)&frequency=neq.Once&select=*&order=date.asc,id.asc', auth.token);
+  const cashflows = await readAll<Entry>('/rest/v1/finance_records?kind=in.(Salary,Rent%20income,Business%20income,Other%20income,Rent%20expense,Living%20expense,Charity,Other%20expense)&frequency=eq.Once&select=*&order=date.asc,id.asc', auth.token);
+  const recurringIncome = await readAll<Entry>('/rest/v1/finance_records?kind=in.(Salary,Rent%20income,Business%20income,Other%20income)&frequency=neq.Once&select=*&order=date.asc,id.asc', auth.token);
   const incomeRecords = [...cashflows.filter(record => income.includes(record.kind)), ...recurringIncome];
   return Response.json({ records, events, cashflows, incomeRecords }, { headers: { 'Cache-Control': 'no-store' } });
  } catch {

@@ -24,6 +24,11 @@ test('deleting tracker updates restores ownership and valuation, reverses exact 
  const baseline=(await db.query("SELECT id FROM investment_history WHERE record_id=$1 AND event_type='baseline'",[id(10)])).rows[0].id;
  await assert.rejects(db.query('SELECT delete_tracker_update($1,$2)',[baseline,id(10)]),/cannot be deleted/);
  await assert.rejects(db.query('DELETE FROM investment_history'),/permission denied/);
+ await save(23,null);assert.equal(await amount(10),160000000);
+ assert.equal((await db.query('SELECT balance FROM investment_history WHERE id=$1',[id(23)])).rows[0].balance,null);
+ await save(24,155000000);
+ await remove(23);assert.equal(await amount(10),155000000);
+ await remove(24);assert.equal(await amount(10),160000000);
  await save(22,150000000);
  await db.exec(`RESET ROLE;INSERT INTO investment_account_links(id,user_id,account_id,amount,account_currency) VALUES('${id(22)}','${id(1)}','${id(11)}',2000,'USD');SET ROLE authenticated;SET request.jwt.claim.sub='${id(1)}';`);
  await assert.rejects(remove(22),/invalid balance/);assert.equal(await amount(10),150000000);assert.equal(await amount(11),1000);

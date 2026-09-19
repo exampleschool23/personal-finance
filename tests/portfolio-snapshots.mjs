@@ -21,16 +21,25 @@ test('missing FX or live quotes never save partial or stale-priced totals',()=>{
  assert.equal(snapshotTotals([cash],{quotes:{},fx:null}),null);
  assert.equal(snapshotTotals([{...btc,quantity:0}],{quotes:{},fx:null}).assets,0);
 });
-test('snapshots retain historical currency rates and merge ahead of reconstructed balances',()=>{
+test('observations retain historical currency rates without overriding dated corrections',()=>{
  const history=[{occurred_on:'2026-09-17',assets:100,debt:20,rates:{USD:1,UZS:12000},updated_at:'2026-09-17T12:00:00Z'}];
  assert.deepEqual(snapshotPoints(history,'UZS'),[{date:'2026-09-17',assets:1200000,debt:240000,net:960000}]);
  assert.deepEqual(snapshotPoints(history,'EUR'),[]);
  const current={date:'2026-09-18',assets:150,debt:20,net:130};
- const points=mergePortfolioPoints([{date:'2026-09-17',assets:1,debt:0,net:1}],snapshotPoints(history,'USD'),current);
+ const points=mergePortfolioPoints([{date:'2026-09-17',assets:1,debt:0,net:1}],snapshotPoints(history,'USD'),current,'observed');
  assert.deepEqual(points,[{date:'2026-09-17',assets:100,debt:20,net:80},current]);
  assert.deepEqual(mergePortfolioPoints([],[],current),[current]);
 });
 test('initial chart draws a starting line without fabricating a second dated balance',()=>{
  const ui=fs.readFileSync('components/portfolio-overview.tsx','utf8');
  assert.ok(ui.includes('onlyPoint ? startingDot'));assert.ok(!ui.includes('Your first snapshot is ready'));assert.ok(ui.includes('mergePortfolioPoints'));
+});
+
+test('default dated history includes backdated car debt instead of an incomplete daily total',()=>{
+ const recorded=[{date:'2026-09-17',assets:398000,debt:99251,net:298749},{date:'2026-09-18',assets:398000,debt:92021,net:305979}];
+ const old=[{date:'2026-09-17',assets:397894,debt:87000,net:310894}];
+ const current={date:'2026-09-19',assets:398195,debt:92021,net:306174};
+ assert.deepEqual(mergePortfolioPoints(recorded,old,current),[...recorded,current]);
+ assert.deepEqual(mergePortfolioPoints([],old,current),[current]);
+ assert.deepEqual(mergePortfolioPoints(recorded,old,current,'observed'),[...old,current]);
 });

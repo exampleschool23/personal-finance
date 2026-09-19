@@ -31,9 +31,10 @@ export function snapshotPoints(snapshots:PortfolioSnapshot[],currency:string):Po
  });
 }
 
-export function mergePortfolioPoints(recorded:PortfolioPoint[],snapshots:PortfolioPoint[],current:PortfolioPoint){
+export function mergePortfolioPoints(recorded:PortfolioPoint[],snapshots:PortfolioPoint[],current:PortfolioPoint,source:'recorded'|'observed'='recorded'){
  const byDate=new Map<string,PortfolioPoint>();
- // Dated market snapshots take precedence over manual balance reconstructions.
- for(const point of [...recorded,...snapshots,current])if(point.date<=current.date)byDate.set(point.date,point);
+ // Aggregate observations cannot be reconciled after records are added or
+ // backdated. Keep them separate instead of overriding dated balances.
+ for(const point of [...(source==='recorded'?recorded:snapshots),current])if(point.date<=current.date)byDate.set(point.date,point);
  return [...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date));
 }

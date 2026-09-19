@@ -2,12 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
+import {expenses,liabilities} from '../lib/finance.ts';
 import {investmentKinds} from '../lib/comparison-profile.ts';
 import * as dates from '../lib/benchmark-data.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const deps={...dates};
 const {convertHistorical,compareInvestments,percentagePerformance}=new Function(...Object.keys(deps),compile('lib/investment-comparison.ts')+';return {convertHistorical,compareInvestments,percentagePerformance};')(...Object.values(deps));
-const performance=new Function('investmentKinds','convertHistorical','shiftDay',compile('lib/actual-investment-performance.ts')+';return actualInvestmentPerformance;')(investmentKinds,convertHistorical,dates.shiftDay);
+const performance=new Function('expenses','liabilities','investmentKinds','convertHistorical','shiftDay',compile('lib/actual-investment-performance.ts')+';return actualInvestmentPerformance;')(expenses,liabilities,investmentKinds,convertHistorical,dates.shiftDay);
 const holding={id:'cafe',kind:'Business',currency:'USD',balance:400};
 const records=[{id:'cafe',kind:'Business',currency:'USD'},{id:'cash',kind:'Cash',currency:'USD'},{id:'loan',kind:'Loan',currency:'USD'}];
 const event=(type,date,amount,balance,id='cafe')=>({id:type+date,record_id:id,event_type:type,occurred_on:date,created_at:date+'T12:00:00Z',amount,balance,ownership_percentage:100});
@@ -22,7 +23,7 @@ test('money added is capital and withdrawals preserve realized profit, including
  const sim=compareInvestments(0,result.flows,result.points,{start:result.start,end:'2026-09-03',fx:[],prices:{},errors:{}},'USD',true);
  const last=percentagePerformance(sim.points,result.flows).at(-1);
  assert.equal(sim.points.at(-1).actual-sim.points.at(-1).contributed,90);
- assert.equal(last.invested,500);assert.equal(last.contributed,-100);assert.equal(last.actual,18);
+ assert.equal(last.invested,510);assert.equal(last.contributed,-90);near(last.actual,90/510*100);
 });
 test('two purchases buy BTC at their own prices and show monetary values and the shortfall',()=>{
  const result=performance(records,[event('contribution','2026-09-01',1000,1000),event('contribution','2026-09-02',500,1500),event('valuation','2026-09-03',0,1700)],[{...holding,balance:1700}],[],'USD','2026-09-03');
@@ -83,4 +84,44 @@ test('benchmark presentation uses monetary values throughout and includes origin
  assert.ok(!source.includes('percentagePerformance'));
  assert.ok(!source.includes('tickFormatter={percent}'));
  assert.ok(!source.includes('percentage points'));
+});
+
+test('only the 7500 mortgage payment funds alternatives; salary, leisure and charity are excluded',()=>{
+ const mortgage={id:'mortgage',kind:'Mortgage',currency:'USD'};
+ const payment={...event('mortgage_payment','2026-09-01',7500,92500,'mortgage'),principal:7000,interest:500};
+ const personal=[{id:'pay',kind:'Salary',amount:10000},{id:'fun',kind:'Living expense',amount:2000},{id:'charity',kind:'Charity',amount:500}].map(row=>({...row,currency:'USD',date:'2026-09-01',frequency:'Once'}));
+ const result=performance([mortgage],[event('baseline','2026-08-01',0,100000,'mortgage'),payment],[],[],'USD','2026-09-02',personal);
+ assert.equal(result.start,'2026-09-01');assert.deepEqual(result.flows,[{date:'2026-09-01',amount:7500}]);assert.equal(result.points.at(-1).amount,7000);assert.equal(result.missing,false);
+ const data={start:result.start,end:'2026-09-02',fx:[{date:'2026-09-01',rates:{USD:1,UZS:12000}}],prices:{BTC:[{date:'2026-09-01',close:100},{date:'2026-09-02',close:110}],SPY:[{date:'2026-09-01',close:200},{date:'2026-09-02',close:202}]},errors:{}};
+ const last=compareInvestments(0,result.flows,result.points,data,'USD',true).points.at(-1);
+ near(last.BTC,8250);near(last.SPY,7575);near(last.depositUSD,7500*1.08**(1/365));near(last.depositUZS,7500*1.21**(1/365));assert.equal(last.actual-last.contributed,-500);
+});
+test('6000 game club, 2000 solar and 2000 cafe share dated capital; later value increases are gains',()=>{
+ const rs=['club','solar','cafe'].map(id=>({id,kind:'Business',currency:'USD'}));
+ const ev=[event('contribution','2026-09-01',6000,6000,'club'),event('contribution','2026-09-02',2000,2000,'solar'),event('contribution','2026-09-03',2000,2000,'cafe'),event('valuation','2026-09-04',0,8000,'club')];
+ const live=rs.map(row=>({...row,balance:row.id==='club'?8000:2000}));
+ const result=performance(rs,ev,live,[],'USD','2026-09-05');
+ assert.deepEqual(result.flows.map(row=>row.amount),[6000,2000,2000]);assert.equal(result.points[2].amount,10000);assert.equal(result.points[3].amount,12000);assert.equal(result.points[4].amount,12000);
+ const subset=performance(rs.filter(row=>row.id==='solar'),ev,live,[],'USD','2026-09-05');assert.deepEqual(subset.flows,[{date:'2026-09-02',amount:2000}]);
+});
+test('business spending funds alternatives once, preserves currency and ownership, and excludes plans and unrelated owners',()=>{
+ const rows=[{id:'pc',business_id:'cafe',kind:'Other expense',amount:150000000,currency:'UZS',date:'2026-09-02',frequency:'Once'},
+ {id:'copy',business_id:'cafe',kind:'Other expense',amount:100,currency:'USD',date:'2026-09-02',frequency:'Once',history_event_id:'cost'},
+ {id:'plan',business_id:'cafe',kind:'Other expense',amount:999,currency:'USD',date:'2026-09-02',frequency:'Monthly'},
+ {id:'other',business_id:'other-owner',kind:'Other expense',amount:999,currency:'USD',date:'2026-09-02',frequency:'Once'},
+ {id:'income',business_id:'cafe',kind:'Business income',amount:50,currency:'USD',date:'2026-09-03',frequency:'Once'}];
+ const result=performance(records,[opening,event('expense','2026-09-02',100,null),{...event('valuation','2026-09-03',0,30800),ownership_percentage:50}],[{...holding,balance:15400}],[{date:'2026-09-01',rates:{USD:1,UZS:10000}}],'USD','2026-09-03',rows);
+ assert.equal(result.flows.reduce((sum,row)=>sum+row.amount,0),15500);assert.equal(result.points.at(-1).amount,15450);assert.equal(result.distributed,50);
+ const bad=performance(records,[opening],[holding],[],'USD','2026-09-03',rows);assert.equal(bad.missing,true);
+});
+test('debt repayments retain principal at dated FX, without counting borrowing or corrections as investment',()=>{
+ const debt={id:'debt',kind:'Debt',currency:'UZS'};
+ const ev=[event('contribution','2026-09-01',1000000,1000000,'debt'),event('withdrawal','2026-09-02',500000,500000,'debt'),event('valuation','2026-09-03',0,1,'debt')];
+ const fx=[{date:'2026-09-01',rates:{USD:1,UZS:10000}},{date:'2026-09-03',rates:{USD:1,UZS:20000}}];
+ const result=performance([debt],ev,[],fx,'USD','2026-09-03');assert.equal(result.start,'2026-09-02');assert.deepEqual(result.flows,[{date:'2026-09-02',amount:50}]);assert.equal(result.points.at(-1).amount,25);
+ const malformed=performance([{...debt,kind:'Mortgage'}],[{...event('mortgage_payment','2026-09-02',100,null,'debt'),principal:200,interest:0}],[],fx,'USD','2026-09-03');assert.equal(malformed.missing,true);
+});
+test('cash-only purchase followed by a starting valuation does not duplicate opening capital',()=>{
+ const result=performance(records,[event('contribution','2026-09-01',400,null),event('baseline','2026-09-02',0,450)],[{...holding,balance:450}],[],'USD','2026-09-03');
+ assert.deepEqual(result.flows,[{date:'2026-09-01',amount:400}]);assert.equal(result.points.at(-1).amount,450);assert.equal(result.points[0].amount,null);assert.equal(result.missing,false);
 });

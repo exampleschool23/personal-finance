@@ -22,3 +22,31 @@ test('record API rejects missing accounts before database writes, including edit
  const plan=await POST(new Request('https://local/api/records',{method:'POST',body:JSON.stringify({...record,frequency:'Monthly'})}));
  assert.equal(plan.status,200);assert.equal(calls,1);
 });
+
+test('all tracker cash actions require an account; valuations remain cash-free',async()=>{
+ const calls=[];
+ const {POST}=loadTS('app/api/investment-history/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner'}),sameOrigin:()=>true,supa:async(path,init,token)=>{calls.push({path,payload:JSON.parse(init.body),token});return Response.json({ok:true});}}});
+ const base={id:'53000000-0000-4000-8000-000000000001',record_id:'53000000-0000-4000-8000-000000000002',date:'2026-09-18',amount:100.125,balance:null,notes:''};
+ const request=data=>new Request('https://local/api/investment-history',{method:'POST',body:JSON.stringify(data)});
+ for(const type of ['contribution','withdrawal','income','expense']){
+  const r=await POST(request({...base,type}));assert.equal(r.status,400);assert.equal((await r.json()).error,'Choose a cash account.');
+ }
+ assert.equal(calls.length,0);
+ for(const type of ['contribution','withdrawal','income','expense']){
+  const account_id='53000000-0000-4000-8000-000000000003';
+  assert.equal((await POST(request({...base,type,account_id}))).status,200);
+  assert.equal(calls.at(-1).path,'/rest/v1/rpc/record_investment_with_account');assert.equal(calls.at(-1).payload.p_account,account_id);assert.equal(calls.at(-1).payload.p_amount,100.125);assert.equal(calls.at(-1).token,'owner');
+ }
+ assert.equal((await POST(request({...base,type:'valuation',amount:0,balance:80000000}))).status,200);
+ assert.equal(calls.at(-1).path,'/rest/v1/rpc/record_investment_event');
+});
+
+test('mortgage payments cannot skip the cash account',async()=>{
+ const calls=[];
+ const {POST}=loadTS('app/api/mortgage-payments/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner'}),sameOrigin:()=>true,supa:async(path,init)=>{calls.push({path,data:JSON.parse(init.body)});return Response.json({ok:true});}}});
+ const base={id:'53000000-0000-4000-8000-000000000001',mortgage_id:'53000000-0000-4000-8000-000000000002',principal:100.125,interest:10.25,date:'2026-09-18',notes:''};
+ const request=data=>new Request('https://local/api/mortgage-payments',{method:'POST',body:JSON.stringify(data)});
+ const rejected=await POST(request(base));assert.equal(rejected.status,400);assert.equal((await rejected.json()).error,'Choose a cash account.');assert.equal(calls.length,0);
+ assert.equal((await POST(request({...base,account_id:'53000000-0000-4000-8000-000000000003'}))).status,200);
+ assert.equal(calls[0].path,'/rest/v1/rpc/planning_action');assert.equal(calls[0].data.p_data.amount,100.125);assert.equal(calls[0].data.p_data.fee,10.25);
+});

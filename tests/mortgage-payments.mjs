@@ -11,10 +11,10 @@ const api=new Function('z','session','supa','sameOrigin',js+';return {POST};')(z
 const body={id:'10000000-0000-4000-8000-000000000001',mortgage_id:'10000000-0000-4000-8000-000000000002',principal:506.79,interest:1062.31,date:'2025-11-05',notes:''};
 const request=data=>new Request('https://app.local/api/mortgage-payments',{method:'POST',headers:{origin:'https://app.local','Content-Type':'application/json'},body:JSON.stringify(data)});
 test('submits one atomic RPC under the signed-in user token',async()=>{
- calls=[];assert.equal((await api.POST(request(body))).status,200);
+ calls=[];assert.equal((await api.POST(request({...body,account_id:'10000000-0000-4000-8000-000000000003'}))).status,200);
  assert.equal(calls.length,1);assert.equal(calls[0].token,'owner-token');
- assert.equal(calls[0].path,'/rest/v1/rpc/record_mortgage_payment');
- assert.equal(JSON.parse(calls[0].init.body).p_principal,506.79);
+ assert.equal(calls[0].path,'/rest/v1/rpc/planning_action');
+ assert.equal(JSON.parse(calls[0].init.body).p_data.amount,506.79);
 });
 test('rejects empty, negative, invalid dates, oversized and unauthenticated payments',async()=>{
  for(const patch of [{principal:0,interest:0},{principal:-1},{interest:-1},{date:'2026-02-30'},{id:'bad'},{principal:1e15,interest:1}])assert.equal((await api.POST(request({...body,...patch}))).status,400);

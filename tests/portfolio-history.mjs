@@ -52,6 +52,12 @@ test('portfolio chart connects observations and scales the chosen series', () =>
  assert.match(ui,/useState<[^;]+>\('net'\)/);
  assert.match(ui,/portfolioChartDomain\(visible, chartKeys\)/);
  assert.match(ui,/domain=\{chartDomain\}/);
- assert.equal((ui.match(/type="linear"/g)||[]).length,3);
- assert.doesNotMatch(ui,/stepAfter/);
+ assert.equal((ui.match(/type=\{historyMode==='recorded'\?'stepAfter':'linear'\}/g)||[]).length,3);
+ assert.match(ui,/useState<'recorded'\|'observed'>\('recorded'\)/);
+});
+
+test('dated PC purchase transfers cash without creating net worth; breeding valuation changes only its day',()=>{
+ const rows=[record('cash','Cash'),record('club','Business'),record('sheep','Business'),record('debt','Debt')];
+ const result=portfolioHistory(rows,[event('cash','2026-09-01',20000),event('club','2026-09-01',10000),event('sheep','2026-09-01',1000),event('debt','2026-08-01',5000),event('cash','2026-09-02',5000),event('club','2026-09-02',25000),event('sheep','2026-09-03',1500)],'USD',undefined,'2026-09-04');
+ assert.deepEqual(result.points.map(p=>[p.date,p.net]),[['2026-09-01',26000],['2026-09-02',26000],['2026-09-03',26500]]);
 });

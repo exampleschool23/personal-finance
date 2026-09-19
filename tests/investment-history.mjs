@@ -27,8 +27,8 @@ const api=new Function('z','session','supa','sameOrigin',js+';return {GET,POST};
 const body={id:'10000000-0000-4000-8000-000000000001',record_id:'10000000-0000-4000-8000-000000000002',type:'income',date:'2026-01-01',amount:400,balance:null,notes:'Rent'};
 const request=patch=>new Request('https://local/api/investment-history',{method:'POST',headers:{origin:'https://local','Content-Type':'application/json'},body:JSON.stringify({...body,...patch})});
 test('saves a cash receipt through the owner-scoped atomic RPC with a stable request id',async()=>{
- calls=[];assert.equal((await api.POST(request({}))).status,200);
- assert.equal(calls[0].token,'owner-token');assert.equal(calls[0].path,'/rest/v1/rpc/record_investment_event');assert.equal(JSON.parse(calls[0].init.body).p_id,body.id);
+ calls=[];assert.equal((await api.POST(request({account_id:'10000000-0000-4000-8000-000000000003'}))).status,200);
+ assert.equal(calls[0].token,'owner-token');assert.equal(calls[0].path,'/rest/v1/rpc/record_investment_with_account');assert.equal(JSON.parse(calls[0].init.body).p_id,body.id);
 });
 test('principal additions and repayments send an amount without a client-supplied balance',async()=>{
  for(const type of ['contribution','withdrawal']){
