@@ -29,7 +29,7 @@ import { RecentlyDeleted } from '@/components/recently-deleted';
 import type { DeletedItem } from '@/lib/deleted-items';
 import { StopScheduleDialog } from '@/components/stop-schedule-dialog';
 import { LoadingPlaceholder, WorkspaceSkeleton } from '@/components/loading-placeholder';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, useRef, useEffectEvent } from 'react';
 import { ArrowUpRight, ArrowDownLeft, GitCompareArrows, ChartNoAxesCombined, Wallet, ShieldCheck, LayoutDashboard, Landmark, HandCoins, Plus, LogOut, Pencil, Trash2, ChevronRight, Building2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -81,12 +81,16 @@ export default function FinanceWorkspace() {
 
 function WorkspaceContent() {
     const pathname = usePathname();
+    const router = useRouter();
     const section = sections.find(([, , path]) => path === pathname)?.[0] || 'Overview';
     const { t, locale, setDefaultLanguage, setLanguage } = useLanguage();
     const formatDate = (value: string) => sharedFormatDate(value, locale);
     const preferences = <div className="preferences"><LanguageSelector /><ThemeToggle /></div>;
     const [user, setUser] = useState<string | null>(null), [ready, setReady] = useState(false), [configured, setConfigured] = useState(true), [demo, setDemo] = useState(false), [rows, setRows] = useState<Entry[]>([]), [currency, setCurrency] = useState<string>('USD'), [editing, setEditing] = useState<Entry | null>(null), [deleting, setDeleting] = useState<Entry | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
     const [preferencesData, setPreferencesData] = useState<Preferences>(defaultPreferences);
+    useEffect(() => {
+        if (ready && !user && !demo && pathname !== '/') router.replace('/');
+    }, [ready, user, demo, pathname, router]);
     const [settingsLoading, setSettingsLoading] = useState(true);
     const [settingsError, setSettingsError] = useState('');
     const [settingsRevision,setSettingsRevision]=useState(0);
@@ -338,7 +342,7 @@ function WorkspaceContent() {
         }
     } clearLocalSession(); }
     const brand = <div className="brand"><span className="mark">h.</span><span>HOGGISH<small className="block">{t("PERSONAL FINANCE")}</small></span></div>;
-    if (!ready)
+    if (!ready || (!user && !demo && pathname !== '/'))
         return <main className="session-loading" aria-busy="true">{brand}<LoadingPlaceholder label={t("Loading your workspace…")} rows={3}/></main>;
     if (!user && !demo)
         return <main className="login"><section className="intro">{brand}<div><p className="eyebrow">{t("YOUR MONEY. THE WHOLE PICTURE.")}</p><h1>{t("A clear view.")}<br />{t("A stronger future.")}</h1><p className="lede">{t("From your next payday to your long-term investments.")}<br />{t("Keep your financial life in one place.")}</p><div className="feature-row"><Wallet /><span>{t("Multiple currencies")}</span><ChartNoAxesCombined /><span>{t("Assets & investments")}</span></div></div><p className="muted">{t("Personal finance, thoughtfully organized.")}</p></section><section className="login-panel"><div className="login-preferences">{preferences}</div><div className="login-box"><ShieldCheck className="login-icon"/><p className="eyebrow">{t("YOUR PRIVATE WORKSPACE")}</p><h2>{t("Welcome back.")}</h2><p className="muted">{t("Sign in to your financial overview.")}</p><form action="/api/auth/google" method="post" className="google-form"><Button type="submit" variant="outline" className="google-button" disabled={busy || !ready || !configured}>{t("Continue with Google")}</Button></form><div className="login-divider"><span>{t("or sign in with email")}</span></div><form onSubmit={login}><label>{t("Email address")}<Input name="email" type="email" placeholder="you@example.com" required autoComplete="username"/></label><label>{t("Password")}<Input name="password" type="password" placeholder={t("Enter your password")} required autoComplete="current-password"/></label><Button className="primary" disabled={busy || !ready || !configured}>{busy ? t("Signing in…") : t("Sign in")} <ArrowUpRight size={18}/></Button></form>{error && <p className="error" role="alert">{t(error)}</p>}{ready && !configured && <p className="setup-note">{t("Account connection is awaiting setup. You can explore the sample workspace below.")}</p>}<Button variant="ghost" className="demo-button" onClick={() => { setRows(withAssetIncomePlans(sample())); setDemo(true); setError(''); }}>{t("Explore sample workspace")} <ChevronRight size={16}/></Button><Link href="/auth/access">{t("Create account or recover access")}</Link><p className="login-note">{t("Registration availability is shown on the account access page.")}</p></div></section></main>;
