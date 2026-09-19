@@ -6,8 +6,8 @@ test('category deletion is atomic, reassigns every reference, preserves amounts,
  const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
  try{
  await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${id(1)}'),('${id(2)}');`);
- const setup=fs.readFileSync('database/setup.sql','utf8'),migration=fs.readFileSync('migrations/051_category_deletion.sql','utf8');assert.ok(setup.endsWith(migration));
- await db.exec(setup.slice(0,-migration.length));await db.exec(migration);
+ const setup=fs.readFileSync('database/setup.sql','utf8'),migration=fs.readFileSync('migrations/051_category_deletion.sql','utf8');const migrationStart=setup.indexOf(migration);assert.ok(migrationStart>=0);
+ await db.exec(setup.slice(0,migrationStart));await db.exec(migration);await db.exec(setup.slice(migrationStart+migration.length));
  await db.exec(`SET ROLE authenticated;SET request.jwt.claim.sub='${id(1)}';`);
  const category=(n,name,direction='expense')=>db.query("SELECT planning_action('category',$1)",[{id:id(n),name,direction}]);
  await category(10,'Leisure');await category(11,'Travel');await category(12,'Freelance','income');await category(13,'Unused');

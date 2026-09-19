@@ -2,10 +2,10 @@ import { session } from '@/lib/supabase';
 import { depositToday } from '@/lib/deposit-interest';
 import { checkpointDates, dateMillis, dayMillis, shiftDay, validDay, type BenchmarkData, type PricePoint, type FxPoint } from '@/lib/benchmark-data';
 
-async function read(url: string): Promise<unknown> {
+async function read(url: string, fresh = false): Promise<unknown> {
  for (let attempt = 0; attempt < 2; attempt++) {
   try {
-   const response = await fetch(url, { next: { revalidate: 3600 }, signal: AbortSignal.timeout(6000) });
+   const response = await fetch(url, { ...(fresh ? { cache: 'no-store' as const } : { next: { revalidate: 3600 } }), signal: AbortSignal.timeout(6000) });
    if (response.ok) return await response.json();
    if (attempt === 0 && (response.status === 429 || response.status >= 500)) {
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -32,17 +32,29 @@ async function stockHistory(symbol: string, start: string, end: string, key: str
  if (!prices.some(row => row.date <= start) || !prices.some(row => row.date >= shiftDay(end, -7))) throw Error('Incomplete history');
  return prices;
 }
-async function bitcoinHistory(start: string, end: string): Promise<PricePoint[]> {
+async function bitcoinProviderHistory(start: string, end: string, provider: 'coinbase' | 'bitfinex'): Promise<PricePoint[]> {
  const rows = new Map<string, PricePoint>();
  for (let cursor = shiftDay(start, -1); cursor <= end; cursor = shiftDay(cursor, 299)) {
   const last = shiftDay(cursor, 299) < shiftDay(end, 1) ? shiftDay(cursor, 299) : shiftDay(end, 1);
-  const params = new URLSearchParams({ granularity: '86400', start: cursor + 'T00:00:00Z', end: last + 'T00:00:00Z' });
-  const candles = await read('https://api.exchange.coinbase.com/products/BTC-USD/candles?' + params);
+  let candles: unknown;
+  if (provider === 'coinbase') {
+   const params = new URLSearchParams({ granularity: '86400', start: cursor + 'T00:00:00Z', end: last + 'T00:00:00Z' });
+   candles = await read('https://api.exchange.coinbase.com/products/BTC-USD/candles?' + params, true);
+  } else {
+   const params = new URLSearchParams({ start: String(dateMillis(cursor)), end: String(dateMillis(last) - 1), limit: '299', sort: '1' });
+   candles = await read('https://api-pub.bitfinex.com/v2/candles/trade:1D:tBTCUSD/hist?' + params, true);
+  }
   if (!Array.isArray(candles)) throw Error('Unavailable');
   for (const row of candles) {
-   if (!Array.isArray(row) || !Number.isFinite(row[0]) || !positive(row[4])) continue;
-   const date = new Date(row[0] * 1000).toISOString().slice(0, 10);
-   if (date >= shiftDay(start,-1) && date <= end) rows.set(date, { date, close: Number(row[4]) });
+   if (!Array.isArray(row)) continue;
+   const timestamp = row[0];
+   const close = row[provider === 'coinbase' ? 4 : 2];
+   if (!positive(timestamp) || !positive(close)) continue;
+   const millis = Number(timestamp) * (provider === 'coinbase' ? 1000 : 1);
+   // Reject malformed timestamps before constructing dates or accepting intraday rows.
+   if (!Number.isSafeInteger(millis) || millis % dayMillis !== 0 || millis < dateMillis(cursor) || millis >= dateMillis(last)) continue;
+   const date = new Date(millis).toISOString().slice(0, 10);
+   rows.set(date, { date, close: Number(close) });
   }
  }
  const openingDate=start===end&&end===depositToday()&&!rows.has(start)?shiftDay(start,-1):start;
@@ -50,6 +62,17 @@ async function bitcoinHistory(start: string, end: string): Promise<PricePoint[]>
  const lastDate=points.at(-1)?.date;
  if(points[0]?.date!==openingDate || !lastDate || (lastDate!==end && !(end===depositToday() && lastDate===shiftDay(end,-1))) || points.length!==Math.round((dateMillis(lastDate)-dateMillis(openingDate))/dayMillis)+1)throw Error('Incomplete history');
  return points;
+}
+async function bitcoinHistory(start: string, end: string): Promise<PricePoint[]> {
+ for (const provider of ['coinbase', 'bitfinex'] as const) {
+  try { return await bitcoinProviderHistory(start, end, provider); }
+  catch {
+   // Fetch the entire series from the fallback, avoiding artificial returns from
+   // mixing daily prices across exchanges. Do not log response bodies or URLs.
+   console.warn('Bitcoin history unavailable', provider, 'request_or_incomplete_history');
+  }
+ }
+ throw Error('Unavailable');
 }
 async function fxAt(date: string): Promise<FxPoint> {
  const rows = await read(`https://cbu.uz/ru/arkhiv-kursov-valyut/json/all/${date}/`);
@@ -92,6 +115,6 @@ export async function GET(req: Request) {
   });
   let index = 0;
   await Promise.all(Array.from({ length: 3 }, async () => { while (index < jobs.length) await jobs[index++](); }));
-  return Response.json(data, { headers: { 'Cache-Control': 'private, max-age=300' } });
+  return Response.json(data, { headers: { 'Cache-Control': Object.keys(data.errors).length ? 'private, no-store' : 'private, max-age=300' } });
  } catch { return Response.json({ error: 'Could not load comparisons.' }, { status: 503 }); }
 }

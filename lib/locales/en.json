@@ -1683,5 +1683,20 @@
   "Time buttons zoom the chart. Values always use your original investment amounts and dates.": "Time buttons zoom the chart. Values always use your original investment amounts and dates.",
   "Ahead / behind benchmark": "Ahead / behind benchmark",
   "Each benchmark shows what the same dated investments would be worth in your selected currency. The difference from your investments shows how much money you are ahead or behind. Investment gain is value including payouts minus net contributions.": "Each benchmark shows what the same dated investments would be worth in your selected currency. The difference from your investments shows how much money you are ahead or behind. Investment gain is value including payouts minus net contributions.",
-  "Compare what your investments are worth with the same money invested in benchmarks on the same dates.": "Compare what your investments are worth with the same money invested in benchmarks on the same dates."
+  "Compare what your investments are worth with the same money invested in benchmarks on the same dates.": "Compare what your investments are worth with the same money invested in benchmarks on the same dates.",
+  "Delete update": "Delete update",
+  "Deleting…": "Deleting…",
+  "Delete this tracker update?": "Delete this tracker update?",
+  "This removes the update and restores the previous recorded value and ownership. Any linked cash movement is reversed using its original amount. This cannot be undone from the app.": "This removes the update and restores the previous recorded value and ownership. Any linked cash movement is reversed using its original amount. This cannot be undone from the app.",
+  "Delete newer balance updates first. Starting snapshots and other transaction types are protected.": "Delete newer balance updates first. Starting snapshots and other transaction types are protected.",
+  "Tracker update not found.": "Tracker update not found.",
+  "This history entry cannot be deleted here.": "This history entry cannot be deleted here.",
+  "Delete newer balance updates first.": "Delete newer balance updates first.",
+  "Keep the starting snapshot.": "Keep the starting snapshot.",
+  "Linked cash account is unavailable or its currency changed.": "Linked cash account is unavailable or its currency changed.",
+  "The cash reversal would create an invalid balance.": "The cash reversal would create an invalid balance.",
+  "Enter updates on or after the latest balance date. Repayments cannot exceed the outstanding balance.": "Enter updates on or after the latest balance date. Repayments cannot exceed the outstanding balance.",
+  "Past valuations do not replace a newer balance. Business valuations use the current ownership share.": "Past valuations do not replace a newer balance. Business valuations use the current ownership share.",
+  "Past valuations do not replace a newer balance.": "Past valuations do not replace a newer balance.",
+  "Could not delete the update. Please try again.": "Could not delete the update. Please try again."
 }

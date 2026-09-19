@@ -1683,5 +1683,20 @@
   "Time buttons zoom the chart. Values always use your original investment amounts and dates.": "Davr tugmalari grafik ko‘lamini o‘zgartiradi. Hisob-kitob doim dastlabki investitsiya summalari va sanalaridan foydalanadi.",
   "Ahead / behind benchmark": "Mezondan oldinda / ortda",
   "Each benchmark shows what the same dated investments would be worth in your selected currency. The difference from your investments shows how much money you are ahead or behind. Investment gain is value including payouts minus net contributions.": "Har bir mezon ayni sanalardagi bir xil investitsiyalarning tanlangan valyutadagi qiymatini ko‘rsatadi. Farq qancha pulga oldinda yoki ortda ekaningizni bildiradi. Investitsiya foydasi — to‘lovlar bilan birga qiymatdan sof badallar ayirmasi.",
-  "Compare what your investments are worth with the same money invested in benchmarks on the same dates.": "Investitsiyalaringiz qiymatini ayni sanalarda mezonlarga kiritilgan bir xil mablag‘ qiymati bilan solishtiring."
+  "Compare what your investments are worth with the same money invested in benchmarks on the same dates.": "Investitsiyalaringiz qiymatini ayni sanalarda mezonlarga kiritilgan bir xil mablag‘ qiymati bilan solishtiring.",
+  "Delete update": "Yozuvni o‘chirish",
+  "Deleting…": "O‘chirilmoqda…",
+  "Delete this tracker update?": "Ushbu treker yozuvi o‘chirilsinmi?",
+  "This removes the update and restores the previous recorded value and ownership. Any linked cash movement is reversed using its original amount. This cannot be undone from the app.": "Yozuv o‘chiriladi, oldingi qiymat va egalik ulushi tiklanadi. Bog‘langan pul harakati asl summasi bo‘yicha qaytariladi. Ilovada o‘chirishni bekor qilib bo‘lmaydi.",
+  "Delete newer balance updates first. Starting snapshots and other transaction types are protected.": "Avval yangi balans yozuvlarini o‘chiring. Boshlang‘ich holat va boshqa operatsiya turlari himoyalangan.",
+  "Tracker update not found.": "Treker yozuvi topilmadi.",
+  "This history entry cannot be deleted here.": "Bu tarix yozuvini bu yerda o‘chirib bo‘lmaydi.",
+  "Delete newer balance updates first.": "Avval yangi balans yozuvlarini o‘chiring.",
+  "Keep the starting snapshot.": "Boshlang‘ich holatni saqlang.",
+  "Linked cash account is unavailable or its currency changed.": "Bog‘langan pul hisobi mavjud emas yoki valyutasi o‘zgargan.",
+  "The cash reversal would create an invalid balance.": "Pul harakatini qaytarish noto‘g‘ri balansga olib keladi.",
+  "Enter updates on or after the latest balance date. Repayments cannot exceed the outstanding balance.": "Yozuvlarni oxirgi balans sanasidan oldin kiritmang. To‘lov qarz qoldig‘idan oshmasligi kerak.",
+  "Past valuations do not replace a newer balance. Business valuations use the current ownership share.": "Oldingi baholar yangi balansni almashtirmaydi. Biznes baholari joriy egalik ulushidan foydalanadi.",
+  "Past valuations do not replace a newer balance.": "Oldingi baholar yangi balansni almashtirmaydi.",
+  "Could not delete the update. Please try again.": "Yozuv o‘chirilmadi. Qayta urinib ko‘ring."
 }

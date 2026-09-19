@@ -65,3 +65,74 @@ test('BTC comparison recovers from a temporary provider failure',async()=>{
   assert.equal(attempts,2);assert.equal(data.prices.BTC.length,4);assert.equal(data.errors.BTC,undefined);
  }finally{globalThis.fetch=original;}
 });
+
+test('BTC falls back to a complete Bitfinex USD series after HTTP errors or incomplete Coinbase history',async()=>{
+ const original=globalThis.fetch;
+ try{
+  for(const failure of ['http','gap']){
+   let fallbackCalls=0;
+   globalThis.fetch=async(raw,options)=>{
+    const url=new URL(raw);
+    if(url.hostname==='api.exchange.coinbase.com'){
+     assert.equal(options.cache,'no-store');
+     return failure==='http'?new Response('',{status:403}):Response.json([[dates.dateMillis('2026-09-14')/1000,0,0,0,99999,1]]);
+    }
+    if(url.hostname==='api-pub.bitfinex.com'){
+     fallbackCalls++;assert.equal(options.cache,'no-store');
+     assert.equal(url.pathname,'/v2/candles/trade:1D:tBTCUSD/hist');
+     assert.equal(url.searchParams.get('sort'),'1');
+     return Response.json(['2026-09-14','2026-09-15','2026-09-16','2026-09-17'].map(date=>[dates.dateMillis(date),40000,50000.12345678,60000,30000,1]));
+    }
+    return Response.json([{Ccy:'USD',Rate:'12000',Nominal:'1',Date:'14.09.2026'}]);
+   };
+   const data=await(await GET(request('start=2026-09-14&end=2026-09-17&benchmarks=BTC'))).json();
+   assert.equal(fallbackCalls,1);assert.equal(data.errors.BTC,undefined);assert.equal(data.prices.BTC.length,4);
+   assert.ok(data.prices.BTC.every(point=>point.close===50000.12345678));
+  }
+ }finally{globalThis.fetch=original;}
+});
+
+test('fallback paginates long BTC histories without gaps or duplicate days',async()=>{
+ const original=globalThis.fetch;let windows=[];
+ try{
+  globalThis.fetch=async raw=>{
+   const url=new URL(raw);
+   if(url.hostname==='api.exchange.coinbase.com')return Response.json([]);
+   if(url.hostname==='api-pub.bitfinex.com'){
+    const start=Number(url.searchParams.get('start')),end=Number(url.searchParams.get('end'));
+    windows.push([start,end]);assert.ok(end-start<299*dates.dayMillis);
+    const rows=[];for(let time=start;time<=end;time+=dates.dayMillis)rows.push([time,1,50000,1,1,1]);
+    return Response.json(rows.reverse());
+   }
+   return Response.json([{Ccy:'USD',Rate:'12000',Nominal:'1',Date:'01.01.2025'}]);
+  };
+  const data=await(await GET(request('start=2025-01-01&end=2026-09-17&benchmarks=BTC'))).json();
+  assert.equal(windows.length,3);assert.equal(data.errors.BTC,undefined);
+  assert.equal(data.prices.BTC.length,(dates.dateMillis('2026-09-17')-dates.dateMillis('2025-01-01'))/dates.dayMillis+1);
+  for(let i=1;i<windows.length;i++)assert.equal(windows[i][0],windows[i-1][1]+1);
+ }finally{globalThis.fetch=original;}
+});
+
+test('invalid fallback prices, missing days, and malformed timestamps remain unavailable and uncached',async()=>{
+ const original=globalThis.fetch;
+ try{
+  for(const invalid of ['gap','price','timestamp','error']){
+   globalThis.fetch=async raw=>{
+    const url=new URL(raw);
+    if(url.hostname==='api.exchange.coinbase.com')return Response.json([]);
+    if(url.hostname==='api-pub.bitfinex.com'){
+     if(invalid==='error')return Response.json({error:'unavailable'});
+     const rows=['2026-09-14','2026-09-15','2026-09-16'].map(date=>[dates.dateMillis(date),1,50000,1,1,1]);
+     if(invalid==='gap')rows.splice(1,1);
+     if(invalid==='price')rows[1][2]=-1;
+     if(invalid==='timestamp')rows[1][0]=1e30;
+     return Response.json(rows);
+    }
+    return Response.json([{Ccy:'USD',Rate:'12000',Nominal:'1',Date:'14.09.2026'}]);
+   };
+   const response=await GET(request('start=2026-09-14&end=2026-09-17&benchmarks=BTC'));
+   assert.equal(response.headers.get('cache-control'),'private, no-store');
+   const data=await response.json();assert.equal(data.prices.BTC,undefined);assert.ok(data.errors.BTC);
+  }
+ }finally{globalThis.fetch=original;}
+});

@@ -1683,5 +1683,20 @@
   "Time buttons zoom the chart. Values always use your original investment amounts and dates.": "Кнопки периода меняют масштаб графика. Расчёт всегда использует исходные суммы и даты инвестиций.",
   "Ahead / behind benchmark": "Опережение / отставание от ориентира",
   "Each benchmark shows what the same dated investments would be worth in your selected currency. The difference from your investments shows how much money you are ahead or behind. Investment gain is value including payouts minus net contributions.": "Каждый ориентир показывает стоимость тех же вложений в те же даты в выбранной валюте. Разница с вашими инвестициями показывает опережение или отставание в деньгах. Прибыль — стоимость с учётом выплат минус чистые взносы.",
-  "Compare what your investments are worth with the same money invested in benchmarks on the same dates.": "Сравните стоимость своих инвестиций с вложением тех же денег в ориентиры в те же даты."
+  "Compare what your investments are worth with the same money invested in benchmarks on the same dates.": "Сравните стоимость своих инвестиций с вложением тех же денег в ориентиры в те же даты.",
+  "Delete update": "Удалить запись",
+  "Deleting…": "Удаление…",
+  "Delete this tracker update?": "Удалить эту запись трекера?",
+  "This removes the update and restores the previous recorded value and ownership. Any linked cash movement is reversed using its original amount. This cannot be undone from the app.": "Запись будет удалена, а предыдущая стоимость и доля владения восстановлены. Связанное движение денег будет отменено на исходную сумму. Отменить удаление в приложении нельзя.",
+  "Delete newer balance updates first. Starting snapshots and other transaction types are protected.": "Сначала удалите более новые изменения баланса. Начальные снимки и другие типы операций защищены.",
+  "Tracker update not found.": "Запись трекера не найдена.",
+  "This history entry cannot be deleted here.": "Эту запись истории нельзя удалить здесь.",
+  "Delete newer balance updates first.": "Сначала удалите более новые изменения баланса.",
+  "Keep the starting snapshot.": "Сохраните начальный снимок.",
+  "Linked cash account is unavailable or its currency changed.": "Связанный денежный счёт недоступен или его валюта изменилась.",
+  "The cash reversal would create an invalid balance.": "Отмена движения денег приведёт к недопустимому балансу.",
+  "Enter updates on or after the latest balance date. Repayments cannot exceed the outstanding balance.": "Вносите изменения не раньше даты последнего баланса. Погашение не может превышать остаток долга.",
+  "Past valuations do not replace a newer balance. Business valuations use the current ownership share.": "Прошлые оценки не заменяют более новый баланс. Оценки бизнеса учитывают текущую долю владения.",
+  "Past valuations do not replace a newer balance.": "Прошлые оценки не заменяют более новый баланс.",
+  "Could not delete the update. Please try again.": "Не удалось удалить запись. Повторите попытку."
 }

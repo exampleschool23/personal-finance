@@ -30,3 +30,16 @@ export async function POST(req:Request){
   return Response.json(await r.json());
  }catch{return Response.json({error:'Update could not be confirmed. Retry with the same details.'},{status:503});}
 }
+
+const deleteErrors=['Tracker update not found.','This history entry cannot be deleted here.','Delete newer balance updates first.','Keep the starting snapshot.','Linked cash account is unavailable or its currency changed.','The cash reversal would create an invalid balance.'];
+export async function DELETE(req:Request){
+ if(!sameOrigin(req))return new Response(null,{status:403});
+ try{
+  const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
+  const parsed=z.object({id:z.string().uuid(),record_id:z.string().uuid()}).safeParse(await req.json());
+  if(!parsed.success)return Response.json({error:'Tracker update not found.'},{status:400});
+  const response=await supa('/rest/v1/rpc/delete_tracker_update',{method:'POST',body:JSON.stringify({p_id:parsed.data.id,p_record_id:parsed.data.record_id})},auth.token);
+  if(!response.ok){const result=await response.json() as {message?:string};const known=deleteErrors.includes(result.message??'');return Response.json({error:known?result.message:'Could not delete the update. Please try again.'},{status:known?400:503});}
+  return Response.json(await response.json());
+ }catch{return Response.json({error:'Could not delete the update. Please try again.'},{status:503});}
+}
