@@ -52,7 +52,10 @@ test('Google OAuth routes keep the exchange bound to the browser and handle fail
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     assert.ok(ready, logs);
+    const page = await request('/');
+    assert.equal(page.headers.get('referrer-policy'), 'same-origin');
     const post = (headers = {}) => request('/api/auth/google', { method: 'POST', headers: { Origin: origin, ...headers } });
+    assert.equal((await post({ Origin: 'null' })).status, 403);
     assert.equal((await post({ Origin: 'https://untrusted.example' })).status, 403);
     assert.equal((await post({ 'sec-fetch-site': 'cross-site' })).status, 403);
     assert.equal((await request('/api/auth/google')).status, 405);
