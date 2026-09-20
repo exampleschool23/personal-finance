@@ -35,7 +35,7 @@ test('account API validates input, applies authenticated ownership and reports m
  const draft={action:'save',id,name:'Brokerage',kind:'Stock',currency:'USD',user_id:id};
  assert.equal((await post(request(draft,'https://other'))).status,403);
  signedIn=false;assert.equal((await post(request(draft))).status,401);signedIn=true;
- for(const bad of [{...draft,kind:'Cash'},{...draft,currency:'XXX'},{...draft,name:' '},{action:'assign',record_id:'bad',holding_account_id:null}])assert.equal((await post(request(bad))).status,400);
+ for(const bad of [{...draft,kind:'Deposit'},{...draft,currency:'XXX'},{...draft,name:' '},{action:'assign',record_id:'bad',holding_account_id:null}])assert.equal((await post(request(bad))).status,400);
  assert.equal(calls.length,0);
  assert.equal((await post(request(draft))).status,200);assert.equal(calls[0].body.user_id,owner);assert.equal(calls[0].token,'owner-token');assert.equal(calls[0].body.action,undefined);
  assert.equal((await post(request({action:'assign',record_id:id,holding_account_id:null,amount:999}))).status,200);
@@ -84,4 +84,12 @@ test('record saves preserve holding membership and accept cash balances',async()
  const request=body=>new Request('https://local/api/records',{method:'POST',body:JSON.stringify(body)});
  assert.equal((await post(request(holding))).status,200);assert.equal(saved.holding_account_id,accountId);assert.equal(saved.user_id,owner);assert.equal(saved.amount,13.45);assert.equal(saved.quantity,2.5);
  assert.equal((await post(request({...holding,kind:'Cash'}))).status,200);
+});
+
+test('cash investment accounts combine currency balances once and exclude instruments',()=>{
+ const account={id:'reserve',name:'Reserve',kind:'Cash',currency:'USD'};
+ const rows=[record('usd','reserve','Cash',100,1),record('uzs','reserve','Cash',1200000,1,'UZS'),record('stock','reserve','Stock',999,1),record('other','other','Cash',500,1)];
+ const result=holdingAccountValue(account,rows,{rates:{UZS:12000},quotes:{},fx:null});
+ assert.equal(result.total,200);assert.equal(result.holdings.length,2);
+ assert.equal(holdingAccountValue(account,rows,null).total,null);
 });

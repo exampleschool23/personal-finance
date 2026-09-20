@@ -49,15 +49,34 @@ test('chart scale handles zero, negative, constant, precise and missing balances
 });
 test('portfolio chart connects observations and scales the chosen series', () => {
  const ui = fs.readFileSync(new URL('../components/portfolio-overview.tsx',import.meta.url),'utf8');
- assert.match(ui,/useState<[^;]+>\('net'\)/);
- assert.match(ui,/portfolioChartDomain\(visible, chartKeys\)/);
- assert.match(ui,/domain=\{chartDomain\}/);
- assert.equal((ui.match(/type=\{historyMode==='recorded'\?'stepAfter':'linear'\}/g)||[]).length,3);
- assert.match(ui,/useState<'recorded'\|'observed'>\('recorded'\)/);
+ assert.match(ui,/<InvestmentValueChart points=\{visible\}/);
+ assert.doesNotMatch(ui,/historyMode|snapshotPoints|Daily observations/);
 });
 
 test('dated PC purchase transfers cash without creating net worth; breeding valuation changes only its day',()=>{
  const rows=[record('cash','Cash'),record('club','Business'),record('sheep','Business'),record('debt','Debt')];
  const result=portfolioHistory(rows,[event('cash','2026-09-01',20000),event('club','2026-09-01',10000),event('sheep','2026-09-01',1000),event('debt','2026-08-01',5000),event('cash','2026-09-02',5000),event('club','2026-09-02',25000),event('sheep','2026-09-03',1500)],'USD',undefined,'2026-09-04');
  assert.deepEqual(result.points.map(p=>[p.date,p.net]),[['2026-09-01',26000],['2026-09-02',26000],['2026-09-03',26500]]);
+});
+
+ test('deleting mistaken assets and debts removes their entire history without a loss',()=>{
+ const records=[record('cash','Cash'),record('wrong-asset','Property'),record('wrong-debt','Loan')];
+ const events=[event('cash','2026-09-01',1000.25),event('wrong-asset','2026-09-01',5000),event('wrong-debt','2026-09-01',300),event('cash','2026-09-02',1000.25)];
+ const result=portfolioHistory(records.filter(r=>r.id==='cash'),events,'USD',undefined,'2026-09-03');
+ assert.deepEqual(result.points.map(p=>p.net),[1000.25,1000.25]);
+ assert.deepEqual(portfolioHistory([],events,'USD',undefined,'2026-09-03').points,[]);
+ });
+ test('partial and complete repayments retain dated lending and debt history',()=>{
+ const records=[record('lent','Money lent'),record('loan','Loan')];
+ const events=[event('lent','2026-09-01',1000),event('loan','2026-09-01',600),event('lent','2026-09-02',500),event('loan','2026-09-02',300),event('lent','2026-09-03',0),event('loan','2026-09-03',0)];
+ const result=portfolioHistory(records,events,'USD',undefined,'2026-09-04');
+ assert.deepEqual(result.points.map(p=>[p.assets,p.debt,p.net]),[[1000,600,400],[500,300,200],[0,0,0]]);
+ });
+
+test('investment-only history excludes everyday cash and debt but retains opted-in cash',async()=>{
+ const {isInvestmentRecord}=await import('../lib/comparison-profile.ts');
+ const records=[record('ordinary','Cash'),{...record('reserve','Cash'),is_investment:true},record('stock','Stock'),record('debt','Loan')];
+ const events=records.flatMap(r=>[event(r.id,'2026-09-01',100),event(r.id,'2026-09-02',r.id==='ordinary'?900:120)]);
+ const result=portfolioHistory(records.filter(isInvestmentRecord),events,'USD',undefined,'2026-09-03');
+ assert.deepEqual(result.points.map(p=>[p.assets,p.debt,p.net]),[[200,0,200],[240,0,240]]);
 });

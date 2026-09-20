@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
 import {expenses,liabilities} from '../lib/finance.ts';
-import {investmentKinds} from '../lib/comparison-profile.ts';
+import {historyEventLabel} from '../lib/investment-history.ts';
+import {investmentKinds,isInvestmentRecord} from '../lib/comparison-profile.ts';
 import * as dates from '../lib/benchmark-data.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const deps={...dates};
 const {convertHistorical,compareInvestments,percentagePerformance}=new Function(...Object.keys(deps),compile('lib/investment-comparison.ts')+';return {convertHistorical,compareInvestments,percentagePerformance};')(...Object.values(deps));
-const performance=new Function('expenses','liabilities','investmentKinds','convertHistorical','shiftDay',compile('lib/actual-investment-performance.ts')+';return actualInvestmentPerformance;')(expenses,liabilities,investmentKinds,convertHistorical,dates.shiftDay);
+const performance=new Function('historyEventLabel','expenses','liabilities','isInvestmentRecord','convertHistorical','shiftDay',compile('lib/actual-investment-performance.ts')+';return actualInvestmentPerformance;')(historyEventLabel,expenses,liabilities,isInvestmentRecord,convertHistorical,dates.shiftDay);
 const holding={id:'cafe',kind:'Business',currency:'USD',balance:400};
 const records=[{id:'cafe',kind:'Business',currency:'USD'},{id:'cash',kind:'Cash',currency:'USD'},{id:'loan',kind:'Loan',currency:'USD'}];
 const event=(type,date,amount,balance,id='cafe')=>({id:type+date,record_id:id,event_type:type,occurred_on:date,created_at:date+'T12:00:00Z',amount,balance,ownership_percentage:100});
@@ -77,8 +78,9 @@ test('monetary comparison retains small-price precision and unavailable benchmar
 test('benchmark presentation uses monetary values throughout and includes original investment dates',()=>{
  const source=fs.readFileSync('components/investment-comparison.tsx','utf8');
  assert.ok(source.includes('const points=result?.points??[]'));
- assert.ok(source.includes('tickFormatter={money}'));
- assert.ok(source.includes('money(Number(amount))'));
+ const chart=fs.readFileSync('components/investment-value-chart.tsx','utf8');
+ assert.ok(chart.includes('tickFormatter={money}'));
+ assert.ok(chart.includes('money(Number(amount))'));
  assert.ok(source.includes("t('Ahead / behind benchmark')"));
  assert.ok(source.includes('):start;'));
  assert.ok(!source.includes('percentagePerformance'));
@@ -124,4 +126,83 @@ test('debt repayments retain principal at dated FX, without counting borrowing o
 test('cash-only purchase followed by a starting valuation does not duplicate opening capital',()=>{
  const result=performance(records,[event('contribution','2026-09-01',400,null),event('baseline','2026-09-02',0,450)],[{...holding,balance:450}],[],'USD','2026-09-03');
  assert.deepEqual(result.flows,[{date:'2026-09-01',amount:400}]);assert.equal(result.points.at(-1).amount,450);assert.equal(result.points[0].amount,null);assert.equal(result.missing,false);
+});
+
+test('cash requires explicit investment opt-in and keeps exact values',()=>{
+ const cash={id:'cash',kind:'Cash',currency:'USD'};
+ const history=[event('baseline','2026-01-01',0,123.456,'cash')];
+ const fx=[];
+ assert.equal(isInvestmentRecord(cash),false);
+ assert.equal(isInvestmentRecord({...cash,is_investment:false}),false);
+ assert.equal(isInvestmentRecord({...cash,is_investment:true}),true);
+ const result=performance([{...cash,is_investment:true}],history,[{...cash,balance:123.456}],fx,'USD','2026-01-01');
+ assert.equal(result.flows[0].amount,123.456);
+ assert.equal(performance([cash],history,[],fx,'USD','2026-01-01').flows.length,0);
+});
+test('principal repayment increases investment value but interest does not',()=>{
+ const mortgage={id:'home-loan',kind:'Mortgage',currency:'USD'};
+ const payment={...event('mortgage_payment','2026-09-02',500,9500,'home-loan'),principal:400,interest:100};
+ const result=performance([...records,mortgage],[opening,payment],[holding],[],'USD','2026-09-03');
+ assert.deepEqual(result.points.map(p=>p.amount),[400,800,800]);
+ assert.equal(result.flows.at(-1).amount,500);
+});
+test('income credited to investment cash is not counted twice in value',()=>{
+ const cash={id:'reserve',kind:'Cash',currency:'USD',is_investment:true};
+ const receipt={...event('income','2026-09-02',50,null),account_link:{account_id:'reserve',amount:50}};
+ const result=performance([...records,cash],[opening,event('baseline','2026-09-01',0,100,'reserve'),receipt,event('contribution','2026-09-02',50,150,'reserve')],[holding,{...cash,balance:150}],[],'USD','2026-09-02');
+ assert.equal(result.points.at(-1).amount,550);assert.equal(result.distributed,0);assert.equal(result.invested,500);assert.equal(result.flows.reduce((sum,flow)=>sum+flow.amount,0),500);
+});
+test('repayment from included investment cash transfers value instead of creating profit',()=>{
+ const cash={id:'reserve',kind:'Cash',currency:'USD',is_investment:true};
+ const result=performance([...records,cash],[opening,event('baseline','2026-09-01',0,1000,'reserve'),event('withdrawal','2026-09-02',200,800,'reserve'),event('withdrawal','2026-09-02',200,300,'loan')],[holding,{...cash,balance:800}],[],'USD','2026-09-02');
+ assert.deepEqual(result.points.map(point=>point.amount),[1400,1400]);
+ assert.equal(result.flows.reduce((sum,flow)=>sum+flow.amount,0),1400);
+});
+test('early repayment cannot masquerade as a complete portfolio before existing asset history',()=>{
+ const paid=event('withdrawal','2026-09-01',469,1000,'loan');
+ const snapshot=event('baseline','2026-09-03',0,400);
+ const result=performance(records,[paid,snapshot],[holding],[],'USD','2026-09-04');
+ assert.deepEqual(result.points.map(p=>p.amount),[null,null,869,869]);
+ assert.equal(result.missing,false);
+});
+test('explicit opening date puts the known starting balance before a repayment without mutating events',()=>{
+ const snapshot=event('baseline','2026-09-03',0,400);
+ const result=performance([{...records[0],opened_on:'2026-08-31'},records[2]],[event('withdrawal','2026-09-01',469,1000,'loan'),snapshot],[holding],[],'USD','2026-09-03');
+ assert.deepEqual(result.points.map(p=>p.amount),[400,869,869,869]);
+ assert.equal(snapshot.occurred_on,'2026-09-03');
+});
+test('known later purchase does not block earlier complete holdings',()=>{
+ const later={id:'later',kind:'Stock',currency:'USD'};
+ const result=performance([...records,later],[opening,event('contribution','2026-09-03',100,100,'later')],[holding,{...later,balance:100}],[],'USD','2026-09-03');
+ assert.deepEqual(result.points.map(p=>p.amount),[400,400,500]);
+});
+test('a later top-up cannot turn unknown earlier asset history into a zero balance',()=>{
+ const result=performance(records,[event('withdrawal','2026-09-01',50,100,'loan'),event('baseline','2026-09-02',0,400),event('contribution','2026-09-03',100,500)],[{...holding,balance:500}],[],'USD','2026-09-03');
+ assert.deepEqual(result.points.map(point=>point.amount),[null,450,550]);
+});
+test('audit explains rising portfolio value alongside interest costs and reconciles every total',()=>{
+ const mortgage={id:'mortgage',name:'Home mortgage',kind:'Mortgage',currency:'USD'};
+ const result=performance([{...records[0],name:'Business'},mortgage],[opening,event('valuation','2026-09-02',0,450),{...event('mortgage_payment','2026-09-02',500,9000,'mortgage'),principal:400,interest:100}],[{...holding,balance:450}],[],'USD','2026-09-02');
+ const sum=key=>result.breakdown.reduce((total,row)=>total+row[key],0);
+ near(sum('value'),850);near(sum('funding'),900);near(sum('result'),-50);
+ near(result.points.at(-1).amount-result.points[0].amount,450);
+ const debt=result.breakdown.find(row=>row.id==='mortgage');
+ assert.equal(debt.principalPaid,400);assert.equal(debt.interestPaid,100);assert.equal(debt.result,-100);
+ assert.deepEqual(debt.transactions.map(row=>[row.date,row.original,row.currency,row.funding]),[['2026-09-02',500,'USD',500]]);
+});
+test('audit preserves historical FX and separates principal currency changes from interest',()=>{
+ const mortgage={id:'mortgage',name:'Mortgage',kind:'Mortgage',currency:'UZS'};
+ const payment={...event('mortgage_payment','2026-09-01',1000000,5000000,'mortgage'),principal:800000,interest:200000};
+ const result=performance([mortgage],[payment],[],[{date:'2026-09-01',rates:{UZS:10000}},{date:'2026-09-02',rates:{UZS:20000}}],'USD','2026-09-02');
+ const row=result.breakdown[0];
+ assert.equal(row.funding,100);assert.equal(row.value,40);assert.equal(row.interestPaid,20);assert.equal(row.principalPaid,80);assert.equal(row.result,-60);
+ assert.equal(row.transactions[0].original,1000000);assert.equal(row.transactions[0].currency,'UZS');
+});
+test('audit matches net funding when received income moves into included cash',()=>{
+ const cash={id:'reserve',kind:'Cash',currency:'USD',is_investment:true};
+ const receipt={...event('income','2026-09-02',50,null),account_link:{account_id:'reserve',amount:50}};
+ const result=performance([...records,cash],[opening,event('baseline','2026-09-01',0,100,'reserve'),receipt,event('contribution','2026-09-02',50,150,'reserve')],[holding,{...cash,balance:150}],[],'USD','2026-09-02');
+ near(result.breakdown.reduce((sum,row)=>sum+row.funding,0),500);
+ near(result.breakdown.reduce((sum,row)=>sum+row.value,0),550);
+ near(result.breakdown.reduce((sum,row)=>sum+row.result,0),50);
 });

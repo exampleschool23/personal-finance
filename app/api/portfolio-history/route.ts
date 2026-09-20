@@ -21,7 +21,7 @@ export async function GET() {
   const events: HistoryEvent[] = [];
   for (let offset = 0; offset < records.length; offset += 100) {
    const ids = records.slice(offset, offset + 100).map(record => record.id).join(',');
-   events.push(...await readAll<HistoryEvent>(`/rest/v1/investment_history?record_id=in.(${ids})&select=*&order=occurred_on.asc,created_at.asc,id.asc`, auth.token));
+   events.push(...await readAll<HistoryEvent>(`/rest/v1/investment_history?record_id=in.(${ids})&select=*,account_link:investment_account_links(account_id,amount,account_currency,record_currency,exchange_rate,rate_date)&order=occurred_on.asc,created_at.asc,id.asc`, auth.token));
   }
   const cashflows = await readAll<Entry>('/rest/v1/finance_records?kind=in.(Salary,Rent%20income,Business%20income,Other%20income,Rent%20expense,Living%20expense,Charity,Other%20expense)&frequency=eq.Once&select=*&order=date.asc,id.asc', auth.token);
   const recurringIncome = await readAll<Entry>('/rest/v1/finance_records?kind=in.(Salary,Rent%20income,Business%20income,Other%20income)&frequency=neq.Once&select=*&order=date.asc,id.asc', auth.token);

@@ -1,4 +1,5 @@
 "use client";
+import { refreshRead } from '@/lib/refresh-read';
 import { useEffect, useState, useRef } from 'react';
 import type { Entry } from '@/lib/finance';
 import { expensePlanMonth, type ExpensePlan } from '@/lib/expense-plans';
@@ -14,7 +15,7 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
   if(!user||demo)return;
   const controller=new AbortController();
   const started=setTimeout(()=>{if(!controller.signal.aborted){setLoading(true);setError('');}},0);
-  fetch('/api/expense-plans?month='+month,{signal:controller.signal}).then(async response=>{
+  refreshRead('/api/expense-plans?month='+month,{signal:controller.signal}).then(async response=>{
    const data=await response.json() as ExpensePlan[] & {error?:string};
    if(!response.ok)throw Error(data.error);
    if(!controller.signal.aborted){setSaved(data.map(p=>({...p,amount:Number(p.amount),spent:Number(p.spent??0)})));setError('');}

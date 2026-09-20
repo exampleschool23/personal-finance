@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { isCurrency } from '@/lib/currencies';
 import { session, sameOrigin, supa } from '@/lib/supabase';
-const account = z.object({ action: z.literal('save'), id: z.string().uuid(), name: z.string().trim().min(1).max(120), kind: z.enum(['Stock', 'Crypto']), currency: z.string().refine(isCurrency) });
+const account = z.object({ action: z.literal('save'), id: z.string().uuid(), name: z.string().trim().min(1).max(120), kind: z.enum(['Cash', 'Stock', 'Crypto']), currency: z.string().refine(isCurrency) });
 const assignment = z.object({ action: z.literal('assign'), record_id: z.string().uuid(), holding_account_id: z.string().uuid().nullable() });
 const schema = z.discriminatedUnion('action', [account, assignment]);
 export async function POST(req: Request) {

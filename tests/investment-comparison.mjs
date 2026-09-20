@@ -60,3 +60,20 @@ test('comparison UI translates literal messages and uses recorded investment dat
  for(const language of ['en','ru','uz']){const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));for(const message of messages)assert.ok(labels[message],`${language}: ${message}`);}
  assert.ok(!source.includes('DatePicker'));assert.ok(!source.includes('setRequestedStart'));assert.ok(!source.includes('setCapital'));assert.ok(!/<[Ii]nput\b[^>]*type="number"/.test(source));assert.ok(!source.includes('type="date"'));
 });
+test('valuation gaps recover when quotes return, without inventing a trade price',()=>{
+ const prices={SPY:[{date:'2025-01-01',close:10},{date:'2025-01-10',close:12}]};
+ const result=compareInvestments(100,[],[],data('2025-01-01','2025-01-10',prices),'USD');
+ assert.equal(result.points[8].SPY,null);assert.equal(result.points[9].SPY,120);
+ const missingTrade=compareInvestments(100,[{date:'2025-01-09',amount:20}],[],data('2025-01-01','2025-01-10',prices),'USD');
+ assert.equal(missingTrade.points[9].SPY,null);
+});
+test('unfunded benchmarks wait for the first contribution without requiring earlier prices',()=>{
+ const result=compareInvestments(0,[{date:'2025-01-03',amount:100}],[],data('2025-01-01','2025-01-03',{BTC:[{date:'2025-01-03',close:20}]}),'USD',true);
+ assert.deepEqual(result.points.map(point=>point.BTC),[0,0,100]);
+});
+test('zero and nonfinite quotes cannot generate infinite benchmark balances',()=>{
+ for(const close of [0,NaN,Infinity,-5]){
+  const result=compareInvestments(100,[],[],data('2025-01-01','2025-01-01',{SPY:[{date:'2025-01-01',close}]}),'USD');
+  assert.equal(result.points[0].SPY,null);
+ }
+});

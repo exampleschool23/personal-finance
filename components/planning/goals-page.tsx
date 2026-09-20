@@ -1,4 +1,5 @@
 "use client";
+import { isInstrumentAccount } from '@/lib/holding-accounts';
 import {useGoalLayoutAnimation} from '@/hooks/use-goal-layout-animation';
 import { GoalDragHandle } from './goal-drag-handle';
 import { GoalCard } from './goal-card';
@@ -45,7 +46,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
  },[plannerVisit]);
  const [draft,setDraft]=useState<Goal|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[archived,setArchived]=useState(false),[selected,setSelected]=useState('');
  const guard=useDraftDialog(draft,()=>setDraft(null),busy);
- const investmentAccounts=data.holdingAccounts??[];
+ const investmentAccounts=(data.holdingAccounts??[]).filter(isInstrumentAccount);
  const accounts=data.records.filter(record=>record.kind==='Cash'),today=depositToday();
  const maxDate=calendarIso(new Date(parseCalendarDate(today)!.getFullYear()+100,parseCalendarDate(today)!.getMonth(),parseCalendarDate(today)!.getDate()));
  const goalCurrency=(goal:Goal)=>goal.kind==='investment'?investmentAccounts.find(account=>account.id===goal.holding_account_id)?.currency??goal.currency??currency:goal.kind==='net_worth'?goal.currency??currency:accounts.find(account=>account.id===goal.account_id)?.currency??goal.currency??currency;

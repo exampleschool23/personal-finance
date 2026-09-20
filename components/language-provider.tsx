@@ -1,15 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { isLanguage, Language, locales, translate } from '@/lib/i18n';
 
-type LanguageState = {
-  language: Language;
-  setLanguage: (language: Language) => void;
-  setDefaultLanguage: (language: Language) => void;
-};
-
-const LanguageContext = createContext<LanguageState | null>(null);
+import { LanguageContext } from '@/components/language-context';
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, updateLanguage] = useState<Language>('en');

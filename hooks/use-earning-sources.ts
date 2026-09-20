@@ -1,4 +1,5 @@
 "use client";
+import { refreshRead } from '@/lib/refresh-read';
 import { useEffect,useRef,useState } from 'react';
 import { earningSourceSchema,type EarningSource } from '@/lib/earning-sources';
 export type EarningSourcesController={sources:EarningSource[];loading:boolean;error:string;retry:()=>void;save:(source:EarningSource)=>Promise<void>};
@@ -12,7 +13,7 @@ export function useEarningSources(user:string|null,demo:boolean,revision:number,
  useEffect(()=>{
   if(!owner||demo)return;
   const controller=new AbortController();
-  fetch('/api/income-sources',{signal:controller.signal}).then(async response=>{
+  refreshRead('/api/income-sources',{signal:controller.signal}).then(async response=>{
    const body=await response.json() as EarningSource[] & {error:string};if(!response.ok)throw Error(body.error);
    if(!controller.signal.aborted)setState({owner,sources:body.map((source:EarningSource)=>({...source,amount:source.amount===null?null:Number(source.amount)})),error:''});
   }).catch(error=>{if(!controller.signal.aborted)setState({owner,sources:[],error:error.message});});

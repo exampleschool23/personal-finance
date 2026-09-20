@@ -1,14 +1,21 @@
 import { expenses, liabilities, type Entry } from './finance';
-import type { HistoryEvent } from './investment-history';
-import { investmentKinds, type BaselineHolding } from './comparison-profile';
+import { historyEventLabel, type HistoryEvent } from './investment-history';
+import { isInvestmentRecord, type BaselineHolding } from './comparison-profile';
 import { convertHistorical, type CashFlow, type WealthPoint } from './investment-comparison';
 import { shiftDay, type FxPoint } from './benchmark-data';
 
 type InvestmentActivity = HistoryEvent & { currency?:string };
 export function investmentEvents(records:Entry[],events:HistoryEvent[],end:string,cashflows:Entry[]=[]):InvestmentActivity[]{
- const ids=new Set(records.filter(record=>(investmentKinds as readonly string[]).includes(record.kind)).map(record=>record.id));
+ const ids=new Set(records.filter(record=>isInvestmentRecord(record)).map(record=>record.id));
  const debts=new Set(records.filter(record=>liabilities.includes(record.kind)).map(record=>record.id));
- const activity:InvestmentActivity[]=events.filter(event=>(ids.has(event.record_id)||(debts.has(event.record_id)&&['withdrawal','mortgage_payment'].includes(event.event_type)))&&event.occurred_on<=end);
+ const byId=new Map(records.map(record=>[record.id,record]));
+ const activity:InvestmentActivity[]=events.filter(event=>(ids.has(event.record_id)||(debts.has(event.record_id)&&['withdrawal','mortgage_payment'].includes(event.event_type)))&&event.occurred_on<=end).map(event=>{
+  const opened=byId.get(event.record_id)?.opened_on;
+  // Only an explicit opening date can date an opening balance earlier.
+  // Never backfill a later valuation or today's balance into unknown history.
+  const earlier=events.some(other=>other.record_id===event.record_id&&other.occurred_on<event.occurred_on);
+  return event.event_type==='baseline'&&!earlier&&opened&&/^\d{4}-\d{2}-\d{2}$/.test(opened)&&opened<event.occurred_on?{...event,occurred_on:opened}:event;
+ });
  // Tracker transactions already have an event. Only independent, actual business
  // spending enters here; recurring plans and personal spending never fund benchmarks.
  for(const row of cashflows){
@@ -23,7 +30,7 @@ export function investmentEvents(records:Entry[],events:HistoryEvent[],end:strin
 // Purchases fund the comparison on their recorded dates. Observations are never
 // silently presented as purchase costs: their opening values are disclosed separately.
 export function actualInvestmentPerformance(records:Entry[],events:HistoryEvent[],live:BaselineHolding[],fx:FxPoint[],currency:string,end:string,cashflows:Entry[]=[]){
- const byId=new Map(records.filter(record=>(investmentKinds as readonly string[]).includes(record.kind)).map(record=>[record.id,record]));
+ const byId=new Map(records.filter(record=>isInvestmentRecord(record)).map(record=>[record.id,record]));
  const debts=new Map(records.filter(record=>liabilities.includes(record.kind)).map(record=>[record.id,record]));
  const repaid=new Map<string,number>();
  const sorted=investmentEvents(records,events,end,cashflows);
@@ -35,7 +42,14 @@ export function actualInvestmentPerformance(records:Entry[],events:HistoryEvent[
  const active=new Set<string>();
  const distributions:CashFlow[]=[];
  const flows:CashFlow[]=[],points:WealthPoint[]=[];
- let missing=false,cursor=0,distributed=0;
+ const audit=new Map([...byId,...debts].map(([id,record])=>[id,{id,name:record.name,kind:record.kind,funding:0,value:0,principalPaid:0,interestPaid:0,income:0,transactions:[] as {id:string;date:string;label:string;original:number;currency:string;funding:number}[]}]));
+ const addFunding=(event:InvestmentActivity,amount:number,original:number,unit:string,label:string,recordId=event.record_id)=>{
+  flows.push({date:event.occurred_on,amount});
+  const row=audit.get(recordId)!;row.funding+=amount;
+  row.transactions.push({id:event.id+':'+label,date:event.occurred_on,label,original,currency:unit,funding:amount});
+ };
+ const incomeByRecord=new Map<string,number>();
+ let missing=false,cursor=0,distributed=0,internalIncome=0;
  for(let date=start;date<=end;date=shiftDay(date,1)){
   while(cursor<sorted.length&&sorted[cursor].occurred_on<=date){
    const event=sorted[cursor++];
@@ -45,7 +59,12 @@ export function actualInvestmentPerformance(records:Entry[],events:HistoryEvent[
     const paid=Number(event.amount);
     const amount=convertHistorical(paid,liability.currency,currency,date,fx);
     if(amount===null||!Number.isFinite(principal)||principal<0||principal>paid||!Number.isFinite(paid)||paid<0)missing=true;
-    else {flows.push({date,amount});repaid.set(liability.id,(repaid.get(liability.id)??0)+principal);}
+    else {
+     addFunding(event,amount,paid,liability.currency,historyEventLabel(liability.kind,event.event_type));
+     repaid.set(liability.id,(repaid.get(liability.id)??0)+principal);
+     audit.get(liability.id)!.principalPaid+=convertHistorical(principal,liability.currency,currency,date,fx)??0;
+     audit.get(liability.id)!.interestPaid+=convertHistorical(paid-principal,liability.currency,currency,date,fx)??0;
+    }
     continue;
    }
    const record=byId.get(event.record_id)!;
@@ -59,28 +78,43 @@ export function actualInvestmentPerformance(records:Entry[],events:HistoryEvent[
     if(event.event_type==='withdrawal'){missing=true;}
     else if(balance>0){flow=balance;observed.add(record.id);}
    }
-   if(flow){const amount=convertHistorical(flow,event.currency??record.currency,currency,date,fx);if(amount===null)missing=true;else flows.push({date,amount});}
-   if(event.event_type==='income'){
+   if(flow){const unit=event.currency??record.currency;const amount=convertHistorical(flow,unit,currency,date,fx);if(amount===null)missing=true;else addFunding(event,amount,flow,unit,observed.has(record.id)&&!balances.has(record.id)?'Opening capital':historyEventLabel(record.kind,event.event_type));}
+   // The linked cash contribution is internal income, not new external capital.
+   if(event.event_type==='income'&&event.account_link&&byId.has(event.account_link.account_id)){
+    const account=byId.get(event.account_link.account_id)!;
+    const credited=convertHistorical(Number(event.account_link.amount),event.account_link.account_currency??account.currency,currency,date,fx);
+    if(credited===null||!Number.isFinite(credited))missing=true;
+    else {addFunding(event,-credited,-Number(event.account_link.amount),event.account_link.account_currency??account.currency,'Internal income adjustment',account.id);internalIncome+=Math.max(0,credited);}
+   }
+   // Income credited to included cash is already present in its balance.
+   if(event.event_type==='income'&&!(event.account_link&&byId.has(event.account_link.account_id))){
     const amount=convertHistorical(Number(event.amount),event.currency??record.currency,currency,date,fx);
-    if(amount===null)missing=true;else{distributed+=amount;distributions.push({date,amount});}
+    if(amount===null)missing=true;else{distributed+=amount;distributions.push({date,amount});incomeByRecord.set(record.id,(incomeByRecord.get(record.id)??0)+amount);audit.get(record.id)!.income+=amount;}
    }
    if(balance!==null)balances.set(record.id,balance);
   }
   let total=distributed;
-  let complete=!missing&&[...active].every(id=>balances.has(id));
+  let complete=!missing&&[...byId.keys()].every(id=>{
+   if(balances.has(id))return true;
+   // A documented future purchase establishes that the holding is not yet owned.
+   // A later opening snapshot alone does not establish an earlier zero balance.
+   const purchase=firstPurchase.get(id);
+   const first=sorted.find(event=>event.record_id===id);
+   return !active.has(id)&&first?.event_type==='contribution'&&!!purchase&&purchase>date;
+  });
   for(const [id,principal] of repaid){
    const amount=convertHistorical(principal,debts.get(id)!.currency,currency,date,fx);
-   if(amount===null)complete=false;else total+=amount;
+   if(amount===null)complete=false;else {total+=amount;if(date===end)audit.get(id)!.value=amount;}
   }
   for(const [id,balance] of balances){
    const record=byId.get(id)!;
    const current=date===end?liveById.get(id):null;
    if(date===end&&!current)complete=false;
    const amount=convertHistorical(current?.balance??balance,record.currency,currency,date,fx);
-   if(amount===null)complete=false;else total+=amount;
+   if(amount===null)complete=false;else {total+=amount;if(date===end)audit.get(id)!.value=amount+(incomeByRecord.get(id)??0);}
   }
   if(date===end&&balances.size!==byId.size)complete=false;
   points.push({date,amount:complete?total:null});
  }
- return {start,points,flows,distributions,distributed,missing:missing||points.at(-1)?.amount===null,observed:[...observed]};
+ return {start,points,flows,breakdown:[...audit.values()].map(row=>({...row,result:row.value-row.funding})),invested:Math.max(0,flows.reduce((sum,flow)=>sum+Math.max(0,flow.amount),0)-internalIncome),distributions,distributed,missing:missing||points.at(-1)?.amount===null,observed:[...observed]};
 }

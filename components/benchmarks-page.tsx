@@ -1,4 +1,5 @@
 "use client";
+import { refreshRead } from '@/lib/refresh-read';
 
 import { useEffect, useState } from 'react';
 import { InvestmentComparison } from '@/components/investment-comparison';
@@ -24,7 +25,7 @@ export function BenchmarksPage({currency,market,demo,revision}:Props) {
  useEffect(()=>{
   if(demo)return;
   const controller=new AbortController();
-  fetch('/api/portfolio-history',{signal:controller.signal}).then(async response=>{
+  refreshRead('/api/portfolio-history',{signal:controller.signal}).then(async response=>{
    if(!response.ok)throw Error();
    const data=await response.json() as History;
    if(!controller.signal.aborted){setHistory(data);setError(false);}
@@ -33,6 +34,6 @@ export function BenchmarksPage({currency,market,demo,revision}:Props) {
  },[demo,revision,retry]);
  return <>
   <div className="page-heading"><div><h1>{t('Benchmarks')}</h1><p className="muted">{t('Compare what your investments are worth with the same money invested in benchmarks on the same dates.')}</p></div></div>
-  {error?<section className="panel"><p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={()=>{setError(false);setHistory(null);setRetry(n=>n+1);}}>{t('Retry')}</Button></p></section>:!demo&&!history?<section className="panel"><LoadingPlaceholder label={t('Loading history…')}/></section>:<InvestmentComparison key={currency} history={history??{records:[],events:[]}} today={depositToday()} currency={currency} market={market} demo={demo}/>}
+  {error?<section className="panel"><p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={()=>{setError(false);setHistory(null);setRetry(n=>n+1);}}>{t('Retry')}</Button></p></section>:!demo&&!history?<section className="panel"><LoadingPlaceholder label={t('Loading history…')}/></section>:<InvestmentComparison history={history??{records:[],events:[]}} today={depositToday()} currency={currency} market={market} demo={demo}/>}
  </>;
 }

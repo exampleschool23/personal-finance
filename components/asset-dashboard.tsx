@@ -19,7 +19,7 @@ import { marketEntry, type MarketData } from '@/lib/market';
 
 type Props = {
  excludedCurrencies?:string[];
- accounts: HoldingAccount[]; accountsLoading:boolean; accountsError:string; onRetryAccounts:()=>void; onAddHolding:(kind:'Stock'|'Crypto',accountId:string)=>void;
+ accounts: HoldingAccount[]; accountsLoading:boolean; accountsError:string; onRetryAccounts:()=>void; onAddHolding:(kind:'Cash'|'Stock'|'Crypto',accountId:string)=>void;
  records: Entry[]; currency: string; market: MarketData | null; netWorth: number; debt: number;
  forecast: ReturnType<typeof estimatedCashFlow>; forecastReady: boolean; loading: boolean; demo: boolean;
  onAdd: () => void; onEdit: (entry: Entry) => void; onTrack: (entry: Entry) => void; onDelete: (entry: Entry) => void;

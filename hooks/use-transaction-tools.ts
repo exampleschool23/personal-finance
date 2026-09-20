@@ -1,4 +1,5 @@
 "use client";
+import { refreshRead } from '@/lib/refresh-read';
 import { useEffect, useRef, useState } from 'react';
 import { emptyTransactionTools, type TransactionTools, type TransactionSplit, type ForecastAssignment } from '@/lib/transaction-tools';
 export function useTransactionTools(user:string|null,demo:boolean,revision:number,onSaved:()=>void){
@@ -9,7 +10,7 @@ export function useTransactionTools(user:string|null,demo:boolean,revision:numbe
  useEffect(()=>{
   if(!user||demo)return;
   const controller=new AbortController();request.current=controller;
-  fetch('/api/transaction-tools',{signal:controller.signal}).then(async response=>{const data=await response.json() as TransactionTools & {error?:string};if(!response.ok)throw Error(data.error);if(!controller.signal.aborted)setState({key,owner:user,data,error:''});}).catch(error=>{if(!controller.signal.aborted)setState(previous=>({key,owner:user,data:previous.owner===user?previous.data:emptyTransactionTools,error:error.message}));});
+  refreshRead('/api/transaction-tools',{signal:controller.signal}).then(async response=>{const data=await response.json() as TransactionTools & {error?:string};if(!response.ok)throw Error(data.error);if(!controller.signal.aborted)setState({key,owner:user,data,error:''});}).catch(error=>{if(!controller.signal.aborted)setState(previous=>({key,owner:user,data:previous.owner===user?previous.data:emptyTransactionTools,error:error.message}));});
   return()=>controller.abort();
  },[user,demo,key,retry]);
  if(!user&&!demo&&state.owner!==null)setState({key:'',owner:null,data:emptyTransactionTools,error:''});

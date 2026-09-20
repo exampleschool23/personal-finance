@@ -6,7 +6,8 @@ export type CashFlow = { date: string; amount: number };
 export type WealthPoint = { date: string; amount: number | null };
 export type ComparisonPoint = { date: string; actual: number | null; contributed: number; [key: string]: string | number | null };
 export function convertHistorical(amount: number, from: string, to: string, date: string, fx: FxPoint[]) {
- if (from === to) return amount;
+ if (!Number.isFinite(amount)) return null;
+ if (amount === 0 || from === to) return amount;
  const source = historicalRate(fx, from, date), target = historicalRate(fx, to, date);
  return source && target ? amount / source * target : null;
 }
@@ -62,7 +63,7 @@ export function firstCompleteDate(records: Entry[], events: HistoryEvent[]) {
 function priceAt(prices: PricePoint[], date: string, currency: string, fx: FxPoint[]) {
  const quote = latestOn(prices,date);
  // Weekend/holiday closes may carry forward briefly; do not hide long feed gaps.
- if (!quote || dateMillis(date) - dateMillis(quote.date) > 7 * dayMillis) return null;
+ if (!quote || !Number.isFinite(quote.close) || quote.close<=0 || dateMillis(date) - dateMillis(quote.date) > 7 * dayMillis) return null;
  return convertHistorical(quote.close,'USD',currency,date,fx);
 }
 export function compareInvestments(starting: number, flows: CashFlow[], actual: WealthPoint[], data: BenchmarkData, currency: string, includeStartFlows = false) {
@@ -75,7 +76,7 @@ export function compareInvestments(starting: number, flows: CashFlow[], actual: 
  const unavailable = new Set<string>();
  for (const key of keys) {
   const price = priceAt(data.prices[key],data.start,currency,data.fx);
-  units.set(key,price && starting >= 0 ? starting / price : null);
+  units.set(key,starting===0?0:price && starting >= 0 ? starting / price : null);
   if (units.get(key) === null) unavailable.add(key);
  }
  // Deposits compound daily at an annual effective rate; additions earn only after their date.
@@ -92,10 +93,19 @@ export function compareInvestments(starting: number, flows: CashFlow[], actual: 
   for (const key of keys) {
    const price = priceAt(data.prices[key],date,currency,data.fx);
    let holding = units.get(key) ?? null;
-   if (price === null || holding === null || holding * price + flow < -1e-8) { holding = null; unavailable.add(key); }
-   else holding += flow / price;
+   // Missing valuation quotes do not destroy known units. A missing trade
+   // price does: we cannot reconstruct the purchase/withdrawal later.
+   if(holding===null){point[key]=null;continue;}
+   if(price===null){
+    if(flow!==0){units.set(key,null);unavailable.add(key);}
+    point[key]=holding===0&&flow===0?0:null;
+    if(point[key]===null)unavailable.add(key);
+    continue;
+   }
+   if(holding*price+flow < -1e-8){units.set(key,null);point[key]=null;unavailable.add(key);continue;}
+   holding=Math.max(0,holding+flow/price);
    units.set(key,holding);
-   point[key] = holding !== null && price !== null ? Math.max(0,holding * price) : null;
+   point[key]=holding*price;
   }
   for (const deposit of deposits) {
    let balance = units.get(deposit.key) ?? null;

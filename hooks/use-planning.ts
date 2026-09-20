@@ -1,4 +1,5 @@
 "use client";
+import { refreshRead } from '@/lib/refresh-read';
 import { useCallback,useEffect,useRef,useState } from 'react';
 import { emptyPlanning,type PlanningData, type Category } from '@/lib/planning';
 import type { HoldingAccount } from '@/lib/holding-accounts';
@@ -12,7 +13,7 @@ export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:
  useEffect(()=>{
   if(!user||demo)return;
   const controller=new AbortController();request.current=controller;
-  fetch('/api/planning',{signal:controller.signal}).then(async r=>{
+  refreshRead('/api/planning',{signal:controller.signal}).then(async r=>{
    const data=await r.json() as PlanningData & {error?:string};if(!r.ok)throw Error(data.error);
    if(!controller.signal.aborted)setState({key,owner:user,data:{...data,records:data.records.map(normalizeEntry)},error:''});
   }).catch(e=>{if(!controller.signal.aborted)setState(previous=>({key,owner:user,data:previous.owner===user?previous.data:emptyPlanning,error:e.message}));});
