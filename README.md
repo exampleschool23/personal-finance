@@ -11,13 +11,13 @@ A private, multilingual personal-finance workspace built with React, Next.js and
 - Savings goals with shared funding priorities, reservation activity, pause/refill behavior, and saved inflation/missed-contribution scenarios.
 - Record search with per-page filters, categories, date filters, sorting and quick expense entry.
 - Transaction categorization rules, atomic category splits, account balance forecasts, monthly actuals review, and guided setup.
-- Bank CSV import with saved mappings, optional stable source IDs, batch history and atomic undo; CSV exports and complete JSON backups (full restore is not yet available).
+- Bank CSV import with saved mappings, optional stable source IDs, batch history and atomic undo; CSV exports and verified JSON backups with previewed in-account restoration and automatic recovery copies.
 - Debt payoff comparisons, allocation targets and drift, spending watchlists, recurring-pattern suggestions and duplicate notices.
 - Portfolio history, income history, market quotes and investment benchmarks. Daily background portfolio capture is available on Vercel.
 - Custom categories, preferences, light/dark themes, Google/email sign-in, optional verified signup, account recovery and password-confirmed account deletion.
 - Installable web-app shell with an offline explanation; financial data remains network-only.
 
-See [implementation status and remaining work](docs/roadmap-implementation.md). New database features require migrations 035–039; these have not yet been applied to the live project.
+See [implementation status and remaining work](docs/roadmap-implementation.md). The current schema includes migrations through 059. Apply only unapplied migrations in order; live migration status is not inferred from repository files. See [record reliability and restoration](docs/reliability-and-restore.md) for the new upgrade and restore limits.
 
 ## Local setup
 

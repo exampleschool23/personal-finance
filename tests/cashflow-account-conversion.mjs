@@ -1,3 +1,4 @@
+import { apiFunction } from './helpers/api-function.mjs';
 import {loadTS as loadCashAccountTS} from './helpers/load-ts.mjs';
 const {requiresCashAccount}=loadCashAccountTS('lib/cash-account-required.ts');
 import test from 'node:test';
@@ -50,9 +51,9 @@ const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^im
 test('record API verifies dated rate, preserves saved conversions on retry, and rejects forged rates',async()=>{
  let signedIn=true,offline=false,calls=[],prior=[];
  const kinds=['Cash','Living expense','Other income'];
- const post=new Function('requiresCashAccount','loadDatedExchangeRate','depositForecasts','isCurrency','z','kinds','income','expenses','assetRecordKinds','session','supa','sameOrigin',compile('app/api/records/route.ts')+';return POST;').bind(null,requiresCashAccount)(
+ const post=apiFunction('requiresCashAccount','loadDatedExchangeRate','depositForecasts','isCurrency','z','kinds','income','expenses','assetRecordKinds','session','supa','sameOrigin',compile('app/api/records/route.ts')+';return POST;').bind(null,requiresCashAccount)(
   async(from,to,date)=>{assert.equal(from,'USD');assert.equal(to,'UZS');assert.equal(date,'2020-01-02');if(offline)throw Error('offline');return {rate:12000,effective_date:'2020-01-01'};},()=>[],value=>['USD','UZS'].includes(value),z,kinds,['Other income'],['Living expense'],['Cash'],async()=>signedIn?{user:{id:id(1)},token:'owner'}:null,
-  async(path,init,token)=>{assert.equal(token,'owner');if(path.includes('select='))return Response.json([{id:id(10),kind:'Cash',currency:'USD'},...prior]);calls.push(JSON.parse(init.body));return Response.json([]);},req=>req.headers.get('origin')==='https://local');
+  async(path,init,token)=>{assert.equal(token,'owner');if(path.includes('select='))return Response.json([{id:id(10),kind:'Cash',currency:'USD'},...prior]);calls.push(JSON.parse(init.body).p_record??JSON.parse(init.body));return Response.json([]);},req=>req.headers.get('origin')==='https://local');
  const body={id:id(50),name:'Groceries',kind:'Living expense',currency:'UZS',amount:1200000,quantity:1,cost:0,rate:0,date:'2020-01-02',frequency:'Once',notes:'',account_id:id(10),account_exchange_rate:12000};
  const req=(patch={},origin='https://local')=>new Request('https://local',{method:'POST',headers:{origin},body:JSON.stringify({...body,...patch})});
  assert.equal((await post(req({},'https://other'))).status,403);

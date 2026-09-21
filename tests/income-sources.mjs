@@ -25,7 +25,7 @@ test('source types, category changes, salary periods and rental forecast dedupli
 });
 test('record API resolves owned matching source names and fails closed',async()=>{
  let source={id:id(1),name:'Apartment',kind:'Property'},failed=false,calls=[];
- const {POST}=loadTS('app/api/records/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner',user:{id:id(10)}}),sameOrigin:()=>true,supa:async(path,init,token)=>{assert.equal(token,'owner');if(path.includes('account_exchange_rate'))return Response.json([{id:id(9),kind:'Cash',currency:'USD'}]);if(init.method!=='POST')return failed?Response.json({}, {status:503}):Response.json(source?[source]:[]);calls.push(JSON.parse(init.body));return Response.json([]);}}});
+ const {POST}=loadTS('app/api/records/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner',user:{id:id(10)}}),sameOrigin:()=>true,supa:async(path,init,token)=>{assert.equal(token,'owner');if(path.includes('account_exchange_rate'))return Response.json([{id:id(9),kind:'Cash',currency:'USD'}]);if(init.method!=='POST')return failed?Response.json({}, {status:503}):Response.json(source?[source]:[]);calls.push(JSON.parse(init.body).p_record??JSON.parse(init.body));return Response.json([]);}}});
  const entry={account_id:id(9),id:id(2),kind:'Rent income',name:'Forged name',income_source_id:id(1),currency:'USD',amount:12.125,quantity:1,cost:0,rate:0,date:'2020-02-02',frequency:'Once',notes:''};
  const post=entry=>POST(new Request('https://local/api/records',{method:'POST',body:JSON.stringify(entry)}));
  assert.equal((await post(entry)).status,200);assert.equal(calls[0].name,'Apartment');assert.equal(calls[0].amount,12.125);

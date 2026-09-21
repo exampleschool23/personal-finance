@@ -1,3 +1,5 @@
+> Current follow-up: [record reliability and verified restoration](reliability-and-restore.md) adds migrations 058–059, conflict protection, edit history, and a verified backup restore flow. The historical notes below describe the earlier release.
+
 # Web roadmap implementation status
 
 Updated 18 September 2026. This tracks implementation against the [competitive research](competitive-feature-research.md). **Working-tree implementation is not deployment. The full roadmap is not finished, and unrestricted public launch is not yet recommended.**

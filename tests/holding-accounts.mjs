@@ -1,3 +1,4 @@
+import { apiFunction } from './helpers/api-function.mjs';
 import {loadTS as loadCashAccountTS} from './helpers/load-ts.mjs';
 const {requiresCashAccount}=loadCashAccountTS('lib/cash-account-required.ts');
 import test from 'node:test';
@@ -8,7 +9,7 @@ import { z } from 'zod';
 import { value } from '../lib/finance.ts';
 import { marketEntry } from '../lib/market.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const {holdingAccountValue}=new Function('value','marketEntry',compile('lib/holding-accounts.ts')+';return {holdingAccountValue};')(value,marketEntry);
+const {holdingAccountValue}=apiFunction('value','marketEntry',compile('lib/holding-accounts.ts')+';return {holdingAccountValue};')(value,marketEntry);
 const record=(id,account,kind,amount,quantity,currency='USD')=>({id,holding_account_id:account,name:kind==='Stock'?'AAPL':'Bitcoin',kind,amount,quantity,cost:0,rate:0,currency,date:'2026-09-17',frequency:'Once',notes:''});
 
 test('account containers sum only their holdings with quantities, quotes, and complete FX',()=>{
@@ -30,7 +31,7 @@ test('account containers sum only their holdings with quantities, quotes, and co
 test('account API validates input, applies authenticated ownership and reports missing assignments',async()=>{
  const id='30000000-0000-4000-8000-000000000001',owner='30000000-0000-4000-8000-000000000002';
  let signedIn=true,rows=[{id}],calls=[];
- const post=new Function('z','isCurrency','session','sameOrigin','supa',compile('app/api/holding-accounts/route.ts')+';return POST;')(z,c=>['USD','EUR'].includes(c),async()=>signedIn?{user:{id:owner},token:'owner-token'}:null,r=>r.headers.get('origin')==='https://local',async(path,init,token)=>{calls.push({path,body:JSON.parse(init.body),token});return Response.json(rows);});
+ const post=apiFunction('z','isCurrency','session','sameOrigin','supa',compile('app/api/holding-accounts/route.ts')+';return POST;')(z,c=>['USD','EUR'].includes(c),async()=>signedIn?{user:{id:owner},token:'owner-token'}:null,r=>r.headers.get('origin')==='https://local',async(path,init,token)=>{calls.push({path,body:JSON.parse(init.body),token});return Response.json(rows);});
  const request=(body,origin='https://local')=>new Request('https://local',{method:'POST',headers:{origin},body:JSON.stringify(body)});
  const draft={action:'save',id,name:'Brokerage',kind:'Stock',currency:'USD',user_id:id};
  assert.equal((await post(request(draft,'https://other'))).status,403);
@@ -79,10 +80,10 @@ test('record saves preserve holding membership and accept cash balances',async()
  const {kinds,income,expenses}=await import('../lib/finance.ts');
  const owner='50000000-0000-4000-8000-000000000001',accountId='50000000-0000-4000-8000-000000000002';
  let saved;
- const post=new Function('requiresCashAccount','z','kinds','income','expenses','isCurrency','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;').bind(null,requiresCashAccount)(z,kinds,income,expenses,c=>c==='USD',async()=>({user:{id:owner},token:'owner-token'}),async(path,init,token)=>{assert.equal(token,'owner-token');saved=JSON.parse(init.body);return Response.json([saved]);},()=>true,async()=>[]);
+ const post=apiFunction('requiresCashAccount','z','kinds','income','expenses','isCurrency','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;').bind(null,requiresCashAccount)(z,kinds,income,expenses,c=>c==='USD',async()=>({user:{id:owner},token:'owner-token'}),async(path,init,token)=>{assert.equal(token,'owner-token');saved=JSON.parse(init.body).p_record??JSON.parse(init.body);return Response.json([saved]);},()=>true,async()=>[]);
  const holding={...record('50000000-0000-4000-8000-000000000003',accountId,'Stock',13.45,2.5),notes:''};
  const request=body=>new Request('https://local/api/records',{method:'POST',body:JSON.stringify(body)});
- assert.equal((await post(request(holding))).status,200);assert.equal(saved.holding_account_id,accountId);assert.equal(saved.user_id,owner);assert.equal(saved.amount,13.45);assert.equal(saved.quantity,2.5);
+ assert.equal((await post(request(holding))).status,200);assert.equal(saved.holding_account_id,accountId);assert.equal(saved.user_id,undefined);assert.equal(saved.amount,13.45);assert.equal(saved.quantity,2.5);
  assert.equal((await post(request({...holding,kind:'Cash'}))).status,200);
 });
 

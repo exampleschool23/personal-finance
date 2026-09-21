@@ -1,9 +1,9 @@
+import { isoDate,uuid,fiatCurrency } from '@/lib/api-validation';
 import { z } from 'zod';
-import { isCurrency } from '@/lib/currencies';
 import { expensePlanCategories, expensePlanMonth } from '@/lib/expense-plans';
 import { session, supa, sameOrigin } from '@/lib/supabase';
-const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v=>Number.isFinite(Date.parse(v)) && new Date(v).toISOString().slice(0,10)===v);
-const schema = z.object({id:z.string().uuid(),name:z.string().trim().min(1).max(120),category:z.enum(expensePlanCategories),currency:z.string().refine(isCurrency),amount:z.number().finite().positive().max(1e15),start_date:date,end_date:date.nullable(),month:z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),rollover:z.boolean().optional()}).refine(p=>!p.end_date || p.end_date>=p.start_date);
+const date = isoDate;
+const schema = z.object({id:uuid,name:z.string().trim().min(1).max(120),category:z.enum(expensePlanCategories),currency:fiatCurrency,amount:z.number().finite().positive().max(1e15),start_date:date,end_date:date.nullable(),month:z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),rollover:z.boolean().optional()}).refine(p=>!p.end_date || p.end_date>=p.start_date);
 async function handle(req:Request, method:string) {
  if(method!=='GET'&&!sameOrigin(req))return new Response(null,{status:403});
  try {
@@ -14,7 +14,7 @@ async function handle(req:Request, method:string) {
    if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))return Response.json({error:'Check the plan fields.'},{status:400});
    path='/rest/v1/rpc/expense_plan_month';init={method:'POST',body:JSON.stringify({p_month:month+'-01'})};
   } else if(method==='DELETE') {
-   const {id}=await req.json() as {id:unknown};if(!z.string().uuid().safeParse(id).success)return new Response(null,{status:400});
+   const {id}=await req.json() as {id:unknown};if(!uuid.safeParse(id).success)return new Response(null,{status:400});
    path='/rest/v1/rpc/move_item_to_deleted';init={method:'POST',body:JSON.stringify({p_id:id,p_source:'expense_plans'})};
   } else {
    const parsed=schema.safeParse(await req.json());if(!parsed.success)return Response.json({error:'Check the plan fields.'},{status:400});

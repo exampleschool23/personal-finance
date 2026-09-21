@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import ts from 'typescript';
 import {expenses,liabilities} from '../lib/finance.ts';
 import {historyEventLabel} from '../lib/investment-history.ts';
-import {investmentKinds,isInvestmentRecord} from '../lib/comparison-profile.ts';
+import {isInvestmentRecord} from '../lib/comparison-profile.ts';
 import * as dates from '../lib/benchmark-data.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const deps={...dates};

@@ -16,3 +16,12 @@ test('single point has a bounded axis without fabricating another balance',()=>{
  assert.equal(axis.props.domain[1]-axis.props.domain[0],86400000);
  assert.equal(axis.props.ticks.length,1);assert.equal(result.props.data.length,1);
 });
+
+test('chart scales only displayed series and preserves gaps in observations',()=>{
+ const result=chart([{date:'2026-09-17',actual:100,hidden:999999},{date:'2026-09-18',actual:null},{date:'2026-09-19',actual:120}]);
+ const axis=result.props.children.find(child=>child.type==='YAxis');
+ assert.deepEqual(axis.props.domain,[97,123]);
+ const series=result.props.children.flat().find(child=>child.type==='Area');
+ assert.equal(series.props.connectNulls,false);assert.equal(series.props.dataKey,'actual');
+ assert.deepEqual(result.props.data.map(point=>point.actual),[100,null,120]);
+});

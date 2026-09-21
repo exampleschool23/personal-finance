@@ -1,25 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import ts from 'typescript';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import * as jsx from 'react/jsx-runtime';
 
-function load(file, imports) {
-  const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
-  }).outputText;
-  const exports = {};
-  new Function('require', 'exports', code)(name => {
-    assert.ok(name in imports, `Unexpected import: ${name}`);
-    return imports[name];
-  }, exports);
-  return exports;
-}
-const dictionaries = Object.fromEntries(['en', 'ru', 'uz'].map(lang =>
-  [`./locales/${lang}.json`, { default: JSON.parse(fs.readFileSync(`lib/locales/${lang}.json`, 'utf8')) }]));
-const i18n = load('lib/i18n.ts', dictionaries);
+import {loadTS as load} from './helpers/load-ts.mjs';
+const i18n = load('lib/i18n.ts');
 
 test('selector changes propagate to page, category, date locale, and back to English', () => {
   let language = 'en';

@@ -30,10 +30,7 @@ test('observations retain historical currency rates without overriding dated cor
  assert.deepEqual(points,[{date:'2026-09-17',assets:100,debt:20,net:80},current]);
  assert.deepEqual(mergePortfolioPoints([],[],current),[current]);
 });
-test('initial chart draws a starting line without fabricating a second dated balance',()=>{
- const ui=fs.readFileSync('components/portfolio-overview.tsx','utf8');
- assert.ok(ui.includes('InvestmentValueChart'));assert.ok(!ui.includes('Your first snapshot is ready'));
-});
+
 
 test('default dated history includes backdated car debt instead of an incomplete daily total',()=>{
  const recorded=[{date:'2026-09-17',assets:398000,debt:99251,net:298749},{date:'2026-09-18',assets:398000,debt:92021,net:305979}];

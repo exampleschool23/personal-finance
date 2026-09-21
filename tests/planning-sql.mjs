@@ -46,7 +46,7 @@ assert.equal(await balance(10),895);assert.equal(await balance(11),200);
  await db.query('SELECT record_investment_with_account($1,$2,$3,$4,$5,$6,$7,$8)',[id(71),id(70),'contribution',today,10,110,'',id(10)]);
  await db.query('SELECT record_investment_with_account($1,$2,$3,$4,$5,$6,$7,$8)',[id(71),id(70),'contribution',today,10,110,'',id(10)]);assert.equal(await balance(10),980);assert.equal(await balance(70),110);
  const backup=(await db.query('SELECT export_finance_backup() AS data')).rows[0].data;
- assert.equal(backup.version,1);for(const table of ['investment_account_links','finance_records','expense_plan_versions','transaction_categories','savings_goals'])assert.ok(backup.tables[table].length>0);
+ assert.equal(backup.version,2);for(const table of ['investment_account_links','finance_records','expense_plan_versions','transaction_categories','savings_goals'])assert.ok(backup.tables[table].length>0);
  for(const rows of Object.values(backup.tables))assert.ok(rows.every(row=>row.user_id===owner));
  await db.exec(`SET request.jwt.claim.sub='${other}';`);
  const emptyBackup=(await db.query('SELECT export_finance_backup() AS data')).rows[0].data;assert.ok(Object.values(emptyBackup.tables).every(rows=>rows.length===0));

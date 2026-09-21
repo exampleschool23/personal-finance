@@ -14,7 +14,7 @@ test('business income is income and does not duplicate business forecasts',()=>{
 });
 test('business income API requires a business and preserves the selected source and precision',async()=>{
  const calls=[];
- const {POST}=loadTS('app/api/records/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner',user:{id:id(1)}}),sameOrigin:()=>true,supa:async(path,init)=>{if(!init.body)return Response.json([{id:id(9),kind:'Cash',currency:'USD'}]);calls.push(JSON.parse(init.body));return Response.json([]);}}});
+ const {POST}=loadTS('app/api/records/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner',user:{id:id(1)}}),sameOrigin:()=>true,supa:async(path,init)=>{if(!init.body)return Response.json([{id:id(9),kind:'Cash',currency:'USD'}]);calls.push(JSON.parse(init.body).p_record??JSON.parse(init.body));return Response.json([]);}}});
  const record={account_id:id(9),id:id(2),name:'Cafe payout',kind:'Business income',currency:'USD',amount:12.125,quantity:1,cost:0,rate:0,date:'2020-01-02',frequency:'Once',notes:''};
  const post=data=>POST(new Request('https://local/api/records',{method:'POST',body:JSON.stringify(data)}));
  assert.equal((await post(record)).status,400);assert.equal(calls.length,0);

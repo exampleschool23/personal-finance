@@ -1,3 +1,4 @@
+import { apiFunction } from './helpers/api-function.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -10,7 +11,7 @@ const owner=id(1),wallet=id(2),goalId=id(3);
 const btc={holding_account_id:wallet,asset_kind:'Crypto',asset_symbol:'BTC',target:4,monthly_contribution:null};
 const ton={...btc,asset_symbol:'TON',target:30000};
 const goal={...btc,id:goalId,name:'Crypto Millionaire',kind:'investment',account_id:null,allocated:0,target_date:'2030-12-01',annual_return:0};
-function api(supa){return new Function('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts',compile('app/api/planning/route.ts')+';return POST;')(instrumentFor,z,async()=>({token:'owner'}),supa,()=>true,async()=>[],()=>true,async()=>[]);}
+function api(supa){return apiFunction('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts',compile('app/api/planning/route.ts')+';return POST;')(instrumentFor,z,async()=>({token:'owner'}),supa,()=>true,async()=>[],()=>true,async()=>[]);}
 const request=data=>new Request('https://local/api/planning',{method:'POST',body:JSON.stringify({action:'goal',data})});
 
 test('a missing multi-holding migration blocks the write instead of silently losing TON',async()=>{

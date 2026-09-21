@@ -47,11 +47,7 @@ test('chart scale handles zero, negative, constant, precise and missing balances
  assert.deepEqual(portfolioChartDomain([],['net']),[0,1]);
  assert.deepEqual(portfolioChartDomain([{net:NaN}],['net']),[0,1]);
 });
-test('portfolio chart connects observations and scales the chosen series', () => {
- const ui = fs.readFileSync(new URL('../components/portfolio-overview.tsx',import.meta.url),'utf8');
- assert.match(ui,/<InvestmentValueChart points=\{visible\}/);
- assert.doesNotMatch(ui,/historyMode|snapshotPoints|Daily observations/);
-});
+
 
 test('dated PC purchase transfers cash without creating net worth; breeding valuation changes only its day',()=>{
  const rows=[record('cash','Cash'),record('club','Business'),record('sheep','Business'),record('debt','Debt')];

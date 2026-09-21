@@ -9,7 +9,7 @@ export function harness(file,name,dependencies){
   useCallback(callback,deps){const index=cursor++;if(changed(slots[index]?.deps,deps))slots[index]={deps,callback};return slots[index].callback;},
   useEffect(effect,deps){const index=cursor++;if(changed(slots[index]?.deps,deps)){const old=slots[index];slots[index]={deps};pending.push(()=>{old?.cleanup?.();slots[index].cleanup=effect();});}},
  };
- const bindings={...hooks,refreshRead:dependencies.fetch,...dependencies};
+ const bindings={...hooks,refreshRead:dependencies.fetch,...(file!=='hooks/use-owner-resource.ts'?{useOwnerResource:harness('hooks/use-owner-resource.ts','useOwnerResource',dependencies)}:{}),...dependencies};
  const source=fs.readFileSync(file,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,'');
  const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
  const hook=new Function(...Object.keys(bindings),js+`;return ${name};`)(...Object.values(bindings));
