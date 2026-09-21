@@ -1524,3 +1524,5 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .cash-investment-option input{width:16px;height:16px;accent-color:var(--primary)}
 
 .portfolio-trend .portfolio-chart{font-family:inherit;font-size:var(--type-small)}
+
+.period-amount{text-align:left;background:none;border:0;padding:0;cursor:pointer;color:inherit}.period-details.portfolio-tooltip{padding:0;width:360px;max-width:calc(100vw - 32px)}

@@ -1770,5 +1770,7 @@
   "Actual investment activity only. Expenses include mortgage interest; principal repayments are shown separately. Opening balances and value updates are excluded.": "Только фактические инвестиционные операции. Расходы включают проценты по ипотеке; погашение основного долга показано отдельно. Начальные остатки и переоценки исключены.",
   "Activity in selected period": "Операции за выбранный период",
   "Overall income received": "Всего получено дохода",
-  "Invested includes investment contributions and debt repayments. Expenses include interest. Income includes all actual receipts in the selected period.": "Инвестировано включает вложения и погашение основного долга. Расходы включают проценты. Доход включает все фактические поступления за выбранный период."
+  "Invested includes investment contributions and debt repayments. Expenses include interest. Income includes all actual receipts in the selected period.": "Инвестировано включает вложения и погашение основного долга. Расходы включают проценты. Доход включает все фактические поступления за выбранный период.",
+  "Rental improvements": "Улучшения арендной недвижимости",
+  "Business investment": "Вложения в бизнес"
 }
