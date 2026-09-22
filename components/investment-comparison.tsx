@@ -1,4 +1,5 @@
 "use client";
+import { Spinner } from '@/components/ui/spinner';
 import { InvestmentPeriodSummary } from '@/components/investment-period-summary';
 import { refreshRead } from '@/lib/refresh-read';
 import { InvestmentValueChart } from '@/components/investment-value-chart';
@@ -47,6 +48,7 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   refreshRead('/api/benchmarks?'+params,{signal:controller.signal}).then(async response=>{const result=await response.json() as BenchmarkData&{error?:string};if(!response.ok)throw Error(result.error);if(!controller.signal.aborted){setData(result);setLoadedKey(requestKey);setError('');}}).catch(reason=>{if(!controller.signal.aborted){setError(reason.message);setLoadedKey(requestKey);setData(null);}});
   return()=>controller.abort();
  },[demo,requestKey,start,today,selectionKey,symbol,retry,profile,profileError]);
+ const comparisonsLoading=!demo&&!!requestKey&&((!profile&&!profileError)||loadedKey!==requestKey);
  const ready=loadedKey===requestKey?data:null;
  const performance=portfolio.performance;
  const result=useMemo(()=>ready&&!performance.missing?getInvestmentComparison({records,events:history.events,cashflows:history.cashflows,market,currency,today},ready):null,[ready,performance,records,history,market,currency,today]);
@@ -66,10 +68,9 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   const chartPoints=result?points.filter(point=>point.date>=cutoff&&point.actual!==null):embedded.points.map(point=>({...point,actual:point.net}));
   const chartSeries=result?visibleSeries:definitions.filter(item=>item.key==='actual');
   return <>
-   <div className="comparison-legend">{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={item.key==='actual'||!result} onClick={()=>setHidden(previous=>previous.includes(item.key)?previous.filter(key=>key!==item.key):[...previous,item.key])}><i style={{background:item.color}}/>{item.label}</button>)}</div>
+   <div className="comparison-legend" aria-busy={comparisonsLoading}>{comparisonsLoading&&<span role="status" className="flex items-center gap-2 muted"><Spinner aria-hidden="true"/>{t('Loading comparisons…')}</span>}{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={item.key==='actual'||!result} onClick={()=>setHidden(previous=>previous.includes(item.key)?previous.filter(key=>key!==item.key):[...previous,item.key])}><i style={{background:item.color}}/>{item.label}</button>)}</div>
    <InvestmentValueChart points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={chartSeries.length===1?embedded.tooltip:undefined}/>
-   {!demo&&!error&&!result&&<p className="muted">{t('Loading comparisons…')}</p>}
-   {error&&<p role="alert" className="error">{t(error)} <Button variant="outline" onClick={()=>setRetry(n=>n+1)}>{t('Retry')}</Button></p>}
+   {error&&<p role="alert" className="error">{t(error)} <Button variant="outline" onClick={()=>{setLoadedKey('');setError('');setRetry(n=>n+1);}}>{t('Retry')}</Button></p>}
   </>;
  }
  return <section className="panel portfolio-trend investment-comparison">
