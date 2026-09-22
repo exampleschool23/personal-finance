@@ -30,3 +30,16 @@ test('activity tap opens the original record and does not select another chart p
  button.props.onClick({stopPropagation(){stopped=true;}});
  assert.equal(opened,activity);assert.equal(opened.record.currency,'UZS');assert.equal(stopped,true);
 });
+
+const tooltipValue=options=>PortfolioTooltip(options).props.children[0].props.children[2].props.children;
+test('overview tooltip displays the investment chart actual value after comparisons load',()=>{
+ assert.equal(tooltipValue({...props,valueKey:'actual',payload:[{payload:{date:point.date,actual:403110.42}}]}),'$403,110');
+});
+test('overview tooltip uses the plotted actual value before comparisons load, preserving zero and missing values',()=>{
+ for(const actual of [403110.42,0,null,undefined]){
+  assert.equal(tooltipValue({...props,valueKey:'actual',payload:[{payload:{...point,actual}}]}),actual===403110.42?'$403,110':actual===0?'$0':'—');
+ }
+ assert.equal(tooltipValue(props),'$100');
+ assert.equal(PortfolioTooltip({...props,active:false}),null);
+ assert.equal(PortfolioTooltip({...props,payload:[]}),null);
+});

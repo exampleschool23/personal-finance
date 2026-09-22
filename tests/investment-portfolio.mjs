@@ -39,3 +39,38 @@ test('portfolio growth is distinct from funding result, including mortgage inter
  assert.equal(investmentValueChange([null,400]),null);
  assert.equal(investmentValueChange([400,399.75]),-.25);
 });
+
+test('cash-only sheep investment funds every benchmark on its date without increasing asset value',()=>{
+ const addition=85.125;
+ const scenario={...input,records:[{...input.records[0],name:'Sheep',ownership_percentage:50}],events:[{...input.events[0],ownership_percentage:50}]};
+ const purchase={...event('sheep-purchase','asset','2026-09-19',null,'contribution',addition*10000),ownership_percentage:50};
+ const funded={...scenario,events:[...scenario.events,purchase]};
+ const prices={...data,prices:{...data.prices,SPY:[{date:'2026-09-17',close:200},{date:'2026-09-20',close:210}],CUSTOM:[{date:'2026-09-17',close:50},{date:'2026-09-20',close:60}]}};
+ const before=getInvestmentComparison(scenario,prices),after=getInvestmentComparison(funded,prices);
+ const portfolio=getInvestmentPortfolio(funded);
+ const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<1e-8,`${actual} != ${expected}`);
+ assert.deepEqual(after.points.map(p=>p.actual),before.points.map(p=>p.actual));
+ assert.equal(portfolio.value,200);
+ near(portfolio.performance.invested,200+addition);
+ assert.deepEqual(portfolio.performance.flows,[{date:'2026-09-17',amount:200},{date:'2026-09-19',amount:addition}]);
+ for(let index=0;index<after.points.length;index++){
+  const current=after.points[index],previous=before.points[index];
+  near(current.contributed-previous.contributed,index<2?0:addition);
+  if(index<=2)for(const key of ['BTC','SPY','CUSTOM','depositUSD','depositUZS'])near(current[key]-previous[key],index<2?0:addition);
+ }
+ const last=after.points.at(-1),oldLast=before.points.at(-1);
+ for(const [key,factor] of [['BTC',1.2],['SPY',1.05],['CUSTOM',1.2],['depositUSD',1.08**(1/365)],['depositUZS',1.21**(1/365)]])near(last[key]-oldLast[key],addition*factor);
+ near(last.actual-last.contributed,-addition);
+ const eur=getInvestmentComparison({...funded,currency:'EUR'},prices);
+ for(let index=0;index<after.points.length;index++)for(const key of ['actual','contributed','BTC','SPY','CUSTOM','depositUSD','depositUZS'])near(eur.points[index][key],after.points[index][key]*.9);
+});
+
+test('cash-only investment with a missing benchmark purchase price remains funded and reports the unavailable comparison',()=>{
+ const funded={...input,events:[...input.events,event('purchase','asset','2026-09-19',null,'contribution',850000)]};
+ const result=getInvestmentComparison(funded,{...data,prices:{BTC:[]}});
+ assert.equal(result.points.at(-1).actual,410);
+ assert.equal(result.points.at(-1).contributed,495);
+ assert.equal(result.points.at(-1).BTC,null);
+ assert.ok(result.unavailable.includes('BTC'));
+ assert.ok(result.points.at(-1).depositUSD>495);
+});
