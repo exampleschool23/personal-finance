@@ -136,3 +136,20 @@ test('invalid fallback prices, missing days, and malformed timestamps remain una
   }
  }finally{globalThis.fetch=original;}
 });
+test('diversified portfolio fetches the chosen crypto and stock with separate keys',async()=>{
+ const original=globalThis.fetch,key=process.env.TWELVE_DATA_API_KEY;
+ try{
+  process.env.TWELVE_DATA_API_KEY='test';const calls=[];
+  globalThis.fetch=async raw=>{
+   const url=new URL(raw);calls.push(url);
+   if(url.hostname==='api.twelvedata.com')return Response.json({meta:{symbol:'QQQ',currency:'USD'},values:[{datetime:'2026-09-14',close:'100'},{datetime:'2026-09-17',close:'110'}]});
+   if(url.hostname==='api.exchange.coinbase.com')return Response.json(['2026-09-14','2026-09-15','2026-09-16','2026-09-17'].map(date=>[dates.dateMillis(date)/1000,0,0,0,2000,1]));
+   const date=url.pathname.split('/').filter(Boolean).at(-1);
+   return Response.json([{Ccy:'USD',Rate:'12000',Nominal:'1',Date:date.split('-').reverse().join('.')}]);
+  };
+  const data=await(await GET(request('start=2026-09-14&end=2026-09-17&benchmarks=PORTFOLIO&portfolioCrypto=ETH&portfolioStock=QQQ'))).json();
+  assert.equal(data.prices.portfolioCrypto.length,4);assert.equal(data.prices.portfolioStock[0].close,100);
+  assert.ok(calls.some(url=>url.pathname.includes('ETH-USD')));assert.ok(calls.some(url=>url.searchParams.get('symbol')==='QQQ'));assert.equal(data.prices.BTC,undefined);
+  const invalid=await GET(request('start=2026-09-14&end=2026-09-17&benchmarks=PORTFOLIO&portfolioCrypto=../secret'));assert.equal(invalid.status,400);
+ }finally{globalThis.fetch=original;if(key===undefined)delete process.env.TWELVE_DATA_API_KEY;else process.env.TWELVE_DATA_API_KEY=key;}
+});

@@ -74,3 +74,10 @@ test('cash-only investment with a missing benchmark purchase price remains funde
  assert.ok(result.unavailable.includes('BTC'));
  assert.ok(result.points.at(-1).depositUSD>495);
 });
+
+test('diversified portfolio uses shared cashflows and converts the whole result at current FX',()=>{
+ const allocation={crypto:0,stock:0,deposit:20,business:20,cash:60,cryptoSymbol:'BTC',stockSymbol:'SPY',businessRate:12};
+ const usd=getInvestmentComparison(input,data,allocation),eur=getInvestmentComparison({...input,currency:'EUR'},data,allocation);
+ assert.ok(usd.points.at(-1).PORTFOLIO>0);
+ for(let i=0;i<usd.points.length;i++)assert.ok(Math.abs(eur.points[i].PORTFOLIO-usd.points[i].PORTFOLIO*.9)<1e-8);
+});

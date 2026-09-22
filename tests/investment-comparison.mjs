@@ -77,3 +77,28 @@ test('zero and nonfinite quotes cannot generate infinite benchmark balances',()=
   assert.equal(result.points[0].SPY,null);
  }
 });
+
+const allocation={crypto:20,stock:20,deposit:20,business:20,cash:20,cryptoSymbol:'ETH',stockSymbol:'QQQ',businessRate:10};
+test('diversified portfolio weights dated purchases and withdrawals without rounding',()=>{
+ const prices={portfolioCrypto:[{date:'2025-01-01',close:100},{date:'2025-01-02',close:200}],portfolioStock:[{date:'2025-01-01',close:100},{date:'2025-01-02',close:110}]};
+ const result=compareInvestments(0,[{date:'2025-01-01',amount:1000.123},{date:'2025-01-02',amount:-100.123}],[],data('2025-01-01','2025-01-02',prices),'USD',true,allocation);
+ near(result.points[0].PORTFOLIO,1000.123);
+ const last=result.points.at(-1);
+ near(last.PORTFOLIO,(last.portfolioCrypto+last.portfolioStock+last.depositUZS+last.portfolioBusiness+last.portfolioCash)/5);
+ near(last.PORTFOLIO,1000.123*(2+1.1+1.21**(1/365)+1.1**(1/365)+1)/5-100.123);
+ near(last.portfolioCash,900);
+ near(last.contributed,900);
+});
+test('missing active sleeve fails closed but zero-weight sleeves do not require data',()=>{
+ let result=compareInvestments(1000,[],[],data('2025-01-01','2025-01-02'),'USD',false,allocation);
+ assert.equal(result.points[0].PORTFOLIO,null);assert.ok(result.unavailable.includes('PORTFOLIO'));
+ result=compareInvestments(1000,[],[],{...data('2025-01-01','2025-01-02'),fx:[]},'USD',false,{...allocation,crypto:0,stock:0,deposit:0,business:0,cash:100});
+ near(result.points.at(-1).PORTFOLIO,1000);
+});
+test('modeled business compounds and impossible withdrawals invalidate the portfolio',()=>{
+ const business={...allocation,crypto:0,stock:0,deposit:0,business:100,cash:0};
+ const result=compareInvestments(1000,[],[],data('2025-01-01','2026-01-01'),'USD',false,business);
+ near(result.points.at(-1).PORTFOLIO,1100);
+ const withdrawn=compareInvestments(1000,[{date:'2025-01-02',amount:-2000}],[],data('2025-01-01','2025-01-03'),'USD',false,business);
+ assert.equal(withdrawn.points.at(-1).PORTFOLIO,null);
+});

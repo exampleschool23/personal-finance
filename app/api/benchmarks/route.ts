@@ -32,17 +32,17 @@ async function stockHistory(symbol: string, start: string, end: string, key: str
  if (!prices.some(row => row.date <= start) || !prices.some(row => row.date >= shiftDay(end, -7))) throw Error('Incomplete history');
  return prices;
 }
-async function bitcoinProviderHistory(start: string, end: string, provider: 'coinbase' | 'bitfinex'): Promise<PricePoint[]> {
+async function cryptoProviderHistory(start: string, end: string, provider: 'coinbase' | 'bitfinex', symbol = 'BTC'): Promise<PricePoint[]> {
  const rows = new Map<string, PricePoint>();
  for (let cursor = shiftDay(start, -1); cursor <= end; cursor = shiftDay(cursor, 299)) {
   const last = shiftDay(cursor, 299) < shiftDay(end, 1) ? shiftDay(cursor, 299) : shiftDay(end, 1);
   let candles: unknown;
   if (provider === 'coinbase') {
    const params = new URLSearchParams({ granularity: '86400', start: cursor + 'T00:00:00Z', end: last + 'T00:00:00Z' });
-   candles = await read('https://api.exchange.coinbase.com/products/BTC-USD/candles?' + params, true);
+   candles = await read('https://api.exchange.coinbase.com/products/'+symbol+'-USD/candles?' + params, true);
   } else {
    const params = new URLSearchParams({ start: String(dateMillis(cursor)), end: String(dateMillis(last) - 1), limit: '299', sort: '1' });
-   candles = await read('https://api-pub.bitfinex.com/v2/candles/trade:1D:tBTCUSD/hist?' + params, true);
+   candles = await read('https://api-pub.bitfinex.com/v2/candles/trade:1D:t'+symbol+'USD/hist?' + params, true);
   }
   if (!Array.isArray(candles)) throw Error('Unavailable');
   for (const row of candles) {
@@ -63,13 +63,13 @@ async function bitcoinProviderHistory(start: string, end: string, provider: 'coi
  if(points[0]?.date!==openingDate || !lastDate || (lastDate!==end && !(end===depositToday() && lastDate===shiftDay(end,-1))) || points.length!==Math.round((dateMillis(lastDate)-dateMillis(openingDate))/dayMillis)+1)throw Error('Incomplete history');
  return points;
 }
-async function bitcoinHistory(start: string, end: string): Promise<PricePoint[]> {
+async function cryptoHistory(start: string, end: string, symbol = 'BTC'): Promise<PricePoint[]> {
  for (const provider of ['coinbase', 'bitfinex'] as const) {
-  try { return await bitcoinProviderHistory(start, end, provider); }
+  try { return await cryptoProviderHistory(start, end, provider, symbol); }
   catch {
    // Fetch the entire series from the fallback, avoiding artificial returns from
    // mixing daily prices across exchanges. Do not log response bodies or URLs.
-   console.warn('Bitcoin history unavailable', provider, 'request_or_incomplete_history');
+   console.warn('Crypto history unavailable', provider, 'request_or_incomplete_history');
   }
  }
  throw Error('Unavailable');
@@ -93,15 +93,24 @@ export async function GET(req: Request) {
   if (!validDay(start) || !validDay(end) || start > end || end > depositToday() || start < '2016-01-01' || (custom && !/^[A-Z][A-Z0-9.-]{0,14}$/.test(custom))) return Response.json({ error: 'Choose valid dates ending today or earlier.' }, { status: 400 });
   const data: BenchmarkData = { start, end, prices: {}, fx: [], errors: {} };
   const selected=(params.get('benchmarks')??'SPY,HYG,BTC,depositUZS,depositUSD,CUSTOM').split(',');
-  if(selected.some(key=>!['SPY','HYG','BTC','depositUZS','depositUSD','CUSTOM'].includes(key)))return Response.json({error:'Check the comparison settings.'},{status:400});
+  if(selected.some(key=>!['SPY','HYG','BTC','depositUZS','depositUSD','CUSTOM','PORTFOLIO'].includes(key)))return Response.json({error:'Check the comparison settings.'},{status:400});
+  const portfolioCrypto=params.get('portfolioCrypto')??'',portfolioStock=params.get('portfolioStock')??'';
+  if ((portfolioCrypto&&!/^[A-Z][A-Z0-9]{0,14}$/.test(portfolioCrypto))||(portfolioStock&&!/^[A-Z][A-Z0-9.-]{0,14}$/.test(portfolioStock)))return Response.json({error:'Check the comparison settings.'},{status:400});
   const key = process.env.TWELVE_DATA_API_KEY;
-  const symbols = [{id:'SPY',symbol:'SPY'},{id:'HYG',symbol:'HYG'},...(custom ? [{id:'CUSTOM',symbol:custom}] : [])];
-  const jobs: (() => Promise<void>)[] = symbols.filter(item=>selected.includes(item.id)).map(({id,symbol}) => async () => {
+  const histories = new Map<string,Promise<PricePoint[]>>();
+  function history(kind:'crypto'|'stock',symbol:string) {
+   const id=kind+':'+symbol;
+   if(!histories.has(id))histories.set(id,kind==='crypto'?cryptoHistory(start,end,symbol):stockHistory(symbol,start,end,key!));
+   return histories.get(id)!;
+  }
+  const symbols = [{id:'SPY',symbol:'SPY'},{id:'HYG',symbol:'HYG'},...(custom ? [{id:'CUSTOM',symbol:custom}] : []),...(selected.includes('PORTFOLIO')&&portfolioStock?[{id:'portfolioStock',symbol:portfolioStock}]:[])];
+  const jobs: (() => Promise<void>)[] = symbols.filter(item=>(selected.includes(item.id)||item.id==='portfolioStock')).map(({id,symbol}) => async () => {
    if (!key) { data.errors[id] = 'Stock comparisons need a market-data connection.'; return; }
-   try { data.prices[id] = await stockHistory(symbol, start, end, key); }
+   try { data.prices[id] = await history('stock',symbol); }
    catch { data.errors[id] = 'Market history is unavailable for this period.'; }
   });
-  if(selected.includes('BTC'))jobs.push(async () => { try { data.prices.BTC = await bitcoinHistory(start, end); } catch { data.errors.BTC = 'Market history is unavailable for this period.'; } });
+  if(selected.includes('BTC'))jobs.push(async () => { try { data.prices.BTC = await history('crypto','BTC'); } catch { data.errors.BTC = 'Market history is unavailable for this period.'; } });
+  if(selected.includes('PORTFOLIO')&&portfolioCrypto)jobs.push(async()=>{try{data.prices.portfolioCrypto=await history('crypto',portfolioCrypto);}catch{data.errors.portfolioCrypto='Market history is unavailable for this period.';}});
   jobs.push(async () => {
    try {
     const dates = checkpointDates(start, end);
@@ -115,6 +124,7 @@ export async function GET(req: Request) {
   });
   let index = 0;
   await Promise.all(Array.from({ length: 3 }, async () => { while (index < jobs.length) await jobs[index++](); }));
+  if(data.errors.portfolioStock||data.errors.portfolioCrypto)data.errors.PORTFOLIO=data.errors.portfolioStock??data.errors.portfolioCrypto;
   return Response.json(data, { headers: { 'Cache-Control': Object.keys(data.errors).length ? 'private, no-store' : 'private, max-age=300' } });
  } catch { return Response.json({ error: 'Could not load comparisons.' }, { status: 503 }); }
 }

@@ -1,3 +1,4 @@
+import type { DiversifiedPortfolio } from './diversified-portfolio';
 import { assets, liabilities, income, expenses, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import { dateMillis, dayMillis, historicalRate, latestOn, shiftDay, type BenchmarkData, type FxPoint, type PricePoint } from './benchmark-data';
@@ -66,16 +67,22 @@ function priceAt(prices: PricePoint[], date: string, currency: string, fx: FxPoi
  if (!quote || !Number.isFinite(quote.close) || quote.close<=0 || dateMillis(date) - dateMillis(quote.date) > 7 * dayMillis) return null;
  return convertHistorical(quote.close,'USD',currency,date,fx);
 }
-export function compareInvestments(starting: number, flows: CashFlow[], actual: WealthPoint[], data: BenchmarkData, currency: string, includeStartFlows = false) {
+export function compareInvestments(starting: number, flows: CashFlow[], actual: WealthPoint[], data: BenchmarkData, currency: string, includeStartFlows = false, portfolio?: DiversifiedPortfolio | null) {
  const dates: string[] = [];
  for (let date = data.start; date <= data.end; date = shiftDay(date,1)) dates.push(date);
  const flowsByDay = new Map<string,number>();
  for (const flow of flows) if ((flow.date > data.start || (includeStartFlows && flow.date === data.start)) && flow.date <= data.end) flowsByDay.set(flow.date,(flowsByDay.get(flow.date) ?? 0) + flow.amount);
- const keys = Object.keys(data.prices);
+ // Modeled business returns and USD cash share the same dated purchase engine.
+ const prices = {...data.prices};
+ if (portfolio) {
+  prices.portfolioBusiness = dates.map((date,index)=>({date,close:(1+portfolio.businessRate/100)**(index/365)}));
+  prices.portfolioCash = dates.map(date=>({date,close:1}));
+ }
+ const keys = Object.keys(prices);
  const units = new Map<string,number | null>();
  const unavailable = new Set<string>();
  for (const key of keys) {
-  const price = priceAt(data.prices[key],data.start,currency,data.fx);
+  const price = priceAt(prices[key],data.start,currency,data.fx);
   units.set(key,starting===0?0:price && starting >= 0 ? starting / price : null);
   if (units.get(key) === null) unavailable.add(key);
  }
@@ -91,7 +98,7 @@ export function compareInvestments(starting: number, flows: CashFlow[], actual: 
   contributed += flow;
   const point: ComparisonPoint = {date,actual:latestOn(actual,date)?.amount ?? null,contributed};
   for (const key of keys) {
-   const price = priceAt(data.prices[key],date,currency,data.fx);
+   const price = priceAt(prices[key],date,currency,data.fx);
    let holding = units.get(key) ?? null;
    // Missing valuation quotes do not destroy known units. A missing trade
    // price does: we cannot reconstruct the purchase/withdrawal later.
@@ -116,6 +123,11 @@ export function compareInvestments(starting: number, flows: CashFlow[], actual: 
    units.set(deposit.key,balance);
    point[deposit.key] = balance === null ? null : convertHistorical(Math.max(0,balance),deposit.currency,currency,date,data.fx);
    if (point[deposit.key] === null) unavailable.add(deposit.key);
+  }
+  if (portfolio) {
+   const sleeves = [{key:'portfolioCrypto',weight:portfolio.crypto},{key:'portfolioStock',weight:portfolio.stock},{key:'depositUZS',weight:portfolio.deposit},{key:'portfolioBusiness',weight:portfolio.business},{key:'portfolioCash',weight:portfolio.cash}].filter(sleeve=>sleeve.weight>0);
+   point.PORTFOLIO = sleeves.every(sleeve=>typeof point[sleeve.key]==='number') ? sleeves.reduce((sum,sleeve)=>sum+(point[sleeve.key] as number)*sleeve.weight/100,0) : null;
+   if(point.PORTFOLIO===null)unavailable.add('PORTFOLIO');
   }
   return point;
  });

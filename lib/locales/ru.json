@@ -1812,5 +1812,12 @@
   "This account has linked records.": "У этого счёта есть связанные записи.",
   "Previous recovery copies": "Предыдущие копии для восстановления",
   "No recovery copies yet.": "Копий для восстановления пока нет.",
-  "Could not load recovery copies.": "Не удалось загрузить копии для восстановления."
+  "Could not load recovery copies.": "Не удалось загрузить копии для восстановления.",
+  "Diversified portfolio": "Диверсифицированный портфель",
+  "Choose SPY for S&P 500, QQQ for Nasdaq-100, or a specific stock or ETF.": "Выберите SPY для S&P 500, QQQ для Nasdaq-100 или отдельную акцию либо ETF.",
+  "Assumed annual business return": "Предполагаемая годовая доходность бизнеса",
+  "USD cash · no interest": "Деньги в USD · без процентов",
+  "Total allocation: {total}%": "Общая доля: {total}%",
+  "Business uses your assumed effective annual return, compounded daily in USD. It does not use recorded business performance. This is a hypothetical comparison, not a forecast. Deposit values include historical UZS exchange-rate changes.": "Для бизнеса используется заданная вами эффективная годовая доходность с ежедневной капитализацией в USD, а не фактические результаты бизнеса. Это условное сравнение, а не прогноз. Стоимость вклада учитывает исторические изменения курса UZS.",
+  "Split each contribution across these investments. Weights must total {target}%. Holdings are not automatically rebalanced.": "Каждый взнос распределяется между этими инвестициями. Сумма долей должна составлять {target}%. Автоматическая ребалансировка не выполняется."
 }

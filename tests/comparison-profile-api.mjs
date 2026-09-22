@@ -1,3 +1,4 @@
+import { diversifiedPortfolioSchema, defaultDiversifiedPortfolio } from '../lib/diversified-portfolio.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -8,7 +9,7 @@ import {benchmarkKeys,investmentKinds,defaultComparisonPreferences} from '../lib
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let authenticated=true,calls=[];
 const supa=async(path,init,token)=>{calls.push({path,init,token});return Response.json(path.includes('mark_app_started')?{started_at:'2026-09-01T00:00:00Z',source:'first_visit'}:[]);};
-const deps={z,isCurrency,benchmarkKeys,investmentKinds,defaultComparisonPreferences,session:async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,supa,sameOrigin:req=>req.headers.get('origin')==='https://local'};
+const deps={diversifiedPortfolioSchema,z,isCurrency,benchmarkKeys,investmentKinds,defaultComparisonPreferences,session:async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,supa,sameOrigin:req=>req.headers.get('origin')==='https://local'};
 const api=new Function(...Object.keys(deps),compile('app/api/comparison-profile/route.ts')+';return {GET,PUT,POST};')(...Object.values(deps));
 const req=body=>new Request('https://local',{method:'POST',headers:{origin:'https://local','Content-Type':'application/json'},body:JSON.stringify(body)});
 test('owner-scoped settings default to Bitcoin and first-use timestamp comes from the database',async()=>{
@@ -27,4 +28,13 @@ test('invalid choices, currencies, origins and unauthenticated requests are reje
 });
 test('migration prevents baseline updates and keeps owner RLS and first-use date immutable',()=>{
  const sql=fs.readFileSync('migrations/016_investment_comparison.sql','utf8');assert.ok(sql.includes('ON CONFLICT(user_id) DO NOTHING'));assert.ok(sql.includes('min(created_at)'));assert.ok(!sql.includes('GRANT UPDATE ON public.investment_comparison_baselines'));assert.ok(sql.includes('GRANT INSERT(user_id,starting_amount,currency,holdings)'));assert.ok(fs.readFileSync('database/setup.sql','utf8').includes(sql));
+});
+
+test('diversified allocation validates totals and persists only for the authenticated owner',async()=>{
+ calls=[];
+ assert.equal((await api.PUT(req({benchmarks:['PORTFOLIO'],custom_symbol:'',portfolio:defaultDiversifiedPortfolio,user_id:'other'}))).status,200);
+ assert.deepEqual(JSON.parse(calls[0].init.body),{benchmarks:['PORTFOLIO'],custom_symbol:'',portfolio:defaultDiversifiedPortfolio,user_id:'owner'});
+ for(const portfolio of [null,{...defaultDiversifiedPortfolio,cash:19},{...defaultDiversifiedPortfolio,cash:-20,stock:60},{...defaultDiversifiedPortfolio,businessRate:-1},{...defaultDiversifiedPortfolio,stockSymbol:'bad/url'}]) {
+  calls=[];assert.equal((await api.PUT(req({benchmarks:['PORTFOLIO'],custom_symbol:'',portfolio}))).status,400);assert.equal(calls.length,0);
+ }
 });

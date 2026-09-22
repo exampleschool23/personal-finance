@@ -1,3 +1,4 @@
+import type { DiversifiedPortfolio } from './diversified-portfolio';
 import { compareInvestments, type ComparisonPoint } from './investment-comparison';
 import type { BenchmarkData } from './benchmark-data';
 import { actualInvestmentPerformance, investmentEvents } from './actual-investment-performance';
@@ -27,10 +28,10 @@ export function getInvestmentPortfolio({records,events,cashflows=[],market,curre
 // Simulate in one base currency so changing the display currency cannot change
 // hypothetical purchases. Convert the complete comparison at the same current
 // rates as Overview, while benchmark instruments retain their dated prices/FX.
-export function getInvestmentComparison(input:InvestmentPortfolioInput,data:BenchmarkData){
+export function getInvestmentComparison(input:InvestmentPortfolioInput,data:BenchmarkData,portfolio?:DiversifiedPortfolio|null){
  const base=getInvestmentPortfolio({...input,currency:'USD'});
  if(base.performance.missing||convertAmount(1,'USD',input.currency,base.rates)===null)return null;
- const result=compareInvestments(0,base.performance.flows,base.performance.points,data,'USD',true);
+ const result=compareInvestments(0,base.performance.flows,base.performance.points,data,'USD',true,portfolio);
  return {...result,netCashFlow:convertAmount(result.netCashFlow,'USD',input.currency,base.rates)!,points:result.points.map(point=>Object.fromEntries(Object.entries(point).map(([key,amount])=>[key,key==='date'||amount===null?amount:convertAmount(Number(amount),'USD',input.currency,base.rates)])) as ComparisonPoint)};
 }
 

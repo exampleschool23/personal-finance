@@ -1812,5 +1812,12 @@
   "This account has linked records.": "Bu hisobga bog‘langan yozuvlar bor.",
   "Previous recovery copies": "Avvalgi tiklash nusxalari",
   "No recovery copies yet.": "Hali tiklash nusxalari yo‘q.",
-  "Could not load recovery copies.": "Tiklash nusxalarini yuklab bo‘lmadi."
+  "Could not load recovery copies.": "Tiklash nusxalarini yuklab bo‘lmadi.",
+  "Diversified portfolio": "Diversifikatsiyalangan portfel",
+  "Choose SPY for S&P 500, QQQ for Nasdaq-100, or a specific stock or ETF.": "S&P 500 uchun SPY, Nasdaq-100 uchun QQQ yoki muayyan aksiya yoki ETF tanlang.",
+  "Assumed annual business return": "Biznesning taxminiy yillik daromadliligi",
+  "USD cash · no interest": "USD pul mablag‘i · foizsiz",
+  "Total allocation: {total}%": "Jami ulush: {total}%",
+  "Business uses your assumed effective annual return, compounded daily in USD. It does not use recorded business performance. This is a hypothetical comparison, not a forecast. Deposit values include historical UZS exchange-rate changes.": "Biznes uchun siz kiritgan samarali yillik daromadlilik USD da kunlik kapitallashadi. Biznesning qayd etilgan natijalari ishlatilmaydi. Bu taxminiy taqqoslash, prognoz emas. Omonat qiymati UZS kursining tarixiy o‘zgarishlarini hisobga oladi.",
+  "Split each contribution across these investments. Weights must total {target}%. Holdings are not automatically rebalanced.": "Har bir badal shu investitsiyalar orasida taqsimlanadi. Ulushlar jami {target}% bo‘lishi kerak. Aktivlar avtomatik qayta muvozanatlanmaydi."
 }

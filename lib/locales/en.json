@@ -1812,5 +1812,12 @@
   "This account has linked records.": "This account has linked records.",
   "Previous recovery copies": "Previous recovery copies",
   "No recovery copies yet.": "No recovery copies yet.",
-  "Could not load recovery copies.": "Could not load recovery copies."
+  "Could not load recovery copies.": "Could not load recovery copies.",
+  "Diversified portfolio": "Diversified portfolio",
+  "Choose SPY for S&P 500, QQQ for Nasdaq-100, or a specific stock or ETF.": "Choose SPY for S&P 500, QQQ for Nasdaq-100, or a specific stock or ETF.",
+  "Assumed annual business return": "Assumed annual business return",
+  "USD cash · no interest": "USD cash · no interest",
+  "Total allocation: {total}%": "Total allocation: {total}%",
+  "Business uses your assumed effective annual return, compounded daily in USD. It does not use recorded business performance. This is a hypothetical comparison, not a forecast. Deposit values include historical UZS exchange-rate changes.": "Business uses your assumed effective annual return, compounded daily in USD. It does not use recorded business performance. This is a hypothetical comparison, not a forecast. Deposit values include historical UZS exchange-rate changes.",
+  "Split each contribution across these investments. Weights must total {target}%. Holdings are not automatically rebalanced.": "Split each contribution across these investments. Weights must total {target}%. Holdings are not automatically rebalanced."
 }

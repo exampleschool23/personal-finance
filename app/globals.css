@@ -1526,3 +1526,11 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .portfolio-trend .portfolio-chart{font-family:inherit;font-size:var(--type-small)}
 
 .period-amount{text-align:left;background:none;border:0;padding:0;cursor:pointer;color:inherit}.period-details.portfolio-tooltip{padding:0;width:360px;max-width:calc(100vw - 32px)}
+
+.diversified-settings{border:1px solid var(--border);border-radius:16px;padding:20px;margin:24px 0;min-width:0}
+.diversified-settings legend{padding:0 8px;font-weight:600}
+.diversified-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin:20px 0}
+.diversified-sleeve{padding:16px;border:1px solid var(--border);border-radius:12px;min-width:0}
+.diversified-sleeve label{display:block;margin-bottom:12px}
+.diversified-sleeve input{margin-top:8px}
+@media(max-width:700px){.diversified-grid{grid-template-columns:1fr}.diversified-settings{padding:12px}}
