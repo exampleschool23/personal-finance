@@ -1,4 +1,5 @@
 "use client";
+import {frequencyLabels,type Frequency} from '@/lib/finance';
 import { useId, useRef, useState } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -8,7 +9,7 @@ import { CategoryBadge } from '@/components/category-badge';
 import { useLanguage } from '@/components/language-provider';
 import { formatNumber, formatMoney, formatDate } from '@/lib/format';
 import { income } from '@/lib/finance';
-export type IncomeSourceOption={id:string;name:string;kind:string;categoryLabel?:string;disabled?:boolean;estimate?:number|null;currency?:string;frequency?:string|null;payment?:{due:string;paid:boolean}|null};
+export type IncomeSourceOption={id:string;name:string;kind:string;categoryLabel?:string;disabled?:boolean;estimate?:number|null;currency?:string;frequency?:Frequency|null;payment?:{due:string;paid:boolean}|null};
 export function IncomeSourcePicker({options,value,disabled,onChange}:{options:IncomeSourceOption[];value:string;disabled?:boolean;onChange:(id:string)=>void}){
  const {t,locale}=useLanguage();
  const [open,setOpen]=useState(false),[search,setSearch]=useState(''),[category,setCategory]=useState('all');
@@ -40,7 +41,7 @@ export function IncomeSourcePicker({options,value,disabled,onChange}:{options:In
    }}>
     <p className="muted">{active==='all'?t('All income sources'):categoryLabel(active)}</p>
     {visible.map(item=><button type="button" key={item.id} disabled={item.disabled} aria-pressed={value===item.id} onClick={()=>choose(item.id)}><span><span className="income-source-title-row"><strong>{item.name}</strong><CategoryBadge kind={item.kind} label={categoryLabel(item.kind)}/></span>
-     {item.currency&&<small className="income-source-estimate">{item.estimate!=null?t('Estimated: {amount} · {frequency}',{amount:formatMoney(item.estimate,item.currency,locale),frequency:t(item.frequency==='Yearly'?'Every year':'Every month')}):t('Variable income')}</small>}
+     {item.currency&&<small className="income-source-estimate">{item.estimate!=null?t('Estimated: {amount} · {frequency}',{amount:formatMoney(item.estimate,item.currency,locale),frequency:t(frequencyLabels[item.frequency??'Monthly'])}):t('Variable income')}</small>}
      {item.payment&&<small className={item.payment.paid?'income-source-payment is-paid':'income-source-payment'}>{t(item.payment.paid?'Paid · {date}':'Scheduled · {date}',{date:formatDate(item.payment.due,locale)})}</small>}</span></button>)}
     {!visible.length&&<p role="status" className="muted">{t('No income sources found.')}</p>}
    </div></div>

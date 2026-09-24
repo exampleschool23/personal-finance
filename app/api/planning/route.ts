@@ -1,3 +1,4 @@
+import { planningReadFilters,currentReviewMonth } from '@/lib/planning-reads';
 import { isoDate,uuid,nonnegativeAmount,fiatCurrency,notes } from '@/lib/api-validation';
 import { loadDatedExchangeRate } from '@/lib/dated-exchange-rate';
 import { depositForecasts } from '@/lib/deposit-forecasts';
@@ -11,6 +12,7 @@ const id=uuid, amount=nonnegativeAmount;
 const base=z.object({exchange_rate:z.number().finite().positive().max(1e15).optional(),id,account_id:id,target_id:id.nullable().optional(),amount,received:amount.default(0),fee:amount.default(0),date,notes:notes});
 const investmentTarget=z.object({holding_account_id:id,asset_kind:z.enum(['Stock','Crypto']),asset_symbol:z.string().trim().max(15),target:amount.positive().max(1e12),monthly_contribution:amount.max(1e12).nullable().default(null)}).refine(v=>instrumentFor({kind:v.asset_kind,name:v.asset_symbol})?.symbol===v.asset_symbol);
 const schemas={
+ exception:z.object({target_id:id,date,skip:z.boolean()}),
  transfer:base.refine(v=>!!v.target_id&&v.target_id!==v.account_id&&v.amount>0&&v.received>0),
  reconcile:base.refine(v=>!v.target_id&&v.received===0&&v.fee===0),
  repayment:base.refine(v=>!!v.target_id&&v.amount>0&&v.received===0),
@@ -33,11 +35,14 @@ const schemas={
 export async function GET(req?:Request){
  try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
  const scope=req?new URL(req.url).searchParams.get('scope')??'full':'full';
- if(!['full','review','workspace'].includes(scope))return Response.json({error:'Invalid planning scope.'},{status:400});
+ if(!['full','review','workspace','insights'].includes(scope))return Response.json({error:'Invalid planning scope.'},{status:400});
+ const month=req?new URL(req.url).searchParams.get('month')??currentReviewMonth():currentReviewMonth();
+ if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||!isoDate.safeParse(month+'-01').success)return Response.json({error:'Invalid review month.'},{status:400});
+ const filters=planningReadFilters(scope,month);
  const tables={movements:'asset_movements',holdingAccounts:'holding_accounts',records:'finance_records',categories:'transaction_categories',goals:'savings_goals',occurrences:'payment_occurrences',activity:'account_activity',investmentLinks:'investment_account_links'};
- const results=await Promise.all(Object.entries(tables).filter(([key])=>scope==='full'||(key!=='movements'&&(scope==='review'||!['activity','investmentLinks'].includes(key)))).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,table==='investment_account_links'?{select:'*,investment_history(occurred_on,record_id,event_type)'}:{})]));
- const data={activity:[],movements:[],investmentLinks:[],...Object.fromEntries(results)} as Record<string,unknown>;
- const estimates=new Map((await depositForecasts(auth.token)).map(record=>[record.id,record.estimated_monthly_income]));
+ const results=await Promise.all(Object.entries(tables).filter(([key])=>scope==='insights'?key==='records':scope==='full'||(key!=='movements'&&(scope==='review'||!['activity','investmentLinks'].includes(key)))).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,filters[key as keyof typeof filters]??{})]));
+ const data={records:[],categories:[],goals:[],occurrences:[],activity:[],movements:[],investmentLinks:[],...Object.fromEntries(results)} as Record<string,unknown>;
+ const estimates=new Map((scope==='insights'?[]:await depositForecasts(auth.token)).map(record=>[record.id,record.estimated_monthly_income]));
  data.records=(data.records as Entry[]).map(record=>record.kind==='Deposit'?{...record,estimated_monthly_income:estimates.get(record.id)??0}:record);
  return Response.json(data,{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Could not load planning data. Check that the latest migrations are installed.'},{status:503});}
@@ -48,6 +53,11 @@ export async function POST(req:Request){
  const body=await req.json() as {action:keyof typeof schemas;data:unknown};
  if(!Object.hasOwn(schemas,body.action))return Response.json({error:'Check the account fields.'},{status:400});
  const parsed=schemas[body.action].safeParse(body.data);if(!parsed.success)return Response.json({error:'Check the account fields.'},{status:400});
+ if(body.action==='exception'&&'skip' in parsed.data){
+  const response=await supa('/rest/v1/rpc/set_schedule_exception',{method:'POST',body:JSON.stringify({p_record:parsed.data.target_id,p_day:parsed.data.date,p_skip:parsed.data.skip})},auth.token);
+  if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='P0001'?error.message:'Could not update the scheduled occurrence.'},{status:409});}
+  return Response.json({ok:true});
+ }
  let paymentData=parsed.data;
  if(['occurrence','repayment','mortgage'].includes(body.action)&&'account_id' in parsed.data&&'target_id' in parsed.data){
   const p=parsed.data as {id:string;account_id:string;target_id:string;date:string;exchange_rate?:number;amount?:number;fee?:number;notes?:string};

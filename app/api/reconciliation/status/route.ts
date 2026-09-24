@@ -1,0 +1,2 @@
+import {session,supa} from '@/lib/supabase';
+export async function GET(){try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});const result=await supa('/rest/v1/rpc/reconciliation_status',{method:'POST',body:'{}'},auth.token);if(!result.ok)throw Error();return Response.json(await result.json(),{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Could not check account statements.'},{status:503});}}

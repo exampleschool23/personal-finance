@@ -2,8 +2,9 @@ import { diversifiedPortfolioSchema } from '@/lib/diversified-portfolio';
 import { z } from 'zod';
 import { session, supa, sameOrigin } from '@/lib/supabase';
 import { isCurrency } from '@/lib/currencies';
-import { benchmarkKeys, investmentKinds, defaultComparisonPreferences } from '@/lib/comparison-profile';
-const preferences = z.object({benchmarks:z.array(z.enum(benchmarkKeys)).min(1).max(7).refine(items=>new Set(items).size===items.length),portfolio:diversifiedPortfolioSchema.nullable().optional(),custom_symbol:z.string().regex(/^$|^[A-Z][A-Z0-9.-]{0,14}$/)}).refine(value=>!value.benchmarks.includes('CUSTOM')||!!value.custom_symbol).refine(value=>!value.benchmarks.includes('PORTFOLIO')||!!value.portfolio);
+import { investmentKinds, defaultComparisonPreferences } from '@/lib/comparison-profile';
+import { benchmarkSelectionSchema } from '@/lib/benchmark-selection';
+const preferences = z.object({benchmarks:benchmarkSelectionSchema,portfolio:diversifiedPortfolioSchema.nullable().optional(),custom_symbol:z.string().regex(/^$|^[A-Z][A-Z0-9.-]{0,14}$/)}).refine(value=>!value.benchmarks.includes('CUSTOM')||!!value.custom_symbol).refine(value=>!value.benchmarks.includes('PORTFOLIO')||!!value.portfolio).refine(value=>!value.portfolio?.assets?.some(asset=>asset.currency&&!isCurrency(asset.currency)));
 const baseline = z.object({starting_amount:z.number().finite().min(0).max(1e27),currency:z.string().refine(isCurrency),holdings:z.array(z.object({id:z.string().uuid(),kind:z.enum(investmentKinds),currency:z.string().refine(isCurrency),balance:z.number().finite().min(0).max(1e27)})).max(10000)}).refine(value=>new Set(value.holdings.map(holding=>holding.id)).size===value.holdings.length);
 export async function GET() {
  try {
@@ -12,7 +13,7 @@ export async function GET() {
   const [saved,capital]=await Promise.all([supa('/rest/v1/investment_comparison_preferences?select=benchmarks,custom_symbol,portfolio',{},auth.token),supa('/rest/v1/investment_comparison_baselines?select=starting_amount,currency,capital_as_of,holdings',{},auth.token)]);
   if(!activity.ok||!saved.ok||!capital.ok)throw Error();
   const rows=await saved.json() as unknown[],baselines=await capital.json() as unknown[];
-  return Response.json({activity:await activity.json(),preferences:rows[0]??defaultComparisonPreferences,baseline:baselines[0]??null},{headers:{'Cache-Control':'no-store'}});
+  return Response.json({owner_id:auth.user.id,activity:await activity.json(),preferences:rows[0]??defaultComparisonPreferences,baseline:baselines[0]??null},{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Investment comparisons are not set up for this account yet.'},{status:503});}
 }
 async function write(req:Request,capture:boolean){

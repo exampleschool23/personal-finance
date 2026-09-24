@@ -1,4 +1,7 @@
 "use client";
+import { readOverviewBenchmarks, overviewBenchmarkStorageKey, toggleOverviewBenchmark } from '@/lib/overview-benchmarks';
+import { portfolioAssets } from '@/lib/diversified-portfolio';
+import { stockBenchmarks } from '@/lib/benchmark-selection';
 import { Spinner } from '@/components/ui/spinner';
 import { InvestmentPeriodSummary } from '@/components/investment-period-summary';
 import { refreshRead } from '@/lib/refresh-read';
@@ -24,6 +27,7 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
  const {t,locale}=useLanguage();
  const [profile,setProfile]=useState<ComparisonProfile|null>(null),[profileError,setProfileError]=useState(''),[profileRetry,setProfileRetry]=useState(0);
  const [data,setData]=useState<BenchmarkData|null>(null),[error,setError]=useState(''),[retry,setRetry]=useState(0),[loadedKey,setLoadedKey]=useState(''),[hidden,setHidden]=useState<string[]>([]),[windowDays,setWindowDays]=useState(0);
+ const [overviewSelection,setOverviewSelection]=useState<{owner:string;keys:string[]}|null>(null);
  const [chosen,setChosen]=useState<string[]|null>(null);
  const [benchmarks,setBenchmarks]=useState<string[]|null>(null);
  const choices=history.records.filter(record=>isInvestmentRecord(record)||liabilities.includes(record.kind));
@@ -34,6 +38,16 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   refreshRead('/api/comparison-profile',{signal:controller.signal}).then(async response=>{const result=await response.json() as ComparisonProfile&{error?:string};if(!response.ok)throw Error(result.error);if(!controller.signal.aborted){setProfile(result);setProfileError('');}}).catch(reason=>{if(!controller.signal.aborted)setProfileError(reason.message);});
   return()=>controller.abort();
  },[demo,profileRetry]);
+ useEffect(()=>{const refresh=()=>setProfileRetry(value=>value+1);window.addEventListener('comparison-settings-saved',refresh);window.addEventListener('focus',refresh);return()=>{window.removeEventListener('comparison-settings-saved',refresh);window.removeEventListener('focus',refresh);};},[]);
+ const overviewOwner=demo?'demo':profile?.owner_id;
+ useEffect(()=>{if(!embedded||!overviewOwner)return;let keys:string[]=[];try{keys=readOverviewBenchmarks(localStorage,overviewOwner);}catch{}setOverviewSelection({owner:overviewOwner,keys});},[!!embedded,overviewOwner]);
+ const overviewKeys=overviewSelection?.owner===overviewOwner?overviewSelection?.keys??[]:[];
+ function toggleOverview(key:string){
+  if(!overviewOwner)return;
+  const keys=toggleOverviewBenchmark(overviewKeys,key);
+  setOverviewSelection({owner:overviewOwner,keys});
+  try{localStorage.setItem(overviewBenchmarkStorageKey(overviewOwner),JSON.stringify(keys));}catch{/* The current selection still works when browser storage is unavailable. */}
+ }
  const events=portfolio.activity;
  const start=events[0]?.occurred_on??today;
  const appStart=profile?depositToday(new Date(profile.activity.started_at)):start;
@@ -42,18 +56,20 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
  const symbol=profile?.preferences.custom_symbol??'';
  const diversified=profile?.preferences.portfolio;
  const activeDiversified=selected.includes('PORTFOLIO')?diversified:null;
- const portfolioCrypto=selected.includes('PORTFOLIO')&&diversified?.crypto?diversified.cryptoSymbol:'';
- const portfolioStock=selected.includes('PORTFOLIO')&&diversified?.stock?diversified.stockSymbol:'';
- const requestKey=events.length?start+':'+today+':'+selectionKey+':'+symbol+':'+portfolioCrypto+':'+portfolioStock:'';
+ const portfolioConfig=activeDiversified?.assets?JSON.stringify(activeDiversified):'';
+ const portfolioCrypto=selected.includes('PORTFOLIO')&&!diversified?.assets&&diversified?.crypto?diversified.cryptoSymbol:'';
+ const portfolioStock=selected.includes('PORTFOLIO')&&!diversified?.assets&&diversified?.stock?diversified.stockSymbol:'';
+ const requestKey=events.length?start+':'+today+':'+selectionKey+':'+symbol+':'+portfolioCrypto+':'+portfolioStock+':'+portfolioConfig:'';
  useEffect(()=>{
   if(demo||!requestKey||(!profile&&!profileError))return;
   const controller=new AbortController(),params=new URLSearchParams({start,end:today,benchmarks:selectionKey});
+  if(portfolioConfig)params.set('portfolio',portfolioConfig);
   if(symbol)params.set('symbol',symbol);
   if(portfolioCrypto)params.set('portfolioCrypto',portfolioCrypto);
   if(portfolioStock)params.set('portfolioStock',portfolioStock);
   refreshRead('/api/benchmarks?'+params,{signal:controller.signal}).then(async response=>{const result=await response.json() as BenchmarkData&{error?:string};if(!response.ok)throw Error(result.error);if(!controller.signal.aborted){setData(result);setLoadedKey(requestKey);setError('');}}).catch(reason=>{if(!controller.signal.aborted){setError(reason.message);setLoadedKey(requestKey);setData(null);}});
   return()=>controller.abort();
- },[demo,requestKey,start,today,selectionKey,symbol,portfolioCrypto,portfolioStock,retry,profile,profileError]);
+ },[demo,requestKey,start,today,selectionKey,symbol,portfolioCrypto,portfolioStock,portfolioConfig,retry,profile,profileError]);
  const comparisonsLoading=!demo&&!!requestKey&&((!profile&&!profileError)||loadedKey!==requestKey);
  const ready=loadedKey===requestKey?data:null;
  const performance=portfolio.performance;
@@ -65,16 +81,17 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
  const visiblePoints=points.filter(point=>point.date>=viewStart&&!!firstComplete&&point.date>=firstComplete);
  const valueChange=investmentValueChange(visiblePoints.map(point=>point.actual));
  const money=(amount:number)=>formatMoney(amount,currency,locale);
- const definitions=[{key:'actual',label:t('My investments'),color:'var(--primary)',dash:undefined},{key:'BTC',label:'Bitcoin · BTC',color:categoryColor('Crypto'),dash:undefined},{key:'SPY',label:'S&P 500 · SPY',color:categoryColor('Stock'),dash:'7 3'},{key:'HYG',label:t('High-yield bonds · HYG'),color:categoryColor('Property'),dash:'9 3 2 3'},{key:'depositUZS',label:t('{currency} deposit · {rate}%',{currency:'UZS',rate:formatNumber(21,locale)}),color:categoryColor('Deposit'),dash:'5 5'},{key:'depositUSD',label:t('{currency} deposit · {rate}%',{currency:'USD',rate:formatNumber(8,locale)}),color:categoryColor('Cash'),dash:'2 4'},{key:'CUSTOM',label:symbol,color:categoryColor('Business'),dash:'12 4'},{key:'PORTFOLIO',label:t('Diversified portfolio'),color:categoryColor('Money lent'),dash:'8 3 2 3'}];
+ const definitions=[...stockBenchmarks(profile?.preferences.benchmarks??[]).map(item=>({key:item.id,label:item.symbol,color:categoryColor(item.id),dash:'12 4'})),{key:'actual',label:t('My investments'),color:'var(--primary)',dash:undefined},{key:'BTC',label:'Bitcoin · BTC',color:categoryColor('Crypto'),dash:undefined},{key:'SPY',label:'S&P 500 · SPY',color:categoryColor('Stock'),dash:'7 3'},{key:'HYG',label:t('High-yield bonds · HYG'),color:categoryColor('Property'),dash:'9 3 2 3'},{key:'depositUZS',label:t('{currency} deposit · {rate}%',{currency:'UZS',rate:formatNumber(21,locale)}),color:categoryColor('Deposit'),dash:'5 5'},{key:'depositUSD',label:t('{currency} deposit · {rate}%',{currency:'USD',rate:formatNumber(8,locale)}),color:categoryColor('Cash'),dash:'2 4'},{key:'CUSTOM',label:symbol,color:categoryColor('Business'),dash:'12 4'},{key:'PORTFOLIO',label:t('Diversified portfolio'),color:categoryColor('Money lent'),dash:'8 3 2 3'}];
  const displayed=definitions.filter(item=>item.key==='actual'||selected.includes(item.key));
- const visibleSeries=displayed.some(item=>!hidden.includes(item.key))?displayed.filter(item=>!hidden.includes(item.key)):displayed.filter(item=>item.key==='actual');
+ const visibleSeries=embedded?displayed.filter(item=>item.key==='actual'||overviewKeys.includes(item.key)):displayed.some(item=>!hidden.includes(item.key))?displayed.filter(item=>!hidden.includes(item.key)):displayed.filter(item=>item.key==='actual');
  const visibleKeys=new Set(visibleSeries.map(item=>item.key));
  if(embedded){
   const cutoff=embedded.days?shiftDay(today,-embedded.days):start;
   const chartPoints=result?points.filter(point=>point.date>=cutoff&&point.actual!==null):embedded.points.map(point=>({...point,actual:point.net}));
   const chartSeries=result?visibleSeries:definitions.filter(item=>item.key==='actual');
   return <>
-   <div className="comparison-legend" aria-busy={comparisonsLoading}>{comparisonsLoading&&<span role="status" className="flex items-center gap-2 muted"><Spinner aria-hidden="true"/>{t('Loading comparisons…')}</span>}{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={item.key==='actual'||!result} onClick={()=>setHidden(previous=>previous.includes(item.key)?previous.filter(key=>key!==item.key):[...previous,item.key])}><i style={{background:item.color}}/>{item.label}</button>)}</div>
+   <div className="comparison-legend" aria-busy={comparisonsLoading}>{comparisonsLoading&&<span role="status" className="flex items-center gap-2 muted"><Spinner aria-hidden="true"/>{t('Loading comparisons…')}</span>}{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={item.key==='actual'||!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div>
+   {ready&&visibleSeries.filter(item=>item.key!=='actual').map(item=>{const reason=ready.errors[item.key]??ready.errors.fx??(result?.unavailable.includes(item.key)?'Price data, exchange rates or funds needed for a matching withdrawal are unavailable.':null);return reason?<p key={item.key} className="comparison-note">{item.label}: {t(reason)}</p>:null;})}
    <InvestmentValueChart points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={chartSeries.length===1?embedded.tooltip:undefined}/>
    {error&&<p role="alert" className="error">{t(error)} <Button variant="outline" onClick={()=>{setLoadedKey('');setError('');setRetry(n=>n+1);}}>{t('Retry')}</Button></p>}
   </>;
@@ -120,7 +137,7 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
      {ready&&(Object.keys(ready.errors).length>0||!!result?.unavailable.some(key=>selected.includes(key)))&&<Button variant="outline" onClick={()=>{setLoadedKey('');setRetry(n=>n+1);}}>{t('Retry unavailable comparisons')}</Button>}
     </>}
    </>}
-   {selected.includes('PORTFOLIO')&&diversified&&<p className="comparison-note">{t('Diversified portfolio')}: {formatNumber(diversified.crypto,locale)}% {diversified.cryptoSymbol} · {formatNumber(diversified.stock,locale)}% {diversified.stockSymbol} · {formatNumber(diversified.deposit,locale)}% {t('Deposit')} (UZS) · {formatNumber(diversified.business,locale)}% {t('Business')} ({t('Assumed annual business return')}: {formatNumber(diversified.businessRate,locale)}%) · {formatNumber(diversified.cash,locale)}% {t('USD cash · no interest')}. {t('Split each contribution across these investments. Weights must total {target}%. Holdings are not automatically rebalanced.',{target:formatNumber(100,locale)})}</p>}<details className="comparison-method"><summary>{t('How this comparison works')}</summary><p>{t('Contributions, linked business spending and debt payments buy each benchmark on the payment date. Personal spending, charity and uninvested salary are excluded. Withdrawals sell the same cash amount on the same date.')}</p><p>{t('Each benchmark shows what the same dated investments would be worth in your selected currency. The difference from your investments shows how much money you are ahead or behind. Investment gain is value including payouts minus net contributions.')}</p><p>{t('Add livestock, a café, a business or crypto in Assets & investments. Record purchases, sales, income and value updates in Tracker. Keep sold investments with a zero balance to preserve their history.')}</p><p>{t('Recorded values carry forward until updated. Opening observations are disclosed when purchase history is missing. Cash balances and outstanding debts are not opening investments. Only actual repayments enter; principal counts as retained value and interest does not. Transferring or reinvesting money counts as another investment if entered as a new contribution.')}</p><p>{t('Fund histories include dividend and split adjustments. Deposit rates are assumed effective annual returns, compounded daily, before taxes and fees. Historical exchange-rate checkpoints are used between dates, so comparisons are estimates.')}</p></details>
+   {selected.includes('PORTFOLIO')&&diversified&&<p className="comparison-note">{t('Diversified portfolio')}: {portfolioAssets(diversified).filter(asset=>asset.weight>0).map(asset=>`${formatNumber(asset.weight,locale)}% ${asset.symbol||asset.name||t({deposit:'Deposit',business:'Business',cash:'Cash',crypto:'Crypto',stock:'Stock',property:'Real estate',custom:'Custom asset'}[asset.kind])}`).join(' · ')}. {t('Split each contribution across these investments. Weights must total {target}%. Holdings are not automatically rebalanced.',{target:formatNumber(100,locale)})}</p>}<details className="comparison-method"><summary>{t('How this comparison works')}</summary><p>{t('Contributions, linked business spending and debt payments buy each benchmark on the payment date. Personal spending, charity and uninvested salary are excluded. Withdrawals sell the same cash amount on the same date.')}</p><p>{t('Each benchmark shows what the same dated investments would be worth in your selected currency. The difference from your investments shows how much money you are ahead or behind. Investment gain is value including payouts minus net contributions.')}</p><p>{t('Add livestock, a café, a business or crypto in Assets & investments. Record purchases, sales, income and value updates in Tracker. Keep sold investments with a zero balance to preserve their history.')}</p><p>{t('Recorded values carry forward until updated. Opening observations are disclosed when purchase history is missing. Cash balances and outstanding debts are not opening investments. Only actual repayments enter; principal counts as retained value and interest does not. Transferring or reinvesting money counts as another investment if entered as a new contribution.')}</p><p>{t('Fund histories include dividend and split adjustments. Deposit rates are assumed effective annual returns, compounded daily, before taxes and fees. Historical exchange-rate checkpoints are used between dates, so comparisons are estimates.')}</p></details>
   </>}
  </section>;
 }

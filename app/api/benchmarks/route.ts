@@ -1,3 +1,6 @@
+import { isCurrency } from '@/lib/currencies';
+import { diversifiedPortfolioSchema, portfolioAssets, portfolioAssetKey } from '@/lib/diversified-portfolio';
+import { benchmarkSelectionSchema, stockBenchmarks } from '@/lib/benchmark-selection';
 import { session } from '@/lib/supabase';
 import { depositToday } from '@/lib/deposit-interest';
 import { checkpointDates, dateMillis, dayMillis, shiftDay, validDay, type BenchmarkData, type PricePoint, type FxPoint } from '@/lib/benchmark-data';
@@ -93,9 +96,16 @@ export async function GET(req: Request) {
   if (!validDay(start) || !validDay(end) || start > end || end > depositToday() || start < '2016-01-01' || (custom && !/^[A-Z][A-Z0-9.-]{0,14}$/.test(custom))) return Response.json({ error: 'Choose valid dates ending today or earlier.' }, { status: 400 });
   const data: BenchmarkData = { start, end, prices: {}, fx: [], errors: {} };
   const selected=(params.get('benchmarks')??'SPY,HYG,BTC,depositUZS,depositUSD,CUSTOM').split(',');
-  if(selected.some(key=>!['SPY','HYG','BTC','depositUZS','depositUSD','CUSTOM','PORTFOLIO'].includes(key)))return Response.json({error:'Check the comparison settings.'},{status:400});
+  if(!benchmarkSelectionSchema.safeParse(selected).success)return Response.json({error:'Check the comparison settings.'},{status:400});
   const portfolioCrypto=params.get('portfolioCrypto')??'',portfolioStock=params.get('portfolioStock')??'';
   if ((portfolioCrypto&&!/^[A-Z][A-Z0-9]{0,14}$/.test(portfolioCrypto))||(portfolioStock&&!/^[A-Z][A-Z0-9.-]{0,14}$/.test(portfolioStock)))return Response.json({error:'Check the comparison settings.'},{status:400});
+  const portfolioParam=params.get('portfolio');
+  let portfolioInput:unknown;
+  try{portfolioInput=portfolioParam?JSON.parse(portfolioParam):null;}catch{return Response.json({error:'Check the comparison settings.'},{status:400});}
+  const parsedPortfolio=portfolioParam?diversifiedPortfolioSchema.safeParse(portfolioInput):null;
+  if(parsedPortfolio&&(!parsedPortfolio.success||parsedPortfolio.data.assets?.some(asset=>asset.currency&&!isCurrency(asset.currency))))return Response.json({error:'Check the comparison settings.'},{status:400});
+  const portfolio=selected.includes('PORTFOLIO')&&parsedPortfolio?.success?parsedPortfolio.data:null;
+  const portfolioRows=portfolio?portfolioAssets(portfolio).filter(asset=>asset.weight>0):[];
   const key = process.env.TWELVE_DATA_API_KEY;
   const histories = new Map<string,Promise<PricePoint[]>>();
   function history(kind:'crypto'|'stock',symbol:string) {
@@ -103,12 +113,13 @@ export async function GET(req: Request) {
    if(!histories.has(id))histories.set(id,kind==='crypto'?cryptoHistory(start,end,symbol):stockHistory(symbol,start,end,key!));
    return histories.get(id)!;
   }
-  const symbols = [{id:'SPY',symbol:'SPY'},{id:'HYG',symbol:'HYG'},...(custom ? [{id:'CUSTOM',symbol:custom}] : []),...(selected.includes('PORTFOLIO')&&portfolioStock?[{id:'portfolioStock',symbol:portfolioStock}]:[])];
-  const jobs: (() => Promise<void>)[] = symbols.filter(item=>(selected.includes(item.id)||item.id==='portfolioStock')).map(({id,symbol}) => async () => {
+  const symbols = [...portfolioRows.filter(asset=>asset.kind==='stock').map(asset=>({id:portfolioAssetKey(asset,portfolio!),symbol:asset.symbol})),...stockBenchmarks(selected),{id:'SPY',symbol:'SPY'},{id:'HYG',symbol:'HYG'},...(custom ? [{id:'CUSTOM',symbol:custom}] : []),...(selected.includes('PORTFOLIO')&&portfolioStock?[{id:'portfolioStock',symbol:portfolioStock}]:[])];
+  const jobs: (() => Promise<void>)[] = symbols.filter(item=>(selected.includes(item.id)||item.id==='portfolioStock'||portfolioRows.some(asset=>portfolioAssetKey(asset,portfolio!)===item.id))).map(({id,symbol}) => async () => {
    if (!key) { data.errors[id] = 'Stock comparisons need a market-data connection.'; return; }
    try { data.prices[id] = await history('stock',symbol); }
    catch { data.errors[id] = 'Market history is unavailable for this period.'; }
   });
+  for(const asset of portfolioRows.filter(asset=>asset.kind==='crypto'))jobs.push(async()=>{const id=portfolioAssetKey(asset,portfolio!);try{data.prices[id]=await history('crypto',asset.symbol);}catch{data.errors[id]='Market history is unavailable for this period.';}});
   if(selected.includes('BTC'))jobs.push(async () => { try { data.prices.BTC = await history('crypto','BTC'); } catch { data.errors.BTC = 'Market history is unavailable for this period.'; } });
   if(selected.includes('PORTFOLIO')&&portfolioCrypto)jobs.push(async()=>{try{data.prices.portfolioCrypto=await history('crypto',portfolioCrypto);}catch{data.errors.portfolioCrypto='Market history is unavailable for this period.';}});
   jobs.push(async () => {
@@ -124,6 +135,7 @@ export async function GET(req: Request) {
   });
   let index = 0;
   await Promise.all(Array.from({ length: 3 }, async () => { while (index < jobs.length) await jobs[index++](); }));
+  for(const asset of portfolioRows){const error=data.errors[portfolioAssetKey(asset,portfolio!)];if(error)data.errors.PORTFOLIO=error;}
   if(data.errors.portfolioStock||data.errors.portfolioCrypto)data.errors.PORTFOLIO=data.errors.portfolioStock??data.errors.portfolioCrypto;
   return Response.json(data, { headers: { 'Cache-Control': Object.keys(data.errors).length ? 'private, no-store' : 'private, max-age=300' } });
  } catch { return Response.json({ error: 'Could not load comparisons.' }, { status: 503 }); }

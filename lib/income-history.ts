@@ -42,7 +42,7 @@ export function incomeHistory(records:Entry[],events:HistoryEvent[],incomeRecord
  const estimateForMonth=(month:string)=>{
   let estimateMissing=0;
   const expected=blank();
-  const estimates=records.filter(record=>['Business','Property','Deposit'].includes(record.kind)).map(record=>({record,amount:record.kind==='Deposit'?depositInterest(events.filter(event=>event.record_id===record.id),Number(record.rate),month):Number(record.estimated_monthly_income??0)}));
+  const estimates=records.filter(record=>['Business','Property','Deposit'].includes(record.kind)).map(record=>({record,amount:record.kind==='Deposit'?depositInterest(events.filter(event=>event.record_id===record.id),Number(record.rate),month,record.deposit_compounding):Number(record.estimated_monthly_income??0)}));
   const businessIds=new Set(estimates.filter(({record,amount})=>record.kind==='Business'&&amount>0).map(({record})=>record.id));
   const propertyIds=new Set(estimates.filter(({record,amount})=>record.kind==='Property'&&amount>0).map(({record})=>record.id));
   const addEstimate=(entry:Entry,amount:number)=>{

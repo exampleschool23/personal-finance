@@ -23,11 +23,12 @@ test('verified backup restores exact balances and history atomically without rep
  await assert.rejects(db.query('SELECT restore_finance_backup($1,$2)',[backup,firstPreview.expected_state]),/workspace changed/);
  const nextPreview=await preview(backup);
  // Simulate a future incompatible constraint and verify full rollback, including
- // trigger DDL and the automatically generated recovery copy.
+ // the private restore context and automatically generated recovery copy.
  await db.exec("RESET ROLE;ALTER TABLE finance_records ADD CONSTRAINT fail_restore CHECK(name<>'Food') NOT VALID;SET ROLE authenticated;");
  await assert.rejects(db.query('SELECT restore_finance_backup($1,$2)',[backup,nextPreview.expected_state]),/fail_restore/);
  assert.equal((await db.query('SELECT name FROM finance_records WHERE id=$1',[id(20)])).rows[0].name,'Changed');
  assert.equal((await db.query('SELECT count(*)::int AS n FROM backup_recovery_points')).rows[0].n,0);
+ assert.equal((await db.query('SELECT finance_restore_active() AS active')).rows[0].active,false);
  await db.exec('RESET ROLE;ALTER TABLE finance_records DROP CONSTRAINT fail_restore;SET ROLE authenticated;');
  const result=(await db.query('SELECT restore_finance_backup($1,$2) AS result',[backup,nextPreview.expected_state])).rows[0].result;
  const retried=(await db.query('SELECT restore_finance_backup($1,$2) AS result',[backup,nextPreview.expected_state])).rows[0].result;assert.deepEqual(retried,result);

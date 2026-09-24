@@ -40,3 +40,16 @@ test('monthly review passes tracker car payments into actual spending',()=>{
  const data={...props.data,records:[record('cash',1000,{kind:'Cash'}),record('car',5000,{kind:'Loan'})],investmentLinks:[{id:'paid',account_id:'cash',amount:-250,investment_history:{record_id:'car',event_type:'withdrawal',occurred_on:'2026-09-10'}}]};
  assert.match(render({data}),/\$250/);
 });
+
+test('remote monthly review normalizes undated lending and never presents failed reads as zero totals',()=>{
+ const calls=[];let failure='',loading=false;
+ const RemoteReview=loadTS('components/financial-review.tsx',{
+  '@/components/language-provider':language,
+  '@/lib/deposit-interest':{depositToday:()=> '2026-09-18'},
+  '@/hooks/use-owner-resource':{useOwnerResource:(...args)=>{calls.push(args);return {data:{...props.data,records:[{id:'lent',kind:'Money lent',date:null,amount:12,frequency:'Once'},record('salary',75,{kind:'Salary'})]},error:failure,loading,retry(){}};}},
+ }).MonthlyReview;
+ const remote=()=>renderToStaticMarkup(React.createElement(RemoteReview,{...props,owner:'one',revision:4}));
+ assert.match(remote(),/\$75/);assert.equal(calls[0][0],'/api/planning?scope=review&month=2026-09');assert.equal(calls[0][1],'one');assert.equal(calls[0][3],4);
+ loading=true;assert.match(remote(),/Loading records/);assert.doesNotMatch(remote(),/\$0|\$75/);
+ loading=false;failure='Could not load planning data.';assert.match(remote(),/role="alert"/);assert.doesNotMatch(remote(),/\$0|\$75/);
+});

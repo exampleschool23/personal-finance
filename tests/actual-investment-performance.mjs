@@ -1,3 +1,4 @@
+import { portfolioAssets, portfolioAssetKey, portfolioAssetCurrency } from '../lib/diversified-portfolio.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -7,7 +8,7 @@ import {historyEventLabel} from '../lib/investment-history.ts';
 import {isInvestmentRecord} from '../lib/comparison-profile.ts';
 import * as dates from '../lib/benchmark-data.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const deps={...dates};
+const deps={portfolioAssets,portfolioAssetKey,portfolioAssetCurrency,...dates};
 const {convertHistorical,compareInvestments,percentagePerformance}=new Function(...Object.keys(deps),compile('lib/investment-comparison.ts')+';return {convertHistorical,compareInvestments,percentagePerformance};')(...Object.values(deps));
 const performance=new Function('historyEventLabel','expenses','liabilities','isInvestmentRecord','convertHistorical','shiftDay',compile('lib/actual-investment-performance.ts')+';return actualInvestmentPerformance;')(historyEventLabel,expenses,liabilities,isInvestmentRecord,convertHistorical,dates.shiftDay);
 const holding={id:'cafe',kind:'Business',currency:'USD',balance:400};

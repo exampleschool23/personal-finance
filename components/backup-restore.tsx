@@ -22,7 +22,7 @@ export function BackupRestore({demo,owner,onSaved}:{demo:boolean;owner:string|nu
   <p className="muted">{t('Restore replaces this account’s data with the selected backup. A recovery copy is saved automatically. Only unchanged verified backups from this account are accepted.')}</p>
   <label>{t('Backup file')}<input type="file" accept=".json,application/json" disabled={demo||busy} onChange={async event=>{
    const file=event.target.files?.[0],generation=++fileRequest.current;setPreview(null);setBackup('');setError('');setRecovery('');if(!file)return;
-   if(file.size>20_000_000){setError('File is too large.');return;}
+   if(file.size>28_000_000){setError('File is too large.');return;}
    setBusy(true);try{const text=await file.text();const result=await request<Preview>('preview',text);if(fileRequest.current===generation){setBackup(text);setPreview(result);}}catch(reason){if(fileRequest.current===generation)setError((reason as Error).message);}finally{if(fileRequest.current===generation)setBusy(false);}
   }}/></label>
   {busy&&<p role="status">{t('Checking backup…')}</p>}

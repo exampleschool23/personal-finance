@@ -13,7 +13,7 @@ import { useUnsavedNavigation } from '@/components/discard-changes';
 import { formatMoney, formatDate } from '@/lib/format';
 import { income } from '@/lib/finance';
 import { fundingPlan, type GoalEvent } from '@/lib/goal-funding';
-import type { Goal, PlanningData } from '@/lib/planning';
+import { emptyPlanning,type Goal,type PlanningData } from '@/lib/planning';
 import { useOwnerResource, saveOwnerResource } from '@/hooks/use-owner-resource';
 
 const empty = { events: [] as GoalEvent[] };
@@ -28,6 +28,7 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
  const plan = fundingPlan(data.goals, surplus, currency, today, rates);
  const [busy, setBusy] = useState(false), [error, setError] = useState('');
  const [activityOpen, setActivityOpen] = useState(false);
+ const incomeHistory=useOwnerResource('/api/planning?scope=insights',owner,!demo&&activityOpen,revision,emptyPlanning);
  const events = activity.data.events.filter(event => event.event_type !== 'opening' || Number(event.delta) !== 0);
  const activityId = useId();
  const money = (value: number | null) => value === null ? '—' : formatMoney(value, currency, locale);
@@ -68,7 +69,7 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
     {activeSavings.length > 0 && <Button type="button" variant="outline" disabled={busy || demo} aria-expanded={activityOpen} aria-controls={`${activityId}-form`} onClick={() => setActivityOpen(open => !open)}><Plus size={16} aria-hidden="true"/>{t('Record goal activity')}</Button>}
    </header>
    {demo && <p className="muted">{t('Sign in to record cash goal activity.')}</p>}
-   {activeSavings.length > 0 && <div id={`${activityId}-form`} hidden={!activityOpen}><GoalActivityForm data={data} goals={activeSavings} today={today} busy={busy || demo} save={save}/></div>}
+   {activeSavings.length > 0 && <div id={`${activityId}-form`} hidden={!activityOpen}>{activityOpen&&incomeHistory.loading?<p role="status">{t('Loading records…')}</p>:activityOpen&&incomeHistory.error?<p role="alert">{t(incomeHistory.error)} <Button onClick={incomeHistory.retry}>{t('Retry')}</Button></p>:<GoalActivityForm data={demo||!activityOpen?data:{...data,records:incomeHistory.data.records}} goals={activeSavings} today={today} busy={busy || demo} save={save}/>}</div>}
    {activity.error ? <div className="goal-funding-notice" role="alert"><p>{t('Goal activity could not be loaded. Please try again.')}</p><Button type="button" variant="outline" onClick={activity.retry}>{t('Retry')}</Button></div>
     : activity.loading ? <p role="status">{t('Loading goal activity…')}</p>
     : events.length > 0 ? <ul className="tool-list goal-activity-list">{events.map(event => {

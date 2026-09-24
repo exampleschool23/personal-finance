@@ -55,3 +55,14 @@ test('unconvertible recorded receipts retain their month instead of being hidden
  const result=history([],[],[payment('foreign','Salary',100,{date:'2026-08-01',currency:'EUR'})],'USD',undefined,'2026-09-17',3);
  assert.equal(result.points[0].month,'2026-08');assert.equal(result.missing,1);
 });
+
+
+test('income forecasts honor every deposit compounding mode in current and future months',()=>{
+ const events=[{id:'opening',record_id:'deposit',event_type:'baseline',amount:0,balance:10000.12345678,occurred_on:'2025-01-01',created_at:'2025-01-01T00:00:00Z'}];
+ for(const mode of ['none','daily','monthly']){
+  const result=history([{id:'deposit',kind:'Deposit',currency:'USD',rate:24,deposit_compounding:mode}],events,[],'USD',undefined,'2026-09-24',3);
+  for(const point of result.points)assert.equal(point.estimate,depositInterest(events,24,point.month,mode));
+  assert.equal(result.expected.interest,depositInterest(events,24,'2026-09',mode));
+  assert.equal(result.totalReceived,0);
+ }
+});

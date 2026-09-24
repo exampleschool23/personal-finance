@@ -1,3 +1,6 @@
+import { isCurrency } from '../lib/currencies.ts';
+import { portfolioAssets, portfolioAssetKey, diversifiedPortfolioSchema } from '../lib/diversified-portfolio.ts';
+import { benchmarkSelectionSchema, stockBenchmarks } from '../lib/benchmark-selection.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -5,7 +8,7 @@ import ts from 'typescript';
 import * as dates from '../lib/benchmark-data.ts';
 const source=ts.transpileModule(fs.readFileSync('app/api/benchmarks/route.ts','utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let auth=true;
-const deps={...dates,session:async()=>auth?{token:'owner'}:null,depositToday:()=> '2026-09-17'};
+const deps={isCurrency,portfolioAssets,portfolioAssetKey,diversifiedPortfolioSchema,benchmarkSelectionSchema,stockBenchmarks,...dates,session:async()=>auth?{token:'owner'}:null,depositToday:()=> '2026-09-17'};
 const GET=new Function(...Object.keys(deps),source+';return GET;')(...Object.values(deps));
 const request=(params='start=2026-09-14&end=2026-09-17')=>new Request('https://local/api/benchmarks?'+params);
 test('rejects anonymous users, invalid dates, future or reversed periods, and arbitrary symbols',async()=>{
@@ -151,5 +154,45 @@ test('diversified portfolio fetches the chosen crypto and stock with separate ke
   assert.equal(data.prices.portfolioCrypto.length,4);assert.equal(data.prices.portfolioStock[0].close,100);
   assert.ok(calls.some(url=>url.pathname.includes('ETH-USD')));assert.ok(calls.some(url=>url.searchParams.get('symbol')==='QQQ'));assert.equal(data.prices.BTC,undefined);
   const invalid=await GET(request('start=2026-09-14&end=2026-09-17&benchmarks=PORTFOLIO&portfolioCrypto=../secret'));assert.equal(invalid.status,400);
+ }finally{globalThis.fetch=original;if(key===undefined)delete process.env.TWELVE_DATA_API_KEY;else process.env.TWELVE_DATA_API_KEY=key;}
+});
+test('fetches several custom stocks independently and deduplicates shared portfolio history',async()=>{
+ const original=globalThis.fetch,key=process.env.TWELVE_DATA_API_KEY;
+ try{
+  process.env.TWELVE_DATA_API_KEY='test';const symbols=[];
+  globalThis.fetch=async raw=>{
+   const url=new URL(raw);
+   if(url.hostname==='api.twelvedata.com'){
+    const symbol=url.searchParams.get('symbol');symbols.push(symbol);
+    return Response.json({meta:{symbol,currency:'USD'},values:[{datetime:'2026-09-14',close:symbol==='NVDA'?'100':'50'},{datetime:'2026-09-17',close:'110'}]});
+   }
+   const date=url.pathname.split('/').filter(Boolean).at(-1);
+   return Response.json([{Ccy:'USD',Rate:'12000',Nominal:'1',Date:date.split('-').reverse().join('.')}]);
+  };
+  const data=await(await GET(request('start=2026-09-14&end=2026-09-17&benchmarks=STOCK:NVDA,STOCK:AAPL,PORTFOLIO&portfolioStock=NVDA'))).json();
+  assert.equal(data.prices['STOCK:NVDA'][0].close,100);
+  assert.equal(data.prices['STOCK:AAPL'][0].close,50);
+  assert.deepEqual(data.prices.portfolioStock,data.prices['STOCK:NVDA']);
+  assert.deepEqual(symbols.sort(),['AAPL','NVDA']);
+ }finally{globalThis.fetch=original;if(key===undefined)delete process.env.TWELVE_DATA_API_KEY;else process.env.TWELVE_DATA_API_KEY=key;}
+});
+test('editable portfolios fetch every active market asset and skip deleted or zero-weight assets',async()=>{
+ const original=globalThis.fetch,key=process.env.TWELVE_DATA_API_KEY;
+ try{
+  process.env.TWELVE_DATA_API_KEY='test';const symbols=[];
+  globalThis.fetch=async raw=>{
+   const url=new URL(raw);
+   if(url.hostname==='api.twelvedata.com'){
+    const symbol=url.searchParams.get('symbol');symbols.push(symbol);
+    return Response.json({meta:{symbol,currency:'USD'},values:[{datetime:'2026-09-14',close:'100'},{datetime:'2026-09-17',close:'110'}]});
+   }
+   const date=url.pathname.split('/').filter(Boolean).at(-1);
+   return Response.json([{Ccy:'USD',Rate:'12000',Nominal:'1',Date:date.split('-').reverse().join('.')}]);
+  };
+  const portfolio={crypto:20,stock:20,deposit:20,business:20,cash:20,cryptoSymbol:'BTC',stockSymbol:'SPY',businessRate:0,assets:[{id:'a',kind:'stock',symbol:'NVDA',weight:60},{id:'b',kind:'stock',symbol:'AAPL',weight:40},{id:'c',kind:'crypto',symbol:'BTC',weight:0}]};
+  const params=new URLSearchParams({start:'2026-09-14',end:'2026-09-17',benchmarks:'PORTFOLIO',portfolio:JSON.stringify(portfolio)});
+  const data=await(await GET(request(params.toString()))).json();
+  assert.deepEqual(symbols.sort(),['AAPL','NVDA']);assert.equal(data.prices.portfolio_a.length,2);assert.equal(data.prices.portfolio_b.length,2);assert.equal(data.prices.portfolio_c,undefined);
+  params.set('portfolio','{');assert.equal((await GET(request(params.toString()))).status,400);
  }finally{globalThis.fetch=original;if(key===undefined)delete process.env.TWELVE_DATA_API_KEY;else process.env.TWELVE_DATA_API_KEY=key;}
 });

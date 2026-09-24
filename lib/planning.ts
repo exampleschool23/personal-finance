@@ -1,4 +1,4 @@
-import { income, expenses, type Entry } from './finance';
+import { scheduleDates, income, expenses, type Entry } from './finance';
 import type { AssetMovement } from './asset-movements';
 import type { HoldingAccount } from './holding-accounts';
 import { depositToday } from './deposit-interest';
@@ -27,14 +27,7 @@ export function upcomingPayments(records:Entry[],occurrences:Occurrence[],today=
   const start=asset?.date&&asset.date>record.date?asset.date:record.date;
   const add=(date:string,type:DueItem['type'])=>{const key=record.id+':'+date;if(date>=start&&date<=end&&!settled.has(key))result.push({key,record,date,type,overdue:date<today});};
   if(recurring){
-   // Generate from the start date so unpaid older occurrences remain visible.
-   const startYear=Number(record.date.slice(0,4)),startMonth=Number(record.date.slice(5,7))-1,day=Number(record.date.slice(8));
-   for(let index=startYear*12+startMonth;index<=Number(end.slice(0,4))*12+Number(end.slice(5,7))-1;index+=record.frequency==='Yearly'?12:1){
-    const year=Math.floor(index/12),month=index%12;
-    const date=new Date(Date.UTC(year,month,Math.min(day,new Date(Date.UTC(year,month+1,0)).getUTCDate()))).toISOString().slice(0,10);
-    if(record.end_date&&date>record.end_date)break;
-    add(date,'scheduled');
-   }
+   for(const date of scheduleDates(record,start,end))add(date,'scheduled');
   }else if(record.amount>0&&['Loan','Debt','Mortgage','Money lent','Deposit'].includes(record.kind))add(record.date,record.kind==='Deposit'?'maturity':'repayment');
  }
  return result.sort((a,b)=>a.date.localeCompare(b.date)||a.record.name.localeCompare(b.record.name));

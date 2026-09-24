@@ -4069,3 +4069,485 @@ COMMIT;
 -- Saved alongside comparison choices under the existing owner-only RLS policies.
 ALTER TABLE public.investment_comparison_preferences
  ADD COLUMN portfolio jsonb CHECK (portfolio IS NULL OR jsonb_typeof(portfolio) = 'object');
+
+BEGIN;
+-- Archived JSON predates later columns. Rehydrate missing columns using the
+-- current schema defaults, preserving every explicitly saved value (even null).
+-- This also keeps revision=1 for pre-revision imports, so later edits still fail.
+CREATE FUNCTION public.normalize_finance_record_snapshot(p_data jsonb) RETURNS jsonb
+LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path=public AS $$
+DECLARE field record; result jsonb:=p_data; default_value jsonb;
+BEGIN
+ FOR field IN SELECT a.attname,pg_get_expr(d.adbin,d.adrelid) AS expression
+  FROM pg_attribute a JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum
+  WHERE a.attrelid='public.finance_records'::regclass AND NOT a.attisdropped AND NOT(p_data ? a.attname)
+ LOOP
+  EXECUTE 'SELECT to_jsonb('||field.expression||')' INTO default_value;
+  result:=result||jsonb_build_object(field.attname,default_value);
+ END LOOP;
+ RETURN to_jsonb(jsonb_populate_record(NULL::public.finance_records,result));
+END $$;
+REVOKE ALL ON FUNCTION public.normalize_finance_record_snapshot(jsonb) FROM PUBLIC,anon,authenticated;
+CREATE OR REPLACE FUNCTION public.restore_deleted_item_before_transaction_tools(p_id uuid) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE item public.deleted_items; previous_write text;
+BEGIN
+ IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ SELECT * INTO item FROM public.deleted_items WHERE id=p_id AND user_id=auth.uid() FOR UPDATE;
+ IF NOT FOUND THEN RETURN; END IF;
+ IF item.source='finance_records' THEN
+  previous_write:=coalesce(current_setting('finance.history_write',true),'0');
+  IF jsonb_array_length(item.history)>0 THEN PERFORM set_config('finance.history_write','1',true); END IF;
+  INSERT INTO public.finance_records SELECT (jsonb_populate_record(NULL::public.finance_records,public.normalize_finance_record_snapshot(item.data) || jsonb_build_object('user_id',auth.uid()))).*;
+  IF jsonb_array_length(item.history)>0 THEN
+   INSERT INTO public.investment_history SELECT * FROM jsonb_populate_recordset(NULL::public.investment_history,item.history);
+   PERFORM set_config('finance.history_write',previous_write,true);
+  END IF;
+ ELSE
+  INSERT INTO public.expense_plans SELECT (jsonb_populate_record(NULL::public.expense_plans,item.data || jsonb_build_object('user_id',auth.uid()))).*;
+ END IF;
+ DELETE FROM public.deleted_items WHERE id=item.id AND user_id=auth.uid();
+END $$;
+CREATE OR REPLACE FUNCTION public.undo_statement_import(p_batch uuid) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE owner uuid:=auth.uid(); batch public.import_batches; item public.import_batch_items; current_record jsonb;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ SELECT * INTO batch FROM public.import_batches WHERE id=p_batch AND user_id=owner FOR UPDATE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Import not found.'; END IF;
+ IF batch.undone_at IS NOT NULL THEN RETURN; END IF;
+ -- Lock and check everything before deleting anything. Later edits must be reviewed.
+ FOR item IN SELECT * FROM public.import_batch_items WHERE batch_id=p_batch AND user_id=owner ORDER BY record_id LOOP
+  SELECT to_jsonb(f) INTO current_record FROM public.finance_records f WHERE id=item.record_id AND user_id=owner FOR UPDATE;
+  IF NOT FOUND OR current_record<>public.normalize_finance_record_snapshot(item.original) OR EXISTS(SELECT 1 FROM public.transaction_splits WHERE record_id=item.record_id) OR EXISTS(SELECT 1 FROM public.goal_events WHERE source_id=item.record_id) THEN RAISE EXCEPTION 'An imported transaction has changed or is linked to a goal. Review these records individually.'; END IF;
+ END LOOP;
+ -- Remove outflows first so undoing a balanced batch does not transiently overdraw.
+ FOR item IN SELECT * FROM public.import_batch_items WHERE batch_id=p_batch AND user_id=owner ORDER BY CASE WHEN original->>'kind'='Other expense' THEN 0 ELSE 1 END,record_id LOOP
+  DELETE FROM public.finance_records WHERE id=item.record_id AND user_id=owner;
+ END LOOP;
+ UPDATE public.import_batches SET undone_at=now() WHERE id=p_batch;
+END $$;
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+BEGIN;
+-- Private transaction-local authorization for suppressing derived writes during
+-- exact restoration. A caller cannot enable this by setting a session variable.
+CREATE TABLE public.finance_restore_context (
+ transaction_id bigint NOT NULL, user_id uuid NOT NULL, PRIMARY KEY(transaction_id,user_id)
+);
+REVOKE ALL ON public.finance_restore_context FROM PUBLIC,anon,authenticated;
+CREATE FUNCTION public.finance_restore_active() RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$
+ SELECT EXISTS(SELECT 1 FROM public.finance_restore_context WHERE transaction_id=txid_current() AND user_id=auth.uid())
+$$;
+REVOKE ALL ON FUNCTION public.finance_restore_active() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.finance_restore_active() TO authenticated;
+-- Preserve each trigger's implementation and privileges. Install the bypass
+-- inside the functions once, rather than changing shared trigger state at runtime.
+DO $$ DECLARE item record; definition text; BEGIN
+ FOR item IN SELECT DISTINCT p.oid,l.lanname FROM pg_trigger t
+  JOIN pg_proc p ON p.oid=t.tgfoid JOIN pg_language l ON l.oid=p.prolang
+  JOIN pg_class r ON r.oid=t.tgrelid JOIN pg_namespace n ON n.oid=r.relnamespace
+  WHERE n.nspname='public' AND r.relname=ANY(public.finance_backup_tables()) AND NOT t.tgisinternal
+ LOOP
+  IF item.lanname<>'plpgsql' THEN RAISE EXCEPTION 'Restore guard requires a PL/pgSQL trigger.'; END IF;
+  definition:=pg_get_functiondef(item.oid);
+  definition:=regexp_replace(definition,'\mBEGIN\M',
+   'BEGIN
+ IF public.finance_restore_active() THEN
+  IF TG_LEVEL=''STATEMENT'' THEN RETURN NULL; ELSIF TG_OP=''DELETE'' THEN RETURN OLD; ELSE RETURN NEW; END IF;
+ END IF;', 'i');
+  EXECUTE definition;
+ END LOOP;
+END $$;
+-- Every ordinary write takes the same owner lock as restore, including direct
+-- RLS writes. Different owners use different locks. Statement triggers run before
+-- row locks, preventing an update/restore lock-order inversion.
+CREATE FUNCTION public.serialize_finance_owner_write() RETURNS trigger
+LANGUAGE plpgsql SET search_path=public AS $$
+BEGIN
+ IF auth.uid() IS NOT NULL THEN PERFORM pg_advisory_xact_lock(hashtextextended(auth.uid()::text,0)); END IF;
+ RETURN NULL;
+END $$;
+REVOKE ALL ON FUNCTION public.serialize_finance_owner_write() FROM PUBLIC,anon,authenticated;
+DO $$ DECLARE tbl text; BEGIN
+ FOREACH tbl IN ARRAY public.finance_backup_tables() LOOP
+  EXECUTE format('CREATE TRIGGER serialize_owner_write BEFORE INSERT OR UPDATE OR DELETE ON public.%I FOR EACH STATEMENT EXECUTE FUNCTION public.serialize_finance_owner_write()',tbl);
+ END LOOP;
+END $$;
+CREATE OR REPLACE FUNCTION public.restore_finance_backup(p_backup text,p_expected_state text) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE backup jsonb; tbl text; recovery jsonb; operation_key text; prior_id uuid;
+BEGIN
+ PERFORM public.preview_finance_restore(p_backup);backup:=p_backup::jsonb;
+ PERFORM pg_advisory_xact_lock(hashtextextended(auth.uid()::text,0));
+ operation_key:=encode(sha256(convert_to(coalesce(p_expected_state,'')||':'||(backup->>'id'),'UTF8')),'hex');
+ SELECT id INTO prior_id FROM public.backup_recovery_points WHERE user_id=auth.uid() AND backup_recovery_points.restore_key=operation_key;
+ IF prior_id IS NOT NULL THEN RETURN jsonb_build_object('ok',true,'recovery_id',prior_id); END IF;
+ IF p_expected_state IS DISTINCT FROM encode(sha256(convert_to(public.finance_backup_state()::text,'UTF8')),'hex') THEN RAISE EXCEPTION 'Your workspace changed. Preview the backup again before restoring.'; END IF;
+ recovery:=public.export_finance_backup();
+ INSERT INTO public.backup_recovery_points(id,user_id,backup,restore_key) VALUES((recovery->>'id')::uuid,auth.uid(),recovery,operation_key);
+ -- This context is writable only by privileged functions, never by a caller's
+ -- custom GUC. Other sessions keep their triggers and continue normally.
+ IF EXISTS(SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid JOIN pg_class r ON r.oid=t.tgrelid JOIN pg_namespace n ON n.oid=r.relnamespace WHERE n.nspname='public' AND r.relname=ANY(public.finance_backup_tables()) AND NOT t.tgisinternal AND p.proname<>'serialize_finance_owner_write' AND position('public.finance_restore_active()' in p.prosrc)=0) THEN RAISE EXCEPTION 'Restore requires updated financial trigger guards.'; END IF;
+ INSERT INTO public.finance_restore_context(transaction_id,user_id) VALUES(txid_current(),auth.uid());
+ SET CONSTRAINTS ALL DEFERRED;
+ FOREACH tbl IN ARRAY public.finance_backup_tables() LOOP EXECUTE format('DELETE FROM public.%I WHERE user_id=$1',tbl) USING auth.uid(); END LOOP;
+ FOREACH tbl IN ARRAY public.finance_backup_tables() LOOP
+  EXECUTE format('INSERT INTO public.%I SELECT * FROM jsonb_populate_recordset(NULL::public.%I,$1)',tbl,tbl) USING backup->'tables'->tbl;
+ END LOOP;
+ -- FK and CHECK constraints remain enforced. Failure rolls back all rows and the restore context.
+ SET CONSTRAINTS ALL IMMEDIATE;
+ DELETE FROM public.finance_restore_context WHERE transaction_id=txid_current() AND user_id=auth.uid();
+ RETURN jsonb_build_object('ok',true,'recovery_id',recovery->>'id');
+END $$;
+-- Background captures use the same owner lock before writing. The cron's
+-- service-role token has no auth.uid(), so it cannot rely on the caller trigger.
+CREATE FUNCTION public.capture_owner_portfolio_snapshot(p_owner uuid,p_day date,p_totals jsonb) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ IF p_owner IS NULL OR p_day IS NULL THEN RAISE EXCEPTION 'Invalid snapshot.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(p_owner::text,0));
+ INSERT INTO public.portfolio_snapshots(user_id,occurred_on,assets,debt,rates,updated_at)
+ VALUES(p_owner,p_day,(p_totals->>'assets')::numeric,(p_totals->>'debt')::numeric,p_totals->'rates',now())
+ ON CONFLICT(user_id,occurred_on) DO UPDATE SET assets=excluded.assets,debt=excluded.debt,rates=excluded.rates,updated_at=excluded.updated_at;
+END $$;
+REVOKE ALL ON FUNCTION public.capture_owner_portfolio_snapshot(uuid,date,jsonb) FROM PUBLIC,anon,authenticated;
+DO $$ BEGIN
+ IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN GRANT EXECUTE ON FUNCTION public.capture_owner_portfolio_snapshot(uuid,date,jsonb) TO service_role; END IF;
+END $$;
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+BEGIN;
+-- Only the trusted server may re-register an externally authenticated backup.
+-- The server verifies its HMAC and passes the signed-in owner's ID. Ordinary
+-- authenticated RPC callers can never certify arbitrary JSON this way.
+CREATE FUNCTION public.register_verified_finance_backup(p_backup text,p_owner uuid) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE backup jsonb; tbl text; fingerprint text;
+BEGIN
+ IF p_owner IS NULL OR NOT EXISTS(SELECT 1 FROM auth.users WHERE id=p_owner) OR octet_length(p_backup)>20000000 THEN RAISE EXCEPTION 'Invalid backup owner or size.'; END IF;
+ backup:=p_backup::jsonb;
+ IF backup->>'version' IS DISTINCT FROM '2' OR backup->>'schema_version' IS DISTINCT FROM '59' OR backup->>'owner_id' IS DISTINCT FROM p_owner::text OR backup->>'id' IS NULL THEN RAISE EXCEPTION 'Use an unchanged verified backup downloaded from this account.'; END IF;
+ FOREACH tbl IN ARRAY public.finance_backup_tables() LOOP
+  IF jsonb_typeof(backup->'tables'->tbl) IS DISTINCT FROM 'array' OR EXISTS(SELECT 1 FROM jsonb_array_elements(backup->'tables'->tbl) r WHERE r->>'user_id' IS DISTINCT FROM p_owner::text) THEN RAISE EXCEPTION 'The backup contains invalid owner data.'; END IF;
+ END LOOP;
+ fingerprint:=encode(sha256(convert_to(backup::text,'UTF8')),'hex');
+ INSERT INTO public.backup_manifests(id,user_id,digest) VALUES((backup->>'id')::uuid,p_owner,fingerprint)
+ ON CONFLICT(id) DO NOTHING;
+ IF NOT EXISTS(SELECT 1 FROM public.backup_manifests WHERE id=(backup->>'id')::uuid AND user_id=p_owner AND digest=fingerprint) THEN RAISE EXCEPTION 'The backup identifier is already in use.'; END IF;
+END $$;
+REVOKE ALL ON FUNCTION public.register_verified_finance_backup(text,uuid) FROM PUBLIC,anon,authenticated;
+DO $$ BEGIN
+ IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN
+  GRANT EXECUTE ON FUNCTION public.register_verified_finance_backup(text,uuid) TO service_role;
+ END IF;
+END $$;
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+BEGIN;
+CREATE INDEX finance_records_owner_actual_date ON public.finance_records(user_id,date DESC,id) WHERE frequency='Once';
+CREATE FUNCTION public.transaction_history_page(p_page integer DEFAULT 1,p_currency text DEFAULT NULL,p_query text DEFAULT '',p_category text DEFAULT 'all',p_from date DEFAULT NULL,p_to date DEFAULT NULL,p_order text DEFAULT 'newest') RETURNS jsonb
+LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path=public AS $$
+DECLARE result jsonb;
+BEGIN
+ IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ IF p_page IS NULL OR p_page<1 OR p_page>1000000 OR p_order IS NULL OR p_order NOT IN('newest','oldest','name') OR length(p_query)>200 OR (p_from IS NOT NULL AND p_to IS NOT NULL AND p_from>p_to) THEN RAISE EXCEPTION 'Invalid history filters.'; END IF;
+ WITH matching AS MATERIALIZED (
+ SELECT r.* FROM public.finance_records r WHERE r.user_id=auth.uid() AND r.frequency='Once'
+ AND r.kind IN('Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense')
+ AND (p_currency IS NULL OR r.currency=p_currency)
+ AND (p_category='all' OR r.kind=p_category OR r.custom_category_id::text=p_category)
+ AND (p_from IS NULL OR r.date>=p_from) AND (p_to IS NULL OR r.date<=p_to)
+ AND (trim(p_query)='' OR strpos(lower(r.name||' '||r.notes),lower(trim(p_query)))>0)
+ ), pagination AS (
+  SELECT count(*)::integer AS total,least(p_page,greatest(1,(count(*)::integer+9)/10)) AS page FROM matching
+ ), items AS (
+  SELECT r.*,row_number() OVER(ORDER BY CASE WHEN p_order='name' THEN lower(r.name) END ASC,CASE WHEN p_order='oldest' THEN r.date END ASC NULLS LAST,CASE WHEN p_order='newest' THEN r.date END DESC NULLS LAST,r.id ASC) AS position
+  FROM matching r ORDER BY position LIMIT 10 OFFSET ((SELECT page FROM pagination)-1)*10
+ )
+ SELECT jsonb_build_object('records',(SELECT coalesce(jsonb_agg(to_jsonb(items)-'position' ORDER BY position),'[]') FROM items),'total',total,'page',page) INTO result FROM pagination;
+ RETURN result;
+END $$;
+REVOKE ALL ON FUNCTION public.transaction_history_page(integer,text,text,text,date,date,text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.transaction_history_page(integer,text,text,text,date,date,text) TO authenticated;
+CREATE OR REPLACE FUNCTION public.finance_capabilities() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
+ SELECT jsonb_build_object('schema_version',64,'record_revisions',true,'verified_restore',true)
+$$;
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+BEGIN;
+ALTER TABLE public.finance_records ADD COLUMN recurrence_days integer;
+ALTER TABLE public.income_sources ADD COLUMN recurrence_days integer;
+ALTER TABLE public.finance_records DROP CONSTRAINT finance_records_frequency_check;
+ALTER TABLE public.finance_records ADD CONSTRAINT finance_records_frequency_check CHECK(frequency IN ('Once','Weekly','Fortnightly','Monthly','Yearly','Custom'));
+ALTER TABLE public.income_sources DROP CONSTRAINT income_sources_frequency_check;
+ALTER TABLE public.income_sources ADD CONSTRAINT income_sources_frequency_check CHECK(frequency IN ('Weekly','Fortnightly','Monthly','Yearly','Custom'));
+ALTER TABLE public.finance_records ADD CONSTRAINT finance_recurrence_interval CHECK((frequency='Custom' AND recurrence_days BETWEEN 1 AND 366 AND recurrence_days IS NOT NULL) OR (frequency<>'Custom' AND recurrence_days IS NULL));
+ALTER TABLE public.income_sources ADD CONSTRAINT source_recurrence_interval CHECK((frequency='Custom' AND recurrence_days BETWEEN 1 AND 366 AND recurrence_days IS NOT NULL) OR (frequency IS DISTINCT FROM 'Custom' AND recurrence_days IS NULL));
+ALTER TABLE public.finance_records DROP CONSTRAINT finance_records_end_date_check;
+ALTER TABLE public.finance_records ADD CONSTRAINT finance_records_end_date_check CHECK(end_date IS NULL OR (date IS NOT NULL AND end_date>=date AND frequency IN ('Weekly','Fortnightly','Monthly','Yearly','Custom') AND kind IN ('Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense')));
+CREATE FUNCTION public.is_schedule_date(frequency text,anchor date,until_day date,day date,days integer DEFAULT NULL) RETURNS boolean LANGUAGE sql IMMUTABLE SET search_path=public AS $$
+ SELECT coalesce(day>=anchor AND (until_day IS NULL OR day<=until_day) AND CASE
+ WHEN frequency IN ('Weekly','Fortnightly','Custom') THEN (day-anchor)%nullif(CASE frequency WHEN 'Weekly' THEN 7 WHEN 'Fortnightly' THEN 14 ELSE days END,0)=0
+ WHEN frequency IN ('Monthly','Yearly') THEN extract(day FROM day)=least(extract(day FROM anchor),extract(day FROM date_trunc('month',day)+interval '1 month - 1 day')) AND (frequency='Monthly' OR extract(month FROM day)=extract(month FROM anchor)) ELSE false END,false)
+$$;
+REVOKE ALL ON FUNCTION public.is_schedule_date(text,date,date,date,integer) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.is_schedule_date(text,date,date,date,integer) TO authenticated;
+-- Exact guarded patches preserve restore guards and existing operation protections.
+CREATE FUNCTION pg_temp.patch_daily(fn regprocedure,old_text text,new_text text) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE definition text:=pg_get_functiondef(fn); BEGIN
+ IF position(old_text in definition)=0 THEN RAISE EXCEPTION 'Unexpected function definition: %',fn; END IF;
+ EXECUTE replace(definition,old_text,new_text);
+END $$;
+SELECT pg_temp.patch_daily('public.save_finance_record(jsonb,bigint)'::regprocedure,$old$'is_investment'];$old$,$new$'is_investment','recurrence_days'];$new$);
+SELECT pg_temp.patch_daily('public.planning_action(text,jsonb)'::regprocedure,$old$r.frequency NOT IN ('Monthly','Yearly') OR r.kind NOT IN ('Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense') OR day<r.date OR (r.end_date IS NOT NULL AND day>r.end_date)
+    OR extract(day FROM day)<>least(extract(day FROM r.date),extract(day FROM date_trunc('month',day)+interval '1 month - 1 day'))
+    OR (r.frequency='Yearly' AND extract(month FROM day)<>extract(month FROM r.date))$old$,$new$r.kind NOT IN ('Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense') OR NOT public.is_schedule_date(r.frequency,r.date,r.end_date,day,r.recurrence_days)$new$);
+SELECT pg_temp.patch_daily('public.planning_action_with_actual_amount(text,jsonb)'::regprocedure,$old$r.frequency NOT IN ('Monthly','Yearly') OR r.kind NOT IN ('Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense') OR day<r.date OR (r.end_date IS NOT NULL AND day>r.end_date)
+    OR extract(day FROM day)<>least(extract(day FROM r.date),extract(day FROM date_trunc('month',day)+interval '1 month - 1 day'))
+    OR (r.frequency='Yearly' AND extract(month FROM day)<>extract(month FROM r.date))$old$,$new$r.kind NOT IN ('Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense') OR NOT public.is_schedule_date(r.frequency,r.date,r.end_date,day,r.recurrence_days)$new$);
+SELECT pg_temp.patch_daily('public.validate_earning_receipt()'::regprocedure,$old$due IS NULL OR due<source.start_date OR (source.end_date IS NOT NULL AND due>source.end_date) OR extract(day FROM due)<>least(extract(day FROM source.start_date),extract(day FROM (month_start+interval '1 month - 1 day'))) OR (source.frequency='Yearly' AND extract(month FROM due)<>extract(month FROM source.start_date))$old$,$new$NOT public.is_schedule_date(source.frequency,source.start_date,source.end_date,due,source.recurrence_days)$new$);
+SELECT pg_temp.patch_daily('public.validate_income_source()'::regprocedure,$old$IF due<source.date OR (source.end_date IS NOT NULL AND due>source.end_date) OR
+    extract(day FROM due)<>least(extract(day FROM source.date),extract(day FROM (month_start+interval '1 month - 1 day'))) OR
+    (source.frequency='Yearly' AND extract(month FROM due)<>extract(month FROM source.date))$old$,$new$IF NOT public.is_schedule_date(source.frequency,source.date,source.end_date,due,source.recurrence_days)$new$);
+SELECT pg_temp.patch_daily('public.validate_income_source()'::regprocedure,$old$source.frequency IN ('Monthly','Yearly')$old$,$new$source.frequency IN ('Weekly','Fortnightly','Monthly','Yearly','Custom')$new$);
+SELECT pg_temp.patch_daily('public.save_income_source(jsonb)'::regprocedure,$old$saved.frequency,saved.start_date$old$,$new$saved.frequency,saved.recurrence_days,saved.start_date$new$);
+SELECT pg_temp.patch_daily('public.save_income_source(jsonb)'::regprocedure,$old$old.frequency,old.start_date$old$,$new$old.frequency,old.recurrence_days,old.start_date$new$);
+SELECT pg_temp.patch_daily('public.save_income_source(jsonb)'::regprocedure,$old$frequency,end_date,business_id,income_source_id,source_paused)$old$,$new$frequency,recurrence_days,end_date,business_id,income_source_id,source_paused)$new$);
+SELECT pg_temp.patch_daily('public.save_income_source(jsonb)'::regprocedure,$old$saved.start_date,saved.frequency,saved.end_date$old$,$new$saved.start_date,saved.frequency,saved.recurrence_days,saved.end_date$new$);
+SELECT pg_temp.patch_daily('public.save_income_source(jsonb)'::regprocedure,$old$frequency=EXCLUDED.frequency,$old$,$new$frequency=EXCLUDED.frequency,recurrence_days=EXCLUDED.recurrence_days,$new$);
+SELECT pg_temp.patch_daily('public.protect_income_schedule()'::regprocedure,$old$NEW.frequency,NEW.date$old$,$new$NEW.frequency,NEW.recurrence_days,NEW.date$new$);
+SELECT pg_temp.patch_daily('public.protect_income_schedule()'::regprocedure,$old$OLD.frequency,OLD.date$old$,$new$OLD.frequency,OLD.recurrence_days,OLD.date$new$);
+SELECT pg_temp.patch_daily('public.finance_records_page(integer,text,text,boolean)'::regprocedure,$old$r.currency,r.frequency,$old$,$new$r.currency,r.frequency,r.recurrence_days,$new$);
+CREATE FUNCTION public.set_schedule_exception(p_record uuid,p_day date,p_skip boolean) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE r public.finance_records; existing public.payment_occurrences;
+BEGIN
+ IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ IF p_skip IS NULL THEN RAISE EXCEPTION 'Choose a schedule action.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(auth.uid()::text,0));
+ SELECT * INTO r FROM public.finance_records WHERE id=p_record AND user_id=auth.uid();
+ IF NOT FOUND OR NOT public.is_schedule_date(r.frequency,r.date,r.end_date,p_day,r.recurrence_days) THEN RAISE EXCEPTION 'Invalid scheduled occurrence.'; END IF;
+ SELECT * INTO existing FROM public.payment_occurrences WHERE user_id=auth.uid() AND record_id=p_record AND due_on=p_day;
+ IF existing.status='paid' THEN RAISE EXCEPTION 'A recorded payment cannot be skipped.'; END IF;
+ IF p_skip THEN
+  INSERT INTO public.payment_occurrences(id,user_id,record_id,due_on,status) VALUES(gen_random_uuid(),auth.uid(),p_record,p_day,'dismissed') ON CONFLICT(user_id,record_id,due_on) DO NOTHING;
+ ELSE DELETE FROM public.payment_occurrences WHERE user_id=auth.uid() AND record_id=p_record AND due_on=p_day AND status='dismissed';
+ END IF;
+ RETURN jsonb_build_object('ok',true);
+END $$;
+REVOKE ALL ON FUNCTION public.set_schedule_exception(uuid,date,boolean) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.set_schedule_exception(uuid,date,boolean) TO authenticated;
+CREATE FUNCTION public.protect_settled_schedule() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ IF public.finance_restore_active() THEN RETURN NEW; END IF;
+ IF EXISTS(SELECT 1 FROM public.payment_occurrences WHERE user_id=OLD.user_id AND record_id=OLD.id) THEN
+  IF (NEW.kind,NEW.currency,NEW.frequency,NEW.recurrence_days) IS DISTINCT FROM (OLD.kind,OLD.currency,OLD.frequency,OLD.recurrence_days)
+   OR (NEW.date IS DISTINCT FROM OLD.date AND NOT EXISTS(SELECT 1 FROM public.income_sources WHERE user_id=OLD.user_id AND schedule_id=OLD.id))
+   OR (NEW.end_date IS NOT NULL AND EXISTS(SELECT 1 FROM public.payment_occurrences WHERE user_id=OLD.user_id AND record_id=OLD.id AND due_on>NEW.end_date AND status='paid')) THEN
+   RAISE EXCEPTION 'Keep the schedule compatible with settled payments. Stop it and create a new plan to change its cadence.';
+  END IF;
+ END IF;
+ RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public.protect_settled_schedule() FROM PUBLIC,anon,authenticated;
+CREATE TRIGGER protect_settled_schedule BEFORE UPDATE ON public.finance_records FOR EACH ROW EXECUTE FUNCTION public.protect_settled_schedule();
+NOTIFY pgrst,'reload schema';
+COMMIT;
+BEGIN;
+CREATE TABLE public.account_reconciliations (
+ id uuid PRIMARY KEY, user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE DEFERRABLE,
+ account_id uuid NOT NULL, start_date date NOT NULL, end_date date NOT NULL,
+ opening_balance numeric NOT NULL, closing_balance numeric NOT NULL,
+ cleared text[] NOT NULL, fingerprint text NOT NULL, ledger jsonb NOT NULL,
+ status text NOT NULL CHECK(status IN ('draft','reconciled')), revision integer NOT NULL DEFAULT 1,
+ FOREIGN KEY(user_id,account_id) REFERENCES public.finance_records(user_id,id) DEFERRABLE,
+ CHECK(start_date<=end_date), CHECK(abs(opening_balance)<=1e15 AND abs(closing_balance)<=1e15),
+ CHECK(opening_balance::text NOT IN ('NaN','Infinity','-Infinity') AND closing_balance::text NOT IN ('NaN','Infinity','-Infinity'))
+);
+ALTER TABLE public.account_reconciliations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY owner_read ON public.account_reconciliations FOR SELECT TO authenticated USING(user_id=auth.uid());
+REVOKE ALL ON public.account_reconciliations FROM PUBLIC,anon,authenticated;
+GRANT SELECT ON public.account_reconciliations TO authenticated;
+CREATE TRIGGER serialize_owner_write BEFORE INSERT OR UPDATE OR DELETE ON public.account_reconciliations FOR EACH STATEMENT EXECUTE FUNCTION public.serialize_finance_owner_write();
+-- A single projection of account legs. Fee/receipt records representing an
+-- operation are excluded when the operation already includes their cash effect.
+CREATE FUNCTION public.account_statement_legs(p_account uuid,p_start date,p_end date)
+RETURNS TABLE(key text,date date,name text,amount numeric) LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
+ SELECT 'record:'||r.id,r.date,r.name,CASE WHEN r.kind IN ('Salary','Rent income','Business income','Other income') THEN r.amount ELSE -r.amount END/coalesce(r.account_exchange_rate,1)
+ FROM public.finance_records r WHERE r.user_id=auth.uid() AND r.account_id=p_account AND r.frequency='Once' AND r.date BETWEEN p_start AND p_end
+ AND NOT EXISTS(SELECT 1 FROM public.account_activity a WHERE a.user_id=auth.uid() AND a.id IN(r.operation_id,r.mortgage_payment_id))
+ AND NOT EXISTS(SELECT 1 FROM public.investment_account_links l WHERE l.user_id=auth.uid() AND l.id=r.history_event_id)
+ UNION ALL
+ SELECT 'activity:'||a.id||':out',a.occurred_on,a.action,a.after_balance-a.before_balance FROM public.account_activity a WHERE a.user_id=auth.uid() AND a.account_id=p_account AND a.occurred_on BETWEEN p_start AND p_end
+ UNION ALL
+ SELECT 'activity:'||a.id||':in',a.occurred_on,a.action,a.received FROM public.account_activity a WHERE a.user_id=auth.uid() AND a.target_id=p_account AND a.action='transfer' AND a.occurred_on BETWEEN p_start AND p_end
+ UNION ALL
+ SELECT 'movement:'||m.id||':out',m.occurred_on,m.kind,-m.sent FROM public.asset_movements m WHERE m.user_id=auth.uid() AND m.source_id=p_account AND m.kind<>'interest' AND m.occurred_on BETWEEN p_start AND p_end
+ UNION ALL
+ SELECT 'movement:'||m.id||':in',m.occurred_on,m.kind,m.received FROM public.asset_movements m WHERE m.user_id=auth.uid() AND m.target_id=p_account AND m.occurred_on BETWEEN p_start AND p_end
+ UNION ALL
+ SELECT 'tracker:'||l.id,h.occurred_on,r.name,l.amount FROM public.investment_account_links l JOIN public.investment_history h ON h.id=l.id AND h.user_id=l.user_id JOIN public.finance_records r ON r.id=h.record_id AND r.user_id=h.user_id
+ WHERE l.user_id=auth.uid() AND l.account_id=p_account AND h.occurred_on BETWEEN p_start AND p_end
+$$;
+-- Carry forward explicitly unchecked entries from earlier statement reviews.
+-- An entry cleared in an earlier period is not offered again in later periods.
+CREATE FUNCTION public.statement_review_legs(p_account uuid,p_start date,p_end date)
+RETURNS TABLE(key text,date date,name text,amount numeric) LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
+ SELECT l.* FROM public.account_statement_legs(p_account,least(p_start,coalesce((SELECT min(start_date) FROM public.account_reconciliations WHERE user_id=auth.uid() AND account_id=p_account AND end_date<p_start),p_start)),p_end) l
+ WHERE l.date>=p_start OR (
+ EXISTS(SELECT 1 FROM public.account_reconciliations r CROSS JOIN LATERAL jsonb_array_elements(r.ledger) e WHERE r.user_id=auth.uid() AND r.account_id=p_account AND r.end_date<p_start AND e->>'key'=l.key AND NOT (l.key=ANY(r.cleared)))
+ AND NOT EXISTS(SELECT 1 FROM public.account_reconciliations r WHERE r.user_id=auth.uid() AND r.account_id=p_account AND r.end_date<p_start AND l.key=ANY(r.cleared)));
+$$;
+REVOKE ALL ON FUNCTION public.statement_review_legs(uuid,date,date) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.statement_review_legs(uuid,date,date) TO authenticated;
+CREATE FUNCTION public.account_statement(p_account uuid,p_start date,p_end date) RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY INVOKER SET search_path=public AS $$
+DECLARE account public.finance_records; rows jsonb; hash text;
+BEGIN
+ IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ IF p_start IS NULL OR p_end IS NULL OR p_start>p_end OR p_end>(now() AT TIME ZONE 'Asia/Tashkent')::date THEN RAISE EXCEPTION 'Check the statement dates.'; END IF;
+ SELECT * INTO account FROM public.finance_records WHERE id=p_account AND user_id=auth.uid() AND kind='Cash';
+ IF NOT FOUND THEN RAISE EXCEPTION 'Choose one of your cash accounts.'; END IF;
+ IF (SELECT count(*) FROM public.statement_review_legs(p_account,p_start,p_end))>5000 THEN RAISE EXCEPTION 'Choose a shorter statement period.'; END IF;
+ SELECT coalesce(jsonb_agg(to_jsonb(l) ORDER BY l.date,l.key),'[]') INTO rows FROM public.statement_review_legs(p_account,p_start,p_end) l;
+ -- Conservative invalidation also catches manual account corrections that have
+ -- no dated transaction leg. A new balance update requires review again.
+ hash:=encode(sha256(convert_to(jsonb_build_array(account.id,account.currency,account.amount,account.revision,p_start,p_end,rows)::text,'UTF8')),'hex');
+ RETURN jsonb_build_object('entries',rows,'fingerprint',hash,'account',to_jsonb(account)-'user_id');
+END $$;
+CREATE FUNCTION public.save_account_reconciliation(p_data jsonb) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE item public.account_reconciliations; prior public.account_reconciliations; state jsonb; total numeric; row_count integer;
+BEGIN
+ IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(auth.uid()::text,0));
+ item:=jsonb_populate_record(NULL::public.account_reconciliations,p_data||jsonb_build_object('user_id',auth.uid()));
+ SELECT * INTO prior FROM public.account_reconciliations WHERE id=item.id;
+ IF FOUND AND prior.user_id<>auth.uid() THEN RAISE EXCEPTION 'Statement not found.'; END IF;
+ IF prior.id IS NOT NULL AND prior.account_id<>item.account_id THEN RAISE EXCEPTION 'Statement account cannot change.'; END IF;
+ IF prior.id IS NOT NULL AND to_jsonb(prior) @> (p_data-'revision') THEN RETURN to_jsonb(prior); END IF;
+ IF prior.id IS NOT NULL AND prior.revision IS DISTINCT FROM item.revision THEN RAISE EXCEPTION 'This statement changed. Reload it before saving.'; END IF;
+ state:=public.account_statement(item.account_id,item.start_date,item.end_date);
+ IF item.fingerprint IS DISTINCT FROM state->>'fingerprint' THEN RAISE EXCEPTION 'Account activity changed. Reload the statement before saving.'; END IF;
+ IF item.cleared IS NULL OR cardinality(item.cleared)>5000 OR cardinality(item.cleared)<>(SELECT count(DISTINCT k) FROM unnest(item.cleared) k) THEN RAISE EXCEPTION 'Check the cleared entries.'; END IF;
+ SELECT count(*),coalesce(sum((e->>'amount')::numeric),0) INTO row_count,total FROM jsonb_array_elements(state->'entries') e WHERE e->>'key'=ANY(item.cleared);
+ IF row_count<>cardinality(item.cleared) THEN RAISE EXCEPTION 'Check the cleared entries.'; END IF;
+ IF item.status='reconciled' AND item.opening_balance+total<>item.closing_balance THEN RAISE EXCEPTION 'The cleared balance must match the statement.'; END IF;
+ item.ledger:=state->'entries';item.revision:=coalesce(prior.revision,0)+1;
+ INSERT INTO public.account_reconciliations SELECT item.* ON CONFLICT(id) DO UPDATE SET start_date=EXCLUDED.start_date,end_date=EXCLUDED.end_date,opening_balance=EXCLUDED.opening_balance,closing_balance=EXCLUDED.closing_balance,cleared=EXCLUDED.cleared,fingerprint=EXCLUDED.fingerprint,ledger=EXCLUDED.ledger,status=EXCLUDED.status,revision=EXCLUDED.revision;
+ RETURN to_jsonb(item)-'user_id';
+END $$;
+REVOKE ALL ON FUNCTION public.account_statement_legs(uuid,date,date),public.account_statement(uuid,date,date),public.save_account_reconciliation(jsonb) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.account_statement_legs(uuid,date,date),public.account_statement(uuid,date,date),public.save_account_reconciliation(jsonb) TO authenticated;
+CREATE FUNCTION public.reconciliation_status() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
+ SELECT coalesce(jsonb_agg(jsonb_build_object('account_id',a.id,'name',a.name,'end_date',r.end_date,'valid',CASE WHEN r.status='reconciled' THEN r.fingerprint=(public.account_statement(a.id,r.start_date,r.end_date)->>'fingerprint') ELSE false END) ORDER BY a.id),'[]')
+ FROM public.finance_records a LEFT JOIN LATERAL(SELECT * FROM public.account_reconciliations r WHERE r.user_id=auth.uid() AND r.account_id=a.id ORDER BY r.end_date DESC,r.id LIMIT 1) r ON true
+ WHERE a.user_id=auth.uid() AND a.kind='Cash';
+$$;
+REVOKE ALL ON FUNCTION public.reconciliation_status() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.reconciliation_status() TO authenticated;
+NOTIFY pgrst,'reload schema';
+COMMIT;
+BEGIN;
+CREATE TABLE public.corporate_events (
+ id uuid PRIMARY KEY, user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE DEFERRABLE,
+ record_id uuid NOT NULL, target_id uuid, kind text NOT NULL CHECK(kind IN ('dividend','split','security_transfer')),
+ occurred_on date NOT NULL, payload jsonb NOT NULL, result jsonb NOT NULL,
+ FOREIGN KEY(user_id,record_id) REFERENCES public.finance_records(user_id,id) DEFERRABLE,
+ FOREIGN KEY(user_id,target_id) REFERENCES public.finance_records(user_id,id) DEFERRABLE
+);
+ALTER TABLE public.corporate_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY owner_read ON public.corporate_events FOR SELECT TO authenticated USING(user_id=auth.uid());
+REVOKE ALL ON public.corporate_events FROM PUBLIC,anon,authenticated;
+GRANT SELECT ON public.corporate_events TO authenticated;
+CREATE TRIGGER serialize_owner_write BEFORE INSERT OR UPDATE OR DELETE ON public.corporate_events FOR EACH STATEMENT EXECUTE FUNCTION public.serialize_finance_owner_write();
+CREATE FUNCTION public.record_corporate_event(p_data jsonb) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+#variable_conflict use_variable
+DECLARE owner uuid:=auth.uid(); a public.finance_records; b public.finance_records; prior public.corporate_events;
+ item uuid:=(p_data->>'id')::uuid; aid uuid:=(p_data->>'record_id')::uuid; bid uuid:=(p_data->>'target_id')::uuid;
+ action text:=p_data->>'kind'; day date:=(p_data->>'date')::date; memo text:=coalesce(p_data->>'notes','');
+ gross numeric:=coalesce((p_data->>'gross')::numeric,0); tax numeric:=coalesce((p_data->>'withholding')::numeric,0);
+ reinvest numeric:=coalesce((p_data->>'reinvest_amount')::numeric,0); quantity numeric:=coalesce((p_data->>'quantity')::numeric,0);
+ numerator numeric:=coalesce((p_data->>'numerator')::numeric,0); denominator numeric:=coalesce((p_data->>'denominator')::numeric,0);
+ next_quantity numeric; total_value numeric; history_setting text; result jsonb; tax_id uuid:=gen_random_uuid(); trade_id uuid:=gen_random_uuid(); last_day date;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ IF item IS NULL OR aid IS NULL OR action IS NULL OR action NOT IN ('dividend','split','security_transfer') OR day IS NULL OR day>(now() AT TIME ZONE 'Asia/Tashkent')::date OR length(memo)>2000
+ OR EXISTS(SELECT 1 FROM unnest(ARRAY[gross,tax,reinvest,quantity,numerator,denominator]) n WHERE n<0 OR n>1e15 OR n::text IN ('NaN','Infinity','-Infinity')) THEN RAISE EXCEPTION 'Check the investment event fields.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ SELECT * INTO prior FROM public.corporate_events WHERE id=item;
+ IF FOUND THEN
+  IF prior.user_id<>owner OR prior.payload<>p_data THEN RAISE EXCEPTION 'This operation was already saved with different details.'; END IF;
+  RETURN prior.result;
+ END IF;
+ PERFORM id FROM public.finance_records WHERE id IN(aid,bid) AND user_id=owner ORDER BY id FOR UPDATE;
+ SELECT * INTO a FROM public.finance_records WHERE id=aid AND user_id=owner AND kind IN ('Stock','Crypto');
+ IF a.id IS NULL OR a.revision IS DISTINCT FROM (p_data->>'revision')::bigint THEN RAISE EXCEPTION 'The holding changed. Reopen the event form.'; END IF;
+ IF bid IS NOT NULL THEN
+  SELECT * INTO b FROM public.finance_records WHERE id=bid AND user_id=owner;
+  IF b.id IS NULL OR b.revision IS DISTINCT FROM (p_data->>'target_revision')::bigint THEN RAISE EXCEPTION 'The destination changed. Reopen the event form.'; END IF;
+ END IF;
+ SELECT max(occurred_on) INTO last_day FROM public.investment_history WHERE record_id IN(aid,bid) AND balance IS NOT NULL;
+ IF day<last_day THEN RAISE EXCEPTION 'Choose a date on or after the latest balance update.'; END IF;
+ result:=jsonb_build_object('ok',true,'id',item);
+ IF action='dividend' THEN
+  IF a.kind<>'Stock' OR b.kind IS DISTINCT FROM 'Cash' OR b.currency<>a.currency OR gross<=0 OR tax>gross OR reinvest>gross-tax OR (reinvest>0)<>(quantity>0) OR quantity>1e12 OR numerator<>0 OR denominator<>0 THEN RAISE EXCEPTION 'Check the dividend amounts and cash account.'; END IF;
+  PERFORM public.record_investment_with_account(item,aid,'income',day,gross,NULL,memo,bid);
+  IF tax>0 THEN PERFORM public.record_investment_with_account(tax_id,aid,'expense',day,tax,NULL,'Dividend withholding. '||left(memo,1950),bid); END IF;
+  IF reinvest>0 THEN
+   PERFORM public.record_asset_movement(jsonb_build_object('id',trade_id,'kind','buy','source_id',bid,'target_id',aid,'sent',reinvest,'received',quantity,'source_value',reinvest,'target_value',reinvest,'fee',0,'date',day,'notes','Dividend reinvestment. '||left(memo,1950)));
+  END IF;
+  result:=result||jsonb_build_object('gross',gross,'withholding',tax,'net',gross-tax,'residual_cash',gross-tax-reinvest,'tax_id',CASE WHEN tax>0 THEN tax_id END,'trade_id',CASE WHEN reinvest>0 THEN trade_id END);
+ ELSE
+  IF gross<>0 OR tax<>0 OR reinvest<>0 THEN RAISE EXCEPTION 'Check the investment event fields.'; END IF;
+  history_setting:=coalesce(current_setting('finance.history_write',true),'0');PERFORM set_config('finance.history_write','1',true);
+  IF action='split' THEN
+   IF a.kind<>'Stock' OR bid IS NOT NULL OR numerator<=0 OR denominator<=0 OR a.quantity<=0 OR quantity<>0 THEN RAISE EXCEPTION 'Enter the new shares and old shares in the split ratio.'; END IF;
+   next_quantity:=a.quantity*numerator/denominator;
+   IF next_quantity<=0 OR next_quantity>1e12 OR a.amount*denominator/numerator>1e15 OR a.cost*denominator/numerator>1e15 THEN RAISE EXCEPTION 'Check the resulting share quantity.'; END IF;
+   UPDATE public.finance_records SET quantity=next_quantity,amount=a.amount*denominator/numerator,cost=a.cost*denominator/numerator WHERE id=aid;
+   INSERT INTO public.investment_history(id,user_id,record_id,event_type,occurred_on,amount,balance,notes) VALUES(item,owner,aid,'valuation',day,0,a.quantity*a.amount,'Stock split. '||left(memo,1950));
+   result:=result||jsonb_build_object('quantity',next_quantity,'total_cost',a.quantity*a.cost);
+  ELSE
+   IF b.id IS NULL OR aid=bid OR b.kind<>a.kind OR b.name<>a.name OR b.currency<>a.currency OR quantity<=0 OR quantity>a.quantity OR b.quantity+quantity>1e12 OR numerator<>0 OR denominator<>0 THEN RAISE EXCEPTION 'Transfer to the same security in another holding, using the same currency.'; END IF;
+   total_value:=quantity*a.amount;
+   UPDATE public.finance_records SET quantity=a.quantity-quantity WHERE id=aid;
+   UPDATE public.finance_records SET quantity=b.quantity+quantity,cost=(b.quantity*b.cost+quantity*a.cost)/(b.quantity+quantity),amount=(b.quantity*b.amount+total_value)/(b.quantity+quantity) WHERE id=bid;
+   INSERT INTO public.investment_history(id,user_id,record_id,event_type,occurred_on,amount,balance,notes) VALUES(item,owner,aid,'withdrawal',day,total_value,(a.quantity-quantity)*a.amount,'Security transfer. '||left(memo,1950)),(trade_id,owner,bid,'contribution',day,total_value,b.quantity*b.amount+total_value,'Security transfer. '||left(memo,1950));
+   result:=result||jsonb_build_object('quantity',quantity,'transferred_cost',quantity*a.cost);
+  END IF;
+  PERFORM set_config('finance.history_write',history_setting,true);
+ END IF;
+ INSERT INTO public.corporate_events VALUES(item,owner,aid,bid,action,day,p_data,result);
+ RETURN result;
+END $$;
+REVOKE ALL ON FUNCTION public.record_corporate_event(jsonb) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.record_corporate_event(jsonb) TO authenticated;
+ALTER TABLE public.workspace_preferences DROP CONSTRAINT workspace_preferences_key_check;
+ALTER TABLE public.workspace_preferences ADD CONSTRAINT workspace_preferences_key_check CHECK(key IN ('allocation','watchlists','import_profiles','debt_plan','goal_scenarios','goal_order','daily_plan','entry_templates','reminders'));
+-- Both new ledgers participate in the existing atomic owner-scoped recovery.
+DO $$ DECLARE definition text; fn regprocedure; BEGIN
+ definition:=pg_get_functiondef('public.finance_backup_tables()'::regprocedure);
+ EXECUTE replace(definition,'''account_activity''','''account_reconciliations'',''corporate_events'',''account_activity''');
+ -- Old verified backups legitimately predate the two new tables. Verify the
+ -- unchanged signed payload first; treat only these absent tables as empty.
+ FOREACH fn IN ARRAY ARRAY['public.preview_finance_restore(text)'::regprocedure,'public.register_verified_finance_backup(text,uuid)'::regprocedure] LOOP
+  definition:=pg_get_functiondef(fn);
+  definition:=replace(definition,'FOREACH tbl IN ARRAY public.finance_backup_tables() LOOP','FOREACH tbl IN ARRAY public.finance_backup_tables() LOOP
+  IF tbl IN (''account_reconciliations'',''corporate_events'') AND backup->>''schema_version''=''59'' AND NOT (backup->''tables'' ? tbl) THEN CONTINUE; END IF;');
+  definition:=replace(definition,'backup->>''schema_version''<>''59''','coalesce(backup->>''schema_version'','''') NOT IN (''59'',''67'')');
+  definition:=replace(definition,'backup->>''schema_version'' IS DISTINCT FROM ''59''','coalesce(backup->>''schema_version'','''') NOT IN (''59'',''67'')');
+  EXECUTE definition;
+ END LOOP;
+ definition:=pg_get_functiondef('public.export_finance_backup()'::regprocedure);
+ EXECUTE replace(definition,'''schema_version'',59','''schema_version'',67');
+ definition:=pg_get_functiondef('public.restore_finance_backup(text,text)'::regprocedure);
+ EXECUTE replace(definition,'USING backup->''tables''->tbl','USING coalesce(backup->''tables''->tbl,''[]''::jsonb)');
+END $$;
+CREATE OR REPLACE FUNCTION public.finance_capabilities() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
+ SELECT jsonb_build_object('schema_version',67,'record_revisions',true,'verified_restore',true)
+$$;
+NOTIFY pgrst,'reload schema';
+COMMIT;

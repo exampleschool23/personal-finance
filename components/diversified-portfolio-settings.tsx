@@ -1,26 +1,43 @@
 "use client";
+import { CurrencySelect } from '@/components/currency-select';
+import { Trash2 } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { FormattedNumberInput } from '@/components/formatted-number-input';
 import { InstrumentPicker } from '@/components/instrument-picker';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { instrumentFor } from '@/lib/market';
 import { formatNumber } from '@/lib/format';
-import { allocationKinds, type DiversifiedPortfolio } from '@/lib/diversified-portfolio';
+import { allocationKinds, portfolioAssets, portfolioAssetCurrency, type PortfolioAsset, type DiversifiedPortfolio } from '@/lib/diversified-portfolio';
 
-export function DiversifiedPortfolioSettings({value,onChange}:{value:DiversifiedPortfolio;onChange:(value:DiversifiedPortfolio)=>void}) {
+export function DiversifiedPortfolioSettings({value,onChange,currencies}:{currencies:string[];value:DiversifiedPortfolio;onChange:(value:DiversifiedPortfolio)=>void}) {
  const {t,locale}=useLanguage();
- const labels={crypto:'Crypto',stock:'Stock',deposit:'Deposit',business:'Business',cash:'Cash'};
- const total=allocationKinds.reduce((sum,key)=>sum+value[key],0);
+ const labels={crypto:'Crypto',stock:'Stock',deposit:'Deposit',business:'Business',cash:'Cash',property:'Real estate',custom:'Custom asset'};
+ const assets=portfolioAssets(value),total=assets.reduce((sum,asset)=>sum+asset.weight,0);
+ function update(id:string,patch:Partial<PortfolioAsset>){onChange({...value,assets:assets.map(asset=>asset.id===id?{...asset,...patch}:asset)});}
+ function addAsset(kind:PortfolioAsset['kind'],symbol=''){
+  if(assets.length>=20)return;
+  onChange({...value,assets:[...assets,{id:crypto.randomUUID(),kind,name:'',weight:0,symbol,currency:kind==='stock'||kind==='crypto'?'USD':currencies[0],rate:0}]});
+ }
+ function renderAsset(asset:PortfolioAsset){return <div className={asset.kind==='crypto'||asset.kind==='stock'?"portfolio-instrument-row":"diversified-sleeve"} key={asset.id}>
+   <div className="flex items-center justify-between gap-3"><strong>{asset.kind==='crypto'||asset.kind==='stock'?asset.symbol||t(labels[asset.kind]):t(labels[asset.kind])}</strong><Button type="button" variant="outline" size="icon" aria-label={t('Remove {symbol}',{symbol:asset.symbol||asset.name||t(labels[asset.kind])})} onClick={()=>onChange({...value,assets:assets.filter(item=>item.id!==asset.id)})}><Trash2 size={16} aria-hidden="true"/></Button></div>
+   <label>{t('Allocation')} (%)<FormattedNumberInput value={asset.weight} max={100} required={false} onValueChange={weight=>update(asset.id,{weight})}/></label>
+   {(asset.kind==='crypto'||asset.kind==='stock')?<InstrumentPicker kind={asset.kind==='crypto'?'Crypto':'Stock'} value={asset.symbol} onChange={name=>{const symbol=instrumentFor({kind:asset.kind==='crypto'?'Crypto':'Stock',name})?.symbol;if(symbol)update(asset.id,{symbol});}}/>:<label>{t('Name')}<Input value={asset.name} maxLength={100} placeholder={t(labels[asset.kind])} onChange={event=>update(asset.id,{name:event.target.value})}/></label>}
+   {!['stock','crypto'].includes(asset.kind)&&<CurrencySelect value={portfolioAssetCurrency(asset)} savedCurrency={portfolioAssetCurrency(asset)} currencies={currencies} onChange={currency=>update(asset.id,{currency})}/>}
+   {!['stock','crypto','cash'].includes(asset.kind)&&<label>{t(asset.kind==='deposit'?'Annual interest rate':'Assumed annual return')} (%)<FormattedNumberInput value={asset.rate} required={false} max={1000} onValueChange={rate=>update(asset.id,{rate})}/></label>}
+   {asset.kind==='deposit'&&<p>{t('{currency} deposit · {rate}%',{currency:portfolioAssetCurrency(asset),rate:formatNumber(asset.rate,locale)})}</p>}
+   {asset.kind==='cash'&&<p>{t('{currency} cash · no interest',{currency:portfolioAssetCurrency(asset)})}</p>}
+  </div>;}
  return <fieldset className="diversified-settings"><legend>{t('Diversified portfolio')}</legend>
   <p className="muted">{t('Split each contribution across these investments. Weights must total {target}%. Holdings are not automatically rebalanced.',{target:formatNumber(100,locale)})}</p>
-  <div className="diversified-grid">{allocationKinds.map(key=><div className="diversified-sleeve" key={key}>
-   <label>{t(labels[key])} · {t('Allocation')} (%)<FormattedNumberInput value={value[key]} max={100} required={false} onValueChange={amount=>onChange({...value,[key]:amount})}/></label>
-   {(key==='crypto'||key==='stock')&&<InstrumentPicker kind={key==='crypto'?'Crypto':'Stock'} value={key==='crypto'?value.cryptoSymbol:value.stockSymbol} onChange={name=>{const symbol=instrumentFor({kind:key==='crypto'?'Crypto':'Stock',name})?.symbol;if(symbol)onChange({...value,[key==='crypto'?'cryptoSymbol':'stockSymbol']:symbol});}}/>}
-   {key==='stock'&&<p className="muted">{t('Choose SPY for S&P 500, QQQ for Nasdaq-100, or a specific stock or ETF.')}</p>}
-   {key==='deposit'&&<p>{t('{currency} deposit · {rate}%',{currency:'UZS',rate:formatNumber(21,locale)})}</p>}
-   {key==='business'&&<label>{t('Assumed annual business return')} (%)<FormattedNumberInput value={value.businessRate} required={false} max={1000} onValueChange={businessRate=>onChange({...value,businessRate})}/></label>}
-   {key==='cash'&&<p>{t('USD cash · no interest')}</p>}
-  </div>)}</div>
+  <div className="diversified-grid">{(['crypto','stock'] as const).map(kind=><section className="diversified-sleeve portfolio-instrument-group" key={kind} aria-label={t(labels[kind])}>
+   <div className="portfolio-instrument-heading"><h3>{t(labels[kind])}</h3><span>{t('Total allocation: {total}%',{total:formatNumber(assets.filter(asset=>asset.kind===kind).reduce((sum,asset)=>sum+asset.weight,0),locale)})}</span></div>
+   <div className="portfolio-instrument-list">{assets.filter(asset=>asset.kind===kind).map(renderAsset)}</div>
+   <InstrumentPicker kind={kind==='crypto'?'Crypto':'Stock'} value="" actionLabel={t(kind==='crypto'?'Add coin':'Add stock or ETF')} excludedSymbols={assets.filter(asset=>asset.kind===kind).map(asset=>asset.symbol)} disabled={assets.length>=20} onChange={name=>{const symbol=instrumentFor({kind:kind==='crypto'?'Crypto':'Stock',name})?.symbol;if(symbol)addAsset(kind,symbol);}}/>
+  </section>)}{assets.filter(asset=>asset.kind!=='crypto'&&asset.kind!=='stock').map(renderAsset)}</div>
+
+  <p>{t('Add portfolio asset')}</p><div className="flex flex-wrap gap-2">{allocationKinds.filter(kind=>kind!=='crypto'&&kind!=='stock').map(kind=><Button key={kind} type="button" variant="outline" disabled={assets.length>=20} onClick={()=>addAsset(kind)}>{t(labels[kind])}</Button>)}</div>
   <p role="status" className={Math.abs(total-100)<1e-8?'':'error'}>{t('Total allocation: {total}%',{total:formatNumber(total,locale)})}</p>
-  <p className="comparison-note">{t('Business uses your assumed effective annual return, compounded daily in USD. It does not use recorded business performance. This is a hypothetical comparison, not a forecast. Deposit values include historical UZS exchange-rate changes.')}</p>
+  <p className="comparison-note">{t('Deposits, businesses, real estate and custom assets use your assumed annual return in the selected currency, compounded daily. Cash earns no interest. Comparisons include historical exchange-rate changes and are hypothetical, not forecasts.')}</p>
  </fieldset>;
 }

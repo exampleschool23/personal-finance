@@ -1,3 +1,4 @@
+import { benchmarkSelectionSchema, stockBenchmarks } from '../lib/benchmark-selection.ts';
 import { diversifiedPortfolioSchema, defaultDiversifiedPortfolio } from '../lib/diversified-portfolio.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,7 +10,7 @@ import {benchmarkKeys,investmentKinds,defaultComparisonPreferences} from '../lib
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let authenticated=true,calls=[];
 const supa=async(path,init,token)=>{calls.push({path,init,token});return Response.json(path.includes('mark_app_started')?{started_at:'2026-09-01T00:00:00Z',source:'first_visit'}:[]);};
-const deps={diversifiedPortfolioSchema,z,isCurrency,benchmarkKeys,investmentKinds,defaultComparisonPreferences,session:async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,supa,sameOrigin:req=>req.headers.get('origin')==='https://local'};
+const deps={benchmarkSelectionSchema,stockBenchmarks,diversifiedPortfolioSchema,z,isCurrency,benchmarkKeys,investmentKinds,defaultComparisonPreferences,session:async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,supa,sameOrigin:req=>req.headers.get('origin')==='https://local'};
 const api=new Function(...Object.keys(deps),compile('app/api/comparison-profile/route.ts')+';return {GET,PUT,POST};')(...Object.values(deps));
 const req=body=>new Request('https://local',{method:'POST',headers:{origin:'https://local','Content-Type':'application/json'},body:JSON.stringify(body)});
 test('owner-scoped settings default to Bitcoin and first-use timestamp comes from the database',async()=>{
@@ -36,5 +37,32 @@ test('diversified allocation validates totals and persists only for the authenti
  assert.deepEqual(JSON.parse(calls[0].init.body),{benchmarks:['PORTFOLIO'],custom_symbol:'',portfolio:defaultDiversifiedPortfolio,user_id:'owner'});
  for(const portfolio of [null,{...defaultDiversifiedPortfolio,cash:19},{...defaultDiversifiedPortfolio,cash:-20,stock:60},{...defaultDiversifiedPortfolio,businessRate:-1},{...defaultDiversifiedPortfolio,stockSymbol:'bad/url'}]) {
   calls=[];assert.equal((await api.PUT(req({benchmarks:['PORTFOLIO'],custom_symbol:'',portfolio}))).status,400);assert.equal(calls.length,0);
+ }
+});
+
+test('multiple stock choices save only to the signed-in owner',async()=>{
+ calls=[];
+ assert.equal((await api.PUT(req({benchmarks:['STOCK:NVDA','STOCK:AAPL'],custom_symbol:'',user_id:'other'}))).status,200);
+ assert.deepEqual(JSON.parse(calls[0].init.body),{benchmarks:['STOCK:NVDA','STOCK:AAPL'],custom_symbol:'',user_id:'owner'});
+});
+
+test('editable portfolio saves multiple assets and rejects invalid allocations and duplicate identities',async()=>{
+ const assets=[{id:'a',kind:'stock',symbol:'NVDA',name:'',weight:60,rate:0},{id:'b',kind:'stock',symbol:'AAPL',name:'',weight:40,rate:0}];
+ const portfolio={...defaultDiversifiedPortfolio,assets};
+ calls=[];
+ assert.equal((await api.PUT(req({benchmarks:['PORTFOLIO'],custom_symbol:'',portfolio,user_id:'other'}))).status,200);
+ assert.deepEqual(JSON.parse(calls[0].init.body).portfolio.assets,assets);
+ assert.equal(JSON.parse(calls[0].init.body).user_id,'owner');
+ for(const rows of [[],[assets[0]],[assets[0],{...assets[1],id:'a'}],[{...assets[0],weight:100,symbol:''}],[{...assets[0],weight:100,rate:-1}]]){
+  calls=[];assert.equal((await api.PUT(req({benchmarks:['PORTFOLIO'],custom_symbol:'',portfolio:{...portfolio,assets:rows}}))).status,400);assert.equal(calls.length,0);
+ }
+});
+
+test('portfolio accepts catalogue currencies for property and custom assets and rejects invalid currency',async()=>{
+ const portfolio={...defaultDiversifiedPortfolio,assets:[{id:'home',kind:'property',name:'Apartment',symbol:'',weight:70,rate:5,currency:'EUR'},{id:'other',kind:'custom',name:'Collectibles',symbol:'',weight:30,rate:2,currency:'GBP'}]};
+ calls=[];assert.equal((await api.PUT(req({benchmarks:['PORTFOLIO'],custom_symbol:'',portfolio}))).status,200);
+ assert.deepEqual(JSON.parse(calls[0].init.body).portfolio.assets,portfolio.assets);
+ for(const currency of ['XYZ','usd','']){
+  calls=[];assert.equal((await api.PUT(req({benchmarks:['PORTFOLIO'],custom_symbol:'',portfolio:{...portfolio,assets:[{...portfolio.assets[0],weight:100,currency}]}}))).status,400);assert.equal(calls.length,0);
  }
 });

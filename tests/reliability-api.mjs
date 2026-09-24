@@ -25,7 +25,7 @@ test('record history is paginated through the caller token and validates identif
  assert.equal(calls[0].token,'owner-token');assert.match(calls[0].path,/offset=40/);assert.match(calls[0].path,/limit=21/);
 });
 test('database readiness distinguishes missing migrations, network failure and compatible schema',async()=>{
- let response=()=>Response.json({schema_version:59,record_revisions:true,verified_restore:true});
+ let response=()=>Response.json({schema_version:67,record_revisions:true,verified_restore:true});
  const {GET}=loadTS('app/api/database-status/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner'}),supa:async()=>response()}});
  assert.equal((await GET()).status,200);
  response=()=>Response.json({code:'PGRST202'},{status:404});assert.match((await (await GET()).json()).error,/migrations/);

@@ -1,3 +1,4 @@
+import { portfolioAssets, portfolioAssetKey, portfolioAssetCurrency } from '../lib/diversified-portfolio.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -5,7 +6,7 @@ import ts from 'typescript';
 import {assets,liabilities,income,expenses} from '../lib/finance.ts';
 import * as dates from '../lib/benchmark-data.ts';
 const compile = path => ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const deps={assets,liabilities,income,expenses,...dates};
+const deps={portfolioAssets,portfolioAssetKey,portfolioAssetCurrency,assets,liabilities,income,expenses,...dates};
 const {compareInvestments,recordedCashFlows,monthlyCashFlows,netWorthHistory,firstCompleteDate}=new Function(...Object.keys(deps),compile('lib/investment-comparison.ts')+';return {compareInvestments,recordedCashFlows,monthlyCashFlows,netWorthHistory,firstCompleteDate};')(...Object.values(deps));
 const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<.00001,`${actual} != ${expected}`);
 const fx=[{date:'2025-01-01',rates:{USD:1,UZS:10000,EUR:.9}},{date:'2026-01-01',rates:{USD:1,UZS:12100,EUR:.95}}];
@@ -101,4 +102,50 @@ test('modeled business compounds and impossible withdrawals invalidate the portf
  near(result.points.at(-1).PORTFOLIO,1100);
  const withdrawn=compareInvestments(1000,[{date:'2025-01-02',amount:-2000}],[],data('2025-01-01','2025-01-03'),'USD',false,business);
  assert.equal(withdrawn.points.at(-1).PORTFOLIO,null);
+});
+
+test('several stock benchmarks follow their own prices with identical funding and isolated failures',()=>{
+ const prices={'STOCK:NVDA':[{date:'2025-01-01',close:100},{date:'2025-01-02',close:200}],'STOCK:AAPL':[{date:'2025-01-01',close:50},{date:'2025-01-02',close:40}],'STOCK:MISSING':[]};
+ const result=compareInvestments(1000,[{date:'2025-01-02',amount:100}],[],data('2025-01-01','2025-01-02',prices),'USD');
+ near(result.points.at(-1)['STOCK:NVDA'],2100);
+ near(result.points.at(-1)['STOCK:AAPL'],900);
+ assert.equal(result.points.at(-1)['STOCK:MISSING'],null);
+ assert.deepEqual(result.unavailable,['STOCK:MISSING']);
+});
+
+test('editable portfolio weights independent stocks, named businesses and deposits; deleted assets are excluded',()=>{
+ const portfolio={crypto:20,stock:20,deposit:20,business:20,cash:20,cryptoSymbol:'BTC',stockSymbol:'SPY',businessRate:0,assets:[
+  {id:'nvidia',kind:'stock',symbol:'NVDA',name:'',weight:30,rate:0},
+  {id:'apple',kind:'stock',symbol:'AAPL',name:'',weight:20,rate:0},
+  {id:'cafe',kind:'business',symbol:'',name:'Cafe',weight:20,rate:0},
+  {id:'savings',kind:'deposit',symbol:'',name:'Savings',weight:30,rate:0},
+ ]};
+ const prices={portfolio_nvidia:[{date:'2025-01-01',close:100},{date:'2025-01-02',close:200}],portfolio_apple:[{date:'2025-01-01',close:100},{date:'2025-01-02',close:50}]};
+ const calculate=p=>compareInvestments(1000,[],[],data('2025-01-01','2025-01-02',prices),'USD',false,p);
+ near(calculate(portfolio).points.at(-1).PORTFOLIO,1200);
+ near(calculate({...portfolio,assets:[{...portfolio.assets[1],weight:100}]}).points.at(-1).PORTFOLIO,500);
+ const missing={...portfolio,assets:[{...portfolio.assets[0],id:'missing',weight:100}]};
+ assert.equal(calculate(missing).points.at(-1).PORTFOLIO,null);
+ near(calculate({...portfolio,assets:[{...missing.assets[0],weight:0},{...portfolio.assets[1],weight:100}]}).points.at(-1).PORTFOLIO,500);
+});
+
+test('portfolio currencies use dated exchange rates and preserve legacy UZS deposits',()=>{
+ const base={crypto:20,stock:20,deposit:20,business:20,cash:20,cryptoSymbol:'BTC',stockSymbol:'SPY',businessRate:0};
+ const data={start:'2025-01-01',end:'2025-01-02',prices:{},errors:{},fx:[{date:'2025-01-01',rates:{USD:1,EUR:.8,UZS:10000}},{date:'2025-01-02',rates:{USD:1,EUR:1,UZS:12000}}]};
+ const asset={id:'savings',kind:'deposit',name:'Savings',symbol:'',weight:100,rate:0};
+ const run=asset=>compareInvestments(1000,[],[],data,'USD',false,{...base,assets:[asset]}).points.at(-1).PORTFOLIO;
+ near(run({...asset,currency:'EUR'}),800);
+ near(run({...asset,currency:'USD'}),1000);
+ near(run(asset),1000*10000/12000);
+ for(const kind of ['cash','business','property','custom'])near(run({...asset,kind,currency:'EUR'}),800);
+ assert.equal(run({...asset,currency:'GBP'}),null);
+});
+
+test('real estate and custom assets compound assumed returns in their own currency',()=>{
+ const base={crypto:20,stock:20,deposit:20,business:20,cash:20,cryptoSymbol:'BTC',stockSymbol:'SPY',businessRate:0};
+ for(const kind of ['property','custom']){
+  const portfolio={...base,assets:[{id:'asset',kind,name:'Apartment',symbol:'',weight:100,rate:10,currency:'USD'}]};
+  const result=compareInvestments(1000,[],[],data('2025-01-01','2026-01-01'),'USD',false,portfolio);
+  near(result.points.at(-1).PORTFOLIO,1100);
+ }
 });

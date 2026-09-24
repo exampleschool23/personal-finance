@@ -9,6 +9,7 @@ function component(file,name){
  const states=[];let cursor=0;
  const loaded=loadTS(file,{
   react:{...React,useState(initial){const index=cursor++;if(!(index in states))states[index]=typeof initial==='function'?initial():initial;return [states[index],value=>{states[index]=value;}];}},
+  '@/hooks/use-owner-resource':{useOwnerResource:()=>({data:{records:[]},loading:false,error:'',retry(){}})},
   'next/link':{__esModule:true,default:passthrough},
   '@/components/language-provider':{useLanguage:()=>({t:key=>key,locale:'en-US'})},
   '@/components/ui/button':{Button:passthrough},

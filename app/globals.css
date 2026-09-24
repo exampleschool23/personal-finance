@@ -1534,3 +1534,46 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .diversified-sleeve label{display:block;margin-bottom:12px}
 .diversified-sleeve input{margin-top:8px}
 @media(max-width:700px){.diversified-grid{grid-template-columns:1fr}.diversified-settings{padding:12px}}
+
+/* Daily finance tools reuse the finance theme and shared controls. */
+.daily-settings { display: grid; gap: 1rem; padding-block: 1rem; }
+.daily-allowance { padding: 1rem; border: 1px solid var(--border); border-radius: 1rem; }
+.daily-allowance > strong { display: block; font-size: 1.5rem; margin-block: .6rem; }
+.daily-allowance dl > div { display: flex; justify-content: space-between; gap: 1rem; margin-block: .6rem; }
+.daily-allowance dd { text-align: right; font-variant-numeric: tabular-nums; }
+.daily-checkbox { display: flex; align-items: center; gap: .6rem; }
+.daily-checkbox input { width: auto; }
+.daily-budget { border-top: 1px solid var(--border); padding-top: 1rem; }
+.daily-ledger { max-height: 40vh; overflow: auto; }
+
+/* Benchmark selections use compact rows with a separate add action. */
+.benchmark-stocks{display:grid;gap:16px;margin-top:24px;padding:20px;border:1px solid var(--border);border-radius:16px;background:var(--card)}
+.benchmark-stocks-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.benchmark-stocks-heading h3{margin:0;font-size:var(--type-body);font-weight:600}
+.benchmark-stock-count{font-size:var(--type-small);color:var(--muted-foreground);white-space:nowrap}
+.benchmark-stock-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.benchmark-stock-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--background)}
+.benchmark-stock-identity{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;min-width:0}
+.benchmark-stock-identity strong{font-size:var(--type-body)}
+.benchmark-stock-identity span{font-size:var(--type-small);color:var(--muted-foreground);overflow-wrap:anywhere}
+.benchmark-stock-row .benchmark-stock-remove{width:36px;height:36px;min-height:36px;padding:8px;flex-shrink:0;border-radius:8px}
+.benchmark-stocks .instrument-add{display:block}
+.benchmark-stocks .instrument-add-trigger{width:auto;min-height:40px;justify-content:center;gap:8px;font-weight:500;padding:8px 14px}
+.benchmark-settings-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.benchmark-settings-footer .comparison-note{margin:0}
+.benchmark-settings-footer [role=status]{flex-basis:100%}
+@media(max-width:600px){.benchmark-stocks{padding:16px}.benchmark-stock-row .benchmark-stock-remove{width:44px;height:44px}.benchmark-settings-footer>button{width:100%}.benchmark-stocks .instrument-add-trigger{width:100%}}
+
+.reminders-panel > summary{cursor:pointer;min-height:44px;align-content:center}
+.reminders-panel > summary h2{display:inline;margin:0}
+.reminders-panel > summary:focus-visible{outline:2px solid var(--ring);outline-offset:3px}
+.reminders-panel[open] > summary{margin-bottom:16px}
+.portfolio-instrument-group{display:flex;flex-direction:column;gap:16px}
+.portfolio-instrument-heading{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.portfolio-instrument-heading h3{margin:0;font-size:var(--type-body);font-weight:600}
+.portfolio-instrument-heading>span{color:var(--muted-foreground);font-size:var(--type-small)}
+.portfolio-instrument-list{display:grid;gap:16px}
+.portfolio-instrument-row{display:grid;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--border);min-width:0}
+.portfolio-instrument-row label{margin-bottom:0}
+.portfolio-instrument-group>.instrument-add{margin-top:auto;display:block}
+.portfolio-instrument-group .instrument-add-trigger{justify-content:center;gap:8px;font-weight:500}

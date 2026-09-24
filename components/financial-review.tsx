@@ -1,4 +1,6 @@
 "use client";
+import { normalizeEntry } from '@/lib/finance';
+import { useOwnerResource } from '@/hooks/use-owner-resource';
 import type { MarketData } from '@/lib/market';
 import { useState } from 'react';
 import { CircleHelp, CalendarDays, ReceiptText, X } from 'lucide-react';
@@ -8,18 +10,21 @@ import { DatePicker } from '@/components/date-picker';
 import { useLanguage } from '@/components/language-provider';
 import { monthlyReview } from '@/lib/transaction-tools';
 import type { ToolsController } from '@/components/transaction-tools-panel';
-import type { PlanningData } from '@/lib/planning';
+import { emptyPlanning,type PlanningData } from '@/lib/planning';
 import { depositToday } from '@/lib/deposit-interest';
 import { formatDate, formatMoney, formatMonthYear } from '@/lib/format';
 import type { PortfolioSnapshot } from '@/lib/portfolio-snapshots';
-export function MonthlyReview({data,tools,snapshots,historyError,currency,market}:{data:PlanningData;tools:ToolsController;snapshots:PortfolioSnapshot[];historyError:string;currency:string;market?:MarketData|null}){
+export function MonthlyReview({data:providedData,owner,demo=false,revision=0,tools,snapshots,historyError,currency,market}:{data:PlanningData;owner?:string|null;demo?:boolean;revision?:number;tools:ToolsController;snapshots:PortfolioSnapshot[];historyError:string;currency:string;market?:MarketData|null}){
  const {t,locale}=useLanguage();
  const today=depositToday();
  const [month,setMonth]=useState(()=>today.slice(0,7));
+ const remote=useOwnerResource('/api/planning?scope=review&month='+month,owner??null,!!owner&&!demo,revision,emptyPlanning);
+ const data=owner&&!demo?{...remote.data,records:remote.data.records.map(normalizeEntry)}:providedData;
  const result=monthlyReview(data.records,tools.data.splits,snapshots,month,currency,today,data.activity,market?.rates??market?.fx?.rate,data.investmentLinks);
  const priorDate=new Date(month+'-01T00:00:00Z');priorDate.setUTCMonth(priorDate.getUTCMonth()-1);
  const previous=monthlyReview(data.records,tools.data.splits,snapshots,priorDate.toISOString().slice(0,7),currency,today,data.activity,market?.rates??market?.fx?.rate,data.investmentLinks);
  const money=(amount:number)=>formatMoney(amount,currency,locale);
+ if(owner&&!demo&&(remote.loading||remote.error))return <section className="panel tools-panel monthly-review"><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2>{remote.error?<p role="alert">{t(remote.error)} <Button onClick={remote.retry}>{t('Retry')}</Button></p>:<p role="status">{t('Loading records…')}</p>}</section>;
  return <section className="panel tools-panel monthly-review">
   <header className="monthly-review-heading">
    <div><div className="monthly-review-title"><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2><Dialog>

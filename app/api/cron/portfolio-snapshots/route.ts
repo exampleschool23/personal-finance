@@ -24,7 +24,7 @@ export async function GET(req:Request){
  const owners=new Map<string,Entry[]>();for(const r of records)owners.set(r.user_id,[...(owners.get(r.user_id)??[]),r]);
  let captured=0,skipped=0;
  for(const [owner,holdings] of owners){const total=snapshotTotals(holdings,market);if(!total){skipped++;continue;}
-  await read('/rest/v1/portfolio_snapshots?on_conflict=user_id,occurred_on',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({user_id:owner,occurred_on:depositToday(),...total,updated_at:new Date().toISOString()})});captured++;
+  await read('/rest/v1/rpc/capture_owner_portfolio_snapshot',{method:'POST',body:JSON.stringify({p_owner:owner,p_day:depositToday(),p_totals:total})});captured++;
  }
  return Response.json({captured,skipped},{status:skipped?503:200,headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Background capture failed. Completed captures remain safe to retry.'},{status:503});}

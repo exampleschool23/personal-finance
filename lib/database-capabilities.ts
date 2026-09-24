@@ -1,4 +1,4 @@
-export const requiredSchemaVersion = 59;
+export const requiredSchemaVersion = 67;
 export const databaseUpdateMessage = 'The app database needs an update. Ask the administrator to apply the latest migrations.';
 export function supportsDatabase(value: unknown): boolean {
  if (!value || typeof value !== 'object') return false;

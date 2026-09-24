@@ -1,4 +1,4 @@
-import type { DiversifiedPortfolio } from './diversified-portfolio';
+import { portfolioAssets, portfolioAssetKey, portfolioAssetCurrency, type DiversifiedPortfolio } from './diversified-portfolio';
 import { assets, liabilities, income, expenses, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import { dateMillis, dayMillis, historicalRate, latestOn, shiftDay, type BenchmarkData, type FxPoint, type PricePoint } from './benchmark-data';
@@ -74,10 +74,11 @@ export function compareInvestments(starting: number, flows: CashFlow[], actual: 
  for (const flow of flows) if ((flow.date > data.start || (includeStartFlows && flow.date === data.start)) && flow.date <= data.end) flowsByDay.set(flow.date,(flowsByDay.get(flow.date) ?? 0) + flow.amount);
  // Modeled business returns and USD cash share the same dated purchase engine.
  const prices = {...data.prices};
- if (portfolio) {
-  prices.portfolioBusiness = dates.map((date,index)=>({date,close:(1+portfolio.businessRate/100)**(index/365)}));
-  prices.portfolioCash = dates.map(date=>({date,close:1}));
+ if (portfolio) for(const asset of portfolioAssets(portfolio)) {
+  const key=portfolioAssetKey(asset,portfolio);
+  if(!portfolio.assets&&(asset.kind==='business'||asset.kind==='cash'))prices[key]=dates.map((date,index)=>({date,close:(1+(asset.kind==='business'?asset.rate:0)/100)**(index/365)}));
  }
+
  const keys = Object.keys(prices);
  const units = new Map<string,number | null>();
  const unavailable = new Set<string>();
@@ -87,7 +88,7 @@ export function compareInvestments(starting: number, flows: CashFlow[], actual: 
   if (units.get(key) === null) unavailable.add(key);
  }
  // Deposits compound daily at an annual effective rate; additions earn only after their date.
- const deposits = [{key:'depositUZS',currency:'UZS',rate:.21},{key:'depositUSD',currency:'USD',rate:.08}];
+ const deposits = [...(portfolio?.assets?portfolioAssets(portfolio).filter(asset=>!['stock','crypto'].includes(asset.kind)).map(asset=>({key:portfolioAssetKey(asset,portfolio),currency:portfolioAssetCurrency(asset),rate:asset.kind==='cash'?0:asset.rate/100})):[]),{key:'depositUZS',currency:'UZS',rate:.21},{key:'depositUSD',currency:'USD',rate:.08}];
  for (const deposit of deposits) {
   units.set(deposit.key, convertHistorical(starting,currency,deposit.currency,data.start,data.fx));
   if (units.get(deposit.key) === null) unavailable.add(deposit.key);
@@ -125,7 +126,7 @@ export function compareInvestments(starting: number, flows: CashFlow[], actual: 
    if (point[deposit.key] === null) unavailable.add(deposit.key);
   }
   if (portfolio) {
-   const sleeves = [{key:'portfolioCrypto',weight:portfolio.crypto},{key:'portfolioStock',weight:portfolio.stock},{key:'depositUZS',weight:portfolio.deposit},{key:'portfolioBusiness',weight:portfolio.business},{key:'portfolioCash',weight:portfolio.cash}].filter(sleeve=>sleeve.weight>0);
+   const sleeves = portfolioAssets(portfolio).map(asset=>({key:portfolioAssetKey(asset,portfolio),weight:asset.weight})).filter(sleeve=>sleeve.weight>0);
    point.PORTFOLIO = sleeves.every(sleeve=>typeof point[sleeve.key]==='number') ? sleeves.reduce((sum,sleeve)=>sum+(point[sleeve.key] as number)*sleeve.weight/100,0) : null;
    if(point.PORTFOLIO===null)unavailable.add('PORTFOLIO');
   }
