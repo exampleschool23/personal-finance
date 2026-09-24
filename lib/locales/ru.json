@@ -1960,5 +1960,15 @@
   "Add or remove assets and set their allocations. Save to make this portfolio available in Overview.": "Добавьте или удалите активы и укажите их доли. Сохраните портфель, чтобы он появился в обзоре.",
   "Add coin": "Добавить монету",
   "Target net worth": "Целевой капитал",
-  "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal.": "Задайте цель по общему чистому капиталу отдельно от долей активов. Оставьте поле пустым, чтобы удалить цель."
+  "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal.": "Задайте цель по общему чистому капиталу отдельно от долей активов. Оставьте поле пустым, чтобы удалить цель.",
+  "Your financial overview": "Ваши финансы",
+  "Forgot password?": "Забыли пароль?",
+  "Show password": "Показать пароль",
+  "Hide password": "Скрыть пароль",
+  "New to Hoggish?": "Впервые в Hoggish?",
+  "Create an account": "Создать аккаунт",
+  "Take a look around first.": "Сначала познакомьтесь с приложением.",
+  "No account needed. Just sample data.": "Без регистрации. Только демоданные.",
+  "Illustrative sample prices and exchange rates.": "Примерные цены и валютные курсы для демоверсии.",
+  "Illustrative sample history and benchmarks, not historical market returns.": "Примерная история и ориентиры для демоверсии, а не историческая рыночная доходность."
 }

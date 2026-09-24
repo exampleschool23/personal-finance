@@ -1,4 +1,5 @@
 "use client";
+import { demoBenchmarks, demoBenchmarkKeys } from '@/lib/demo-finance';
 import { readOverviewBenchmarks, overviewBenchmarkStorageKey, toggleOverviewBenchmark } from '@/lib/overview-benchmarks';
 import { portfolioAssets } from '@/lib/diversified-portfolio';
 import { stockBenchmarks } from '@/lib/benchmark-selection';
@@ -40,7 +41,18 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
  },[demo,profileRetry]);
  useEffect(()=>{const refresh=()=>setProfileRetry(value=>value+1);window.addEventListener('comparison-settings-saved',refresh);window.addEventListener('focus',refresh);return()=>{window.removeEventListener('comparison-settings-saved',refresh);window.removeEventListener('focus',refresh);};},[]);
  const overviewOwner=demo?'demo':profile?.owner_id;
- useEffect(()=>{if(!embedded||!overviewOwner)return;let keys:string[]=[];try{keys=readOverviewBenchmarks(localStorage,overviewOwner);}catch{}setOverviewSelection({owner:overviewOwner,keys});},[!!embedded,overviewOwner]);
+ const isEmbedded=!!embedded;
+ useEffect(()=>{
+  if(!isEmbedded||!overviewOwner)return;
+  let cancelled=false;
+  queueMicrotask(()=>{
+   if(cancelled)return;
+   let keys:string[]=demo?[...demoBenchmarkKeys]:[];
+   try{if(localStorage.getItem(overviewBenchmarkStorageKey(overviewOwner))!==null)keys=readOverviewBenchmarks(localStorage,overviewOwner);}catch{}
+   setOverviewSelection({owner:overviewOwner,keys});
+  });
+  return()=>{cancelled=true;};
+ },[isEmbedded,overviewOwner,demo]);
  const overviewKeys=overviewSelection?.owner===overviewOwner?overviewSelection?.keys??[]:[];
  function toggleOverview(key:string){
   if(!overviewOwner)return;
@@ -71,7 +83,8 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   return()=>controller.abort();
  },[demo,requestKey,start,today,selectionKey,symbol,portfolioCrypto,portfolioStock,portfolioConfig,retry,profile,profileError]);
  const comparisonsLoading=!demo&&!!requestKey&&((!profile&&!profileError)||loadedKey!==requestKey);
- const ready=loadedKey===requestKey?data:null;
+ const sampleData=useMemo(()=>demo?demoBenchmarks(today):null,[demo,today]);
+ const ready=demo?sampleData:loadedKey===requestKey?data:null;
  const performance=portfolio.performance;
  const result=useMemo(()=>ready&&!performance.missing?getInvestmentComparison({records,events:history.events,cashflows:history.cashflows,market,currency,today},ready,activeDiversified):null,[ready,performance,records,history,market,currency,today,activeDiversified]);
  const points=result?.points??[];
@@ -90,6 +103,7 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   const chartPoints=result?points.filter(point=>point.date>=cutoff&&point.actual!==null):embedded.points.map(point=>({...point,actual:point.net}));
   const chartSeries=result?visibleSeries:definitions.filter(item=>item.key==='actual');
   return <>
+   {demo&&<p className="comparison-note">{t("Illustrative sample history and benchmarks, not historical market returns.")}</p>}
    <div className="comparison-legend" aria-busy={comparisonsLoading}>{comparisonsLoading&&<span role="status" className="flex items-center gap-2 muted"><Spinner aria-hidden="true"/>{t('Loading comparisons…')}</span>}{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={item.key==='actual'||!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div>
    {ready&&visibleSeries.filter(item=>item.key!=='actual').map(item=>{const reason=ready.errors[item.key]??ready.errors.fx??(result?.unavailable.includes(item.key)?'Price data, exchange rates or funds needed for a matching withdrawal are unavailable.':null);return reason?<p key={item.key} className="comparison-note">{item.label}: {t(reason)}</p>:null;})}
    <InvestmentValueChart points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={chartSeries.length===1?embedded.tooltip:undefined}/>

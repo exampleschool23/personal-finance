@@ -1,4 +1,5 @@
 "use client";
+import { demoHistory } from '@/lib/demo-finance';
 import { InvestmentPeriodSummary } from '@/components/investment-period-summary';
 import { InvestmentComparison } from '@/components/investment-comparison';
 import { getInvestmentPortfolio, investmentValueChange } from '@/lib/investment-portfolio';
@@ -9,7 +10,7 @@ import { PortfolioTooltip } from '@/components/portfolio-tooltip';
 import { portfolioChanges, type PortfolioChange } from '@/lib/portfolio-changes';
 import { PartialTotal } from '@/components/partial-total';
 import { IncomeHistoryChart } from '@/components/income-history-chart';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { LoadingPlaceholder } from '@/components/loading-placeholder';
@@ -22,9 +23,9 @@ import { type HistoryEvent } from '@/lib/investment-history';
 import { convertAmount, type MarketData } from '@/lib/market';
 
 type History = { records: Entry[]; events: HistoryEvent[]; cashflows?: Entry[]; incomeRecords?: Entry[] };
-export function PortfolioOverview({ entries, currency, market, demo, revision, onOpenActivity }: { onOpenActivity?:(activity:PortfolioChange)=>void; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
+export function PortfolioOverview({ entries, demoRecords, currency, market, demo, revision, onOpenActivity }: { demoRecords?: Entry[]; onOpenActivity?:(activity:PortfolioChange)=>void; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
  const { t, locale } = useLanguage();
- const [history, setHistory] = useState<History | null>(null);
+ const [savedHistory, setHistory] = useState<History | null>(null);
  const [error, setError] = useState(false);
  const [retry, setRetry] = useState(0);
  const [range, setRange] = useState<number | null>(null);
@@ -39,6 +40,7 @@ export function PortfolioOverview({ entries, currency, market, demo, revision, o
   return () => controller.abort();
  }, [demo, revision, retry]);
  const today = depositToday();
+ const history = useMemo(() => demo ? demoHistory(demoRecords ?? [], today) : savedHistory, [demo, demoRecords, today, savedHistory]);
  const money = (amount: number) => formatMoney(amount, currency, locale);
  const {totalAssets:assetTotal,totalDebt:debt,cash}=financialTotals(entries);
  const investments = entries.filter(entry => ['Stock', 'Crypto'].includes(entry.kind) && entry.cost > 0);
@@ -73,7 +75,7 @@ export function PortfolioOverview({ entries, currency, market, demo, revision, o
     {investmentExcluded.length > 0 && <p className="muted">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
    </>}
   </section>
-  {!loading&&!error&&<IncomeHistoryChart records={demo?entries:history?.records??[]} events={history?.events??[]} incomeRecords={demo?entries:history?.incomeRecords??[]} currency={currency} rates={market?.rates??market?.fx?.rate} today={today}/>}
+  {!loading&&!error&&<IncomeHistoryChart records={history?.records??[]} events={history?.events??[]} incomeRecords={history?.incomeRecords??[]} currency={currency} rates={market?.rates??market?.fx?.rate} today={today}/>}
   <div className="portfolio-indicators">
    <article className="panel"><span>{t('Cash share')}</span><strong>{assetTotal > 0 ? formatNumber(cash / assetTotal * 100, locale, 1) + '%' : '—'}</strong><p>{t('Cash available')}: {money(cash)}</p></article>
    <article className="panel"><span>{t('Debt to assets')}</span><strong>{assetTotal > 0 ? formatNumber(debt / assetTotal * 100, locale, 1) + '%' : '—'}</strong><p>{t('Outstanding debt compared with everything you own.')}</p></article>

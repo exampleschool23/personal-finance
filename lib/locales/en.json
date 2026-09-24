@@ -1960,5 +1960,15 @@
   "Add or remove assets and set their allocations. Save to make this portfolio available in Overview.": "Add or remove assets and set their allocations. Save to make this portfolio available in Overview.",
   "Add coin": "Add coin",
   "Target net worth": "Target net worth",
-  "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal.": "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal."
+  "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal.": "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal.",
+  "Your financial overview": "Your financial overview",
+  "Forgot password?": "Forgot password?",
+  "Show password": "Show password",
+  "Hide password": "Hide password",
+  "New to Hoggish?": "New to Hoggish?",
+  "Create an account": "Create an account",
+  "Take a look around first.": "Take a look around first.",
+  "No account needed. Just sample data.": "No account needed. Just sample data.",
+  "Illustrative sample prices and exchange rates.": "Illustrative sample prices and exchange rates.",
+  "Illustrative sample history and benchmarks, not historical market returns.": "Illustrative sample history and benchmarks, not historical market returns."
 }

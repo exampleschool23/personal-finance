@@ -1960,5 +1960,15 @@
   "Add or remove assets and set their allocations. Save to make this portfolio available in Overview.": "Aktivlarni qo‘shing yoki olib tashlang va ulushlarini belgilang. Portfel umumiy ko‘rinishda chiqishi uchun saqlang.",
   "Add coin": "Tanga qo‘shish",
   "Target net worth": "Maqsadli sof boylik",
-  "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal.": "Umumiy sof boylik maqsadini aktivlar ulushidan alohida belgilang. Maqsadni olib tashlash uchun maydonni bo‘sh qoldiring."
+  "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal.": "Umumiy sof boylik maqsadini aktivlar ulushidan alohida belgilang. Maqsadni olib tashlash uchun maydonni bo‘sh qoldiring.",
+  "Your financial overview": "Moliyaviy holatingiz",
+  "Forgot password?": "Parolni unutdingizmi?",
+  "Show password": "Parolni ko‘rsatish",
+  "Hide password": "Parolni yashirish",
+  "New to Hoggish?": "Hoggish’da yangimisiz?",
+  "Create an account": "Hisob yaratish",
+  "Take a look around first.": "Avval ilova bilan tanishing.",
+  "No account needed. Just sample data.": "Hisob kerak emas. Faqat namuna ma’lumotlar.",
+  "Illustrative sample prices and exchange rates.": "Namuna narxlari va valyuta kurslari.",
+  "Illustrative sample history and benchmarks, not historical market returns.": "Namuna tarixi va taqqoslashlar, haqiqiy tarixiy bozor daromadlari emas."
 }
