@@ -1958,5 +1958,7 @@
   "{count} of {limit}": "{count} of {limit}",
   "Your investment history stays unchanged.": "Your investment history stays unchanged.",
   "Add or remove assets and set their allocations. Save to make this portfolio available in Overview.": "Add or remove assets and set their allocations. Save to make this portfolio available in Overview.",
-  "Add coin": "Add coin"
+  "Add coin": "Add coin",
+  "Target net worth": "Target net worth",
+  "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal.": "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal."
 }

@@ -1958,5 +1958,7 @@
   "{count} of {limit}": "{count} из {limit}",
   "Your investment history stays unchanged.": "История ваших инвестиций не изменится.",
   "Add or remove assets and set their allocations. Save to make this portfolio available in Overview.": "Добавьте или удалите активы и укажите их доли. Сохраните портфель, чтобы он появился в обзоре.",
-  "Add coin": "Добавить монету"
+  "Add coin": "Добавить монету",
+  "Target net worth": "Целевой капитал",
+  "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal.": "Задайте цель по общему чистому капиталу отдельно от долей активов. Оставьте поле пустым, чтобы удалить цель."
 }

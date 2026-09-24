@@ -1611,3 +1611,8 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .portfolio-editor-status p{margin:0}
 .portfolio-editor-status .error{padding:6px 10px}
 @media(max-width:600px){.portfolio-editor-dialog>[data-slot="dialog-header"]{padding:20px 44px 16px 16px}.portfolio-editor-body{padding:16px}.portfolio-editor-body .portfolio-asset-fields{grid-template-columns:minmax(0,1fr)}.portfolio-editor-body .portfolio-instrument-row{grid-template-columns:minmax(0,1fr) 44px}.portfolio-instrument-row>.instrument-field{grid-column:1/-1}.portfolio-editor-dialog .portfolio-editor-footer{padding:12px 16px;flex-wrap:wrap}.portfolio-editor-footer>button{width:100%}}
+.workspace-privacy-footer{padding-top:0;padding-bottom:24px}
+.workspace-privacy-footer .bottom-note{margin-bottom:0}
+.allocation-net-worth-target{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;grid-column:1/-1}
+.allocation-net-worth-target [data-slot="native-select-wrapper"]{width:100%}
+@media(max-width:600px){.allocation-net-worth-target{grid-template-columns:minmax(0,1fr)}}

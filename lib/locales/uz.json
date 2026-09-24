@@ -1958,5 +1958,7 @@
   "{count} of {limit}": "{limit} tadan {count} ta",
   "Your investment history stays unchanged.": "Investitsiya tarixingiz o‘zgarmaydi.",
   "Add or remove assets and set their allocations. Save to make this portfolio available in Overview.": "Aktivlarni qo‘shing yoki olib tashlang va ulushlarini belgilang. Portfel umumiy ko‘rinishda chiqishi uchun saqlang.",
-  "Add coin": "Tanga qo‘shish"
+  "Add coin": "Tanga qo‘shish",
+  "Target net worth": "Maqsadli sof boylik",
+  "Set your overall net-worth goal separately from your asset allocation weights. Leave blank to remove the goal.": "Umumiy sof boylik maqsadini aktivlar ulushidan alohida belgilang. Maqsadni olib tashlash uchun maydonni bo‘sh qoldiring."
 }
