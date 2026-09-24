@@ -862,10 +862,16 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 .instrument-trigger{width:100%;min-height:44px;justify-content:space-between;text-align:left;white-space:normal;border-radius:10px;font-weight:400}
 .instrument-trigger>span{min-width:0;overflow-wrap:anywhere}
 .instrument-trigger>svg{flex-shrink:0}
-.instrument-popover{width:var(--radix-popover-trigger-width);max-width:calc(100vw - 32px);max-height:var(--radix-popover-content-available-height);overflow-y:auto;padding:0;border-radius:12px}
+.instrument-popover{width:max(320px,var(--radix-popover-trigger-width));max-width:calc(100vw - 32px);height:min(440px,70dvh);overflow:hidden;padding:0;border-radius:12px}
+/* Keep floating geometry independent of observer-reported available height.
+   Only the results scroll; search and help remain outside that scroll area. */
+.instrument-popover [data-slot="command"]{height:100%;min-height:0}
+.instrument-popover [data-slot="command-input-wrapper"],.instrument-popover .instrument-help{flex-shrink:0}
+.instrument-popover [data-slot="command-list"]{flex:1;min-height:0;max-height:none;scrollbar-gutter:stable}
+.portfolio-editor-dialog{scrollbar-gutter:stable}
 .instrument-popover [data-slot="command-input-wrapper"]{height:auto;min-height:48px}
 .instrument-popover [data-slot="command-input"]{min-width:0;font-size:16px}
-.instrument-popover [data-slot="command-list"]{max-height:min(300px,40dvh)}
+
 .instrument-option{min-height:44px;justify-content:space-between;cursor:pointer}
 .instrument-option>span{display:grid;gap:2px;min-width:0}
 .instrument-option strong{font-size:var(--type-compact)}
@@ -1577,3 +1583,31 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .portfolio-instrument-row label{margin-bottom:0}
 .portfolio-instrument-group>.instrument-add{margin-top:auto;display:block}
 .portfolio-instrument-group .instrument-add-trigger{justify-content:center;gap:8px;font-weight:500}
+
+/* Portfolio editor: fixed chrome, one scroll area, and content-sized sections. */
+.portfolio-editor-dialog{display:flex;flex-direction:column;height:min(860px,90dvh);max-height:90dvh;gap:0;padding:0;overflow:hidden;scrollbar-gutter:auto}
+.portfolio-editor-dialog>[data-slot="dialog-header"]{flex-shrink:0;padding:24px 52px 20px 24px;border-bottom:1px solid var(--border);text-align:left}
+.portfolio-editor-body{flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable;padding:20px 24px}
+.portfolio-editor-body>fieldset{min-width:0;border:0;padding:0;margin:0}
+.portfolio-editor-body .diversified-settings{border:0;padding:0;margin:0}
+.portfolio-editor-body .diversified-grid{grid-template-columns:minmax(0,1fr);gap:16px;margin:20px 0}
+.portfolio-editor-body .diversified-sleeve{padding:16px;display:grid;gap:16px;align-content:start}
+.portfolio-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.portfolio-section-heading h3{margin:0;font-size:var(--type-body);font-weight:600}
+.portfolio-editor-body .portfolio-instrument-row{grid-template-columns:minmax(0,1fr) 130px 44px;align-items:end;gap:12px;padding-bottom:12px}
+.portfolio-editor-body .portfolio-instrument-row:last-child{border-bottom:0;padding-bottom:0}
+.portfolio-editor-body .portfolio-asset-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.portfolio-editor-body .diversified-sleeve label{display:grid;gap:8px;min-width:0;margin:0;font-size:var(--type-small)}
+.portfolio-editor-body .instrument-field{gap:8px}
+.portfolio-editor-body input,.portfolio-editor-body select,.portfolio-editor-body .instrument-trigger{height:44px;min-height:44px;width:100%;margin:0;padding:8px 12px;font-size:16px;box-sizing:border-box}
+.portfolio-editor-body select{padding-right:36px}
+.portfolio-editor-body [data-slot="native-select-wrapper"]{width:100%;min-width:0}
+.portfolio-editor-body .instrument-trigger>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.portfolio-editor-body .portfolio-remove{width:44px;height:44px;min-height:44px;padding:10px;flex-shrink:0}
+.portfolio-editor-body .portfolio-instrument-group>.instrument-add{margin:0;justify-self:start}
+.portfolio-editor-body .instrument-add-trigger{width:auto}
+.portfolio-editor-dialog .portfolio-editor-footer{flex-shrink:0;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-top:1px solid var(--border);background:var(--background)}
+.portfolio-editor-status{min-width:0;font-size:var(--type-small)}
+.portfolio-editor-status p{margin:0}
+.portfolio-editor-status .error{padding:6px 10px}
+@media(max-width:600px){.portfolio-editor-dialog>[data-slot="dialog-header"]{padding:20px 44px 16px 16px}.portfolio-editor-body{padding:16px}.portfolio-editor-body .portfolio-asset-fields{grid-template-columns:minmax(0,1fr)}.portfolio-editor-body .portfolio-instrument-row{grid-template-columns:minmax(0,1fr) 44px}.portfolio-instrument-row>.instrument-field{grid-column:1/-1}.portfolio-editor-dialog .portfolio-editor-footer{padding:12px 16px;flex-wrap:wrap}.portfolio-editor-footer>button{width:100%}}
