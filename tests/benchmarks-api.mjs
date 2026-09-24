@@ -196,3 +196,33 @@ test('editable portfolios fetch every active market asset and skip deleted or ze
   params.set('portfolio','{');assert.equal((await GET(request(params.toString()))).status,400);
  }finally{globalThis.fetch=original;if(key===undefined)delete process.env.TWELVE_DATA_API_KEY;else process.env.TWELVE_DATA_API_KEY=key;}
 });
+
+test('anonymous demo uses fixed real-feed queries, shares concurrent work and ignores arbitrary symbols',async()=>{
+ const original=globalThis.fetch,key=process.env.TWELVE_DATA_API_KEY;
+ try{
+  auth=false;process.env.TWELVE_DATA_API_KEY='test-secret';
+  const symbols=[];let calls=0;
+  globalThis.fetch=async raw=>{
+   calls++;const url=new URL(raw);
+   if(url.hostname==='api.twelvedata.com'){
+    const symbol=url.searchParams.get('symbol');symbols.push(symbol);
+    assert.equal(symbol,'SPY');
+    return Response.json({meta:{symbol,currency:'USD'},values:[{datetime:'2025-09-17',close:'500'},{datetime:'2026-09-17',close:'550'}]});
+   }
+   if(url.hostname==='api.exchange.coinbase.com'){
+    const start=url.searchParams.get('start').slice(0,10),end=url.searchParams.get('end').slice(0,10),rows=[];
+    for(let date=start;date<end;date=dates.shiftDay(date,1))rows.push([dates.dateMillis(date)/1000,0,0,0,65000,1]);
+    return Response.json(rows);
+   }
+   const date=url.pathname.split('/').filter(Boolean).at(-1);
+   return Response.json([{Ccy:'USD',Rate:'12500',Nominal:'1',Date:date.split('-').reverse().join('.')}]);
+  };
+  const responses=await Promise.all([GET(request('demo=1&symbol=NVDA&start=2016-01-01')),GET(request('demo=1'))]);
+  const a=await responses[0].json(),b=await responses[1].json();
+  assert.deepEqual(a,b);assert.equal(a.start,'2025-09-17');assert.equal(a.end,'2026-09-17');
+  assert.equal(a.prices.SPY[0].close,500);assert.equal(a.prices.BTC[0].close,65000);
+  assert.deepEqual(symbols,['SPY']);assert.deepEqual(a.errors,{});
+  const previous=calls;await GET(request('demo=1'));assert.equal(calls,previous);
+  assert.equal((await GET(request())).status,401,'Normal benchmark queries still require authentication');
+ }finally{auth=true;globalThis.fetch=original;if(key===undefined)delete process.env.TWELVE_DATA_API_KEY;else process.env.TWELVE_DATA_API_KEY=key;}
+});

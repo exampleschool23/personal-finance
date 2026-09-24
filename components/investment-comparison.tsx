@@ -1,5 +1,5 @@
 "use client";
-import { demoBenchmarks, demoBenchmarkKeys } from '@/lib/demo-finance';
+import { demoBenchmarkKeys } from '@/lib/demo-finance';
 import { readOverviewBenchmarks, overviewBenchmarkStorageKey, toggleOverviewBenchmark } from '@/lib/overview-benchmarks';
 import { portfolioAssets } from '@/lib/diversified-portfolio';
 import { stockBenchmarks } from '@/lib/benchmark-selection';
@@ -21,7 +21,7 @@ import { type HistoryEvent } from '@/lib/investment-history';
 import { depositToday } from '@/lib/deposit-interest';
 import { shiftDay,type BenchmarkData } from '@/lib/benchmark-data';
 import { getInvestmentPortfolio, getInvestmentComparison, investmentValueChange } from '@/lib/investment-portfolio';
-import { isInvestmentRecord,type ComparisonProfile } from '@/lib/comparison-profile';
+import { defaultComparisonPreferences,isInvestmentRecord,type ComparisonProfile } from '@/lib/comparison-profile';
 
 type History={records:Entry[];events:HistoryEvent[];cashflows?:Entry[]};
 export function InvestmentComparison({history,today,currency,market,demo,embedded}:{embedded?:{days:number;points:{date:string;net:number}[];tooltip:ReactElement};history:History;today:string;currency:string;market:MarketData|null;demo:boolean}){
@@ -63,7 +63,7 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
  const events=portfolio.activity;
  const start=events[0]?.occurred_on??today;
  const appStart=profile?depositToday(new Date(profile.activity.started_at)):start;
- const selected:readonly string[]=benchmarks??profile?.preferences.benchmarks??['BTC','SPY','depositUZS','depositUSD'];
+ const selected:readonly string[]=benchmarks??profile?.preferences.benchmarks??defaultComparisonPreferences.benchmarks;
  const selectionKey=selected.join(',');
  const symbol=profile?.preferences.custom_symbol??'';
  const diversified=profile?.preferences.portfolio;
@@ -73,18 +73,17 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
  const portfolioStock=selected.includes('PORTFOLIO')&&!diversified?.assets&&diversified?.stock?diversified.stockSymbol:'';
  const requestKey=events.length?start+':'+today+':'+selectionKey+':'+symbol+':'+portfolioCrypto+':'+portfolioStock+':'+portfolioConfig:'';
  useEffect(()=>{
-  if(demo||!requestKey||(!profile&&!profileError))return;
+  if(!requestKey||(!demo&&!profile&&!profileError))return;
   const controller=new AbortController(),params=new URLSearchParams({start,end:today,benchmarks:selectionKey});
   if(portfolioConfig)params.set('portfolio',portfolioConfig);
   if(symbol)params.set('symbol',symbol);
   if(portfolioCrypto)params.set('portfolioCrypto',portfolioCrypto);
   if(portfolioStock)params.set('portfolioStock',portfolioStock);
-  refreshRead('/api/benchmarks?'+params,{signal:controller.signal}).then(async response=>{const result=await response.json() as BenchmarkData&{error?:string};if(!response.ok)throw Error(result.error);if(!controller.signal.aborted){setData(result);setLoadedKey(requestKey);setError('');}}).catch(reason=>{if(!controller.signal.aborted){setError(reason.message);setLoadedKey(requestKey);setData(null);}});
+  refreshRead(demo?'/api/benchmarks?demo=1':'/api/benchmarks?'+params,{signal:controller.signal}).then(async response=>{const result=await response.json() as BenchmarkData&{error?:string};if(!response.ok)throw Error(result.error);if(!controller.signal.aborted){setData(result);setLoadedKey(requestKey);setError('');}}).catch(reason=>{if(!controller.signal.aborted){setError(reason.message);setLoadedKey(requestKey);setData(null);}});
   return()=>controller.abort();
  },[demo,requestKey,start,today,selectionKey,symbol,portfolioCrypto,portfolioStock,portfolioConfig,retry,profile,profileError]);
- const comparisonsLoading=!demo&&!!requestKey&&((!profile&&!profileError)||loadedKey!==requestKey);
- const sampleData=useMemo(()=>demo?demoBenchmarks(today):null,[demo,today]);
- const ready=demo?sampleData:loadedKey===requestKey?data:null;
+ const comparisonsLoading=!!requestKey&&((!demo&&!profile&&!profileError)||loadedKey!==requestKey);
+ const ready=loadedKey===requestKey?data:null;
  const performance=portfolio.performance;
  const result=useMemo(()=>ready&&!performance.missing?getInvestmentComparison({records,events:history.events,cashflows:history.cashflows,market,currency,today},ready,activeDiversified):null,[ready,performance,records,history,market,currency,today,activeDiversified]);
  const points=result?.points??[];
@@ -103,7 +102,7 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   const chartPoints=result?points.filter(point=>point.date>=cutoff&&point.actual!==null):embedded.points.map(point=>({...point,actual:point.net}));
   const chartSeries=result?visibleSeries:definitions.filter(item=>item.key==='actual');
   return <>
-   {demo&&<p className="comparison-note">{t("Illustrative sample history and benchmarks, not historical market returns.")}</p>}
+   {demo&&<p className="comparison-note">{t("Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.")}</p>}
    <div className="comparison-legend" aria-busy={comparisonsLoading}>{comparisonsLoading&&<span role="status" className="flex items-center gap-2 muted"><Spinner aria-hidden="true"/>{t('Loading comparisons…')}</span>}{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={item.key==='actual'||!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div>
    {ready&&visibleSeries.filter(item=>item.key!=='actual').map(item=>{const reason=ready.errors[item.key]??ready.errors.fx??(result?.unavailable.includes(item.key)?'Price data, exchange rates or funds needed for a matching withdrawal are unavailable.':null);return reason?<p key={item.key} className="comparison-note">{item.label}: {t(reason)}</p>:null;})}
    <InvestmentValueChart points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={chartSeries.length===1?embedded.tooltip:undefined}/>

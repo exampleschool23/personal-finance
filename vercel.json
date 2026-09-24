@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "buildCommand": "npx next build --webpack",
-  "devCommand": "npx next dev --port 5173",
+  "devCommand": "npx next dev --port 5000",
   "outputDirectory": ".next",
   "crons": [
     {

@@ -1,12 +1,12 @@
-import { shiftDay, type BenchmarkData } from './benchmark-data';
-import { isInvestmentRecord } from './comparison-profile';
+import { shiftDay } from './benchmark-data';
+import { defaultComparisonPreferences, isInvestmentRecord } from './comparison-profile';
 import { value, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import type { MarketData } from './market';
 
 // Illustrative fixtures only: never represent these as historical market quotes.
 export const demoMarket: MarketData = { rates: { USD: 1, UZS: 12500 }, fx: null, quotes: {}, errors: {}, stocksConfigured: false };
-export const demoBenchmarkKeys = ['BTC', 'SPY', 'depositUSD'];
+export const demoBenchmarkKeys = defaultComparisonPreferences.benchmarks;
 export function demoRecords(today: string): Entry[] {
  const record = (id: string, name: string, kind: Entry['kind'], amount: number, extra: Partial<Entry> = {}): Entry => ({
   id: 'demo-' + id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0,
@@ -55,15 +55,4 @@ export function demoHistory(records: Entry[], today: string) {
   }
  }
  return { records, events, cashflows: [] as Entry[], incomeRecords: records };
-}
-
-export function demoBenchmarks(today: string): BenchmarkData {
- const start = shiftDay(today, -365);
- const prices: BenchmarkData['prices'] = { BTC: [], SPY: [] };
- for (let day = 0; day <= 365; day++) {
-  const date = shiftDay(start, day), progress = day / 365;
-  prices.BTC.push({ date, close: 52000 * (1 + .28 * progress + .075 * Math.sin(progress * Math.PI * 6)) });
-  prices.SPY.push({ date, close: 480 * (1 + .13 * progress + .022 * Math.sin(progress * Math.PI * 5)) });
- }
- return { start, end: today, prices, fx: [{ date: start, rates: { ...demoMarket.rates! } }], errors: {} };
 }

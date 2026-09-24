@@ -3,7 +3,7 @@
 Import `exampleschool23/personal-finance` in Vercel with the **Next.js** preset.
 The Vercel build command is `npx next build --webpack`, with the default `.next`
 output directory. `vercel.json` records these overrides; the existing
-`npm run dev` command still runs the local Vinext preview on port 5173.
+`npm run dev` command still runs the local Vinext preview on port 5000.
 
 Set these environment variables in Vercel for Production and Preview:
 
@@ -25,12 +25,12 @@ cookies. The short-lived verifier is also HTTP-only and cleared on callback.
 2. Set its authorized redirect URI to
    `https://hnwxybhsvnutcsqwscul.supabase.co/auth/v1/callback`.
    Add JavaScript origins `https://personal-finance-eta-nine.vercel.app` and
-   `http://localhost:5173`. If Google is in Testing mode, add your Google account
+   `http://localhost:5000`. If Google is in Testing mode, add your Google account
    to its test users.
 3. Enable Google in Supabase and enter the Google client ID and secret there.
 4. In Supabase Authentication URL Configuration, allow exactly:
    - `https://personal-finance-eta-nine.vercel.app/auth/callback`
-   - `http://localhost:5173/auth/callback`
+   - `http://localhost:5000/auth/callback`
    Set Site URL to `https://personal-finance-eta-nine.vercel.app`.
 5. Preserve the intended invitation-only account policy when enabling Google.
 

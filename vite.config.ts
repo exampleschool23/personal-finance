@@ -52,6 +52,7 @@ export default defineConfig(async () => {
 
   return {
     server: {
+      ...(!managedLinux ? { port: 5000, strictPort: true } : {}),
       ...(managedLinux ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] } : {}),
       ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
     },

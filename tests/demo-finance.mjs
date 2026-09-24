@@ -1,12 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { demoRecords, demoHistory, demoBenchmarks, demoMarket, demoBenchmarkKeys } = loadTS('lib/demo-finance.ts');
+const { demoRecords, demoHistory, demoMarket, demoBenchmarkKeys } = loadTS('lib/demo-finance.ts');
 const { getInvestmentPortfolio, getInvestmentComparison } = loadTS('lib/investment-portfolio.ts');
 const { investmentPeriodTotals } = loadTS('lib/investment-period.ts');
 const { portfolioWindow } = loadTS('lib/portfolio-history.ts');
 const { shiftDay } = loadTS('lib/benchmark-data.ts');
 const today = '2026-09-24';
+// Mock feed data belongs only in tests; production demo requests the real API.
+const benchmarkFixture = day => {
+ const start=shiftDay(day,-365);
+ const series=(opening,gain)=>Array.from({length:366},(_,index)=>({date:shiftDay(start,index),close:opening+gain*index/365}));
+ return {start,end:day,prices:{BTC:series(52000,8000),SPY:series(480,80)},fx:[{date:start,rates:demoMarket.rates}],errors:{}};
+};
 const records = demoRecords(today);
 const history = demoHistory(records, today);
 const input = { ...history, today, market: demoMarket, currency: 'USD' };
@@ -26,8 +32,8 @@ test('demo has a year of funded history, receipts and expenses in all chart wind
  assert.equal(records.find(row => row.id === 'demo-deposit-usd').rate, 8);
 });
 
-test('BTC, S&P and deposit comparisons work offline and preserve currency precision', () => {
- const data = demoBenchmarks(today);
+test('BTC, S&P and deposit comparisons accept provider data and preserve currency precision', () => {
+ const data = benchmarkFixture(today);
  const usd = getInvestmentComparison(input, data);
  const uzs = getInvestmentComparison({ ...input, currency: 'UZS' }, data);
  assert.ok(usd.points.length > 365);
@@ -59,8 +65,6 @@ test('sample dates stay valid across leap years and roll forward with the visit'
  for (const day of ['2024-02-29', '2027-01-01']) {
   const sample = demoHistory(demoRecords(day), day);
   assert.ok(sample.events.every(event => event.occurred_on <= day && event.occurred_on >= shiftDay(day, -365)));
-  const data = demoBenchmarks(day);
-  assert.equal(data.prices.SPY.at(-1).date, day);
-  assert.equal(data.prices.BTC.length, 366);
+
  }
 });

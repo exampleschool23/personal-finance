@@ -66,3 +66,16 @@ test('portfolio accepts catalogue currencies for property and custom assets and 
   calls=[];assert.equal((await api.PUT(req({benchmarks:['PORTFOLIO'],custom_symbol:'',portfolio:{...portfolio,assets:[{...portfolio.assets[0],weight:100,currency}]}}))).status,400);assert.equal(calls.length,0);
  }
 });
+
+
+test('UZS deposit is opt-in: absent from defaults and accepted when selected in Settings',async()=>{
+ assert.deepEqual(defaultComparisonPreferences.benchmarks,['BTC','SPY','depositUSD']);
+ calls=[];
+ const response=await api.PUT(req({benchmarks:['BTC','SPY','depositUSD','depositUZS'],custom_symbol:''}));
+ assert.equal(response.status,200);
+ assert.ok(JSON.parse(calls[0].init.body).benchmarks.includes('depositUZS'));
+ calls=[];
+ const removed=await api.PUT(req({benchmarks:['BTC','SPY','depositUSD'],custom_symbol:''}));
+ assert.equal(removed.status,200);
+ assert.ok(!JSON.parse(calls[0].init.body).benchmarks.includes('depositUZS'));
+});

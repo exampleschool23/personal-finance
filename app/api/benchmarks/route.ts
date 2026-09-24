@@ -88,9 +88,8 @@ async function fxAt(date: string): Promise<FxPoint> {
  if (!uzs.USD) throw Error('Unavailable');
  return { date, rates: Object.fromEntries(Object.entries(uzs).map(([currency, value]) => [currency, uzs.USD / value])) };
 }
-export async function GET(req: Request) {
+async function loadBenchmarks(req: Request) {
  try {
-  if (!(await session())) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
   const params = new URL(req.url).searchParams;
   const start = params.get('start') ?? '', end = params.get('end') ?? '', custom = params.get('symbol') ?? '';
   if (!validDay(start) || !validDay(end) || start > end || end > depositToday() || start < '2016-01-01' || (custom && !/^[A-Z][A-Z0-9.-]{0,14}$/.test(custom))) return Response.json({ error: 'Choose valid dates ending today or earlier.' }, { status: 400 });
@@ -138,5 +137,33 @@ export async function GET(req: Request) {
   for(const asset of portfolioRows){const error=data.errors[portfolioAssetKey(asset,portfolio!)];if(error)data.errors.PORTFOLIO=error;}
   if(data.errors.portfolioStock||data.errors.portfolioCrypto)data.errors.PORTFOLIO=data.errors.portfolioStock??data.errors.portfolioCrypto;
   return Response.json(data, { headers: { 'Cache-Control': Object.keys(data.errors).length ? 'private, no-store' : 'private, max-age=300' } });
+ } catch { return Response.json({ error: 'Could not load comparisons.' }, { status: 503 }); }
+}
+
+// Anonymous demo access is limited to one fixed public-data request. Coalesce
+// concurrent visitors and cache it without exposing arbitrary paid-feed queries.
+let demoCache: { day: string; expires: number; response: Promise<Response> } | null = null;
+export async function GET(req: Request) {
+ if (new URL(req.url).searchParams.get('demo') === '1') {
+  const day = depositToday();
+  if (!demoCache || demoCache.day !== day || demoCache.expires <= Date.now()) {
+   const params = new URLSearchParams({ start: shiftDay(day, -365), end: day, benchmarks: 'BTC,SPY,depositUSD,depositUZS' });
+   const entry = { day, expires: Infinity, response: loadBenchmarks(new Request('https://local/api/benchmarks?' + params)) };
+   demoCache = entry;
+   entry.response = entry.response.then(async response => {
+    const result = await response.clone().json() as BenchmarkData;
+    const complete = response.ok && !Object.keys(result.errors ?? {}).length;
+    entry.expires = Date.now() + (complete ? 3600000 : 30000);
+    return response;
+   }).catch(() => {
+    entry.expires = Date.now() + 30000;
+    return Response.json({ error: 'Could not load comparisons.' }, { status: 503 });
+   });
+  }
+  return (await demoCache.response).clone();
+ }
+ try {
+  if (!(await session())) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
+  return await loadBenchmarks(req);
  } catch { return Response.json({ error: 'Could not load comparisons.' }, { status: 503 }); }
 }
