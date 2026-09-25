@@ -33,11 +33,11 @@ export function useLanguage() {
   return { ...context, locale: locales[context.language], t: (key: string, params?: Record<string, string | number>) => translate(context.language, key, params) };
 }
 
-export function LanguageSelector() {
+export function LanguageSelector({ compact = false }: { compact?: boolean } = {}) {
   const { language, setLanguage, t } = useLanguage();
   return <select className="language-selector" aria-label={t('Language')} title={t('Language')} value={language} onChange={event => { if (isLanguage(event.target.value)) setLanguage(event.target.value); }}>
-    <option value="en" lang="en">EN · English</option>
-    <option value="ru" lang="ru">RU · Русский</option>
-    <option value="uz" lang="uz">UZ · O‘zbekcha</option>
+    <option value="en" lang="en">{compact ? 'EN' : 'EN · English'}</option>
+    <option value="ru" lang="ru">{compact ? 'RU' : 'RU · Русский'}</option>
+    <option value="uz" lang="uz">{compact ? 'UZ' : 'UZ · O‘zbekcha'}</option>
   </select>;
 }

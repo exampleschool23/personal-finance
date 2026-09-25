@@ -76,3 +76,16 @@ test('investment-only history excludes everyday cash and debt but retains opted-
  const result=portfolioHistory(records.filter(isInvestmentRecord),events,'USD',undefined,'2026-09-03');
  assert.deepEqual(result.points.map(p=>[p.assets,p.debt,p.net]),[[200,0,200],[240,0,240]]);
 });
+
+test('net worth includes cash and subtracts the remaining mortgage, not cumulative repayments', () => {
+ const records = [record('cash', 'Cash'), record('home', 'Property'), record('mortgage', 'Mortgage')];
+ const result = portfolioHistory(records, [
+  event('cash', '2026-09-01', 10000), event('home', '2026-09-01', 200000), event('mortgage', '2026-09-01', 150000),
+  event('cash', '2026-09-02', 8900), event('mortgage', '2026-09-02', 149000),
+ ], 'USD', undefined, '2026-09-03');
+ assert.deepEqual(result.points.map(({assets, debt, net}) => ({assets, debt, net})), [
+  {assets:210000, debt:150000, net:60000},
+  {assets:208900, debt:149000, net:59900},
+ ]);
+ assert.equal(result.missing, 0);
+});

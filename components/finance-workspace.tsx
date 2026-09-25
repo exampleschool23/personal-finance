@@ -89,7 +89,7 @@ function WorkspaceContent() {
     const section = sections.find(([, , path]) => path === pathname)?.[0] || 'Overview';
     const { t, locale, setDefaultLanguage, setLanguage } = useLanguage();
     const formatDate = (value: string) => sharedFormatDate(value, locale);
-    const preferences = <div className="preferences"><LanguageSelector /><ThemeToggle /></div>;
+    const preferences = <div className="preferences"><LanguageSelector compact /><ThemeToggle /></div>;
     const [user, setUser] = useState<string | null>(null), [ready, setReady] = useState(false), [configured, setConfigured] = useState(true), [demo, setDemo] = useState(false), [rows, setRows] = useState<Entry[]>([]), [currency, setCurrency] = useState<string>('USD'), [editing, setEditing] = useState<Entry | null>(null), [deleting, setDeleting] = useState<Entry | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
     const [preferencesData, setPreferencesData] = useState<Preferences>(defaultPreferences);
     useEffect(() => {
