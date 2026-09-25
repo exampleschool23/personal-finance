@@ -41,3 +41,13 @@ test('account security clears the persistent workspace session before navigating
  const tree=AccountAccessPanel({settings:true,onSignedOut:()=>{cleared=true;}});const find=node=>{if(!node||typeof node!=='object')return null;if(node.type==='form')return node;return React.Children.toArray(node.props?.children).map(find).find(Boolean);};
  await find(tree).props.onSubmit({preventDefault:()=>{}});assert.equal(cleared,true);assert.deepEqual(navigation,['/']);
 });
+
+test('profile settings shows the shared country picker with its prompt and saved selection',()=>{
+ const {SettingsPanel}=loadTS('components/settings-panel.tsx',overrides);
+ const render=country=>renderToStaticMarkup(React.createElement(SettingsPanel,{initial:{language:'en',currencies:['USD'],country},demo:false,onSaved:()=>{},loading:false,loadError:'',onRetry:()=>{}}));
+ const html=render('');
+ assert.match(html,/<label for="profile-country">Country \/ region \(optional\)<\/label>/);
+ assert.match(html,/<select[^>]*data-slot="native-select"[^>]*id="profile-country"/);
+ assert.match(html,/<option value="" selected="">Select your country<\/option>/);
+ assert.match(render('UZ'),/<option value="UZ" selected="">Uzbekistan<\/option>/);
+});

@@ -40,3 +40,18 @@ test('account deletion uses the verified owner ID and server admin key, never a 
  const previous=process.env.SUPABASE_SERVICE_ROLE_KEY;process.env.SUPABASE_SERVICE_ROLE_KEY='test-admin-key';const calls=[];context.mock.method(globalThis,'fetch',async(url,init)=>{calls.push({url,init});return Response.json({});});
  try{const app=api();const result=await app.POST(request({action:'delete_account',current_password:'current',confirmation:'DELETE',user_id:'other-owner'}));assert.equal(result.status,200);assert.equal(calls.length,1);assert.equal(calls[0].url,'https://supabase.invalid/auth/v1/admin/users/'+id);assert.equal(calls[0].init.method,'DELETE');assert.equal(calls[0].init.headers.Authorization,'Bearer test-admin-key');assert.deepEqual(app.deleted,['hf_access','hf_refresh']);}finally{if(previous===undefined)delete process.env.SUPABASE_SERVICE_ROLE_KEY;else process.env.SUPABASE_SERVICE_ROLE_KEY=previous;}
 });
+
+test('failed deletion preserves the session and never deletes an unverified account',async context=>{
+ const previous=process.env.SUPABASE_SERVICE_ROLE_KEY;const calls=[];
+ context.mock.method(globalThis,'fetch',async(url,init)=>{calls.push({url,init});return Response.json({},{status:500});});
+ const body={action:'delete_account',current_password:'current',confirmation:'DELETE'};
+ try{
+  process.env.SUPABASE_SERVICE_ROLE_KEY='test-admin-key';
+  for(const options of [{auth:false},{origin:false},{provider:()=>Response.json({},{status:400})},{provider:()=>Response.json({...verified,user:{id:'b0000000-0000-4000-8000-000000000001'}})}]){
+   const app=api(options);assert.ok((await app.POST(request(body))).status>=400);assert.equal(calls.length,0);assert.deepEqual(app.deleted,[]);
+  }
+  const failed=api();assert.equal((await failed.POST(request(body))).status,503);assert.equal(calls.length,1);assert.deepEqual(failed.deleted,[]);
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const unavailable=api();assert.equal((await unavailable.POST(request(body))).status,503);assert.equal(calls.length,1);assert.deepEqual(unavailable.deleted,[]);
+ }finally{if(previous===undefined)delete process.env.SUPABASE_SERVICE_ROLE_KEY;else process.env.SUPABASE_SERVICE_ROLE_KEY=previous;}
+});

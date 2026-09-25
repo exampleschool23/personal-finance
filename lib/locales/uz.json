@@ -1971,5 +1971,10 @@
   "No account needed. Just sample data.": "Hisob kerak emas. Faqat namuna ma’lumotlar.",
   "Illustrative sample prices and exchange rates.": "Namuna narxlari va valyuta kurslari.",
   "Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.": "Namuna portfeli BTC va SPY haqiqiy narxlar tarixi bilan taqqoslanadi. SPY S&P 500 indeksini kuzatadi; omonatlar uchun taxminiy yillik stavkalar ishlatiladi.",
-  "Some holdings have no recorded history yet.": "Ayrim aktivlar va qarzlar tarixi hali qayd etilmagan."
+  "Some holdings have no recorded history yet.": "Ayrim aktivlar va qarzlar tarixi hali qayd etilmagan.",
+  "Benchmarks invest the opening net worth once at the start of the selected period, with no later contributions or withdrawals.": "Taqqoslash ko‘rsatkichlari tanlangan davr boshidagi sof boylikni bir marta investitsiya qiladi, keyingi qo‘shimcha mablag‘lar va yechib olishlar hisobga olinmaydi.",
+  "Country / region (optional)": "Mamlakat / hudud (ixtiyoriy)",
+  "Not selected": "Tanlanmagan",
+  "Choose a language, at least one currency, a valid country, and a name of up to 80 characters.": "Til, kamida bitta valyuta, haqiqiy mamlakat va 80 belgigacha bo‘lgan ismni tanlang.",
+  "Select your country": "Mamlakatingizni tanlang"
 }

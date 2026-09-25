@@ -164,12 +164,15 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 [data-theme="light"] :is(button,select,textarea):focus-visible{outline-color:#427526}
 
 .preferences{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.preferences .language-selector{min-height:40px!important;height:40px;padding:6px 28px 6px 10px;font-size:var(--type-body);max-width:160px}
+.language-selector{width:auto;min-width:max-content;max-width:none;padding:6px 36px 6px 12px;font-size:var(--type-body)}
+.language-selector[data-compact="true"]{width:calc(3ch + 48px)}
+.preferences [data-slot="native-select-wrapper"]{flex-shrink:0}
+.preferences .language-selector{min-height:40px!important;height:40px}
 .login-panel{position:relative;padding-top:96px}
 .login-preferences{position:absolute;right:24px;top:24px}
 .topbar>div:first-child{min-width:0}
 .topbar>div:first-child>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media(max-width:640px){.topbar{gap:8px}.preferences{gap:6px}.preferences .language-selector{max-width:126px}.topbar>div:first-child>span:first-of-type{display:none}.entry-actions button{white-space:normal;height:auto}.metrics h2{overflow-wrap:anywhere}.login-preferences{right:24px}}
+@media(max-width:640px){.topbar{gap:8px}.preferences{gap:6px}.topbar>div:first-child>span:first-of-type{display:none}.entry-actions button{white-space:normal;height:auto}.metrics h2{overflow-wrap:anywhere}.login-preferences{right:24px}}
 
 .market-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:-8px 0 22px; color:var(--muted-foreground); font-size:var(--type-small); }
 .record-name small { display:block; }
@@ -258,8 +261,6 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 
 /* Keep dropdown chevrons inset and reserve room for long labels. */
 .record-dialog [data-slot="native-select-wrapper"]{width:100%;min-width:0}
-.record-dialog select[data-slot="native-select"]{appearance:none;padding-right:40px;text-overflow:ellipsis}
-.record-dialog [data-slot="native-select-icon"]{right:14px;opacity:1;color:var(--muted-foreground)}
 
 /* Compact asset rows keep useful details visible in a single scan. */
 .compact-asset-records th{padding:10px 18px}
@@ -960,7 +961,6 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .workspace .content .record-filters label{display:grid;gap:8px;min-width:0;margin:0;line-height:1.5}
 .workspace .content .record-filters [data-slot="native-select-wrapper"]{width:100%;min-width:0}
 .workspace .content .record-filters :is(input,select,.date-picker-trigger){width:100%;min-width:0;height:46px;min-height:46px;padding-block:10px;font-size:var(--type-compact)}
-.workspace .content .record-filters select{padding-right:36px}
 .workspace .content .record-filters button{min-height:46px}
 .workspace .content .record-filters .date-picker-trigger{height:46px}
 .workspace .content .record-filters .date-picker-trigger span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1413,25 +1413,48 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 
 /* Settings uses one navigation rail and a consistent content column. */
 .settings-layout{max-width:1120px;margin:0 auto}
-.settings-layout .settings-navigation{display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px;align-items:start}
+.settings-layout .settings-navigation{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:start}
 .settings-layout .settings-navigation-list{display:flex;flex-direction:column;align-items:stretch;width:100%;height:auto;gap:6px;padding:8px;background:var(--card);border:1px solid var(--border);border-radius:14px;position:sticky;top:24px}
-.settings-layout .settings-navigation-list button{justify-content:flex-start;white-space:normal;text-align:left;min-height:48px;padding:12px;gap:10px;flex:none}
+.settings-layout .settings-navigation-list button{justify-content:flex-start;white-space:normal;text-align:left;min-height:44px;padding:8px 10px;gap:10px;flex:none}
 .settings-layout .settings-navigation-list button[data-state=active]{background:var(--accent);color:var(--accent-foreground);box-shadow:none}
 .settings-section-content{min-width:0}
 .settings-section-content [hidden]{display:none!important}
 .settings-layout .settings-page{max-width:none;margin:0}
 .settings-layout .settings-columns{display:block}
-.workspace .content .settings-layout .panel{width:100%;max-width:none;margin:0 0 20px;padding:24px;border-radius:16px;background:var(--card)}
-.settings-layout .settings-form{gap:18px}
+.workspace .content .settings-layout .panel{width:100%;max-width:none;margin:0 0 16px;padding:20px;border-radius:16px;background:var(--card)}
+.settings-layout .settings-form{gap:12px}
 .settings-layout .settings-form>label{max-width:none}
 .settings-layout .settings-form>button{justify-self:start;min-width:144px}
 .settings-layout .comparison-settings-options{gap:10px}
-.settings-layout .settings-section-heading{margin-bottom:8px}
+.settings-layout .settings-section-heading{gap:10px;margin:4px 0 0}
+.settings-layout .settings-section-heading>span{width:36px;height:36px;border-radius:10px}
+.settings-layout .page-heading{margin-bottom:20px}
+.settings-layout .panel label{gap:6px;margin-bottom:0}
+.workspace .content .settings-layout .panel h2{font-size:18px;line-height:1.4;margin:0 0 12px;font-weight:600}
+.workspace .content .settings-layout .settings-form h2{margin:0}
+.settings-layout .profile-settings{gap:6px;padding-bottom:16px;margin-bottom:0}
+.workspace .content .settings-layout .profile-settings>h2{margin-bottom:4px}
+.settings-layout .settings-form>h2{padding-top:4px}
+.settings-layout .panel>p:not(.error){margin:0 0 12px;line-height:1.5}
+.settings-layout .comparison-settings-options{margin:12px 0}
+.workspace .content .settings-layout .comparison-settings-options label{padding:10px 12px}
+.settings-layout .benchmark-stocks{gap:12px;margin-top:16px;padding:14px;border-radius:12px}
+.settings-layout .benchmark-settings-footer{margin-top:16px;padding-top:12px}
+.settings-layout .category-settings .category-group,
+.settings-layout .data-import-section{margin-top:16px;padding-top:16px}
+.settings-layout .default-category-groups{gap:16px;margin-top:12px}
+.settings-layout .category-rule-form{margin-top:12px}
+.settings-layout .data-import-fields{gap:12px;margin:16px 0}
+.settings-layout .data-settings>h2{margin-bottom:12px}
+.settings-layout .inline-tool-form,.settings-layout .tool-list{margin-block:12px}
+.settings-layout .tool-list li{gap:10px;padding-block:10px}
+.settings-layout .import-history-empty{padding:16px;margin-top:12px}
+.settings-layout .account-danger-zone{margin-top:16px;padding-top:16px}
 @media(max-width:800px){
- .settings-layout .settings-navigation{grid-template-columns:minmax(0,1fr);gap:20px}
+ .settings-layout .settings-navigation{grid-template-columns:minmax(0,1fr);gap:16px}
  .settings-layout .settings-navigation-list{position:static;flex-direction:row;overflow-x:auto;border-radius:12px}
  .settings-layout .settings-navigation-list button{white-space:nowrap;flex-shrink:0}
- .workspace .content .settings-layout .panel{padding:20px}
+ .workspace .content .settings-layout .panel{padding:16px}
 }
 
 .category-settings>h2{margin-bottom:8px}
@@ -1600,7 +1623,6 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .portfolio-editor-body .diversified-sleeve label{display:grid;gap:8px;min-width:0;margin:0;font-size:var(--type-small)}
 .portfolio-editor-body .instrument-field{gap:8px}
 .portfolio-editor-body input,.portfolio-editor-body select,.portfolio-editor-body .instrument-trigger{height:44px;min-height:44px;width:100%;margin:0;padding:8px 12px;font-size:16px;box-sizing:border-box}
-.portfolio-editor-body select{padding-right:36px}
 .portfolio-editor-body [data-slot="native-select-wrapper"]{width:100%;min-width:0}
 .portfolio-editor-body .instrument-trigger>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .portfolio-editor-body .portfolio-remove{width:44px;height:44px;min-height:44px;padding:10px;flex-shrink:0}
@@ -1618,7 +1640,6 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 @media(max-width:600px){.allocation-net-worth-target{grid-template-columns:minmax(0,1fr)}}
 
 /* Keep the workspace toolbar and settings forms readable on narrow screens. */
-.topbar .preferences .language-selector{width:72px;max-width:none;flex-shrink:0}
 .import-profile-list:empty{display:none}
 .import-profiles>p{font-size:var(--type-small)}
 @media(max-width:640px){
@@ -1628,7 +1649,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
  .topbar-actions>button{font-size:var(--type-small);min-height:44px;height:auto;padding:8px 10px;line-height:1.3}
  .topbar-actions>button:not(.header-currency-trigger){flex:1;min-width:0;white-space:normal}
  .topbar .preferences{gap:8px}
- .topbar .preferences .language-selector{min-height:44px!important;height:44px;font-size:16px;padding-left:10px}
+ .topbar .preferences .language-selector{min-height:44px!important;height:44px;font-size:16px}
  .topbar .preferences button{width:44px;height:44px;min-height:44px}
  .workspace .content .settings-layout .panel{padding:18px 16px}
  .settings-layout .tools-panel h2{font-size:20px;line-height:1.3;letter-spacing:-.3px}
@@ -1658,3 +1679,12 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
  .portfolio-tooltip-row{flex-wrap:wrap}
  .portfolio-tooltip-row>b{margin-left:auto;max-width:100%;white-space:normal;overflow-wrap:anywhere}
 }
+
+/* Shared dropdown spacing: leave room for the arrow and its inset edge. */
+[data-slot="native-select-wrapper"] select[data-slot="native-select"]{appearance:none;padding-right:40px;text-overflow:ellipsis}
+[data-slot="native-select-wrapper"] [data-slot="native-select-icon"]{right:14px;width:16px;height:16px;pointer-events:none}
+.settings-form [data-slot="native-select-wrapper"]{width:100%}
+
+.profile-settings-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+.profile-settings-header>button{flex-shrink:0}
+.workspace .content .profile-settings-header>h2{margin:0}

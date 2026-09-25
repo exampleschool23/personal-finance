@@ -3,6 +3,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { isLanguage, Language, locales, translate } from '@/lib/i18n';
 
+import { NativeSelect } from '@/components/ui/native-select';
 import { LanguageContext } from '@/components/language-context';
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -35,9 +36,9 @@ export function useLanguage() {
 
 export function LanguageSelector({ compact = false }: { compact?: boolean } = {}) {
   const { language, setLanguage, t } = useLanguage();
-  return <select className="language-selector" aria-label={t('Language')} title={t('Language')} value={language} onChange={event => { if (isLanguage(event.target.value)) setLanguage(event.target.value); }}>
+  return <NativeSelect className="language-selector" data-compact={compact} aria-label={t('Language')} title={t('Language')} value={language} onChange={event => { if (isLanguage(event.target.value)) setLanguage(event.target.value); }}>
     <option value="en" lang="en">{compact ? 'EN' : 'EN · English'}</option>
     <option value="ru" lang="ru">{compact ? 'RU' : 'RU · Русский'}</option>
     <option value="uz" lang="uz">{compact ? 'UZ' : 'UZ · O‘zbekcha'}</option>
-  </select>;
+  </NativeSelect>;
 }

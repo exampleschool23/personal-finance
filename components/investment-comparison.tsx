@@ -1,4 +1,5 @@
 "use client";
+import { getNetWorthComparison } from '@/lib/net-worth-comparison';
 import { demoBenchmarkKeys } from '@/lib/demo-finance';
 import { readOverviewBenchmarks, overviewBenchmarkStorageKey, toggleOverviewBenchmark } from '@/lib/overview-benchmarks';
 import { portfolioAssets } from '@/lib/diversified-portfolio';
@@ -61,7 +62,7 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   try{localStorage.setItem(overviewBenchmarkStorageKey(overviewOwner),JSON.stringify(keys));}catch{/* The current selection still works when browser storage is unavailable. */}
  }
  const events=portfolio.activity;
- const start=events[0]?.occurred_on??today;
+ const start=embedded?.points[0]?.date??events[0]?.occurred_on??today;
  const appStart=profile?depositToday(new Date(profile.activity.started_at)):start;
  const selected:readonly string[]=benchmarks??profile?.preferences.benchmarks??defaultComparisonPreferences.benchmarks;
  const selectionKey=selected.join(',');
@@ -71,7 +72,7 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
  const portfolioConfig=activeDiversified?.assets?JSON.stringify(activeDiversified):'';
  const portfolioCrypto=selected.includes('PORTFOLIO')&&!diversified?.assets&&diversified?.crypto?diversified.cryptoSymbol:'';
  const portfolioStock=selected.includes('PORTFOLIO')&&!diversified?.assets&&diversified?.stock?diversified.stockSymbol:'';
- const requestKey=events.length?start+':'+today+':'+selectionKey+':'+symbol+':'+portfolioCrypto+':'+portfolioStock+':'+portfolioConfig:'';
+ const requestKey=(embedded?embedded.points.length:events.length)?start+':'+today+':'+selectionKey+':'+symbol+':'+portfolioCrypto+':'+portfolioStock+':'+portfolioConfig:'';
  useEffect(()=>{
   if(!requestKey||(!demo&&!profile&&!profileError))return;
   const controller=new AbortController(),params=new URLSearchParams({start,end:today,benchmarks:selectionKey});
@@ -98,13 +99,14 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
  const visibleSeries=embedded?displayed.filter(item=>item.key==='actual'||overviewKeys.includes(item.key)):displayed.some(item=>!hidden.includes(item.key))?displayed.filter(item=>!hidden.includes(item.key)):displayed.filter(item=>item.key==='actual');
  const visibleKeys=new Set(visibleSeries.map(item=>item.key));
  if(embedded){
-  const comparisonsByDate=new Map(points.map(point=>[point.date,point]));
-  const chartPoints=embedded.points.map(point=>({...comparisonsByDate.get(point.date),...point,actual:point.net}));
-  const chartSeries=result?visibleSeries:definitions.filter(item=>item.key==='actual');
+  const overviewResult=ready?getNetWorthComparison(embedded.points,ready,currency,market,activeDiversified):null;
+  const chartPoints=overviewResult?.points??embedded.points.map(point=>({...point,actual:point.net}));
+  const chartSeries=overviewResult?visibleSeries:definitions.filter(item=>item.key==='actual');
   return <>
+   <p className="comparison-note">{t('Benchmarks invest the opening net worth once at the start of the selected period, with no later contributions or withdrawals.')}</p>
    {demo&&<p className="comparison-note">{t("Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.")}</p>}
    <div className="comparison-legend" aria-busy={comparisonsLoading}>{comparisonsLoading&&<span role="status" className="flex items-center gap-2 muted"><Spinner aria-hidden="true"/>{t('Loading comparisons…')}</span>}{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={item.key==='actual'||!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div>
-   {ready&&visibleSeries.filter(item=>item.key!=='actual').map(item=>{const reason=ready.errors[item.key]??ready.errors.fx??(result?.unavailable.includes(item.key)?'Price data, exchange rates or funds needed for a matching withdrawal are unavailable.':null);return reason?<p key={item.key} className="comparison-note">{item.label}: {t(reason)}</p>:null;})}
+   {ready&&visibleSeries.filter(item=>item.key!=='actual').map(item=>{const reason=ready.errors[item.key]??ready.errors.fx??(overviewResult?.unavailable.includes(item.key)?'Price data, exchange rates or funds needed for a matching withdrawal are unavailable.':null);return reason?<p key={item.key} className="comparison-note">{item.label}: {t(reason)}</p>:null;})}
    <InvestmentValueChart label="NET WORTH" points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={chartSeries.length===1?embedded.tooltip:undefined}/>
    {error&&<p role="alert" className="error">{t(error)} <Button variant="outline" onClick={()=>{setLoadedKey('');setError('');setRetry(n=>n+1);}}>{t('Retry')}</Button></p>}
   </>;
