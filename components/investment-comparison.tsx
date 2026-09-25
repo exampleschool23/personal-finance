@@ -62,7 +62,7 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   try{localStorage.setItem(overviewBenchmarkStorageKey(overviewOwner),JSON.stringify(keys));}catch{/* The current selection still works when browser storage is unavailable. */}
  }
  const events=portfolio.activity;
- const start=embedded?.points[0]?.date??events[0]?.occurred_on??today;
+ const start=[events[0]?.occurred_on,embedded?.points[0]?.date].filter((date):date is string=>!!date).sort()[0]??today;
  const appStart=profile?depositToday(new Date(profile.activity.started_at)):start;
  const selected:readonly string[]=benchmarks??profile?.preferences.benchmarks??defaultComparisonPreferences.benchmarks;
  const selectionKey=selected.join(',');
@@ -99,11 +99,12 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
  const visibleSeries=embedded?displayed.filter(item=>item.key==='actual'||overviewKeys.includes(item.key)):displayed.some(item=>!hidden.includes(item.key))?displayed.filter(item=>!hidden.includes(item.key)):displayed.filter(item=>item.key==='actual');
  const visibleKeys=new Set(visibleSeries.map(item=>item.key));
  if(embedded){
-  const overviewResult=ready?getNetWorthComparison(embedded.points,ready,currency,market,activeDiversified):null;
+  const overviewResult=ready?getNetWorthComparison(embedded.points,ready,{records,events:history.events,cashflows:history.cashflows,market,currency,today},activeDiversified):null;
   const chartPoints=overviewResult?.points??embedded.points.map(point=>({...point,actual:point.net}));
   const chartSeries=overviewResult?visibleSeries:definitions.filter(item=>item.key==='actual');
   return <>
-   <p className="comparison-note">{t('Benchmarks invest the opening net worth once at the start of the selected period, with no later contributions or withdrawals.')}</p>
+   <p className="comparison-note">{t('Benchmarks invest the same amounts on the same dates as your recorded investments, including later contributions and withdrawals. Changing the period only zooms the chart.')} {t('Investment amounts are converted using current exchange rates.')}</p>
+   {!!performance?.observed.length&&<p className="comparison-note">{t('Some investments have no recorded purchase. Their first recorded value is used as opening capital, so earlier profit is unknown. Add the original investment amount and date in Tracker for a purchase-based comparison.')}</p>}
    {demo&&<p className="comparison-note">{t("Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.")}</p>}
    <div className="comparison-legend" aria-busy={comparisonsLoading}>{comparisonsLoading&&<span role="status" className="flex items-center gap-2 muted"><Spinner aria-hidden="true"/>{t('Loading comparisons…')}</span>}{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={item.key==='actual'||!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div>
    {ready&&visibleSeries.filter(item=>item.key!=='actual').map(item=>{const reason=ready.errors[item.key]??ready.errors.fx??(overviewResult?.unavailable.includes(item.key)?'Price data, exchange rates or funds needed for a matching withdrawal are unavailable.':null);return reason?<p key={item.key} className="comparison-note">{item.label}: {t(reason)}</p>:null;})}

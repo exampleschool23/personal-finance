@@ -1972,9 +1972,10 @@
   "Illustrative sample prices and exchange rates.": "Примерные цены и валютные курсы для демоверсии.",
   "Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.": "Примерный портфель сравнивается с реальной историей цен BTC и SPY. SPY отслеживает S&P 500; для вкладов используются условные годовые ставки.",
   "Some holdings have no recorded history yet.": "Для некоторых активов и долгов история ещё не записана.",
-  "Benchmarks invest the opening net worth once at the start of the selected period, with no later contributions or withdrawals.": "Ориентиры инвестируют начальный собственный капитал один раз в начале выбранного периода, без последующих пополнений и снятий.",
+  "Benchmarks invest the same amounts on the same dates as your recorded investments, including later contributions and withdrawals. Changing the period only zooms the chart.": "Ориентиры инвестируют те же суммы в те же даты, что и ваши записанные инвестиции, включая последующие пополнения и снятия. Выбор периода меняет только видимый участок графика.",
   "Country / region (optional)": "Страна / регион (необязательно)",
   "Not selected": "Не выбрано",
   "Choose a language, at least one currency, a valid country, and a name of up to 80 characters.": "Выберите язык, хотя бы одну валюту, допустимую страну и имя длиной до 80 символов.",
-  "Select your country": "Выберите свою страну"
+  "Select your country": "Выберите свою страну",
+  "Investment amounts are converted using current exchange rates.": "Суммы инвестиций пересчитываются по текущим обменным курсам."
 }

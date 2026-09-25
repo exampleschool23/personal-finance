@@ -89,3 +89,23 @@ test('net worth includes cash and subtracts the remaining mortgage, not cumulati
  ]);
  assert.equal(result.missing, 0);
 });
+
+test('new zero-opening holdings preserve older portfolio history without inventing positive balances',()=>{
+ const today='2026-09-25';
+ const cash=record('cash','Cash');
+ const additions=[{...record('business','Business'),date:today},{...record('stock','Stock'),opened_on:today},{...record('settlement','Cash'),opened_on:today}];
+ const baselines=additions.map(row=>({...event(row.id,today,0),event_type:'baseline',created_at:today+'T09:00:00Z'}));
+ const old=[event('cash','2020-01-01',1000),event('cash','2021-01-01',2000)];
+ const updates=[{...event('cash',today,500),created_at:today+'T10:00:00Z'},{...event('business',today,1000),created_at:today+'T10:00:00Z'},{...event('stock',today,500),created_at:today+'T10:00:00Z'}];
+ const result=portfolioHistory([cash,...additions],[...old,...baselines,...updates],'USD',undefined,today);
+ assert.deepEqual(result.points.map(point=>[point.date,point.net]),[['2020-01-01',1000],['2021-01-01',2000],[today,2000]]);
+ assert.equal(result.missing,0);
+ for(const changed of [{...baselines[1],balance:100},{...baselines[1],event_type:'valuation'}]){
+  const uncertain=portfolioHistory([cash,additions[1]],[...old,changed],'USD',undefined,today);
+  assert.deepEqual(uncertain.points.map(point=>point.date),[today]);
+ }
+ const unknown=portfolioHistory([cash,record('stock','Stock')],[...old,baselines[1]],'USD',undefined,today);
+ assert.deepEqual(unknown.points.map(point=>point.date),[today]);
+ const earlierIncome={...event('stock','2019-01-01',null),event_type:'income',amount:10};
+ assert.deepEqual(portfolioHistory([cash,additions[1]],[...old,earlierIncome,baselines[1]],'USD',undefined,today).points.map(point=>point.date),[today]);
+});
