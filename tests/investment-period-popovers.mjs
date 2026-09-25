@@ -10,7 +10,7 @@ test('summary opens only one popup and ignores delayed closes from the previous 
   '@/components/ui/popover':{},
   '@/lib/investment-period':{investmentPeriodTotals:()=>({invested:100,expenses:20,income:30,missing:[]})},
  });
- const render=()=>InvestmentPeriodSummary({input:{currency:'USD'},start:'2026-09-01'}).props.children[0].props.children;
+ const render=()=>InvestmentPeriodSummary({input:{currency:'USD'},start:'2026-09-01'}).props.children[0].props.children.flat().filter(Boolean);
  const initial=render();
  assert.deepEqual(initial.map(item=>item.props.open),[false,false,false]);
  initial[1].props.onOpenChange(true);
