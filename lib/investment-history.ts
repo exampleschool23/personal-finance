@@ -25,6 +25,7 @@ export function historyUpdateTypes(kind:string):HistoryUpdateType[] {
 }
 export function historyEventLabel(kind:string,type:HistoryEvent['event_type']):string {
  if(isLendingKind(kind)){
+  if(type==='valuation'&&kind==='Mortgage')return 'Balance update';
   if(type==='valuation')return 'Balance correction';
   if(type==='contribution')return kind==='Money lent'?'Lend more':kind==='Debt'?'Add to debt':'Additional borrowing';
   if(type==='withdrawal')return kind==='Money lent'?'Repayment received':'Repayment made';

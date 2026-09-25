@@ -81,3 +81,9 @@ test('typed tracker SQL computes principal, rejects invalid actions, and preserv
   assert.equal((await db.query('SELECT * FROM investment_history')).rows.length,0);
  }finally{await db.close();}
 });
+
+test('automatic mortgage snapshots are balance updates, not manual corrections',()=>{
+ assert.equal(historyEventLabel('Mortgage','valuation'),'Balance update');
+ assert.equal(historyEventLabel('Mortgage','mortgage_payment'),'Mortgage payment');
+ assert.equal(historyEventLabel('Loan','valuation'),'Balance correction');
+});

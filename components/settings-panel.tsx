@@ -1,10 +1,10 @@
 "use client";
+import { showSaved } from '@/lib/save-feedback';
 import { useUnsavedNavigation } from '@/components/discard-changes';
 import { LoadingPlaceholder } from '@/components/loading-placeholder';
 import { useState } from 'react';
-import { toast } from 'sonner';
+
 import { countryOptions } from '@/lib/countries';
-import { translate } from '@/lib/i18n';
 import { Globe2, Search } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
@@ -27,7 +27,7 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
     try {
       let next = { ...draft, display_name: (draft.display_name ?? '').trim() };
       if (!demo) { const response = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) }); if (!response.ok) { const data = await response.json() as { error: string }; throw Error(data.error); } next = await response.json() as typeof next; }
-      onSaved(next); setDraft(next); setSaved(next); toast.success(translate(next.language, demo ? 'Saved for this demo session.' : 'Settings saved.'), { id: 'settings-saved' });
+      onSaved(next); setDraft(next); setSaved(next); showSaved(next.language);
     } catch (error) { setMessage((error as Error).message); }
     finally { setBusy(false); }
   }

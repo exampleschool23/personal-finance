@@ -15,11 +15,31 @@ function group(entry:Entry,investment=false):IncomeGroup {
  if(entry.kind==='Deposit'||entry.kind==='Money lent')return 'interest';
  return 'other';
 }
+// Receipts are personal cash amounts. Do not apply ownership a second time or
+// turn schedules, transfers, opening balances and returned principal into income.
+export function receivedIncome(records:Entry[],events:HistoryEvent[],incomeRecords:Entry[],today:string) {
+ const byId=new Map(records.map(record=>[record.id,record]));
+ const eventIds=new Set<string>(),seen=new Set<string>();
+ const receipts:Array<{id:string;date:string;amount:number;currency:string;group:IncomeGroup;name:string}>=[];
+ for(const event of events){
+  if(event.event_type!=='income'||eventIds.has(event.id)||event.occurred_on>today)continue;
+  const record=byId.get(event.record_id);if(!record)continue;
+  eventIds.add(event.id);
+  receipts.push({id:event.id,date:event.occurred_on,amount:Number(event.amount),currency:record.currency,group:group(record,true),name:record.name});
+ }
+ for(const entry of incomeRecords){
+  if(seen.has(entry.id)||!income.includes(entry.kind)||entry.frequency!=='Once'||entry.date>today)continue;
+  seen.add(entry.id);
+  if(entry.history_event_id&&eventIds.has(entry.history_event_id))continue;
+  receipts.push({id:entry.id,date:entry.date,amount:Number(entry.amount),currency:entry.currency,group:group(entry),name:entry.name});
+ }
+ return receipts.sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
+}
 export function incomeHistory(records:Entry[],events:HistoryEvent[],incomeRecords:Entry[],currency:string,rates:number|Record<string,number>|undefined,today:string,months=6){
  const end=today.slice(0,7), startDate=new Date(end+'-01T00:00:00Z');startDate.setUTCMonth(startDate.getUTCMonth()-months+1);
  const points:IncomePoint[]=[];
  for(let index=0;index<months;index++){const date=new Date(startDate);date.setUTCMonth(date.getUTCMonth()+index);points.push({month:date.toISOString().slice(0,7),...blank(),estimate:null});}
- const byMonth=new Map(points.map(point=>[point.month,point])),byId=new Map(records.map(record=>[record.id,record]));
+ const byMonth=new Map(points.map(point=>[point.month,point]));
  let missing=0;
  const recordedMonths=new Set<string>();
  const add=(date:string,amount:number,unit:string,kind:IncomeGroup)=>{
@@ -28,17 +48,7 @@ export function incomeHistory(records:Entry[],events:HistoryEvent[],incomeRecord
   const converted=convertAmount(Number(amount),unit,currency,rates);
   if(converted===null||!Number.isFinite(converted)){missing++;return;}point[kind]+=converted;
  };
- const eventIds=new Set<string>();
- for(const event of events){
-  if(event.event_type!=='income'||eventIds.has(event.id))continue;
-  const record=byId.get(event.record_id);if(!record)continue;
-  eventIds.add(event.id);add(event.occurred_on,event.amount,record.currency,group(record,true));
- }
- const seen=new Set<string>();
- for(const entry of incomeRecords){
-  if(seen.has(entry.id)||!income.includes(entry.kind))continue;seen.add(entry.id);
-  if(entry.frequency==='Once'&&!(entry.history_event_id&&eventIds.has(entry.history_event_id)))add(entry.date,entry.amount,entry.currency,group(entry));
- }
+ for(const receipt of receivedIncome(records,events,incomeRecords,today))add(receipt.date,receipt.amount,receipt.currency,receipt.group);
  const estimateForMonth=(month:string)=>{
   let estimateMissing=0;
   const expected=blank();

@@ -1,4 +1,5 @@
 "use client";
+import { showSaved } from '@/lib/save-feedback';
 import { useOwnerResource } from './use-owner-resource';
 import { useCallback } from 'react';
 import { emptyPlanning,type Category } from '@/lib/planning';
@@ -18,6 +19,7 @@ export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:
    if(typeof id==='string'&&typeof target_id==='string'&&typeof date==='string')resource.update(data=>({...data,occurrences:[...data.occurrences.filter(item=>item.record_id!==target_id||item.due_on!==date),{id,record_id:target_id,due_on:date,status:action==='occurrence'?'paid':'dismissed'}]}));
   }
   if(action==='category'){const category=payload as Category;resource.update(data=>({...data,categories:[...data.categories.filter(item=>item.id!==category.id),category]}));}
+  showSaved();
   onSaved();
  },[demo,onSaved,resource]);
  return {data:demo?{...emptyPlanning,records:rows,holdingAccounts}:{...resource.data,records:resource.data.records.map(normalizeEntry)},loading:resource.initialLoading,refreshing:resource.loading,error:resource.error,save};

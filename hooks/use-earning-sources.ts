@@ -1,4 +1,5 @@
 "use client";
+import { showSaved } from '@/lib/save-feedback';
 import { refreshRead } from '@/lib/refresh-read';
 import { useEffect,useRef,useState } from 'react';
 import { earningSourceSchema,type EarningSource } from '@/lib/earning-sources';
@@ -32,7 +33,7 @@ export function useEarningSources(user:string|null,demo:boolean,revision:number,
    const body=await response.json() as EarningSource & {error:string};if(!response.ok)throw Error(body.error);body.amount=body.amount===null?null:Number(body.amount);
    if(current.current===scope){setState(previous=>({owner:scope,sources:[...(previous.owner===scope?previous.sources:[]).filter(row=>row.id!==body.id),body],error:''}));setRetry(value=>value+1);}
   }
-  if(current.current===scope)onSaved();
+  if(current.current===scope){showSaved();onSaved();}
  }
  return {sources,loading:!!owner&&!demo&&state.owner!==owner,error:state.owner===owner?state.error:'',retry:()=>setRetry(value=>value+1),save};
 }

@@ -61,7 +61,7 @@ export function firstCompleteDate(records: Entry[], events: HistoryEvent[]) {
  const first = holdings.map(record => events.filter(event => event.record_id === record.id && event.balance !== null).map(event => event.occurred_on).sort()[0]);
  return first.length && first.every(Boolean) ? first.sort().at(-1)! : null;
 }
-function priceAt(prices: PricePoint[], date: string, currency: string, fx: FxPoint[]) {
+export function benchmarkUnitPrice(prices: PricePoint[], date: string, currency: string, fx: FxPoint[]) {
  const quote = latestOn(prices,date);
  // Weekend/holiday closes may carry forward briefly; do not hide long feed gaps.
  if (!quote || !Number.isFinite(quote.close) || quote.close<=0 || dateMillis(date) - dateMillis(quote.date) > 7 * dayMillis) return null;
@@ -83,7 +83,7 @@ export function compareInvestments(starting: number, flows: CashFlow[], actual: 
  const units = new Map<string,number | null>();
  const unavailable = new Set<string>();
  for (const key of keys) {
-  const price = priceAt(prices[key],data.start,currency,data.fx);
+  const price = benchmarkUnitPrice(prices[key],data.start,currency,data.fx);
   units.set(key,starting===0?0:price && starting >= 0 ? starting / price : null);
   if (units.get(key) === null) unavailable.add(key);
  }
@@ -99,7 +99,7 @@ export function compareInvestments(starting: number, flows: CashFlow[], actual: 
   contributed += flow;
   const point: ComparisonPoint = {date,actual:latestOn(actual,date)?.amount ?? null,contributed};
   for (const key of keys) {
-   const price = priceAt(prices[key],date,currency,data.fx);
+   const price = benchmarkUnitPrice(prices[key],date,currency,data.fx);
    let holding = units.get(key) ?? null;
    // Missing valuation quotes do not destroy known units. A missing trade
    // price does: we cannot reconstruct the purchase/withdrawal later.

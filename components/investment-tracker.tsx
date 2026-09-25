@@ -1,4 +1,5 @@
 "use client";
+import { showSaved } from '@/lib/save-feedback';
 import { useDraftDialog } from '@/components/discard-changes';
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
 import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
@@ -52,7 +53,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
   const response=await fetch('/api/asset-movements',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   const result=await response.json() as {error?:string};
   if(!response.ok)throw Object.assign(Error(result.error),{confirmedFailure:response.status<500});
-  onSaved();onClose();
+  showSaved();onSaved();onClose();
  }
  const eventLabel=(type:HistoryEvent['event_type'])=>historyEventLabel(record.kind,type);
  const money=(n:number)=>formatMoney(n,record.currency,locale);
@@ -84,7 +85,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
    setDraft(payload);
    const response=await fetch(payload.exchange_rate!==undefined?'/api/investment-history/exchange':'/api/investment-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
    const result=await response.json() as {error?:string};if(!response.ok){if(response.status>=400&&response.status<500){setSubmitted(false);if(crossCurrency)fx.retry();}throw Error(result.error);}
-   setDraft(makeDraft());setSubmitted(false);setLoading(true);setReload(n=>n+1);onSaved();if(inline)onClose();
+   showSaved();setDraft(makeDraft());setSubmitted(false);setLoading(true);setReload(n=>n+1);onSaved();if(inline)onClose();
   }catch(e){setError((e as Error).message);}finally{setBusy(false);}
  }
  const paymentFields=<div className="record-form">

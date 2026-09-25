@@ -47,7 +47,7 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
  const gain = investments.reduce((sum, entry) => sum + (entry.amount - entry.cost) * entry.quantity, 0);
  const allRecords = history?.records ?? [];
  const rates = market?.rates ?? market?.fx?.rate;
- const recorded = portfolioHistory(allRecords, history?.events ?? [], currency, rates, today);
+ const recorded = portfolioHistory(allRecords, history?.events ?? [], currency, rates, today, true);
  const portfolioValue = assetTotal - debt;
  const points = mergePortfolioPoints(recorded.points, [], {date:today,assets:assetTotal,debt,net:portfolioValue});
  const visible = portfolioWindow(points, range, today);
@@ -60,16 +60,16 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
    row.label='Principal repaid';
   }
  }
- const change = investmentValueChange(visible.map(point=>point.net));
+ const partialHistory = visible.some(point=>point.partial);
+ const change = partialHistory ? null : investmentValueChange(visible.map(point=>point.net));
  const loading = !demo && !history && !error;
+ const headline = <><div><span>{t('Net worth today')}</span><strong>{portfolioValue===null?'—':money(portfolioValue)}</strong><PartialTotal currencies={excludedCurrencies}/></div>{!loading && !error && change !== null && <div><span>{t('Change in selected period')}</span><strong className={change >= 0 ? 'positive' : 'negative'}>{money(change)}</strong></div>}</>;
  return <>
   <section className="panel portfolio-trend">
    <div className="panel-title"><div><h2>{t('Portfolio over time')}</h2></div><div className="portfolio-ranges" aria-label={t('History period')}>{[30, 90, 365, null].map(days => <Button key={String(days)} size="sm" variant={range === days ? 'default' : 'outline'} aria-pressed={range === days} onClick={() => setRange(days)}>{days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) })}</Button>)}</div></div>
-   <div className="portfolio-headline"><div><span>{t('Net worth today')}</span><strong>{portfolioValue===null?'—':money(portfolioValue)}</strong><PartialTotal currencies={excludedCurrencies}/></div>{!loading && !error && change !== null && <div><span>{t('Change in selected period')}</span><strong className={change >= 0 ? 'positive' : 'negative'}>{money(change)}</strong></div>}</div>
+   {!loading&&!error?<InvestmentPeriodSummary input={{records:allRecords,events:history?.events??[],cashflows:history?.cashflows,market,currency,today}} start={range===null?'0000-01-01':shiftDay(today,-range)}>{headline}</InvestmentPeriodSummary>:<div className="portfolio-headline">{headline}</div>}
    {loading ? <LoadingPlaceholder label={t('Loading history…')}/> : error ? <p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}>{t('Retry')}</Button></p> : <>
-    <InvestmentPeriodSummary input={{records:allRecords,events:history?.events??[],cashflows:history?.cashflows,market,currency,today}} start={range===null?'0000-01-01':shiftDay(today,-range)}/>
-    <p className="comparison-note">{t('Includes cash, investments, property, businesses and debts. Only current holdings are included; recorded balances carry forward until updated. Your line carries saved valuations forward; today includes available market quotes.')}</p>
-    <InvestmentComparison history={history??{records:[],events:[]}} today={today} currency={currency} market={market} demo={demo} embedded={{days:range??0,points:visible,tooltip:<PortfolioTooltip valueKey="actual" showBalanceDifference valueLabel="NET WORTH" details={details} currency={currency} onOpenActivity={onOpenActivity}/>}}/>
+    <InvestmentComparison history={history??{records:[],events:[]}} today={today} currency={currency} market={market} demo={demo} embedded={{openingNetWorth:recorded.points[0]?{date:recorded.points[0].date,amount:recorded.points[0].net}:undefined,days:range??0,points:visible,tooltip:<PortfolioTooltip valueKey="actual" showBalanceDifference={!partialHistory} valueLabel="NET WORTH" details={details} currency={currency} onOpenActivity={onOpenActivity}/>}}/>
     {recorded.missing > 0 && <p className="muted">{t('Some holdings have no recorded history yet.')}</p>}
     {excludedCurrencies.length > 0 && <p className="muted">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
    </>}

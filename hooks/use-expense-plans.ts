@@ -1,4 +1,5 @@
 "use client";
+import { showSaved } from '@/lib/save-feedback';
 import { refreshRead } from '@/lib/refresh-read';
 import { useEffect, useState, useRef } from 'react';
 import type { Entry } from '@/lib/finance';
@@ -33,6 +34,7 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
    const response=await fetch('/api/expense-plans',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...plan,amount:plan.amount||plan.base_amount,month:month<plan.start_date.slice(0,7)?plan.start_date.slice(0,7):month})});
    const result=await response.json() as {error?:string};if(!response.ok)throw Error(result.error);
   }
+  showSaved();
   onSaved();
  }
  function restoreDemo(plan:ExpensePlan) {

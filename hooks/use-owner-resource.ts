@@ -1,4 +1,5 @@
 "use client";
+import { showSaved } from '@/lib/save-feedback';
 import { useEffect,useRef,useState } from 'react';
 import { refreshRead } from '@/lib/refresh-read';
 
@@ -31,4 +32,4 @@ export function useOwnerResource<T>(url:string,owner:string|null,enabled:boolean
   invalidate:()=>{if(current.current===scope){request.current?.abort();setRetry(count=>count+1);}},
  };
 }
-export async function saveOwnerResource(url:string,action:string,data:unknown){const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,data})});const result=await response.json() as {error?:string};if(!response.ok)throw Object.assign(Error(result.error??'Could not save changes.'),{confirmedFailure:response.status<500});return result;}
+export async function saveOwnerResource(url:string,action:string,data:unknown){const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,data})});const result=await response.json() as {error?:string};if(!response.ok)throw Object.assign(Error(result.error??'Could not save changes.'),{confirmedFailure:response.status<500});showSaved();return result;}

@@ -1,4 +1,5 @@
 "use client";
+import { showSaved } from '@/lib/save-feedback';
 import { refreshRead } from '@/lib/refresh-read';
 import { useEffect, useRef, useState } from 'react';
 import { emptyTransactionTools, type TransactionTools, type TransactionSplit, type ForecastAssignment } from '@/lib/transaction-tools';
@@ -24,9 +25,9 @@ export function useTransactionTools(user:string|null,demo:boolean,revision:numbe
   });
  }
  async function save(action:string,data:unknown){
-  if(demo){applyChange(action,data);return;}
+  if(demo){applyChange(action,data);showSaved();return;}
   const response=await fetch('/api/transaction-tools',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,data})});
-  const result=await response.json() as {error?:string};if(!response.ok)throw Error(result.error);request.current?.abort();applyChange(action,data);setRetry(value=>value+1);onSaved();
+  const result=await response.json() as {error?:string};if(!response.ok)throw Error(result.error);request.current?.abort();applyChange(action,data);setRetry(value=>value+1);showSaved();onSaved();
  }
  return {data:state.owner===(demo?'demo':user)?state.data:emptyTransactionTools,error:state.key===key?state.error:'',loading:!!user&&!demo&&state.owner!==user,save,retry:()=>setRetry(value=>value+1)};
 }

@@ -7,7 +7,7 @@ import { liabilities, value, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import { convertAmount, marketEntry, type MarketData } from './market';
 
-export type InvestmentPortfolioInput={records:Entry[];events:HistoryEvent[];cashflows?:Entry[];market:MarketData|null;currency:string;today:string};
+export type InvestmentPortfolioInput={openingNetWorth?:{date:string;amount:number};records:Entry[];events:HistoryEvent[];cashflows?:Entry[];market:MarketData|null;currency:string;today:string};
 // Application use case: one valuation policy for every view of the user's
 // portfolio. Benchmark price simulation is deliberately a separate operation.
 export function getInvestmentPortfolio({records,events,cashflows=[],market,currency,today}:InvestmentPortfolioInput){

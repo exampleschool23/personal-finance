@@ -8,7 +8,7 @@ import { historyChartDate } from '@/lib/investment-history';
 
 type Series={key:string;label:string;color:string;dash?:string;primary?:boolean};
 type Point={date:string;[key:string]:string|number|null};
-export function InvestmentValueChart({points,series,currency,tooltip,height=310,label='Investment value'}:{points:Point[];series:Series[];currency:string;tooltip?:ReactElement;height?:number;label?:string}){
+export function InvestmentValueChart({points,series,currency,tooltip,onPointSelect,height=310,label='Investment value'}:{points:Point[];series:Series[];currency:string;tooltip?:ReactElement;onPointSelect?:(date:string)=>void;height?:number;label?:string}){
  const {locale,t}=useLanguage(),id=useId();
  const mobile=useIsMobile();
  const data=points.map(point=>({...point,timestamp:Date.parse(point.date+'T00:00:00Z')}));
@@ -19,7 +19,12 @@ export function InvestmentValueChart({points,series,currency,tooltip,height=310,
  const padding=Math.max((max-min)*.15,Math.abs(max)*.001,1);
  const domain:[number,number]=[Math.floor(min-padding),Math.ceil(max+padding)];
  const money=(amount:number)=>formatMoney(amount,currency,locale);
- return <div className="portfolio-chart" aria-label={t(label)}><ResponsiveContainer width="100%" height={height}><ComposedChart data={data} accessibilityLayer margin={{top:15,right:15,left:5,bottom:20}}>
+ return <div className="portfolio-chart" aria-label={t(label)}><ResponsiveContainer width="100%" height={height}><ComposedChart data={data} accessibilityLayer onClick={state=>{
+   const index=state.activeTooltipIndex;
+   if(index===undefined||index===null||index==='')return;
+   const point=data[Number(index)];
+   if(point&&series.length)onPointSelect?.(point.date);
+  }} margin={{top:15,right:15,left:5,bottom:20}}>
   <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity={.18}/><stop offset="100%" stopColor="var(--primary)" stopOpacity={.01}/></linearGradient></defs>
   <CartesianGrid stroke="var(--border)" strokeOpacity={.6} strokeDasharray="2 6" vertical={false}/>
   <XAxis dataKey="timestamp" type="number" scale="time" domain={first===undefined?['dataMin','dataMax']:[first,single?first+86400000:last!]} ticks={single?[first!]:undefined} tickFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} minTickGap={80} axisLine={false} tickLine={false} tickMargin={14}/>

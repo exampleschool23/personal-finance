@@ -2,9 +2,9 @@ import { assets, liabilities, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import { convertAmount } from './market';
 
-export type PortfolioPoint = { date: string; assets: number; debt: number; net: number };
+export type PortfolioPoint = { date: string; assets: number; debt: number; net: number; partial?: boolean };
 // Require known balances; an explicit zero opening contributes nothing before it opens.
-export function portfolioHistory(records: Entry[], events: HistoryEvent[], currency: string, rates: number | Record<string, number> | undefined, today: string) {
+export function portfolioHistory(records: Entry[], events: HistoryEvent[], currency: string, rates: number | Record<string, number> | undefined, today: string, includePartial = false) {
  const eligible = records.filter(record => assets.includes(record.kind) || liabilities.includes(record.kind));
  const included = eligible.filter(record => convertAmount(1, record.currency, currency, rates) !== null);
  const byId = new Map(included.map(record => [record.id, record]));
@@ -28,13 +28,13 @@ export function portfolioHistory(records: Entry[], events: HistoryEvent[], curre
   const balance = convertAmount(Number(event.balance) * Number(event.ownership_percentage) / 100, record.currency, currency, rates);
   if (balance === null || !Number.isFinite(balance)) continue;
   balances.set(record.id, balance);
-  if (balances.size !== included.length) continue;
+  if (!includePartial && balances.size !== included.length) continue;
   let assetTotal = 0, debt = 0;
   for (const [id, amount] of balances) {
    if (assets.includes(byId.get(id)!.kind)) assetTotal += amount;
    else debt += amount;
   }
-  days.set(event.occurred_on, { date: event.occurred_on, assets: assetTotal, debt, net: assetTotal - debt });
+  days.set(event.occurred_on, { date: event.occurred_on, assets: assetTotal, debt, net: assetTotal - debt, ...(balances.size !== included.length ? {partial:true} : {}) });
  }
  return { points: [...days.values()], missing: included.length - balances.size, excluded: eligible.length - included.length };
 }

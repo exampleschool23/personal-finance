@@ -109,3 +109,13 @@ test('new zero-opening holdings preserve older portfolio history without inventi
  const earlierIncome={...event('stock','2019-01-01',null),event_type:'income',amount:10};
  assert.deepEqual(portfolioHistory([cash,additions[1]],[...old,earlierIncome,baselines[1]],'USD',undefined,today).points.map(point=>point.date),[today]);
 });
+
+test('partial-history view retains older observations after a positive new opening and flags incomplete coverage',()=>{
+ const rows=[record('cash','Cash'),{...record('new','Cash'),opened_on:'2026-09-25'}];
+ const events=[event('cash','2020-01-01',1000),event('cash','2021-01-01',2000),{...event('new','2026-09-25',50000),event_type:'baseline'}];
+ const result=portfolioHistory(rows,events,'USD',undefined,'2026-09-25',true);
+ assert.deepEqual(result.points.map(p=>[p.date,p.net,!!p.partial]),[['2020-01-01',1000,true],['2021-01-01',2000,true],['2026-09-25',52000,false]]);
+ assert.equal(result.missing,0);
+ assert.equal(portfolioWindow(result.points,30,'2026-09-25')[0].partial,true);
+ assert.deepEqual(portfolioHistory(rows,events,'USD',undefined,'2026-09-25').points,result.points.slice(-1));
+});

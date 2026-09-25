@@ -305,7 +305,8 @@ body{margin:0;background:var(--background);color:var(--foreground);font-family:A
 .expense-plans { margin: 24px 0; }
 .expense-plans > .muted { margin: 12px 0; }
 .expense-plans .table-scroll { margin-top: 20px; }
-.expense-plans td { vertical-align: middle; }
+.expense-plans td { vertical-align: middle; padding-top: 12px; padding-bottom: 12px; }
+.expense-plan-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .expense-plan-name { display: flex; align-items: flex-start; flex-direction: column; gap: 6px; min-width: 170px; }
 .expense-plans-empty { padding: 24px 0; color: var(--muted-foreground); }
 @media (max-width: 640px) {
@@ -1542,9 +1543,10 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .portfolio-tooltip-note{font-size:11px;line-height:1.6;color:var(--muted-foreground);margin:14px 0}
 .portfolio-tooltip-note strong{color:var(--foreground);white-space:nowrap}
 
-/* Pointer selection should not draw a frame around the portfolio chart. */
-.portfolio-chart .recharts-surface:focus:not(:focus-visible){outline:none}
-.portfolio-chart .recharts-surface:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px}
+/* Chart surfaces and plotted layers are not selectable boxes. Keep Recharts'
+   keyboard navigation, but omit browser focus frames around the SVG artwork. */
+.recharts-wrapper:focus,
+.recharts-wrapper :is(svg,g,path,rect):focus{outline:none}
 .portfolio-tooltip button.portfolio-tooltip-row{width:100%;text-align:left;border:0;background:transparent;color:inherit;padding:8px 6px;border-radius:8px;cursor:pointer}
 .portfolio-tooltip button.portfolio-tooltip-row:hover{background:var(--muted)}
 .portfolio-tooltip button.portfolio-tooltip-row:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
@@ -1688,3 +1690,50 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .profile-settings-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
 .profile-settings-header>button{flex-shrink:0}
 .workspace .content .profile-settings-header>h2{margin:0}
+
+/* Save confirmations share Sonner's top entrance/exit and swipe dismissal. */
+[data-sonner-toaster] [data-sonner-toast].save-confirmation {
+  width: max-content;
+  max-width: 100%;
+  min-width: 160px;
+  left: 50%;
+  margin-left: 0;
+  translate: -50% 0;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 18px;
+  border-color: color-mix(in srgb, var(--primary) 24%, var(--border));
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 12px 36px rgb(0 0 0 / 14%);
+  transition: transform 420ms cubic-bezier(.22, 1, .36, 1), opacity 260ms ease, height 260ms ease;
+}
+[data-sonner-toast].save-confirmation [data-title] { font-size: 14px; font-weight: 600; }
+[data-sonner-toast].save-confirmation [data-icon] {
+  color: var(--primary);
+  animation: saved-check-in 420ms cubic-bezier(.22, 1, .36, 1) both;
+}
+@keyframes saved-check-in {
+  from { opacity: 0; scale: .6; }
+  to { opacity: 1; scale: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toaster] [data-sonner-toast].save-confirmation { transition: none; }
+  [data-sonner-toast].save-confirmation [data-icon] { animation: none; }
+}
+
+/* Budget use belongs to its plan row, with the exact percentage above the line. */
+.expense-plan-usage { width: 140px; margin: 0; }
+.expense-plan-usage-label { display: flex; align-items: baseline; justify-content: flex-end; gap: 16px; font-size: 12px; color: var(--muted-foreground); margin-bottom: 6px; }
+.expense-plan-usage-label strong { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--foreground); }
+.expense-plan-usage-label strong.negative { color: var(--destructive); }
+.expense-plan-usage-track { height: 6px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.expense-plan-usage-fill { display: block; height: 100%; border-radius: inherit; }
+
+.chart-point-details{max-height:85dvh;overflow-y:auto;overscroll-behavior:contain}
+.chart-point-details .portfolio-tooltip{width:100%;max-width:none;box-shadow:none}
+.chart-point-details .portfolio-tooltip-body{max-height:none;overflow:visible}
+
+.benchmark-tooltip header>.portfolio-tooltip-row{grid-column:1 / -1;width:100%;flex-wrap:wrap}
+.benchmark-tooltip header>.portfolio-tooltip-row>div{min-width:120px}
+.benchmark-tooltip header>.portfolio-tooltip-row strong{overflow-wrap:normal;word-break:normal}
