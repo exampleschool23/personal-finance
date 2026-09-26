@@ -1950,3 +1950,27 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
  .topbar .preferences .language-selector{padding-inline:8px}
  .page-heading [data-slot=button]{white-space:nowrap}
 }
+
+/* Layouts that sit beside the sidebar respond to the space they actually get. */
+.topbar{container:topbar/inline-size}
+@media(min-width:641px){@container topbar (max-width:820px){
+ /* The page title repeats the location; drop the breadcrumb instead of truncating it. */
+ .topbar>div:first-child>:is(span,svg){display:none}
+}}
+@container content (max-width:900px){
+ .settings-layout .settings-navigation{grid-template-columns:minmax(0,1fr);gap:16px}
+ .settings-layout .settings-navigation-list{position:static;flex-direction:row;overflow-x:auto;scrollbar-width:none}
+ .settings-layout .settings-navigation-list button{white-space:nowrap;flex-shrink:0}
+ .portfolio-summary{grid-template-columns:minmax(0,1fr)}
+ .portfolio-summary-allocation{border-left:0;border-top:1px solid var(--border)}
+ .portfolio-summary-main,.portfolio-summary-allocation{padding:24px}
+}
+@container content (max-width:1000px){
+ /* Deleted-item details need the card width; actions move beneath them. */
+ .recovery-card>div{flex-basis:calc(100% - 60px)}
+ .recovery-card>.recovery-actions{flex-basis:100%;justify-content:flex-end}
+}
+@container content (max-width:640px){
+ .preferences-profile-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+ .settings-layout .preferences-card .preferences-setting-row{grid-template-columns:minmax(0,1fr);gap:6px}
+}
