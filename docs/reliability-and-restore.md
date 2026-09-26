@@ -142,3 +142,11 @@ for future aggregation if usage grows; no financial dataset is silently truncate
 
 Regression coverage exercises large reads across database batches, stale edits,
 retry behavior, rollback, owner isolation, backup precision, and demo reversals.
+
+## Undoing goals, lending updates and recorded payments (migration 071)
+
+Apply `071_undo_goals_lending_and_payments.sql` after 070. It rewrites no data.
+
+- **Savings goals** can be deleted from the goal dialog. The goal and its activity move to Recently deleted; money never moves. Restoring brings back the original activity (no extra opening entry) and requires the goal's cash account to still exist.
+- **Loans, debts and money lent**: the newest Tracker addition or repayment can be deleted, newest first. Its linked cash movement and the mirrored cash-account entry are reversed. When only the starting snapshot remains, the record itself can be deleted. Repayments recorded from Accounts (which also create activity and interest records) and mortgage payments stay protected.
+- **Recorded scheduled payments**: deleting the transaction created by "Record payment" reverses its cash and reopens the reminder. Restoring it from Recently deleted marks the reminder paid again, unless that due date was recorded or skipped again in the meantime.

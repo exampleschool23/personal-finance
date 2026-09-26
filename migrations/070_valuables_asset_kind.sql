@@ -14,6 +14,8 @@ CREATE FUNCTION pg_temp.patch_valuables(fn regprocedure,old_text text,new_text t
 DECLARE definition text:=pg_get_functiondef(fn); found integer;
 BEGIN
  found:=(length(definition)-length(replace(definition,old_text,'')))/length(old_text);
+ -- Re-running is a no-op once every expected match was already patched.
+ IF found=0 AND (length(definition)-length(replace(definition,new_text,'')))/length(new_text)=expected THEN RETURN; END IF;
  IF found<>expected THEN RAISE EXCEPTION 'Unexpected function definition: % (% of % matches)',fn,found,expected; END IF;
  EXECUTE replace(definition,old_text,new_text);
 END $$;

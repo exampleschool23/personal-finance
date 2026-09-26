@@ -2070,5 +2070,10 @@
   "Principal": "Principal",
   "Interest": "Interest",
   "e.g. Apartment mortgage": "e.g. Apartment mortgage",
-  "e.g. Car loan or credit card": "e.g. Car loan or credit card"
+  "e.g. Car loan or credit card": "e.g. Car loan or credit card",
+  "Delete goal": "Delete goal",
+  "The goal and its activity move to Recently deleted. Money stays in your accounts, and you can restore the goal later.": "The goal and its activity move to Recently deleted. Money stays in your accounts, and you can restore the goal later.",
+  "This repayment was recorded from Accounts and cannot be deleted here.": "This repayment was recorded from Accounts and cannot be deleted here.",
+  "Goal deletion needs the latest database update.": "Goal deletion needs the latest database update.",
+  "Could not delete the goal. Please try again.": "Could not delete the goal. Please try again."
 }

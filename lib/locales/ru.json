@@ -2070,5 +2070,10 @@
   "Principal": "Основной долг",
   "Interest": "Проценты",
   "e.g. Apartment mortgage": "например, ипотека на квартиру",
-  "e.g. Car loan or credit card": "например, автокредит или кредитная карта"
+  "e.g. Car loan or credit card": "например, автокредит или кредитная карта",
+  "Delete goal": "Удалить цель",
+  "The goal and its activity move to Recently deleted. Money stays in your accounts, and you can restore the goal later.": "Цель и её история будут перемещены в «Недавно удалённые». Деньги останутся на ваших счетах, а цель можно будет восстановить.",
+  "This repayment was recorded from Accounts and cannot be deleted here.": "Это погашение записано в разделе «Счета», и его нельзя удалить здесь.",
+  "Goal deletion needs the latest database update.": "Для удаления целей нужно последнее обновление базы данных.",
+  "Could not delete the goal. Please try again.": "Не удалось удалить цель. Попробуйте ещё раз."
 }

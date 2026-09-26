@@ -33,7 +33,7 @@ export async function POST(req:Request){
  }catch{return Response.json({error:'Update could not be confirmed. Retry with the same details.'},{status:503});}
 }
 
-const deleteErrors=['Tracker update not found.','This history entry cannot be deleted here.','Delete newer balance updates first.','Keep the starting snapshot.','Linked cash account is unavailable or its currency changed.','The cash reversal would create an invalid balance.'];
+const deleteErrors=['Tracker update not found.','This history entry cannot be deleted here.','Delete newer balance updates first.','Keep the starting snapshot.','Linked cash account is unavailable or its currency changed.','The cash reversal would create an invalid balance.','This repayment was recorded from Accounts and cannot be deleted here.'];
 export async function DELETE(req:Request){
  if(!sameOrigin(req))return new Response(null,{status:403});
  try{

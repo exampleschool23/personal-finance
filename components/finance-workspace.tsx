@@ -393,6 +393,8 @@ function WorkspaceContent() {
     }
     function restoreDemoItem(item:DeletedItem) {
         if(item.source==='expense_plans')expensePlans.restoreDemo(item.data);
+        // Demo goals cannot be deleted, so they never reach Recently deleted.
+        else if(item.source==='savings_goals')return;
         else {
             const entry=item.data;
             if(entry.business_id&&!rows.some(row=>row.id===entry.business_id&&row.kind==='Business'))throw Error('Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.');

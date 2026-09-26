@@ -1928,3 +1928,4 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
  .entry-actions:has(.cashflow-action) :is(.cashflow-reporting,.date-picker-trigger){grid-column:1/-1;width:100%}
  .workspace .content .entry-actions .cashflow-action{white-space:nowrap;height:44px;min-height:44px}
 }
+.recovery-detail{font-size:var(--type-small);color:var(--foreground);font-weight:600;margin-top:2px}

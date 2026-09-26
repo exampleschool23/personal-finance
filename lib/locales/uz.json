@@ -2070,5 +2070,10 @@
   "Principal": "Asosiy qarz",
   "Interest": "Foiz",
   "e.g. Apartment mortgage": "masalan, kvartira ipotekasi",
-  "e.g. Car loan or credit card": "masalan, avtokredit yoki kredit karta"
+  "e.g. Car loan or credit card": "masalan, avtokredit yoki kredit karta",
+  "Delete goal": "Maqsadni o‘chirish",
+  "The goal and its activity move to Recently deleted. Money stays in your accounts, and you can restore the goal later.": "Maqsad va uning tarixi «Yaqinda o‘chirilganlar»ga o‘tkaziladi. Pul hisoblaringizda qoladi va maqsadni keyinroq tiklash mumkin.",
+  "This repayment was recorded from Accounts and cannot be deleted here.": "Bu to‘lov «Hisoblar» bo‘limida qayd etilgan va uni bu yerda o‘chirib bo‘lmaydi.",
+  "Goal deletion needs the latest database update.": "Maqsadlarni o‘chirish uchun ma’lumotlar bazasining so‘nggi yangilanishi kerak.",
+  "Could not delete the goal. Please try again.": "Maqsadni o‘chirib bo‘lmadi. Qayta urinib ko‘ring."
 }

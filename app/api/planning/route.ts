@@ -19,6 +19,7 @@ const schemas={
  mortgage:base.refine(v=>!!v.target_id&&v.amount+v.fee>0&&v.received===0),
  occurrence:z.object({amount:z.number().finite().positive().max(1e15),exchange_rate:z.number().finite().positive().max(1e15).optional(),id,account_id:id,target_id:id,date,notes:notes}),
  dismiss:z.object({id,target_id:id,date}),
+ delete_goal:z.object({id}),
  category:z.object({id,name:z.string().trim().min(1).max(80),direction:z.enum(['income','expense'])}),
  goal:z.object({investment_targets:z.array(investmentTarget).max(50).optional(),id,name:z.string().trim().min(1).max(120),account_id:id.nullable(),kind:z.enum(['savings','net_worth','investment']).default('savings'),currency:fiatCurrency.optional(),target:amount.positive(),allocated:amount,target_date:date.nullable(),archived:z.boolean().default(false),monthly_contribution:amount.nullable().default(null),annual_return:z.number().finite().min(0).max(100).default(0),holding_account_id:id.nullable().default(null),asset_kind:z.enum(['Stock','Crypto']).nullable().default(null),asset_symbol:z.string().trim().max(15).nullable().default(null)}).transform(v=>v.kind==='investment'&&v.investment_targets?.length?{...v,...v.investment_targets[0]}:v).refine(v=>{
   if(v.investment_targets!==undefined){
@@ -53,6 +54,12 @@ export async function POST(req:Request){
  const body=await req.json() as {action:keyof typeof schemas;data:unknown};
  if(!Object.hasOwn(schemas,body.action))return Response.json({error:'Check the account fields.'},{status:400});
  const parsed=schemas[body.action].safeParse(body.data);if(!parsed.success)return Response.json({error:'Check the account fields.'},{status:400});
+ if(body.action==='delete_goal'){
+  // Moves the goal and its activity to Recently deleted; retries are harmless.
+  const response=await supa('/rest/v1/rpc/delete_savings_goal',{method:'POST',body:JSON.stringify({p_id:(parsed.data as {id:string}).id})},auth.token);
+  if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='PGRST202'?'Goal deletion needs the latest database update.':error.code==='P0001'?error.message:'Could not delete the goal. Please try again.'},{status:error.code==='PGRST202'?503:409});}
+  return Response.json({ok:true});
+ }
  if(body.action==='exception'&&'skip' in parsed.data){
   const response=await supa('/rest/v1/rpc/set_schedule_exception',{method:'POST',body:JSON.stringify({p_record:parsed.data.target_id,p_day:parsed.data.date,p_skip:parsed.data.skip})},auth.token);
   if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='P0001'?error.message:'Could not update the scheduled occurrence.'},{status:409});}
@@ -60,7 +67,7 @@ export async function POST(req:Request){
  }
  let paymentData=parsed.data;
  if(['occurrence','repayment','mortgage'].includes(body.action)&&'account_id' in parsed.data&&'target_id' in parsed.data){
-  const p=parsed.data as {id:string;account_id:string;target_id:string;date:string;exchange_rate?:number;amount?:number;fee?:number;notes?:string};
+  const p=parsed.data as unknown as {id:string;account_id:string;target_id:string;date:string;exchange_rate?:number;amount?:number;fee?:number;notes?:string};
   const response=await supa(`/rest/v1/finance_records?select=*&id=in.(${p.account_id},${p.target_id},${p.id})`,{},auth.token);
   if(!response.ok)return Response.json({error:'Could not load accounts or exchange history.'},{status:503});
   const records=await response.json() as Entry[];
