@@ -1,4 +1,5 @@
 "use client";
+import type { BenchmarkMovement } from '@/lib/investment-benchmarks';
 import { demoHistory } from '@/lib/demo-finance';
 import { InvestmentPeriodSummary } from '@/components/investment-period-summary';
 import { InvestmentComparison } from '@/components/investment-comparison';
@@ -21,7 +22,7 @@ import { portfolioHistory, portfolioWindow } from '@/lib/portfolio-history';
 import { type HistoryEvent } from '@/lib/investment-history';
 import { convertAmount, type MarketData } from '@/lib/market';
 
-type History = { records: Entry[]; events: HistoryEvent[]; cashflows?: Entry[]; incomeRecords?: Entry[] };
+type History = { movements?:BenchmarkMovement[]; records: Entry[]; events: HistoryEvent[]; cashflows?: Entry[]; incomeRecords?: Entry[] };
 export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecords, currency, market, demo, revision, onOpenActivity }: { demoRecords?: Entry[]; onOpenActivity?:(activity:PortfolioChange)=>void; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
  const { t, locale } = useLanguage();
  const [savedHistory, setHistory] = useState<History | null>(null);

@@ -26,8 +26,8 @@ export function investmentPeriodTotals(input:InvestmentPortfolioInput,start:stri
   }else if(event.event_type==='income')add('income',Number(event.amount),currency);
   else if(event.event_type==='expense')add('expenses',Number(event.amount),currency);
   else if(event.event_type==='contribution'){
-   const improvement=['Business','Property'].includes(record.kind);
-   if(improvement)context.category=record.kind==='Property'?'Rental improvements':'Business investment';
+   const improvement=['Business','Property','Valuables'].includes(record.kind);
+   if(improvement)context.category=record.kind==='Property'?'Rental improvements':record.kind==='Valuables'?'Valuables purchase':'Business investment';
    add('invested',Number(event.amount),currency);
   }
  }

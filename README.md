@@ -17,7 +17,7 @@ A private, multilingual personal-finance workspace built with React, Next.js and
 - Custom categories, preferences, light/dark themes, Google/email sign-in, optional verified signup, account recovery and password-confirmed account deletion.
 - Installable web-app shell with an offline explanation; financial data remains network-only.
 
-See [implementation status and remaining work](docs/roadmap-implementation.md). The current schema includes migrations through 059. Apply only unapplied migrations in order; live migration status is not inferred from repository files. See [record reliability and restoration](docs/reliability-and-restore.md) for the new upgrade and restore limits.
+See [implementation status and remaining work](docs/roadmap-implementation.md). The current schema includes migrations through 070. Apply only unapplied migrations in order; live migration status is not inferred from repository files. See [record reliability and restoration](docs/reliability-and-restore.md) for the new upgrade and restore limits.
 
 ## Local setup
 

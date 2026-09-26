@@ -22,3 +22,10 @@ test('BTC unit price uses the selected historical day, preserves quote decimals 
  const stale=renderToStaticMarkup(BenchmarkTooltip({...props,marketHistory:{...marketHistory,prices:{BTC:[{date:'2026-09-01',close:1}]}}}));
  assert.ok(stale.includes('BTC price (USD): —'));
 });
+test('expense funding rows are labeled by category and the note follows the funding scope',()=>{
+ const fundingDetails=[{id:'expense:watch',date:'2026-09-25',name:'Watch',amount:800,currency:'USD',reused:0,source:'expense',kind:'Other expense'},{id:'buy',date:'2026-09-25',name:'SPY shares',amount:500,currency:'USD',reused:0}];
+ const including=renderToStaticMarkup(BenchmarkTooltip({...props,fundingDetails,scope:'expenses'}));
+ for(const text of ['Watch','Expense funding · Other expense','$800','SPY shares','Fresh investment funding','every recorded expense'])assert.ok(including.includes(text),text);
+ const excluding=renderToStaticMarkup(BenchmarkTooltip({...props,fundingDetails:fundingDetails.slice(1)}));
+ assert.ok(excluding.includes('Interest, fees and living expenses are excluded.'));assert.ok(!excluding.includes('Expense funding'));
+});

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import {historyUpdateTypes,historyEventLabel,historySeries,trackedKinds} from '../lib/investment-history.ts';
 
 test('every tracked category offers appropriate actions with translated labels',()=>{
- const expected={Cash:['valuation'],Stock:['valuation','income','expense'],Crypto:['valuation','income','expense'],Deposit:['valuation','income','expense'],Property:['valuation','contribution','withdrawal','income','expense'],Business:['valuation','contribution','withdrawal','income','expense'],'Money lent':['contribution','withdrawal'],Mortgage:['contribution'],Loan:['contribution','withdrawal'],Debt:['contribution','withdrawal']};
+ const expected={Cash:['valuation'],Stock:['valuation','income','expense'],Crypto:['valuation','income','expense'],Deposit:['valuation','income','expense'],Property:['valuation','contribution','withdrawal','income','expense'],Business:['valuation','contribution','withdrawal','income','expense'],Valuables:['valuation','contribution','withdrawal','income','expense'],'Money lent':['contribution','withdrawal'],Mortgage:['contribution'],Loan:['contribution','withdrawal'],Debt:['contribution','withdrawal']};
  const dictionaries=['en','ru','uz'].map(lang=>JSON.parse(fs.readFileSync(`lib/locales/${lang}.json`,'utf8')));
  for(const kind of trackedKinds){
   assert.deepEqual(historyUpdateTypes(kind),expected[kind],kind);

@@ -57,3 +57,51 @@ test('rental receipt marks only its own property and leaves estimates unchanged'
  const cards=monthlyIncomeCards(rows,'2026-09',[{id:'source',linked_record_id:'home',schedule_id:'plan'}],'2026-09-18');
  assert.deepEqual(cards.map(card=>[card.entry.id,card.received,card.amount]),[['home',true,450],['other',false,400]]);
 });
+
+test('sample history displays September salary, never the all-time total', () => {
+ const rows=Array.from({length:81},(_,index)=>entry('receipt-'+index,'Salary',{
+  frequency:'Once',earning_source_id:'salary',name:'Sample salary USD',
+  date:new Date(Date.UTC(2020,index,25)).toISOString().slice(0,10),
+  amount:Math.round(5700*(.65+.35*(index+1)/81)),
+ }));
+ assert.equal(rows.reduce((sum,row)=>sum+row.amount,0),381900);
+ const before=structuredClone(rows);
+ const cards=monthlyIncomeCards(rows,'2026-09',[{id:'salary',mode:'variable'}],'2026-09-25');
+ assert.equal(cards.length,1);
+ assert.equal(cards[0].amount,5700);
+ assert.equal(cards[0].received,true);
+ assert.equal(cards[0].excluded,true);
+ assert.deepEqual(rows,before);
+ assert.deepEqual(monthlyIncomeCards([entry('summary','Salary',{frequency:'Once',date:'',amount:381900})],'2026-09'),[]);
+});
+
+test('monthly variable payments retain precision and distinct source identities', () => {
+ const rows=[
+  entry('first','Salary',{frequency:'Once',earning_source_id:'one',amount:100.125}),
+  entry('second','Salary',{frequency:'Once',earning_source_id:'one',amount:200.25,name:'Renamed'}),
+  entry('other','Salary',{frequency:'Once',earning_source_id:'two',amount:40}),
+  entry('bonus','Other income',{frequency:'Once',earning_source_id:'one',payment_type:'bonus',amount:15}),
+  entry('old','Salary',{frequency:'Once',earning_source_id:'one',amount:900000,date:'2026-08-31'}),
+  entry('next','Salary',{frequency:'Once',earning_source_id:'one',amount:900000,date:'2026-10-01'}),
+ ];
+ const cards=monthlyIncomeCards(rows,'2026-09',[],'2026-09-25');
+ assert.deepEqual(cards.map(card=>card.amount),[300.375,40,15]);
+ assert.ok(cards.every(card=>card.received));
+});
+
+test('linked payments without an asset estimate group within the month', () => {
+ const rows=[entry('one','Rent income',{frequency:'Once',income_source_id:'home',amount:100}),entry('two','Rent income',{frequency:'Once',income_source_id:'home',amount:200})];
+ assert.deepEqual(monthlyIncomeCards(rows,'2026-09').map(card=>card.amount),[300]);
+});
+
+test('receipts from another currency never mark an unconverted estimate as received', () => {
+ const cards=monthlyIncomeCards([entry('schedule','Salary'),entry('receipt','Salary',{frequency:'Once',currency:'UZS',earning_source_id:'source'})],'2026-09',[{id:'source',schedule_id:'schedule'}],'2026-09-25');
+ assert.equal(cards.length,2);
+ assert.equal(cards.find(card=>card.entry.id==='schedule').received,false);
+});
+
+test('receipt totals retain precision separately from estimates and exclude future and other-month payments',()=>{
+ const rows=[entry('schedule','Salary',{earning_source_id:'source'}),entry('a','Salary',{frequency:'Once',earning_source_id:'source',amount:12.345,date:'2026-09-01'}),entry('b','Salary',{frequency:'Once',earning_source_id:'source',amount:7.125,date:'2026-09-02'}),entry('future','Salary',{frequency:'Once',earning_source_id:'source',amount:100,date:'2026-09-30'}),entry('prior','Salary',{frequency:'Once',earning_source_id:'source',amount:200,date:'2026-08-01'})];
+ const cards=monthlyIncomeCards(rows,'2026-09',[{id:'source',schedule_id:'schedule'}],'2026-09-25');
+ assert.equal(cards.length,1);assert.equal(cards[0].amount,5700);assert.equal(cards[0].receivedAmount,19.47);
+});

@@ -80,7 +80,7 @@ test('benchmark presentation uses monetary values throughout and includes origin
  const source=fs.readFileSync('components/investment-comparison.tsx','utf8');
  assert.ok(source.includes('const points=result?.points??[]'));
  const chart=fs.readFileSync('components/investment-value-chart.tsx','utf8');
- assert.ok(chart.includes('tickFormatter={money}'));
+ assert.ok(chart.includes('tickFormatter={amount=>formatCompactMoney(Number(amount),currency,locale)}'));
  assert.ok(chart.includes('money(Number(amount))'));
  assert.ok(source.includes("t('Ahead / behind benchmark')"));
  assert.ok(source.includes('):start;'));

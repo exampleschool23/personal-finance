@@ -1,6 +1,6 @@
 import type { Entry } from '@/lib/finance';
 
-type AssetSymbol = 'home' | 'apartment' | 'cafe' | 'gaming' | 'solar' | 'livestock' | 'business' | 'cash' | 'stock' | 'crypto' | 'deposit';
+type AssetSymbol = 'home' | 'apartment' | 'cafe' | 'gaming' | 'solar' | 'livestock' | 'business' | 'cash' | 'stock' | 'crypto' | 'deposit' | 'watch' | 'gem';
 function assetSymbol(record: Pick<Entry, 'kind' | 'name'>): AssetSymbol {
  const name = record.name.toLowerCase();
  if (record.kind === 'Property') return /rent|apartment|аренд|квартир|ijara|kvartira|ижара/u.test(name) ? 'apartment' : 'home';
@@ -11,6 +11,7 @@ function assetSymbol(record: Pick<Entry, 'kind' | 'name'>): AssetSymbol {
   if (/caf[eé]|coffee|restaurant|kebab|кафе|кофе|ресторан|kabob/u.test(name)) return 'cafe';
   return 'business';
  }
+ if (record.kind === 'Valuables') return /watch|rolex|omega|час|soat|соат/u.test(name) ? 'watch' : 'gem';
  return ({ Cash: 'cash', Stock: 'stock', Crypto: 'crypto', Deposit: 'deposit' } as const)[record.kind as 'Cash' | 'Stock' | 'Crypto' | 'Deposit'] ?? 'business';
 }
 
@@ -30,6 +31,8 @@ export function AssetIcon({ record }: { record: Pick<Entry, 'kind' | 'name'> }) 
    {symbol === 'cash' && <><rect x="4" y="10" width="24" height="17" rx="3" fill="currentColor" fillOpacity=".12"/><path d="m7 10 15-6v6M28 16h-7v6h7M24 19h.01"/></>}
    {symbol === 'stock' && <><path d="M5 25V18h5v7m4 0V13h5v12m4 0V7h5v18" fill="currentColor" fillOpacity=".12" stroke="none"/><path d="M4 28h25M7 24v-5m9 5V14m9 10V9M5 13l8-6 6 2 8-6m-5 0h5v5"/></>}
    {symbol === 'crypto' && <><circle cx="16" cy="16" r="12" fill="currentColor" fillOpacity=".12"/><path d="M12 9h6a3.5 3.5 0 0 1 0 7h-6m0 0h7a3.5 3.5 0 0 1 0 7h-7V9M14 6v3m4-3v3m-4 14v3m4-3v3"/></>}
+   {symbol === 'watch' && <><circle cx="16" cy="16" r="8" fill="currentColor" fillOpacity=".12"/><circle cx="16" cy="16" r="8"/><path d="M12 8.9 13 3h6l1 5.9M12 23.1 13 29h6l1-5.9M16 12v4l2.5 2M24 16h1.5"/></>}
+   {symbol === 'gem' && <><path d="M9 5h14l5 7-12 15L4 12Z" fill="currentColor" fillOpacity=".12"/><path d="M4 12h24M13 5l-3 7 6 15 6-15-3-7"/></>}
    {symbol === 'deposit' && <><path d="m4 11 12-7 12 7v3H4Z" fill="currentColor" fillOpacity=".12"/><path d="M7 18v7m6-7v7m6-7v7m6-7v7M4 28h24M16 9h.01"/></>}
   </g>
  </svg>;

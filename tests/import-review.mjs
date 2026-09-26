@@ -27,3 +27,15 @@ test('import batches, owner preferences, undo and account deletion work across a
  await db.exec(`RESET ROLE;DELETE FROM auth.users WHERE id='${owner}';`);for(const table of ['finance_records','savings_goals','goal_events','goal_operations','workspace_preferences','import_batches','import_batch_items'])assert.equal((await db.query('SELECT * FROM '+table+' WHERE user_id=$1',[owner])).rows.length,0);
  }finally{await db.close();}
 });
+test('statement headers and delimiters are detected so common files need no manual mapping',async()=>{
+ const {guessColumnMapping,guessDelimiter,parseCSV,mapCSV}=await import('../lib/csv.ts');
+ const base={name:0,date:1,amount:2,notes:-1,sourceId:-1,dateFormat:'iso',decimal:'.'};
+ const text='Date,Description,Amount\n2024-02-10,Coffee machine,-150.00\n';
+ assert.equal(guessDelimiter(text),',');
+ const mapping=guessColumnMapping(parseCSV(text)[0],base);
+ assert.deepEqual({name:mapping.name,date:mapping.date,amount:mapping.amount},{name:1,date:0,amount:2});
+ assert.deepEqual(mapCSV(parseCSV(text),mapping).map(row=>[row.name,row.date,row.amount]),[['Coffee machine','2024-02-10',-150]]);
+ assert.equal(guessDelimiter('Дата;Описание;Сумма;Примечание;ID\n'),';');
+ assert.deepEqual(guessColumnMapping(['Дата','Описание','Сумма','Примечание','ID'],base),{...base,date:0,name:1,amount:2,notes:3,sourceId:4});
+ assert.deepEqual(guessColumnMapping(['Col A','Col B','Col C'],base),base);
+});

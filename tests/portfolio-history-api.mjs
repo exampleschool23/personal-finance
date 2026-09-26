@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
 const source=ts.transpileModule(fs.readFileSync('app/api/portfolio-history/route.ts','utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const api=(session,supa)=>new Function('session','supa','income',source+';return GET;')(session,supa,['Salary','Rent income','Other income']);
+const {trackedKinds}=await import('../lib/investment-history.ts');
+const api=(session,supa)=>new Function('session','supa','income','trackedKinds',source+';return GET;')(session,supa,['Salary','Rent income','Other income'],trackedKinds);
 test('history and actual cash flows remain owner-scoped and cash-flow pagination is complete',async()=>{
  const calls=[];
  const GET=api(async()=>({token:'owner-token'}),async(path,init,token)=>{
@@ -14,6 +15,7 @@ test('history and actual cash flows remain owner-scoped and cash-flow pagination
  });
  const response=await GET();assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');
  const result=await response.json();assert.equal(result.cashflows.length,501);assert.equal(result.events.length,1);assert.ok(calls.every(call=>call.token==='owner-token'));
+ assert.ok(calls.some(call=>call.path.includes('kind=in.(')&&call.path.includes('Valuables')&&call.path.includes('Money%20lent')));
  assert.ok(calls.find(call=>call.path.includes('investment_history')).path.includes('record_id=in.(holding)'));
 });
 test('anonymous reads and failed cashflow reads do not return a partial comparison',async()=>{

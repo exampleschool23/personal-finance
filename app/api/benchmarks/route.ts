@@ -37,7 +37,15 @@ async function stockHistory(symbol: string, start: string, end: string, key: str
 }
 async function cryptoProviderHistory(start: string, end: string, provider: 'coinbase' | 'bitfinex', symbol = 'BTC'): Promise<PricePoint[]> {
  const rows = new Map<string, PricePoint>();
- for (let cursor = shiftDay(start, -1); cursor <= end; cursor = shiftDay(cursor, 299)) {
+ const windows: string[] = [];
+ for (let cursor = shiftDay(start, -2); cursor <= end; cursor = shiftDay(cursor, 299)) windows.push(cursor);
+ let index=0;
+ let failure:unknown;
+ // Bound provider traffic while avoiding one network round trip per 299 days.
+ await Promise.all(Array.from({length:Math.min(3,windows.length)},async()=>{
+  while(index<windows.length&&!failure){
+   const cursor=windows[index++];
+   try {
   const last = shiftDay(cursor, 299) < shiftDay(end, 1) ? shiftDay(cursor, 299) : shiftDay(end, 1);
   let candles: unknown;
   if (provider === 'coinbase') {
@@ -59,11 +67,19 @@ async function cryptoProviderHistory(start: string, end: string, provider: 'coin
    const date = new Date(millis).toISOString().slice(0, 10);
    rows.set(date, { date, close: Number(close) });
   }
- }
- const openingDate=start===end&&end===depositToday()&&!rows.has(start)?shiftDay(start,-1):start;
- const points = [...rows.values()].filter(point=>point.date>=openingDate).sort((a,b) => a.date.localeCompare(b.date));
+   }catch(error){failure=error;}
+  }
+ }));
+ if(failure)throw failure;
+ // Local today can be a day ahead of UTC. Exchanges may publish only the
+ // last completed UTC candle; allow that tail without accepting interior gaps.
+ const latest=[...rows.keys()].sort().at(-1);
+ const tailDays=end===depositToday()&&new Date().getUTCHours()>=19?2:1;
+ const validTail=!!latest&&(latest===end||(end===depositToday()&&latest>=shiftDay(end,-tailDays)));
+ const openingDate=validTail&&latest!<start?latest!:start;
+ const points=[...rows.values()].filter(point=>point.date>=openingDate).sort((a,b)=>a.date.localeCompare(b.date));
  const lastDate=points.at(-1)?.date;
- if(points[0]?.date!==openingDate || !lastDate || (lastDate!==end && !(end===depositToday() && lastDate===shiftDay(end,-1))) || points.length!==Math.round((dateMillis(lastDate)-dateMillis(openingDate))/dayMillis)+1)throw Error('Incomplete history');
+ if(!validTail||points[0]?.date!==openingDate||!lastDate||points.length!==Math.round((dateMillis(lastDate)-dateMillis(openingDate))/dayMillis)+1)throw Error('Incomplete history');
  return points;
 }
 async function cryptoHistory(start: string, end: string, symbol = 'BTC'): Promise<PricePoint[]> {

@@ -5,8 +5,8 @@ import { useCallback } from 'react';
 import { emptyPlanning,type Category } from '@/lib/planning';
 import type { HoldingAccount } from '@/lib/holding-accounts';
 import { normalizeEntry,type Entry } from '@/lib/finance';
-export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:number,onSaved:()=>void,holdingAccounts:HoldingAccount[]=[],scope:'full'|'review'|'workspace'='full'){
- const resource=useOwnerResource('/api/planning?scope='+scope,user,!demo,revision,emptyPlanning);
+export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:number,onSaved:()=>void,holdingAccounts:HoldingAccount[]=[],scope:'full'|'review'|'workspace'='full',month?:string){
+ const resource=useOwnerResource('/api/planning?scope='+scope+(scope==='review'&&month?'&month='+encodeURIComponent(month):''),user,!demo,revision,emptyPlanning);
  const save=useCallback(async(action:string,payload:unknown)=>{
   if(demo)throw Error('Sign in to save planning changes.');
   const r=await fetch(action==='movement'?'/api/asset-movements':'/api/planning',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(action==='movement'?payload:{action,data:payload})});

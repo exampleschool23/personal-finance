@@ -14,6 +14,11 @@ export function formatMoney(value: number, currency: string, locale: string, uni
   const displayed = !unitPrice && Math.abs(value) < 0.5 ? 0 : value;
   return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: unitPrice ? 8 : 0 }).format(displayed);
 }
+// Short axis labels ("$1.2M"); tooltips and totals keep formatMoney precision.
+export function formatCompactMoney(value: number, currency: string, locale: string) {
+  if (!Number.isFinite(value)) return '—';
+  return new Intl.NumberFormat(locale, { style: 'currency', currency, notation: 'compact', maximumFractionDigits: 1 }).format(value);
+}
 export function formatDate(value: string, locale: string) {
   if (!parseCalendarDate(value)) return '—';
   return formatLongDate(value, locale, '—');

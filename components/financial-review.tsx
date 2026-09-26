@@ -3,7 +3,7 @@ import { normalizeEntry } from '@/lib/finance';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import type { MarketData } from '@/lib/market';
 import { useState } from 'react';
-import { CircleHelp, CalendarDays, ReceiptText, X } from 'lucide-react';
+import { ArrowUp, ArrowDown, Equal, CircleHelp, CalendarDays, ReceiptText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { DatePicker } from '@/components/date-picker';
@@ -14,10 +14,11 @@ import { emptyPlanning,type PlanningData } from '@/lib/planning';
 import { depositToday } from '@/lib/deposit-interest';
 import { formatDate, formatMoney, formatMonthYear } from '@/lib/format';
 import type { PortfolioSnapshot } from '@/lib/portfolio-snapshots';
-export function MonthlyReview({data:providedData,owner,demo=false,revision=0,tools,snapshots,historyError,currency,market}:{data:PlanningData;owner?:string|null;demo?:boolean;revision?:number;tools:ToolsController;snapshots:PortfolioSnapshot[];historyError:string;currency:string;market?:MarketData|null}){
+export function MonthlyReview({data:providedData,owner,demo=false,revision=0,tools,snapshots,historyError,currency,market,compact=false,selectedMonth,estimates}:{compact?:boolean;selectedMonth?:string;estimates?:{income:number;spending:number;net:number}|null;data:PlanningData;owner?:string|null;demo?:boolean;revision?:number;tools:ToolsController;snapshots:PortfolioSnapshot[];historyError:string;currency:string;market?:MarketData|null}){
  const {t,locale}=useLanguage();
  const today=depositToday();
- const [month,setMonth]=useState(()=>today.slice(0,7));
+ const [localMonth,setMonth]=useState(()=>today.slice(0,7));
+ const month=selectedMonth??localMonth;
  const remote=useOwnerResource('/api/planning?scope=review&month='+month,owner??null,!!owner&&!demo,revision,emptyPlanning);
  const data=owner&&!demo?{...remote.data,records:remote.data.records.map(normalizeEntry)}:providedData;
  const result=monthlyReview(data.records,tools.data.splits,snapshots,month,currency,today,data.activity,market?.rates??market?.fx?.rate,data.investmentLinks);
@@ -25,6 +26,16 @@ export function MonthlyReview({data:providedData,owner,demo=false,revision=0,too
  const previous=monthlyReview(data.records,tools.data.splits,snapshots,priorDate.toISOString().slice(0,7),currency,today,data.activity,market?.rates??market?.fx?.rate,data.investmentLinks);
  const money=(amount:number)=>formatMoney(amount,currency,locale);
  if(owner&&!demo&&(remote.loading||remote.error))return <section className="panel tools-panel monthly-review"><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2>{remote.error?<p role="alert">{t(remote.error)} <Button onClick={remote.retry}>{t('Retry')}</Button></p>:<p role="status">{t('Loading records…')}</p>}</section>;
+ if(compact)return <section className="cashflow-summary" aria-label={t('Monthly review')}>
+  {tools.error&&<p className="error" role="alert">{t(tools.error)} <Button onClick={tools.retry}>{t('Retry')}</Button></p>}
+  <div className="cashflow-summary-grid">{[
+   {label:'Income received',value:result.received,estimate:estimates?.income,Icon:ArrowUp,tone:'income'},
+   {label:'Actual spending',value:result.spent,estimate:estimates?.spending,Icon:ArrowDown,tone:'spending'},
+   {label:'Net cash flow',value:result.saved,estimate:estimates?.net,Icon:Equal,tone:result.saved<0?'negative':'income'},
+  ].map(({label,value,estimate,Icon,tone})=><article key={label} className={`cashflow-summary-card ${tone}`}><span className="cashflow-summary-icon"><Icon size={25} aria-hidden="true"/></span><div><h2>{t(label)}</h2><strong>{tools.loading||tools.error?'—':money(value)}</strong><p>{t(label==='Net cash flow'?'Estimated monthly surplus':'Monthly estimate')}: {estimate==null?'—':money(estimate)}</p></div></article>)}</div>
+  <p className="cashflow-summary-note muted">{t('Estimates exclude one-time entries. Actuals include recorded mortgage payments.')}</p>
+  {!!result.missing&&<p className="partial-total" role="status">{t('Some transactions could not be converted. Current or previous month totals are incomplete.')}</p>}
+ </section>;
  return <section className="panel tools-panel monthly-review">
   <header className="monthly-review-heading">
    <div><div className="monthly-review-title"><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2><Dialog>

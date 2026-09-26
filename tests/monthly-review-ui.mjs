@@ -53,3 +53,9 @@ test('remote monthly review normalizes undated lending and never presents failed
  loading=true;assert.match(remote(),/Loading records/);assert.doesNotMatch(remote(),/\$0|\$75/);
  loading=false;failure='Could not load planning data.';assert.match(remote(),/role="alert"/);assert.doesNotMatch(remote(),/\$0|\$75/);
 });
+
+test('compact cash-flow cards keep actuals separate from estimates and honor the selected month',()=>{
+ const html=render({compact:true,selectedMonth:'2026-08',estimates:{income:1000,spending:400,net:600},data:{...props.data,records:[record('august',800,{kind:'Salary',date:'2026-08-10'}),record('september',9999,{kind:'Salary'})]}});
+ assert.match(html,/\$800/);assert.match(html,/\$1,000/);assert.match(html,/Net cash flow/);assert.doesNotMatch(html,/\$9,999/);
+ assert.match(render({compact:true,tools:{...props.tools,error:'Offline'}}),/Offline/);
+});

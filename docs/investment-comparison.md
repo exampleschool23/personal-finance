@@ -1,3 +1,41 @@
+# Investment comparison: current Overview behavior
+
+The Overview comparison supports two methods, saved per account in this browser:
+
+- **From original purchases:** each recorded investment contribution funds benchmarks on its actual date. When original purchases are missing, Overview automatically selects the chosen-date method at the earliest usable recorded valuation date, with an explicit notice. No observed balance is labeled as purchase cost.
+- **From a chosen start date:** seed each benchmark with the recorded non-cash investment value at the end of that date, then add later fresh investment payments. Same-day payments are already part of the opening value. Valuations carry forward; today's valuation uses available market quotes.
+
+Ordinary cash, salary, unspent savings, groceries and family support do not fund benchmarks. Mortgage/debt principal payments count; interest and transaction fees do not. Business contributions and recorded asset purchases count. Daily closing prices and dated FX are used, rather than intraday execution prices. Display currency conversion uses current rates.
+
+Explicit transfers between investments add no fresh capital. Cash-account history does not prove which receipt funded a payment: a purchase or principal repayment from cash counts in full, even when an earlier sale or income receipt reached that account. Separate sale-to-cash and later purchase transactions are not automatically linked; use a direct investment transfer to record reuse. Interest and fees never fund benchmarks.
+
+## Funding scope
+
+A second setting, also saved per account in this browser, chooses what funds benchmarks:
+
+- **Excluding expenses** (default, and for choices saved before this setting existed): only investment funding as described above. No expense record funds a benchmark.
+- **Including expenses:** investment funding plus every actual one-time expense on its date: rent, living, charity, other and business-linked spending, CSV imports, budget spending, Tracker expense copies, loan interest, and trade/transfer fees. A mortgage payment copy contributes only its interest; its principal already funds through the payment itself. Recurring plans and future-dated rows are ignored. Spending adds nothing to the actual line, so the gap to each benchmark shows what the spending cost.
+
+Transfers between the user's own accounts are never expense records and never fund benchmarks in either scope. With **From original purchases**, Including expenses starts at the earlier of the first investment activity and the first counted expense; a chosen start date excludes earlier and same-day spending, like investments. Record a purchase once: an item entered both as an expense and as a Tracker contribution is counted twice under Including expenses.
+
+A watch or similar item bought as an investment belongs in the **Valuables** asset category (migration 070). Valuables track a value like Property: valuations, cash-linked contributions and withdrawals, deletable corrections and optional income/expense updates, without estimated monthly income or trading. They count as investments in both scopes and in net worth. Bought as ordinary spending, the same item is an expense and funds benchmarks only under Including expenses.
+
+The actual line is **Investment value and proceeds**: remaining holdings plus cumulative sale/distribution payouts and retained repaid principal. Once paid out to ordinary cash, proceeds remain historical payouts in this total; unrelated later cash-funded purchases add both new capital and holdings. Ordinary cash balances themselves are excluded. This is not net worth; net worth remains in the Overview summary.
+
+Tap a point for funding details, reused proceeds and historical benchmark unit prices. Period buttons only zoom. Missing valuations or required exchange rates pause the comparison. Preserve sold holdings as zero-balance records to retain their history.
+
+## Upgrade and verification
+
+`070_valuables_asset_kind.sql` adds the Valuables category after 069. It patches the existing tracker, cash-link, deletion and asset-list functions in place (failing if a definition is unexpected) and rewrites no data. Rolling back the category constraint requires deleting or reclassifying Valuables records first. Like 069, it must be applied manually to the live database.
+
+`069_investment_account_conversions.sql` extends the existing atomic Buy/Sell movement function to support direct deposit-to-security and security-to-security conversions. Apply it to the existing database after preceding schema migrations; fresh databases use `database/setup.sql`. It does not move money or rewrite history. This migration has been tested locally but **has not been applied to the live database**; administrative SQL access is not configured in this workspace. Existing transfers through a cash settlement account remain supported.
+
+Regression coverage includes purchase dates, income/cash exclusion, reinvestment, mixed fresh/reused funding, personal spending, missing history, chosen-date seeding, fees, principal-only repayment, precision and dated FX. The SQL test covers direct conversions, retry idempotency, insufficient-balance rollback and owner isolation. Regression coverage also checks legacy valuation fallback and the Tashkent/UTC midnight boundary: a current chart may carry the latest completed UTC candle for up to two local calendar days shortly after local midnight, while interior gaps still fail. Browser checks verified both mode controls and the expected missing-purchase notice using the test account.
+
+---
+
+The notes below describe earlier comparison implementations and supporting infrastructure. Where they differ, the current Overview behavior above takes precedence.
+
 # Investment returns versus Bitcoin
 
 The Benchmarks page (`/benchmarks`) compares the monetary value and profit of actual investments with buying Bitcoin using the same cash amounts on the same dates. Bitcoin is the default benchmark. Settings also offers SPY, HYG, assumed UZS and USD deposits, and a custom USD stock/ETF. Real investments—including livestock or cafés recorded as Businesses—belong in Assets & investments, with dated activity in Tracker.

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatNumberInput, numberInputValue, formatMoney, formatDate, formatDateTime } from '../lib/format.ts';
+import { formatNumberInput, numberInputValue, formatMoney, formatCompactMoney, formatDate, formatDateTime } from '../lib/format.ts';
 test('amount entry groups digits and round-trips supported locales',()=>{
  for(const locale of ['en-US','ru-RU','uz-UZ']) {
   const formatted=numberInputValue(9300.25,locale);
@@ -73,4 +73,11 @@ test('planner input display hides calculated decimal tails without changing prec
   assert.equal(formatNumberInput(numberInputValue(0.00001234, locale), locale).value, 0.00001234);
   assert.equal(formatNumberInput(numberInputValue(123.45, locale), locale).value, 123.45);
  }
+});
+test('compact money shortens chart axis labels in every supported language',()=>{
+ assert.equal(formatCompactMoney(4000000,'USD','en-US'),'$4M');
+ assert.equal(formatCompactMoney(1500,'USD','en-US'),'$1.5K');
+ assert.equal(formatCompactMoney(0,'USD','en-US'),'$0');
+ assert.equal(formatCompactMoney(NaN,'USD','en-US'),'—');
+ for(const locale of ['ru-RU','uz-UZ'])assert.ok(formatCompactMoney(25000000,'UZS',locale).startsWith('25'));
 });

@@ -3,6 +3,7 @@ import { instrumentFor } from '@/lib/market';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { snapshotTotals } from '@/lib/portfolio-snapshots';
 import type { Entry } from '@/lib/finance';
+import { trackedKinds } from '@/lib/investment-history';
 export async function GET(){
  try{
   const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
@@ -20,7 +21,7 @@ export async function POST(req:Request){
   const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
   const records:Entry[]=[];
   for(let offset=0;;offset+=500){
-   const params=new URLSearchParams({select:'*',kind:'in.(Cash,Stock,Crypto,Deposit,Property,Business,Money lent,Mortgage,Loan,Debt)',order:'id.asc',limit:'500',offset:String(offset)});
+   const params=new URLSearchParams({select:'*',kind:`in.(${trackedKinds.join(',')})`,order:'id.asc',limit:'500',offset:String(offset)});
    const response=await supa('/rest/v1/finance_records?'+params,{},auth.token);if(!response.ok)throw Error();
    const batch=await response.json() as Entry[];records.push(...batch);if(batch.length<500)break;
   }

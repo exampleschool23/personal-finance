@@ -12,6 +12,6 @@ export function DebtSummary({entries,currency}:{entries:Entry[];currency:string}
  return <div className="metrics debt-metrics">
   <article><p>{t('Money owed to you')}<ArrowDownLeft size={19}/></p><h2>{formatMoney(receivable,currency,locale)}</h2><small>{t('{count} lending records',{count:count(lent)})}</small></article>
   <article><p>{t('Money you owe')}<ArrowUpRight size={19}/></p><h2>{formatMoney(payable,currency,locale)}</h2><small>{t('Mortgages, loans & other debts')}</small></article>
-  <article><p>{t('Net lending position')}<Scale size={19}/></p><h2>{formatMoney(netLending,currency,locale)}</h2><small>{t('Money owed to you minus your outstanding debts.')}</small></article>
+  <article className={netLending<0?'negative':undefined}><p>{t('Net lending position')}<Scale size={19}/></p><h2>{formatMoney(netLending,currency,locale)}</h2><small>{t('Money owed to you minus your outstanding debts.')}</small></article>
  </div>;
 }

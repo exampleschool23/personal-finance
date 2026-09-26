@@ -19,7 +19,7 @@ export function portfolioHistory(records: Entry[], events: HistoryEvent[], curre
  for (const event of sorted) if (!firstBalances.has(event.record_id)) firstBalances.set(event.record_id, event);
  for (const record of included) {
   const first = firstBalances.get(record.id);
-  const openedOn = record.opened_on || (['Business', 'Property'].includes(record.kind) ? record.date : undefined);
+  const openedOn = record.opened_on || (['Business', 'Property', 'Valuables'].includes(record.kind) ? record.date : undefined);
   if (first?.event_type === 'baseline' && Number(first.balance) === 0 && openedOn === first.occurred_on
    && !events.some(event => event.record_id === record.id && event.occurred_on < openedOn)) balances.set(record.id, 0);
  }

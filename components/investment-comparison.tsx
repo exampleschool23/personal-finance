@@ -1,8 +1,10 @@
 "use client";
+import { DatePicker } from '@/components/date-picker';
+import { NativeSelect } from '@/components/ui/native-select';
+import { benchmarkExpenseFunding, benchmarkMethodStorageKey, readBenchmarkMethod, investmentComparisonCoverage, investmentDecisionComparison, type ComparisonMethod, type BenchmarkMovement, type FundingScope } from '@/lib/investment-benchmarks';
+import { validDay } from '@/lib/benchmark-data';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { BenchmarkTooltip } from '@/components/benchmark-tooltip';
-import { receivedIncome } from '@/lib/income-history';
-import { getNetWorthComparison } from '@/lib/net-worth-comparison';
 import { demoBenchmarkKeys } from '@/lib/demo-finance';
 import { readOverviewBenchmarks, overviewBenchmarkStorageKey, toggleOverviewBenchmark, overviewSeriesVisible } from '@/lib/overview-benchmarks';
 import { portfolioAssets } from '@/lib/diversified-portfolio';
@@ -11,7 +13,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { InvestmentPeriodSummary } from '@/components/investment-period-summary';
 import { refreshRead } from '@/lib/refresh-read';
 import { InvestmentValueChart } from '@/components/investment-value-chart';
-import { cloneElement,useEffect,useMemo,useState,type ReactElement } from 'react';
+import { useEffect,useMemo,useState,type ReactElement } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,12 +29,13 @@ import { shiftDay,type BenchmarkData } from '@/lib/benchmark-data';
 import { getInvestmentPortfolio, getInvestmentComparison, investmentValueChange } from '@/lib/investment-portfolio';
 import { defaultComparisonPreferences,isInvestmentRecord,type ComparisonProfile } from '@/lib/comparison-profile';
 
-type History={records:Entry[];events:HistoryEvent[];cashflows?:Entry[]};
+type History={movements?:BenchmarkMovement[];records:Entry[];events:HistoryEvent[];cashflows?:Entry[]};
 export function InvestmentComparison({history,today,currency,market,demo,embedded}:{embedded?:{openingNetWorth?:{date:string;amount:number};days:number;points:{date:string;net:number}[];tooltip:ReactElement};history:History;today:string;currency:string;market:MarketData|null;demo:boolean}){
  const {t,locale}=useLanguage();
  const [profile,setProfile]=useState<ComparisonProfile|null>(null),[profileError,setProfileError]=useState(''),[profileRetry,setProfileRetry]=useState(0);
  const [data,setData]=useState<BenchmarkData|null>(null),[error,setError]=useState(''),[retry,setRetry]=useState(0),[loadedKey,setLoadedKey]=useState(''),[hidden,setHidden]=useState<string[]>([]),[windowDays,setWindowDays]=useState(0);
  const [overviewSelection,setOverviewSelection]=useState<{owner:string;keys:string[]}|null>(null);
+ const [methodChoice,setMethodChoice]=useState<{owner:string;method:ComparisonMethod}|null>(null);
  const [detailDate,setDetailDate]=useState<string|null>(null);
  const [chosen,setChosen]=useState<string[]|null>(null);
  const [benchmarks,setBenchmarks]=useState<string[]|null>(null);
@@ -52,12 +55,21 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   let cancelled=false;
   queueMicrotask(()=>{
    if(cancelled)return;
-   let keys:string[]=demo?[...demoBenchmarkKeys]:[];
+   // Until the owner chooses, show the headline market benchmarks rather than an empty comparison.
+   let keys:string[]=[...demoBenchmarkKeys];
    try{if(localStorage.getItem(overviewBenchmarkStorageKey(overviewOwner))!==null)keys=readOverviewBenchmarks(localStorage,overviewOwner);}catch{}
    setOverviewSelection({owner:overviewOwner,keys});
+   try{const saved=readBenchmarkMethod(localStorage,overviewOwner,today);if(saved)setMethodChoice({owner:overviewOwner,method:saved});}catch{}
+
   });
   return()=>{cancelled=true;};
- },[isEmbedded,overviewOwner,demo]);
+ },[isEmbedded,overviewOwner,demo,today]);
+ const coverage=useMemo(()=>investmentComparisonCoverage(history.records,history.events,today),[history.records,history.events,today]);
+ const requestedMethod:ComparisonMethod=methodChoice&&methodChoice.owner===overviewOwner?methodChoice.method:{mode:'purchases',date:coverage.start,scope:'investments'};
+ const usesRecordedStart=requestedMethod.mode==='purchases'&&coverage.missing.length>0;
+ const scope=requestedMethod.scope??'investments';
+ const method:ComparisonMethod=usesRecordedStart?{mode:'date',date:coverage.start,scope}:{...requestedMethod,scope};
+ function chooseMethod(next:ComparisonMethod){if(!overviewOwner)return;setMethodChoice({owner:overviewOwner,method:next});setDetailDate(null);try{localStorage.setItem(benchmarkMethodStorageKey(overviewOwner),JSON.stringify(next));}catch{}}
  const overviewKeys=overviewSelection?.owner===overviewOwner?overviewSelection?.keys??[]:[];
  function toggleOverview(key:string){
   if(!overviewOwner)return;
@@ -66,11 +78,13 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   try{localStorage.setItem(overviewBenchmarkStorageKey(overviewOwner),JSON.stringify(keys));}catch{/* The current selection still works when browser storage is unavailable. */}
  }
  const events=portfolio.activity;
- const receipts=useMemo(()=>receivedIncome(history.records,history.events,history.cashflows??[],today),[history,today]);
  const historyStart=isEmbedded?history.events.filter(event=>event.occurred_on<=today&&event.balance!==null).map(event=>event.occurred_on).sort()[0]:undefined;
- const start=[isEmbedded?receipts[0]?.date:events[0]?.occurred_on,historyStart].filter((date):date is string=>!!date).sort()[0]??today;
+ const spendingStart=isEmbedded&&scope==='expenses'?benchmarkExpenseFunding(history.cashflows,today)[0]?.date:undefined;
+ const start=isEmbedded&&method.mode==='date'?method.date:([events[0]?.occurred_on,historyStart,spendingStart].filter((date):date is string=>!!date).sort()[0]??today);
  const appStart=profile?depositToday(new Date(profile.activity.started_at)):start;
  const selected:readonly string[]=benchmarks??profile?.preferences.benchmarks??defaultComparisonPreferences.benchmarks;
+ // Legend visibility is presentation state. Keep every configured benchmark
+ // loaded so hiding and restoring lines never changes the request or simulation.
  const selectionKey=selected.join(',');
  const symbol=profile?.preferences.custom_symbol??'';
  const diversified=profile?.preferences.portfolio;
@@ -79,8 +93,9 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
  const portfolioCrypto=selected.includes('PORTFOLIO')&&!diversified?.assets&&diversified?.crypto?diversified.cryptoSymbol:'';
  const portfolioStock=selected.includes('PORTFOLIO')&&!diversified?.assets&&diversified?.stock?diversified.stockSymbol:'';
  const requestKey=(embedded?embedded.points.length:events.length)?start+':'+today+':'+selectionKey+':'+symbol+':'+portfolioCrypto+':'+portfolioStock+':'+portfolioConfig:'';
+ const canLoad=(demo||!!profile||!!profileError)&&(!isEmbedded||!!profileError||overviewSelection?.owner===overviewOwner);
  useEffect(()=>{
-  if(!requestKey||(!demo&&!profile&&!profileError))return;
+  if(!requestKey||!canLoad)return;
   const controller=new AbortController(),params=new URLSearchParams({start,end:today,benchmarks:selectionKey});
   if(portfolioConfig)params.set('portfolio',portfolioConfig);
   if(symbol)params.set('symbol',symbol);
@@ -88,11 +103,12 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   if(portfolioStock)params.set('portfolioStock',portfolioStock);
   refreshRead(demo?'/api/benchmarks?demo=1':'/api/benchmarks?'+params,{signal:controller.signal}).then(async response=>{const result=await response.json() as BenchmarkData&{error?:string};if(!response.ok)throw Error(result.error);if(!controller.signal.aborted){setData(result);setLoadedKey(requestKey);setError('');}}).catch(reason=>{if(!controller.signal.aborted){setError(reason.message);setLoadedKey(requestKey);setData(null);}});
   return()=>controller.abort();
- },[demo,requestKey,start,today,selectionKey,symbol,portfolioCrypto,portfolioStock,portfolioConfig,retry,profile,profileError]);
+ },[demo,requestKey,start,today,selectionKey,symbol,portfolioCrypto,portfolioStock,portfolioConfig,retry,canLoad]);
  const comparisonsLoading=!!requestKey&&((!demo&&!profile&&!profileError)||loadedKey!==requestKey);
  const ready=loadedKey===requestKey?data:null;
  const performance=portfolio.performance;
- const result=useMemo(()=>ready&&!performance.missing?getInvestmentComparison({records,events:history.events,cashflows:history.cashflows,market,currency,today},ready,activeDiversified):null,[ready,performance,records,history,market,currency,today,activeDiversified]);
+ const result=useMemo(()=>!isEmbedded&&ready&&!performance.missing?getInvestmentComparison({records,events:history.events,cashflows:history.cashflows,market,currency,today},ready,activeDiversified):null,[isEmbedded,ready,performance,records,history,market,currency,today,activeDiversified]);
+ const decision=useMemo(()=>isEmbedded&&ready?investmentDecisionComparison({records:history.records,events:history.events,cashflows:history.cashflows,movements:history.movements,market,currency,today,method:{mode:method.mode,date:method.date,scope}},ready,activeDiversified):null,[isEmbedded,ready,history,market,currency,today,method.mode,method.date,scope,activeDiversified]);
  const points=result?.points??[];
  const last=points.at(-1);
  const viewStart=windowDays?([start,shiftDay(today,-windowDays)].sort().at(-1)!):start;
@@ -100,27 +116,30 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
  const visiblePoints=points.filter(point=>point.date>=viewStart&&!!firstComplete&&point.date>=firstComplete);
  const valueChange=investmentValueChange(visiblePoints.map(point=>point.actual));
  const money=(amount:number)=>formatMoney(amount,currency,locale);
- const definitions=[{key:'actual',label:t(embedded?'NET WORTH':'My investments'),color:'var(--primary)',dash:undefined},...stockBenchmarks(profile?.preferences.benchmarks??[]).map(item=>({key:item.id,label:item.symbol,color:categoryColor(item.id),dash:'12 4'})),{key:'BTC',label:'Bitcoin · BTC',color:categoryColor('Crypto'),dash:undefined},{key:'SPY',label:'S&P 500 · SPY',color:categoryColor('Stock'),dash:'7 3'},{key:'HYG',label:t('High-yield bonds · HYG'),color:categoryColor('Property'),dash:'9 3 2 3'},{key:'depositUZS',label:t('{currency} deposit · {rate}%',{currency:'UZS',rate:formatNumber(21,locale)}),color:categoryColor('Deposit'),dash:'5 5'},{key:'depositUSD',label:t('{currency} deposit · {rate}%',{currency:'USD',rate:formatNumber(8,locale)}),color:categoryColor('Cash'),dash:'2 4'},{key:'CUSTOM',label:symbol,color:categoryColor('Business'),dash:'12 4'},{key:'PORTFOLIO',label:t('Diversified portfolio'),color:categoryColor('Money lent'),dash:'8 3 2 3'}];
+ const definitions=[{key:'actual',label:t(embedded?'Investment value and proceeds':'My investments'),color:'var(--primary)',dash:undefined},...stockBenchmarks(profile?.preferences.benchmarks??[]).map(item=>({key:item.id,label:item.symbol,color:categoryColor(item.id),dash:'12 4'})),{key:'BTC',label:'Bitcoin · BTC',color:categoryColor('Crypto'),dash:undefined},{key:'SPY',label:'S&P 500 · SPY',color:categoryColor('Stock'),dash:'7 3'},{key:'HYG',label:t('High-yield bonds · HYG'),color:categoryColor('Property'),dash:'9 3 2 3'},{key:'depositUZS',label:t('{currency} deposit · {rate}%',{currency:'UZS',rate:formatNumber(21,locale)}),color:categoryColor('Deposit'),dash:'5 5'},{key:'depositUSD',label:t('{currency} deposit · {rate}%',{currency:'USD',rate:formatNumber(8,locale)}),color:categoryColor('Cash'),dash:'2 4'},{key:'CUSTOM',label:symbol,color:categoryColor('Business'),dash:'12 4'},{key:'PORTFOLIO',label:t('Diversified portfolio'),color:categoryColor('Money lent'),dash:'8 3 2 3'}];
  const displayed=definitions.filter(item=>item.key==='actual'||selected.includes(item.key));
  const visibleSeries=embedded?displayed.filter(item=>overviewSeriesVisible(overviewKeys,item.key)):displayed.some(item=>!hidden.includes(item.key))?displayed.filter(item=>!hidden.includes(item.key)):displayed.filter(item=>item.key==='actual');
  const visibleKeys=new Set(visibleSeries.map(item=>item.key));
  if(embedded){
-  const overviewResult=ready?getNetWorthComparison(embedded.points,ready,{openingNetWorth:embedded.openingNetWorth,records,events:history.events,cashflows:history.cashflows,market,currency,today},activeDiversified):null;
-  const chartPoints=overviewResult?.points??embedded.points.map(point=>({...point,actual:point.net}));
-  const chartSeries=overviewResult?visibleSeries:visibleSeries.filter(item=>item.key==='actual');
+  const overviewResult=decision?.result;
+  const windowStart=embedded.days?shiftDay(today,-embedded.days):'0000-01-01';
+  const chartPoints=(overviewResult?.points??[]).filter(point=>point.date>=windowStart);
+  const chartSeries=visibleSeries;
   const detailPoint=chartPoints.find(point=>point.date===detailDate);
   return <>
-   {!receipts.length&&!embedded.openingNetWorth&&<p className="comparison-note">{t('Record received income to fund benchmarks. Scheduled income and opening balances are not receipts.')}</p>}
-   {ready&&!overviewResult&&receipts.length>0&&<p className="comparison-notice">{t('An income exchange rate or part of its history is missing. Benchmarks are paused until all receipts can be included.')}</p>}
+   <div className="form-grid"><label>{t('Comparison method')}<NativeSelect value={method.mode} disabled={!overviewOwner} onChange={event=>chooseMethod({...method,mode:event.target.value as ComparisonMethod['mode']})}><option value="purchases">{t('From original purchases')}</option><option value="date">{t('From a chosen start date')}</option></NativeSelect></label><label>{t('Benchmark funding')}<NativeSelect value={scope} disabled={!overviewOwner} onChange={event=>chooseMethod({...requestedMethod,scope:event.target.value as FundingScope})}><option value="investments">{t('Excluding expenses')}</option><option value="expenses">{t('Including expenses')}</option></NativeSelect></label>{method.mode==='date'&&<label>{t('Starting date')}<DatePicker value={method.date} min="2016-01-01" max={today} required onChange={date=>{if(validDay(date))chooseMethod({...method,date});}}/></label>}</div>
+   <p className="comparison-note">{t(scope==='expenses'?'Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.':'Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.')}</p>
+   {usesRecordedStart&&<p className="comparison-note">{t('Using recorded investment values from {date}; original purchase costs are not recorded for every investment.',{date:formatDate(coverage.start,locale)})}</p>}
+   {method.mode==='date'&&method.date!==coverage.start&&<Button variant="outline" onClick={()=>chooseMethod({mode:'date',date:coverage.start,scope})}>{t('Use earliest recorded date')}</Button>}
+   {ready&&!decision&&<p className="comparison-notice">{t('Investment history or exchange rates are incomplete for this comparison.')}</p>}
    {demo&&<p className="comparison-note">{t("Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.")}</p>}
    <div className="comparison-legend" aria-busy={comparisonsLoading}>{comparisonsLoading&&<span role="status" className="flex items-center gap-2 muted"><Spinner aria-hidden="true"/>{t('Loading comparisons…')}</span>}{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div>
    {ready&&visibleSeries.filter(item=>item.key!=='actual').map(item=>{const reason=ready.errors[item.key]??ready.errors.fx??(overviewResult?.unavailable.includes(item.key)?'Price data, exchange rates or funds needed for a matching withdrawal are unavailable.':null);return reason?<p key={item.key} className="comparison-note">{item.label}: {t(reason)}</p>:null;})}
-   <InvestmentValueChart onPointSelect={setDetailDate} label="NET WORTH" points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={chartSeries.length===1&&chartSeries[0].key==='actual'?embedded.tooltip:<BenchmarkTooltip marketHistory={ready} openingNetWorth={embedded.openingNetWorth} receipts={receipts} currency={currency} series={chartSeries}/>}/>
-   <p className="comparison-note">{t('Tap a chart point to open its activity and investments.')}</p>
+   {!!chartPoints.length&&<><InvestmentValueChart onPointSelect={setDetailDate} label="Investment value and proceeds" points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={<BenchmarkTooltip scope={scope} marketHistory={ready} fundingDetails={decision?.details} receipts={[]} currency={currency} series={chartSeries}/>}/>
+   <p className="comparison-note">{t('Tap a chart point to open its activity and investments.')}</p></>}
    <Dialog open={!!detailPoint} onOpenChange={open=>{if(!open)setDetailDate(null);}}><DialogContent className="chart-point-details sm:max-w-xl"><DialogHeader><DialogTitle>{t('Activity and investments')}</DialogTitle><DialogDescription>{detailDate?formatDate(detailDate,locale):''}</DialogDescription></DialogHeader>
     {detailPoint&&<>
-     {chartSeries.some(item=>item.key!=='actual')&&<BenchmarkTooltip marketHistory={ready} openingNetWorth={embedded.openingNetWorth} active payload={[{payload:detailPoint}]} receipts={receipts} currency={currency} series={chartSeries.filter(item=>item.key!=='actual')}/>}
-     {visibleKeys.has('actual')&&cloneElement(embedded.tooltip as ReactElement<{active:boolean;payload:{payload:typeof detailPoint}[]}>,{active:true,payload:[{payload:detailPoint}]})}
+     <BenchmarkTooltip scope={scope} marketHistory={ready} fundingDetails={decision?.details} active payload={[{payload:detailPoint}]} receipts={[]} currency={currency} series={chartSeries}/>
     </>}
    </DialogContent></Dialog>
    {error&&<p role="alert" className="error">{t(error)} <Button variant="outline" onClick={()=>{setLoadedKey('');setError('');setRetry(n=>n+1);}}>{t('Retry')}</Button></p>}

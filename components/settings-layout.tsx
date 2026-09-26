@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useState, type ReactNode } from 'react';
-import { Globe2, SlidersHorizontal, ShieldCheck, Tags, Database } from 'lucide-react';
+import { UserRound, ChartNoAxesColumnIncreasing, ShieldCheck, Tags, Database } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const sections = [
- {id:'preferences',label:'Profile & preferences',icon:Globe2},
- {id:'benchmarks',label:'Investment benchmarks',icon:SlidersHorizontal},
+ {id:'preferences',label:'Profile & preferences',icon:UserRound},
+ {id:'benchmarks',label:'Investment benchmarks',icon:ChartNoAxesColumnIncreasing},
  {id:'security',label:'Account security',icon:ShieldCheck},
  {id:'categories',label:'Categories',icon:Tags},
  {id:'data-tools',label:'Import & backup',icon:Database},
@@ -19,6 +19,8 @@ export function SettingsLayout({preferences,benchmarks,security,categories,data}
   const sync=()=>{const hash=window.location.hash.slice(1);setActive(sections.some(section=>section.id===hash)?hash:'preferences');};
   sync();window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync);
  },[]);
+ // The tab strip scrolls on narrow screens; keep the selected tab fully visible.
+ useEffect(()=>{document.querySelector(`.settings-navigation-list [data-state="active"]`)?.scrollIntoView({block:'nearest',inline:'nearest'});},[active]);
  const panels:Record<string,ReactNode>={preferences,benchmarks,security,categories,'data-tools':data};
  return <div className="settings-layout">
   <header className="page-heading"><div><h1>{t('Settings')}</h1><p className="muted">{t('Manage your preferences, security, and financial data.')}</p></div></header>

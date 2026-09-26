@@ -226,3 +226,41 @@ test('anonymous demo uses fixed real-feed queries, shares concurrent work and ig
   assert.equal((await GET(request())).status,401,'Normal benchmark queries still require authentication');
  }finally{auth=true;globalThis.fetch=original;if(key===undefined)delete process.env.TWELVE_DATA_API_KEY;else process.env.TWELVE_DATA_API_KEY=key;}
 });
+
+test('long crypto history overlaps requests with at most three windows in flight and keeps every day',async()=>{
+ const original=globalThis.fetch;let active=0,peak=0,calls=0;
+ try{
+  globalThis.fetch=async raw=>{
+   const url=new URL(raw);
+   if(url.hostname==='api.exchange.coinbase.com'){
+    active++;calls++;peak=Math.max(peak,active);
+    await new Promise(resolve=>setTimeout(resolve,5));
+    active--;
+    const start=Date.parse(url.searchParams.get('start')),end=Date.parse(url.searchParams.get('end'));
+    const rows=[];for(let time=start;time<end;time+=dates.dayMillis)rows.push([time/1000,0,0,0,50000,1]);
+    return Response.json(rows);
+   }
+   return Response.json([{Ccy:'USD',Rate:'12000',Nominal:'1',Date:'01.01.2020'}]);
+  };
+  const data=await(await GET(request('start=2020-01-01&end=2026-09-17&benchmarks=BTC'))).json();
+  assert.ok(calls>3);assert.equal(peak,3);assert.equal(data.errors.BTC,undefined);
+  assert.equal(data.prices.BTC.length,(dates.dateMillis('2026-09-17')-dates.dateMillis('2020-01-01'))/dates.dayMillis+1);
+ }finally{globalThis.fetch=original;}
+});
+test('Tashkent midnight carries the latest completed UTC candle across a two-day local window',async()=>{
+ const original=globalThis.fetch;
+ const RealDate=Date;
+ class MidnightDate extends RealDate{constructor(...args){super(...(args.length?args:['2026-09-16T20:00:00Z']));}}
+ const atMidnight=new Function(...Object.keys(deps),'Date',source+';return GET;')(...Object.values(deps),MidnightDate);
+ try{
+  globalThis.fetch=async raw=>{
+   const url=new URL(raw);
+   if(url.hostname==='api.exchange.coinbase.com')return Response.json([[dates.dateMillis('2026-09-15')/1000,0,0,0,50000,1]]);
+   if(url.hostname==='api-pub.bitfinex.com')return Response.json([]);
+   const date=url.pathname.split('/').filter(Boolean).at(-1);
+   return Response.json([{Ccy:'USD',Rate:'12000',Nominal:'1',Date:date.split('-').reverse().join('.')}]);
+  };
+  const result=await(await atMidnight(request('start=2026-09-16&end=2026-09-17&benchmarks=BTC'))).json();
+  assert.equal(result.errors.BTC,undefined);assert.equal(result.prices.BTC[0].date,'2026-09-15');
+ }finally{globalThis.fetch=original;}
+});

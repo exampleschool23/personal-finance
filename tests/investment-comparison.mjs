@@ -55,11 +55,11 @@ test('cashflow-only investing can start at zero and earns nothing before the con
  const result=compareInvestments(0,[{date:'2025-01-02',amount:100}],[],data('2025-01-01','2025-01-03',{BTC:[{date:'2025-01-01',close:100},{date:'2025-01-02',close:200},{date:'2025-01-03',close:220}]}),'USD');
  assert.equal(result.points[0].BTC,0);assert.equal(result.points[1].BTC,100);near(result.points[2].BTC,110);assert.equal(result.netCashFlow,100);
 });
-test('comparison UI translates literal messages and uses recorded investment dates instead of editable starting capital',()=>{
+test('comparison UI translates messages and uses the shared date picker without editable starting capital',()=>{
  const source=fs.readFileSync('components/investment-comparison.tsx','utf8');
  const messages=[...source.matchAll(/\bt\('([^']+)'/g)].map(match=>match[1]);
  for(const language of ['en','ru','uz']){const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));for(const message of messages)assert.ok(labels[message],`${language}: ${message}`);}
- assert.ok(!source.includes('DatePicker'));assert.ok(!source.includes('setRequestedStart'));assert.ok(!source.includes('setCapital'));assert.ok(!/<[Ii]nput\b[^>]*type="number"/.test(source));assert.ok(!source.includes('type="date"'));
+ assert.ok(source.includes('<DatePicker'));assert.ok(!source.includes('setRequestedStart'));assert.ok(!source.includes('setCapital'));assert.ok(!/<[Ii]nput\b[^>]*type="number"/.test(source));assert.ok(!source.includes('type="date"'));
 });
 test('valuation gaps recover when quotes return, without inventing a trade price',()=>{
  const prices={SPY:[{date:'2025-01-01',close:10},{date:'2025-01-10',close:12}]};

@@ -20,7 +20,7 @@ test('single point has a bounded axis without fabricating another balance',()=>{
 test('chart scales only displayed series and preserves gaps in observations',()=>{
  const result=chart([{date:'2026-09-17',actual:100,hidden:999999},{date:'2026-09-18',actual:null},{date:'2026-09-19',actual:120}]);
  const axis=result.props.children.find(child=>child.type==='YAxis');
- assert.deepEqual(axis.props.domain,[97,123]);
+ assert.deepEqual(axis.props.domain,[90,120]);assert.deepEqual(axis.props.ticks,[90,100,110,120]);
  const series=result.props.children.flat().find(child=>child.type==='Area');
  assert.equal(series.props.connectNulls,false);assert.equal(series.props.dataKey,'actual');
  assert.deepEqual(result.props.data.map(point=>point.actual),[100,null,120]);
@@ -30,9 +30,17 @@ test('clicking or tapping a point opens that exact date, including the first poi
  const opened=[];
  const points=[{date:'2026-09-17',actual:100},{date:'2026-09-18',actual:120}];
  const result=InvestmentValueChart({points,currency:'USD',series:[{key:'actual',label:'Net worth',color:'green'}],onPointSelect:date=>opened.push(date)}).props.children.props.children;
- for(const activeTooltipIndex of [0,'1',undefined,null,'',10])result.props.onClick({activeTooltipIndex});
+ for(const activeTooltipIndex of [0,'1',undefined,null,'',10])result.props.onClick({activeTooltipIndex,isTooltipActive:true});
+ assert.deepEqual(opened,['2026-09-17','2026-09-18']);
+ // A click in the axis margin keeps recharts' previous index; it must not open that stale date.
+ result.props.onClick({activeTooltipIndex:0,isTooltipActive:false});
  assert.deepEqual(opened,['2026-09-17','2026-09-18']);
  const hidden=InvestmentValueChart({points,currency:'USD',series:[],onPointSelect:date=>opened.push(date)}).props.children.props.children;
- hidden.props.onClick({activeTooltipIndex:0});
+ hidden.props.onClick({activeTooltipIndex:0,isTooltipActive:true});
  assert.equal(opened.length,2);
+});
+test('money axis never shows negative ticks for positive balances',()=>{
+ const result=chart([{date:'2026-09-17',actual:49645},{date:'2026-09-18',actual:3105952}]);
+ const axis=result.props.children.find(child=>child.type==='YAxis');
+ assert.ok(axis.props.ticks.every(tick=>tick>=0));assert.equal(axis.props.domain[0],0);
 });

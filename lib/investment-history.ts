@@ -1,4 +1,4 @@
-export const trackedKinds: readonly string[] = ['Cash','Stock','Crypto','Deposit','Property','Business','Money lent','Mortgage','Loan','Debt'];
+export const trackedKinds: readonly string[] = ['Cash','Stock','Crypto','Deposit','Property','Business','Valuables','Money lent','Mortgage','Loan','Debt'];
 export type HistoryEvent = {
  id:string; record_id:string; event_type:'baseline'|'valuation'|'contribution'|'withdrawal'|'income'|'expense'|'mortgage_payment';
  occurred_on:string; amount:number; balance:number|null; ownership_percentage:number; principal:number; interest:number; notes:string; created_at:string;
@@ -20,7 +20,7 @@ export function historyUpdateTypes(kind:string):HistoryUpdateType[] {
  if(isLendingKind(kind))return ['contribution','withdrawal'];
  if(kind==='Cash')return ['valuation'];
  if(['Deposit','Stock','Crypto'].includes(kind))return ['valuation','income','expense'];
- if(['Property','Business'].includes(kind))return ['valuation','contribution','withdrawal','income','expense'];
+ if(['Property','Business','Valuables'].includes(kind))return ['valuation','contribution','withdrawal','income','expense'];
  return [];
 }
 export function historyEventLabel(kind:string,type:HistoryEvent['event_type']):string {

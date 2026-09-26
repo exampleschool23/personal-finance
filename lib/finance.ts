@@ -37,7 +37,7 @@ export function scheduleDueDate(schedule:Schedule,on:string):string {
 }
 export const frequencyLabels:Record<Frequency,string>={Once:'One time',Weekly:'Every week',Fortnightly:'Every two weeks',Monthly:'Every month',Yearly:'Every year',Custom:'Every N days'};
 
-export const kinds = ['Cash','Stock','Crypto','Deposit','Property','Business','Money lent','Mortgage','Loan','Debt','Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense'] as const;
+export const kinds = ['Cash','Stock','Crypto','Deposit','Property','Business','Valuables','Money lent','Mortgage','Loan','Debt','Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense'] as const;
 export type Kind = typeof kinds[number];
 export type Entry = {revision?:number;is_investment?:boolean;source_paused?:boolean;earning_source_id?:string|null;earning_due_on?:string|null;payment_type?:'regular'|'bonus';income_source_id?:string|null;income_due_on?:string|null;account_exchange_rate?:number|null;account_rate_date?:string|null;account_currency?:string|null;id:string;opened_on?:string|null;deposit_compounding?:'monthly'|'daily'|'none';movement_id?:string|null;holding_account_id?:string|null;operation_id?:string|null;account_id?:string|null;custom_category_id?:string|null;import_key?:string|null;end_date?:string|null;expense_plan_id?:string|null;history_event_id?:string|null;mortgage_payment_id?:string|null;payment_principal?:number;payment_interest?:number;record_count?:number;name:string;kind:Kind;currency:string;amount:number;quantity:number;cost:number;rate:number;date:string;lent_date?:string;recurrence_days?:number|null;frequency:Frequency;notes:string;business_id?:string|null;ownership_percentage?:number;estimated_monthly_payment?:number;estimated_monthly_income?:number};
 // PostgreSQL permits a null due date for lending records. Keep the same client
@@ -45,7 +45,7 @@ export type Entry = {revision?:number;is_investment?:boolean;source_paused?:bool
 export function normalizeEntry(entry: Omit<Entry, 'date' | 'lent_date'> & {date?:string|null;lent_date?:string|null}): Entry {
  return {...entry,date:entry.date??'',lent_date:entry.lent_date??'',amount:Number(entry.amount),quantity:Number(entry.quantity),cost:Number(entry.cost),rate:Number(entry.rate),ownership_percentage:Number(entry.ownership_percentage??100),estimated_monthly_income:Number(entry.estimated_monthly_income??0),estimated_monthly_payment:Number(entry.estimated_monthly_payment??0)};
 }
-export const assets:readonly string[] = ['Cash','Stock','Crypto','Deposit','Property','Business','Money lent'];
+export const assets:readonly string[] = ['Cash','Stock','Crypto','Deposit','Property','Business','Valuables','Money lent'];
 export const liabilities:readonly string[] = ['Mortgage','Loan','Debt'];
 // Navigation groups are separate from accounting classifications.
 export const assetRecordKinds:readonly string[] = assets.filter(kind => kind !== 'Money lent');
