@@ -1866,9 +1866,9 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .cashflow-summary-card p{font-size:13px;color:var(--muted-foreground);margin-top:6px}
 .cashflow-summary-card.negative strong{color:var(--destructive)}
 .cashflow-summary-note{font-size:12px;margin:10px 0 18px}
-.cashflow-preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;margin-bottom:14px}
+.cashflow-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;margin-bottom:14px}
 .workspace .content[data-page="Income & expenses"] .panel{border-radius:10px;padding:18px 20px;box-shadow:none}
-.cashflow-preview-grid .panel{margin:0}
+.cashflow-preview-grid .panel{margin:0;min-width:0}
 .cashflow-preview-grid .panel-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}
 .workspace .content .cashflow-preview-grid h2{font-size:18px;font-weight:600;margin:0}
 .cashflow-preview-grid .panel-title button{padding:0;height:auto;font-size:13px}
@@ -1898,7 +1898,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 [data-page="Income & expenses"] .records .record-name strong{font-size:13px}
 [data-page="Income & expenses"] .records .record-name small{font-size:11px}
 .cashflow-view-history{display:flex;margin-left:auto;margin-top:12px;font-size:13px}
-@media(max-width:1100px){.cashflow-preview-grid{grid-template-columns:1fr}.cashflow-summary-card{gap:12px;padding:16px}.cashflow-summary-card strong{font-size:27px}.cashflow-summary-icon{width:36px;height:36px}}
+@media(max-width:1100px){.cashflow-preview-grid{grid-template-columns:minmax(0,1fr)}.cashflow-summary-card{gap:12px;padding:16px}.cashflow-summary-card strong{font-size:27px}.cashflow-summary-icon{width:36px;height:36px}}
 @media(max-width:700px){.cashflow-summary-grid{grid-template-columns:1fr}.cashflow-tabs{gap:0}.cashflow-tabs button{padding:12px 14px}.cashflow-reporting{max-width:none;width:100%}.cashflow-preview-grid{min-width:0}.workspace .content[data-page="Income & expenses"] .panel{padding:16px}.cashflow-summary-card{padding:18px}.cashflow-summary-card strong{font-size:30px}.cashflow-source-name{gap:8px}.cashflow-preview-grid th{white-space:normal}}
 
 .records tr.clickable-row { cursor: pointer; }
@@ -1907,9 +1907,12 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 
 /* QA responsive polish: compact phone summaries, single-row controls and no clipped actions. */
 .cashflow-action,.portfolio-ranges button{white-space:nowrap}
+.date-picker-trigger>span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .page-heading .date-picker-trigger{width:auto;min-width:0}
 .page-heading .date-picker-trigger span{white-space:nowrap}
 @media(max-width:640px){
+ /* Comfortable touch target for the sidebar toggle. */
+ .topbar [data-sidebar=trigger]{width:40px;height:40px}
  /* The workspace label is hidden here; hide its separator too. */
  .topbar>div:first-child>span:first-of-type+svg{display:none}
  /* Two-up summary tiles. */
@@ -1923,9 +1926,27 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
  .comparison-legend{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
  .comparison-legend::-webkit-scrollbar{display:none}
  .comparison-legend button{flex-shrink:0;white-space:nowrap}
- /* Cash flow header: month on its own row, then both actions side by side. */
+}
+.recovery-detail{font-size:var(--type-small);color:var(--foreground);font-weight:600;margin-top:2px}
+
+/* Size page layouts by the content column, not the window: between 768px and
+   1100px the open sidebar leaves far less room than viewport queries assume. */
+.workspace .content{container:content/inline-size}
+.asset-card-actions{flex-wrap:wrap}
+.asset-card-actions>:is(button,a){flex:1 1 auto}
+@container content (max-width:760px){
+ .page-heading:has(.cashflow-action){flex-direction:column;align-items:stretch}
  .workspace .content .entry-actions:has(.cashflow-action){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%}
  .entry-actions:has(.cashflow-action) :is(.cashflow-reporting,.date-picker-trigger){grid-column:1/-1;width:100%}
  .workspace .content .entry-actions .cashflow-action{white-space:nowrap;height:44px;min-height:44px}
+ .asset-card-grid,.asset-account-section>.asset-card-grid{grid-template-columns:minmax(0,1fr)}
 }
-.recovery-detail{font-size:var(--type-small);color:var(--foreground);font-weight:600;margin-top:2px}
+/* A centred scrolling strip hides its first tabs off the left edge. */
+.settings-layout .settings-navigation-list{justify-content:flex-start}
+@media(max-width:380px){
+ .topbar .topbar-actions{gap:6px}
+ .topbar-actions>button{padding-inline:8px}
+ .topbar-actions>button:not(.header-currency-trigger){white-space:nowrap;font-size:13px}
+ .topbar .preferences .language-selector{padding-inline:8px}
+ .page-heading [data-slot=button]{white-space:nowrap}
+}
