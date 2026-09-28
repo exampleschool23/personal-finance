@@ -9,7 +9,6 @@ import { demoBenchmarkKeys } from '@/lib/demo-finance';
 import { readOverviewBenchmarks, overviewBenchmarkStorageKey, toggleOverviewBenchmark, overviewSeriesVisible } from '@/lib/overview-benchmarks';
 import { portfolioAssets } from '@/lib/diversified-portfolio';
 import { stockBenchmarks } from '@/lib/benchmark-selection';
-import { Spinner } from '@/components/ui/spinner';
 import { InvestmentPeriodSummary } from '@/components/investment-period-summary';
 import { refreshRead } from '@/lib/refresh-read';
 import { InvestmentValueChart } from '@/components/investment-value-chart';
@@ -17,7 +16,7 @@ import { useEffect,useMemo,useState,type ReactElement } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { LoadingPlaceholder } from '@/components/loading-placeholder';
+import { ChartSkeleton, LoadingPlaceholder } from '@/components/loading-placeholder';
 import { useLanguage } from '@/components/language-provider';
 import { formatDate,formatMoney,formatNumber } from '@/lib/format';
 import { categoryColor } from '@/lib/category-colors';
@@ -133,9 +132,9 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
    {method.mode==='date'&&method.date!==coverage.start&&<Button variant="outline" onClick={()=>chooseMethod({mode:'date',date:coverage.start,scope})}>{t('Use earliest recorded date')}</Button>}
    {ready&&!decision&&<p className="comparison-notice">{t('Investment history or exchange rates are incomplete for this comparison.')}</p>}
    {demo&&<p className="comparison-note">{t("Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.")}</p>}
-   <div className="comparison-legend" aria-busy={comparisonsLoading}>{comparisonsLoading&&<span role="status" className="flex items-center gap-2 muted"><Spinner aria-hidden="true"/>{t('Loading comparisons…')}</span>}{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div>
+   <div className="comparison-legend" aria-busy={comparisonsLoading}>{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div>
    {ready&&visibleSeries.filter(item=>item.key!=='actual').map(item=>{const reason=ready.errors[item.key]??ready.errors.fx??(overviewResult?.unavailable.includes(item.key)?'Price data, exchange rates or funds needed for a matching withdrawal are unavailable.':null);return reason?<p key={item.key} className="comparison-note">{item.label}: {t(reason)}</p>:null;})}
-   {!!chartPoints.length&&<><InvestmentValueChart onPointSelect={setDetailDate} label="Investment value and proceeds" points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={<BenchmarkTooltip scope={scope} marketHistory={ready} fundingDetails={decision?.details} receipts={[]} currency={currency} series={chartSeries}/>}/>
+   {comparisonsLoading?<ChartSkeleton label={t('Loading comparisons…')}/>:!!chartPoints.length&&<><InvestmentValueChart onPointSelect={setDetailDate} label="Investment value and proceeds" points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={<BenchmarkTooltip scope={scope} marketHistory={ready} fundingDetails={decision?.details} receipts={[]} currency={currency} series={chartSeries}/>}/>
    <p className="comparison-note">{t('Tap a chart point to open its activity and investments.')}</p></>}
    <Dialog open={!!detailPoint} onOpenChange={open=>{if(!open)setDetailDate(null);}}><DialogContent className="chart-point-details sm:max-w-xl"><DialogHeader><DialogTitle>{t('Activity and investments')}</DialogTitle><DialogDescription>{detailDate?formatDate(detailDate,locale):''}</DialogDescription></DialogHeader>
     {detailPoint&&<>
@@ -152,9 +151,9 @@ export function InvestmentComparison({history,today,currency,market,demo,embedde
   <div className="portfolio-ranges" role="group" aria-label={t('Benchmarks')}>{definitions.filter(item=>item.key!=='actual'&&(item.key!=='CUSTOM'||symbol)&&(item.key!=='PORTFOLIO'||diversified)).map(item=><Button key={item.key} variant={selected.includes(item.key)?'default':'outline'} aria-pressed={selected.includes(item.key)} disabled={selected.length===1&&selected.includes(item.key)} onClick={()=>setBenchmarks(selected.includes(item.key)?selected.filter(key=>key!==item.key):[...selected,item.key])}>{item.label}</Button>)}</div>
   {demo?<p className="comparison-note">{t('Sign in to save investment comparisons.')}</p>:<>
    {profileError&&<p className="error" role="alert">{t(profileError)} {t('Showing default comparisons.')} <Button variant="outline" onClick={()=>{setProfileError('');setProfileRetry(n=>n+1);}}>{t('Retry')}</Button></p>}
-   {!profile&&!profileError?<LoadingPlaceholder label={t('Loading comparisons…')}/>:<>
+   {!profile&&!profileError?<ChartSkeleton label={t('Loading comparisons…')}/>:<>
     {profile&&<p className="comparison-note">{t('Started using the app')}: {formatDate(appStart,locale)}. {profile.activity.source==='earliest_record'&&t('For this existing account, the start date is the earliest saved app activity.')}</p>}
-    {!events.length?<p className="comparison-notice">{t('Select investments or debts with dated contributions, business spending or repayments to start the comparison.')}</p>:loadedKey!==requestKey?<LoadingPlaceholder label={t('Loading comparisons…')}/>:error?<p className="error" role="alert">{t(error)} <Button variant="outline" onClick={()=>{setLoadedKey('');setRetry(n=>n+1);}}>{t('Retry')}</Button></p>:<>
+    {!events.length?<p className="comparison-notice">{t('Select investments or debts with dated contributions, business spending or repayments to start the comparison.')}</p>:loadedKey!==requestKey?<ChartSkeleton label={t('Loading comparisons…')}/>:error?<p className="error" role="alert">{t(error)} <Button variant="outline" onClick={()=>{setLoadedKey('');setRetry(n=>n+1);}}>{t('Retry')}</Button></p>:<>
      {(performance.missing||(ready&&!result))&&<p className="comparison-notice">{t('An investment balance or exchange rate is missing. Performance is paused rather than using an incomplete total.')}</p>}
      {!!performance?.observed.length&&<p className="comparison-notice">{t('Some investments have no recorded purchase. Their first recorded value is used as opening capital, so earlier profit is unknown. Add the original investment amount and date in Tracker for a purchase-based comparison.')}</p>}
      {!!points.length&&<>

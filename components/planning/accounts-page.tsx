@@ -1,5 +1,6 @@
 "use client";
 import {StatementReconciliation} from './statement-reconciliation';
+import { ErrorPopup } from '@/components/error-popup';
 import {CorporateEventDialog} from './corporate-event-dialog';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
@@ -43,7 +44,7 @@ function HoldingRow({ record, accounts, market, onEdit, onTrack, assignHolding, 
  const priced = marketEntry(record, record.currency, market) ?? record;
  return <li className="account-holding-row"><div><strong>{record.name}</strong><p className="muted">{isHolding(record)?<>{t('{quantity} units', { quantity: formatNumber(record.quantity, locale) })} · {formatMoney(priced.amount, record.currency, locale, true)} {t('per unit')}</>:t('Available cash')}</p></div><strong className="account-holding-value">{formatMoney(value(priced), record.currency, locale)}</strong>
   <div className="account-holding-actions"><label>{t('Investment account')}<NativeSelect value={record.holding_account_id??''} disabled={busy} onChange={async event=>{const accountId=event.target.value||null;setBusy(true);setError('');try{await assignHolding(record,accountId);}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}><option value="">{t('No investment account')}</option>{accounts.filter(account=>record.kind==='Cash'||account.kind===record.kind).map(account=><option key={account.id} value={account.id}>{account.name}</option>)}</NativeSelect></label>{isHolding(record)&&<><Button variant="outline" onClick={()=>onMove({kind:'buy',target_id:record.id})}>{t('Buy')}</Button><Button variant="outline" onClick={()=>onMove({kind:'sell',source_id:record.id})}>{t('Sell / convert')}</Button><Button variant="outline" onClick={()=>onCorporate(record)}>{t('Investment events')}</Button></>}{onTrack&&<Button variant="outline" onClick={()=>onTrack(record)}>{t('Tracker')}</Button>}<Button variant="ghost" onClick={()=>onEdit(record)}>{t('Edit')}</Button></div>
-  {error&&<p className="error" role="alert">{t(error)}</p>}
+  <ErrorPopup message={error}/>
  </li>;
 }
 

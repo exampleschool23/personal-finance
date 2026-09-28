@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
+import { ErrorPopup } from '@/components/error-popup';
 import { AlertDialog, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,7 +45,7 @@ export function DeleteCategoryDialog({category,categories,onClose,onDeleted}:{ca
   {replacement==='new'&&<label>{t('New category')}<Input value={name} disabled={busy} required maxLength={80} onChange={event=>setName(event.target.value)}/></label>}
   <p className="muted">{t('Only categories of the same type can receive these records. Split allocations and Recently deleted records are moved too.')}</p></>}
   {usage&&!inUse&&<p>{t('No linked records. Your transactions will not be changed.')}</p>}
-  {error&&<p className="error" role="alert">{t(error)}{!usage&&<Button type="button" variant="outline" onClick={()=>{setError('');setUsage(null);setRetry(value=>value+1);}}>{t('Retry')}</Button>}</p>}
+  {error&&!usage&&<p className="error" role="alert">{t(error)}<Button type="button" variant="outline" onClick={()=>{setError('');setUsage(null);setRetry(value=>value+1);}}>{t('Retry')}</Button></p>}<ErrorPopup message={usage?error:''}/>
   <AlertDialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t('Cancel')}</Button><Button type="button" variant="destructive" disabled={!valid||busy} onClick={()=>void remove()}>{t(busy?'Saving…':inUse?'Move records and delete':'Delete category')}</Button></AlertDialogFooter>
  </AlertDialogContent></AlertDialog>;
 }

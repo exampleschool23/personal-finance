@@ -1,5 +1,6 @@
 "use client";
 import { CurrencySelect } from '@/components/currency-select';
+import { ErrorPopup } from '@/components/error-popup';
 import { useDiscardChanges } from '@/components/discard-changes';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -21,7 +22,7 @@ export function HoldingAccountDialog({ account, existing, currencies, save, onCl
     <label>{t('Account name')}<Input required maxLength={120} value={draft.name} placeholder={t('e.g. My brokerage or exchange')} onChange={event => setDraft({ ...draft, name: event.target.value })} /></label>
     <CurrencySelect value={draft.currency} currencies={currencies} savedCurrency={existing?account.currency:undefined} disabled={busy} onChange={currency=>setDraft({...draft,currency})}/>
    </fieldset>
-   {error && <p role="alert" className="error">{t(error)}</p>}
+   <ErrorPopup message={error}/>
    <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy || !draft.name.trim()}>{t(busy ? 'Saving…' : 'Save account')}</Button></div>
   </form>
  </DialogContent></Dialog>{guard.confirmation}</>;

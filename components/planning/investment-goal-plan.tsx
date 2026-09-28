@@ -1,5 +1,6 @@
 "use client";
 import { useId, useState } from 'react';
+import { ErrorPopup } from '@/components/error-popup';
 import Link from 'next/link';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Target } from 'lucide-react';
@@ -62,6 +63,6 @@ export function InvestmentGoalPlan({goal,data,today,currency,market,save,onEdit}
   <div className="entry-actions"><Button disabled={busy||goal.archived||!dirty||items.some(item=>!item.progress)} onClick={async()=>{setBusy(true);setError('');try{await save('goal',{...goal,...targets[0],investment_targets:targets,annual_return:0});setSavedTargets(targets);}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}>{t(busy?'Saving…':'Save plan')}</Button></div>
   <details className="investment-plan-method"><summary>{t('How this plan works')}</summary>  <p className="goal-help">{t('Progress follows the coins or shares held in the selected account. Buying increases progress; selling or moving holdings out reduces it. Price changes do not affect this goal.')}</p>
 <p className="goal-help">{t('The plan adds units on each monthly anniversary, starting next month. It does not assume an investment return or place trades.')}</p><p className="goal-help">{t('This goal tracks holdings without reserving them or changing your balances. The same holdings may appear in more than one goal.')} <Link href="/accounts">{t('Manage holdings')}</Link></p></details>
-  {error&&<p role="alert" className="error">{t(error)}</p>}
+  <ErrorPopup message={error}/>
  </section>;
 }

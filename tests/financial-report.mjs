@@ -86,3 +86,18 @@ test('selected reporting currency converts even a single foreign currency and at
  assert.equal(tables(r,'Conversion')[0].rows[0][2],'CBU + ExchangeRate-API');
  const s=text(r);assert.ok(s.includes('0.00009'));assert.ok(!s.includes('more omitted'));
 });
+test('reports read signed backup downloads, including non-ASCII names, and reject broken envelopes',()=>{
+ const {signBackup}=loadTS('lib/backup-signature.ts');
+ const old=process.env.BACKUP_SIGNING_KEY;
+ try{
+  process.env.BACKUP_SIGNING_KEY='test-only-backup-signing-key-with-enough-entropy';
+  const fixture={...reportFixture,tables:{...reportFixture.tables,savings_goals:[{...reportFixture.tables.savings_goals[0],name:'Запас — Jamg‘arma'}]}};
+  const signed=JSON.parse(signBackup(JSON.stringify(fixture)));
+  assert.equal(signed.format,'finance-backup-signed-v1');
+  const parsed=parseFinanceBackup(signed);
+  assert.equal(parsed.version,1);assert.equal(parsed.tables.savings_goals[0].name,'Запас — Jamg‘arma');
+  assert.equal(parsed.tables.finance_records.length,reportFixture.tables.finance_records.length);
+  assert.ok(buildFinancialReport(signed,'en','',null,{currency:'USD'}).blocks.length);
+  for(const broken of [{...signed,payload:'***'},{...signed,payload:12},{...signed,payload:'bm90LWpzb24'}])assert.throws(()=>parseFinanceBackup(broken),/Could not read the complete backup/);
+ }finally{if(old===undefined)delete process.env.BACKUP_SIGNING_KEY;else process.env.BACKUP_SIGNING_KEY=old;}
+});

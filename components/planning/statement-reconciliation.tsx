@@ -1,5 +1,6 @@
 "use client";
-import { showSaved } from '@/lib/save-feedback';
+import { showSaved } from '@/lib/feedback';
+import { ErrorPopup } from '@/components/error-popup';
 import {decimalTotalEquals} from '@/lib/decimal-amounts';
 import {useState} from 'react';
 import {useOwnerResource} from '@/hooks/use-owner-resource';
@@ -39,5 +40,5 @@ function StatementForm({initial,account,from,to,state,onClose,onSaved}:{initial:
  <div className="table-scroll daily-ledger"><table><thead><tr><th>{t('Cleared')}</th><th>{t('Date')}</th><th>{t('Name')}</th><th>{t('Amount')}</th></tr></thead><tbody>{state.entries.map(e=><tr key={e.key}><td><input type="checkbox" aria-label={`${t('Cleared')}: ${e.name}`} checked={draft.cleared.includes(e.key)} onChange={event=>setDraft({...draft,cleared:event.target.checked?[...draft.cleared,e.key]:draft.cleared.filter(k=>k!==e.key)})}/></td><td>{formatDate(e.date,locale)}{e.date<from&&<small className="block">{t('Pending from an earlier statement')}</small>}</td><td>{t(e.name)}</td><td>{formatMoney(Number(e.amount),account.currency,locale)}</td></tr>)}</tbody></table></div>
  <p>{t('Cleared balance')}: <strong>{formatMoney(sum,account.currency,locale)}</strong></p><p>{t('Difference')}: <strong>{formatMoney(difference,account.currency,locale)}</strong></p>{difference!==0&&Math.abs(difference)<1&&<p>{t('A fractional difference remains. Check the precise statement amounts.')}</p>}
  <p className="muted">{t('Any subsequent account balance update requires another review, including a payment after this statement period.')}</p>
- </fieldset>{error&&<p role="alert" className="error">{t(error)}</p>}<div className="record-form-footer"><Button variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button variant="outline" disabled={busy} onClick={()=>void save('draft')}>{t('Save draft')}</Button><Button disabled={busy||!decimalTotalEquals([draft.opening_balance,...state.entries.filter(e=>draft.cleared.includes(e.key)).map(e=>Number(e.amount))],draft.closing_balance)} onClick={()=>void save('reconciled')}>{t('Reconcile statement')}</Button></div>{guard.confirmation}</>;
+ </fieldset><ErrorPopup message={error}/><div className="record-form-footer"><Button variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button variant="outline" disabled={busy} onClick={()=>void save('draft')}>{t('Save draft')}</Button><Button disabled={busy||!decimalTotalEquals([draft.opening_balance,...state.entries.filter(e=>draft.cleared.includes(e.key)).map(e=>Number(e.amount))],draft.closing_balance)} onClick={()=>void save('reconciled')}>{t('Reconcile statement')}</Button></div>{guard.confirmation}</>;
 }

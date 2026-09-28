@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from 'react';
+import { ErrorPopup } from '@/components/error-popup';
 import { ChevronDown, History, Plus, SlidersHorizontal } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
@@ -78,7 +79,7 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
      })}</ul>
     : <div className="goal-activity-empty" role="status"><History size={22} aria-hidden="true"/><div><strong>{t('No cash goal activity yet.')}</strong><p>{t('Cash contributions, withdrawals and transfers will appear here when recorded.')}</p></div></div>}
   </section>}
-  {error && <p role="alert" className="error">{t(error)}</p>}
+  <ErrorPopup message={error}/>
  </section>;
 }
 

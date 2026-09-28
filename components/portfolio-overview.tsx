@@ -13,7 +13,7 @@ import { IncomeHistoryChart } from '@/components/income-history-chart';
 import { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
-import { LoadingPlaceholder } from '@/components/loading-placeholder';
+import { ChartSkeleton } from '@/components/loading-placeholder';
 import { financialTotals, type Entry } from '@/lib/finance';
 import { formatMoney, formatNumber } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
@@ -69,7 +69,7 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
   <section className="panel portfolio-trend">
    <div className="panel-title"><div><h2>{t('Portfolio over time')}</h2></div><div className="portfolio-ranges" aria-label={t('History period')}>{[30, 90, 365, null].map(days => <Button key={String(days)} size="sm" variant={range === days ? 'default' : 'outline'} aria-pressed={range === days} onClick={() => setRange(days)}>{days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) })}</Button>)}</div></div>
    {!loading&&!error?<InvestmentPeriodSummary input={{records:allRecords,events:history?.events??[],cashflows:history?.cashflows,market,currency,today}} start={range===null?'0000-01-01':shiftDay(today,-range)}>{headline}</InvestmentPeriodSummary>:<div className="portfolio-headline">{headline}</div>}
-   {loading ? <LoadingPlaceholder label={t('Loading history…')}/> : error ? <p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}>{t('Retry')}</Button></p> : <>
+   {loading ? <ChartSkeleton label={t('Loading history…')}/> : error ? <p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}>{t('Retry')}</Button></p> : <>
     <InvestmentComparison history={history??{records:[],events:[]}} today={today} currency={currency} market={market} demo={demo} embedded={{openingNetWorth:recorded.points[0]?{date:recorded.points[0].date,amount:recorded.points[0].net}:undefined,days:range??0,points:visible,tooltip:<PortfolioTooltip valueKey="actual" showBalanceDifference={!partialHistory} valueLabel="NET WORTH" details={details} currency={currency} onOpenActivity={onOpenActivity}/>}}/>
     {recorded.missing > 0 && <p className="muted">{t('Some holdings have no recorded history yet.')}</p>}
     {excludedCurrencies.length > 0 && <p className="muted">{t('Some currencies could not be converted and are excluded from totals.')}</p>}

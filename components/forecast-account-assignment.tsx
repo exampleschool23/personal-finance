@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import { ErrorPopup } from '@/components/error-popup';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Button } from '@/components/ui/button';
 import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
@@ -21,6 +22,6 @@ export function ForecastAccountAssignment({record,accounts,assignment,today,tool
  return <div className="grid gap-2"><label>{record.name} · {record.currency}<NativeSelect disabled={busy} value={accountId} onChange={event=>setAccountId(event.target.value)}><option value="">{t('Unassigned')}</option>{accounts.map(item=><option key={item.id} value={item.id}>{item.name} · {item.currency}</option>)}</NativeSelect></label>
   {account&&account.currency!==record.currency&&<><ExchangeRatePreview fx={fx}/>{fx.rate&&<p className="muted">{t('Projected amount')}: {formatMoney(record.amount*fx.rate,account.currency,locale)}</p>}{assignment?.account_id===accountId&&assignment.exchange_rate&&<small className="muted">{t('Saved forecast rate')}: {formatNumber(1,locale)} {assignment.from_currency} = {formatNumber(Number(assignment.exchange_rate),locale,8)} {assignment.to_currency}</small>}</>}
   <Button type="button" variant="outline" disabled={busy||(!!accountId&&(!account||!fx.rate||fx.loading||!!fx.error))} onClick={()=>void save()}>{t(busy?'Saving…':'Save assignment')}</Button>
-  {error&&<p role="alert" className="error">{t(error)}</p>}
+  <ErrorPopup message={error}/>
  </div>;
 }

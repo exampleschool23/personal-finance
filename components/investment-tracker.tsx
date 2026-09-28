@@ -1,5 +1,6 @@
 "use client";
-import { showSaved } from '@/lib/save-feedback';
+import { showSaved } from '@/lib/feedback';
+import { ErrorPopup } from '@/components/error-popup';
 import { useDraftDialog } from '@/components/discard-changes';
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
 import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
@@ -110,7 +111,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
    {deposit&&<p className="muted tracker-help">{t('Use Top-up or Withdraw to move money between accounts. Use Record capitalized interest when interest stays in the deposit; Income received is for interest paid out.')}</p>}
    <p className="muted tracker-help">{t(lending?'Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.':cash?'Use Balance update to confirm a cash balance, or Transfer money to move funds between accounts.':security?'Use Value update for a valuation, Buy or Sell / convert for trades, and income or expenses for actual cash payments.':deposit?'Use Balance update for a confirmed bank balance. Record paid-out interest and fees separately.':'Use Value update for a valuation. Record invested money, sale proceeds, income and expenses separately.')}</p>
    <p className="muted tracker-help">{t(lending?'Enter updates on or after the latest balance date. Repayments cannot exceed the outstanding balance.':record.kind==='Business'?'Past valuations do not replace a newer balance. Business valuations use the current ownership share.':'Past valuations do not replace a newer balance.')}</p>
-   {error&&<p className="error" role="alert">{t(error)}</p>}
+   <ErrorPopup message={error}/>
    {submitted&&<p className="muted tracker-help">{t('Retry with the same details to avoid duplicates.')}</p>}
    <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Close')}</Button><Button type="button" onClick={()=>void save()} disabled={!canSave}>{t(busy?'Saving…':submitted?'Retry update':inline?'Save payment':'Save update')}</Button></div>
   </div>;

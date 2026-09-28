@@ -1,5 +1,6 @@
 "use client";
 import { useUnsavedNavigation } from '@/components/discard-changes';
+import { ErrorPopup } from '@/components/error-popup';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useId, useMemo, useState, type CSSProperties } from 'react';
@@ -148,6 +149,6 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
 
   <details className="goal-method"><summary><CircleHelp size={17} aria-hidden="true" />{t('How this projection works')}<ChevronDown size={16} aria-hidden="true" /></summary><div><p>{t('Existing wealth stays constant. New investments are added on each monthly anniversary and compound at your assumed annual return. Taxes, fees, inflation and future exchange-rate changes are excluded. Returns are assumptions, not guarantees.')}</p><p>{t('Each goal is a separate scenario. Do not allocate the same surplus to multiple savings goals. Savings allocations already belong to your net worth.')}</p></div></details>
   <footer className="goal-save-bar"><span className="goal-save-status" role="status">{goal.archived ? t('Archived') : dirty ? <><i />{t('Unsaved changes')}</> : <><Check size={16} aria-hidden="true" />{t('Plan saved')}</>}</span><div><Button variant="ghost" disabled={busy || !dirty || goal.archived} onClick={() => { setMonthly(savedPlan.monthly); setRate(savedPlan.rate); setError(''); }}><RotateCcw size={15} aria-hidden="true" />{t('Reset changes')}</Button><Button disabled={busy || goal.archived || !dirty} onClick={savePlan}><Save size={16} aria-hidden="true" />{t(busy ? 'Saving…' : 'Save plan')}</Button></div></footer>
-  {error && <p className="error" role="alert">{t(error)}</p>}
+  <ErrorPopup message={error}/>
  {confirmation}</section>;
 }

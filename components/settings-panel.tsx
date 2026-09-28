@@ -1,5 +1,6 @@
 "use client";
-import { showSaved } from '@/lib/save-feedback';
+import { showSaved } from '@/lib/feedback';
+import { ErrorPopup } from '@/components/error-popup';
 import { useUnsavedNavigation } from '@/components/discard-changes';
 import { LoadingPlaceholder } from '@/components/loading-placeholder';
 import { useState } from 'react';
@@ -52,7 +53,7 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
           </div>
         </section>
       </fieldset>
-      <div className="panel preferences-save-bar"><span className="preferences-save-status" role="status"><span className={dirty?'preferences-status-dot is-dirty':'preferences-status-dot'} aria-hidden="true"/>{t(dirty?'Unsaved changes':'All changes saved')}</span><div><Button type="button" variant="outline" disabled={!dirty||busy} onClick={()=>{setDraft(saved);setMessage('');setQuery('');}}>{t('Discard')}</Button><Button type="submit" disabled={!dirty||busy||!!loadError}>{t(busy?'Saving…':'Save changes')}</Button></div>{message && <p className="error" role="alert">{t(message)}</p>}</div>
+      <div className="panel preferences-save-bar"><span className="preferences-save-status" role="status"><span className={dirty?'preferences-status-dot is-dirty':'preferences-status-dot'} aria-hidden="true"/>{t(dirty?'Unsaved changes':'All changes saved')}</span><div><Button type="button" variant="outline" disabled={!dirty||busy} onClick={()=>{setDraft(saved);setMessage('');setQuery('');}}>{t('Discard')}</Button><Button type="submit" disabled={!dirty||busy||!!loadError}>{t(busy?'Saving…':'Save changes')}</Button></div><ErrorPopup message={message}/></div>
     </form>}{confirmation}
   </section>;
 }

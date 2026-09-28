@@ -1,5 +1,6 @@
 "use client";
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
+import { ErrorPopup } from '@/components/error-popup';
 import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
 import { NativeSelect } from '@/components/ui/native-select';
 import { depositToday } from '@/lib/deposit-interest';
@@ -47,7 +48,7 @@ export function MortgagePaymentDialog({ mortgage, accounts = [], onClose, onSave
    </fieldset>
    <div className="ownership-summary"><p>{t('Total payment: {amount}', { amount: money(payment.principal + payment.interest) })}</p><p>{t('Remaining balance: {amount}', { amount: money(mortgage.amount - payment.principal) })}</p></div>
    <p className="muted">{t('Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.')}</p>
-   {error && <p className="error" role="alert">{t(error)} {t('Retry the same payment to avoid duplicates.')}</p>}
+   <ErrorPopup message={error} detail="Retry the same payment to avoid duplicates."/>
    <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy || !valid} type="button" onClick={()=>void submit()}>{t(busy ? 'Saving…' : 'Save payment')}</Button></div>
   </div>;
  if(inline)return <>{content}{guard.confirmation}</>;

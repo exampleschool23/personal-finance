@@ -1,3 +1,4 @@
+import { unwrapSignedBackup } from '@/lib/backup-envelope';
 import { projectGoal } from './goal-projection';
 import { convertAmount, instrumentFor, instrumentKey, type MarketData } from './market';
 import { assets, liabilities, income, expenses, value, normalizeEntry, monthly, type Entry } from './finance';
@@ -15,7 +16,8 @@ export type FinanceBackup={version:number;exported_at:string;tables:Record<strin
 export type ReportBlock={kind:'title'|'heading'|'subheading'|'text'|'pageBreak';text:string}|{kind:'table';text:string;headers:string[];rows:string[][];widths:number[];numeric?:number[]};
 export type FinancialReport={title:string;generated:string;locale:string;blocks:ReportBlock[]};
 export type ReportOptions={currency?:string;plans?:ExpensePlan[]};
-export function parseFinanceBackup(input:unknown):FinanceBackup {
+export function parseFinanceBackup(signed:unknown):FinanceBackup {
+ const input=unwrapSignedBackup(signed);
  if(!input||typeof input!=='object')throw Error('Could not read the complete backup.');
  const data=input as FinanceBackup;
  if(data.version!==1||!data.exported_at||!Number.isFinite(Date.parse(data.exported_at))||!data.tables||typeof data.tables!=='object'||!Array.isArray(data.tables.finance_records)||!Array.isArray(data.tables.savings_goals))throw Error('Could not read the complete backup.');

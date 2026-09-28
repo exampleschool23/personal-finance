@@ -1,5 +1,6 @@
 "use client";
-import { showSaved } from '@/lib/save-feedback';
+import { showSaved } from '@/lib/feedback';
+import { ErrorPopup } from '@/components/error-popup';
 import {useEffect,useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
@@ -23,6 +24,6 @@ export function AccountAccessPanel({settings=false,tokenHash='',tokenType='email
  {mode==='verify'&&<p>{t('Continue to verify this email link. Links expire and can only be used once.')}</p>}
  </fieldset>{mode==='delete_account'&&!capabilities.deletion&&<p role="status">{t('Account deletion is awaiting server setup.')}</p>}<Button variant={mode==='delete_account'?'destructive':'default'} disabled={busy||(needsPassword&&password!==repeat)||(mode==='delete_account'&&(!capabilities.deletion||confirmation!=='DELETE'||!current))}>{t(busy?'Saving…':mode==='change_password'?'Change password':mode==='verify'?'Verify email link':mode==='delete_account'?'Permanently delete account':'Continue')}</Button>
  {mode==='delete_account'&&<Button type="button" variant="outline" disabled={busy} onClick={()=>{setMode('change_password');setCurrent('');setConfirmation('');setError('');setMessage('');}}>{t('Cancel')}</Button>}
- </form>{settings&&mode!=='delete_account'&&<div className="account-danger-zone mt-6 border-t border-destructive/30 pt-6"><h3 className="font-semibold text-destructive">{t('Permanently delete account')}</h3><p className="my-3 text-sm text-muted-foreground">{t('This permanently deletes your account and financial records. Download a backup first. This cannot be undone.')}</p><Button type="button" variant="destructive" disabled={busy} onClick={()=>{setMode('delete_account');setCurrent('');setPassword('');setRepeat('');setConfirmation('');setError('');setMessage('');}}>{t('Delete account')}</Button></div>}{error&&<p className="error" role="alert">{t(error)}</p>}{message&&<p role="status">{t(message)}</p>}{!settings&&<Link href="/">{t('Back to sign in')}</Link>}
+ </form>{settings&&mode!=='delete_account'&&<div className="account-danger-zone mt-6 border-t border-destructive/30 pt-6"><h3 className="font-semibold text-destructive">{t('Permanently delete account')}</h3><p className="my-3 text-sm text-muted-foreground">{t('This permanently deletes your account and financial records. Download a backup first. This cannot be undone.')}</p><Button type="button" variant="destructive" disabled={busy} onClick={()=>{setMode('delete_account');setCurrent('');setPassword('');setRepeat('');setConfirmation('');setError('');setMessage('');}}>{t('Delete account')}</Button></div>}<ErrorPopup message={error}/>{message&&<p role="status">{t(message)}</p>}{!settings&&<Link href="/">{t('Back to sign in')}</Link>}
  </section>;
 }

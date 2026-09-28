@@ -43,7 +43,7 @@ test('delete dialog requires a loaded preview and explicit same-type replacement
   assert.equal(find(tree,node=>node.props?.variant==='destructive').props.disabled,true);
   select.props.onChange({target:{value:target.id}});tree=h.render(props);submit=find(tree,node=>node.props?.variant==='destructive');assert.equal(submit.props.disabled,false);
   submit.props.onClick();await new Promise(resolve=>setImmediate(resolve));tree=h.render(props);
-  assert.equal(closed,0);assert.equal(deleted,0);assert.equal(find(tree,node=>node.props?.role==='alert').props.children[0],'Unavailable');
+  assert.equal(closed,0);assert.equal(deleted,0);assert.equal(find(tree,node=>node.type?.name==='ErrorPopup').props.message,'Unavailable');
   assert.deepEqual(JSON.parse(calls.at(-1).options.body),{id:category.id,replacement_id:target.id});
   globalThis.fetch=async()=>Response.json({ok:true});find(tree,node=>node.props?.variant==='destructive').props.onClick();await new Promise(resolve=>setImmediate(resolve));assert.equal(closed,1);assert.equal(deleted,1);cleanup();
  }finally{globalThis.fetch=original;}

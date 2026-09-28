@@ -23,3 +23,13 @@ export function WorkspaceSkeleton({ label, section }: { label: string; section: 
     </div>
   </div>;
 }
+
+export function ChartSkeleton({ label, height = 310 }: { label: string; height?: number }) {
+  return <div role="status" aria-busy="true" className="chart-skeleton shimmer" style={{ height }}>
+    <span className="sr-only">{label}</span>
+    <svg aria-hidden="true" viewBox="0 0 400 100" preserveAspectRatio="none">
+      {[20, 45, 70].map(y => <line key={y} x1="0" x2="400" y1={y} y2={y}/>)}
+      <path d="M0 82 C40 78 60 60 100 64 S160 40 200 46 S260 28 300 34 S360 14 400 18"/>
+    </svg>
+  </div>;
+}

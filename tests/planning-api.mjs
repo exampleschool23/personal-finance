@@ -6,7 +6,7 @@ import ts from 'typescript';
 import {z} from 'zod';
 import {loadTS} from './helpers/load-ts.mjs';
 const {planningReadFilters,currentReviewMonth}=loadTS('lib/planning-reads.ts');
-import {signBackup} from '../lib/backup-signature.ts';
+const {signBackup}=loadTS('lib/backup-signature.ts');
 import {instrumentFor} from '../lib/market.ts';
 import {timingSafeEqual} from 'node:crypto';
 import {exportCSV,parseCSV,mapCSV,FINANCE_RECORD_CSV_COLUMNS} from '../lib/csv.ts';

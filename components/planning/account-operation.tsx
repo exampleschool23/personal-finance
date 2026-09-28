@@ -1,5 +1,6 @@
 "use client";
 import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
+import { ErrorPopup } from '@/components/error-popup';
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
 import { useDiscardChanges } from '@/components/discard-changes';
 import { useState } from 'react';
@@ -42,7 +43,7 @@ export function AccountOperation({operation,records,save,onClose}:{operation:Ope
  </fieldset>
  {convertedPayment&&<><ExchangeRatePreview fx={fx}/>{fx.rate&&account&&<p className="muted">{t('Account amount')}: {formatMoney((operation.action==='occurrence'?draft.amount:draft.amount+draft.fee)/fx.rate,account.currency,locale)}</p>}</>}
  {operation.action==='reconcile'&&<p className="muted">{t('This records a balance correction today. It is not income or spending.')}</p>}
- {error&&<p role="alert" className="error">{t(error)}</p>}
+ <ErrorPopup message={error}/>
  <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||!draft.account_id||(operation.action==='occurrence'&&draft.amount<=0)||(convertedPayment&&!fx.rate)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></div>
  </form></DialogContent></Dialog>{guard.confirmation}</>;
 }

@@ -1,5 +1,6 @@
 "use client";
 import type { MarketData } from '@/lib/market';
+import { ErrorPopup } from '@/components/error-popup';
 import { useRef, useState } from 'react';
 import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,7 @@ export function FinancialReportExport({demo,market=null,currency}:{demo:boolean;
  }
  return <div>
  <Button variant="outline" disabled={demo||busy} aria-busy={busy} onClick={()=>void download()}><FileText size={18} aria-hidden="true"/>{t(busy?'Preparing PDF…':'Download financial report (PDF)')}</Button>
- {error&&<p className="error" role="alert">{t(error)}</p>}
+ <ErrorPopup message={error}/>
  {done&&<p role="status">{t('Your PDF is ready. Upload it to your agent when you want feedback.')}</p>}
  </div>;
 }

@@ -1,5 +1,6 @@
 "use client";
 import {ScheduleFields} from './schedule-fields';
+import { ErrorPopup } from '@/components/error-popup';
 import {frequencyLabels} from '@/lib/finance';
 import { selectTransactionCategory } from '@/lib/transaction-categories';
 import { IncomeSourcePicker } from '@/components/income-source-picker';
@@ -84,7 +85,7 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
   {!salaryPlan&&<CashAccountField entry={editing} records={planning.data.records} loading={planning.loading} error={planning.error} busy={busy} onChange={account_id=>update({account_id})}/>}
   {planning.error&&<p className="error" role="alert">{t(planning.error)}</p>}
   <label>{t('Notes (optional)')}<textarea value={editing.notes} maxLength={2000} rows={2} onChange={event=>update({notes:event.target.value})}/></label>
-  {error&&<p className="error" role="alert">{t(error)}</p>}
+  <ErrorPopup message={error}/>
   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={()=>setEditing(null)}>{t('Cancel')}</Button><Button className="primary" disabled={busy||missing||(!named&&(planning.loading||!!planning.error))|| (!!editing.earning_source_id&&(earningSources?.loading||!!earningSources?.error))}>{t(busy?'Saving…':salaryPlan?'Save salary plan':demo?'Save in demo':'Save income')}</Button></div>
  </form>;
 }

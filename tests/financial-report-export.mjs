@@ -9,6 +9,7 @@ function fixture(){
   react:{...React,useState(initial){const i=cursor++;if(!(i in states))states[i]=initial;return [states[i],value=>{states[i]=value;}];},useRef:()=>downloading},
   '@/components/language-provider':{useLanguage:()=>({t:key=>key,language:'uz'})},
   '@/lib/financial-report':{buildFinancialReport:(backup,language,context,market,options)=>{built.push({backup,language,context,market,options});return {}; }},
+  '@/components/error-popup':{ErrorPopup:function ErrorPopup(){return null;}},
   '@/lib/financial-report-pdf':{renderFinancialReportPdf:async()=>new Uint8Array([37,80,68,70,45])},
  });
  return {render:(demo=false)=>{cursor=0;return FinancialReportExport({demo,currency:'UZS'});},built};
@@ -23,7 +24,7 @@ test('report download uses only the owner backup and local font; failures never 
  try{
   const h=fixture();const tree=h.render();assert.equal(find(tree,node=>node.type==='textarea'),undefined);
   find(tree,node=>typeof node.props?.onClick==='function').props.onClick();assert.equal(find(h.render(),node=>typeof node.props?.onClick==='function').props.disabled,true);find(h.render(),node=>typeof node.props?.onClick==='function').props.onClick();await flush();await flush();
-  assert.equal(requests.length,3);assert.equal(downloads,0);assert.equal(h.built.length,0);assert.ok(find(h.render(),node=>node.props?.role==='alert'));
+  assert.equal(requests.length,3);assert.equal(downloads,0);assert.equal(h.built.length,0);assert.equal(find(h.render(),node=>node.type?.name==='ErrorPopup').props.message,'Could not export all data. No incomplete backup was created.');
   failed=false;budgetFailed=true;find(h.render(),node=>typeof node.props?.onClick==='function').props.onClick();await flush();await flush();
   assert.equal(downloads,0);assert.equal(h.built.length,0);
   budgetFailed=false;find(h.render(),node=>typeof node.props?.onClick==='function').props.onClick();await flush();await flush();

@@ -1,5 +1,5 @@
 "use client";
-import { showSaved } from '@/lib/save-feedback';
+import { showSaved } from '@/lib/feedback';
 import { Trash2, SlidersHorizontal } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { DiversifiedPortfolioSettings } from '@/components/diversified-portfolio-settings';

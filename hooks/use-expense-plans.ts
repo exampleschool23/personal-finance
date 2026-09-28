@@ -1,5 +1,5 @@
 "use client";
-import { showSaved } from '@/lib/save-feedback';
+import { showSaved } from '@/lib/feedback';
 import { refreshRead } from '@/lib/refresh-read';
 import { useEffect, useState, useRef } from 'react';
 import type { Entry } from '@/lib/finance';

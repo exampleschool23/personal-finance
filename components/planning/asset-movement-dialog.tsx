@@ -1,5 +1,6 @@
 "use client";
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
+import { ErrorPopup } from '@/components/error-popup';
 import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
 import { useDiscardChanges } from '@/components/discard-changes';
 import { useState } from 'react';
@@ -69,7 +70,7 @@ export function AssetMovementDialog({initial,records,accounts=[],save,onClose}:{
    </fieldset>
    {source&&target&&valid&&<div className="ownership-summary">{!interest&&<p>{source.name}: {units(source,available-draft.sent)}</p>}<p>{target.name}: {units(target,(isHolding(target)?target.quantity:target.amount)+received)}</p><small>{t('Balances after this transaction')}</small></div>}
    {!interest&&(!movementSources(draft.kind,records).length||!movementTargets(draft.kind,source,records).length)&&<p className="muted">{t('Add the source and destination first. For a new holding or proceeds balance, start at zero.')}</p>}
-   {error&&<p role="alert" className="error">{t(error)}</p>}
+   <ErrorPopup message={error}/>
    <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||(!valid&&!submitted)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></div>
   </form>
  </DialogContent></Dialog>{guard.confirmation}</>;

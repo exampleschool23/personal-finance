@@ -1,5 +1,5 @@
 "use client";
-import { showSaved } from '@/lib/save-feedback';
+import { showSaved } from '@/lib/feedback';
 import { useOwnerResource } from './use-owner-resource';
 import { useCallback } from 'react';
 import { emptyPlanning,type Category } from '@/lib/planning';

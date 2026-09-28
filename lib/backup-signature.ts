@@ -1,6 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-
-const format = 'finance-backup-signed-v1';
+import { SIGNED_BACKUP_FORMAT as format } from '@/lib/backup-envelope';
 const maxPayloadBytes = 20_000_000;
 function signingKey() {
  const key = process.env.BACKUP_SIGNING_KEY;
