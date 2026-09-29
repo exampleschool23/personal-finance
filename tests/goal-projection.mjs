@@ -59,3 +59,14 @@ test('only Cash flow follows its month picker; other screens plan for the curren
  assert.match(provider,/estimatedCashFlow\(current, planProjection, planningMonth\)/);
  assert.match(provider,/useExpensePlans\(user, demo, rows, reload, refreshRecords, planningMonth\)/);
 });
+
+test('milestones mark the months that receive an investment and show both monthly amounts',()=>{
+ const plan=projectGoal(0,1000,'2026-01-31','2026-04-15',100,0);
+ assert.deepEqual(plan.points.map(point=>[point.date,point.contributes]),[['2026-01-31',false],['2026-02-28',true],['2026-03-31',true],['2026-04-15',false]]);
+ const skipped=projectGoal(0,1000,'2026-01-31','2026-03-31',100,0,'2026-02');
+ assert.deepEqual(skipped.points.map(point=>point.contributes),[false,false,true]);
+ const planner=fs.readFileSync('components/planning/goal-forecast.tsx','utf8');
+ assert.match(planner,/<th scope="col">\{t\('Monthly investment'\)\}<\/th><th scope="col">\{t\('Your projected path'\)\}<\/th><th scope="col">\{t\('Monthly contribution needed'\)\}<\/th><th scope="col">\{t\('Path to your goal'\)\}<\/th>/);
+ // The needed amount is the same whole figure as the summary tile, never an exact calculation tail.
+ assert.match(planner,/point\.contributes && requiredContribution !== null \? money\(requiredContribution\) : '—'/);
+});

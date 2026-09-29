@@ -762,7 +762,8 @@ tbody tr:last-child td{border-bottom:0}
 @media(max-width:640px){.workspace .content .goal-card{padding:20px}}
 .goal-milestones{max-height:320px;margin-top:12px}
 .goal-milestones table{width:100%;text-align:left}
-.goal-milestones th,.goal-milestones td{padding:10px;border-bottom:1px solid var(--border);white-space:nowrap}
+.goal-milestones th,.goal-milestones td{padding:10px;border-bottom:1px solid var(--border)}
+.goal-milestones th{white-space:normal;vertical-align:bottom}
 
 /* Interactive goal planner */
 .goal-forecast{container-type:inline-size;min-width:0;padding:28px;overflow:hidden;font-size:var(--type-small)}

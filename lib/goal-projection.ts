@@ -17,7 +17,8 @@ export function projectGoal(starting: number, target: number, today: string, dea
  const factor = (date: string) => dates.filter(day=>day<=date&&day.slice(0,7)!==skippedMonth).reduce((sum,day)=>sum+(1+annualReturn/100)**((Date.parse(date+'T00:00:00Z')-Date.parse(day+'T00:00:00Z'))/86400000/365.25),0);
  const finalFactor = factor(deadline);
  const required = target <= starting ? 0 : finalFactor > 0 ? (target-starting)/finalFactor : null;
- const points = [today,...dates,...(end>start&&!dates.includes(deadline)?[deadline]:[])].map(date=>({date,projected:starting+monthly*factor(date),required:required===null?null:starting+required*factor(date),target}));
+ // `contributes` marks a monthly anniversary that receives an investment; today and an off-cycle deadline do not.
+ const points = [today,...dates,...(end>start&&!dates.includes(deadline)?[deadline]:[])].map(date=>({date,contributes:date!==today&&dates.includes(date)&&date.slice(0,7)!==skippedMonth,projected:starting+monthly*factor(date),required:required===null?null:starting+required*factor(date),target}));
  return {points,required,projected:starting+monthly*finalFactor,months:dates.length,overdue:end<start,contributed:monthly*dates.filter(day=>day.slice(0,7)!==skippedMonth).length};
 }
 
