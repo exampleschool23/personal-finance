@@ -10,7 +10,7 @@ test('expense shortcut uses owned outstanding liabilities and guards unsaved cha
  assert.match(ui,/type="button" disabled=\{busy\|\|!selectedDebt/);
 });
 test('shortcut routes mortgages to their existing form and loans to repayment mode',()=>{
- const workspace=fs.readFileSync('components/finance-workspace.tsx','utf8');
+ const workspace=fs.readFileSync('components/workspace/workspace-dialogs.tsx','utf8');
  assert.match(workspace,/setEditing\(null\);if\(record.kind==='Mortgage'\)setPayingMortgage\(record\);else setDebtPayment\(record\)/);
  assert.match(workspace,/initialType="withdrawal" record=\{debtPayment\}/);
  const tracker=fs.readFileSync('components/investment-tracker.tsx','utf8');

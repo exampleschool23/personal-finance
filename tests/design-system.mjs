@@ -56,7 +56,7 @@ test('asset card shows share with one decimal, a dash without a total, and clamp
 });
 
 test('redesigned pages translate every label and use the shared formatters',()=>{
- const files=['components/page-header.tsx','components/stat-tile.tsx','components/asset-card.tsx','components/brand.tsx','components/debt-summary.tsx','components/asset-dashboard.tsx','components/asset-accounts.tsx','components/recently-deleted.tsx','components/planning/upcoming-page.tsx','components/planning/accounts-page.tsx','components/planning/goals-page.tsx','components/settings-layout.tsx','components/income-sources-panel.tsx','components/finance-workspace.tsx'];
+ const files=['components/page-header.tsx','components/stat-tile.tsx','components/asset-card.tsx','components/brand.tsx','components/debt-summary.tsx','components/asset-dashboard.tsx','components/asset-accounts.tsx','components/recently-deleted.tsx','components/planning/upcoming-page.tsx','components/planning/accounts-page.tsx','components/planning/goals-page.tsx','components/settings-layout.tsx','components/income-sources-panel.tsx','components/workspace/app-drawer.tsx','components/workspace/top-bar.tsx','components/workspace/workspace-shell.tsx','components/workspace/workspace-dialogs.tsx','components/workspace/records-table.tsx','components/workspace/screen-notices.tsx',...fs.readdirSync('components/workspace/screens').map(file=>'components/workspace/screens/'+file)];
  const sources=files.map(file=>[file,fs.readFileSync(file,'utf8')]);
  for(const language of ['en','ru','uz']){
   const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));

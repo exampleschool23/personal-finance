@@ -11,6 +11,29 @@ All user-facing prices, amounts, exchange rates, quantities, percentages, and da
 - Store numbers and ISO dates, never formatted display strings. Formatting must not mutate amounts, purchase costs, or exchange-rate calculations.
 - Add regression coverage to `tests/format.mjs` when changing shared formatting. Check EN, RU, and UZ, grouping, decimals, small crypto prices, missing dates, and date-only timezone behavior.
 
+# Workspace structure
+
+The drawer, the shell and the screens are separate. Keep them that way.
+
+- `app/(workspace)/layout.tsx` renders `Workspace` from
+  `components/workspace/workspace-shell.tsx` once. It owns the drawer, the top
+  bar, the shared dialogs and the privacy footer, and places the routed screen
+  between them.
+- Each route in `app/(workspace)/*/page.tsx` renders exactly one screen from
+  `components/workspace/screens/`. A screen returns only its own
+  `<div data-page="…" className="content">` blocks. It never imports the drawer,
+  the top bar, the shell, the sidebar kit or another screen.
+- `AppDrawer` (`components/workspace/app-drawer.tsx`) is independent: it takes
+  the account, the overdue count and a sign-out callback as props and reads the
+  route list from `components/workspace/navigation.ts`. It must not import
+  workspace state or any screen. Add a destination by adding it to `sections`
+  and creating its route and screen.
+- Shared session, records and actions live in `WorkspaceProvider`
+  (`components/workspace/workspace-provider.tsx`) and are read with
+  `useWorkspace()`. State that only one screen needs (a selected tab, a local
+  filter) stays inside that screen.
+- `tests/workspace-structure.mjs` enforces these boundaries.
+
 # Interface design system
 
 Every workspace page shares one visual language, first built for Overview. Extend

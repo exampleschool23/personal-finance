@@ -1,5 +1,5 @@
-import FinanceWorkspace from "@/components/finance-workspace";
+import { Workspace } from "@/components/workspace/workspace-shell";
 
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
-  return <><FinanceWorkspace />{children}</>;
+  return <Workspace>{children}</Workspace>;
 }
