@@ -4,8 +4,9 @@ import {loadTS} from './helpers/load-ts.mjs';
 const {investmentPeriodTotals}=loadTS('lib/investment-period.ts');
 const event=(id,type,amount,date='2026-09-19')=>({id,record_id:'sheep',event_type:type,amount,occurred_on:date,created_at:date,balance:null,ownership_percentage:100});
 const input={records:[{id:'sheep',kind:'Business',currency:'USD'},{id:'debt',kind:'Mortgage',currency:'USD'}],events:[event('old','income',900,'2026-08-01'),event('add','contribution',84),event('income','income',150),event('cost','expense',20),event('snapshot','baseline',9000),{...event('mortgage','mortgage_payment',100),record_id:'debt',principal:80}],today:'2026-09-20',currency:'USD',market:{rates:{}}};
-test('period classifies full mortgage payments and business contributions as invested',()=>{
- assert.deepEqual(investmentPeriodTotals(input,'2026-09-19'),{income:150,invested:184,expenses:20,missing:[]});
+test('principal and business contributions are invested; mortgage interest and running costs are expenses',()=>{
+ // 84 contributed + 80 principal; 20 running cost + 20 interest. Together they equal the money that left.
+ assert.deepEqual(investmentPeriodTotals(input,'2026-09-19'),{income:150,invested:164,expenses:40,missing:[]});
  assert.equal(investmentPeriodTotals(input,'2026-09-20').income,0);
  assert.equal(investmentPeriodTotals(input,'2026-01-01').income,1050);
 });
@@ -18,7 +19,8 @@ test('missing rates are disclosed and future events excluded',()=>{
 test('includes overall actual income and expenses without counting linked tracker rows twice',()=>{
  const row=(id,kind,amount,extra={})=>({id,kind,amount,currency:'USD',date:'2026-09-19',frequency:'Once',...extra});
  const totals=investmentPeriodTotals({...input,cashflows:[row('salary','Salary',1500),row('food','Living expense',50),row('copy','Business income',150,{history_event_id:'income'}),row('mortgage-copy','Other expense',100,{mortgage_payment_id:'mortgage',payment_principal:80,payment_interest:20}),row('plan','Salary',9000,{frequency:'Monthly'})]},'2026-09-19');
- assert.deepEqual(totals,{income:1650,invested:184,expenses:70,missing:[]});
+ // The mortgage copy contributes its 20 interest once; its 80 principal is already invested.
+ assert.deepEqual(totals,{income:1650,invested:164,expenses:90,missing:[]});
 });
 
 test('business investments have an invested breakdown that reconciles',()=>{
@@ -28,9 +30,34 @@ test('business investments have an invested breakdown that reconciles',()=>{
  for(const key of Object.keys(details))assert.equal(details[key].reduce((sum,row)=>sum+row.amount,0),totals[key]);
 });
 
-test('mortgage cashflow fallback includes interest exactly once and preserves precision',()=>{
+test('mortgage cashflow fallback splits principal and interest exactly once and preserves precision',()=>{
  const details={income:[],expenses:[],invested:[]};
  const totals=investmentPeriodTotals({...input,events:[],cashflows:[{id:'payment',mortgage_payment_id:'payment',kind:'Other expense',amount:100.25,payment_principal:80,payment_interest:20.25,currency:'USD',date:'2026-09-19',frequency:'Once'}]},'2026-09-19',details);
- assert.equal(totals.invested,100.25);assert.equal(totals.expenses,0);
- assert.equal(details.invested[0].category,'Mortgage');
+ assert.equal(totals.invested,80);assert.equal(totals.expenses,20.25);assert.equal(totals.invested+totals.expenses,100.25);
+ assert.equal(details.invested[0].category,'Mortgage');assert.equal(details.expenses[0].category,'Mortgage interest');
+});
+
+const {investmentDecisionComparison}=loadTS('lib/investment-benchmarks.ts');
+const prices={start:'2026-09-01',end:'2026-09-04',fx:[],prices:{BTC:[1,2,3,4].map(n=>({date:'2026-09-0'+n,close:n*100}))},errors:{}};
+const dated=(id,record_id,date,event_type,amount,balance,extra={})=>({id,record_id,occurred_on:date,created_at:date+'T12:00:00Z',event_type,amount,balance,ownership_percentage:100,principal:0,interest:0,notes:'',...extra});
+const holding=(id,kind,extra={})=>({id,name:id,kind,currency:'USD',amount:0,quantity:1,ownership_percentage:100,rate:0,...extra});
+const figures=(scenario,scope)=>{
+ const base={...scenario,today:'2026-09-04',currency:'USD',market:{quotes:{},rates:{USD:1}}};
+ const chart=investmentDecisionComparison({...base,method:{mode:'purchases',date:'2026-09-01',scope}},prices).result.points.at(-1).contributed;
+ return {chart,...investmentPeriodTotals(base,'0000-01-01')};
+};
+test('summary figures equal the chart funding in both funding scopes',()=>{
+ const scenarios={
+  'money moved between investments is invested once':{records:[holding('cash','Cash'),holding('deposit','Deposit'),holding('crypto','Crypto')],events:[dated('open','deposit','2026-09-01','contribution',1000,1000,{account_link:{account_id:'cash',amount:-1000}}),dated('empty','crypto','2026-09-01','baseline',0,0),dated('out','deposit','2026-09-02','withdrawal',1000,0),dated('in','crypto','2026-09-02','contribution',1000,1000)],movements:[{id:'move',kind:'buy',source_id:'deposit',target_id:'crypto',sent:1000,received:1,source_value:1000,target_value:1000,fee:0,notes:'',occurred_on:'2026-09-02',created_at:'2026-09-02T12:00:00Z'}],cashflows:[]},
+  'mortgage interest is an expense, principal an investment':{records:[holding('cash','Cash'),holding('shop','Business'),holding('home','Mortgage')],events:[dated('buy','shop','2026-09-01','contribution',1000,1000),dated('pay','home','2026-09-02','mortgage_payment',350,4000,{principal:300,interest:50})],cashflows:[{id:'copy',name:'home',kind:'Other expense',frequency:'Once',date:'2026-09-02',amount:350,currency:'USD',mortgage_payment_id:'pay',payment_principal:300,payment_interest:50}]},
+  'a purchase fee is an expense, not part of the investment':{records:[holding('cash','Cash'),holding('stock','Stock')],events:[dated('out','cash','2026-09-01','withdrawal',1000,0),dated('in','stock','2026-09-01','contribution',1000,1000)],movements:[{id:'m',kind:'buy',source_id:'cash',target_id:'stock',sent:1000,received:4,source_value:1000,target_value:1000,fee:20,notes:'',occurred_on:'2026-09-01'}],cashflows:[{id:'fee',name:'Transaction fee',kind:'Other expense',frequency:'Once',date:'2026-09-01',amount:20,currency:'USD',movement_id:'m'}]},
+  'cash marked for investments is still cash':{records:[holding('broker','Cash',{is_investment:true}),holding('shop','Business')],events:[dated('top','broker','2026-09-01','contribution',5000,5000),dated('buy','shop','2026-09-02','contribution',1000,1000,{account_link:{account_id:'broker',amount:-1000}}),dated('rent','shop','2026-09-03','income',400,null,{account_link:{account_id:'broker',amount:400}})],cashflows:[{id:'rent-copy',name:'shop',kind:'Business income',frequency:'Once',date:'2026-09-03',amount:400,currency:'USD',history_event_id:'rent'}]},
+ };
+ const expected={'money moved between investments is invested once':[1000,0,0],'mortgage interest is an expense, principal an investment':[1300,50,0],'a purchase fee is an expense, not part of the investment':[980,20,0],'cash marked for investments is still cash':[1000,0,400]};
+ for(const [name,scenario] of Object.entries(scenarios)){
+  const excluding=figures(scenario,'investments'),including=figures(scenario,'expenses');
+  assert.deepEqual([excluding.invested,excluding.expenses,excluding.income],expected[name],name);
+  assert.ok(Math.abs(excluding.chart-excluding.invested)<1e-9,name+': excluding expenses');
+  assert.ok(Math.abs(including.chart-including.invested-including.expenses)<1e-9,name+': including expenses');
+ }
 });

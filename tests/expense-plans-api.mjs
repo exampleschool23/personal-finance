@@ -1,6 +1,6 @@
 import { apiFunction } from './helpers/api-function.mjs';
 import {loadTS as loadCashAccountTS} from './helpers/load-ts.mjs';
-const {requiresCashAccount}=loadCashAccountTS('lib/cash-account-required.ts');
+const {requiresCashAccount,cashFlowAmountMissing}=loadCashAccountTS('lib/cash-account-required.ts');
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -32,14 +32,14 @@ test('authentication, origin checks and month-scoped reads',async()=>{
  calls=[];assert.equal((await api.GET(new Request('https://local?month=2026-09'))).status,200);assert.equal(calls[0].path,'/rest/v1/rpc/expense_plan_month');assert.deepEqual(JSON.parse(calls[0].init.body),{p_month:'2026-09-01'});
 });
 test('record API preserves the expense plan link and rejects linked recurring or income entries',async()=>{
- const post=apiFunction('requiresCashAccount','z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;').bind(null,requiresCashAccount)(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
+ const post=apiFunction('cashFlowAmountMissing','requiresCashAccount','z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;').bind(null,cashFlowAmountMissing,requiresCashAccount)(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
  const record={account_id:plan.id,id:plan.id,name:'Mum payment',kind:'Other expense',currency:'EUR',amount:100,quantity:1,cost:0,rate:0,date:'2026-09-10',frequency:'Once',notes:'',expense_plan_id:plan.id};
  calls=[];assert.equal((await post(request(record))).status,200);assert.equal(JSON.parse(calls[0].init.body).p_record.expense_plan_id,plan.id);
  for(const patch of [{frequency:'Monthly'},{kind:'Salary'},{business_id:plan.id},{expense_plan_id:'bad'}])assert.equal((await post(request({...record,...patch}))).status,400);
 });
 
 test('recurring stop date saves without deleting and rejects invalid intervals',async()=>{
- const post=apiFunction('requiresCashAccount','z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;').bind(null,requiresCashAccount)(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
+ const post=apiFunction('cashFlowAmountMissing','requiresCashAccount','z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return POST;').bind(null,cashFlowAmountMissing,requiresCashAccount)(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
  const record={id:plan.id,name:'Salary',kind:'Salary',currency:'EUR',amount:100,quantity:1,cost:0,rate:0,date:'2026-09-10',frequency:'Monthly',notes:'',end_date:'2026-09-30'};
  calls=[];assert.equal((await post(request(record))).status,200);assert.equal(calls[0].init.method,'POST');assert.equal(JSON.parse(calls[0].init.body).p_record.end_date,record.end_date);
  for(const patch of [{end_date:'2026-09-09'},{end_date:'2026-02-30'},{frequency:'Once'},{kind:'Cash'}]){calls=[];assert.equal((await post(request({...record,...patch}))).status,400);assert.equal(calls.length,0);}
@@ -48,7 +48,7 @@ test('recurring stop date saves without deleting and rejects invalid intervals',
 test('delete endpoints require the recoverable deletion RPC',async()=>{
  calls=[];assert.equal((await api.DELETE(request({id:plan.id},'DELETE'))).status,200);
  assert.equal(calls[0].path,'/rest/v1/rpc/move_item_to_deleted');assert.deepEqual(JSON.parse(calls[0].init.body),{p_id:plan.id,p_source:'expense_plans'});
- const remove=apiFunction('requiresCashAccount','z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return DELETE;').bind(null,requiresCashAccount)(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
+ const remove=apiFunction('cashFlowAmountMissing','requiresCashAccount','z','isCurrency','kinds','income','expenses','session','supa','sameOrigin','depositForecasts',compile('app/api/records/route.ts')+';return DELETE;').bind(null,cashFlowAmountMissing,requiresCashAccount)(z,isCurrency,kinds,income,expenses,session,supa,sameOrigin,async()=>[]);
  calls=[];assert.equal((await remove(request({id:plan.id},'DELETE'))).status,200);
  assert.equal(calls[0].path,'/rest/v1/rpc/move_item_to_deleted');assert.deepEqual(JSON.parse(calls[0].init.body),{p_id:plan.id,p_source:'finance_records'});
 });

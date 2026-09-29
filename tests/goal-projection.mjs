@@ -41,3 +41,21 @@ test('surplus excludes ended schedules and one-off income, and includes mortgage
  const records=[record('Salary',1000,{frequency:'Monthly',end_date:'2026-08-31'}),record('Other income',10000),record('Mortgage',500,{estimated_monthly_payment:100})];
  assert.equal(goalFinancials(records,[],'2026-09','USD',null,true).surplus,-100);
 });
+
+test('a deadline today has not passed; the required amount shown is a whole amount that meets the target',()=>{
+ assert.equal(projectGoal(0,1000,'2026-09-29','2026-09-29',100,0).overdue,false);
+ assert.equal(projectGoal(0,1000,'2026-09-29','2026-09-28',100,0).overdue,true);
+ const plan=projectGoal(0,1000,'2026-09-29','2026-12-29',0,0);
+ assert.ok(Math.abs(plan.required-1000/3)<1e-9);
+ assert.ok(projectGoal(0,1000,'2026-09-29','2026-12-29',Math.ceil(plan.required),0).projected>=1000);
+ assert.ok(projectGoal(0,1000,'2026-09-29','2026-12-29',Math.round(plan.required),0).projected<1000);
+ const planner=fs.readFileSync('components/planning/goal-forecast.tsx','utf8');
+ assert.match(planner,/\{t\('Monthly contribution needed'\)\}<\/span><strong>\{requiredContribution === null \? '—' : money\(requiredContribution\)\}/);
+ assert.match(planner,/displayFractionDigits=\{monthly === null \? 0 : undefined\}/);
+});
+test('only Cash flow follows its month picker; other screens plan for the current month',()=>{
+ const provider=fs.readFileSync('components/workspace/workspace-provider.tsx','utf8');
+ assert.match(provider,/const planningMonth = section === 'Income & expenses' \? forecastMonth : expensePlanMonth\(\);/);
+ assert.match(provider,/estimatedCashFlow\(current, planProjection, planningMonth\)/);
+ assert.match(provider,/useExpensePlans\(user, demo, rows, reload, refreshRecords, planningMonth\)/);
+});

@@ -16,8 +16,9 @@ import { AmountCurrencyFields } from '@/components/amount-currency-fields';
 import { DatePicker } from '@/components/date-picker';
 import { CashAccountField } from '@/components/cash-account-field';
 import { earningSourcePaymentStatus, selectEarningSource } from '@/lib/earning-sources';
+import { depositToday } from '@/lib/deposit-interest';
 import { income, type Entry } from '@/lib/finance';
-import { incomeSources, selectIncomeSource, changeIncomeKind } from '@/lib/income-sources';
+import { incomeSources, selectIncomeSource, changeIncomeKind, salaryDueDate } from '@/lib/income-sources';
 import { formatMoney, formatDate, formatNumber } from '@/lib/format';
 import type { RecordDialogProps } from '@/components/record-dialog';
 
@@ -32,7 +33,7 @@ function ScheduledPaymentSummary({date,label}:{date:string;label:string}){
  </div>;
 }
 
-export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,planning,error,demo,earningSources,onNavigateToSources}:RecordDialogProps & {onNavigateToSources?:()=>void}){
+export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,planning,error,demo,earningSources,onNavigateToSources}:RecordDialogProps & {onNavigateToSources?:(event:{preventDefault:()=>void})=>void}){
  const {t,locale}=useLanguage();
  const original=rows.find(row=>row.id===editing?.id);
  const [salaryPlan,setSalaryPlan]=useState(()=>editing?.kind==='Salary'&&editing.frequency!=='Once');
@@ -47,6 +48,11 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
  const named=!reusable&&(editing.kind==='Other income'||salaryPlan);
  const legacy=!!original&&!original.income_source_id&&!original.business_id&&original.kind===editing.kind&&!sourceId;
  const missing=editing.earning_source_id?!reusable:!named&&!source&&!legacy;
+ // A new receipt settles the scheduled date of the period it was received in, so the due date
+ // follows the record date. A saved receipt keeps the date it already settled.
+ const changeDate=(date:string)=>update({date,...(!original&&reusable&&editing.earning_due_on?{earning_due_on:selectEarningSource({...editing,date},reusable).earning_due_on}:{}),...(!original&&editing.kind==='Salary'&&source&&editing.income_due_on?{income_due_on:salaryDueDate(source,date)}:{})});
+ const actual=editing.frequency==='Once'&&!salaryPlan;
+ const latestDate=[actual?depositToday():undefined,editing.kind==='Salary'&&source?source.end_date??undefined:undefined].filter((date):date is string=>!!date).sort()[0];
  const sourceLabel=editing.kind==='Salary'?'Linked salary':editing.kind==='Rent income'?'Linked rental':'Linked business';
  const sourcePlaceholder=editing.kind==='Salary'?'Choose a salary plan':editing.kind==='Rent income'?'Choose a rental':'Choose a business';
  return <form className="record-form" onSubmit={save}>
@@ -64,7 +70,7 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
    else if(id==='saved'&&original)update({custom_category_id:null,kind:original.kind,name:original.name,business_id:original.business_id,income_source_id:original.income_source_id,income_due_on:original.income_due_on,earning_source_id:null,earning_due_on:null,payment_type:'regular'});
    else setEditing({...changeIncomeKind(editing,'Other income'),custom_category_id:null,earning_source_id:null,earning_due_on:null,payment_type:'regular'});
   }}/>
-  <Button asChild variant="outline" className="mt-3 min-h-11 w-full" disabled={busy}><Link href="/income-expenses#income-sources" aria-disabled={busy} onNavigate={event=>{if(busy){event.preventDefault();return;}(onNavigateToSources??(()=>setEditing(null)))();}}><Settings2 aria-hidden="true"/>{t('Manage income sources')}<ArrowRight aria-hidden="true"/></Link></Button>
+  <Button asChild variant="outline" className="mt-3 min-h-11 w-full" disabled={busy}><Link href="/income-expenses#income-sources" aria-disabled={busy} onNavigate={event=>{if(busy){event.preventDefault();return;}if(onNavigateToSources)onNavigateToSources(event);else setEditing(null);}}><Settings2 aria-hidden="true"/>{t('Manage income sources')}<ArrowRight aria-hidden="true"/></Link></Button>
    {earningSources.loading&&<p className="muted" role="status">{t('Loading income sources…')}</p>}
    {earningSources.error&&<div className="error" role="alert">{t(earningSources.error)} <Button type="button" variant="outline" disabled={busy} onClick={earningSources.retry}>{t('Retry')}</Button></div>}
   </div>}
@@ -79,7 +85,7 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
   </div>)}
   {editing.kind==='Salary'&&source&&<ScheduledPaymentSummary label={t('Salary due date')} date={editing.income_due_on??''}/>}
   <AmountCurrencyFields amountPlaceholder={reusable?.mode==='fixed'&&editing.payment_type!=='bonus'&&reusable.currency===editing.currency&&reusable.amount!==null?formatNumber(reusable.amount,locale,0):undefined} amount={editing.amount} currency={editing.currency} currencies={currencies} savedCurrency={original?.currency} disabled={busy} label={t(salaryPlan?'Amount per occurrence':'Amount')} onAmountChange={amount=>update({amount})} onCurrencyChange={currency=>update({currency,account_exchange_rate:null,account_rate_date:null,account_currency:null})}/>
-  <div className="form-grid"><label>{t(editing.frequency==='Once'?'Record date':'Start date')}<DatePicker value={editing.date} min={editing.kind==='Salary'&&source?source.date:undefined} max={editing.kind==='Salary'&&source?source.end_date??undefined:undefined} onChange={date=>update({date})}/></label>
+  <div className="form-grid"><label>{t(editing.frequency==='Once'?'Record date':'Start date')}<DatePicker value={editing.date} min={editing.kind==='Salary'&&source?source.date:undefined} max={latestDate} onChange={changeDate}/></label>
   {!simple&&!reusable&&(editing.kind!=='Salary'||salaryPlan)&&<ScheduleFields frequency={editing.frequency} days={editing.recurrence_days} disabled={busy} once={!salaryPlan} onChange={(frequency,recurrence_days)=>update({frequency,recurrence_days,account_id:null,end_date:frequency==='Once'?null:editing.end_date})}/>}</div>
   {editing.frequency!=='Once'&&<><label>{t('End date (optional)')}<DatePicker value={editing.end_date??''} required={false} min={editing.date} onChange={date=>update({end_date:date||null})}/></label><p className="muted">{t('{amount} {frequency} from {date}. This is a recurring plan; it does not automatically create transactions or change account balances.',{amount:formatMoney(editing.amount,editing.currency,locale),frequency:t(frequencyLabels[editing.frequency]),date:formatDate(editing.date,locale)})}</p></>}
   {!salaryPlan&&<CashAccountField entry={editing} records={planning.data.records} loading={planning.loading} error={planning.error} busy={busy} onChange={account_id=>update({account_id})}/>}

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
 const {compareInvestments}=loadTS('lib/investment-comparison.ts');
-const {getInvestmentComparison,getInvestmentPortfolio}=loadTS('lib/investment-portfolio.ts');
+const {investmentDecisionComparison}=loadTS('lib/investment-benchmarks.ts');
 const {defaultDiversifiedPortfolio,diversifiedPortfolioSchema}=loadTS('lib/diversified-portfolio.ts');
 const {formatMoney}=loadTS('lib/format.ts');
 const weights={...defaultDiversifiedPortfolio,businessRate:12};
@@ -18,7 +18,7 @@ function feed(days=365,{crypto=index=>60000*(1+.5*index/days),stock=index=>600*(
  return {start,end:day(days),prices:{portfolioCrypto:indices.map(index=>({date:day(index),close:crypto(index)})),portfolioStock:indices.map(index=>({date:day(index),close:stock(index)}))},fx:indices.map(index=>({date:day(index),rates:{UZS:fx(index),EUR:.9}})),errors:{}};
 }
 function event(id,index,event_type,amount,balance) {
- return {id,record_id:'investment',occurred_on:day(index),created_at:day(index),event_type,amount,balance,ownership_percentage:100,principal:0,interest:0};
+ return {id,record_id:'investment',occurred_on:day(index),created_at:day(index),event_type,amount,balance,ownership_percentage:100,principal:0,interest:0,notes:''};
 }
 function scenario(days=365,events=[event('purchase',0,'contribution',9000,9000)],balance=9000) {
  return {records:[{id:'investment',name:'Other investment',kind:'Business',amount:balance,quantity:1,currency:'USD',ownership_percentage:100}],events,market:{rates:{UZS:12000,EUR:.9},quotes:{},fx:null},currency:'USD',today:day(days)};
@@ -39,11 +39,14 @@ function lotValues(flows,index,data,allocation) {
  return result;
 }
 const sum=values=>Object.values(values).reduce((total,amount)=>total+amount,0);
+// The Overview path: recorded purchases fund each benchmark on their own dates.
+const compare=(input,data,allocation)=>investmentDecisionComparison({...input,method:{mode:'purchases',date:start}},data,allocation);
+const funding=(id,index,amount)=>({id,date:day(index),name:'Other investment',amount,currency:'USD',reused:0});
 
 test('$9,000 real investment allocates $1,800 to each part and reaches $10,674 with specified returns',()=>{
  const data=feed(),input=scenario();
- const own=getInvestmentPortfolio(input),result=getInvestmentComparison(input,data,weights);
- assert.deepEqual(own.performance.flows,[{date:start,amount:9000}]);
+ const {details,result}=compare(input,data,weights);
+ assert.deepEqual(details,[funding('purchase',0,9000)]);
  near(result.points[0].PORTFOLIO,9000);
  const opening=lotValues([{index:0,amount:9000}],0,data,weights);
  assert.deepEqual(opening,{crypto:1800,stock:1800,deposit:1800,business:1800,cash:1800});
@@ -61,7 +64,7 @@ test('$9,000 real investment allocates $1,800 to each part and reaches $10,674 w
 test('one rising asset affects only its allocation; holdings drift rather than rebalance daily',()=>{
  const data=feed(2,{crypto:index=>[100,200,300][index],stock:()=>100});
  const allocation={...weights,deposit:0,business:0,cash:60};
- const result=getInvestmentComparison(scenario(2),data,allocation);
+ const {result}=compare(scenario(2),data,allocation);
  assert.deepEqual(result.points.map(point=>point.PORTFOLIO),[9000,10800,12600]);
  // The original crypto purchase is still 18 units, not reset to 20% of yesterday's total.
  near(result.points[2].PORTFOLIO,18*300+1800+5400);
@@ -69,8 +72,8 @@ test('one rising asset affects only its allocation; holdings drift rather than r
 
 test('actual investment valuation increases and same-day opening snapshots do not reinvest benchmark capital',()=>{
  const events=[event('a-opening',0,'baseline',0,9000),event('b-purchase',0,'contribution',9000,9000),event('valuation',100,'valuation',0,18000)];
- const input=scenario(365,events,18000),result=getInvestmentComparison(input,feed(),weights);
- assert.deepEqual(getInvestmentPortfolio(input).performance.flows,[{date:start,amount:9000}]);
+ const {details,result}=compare(scenario(365,events,18000),feed(),weights);
+ assert.deepEqual(details,[funding('b-purchase',0,9000)]);
  near(result.points.at(-1).actual,18000);
  near(result.points.at(-1).contributed,9000);
  near(result.points.at(-1).PORTFOLIO,10674);
@@ -79,7 +82,7 @@ test('actual investment valuation increases and same-day opening snapshots do no
 test('later contributions buy at their own dates and prices, never at the original cheap price',()=>{
  const data=feed(365,{crypto:index=>index<180?100:200,stock:index=>index<180?100:120});
  const events=[event('first',0,'contribution',9000,9000),event('second',180,'contribution',4500,13500)];
- const result=getInvestmentComparison(scenario(365,events,13500),data,weights);
+ const {result}=compare(scenario(365,events,13500),data,weights);
  const lots=[{index:0,amount:9000},{index:180,amount:4500}];
  result.points.forEach((point,index)=>near(point.PORTFOLIO,sum(lotValues(lots,index,data,weights)),day(index)));
  near(result.points[180].PORTFOLIO-sum(lotValues([lots[0]],180,data,weights)),4500);
@@ -88,7 +91,7 @@ test('later contributions buy at their own dates and prices, never at the origin
 
 test('a UZS deposit earns local interest while UZS depreciation reduces its USD value',()=>{
  const data=feed(365,{fx:index=>12000*(1+.2*index/365)});
- const result=getInvestmentComparison(scenario(),data,weights);
+ const {result}=compare(scenario(),data,weights);
  // 1,800 USD -> 21,600,000 UZS -> 26,136,000 UZS / 14,400 = 1,815 USD.
  near(lotValues([{index:0,amount:9000}],365,data,weights).deposit,1815);
  near(result.points.at(-1).PORTFOLIO,10311);
@@ -99,15 +102,15 @@ test('losses, tiny crypto unit prices, and non-equal fractional weights retain f
  assert.equal(diversifiedPortfolioSchema.safeParse(allocation).success,true);
  const data=feed(365,{crypto:index=>.00000001*(1-.99*index/365),stock:index=>100*(1-.7*index/365)});
  const amount=9000.123456789;
- const result=getInvestmentComparison(scenario(365,[event('purchase',0,'contribution',amount,amount)],amount),data,allocation);
+ const {result}=compare(scenario(365,[event('purchase',0,'contribution',amount,amount)],amount),data,allocation);
  result.points.forEach((point,index)=>near(point.PORTFOLIO,sum(lotValues([{index:0,amount}],index,data,allocation)),day(index)));
  assert.ok(result.points.at(-1).PORTFOLIO<amount);
  near(result.points[0].contributed,amount);
 });
 
 test('withdrawals are divided by configured weights and reduce value by exactly the withdrawn cash',()=>{
- const data=feed(365),events=[event('purchase',0,'contribution',9000,9000),event('sale',180,'withdrawal',1000,8000)];
- const result=getInvestmentComparison(scenario(365,events,8000),data,weights);
+ const data=feed(365);
+ const result=compareInvestments(0,[{date:day(0),amount:9000},{date:day(180),amount:-1000}],[],data,'USD',true,weights);
  const lots=[{index:0,amount:9000},{index:180,amount:-1000}];
  result.points.forEach((point,index)=>near(point.PORTFOLIO,sum(lotValues(lots,index,data,weights)),day(index)));
  near(result.points[180].PORTFOLIO-sum(lotValues([lots[0]],180,data,weights)),-1000);
@@ -150,7 +153,7 @@ test('changing display currency cannot change purchases or allocation; unrelated
  const data=feed(),input=scenario();
  input.records.push({id:'cash',kind:'Cash',amount:100000,currency:'USD',is_investment:false});
  input.cashflows=[{id:'food',kind:'Food',amount:1000,currency:'USD',frequency:'Once',date:day(50)}];
- const usd=getInvestmentComparison(input,data,weights),eur=getInvestmentComparison({...input,currency:'EUR'},data,weights),uzs=getInvestmentComparison({...input,currency:'UZS'},data,weights);
+ const [usd,eur,uzs]=['USD','EUR','UZS'].map(currency=>compare({...input,currency},data,weights).result);
  usd.points.forEach((point,index)=>{near(eur.points[index].PORTFOLIO,point.PORTFOLIO*.9);near(uzs.points[index].PORTFOLIO,point.PORTFOLIO*12000);});
  near(usd.points.at(-1).contributed,9000);near(usd.points.at(-1).PORTFOLIO,10674);
 });
@@ -183,11 +186,11 @@ test('each asset can receive the entire allocation independently, including the 
  const data=feed();
  for(const [key,expected] of Object.entries({crypto:13500,stock:9900,deposit:10890,business:10080,cash:9000})) {
   const allocation={...weights,crypto:0,stock:0,deposit:0,business:0,cash:0,[key]:100};
-  const result=getInvestmentComparison(scenario(),data,allocation);
+  const {result}=compare(scenario(),data,allocation);
   near(result.points[0].PORTFOLIO,9000,key);near(result.points.at(-1).PORTFOLIO,expected,key);
  }
  const defaultBusiness={...weights,crypto:0,stock:0,deposit:0,business:100,cash:0,businessRate:0};
- near(getInvestmentComparison(scenario(),data,defaultBusiness).points.at(-1).PORTFOLIO,9000);
+ near(compare(scenario(),data,defaultBusiness).result.points.at(-1).PORTFOLIO,9000);
 });
 
 test('ten years of history and 366 dated investments stay finite and match the lot ledger',()=>{

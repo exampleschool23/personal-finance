@@ -18,7 +18,7 @@ export function projectGoal(starting: number, target: number, today: string, dea
  const finalFactor = factor(deadline);
  const required = target <= starting ? 0 : finalFactor > 0 ? (target-starting)/finalFactor : null;
  const points = [today,...dates,...(end>start&&!dates.includes(deadline)?[deadline]:[])].map(date=>({date,projected:starting+monthly*factor(date),required:required===null?null:starting+required*factor(date),target}));
- return {points,required,projected:starting+monthly*finalFactor,months:dates.length,overdue:end<=start,contributed:monthly*dates.filter(day=>day.slice(0,7)!==skippedMonth).length};
+ return {points,required,projected:starting+monthly*finalFactor,months:dates.length,overdue:end<start,contributed:monthly*dates.filter(day=>day.slice(0,7)!==skippedMonth).length};
 }
 
 export function goalFinancials(records: Entry[], plans: ExpensePlan[], month: string, currency: string, market: MarketData|null, plansReady: boolean) {

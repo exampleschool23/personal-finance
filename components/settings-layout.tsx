@@ -18,7 +18,10 @@ export function SettingsLayout({preferences,benchmarks,security,categories,data}
  const [active,setActive]=useState('preferences');
  useEffect(()=>{
   const sync=()=>{const hash=window.location.hash.slice(1);setActive(sections.some(section=>section.id===hash)?hash:'preferences');};
-  sync();window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync);
+  // Links followed by the router change the address without a hashchange event.
+  const followed=(event:MouseEvent)=>{if(event.target instanceof Element&&event.target.closest('a[href*="#"]'))setTimeout(sync,0);};
+  sync();window.addEventListener('hashchange',sync);window.addEventListener('popstate',sync);document.addEventListener('click',followed);
+  return()=>{window.removeEventListener('hashchange',sync);window.removeEventListener('popstate',sync);document.removeEventListener('click',followed);};
  },[]);
  // The tab strip scrolls on narrow screens; keep the selected tab fully visible.
  useEffect(()=>{document.querySelector(`.settings-navigation-list [data-state="active"]`)?.scrollIntoView({block:'nearest',inline:'nearest'});},[active]);

@@ -150,3 +150,10 @@ Apply `071_undo_goals_lending_and_payments.sql` after 070. It rewrites no data.
 - **Savings goals** can be deleted from the goal dialog. The goal and its activity move to Recently deleted; money never moves. Restoring brings back the original activity (no extra opening entry) and requires the goal's cash account to still exist.
 - **Loans, debts and money lent**: the newest Tracker addition or repayment can be deleted, newest first. Its linked cash movement and the mirrored cash-account entry are reversed. When only the starting snapshot remains, the record itself can be deleted. Repayments recorded from Accounts (which also create activity and interest records) and mortgage payments stay protected.
 - **Recorded scheduled payments**: deleting the transaction created by "Record payment" reverses its cash and reopens the reminder. Restoring it from Recently deleted marks the reminder paid again, unless that due date was recorded or skipped again in the meantime.
+
+## Editing goals on an over-reserved account (migration 072)
+
+Apply `072_edit_over_reserved_goals.sql` after 071. It rewrites no data and can be run again safely.
+
+When spending takes a cash account below the amount its savings goals reserve, the goal card warns about it. Before 072 every save of such a goal failed with "Allocations exceed the account balance.", including a rename, a new target date or a saved plan. The reservation is now checked only when it grows or when an archived goal is reactivated, so the goal can still be corrected, reduced or archived. Recording a goal contribution keeps its own check.
+

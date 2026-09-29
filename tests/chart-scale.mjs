@@ -14,3 +14,10 @@ test('negative data keeps a zero line and covers the full range',()=>{
  const {domain,ticks}=niceAxis([-500,1200]);
  assert.ok(ticks.includes(0));assert.ok(domain[0]<=-500&&domain[1]>=1200);
 });
+test('values that differ only by floating-point noise still produce a short, usable axis',()=>{
+ for(const values of [[3.3,3.3,3.3,3.3000000000000003],[1000,999.9999999999999],[1e15,1e15+1],[0.1+0.2,0.3]]){
+  const {domain,ticks}=niceAxis(values);
+  assert.ok(ticks.length>=2&&ticks.length<=8,JSON.stringify(values));assert.ok(domain[1]>domain[0],JSON.stringify(values));
+  for(const value of values)assert.ok(value>=domain[0]&&value<=domain[1],JSON.stringify(values));
+ }
+});

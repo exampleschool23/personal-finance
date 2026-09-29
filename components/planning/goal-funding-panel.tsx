@@ -118,9 +118,11 @@ function GoalActivityForm({ data, goals, today, busy, save }: { data: PlanningDa
  const [goalId, setGoalId] = useState(goals[0]?.id ?? ''), [type, setType] = useState('contribution'), [amount, setAmount] = useState(0), [target, setTarget] = useState(''), [source, setSource] = useState(''), [date, setDate] = useState(today), [notes, setNotes] = useState('');
  const [operation, setOperation] = useState<string | null>(null);
  const goal = goals.find(item => item.id === goalId);
+ const linked = type === 'contribution' ? data.records.find(record => record.id === source) : undefined;
+ const exceedsIncome = !!linked && amount > Number(linked.amount);
  const guard = useUnsavedNavigation(amount > 0 || !!notes); const locked = busy || !!operation;
  return <form className="goal-activity-form" onSubmit={async event => {
-  event.preventDefault(); if (busy || !goal || amount <= 0) return;
+  event.preventDefault(); if (busy || !goal || amount <= 0 || exceedsIncome) return;
   const id = operation ?? crypto.randomUUID(); setOperation(id);
   try { await save('activity', { id, goal_id: goalId, target_id: type === 'transfer' ? target : null, source_id: type === 'contribution' ? source || null : null, amount, date, type, notes }); setAmount(0); setNotes(''); setOperation(null); }
   catch (reason) { if ((reason as { confirmedFailure?: boolean }).confirmedFailure) setOperation(null); }
@@ -132,10 +134,10 @@ function GoalActivityForm({ data, goals, today, busy, save }: { data: PlanningDa
    <label>{t('Amount')} {goal?.currency}<FormattedNumberInput value={amount} onValueChange={setAmount}/></label>
    <label>{t('Date')}<DatePicker value={date} max={today} onChange={value => { setDate(value); setSource(''); }}/></label>
    {type === 'transfer' && <label>{t('Destination goal')}<NativeSelect required value={target} onChange={event => setTarget(event.target.value)}><option value="">{t('Select goal')}</option>{goals.filter(item => item.id !== goalId && item.account_id === goal?.account_id).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></label>}
-   {type === 'contribution' && <label>{t('Link income (optional)')}<NativeSelect value={source} onChange={event => setSource(event.target.value)}><option value="">{t('None')}</option>{data.records.filter(record => record.account_id === goal?.account_id && record.currency === goal?.currency && record.date <= date && record.frequency === 'Once' && income.includes(record.kind)).map(record => <option key={record.id} value={record.id}>{record.name} · {formatMoney(record.amount, record.currency, locale)}</option>)}</NativeSelect></label>}
+   {type === 'contribution' && <label>{t('Link income (optional)')}<NativeSelect value={source} onChange={event => setSource(event.target.value)}><option value="">{t('None')}</option>{data.records.filter(record => record.account_id === goal?.account_id && record.currency === goal?.currency && record.date <= date && record.frequency === 'Once' && income.includes(record.kind)).map(record => <option key={record.id} value={record.id}>{record.name} · {formatMoney(record.amount, record.currency, locale)}</option>)}</NativeSelect>{exceedsIncome && linked && <small className="negative" role="alert">{t('Enter no more than the linked income: {amount}.', { amount: formatMoney(Number(linked.amount), linked.currency, locale) })}</small>}</label>}
    <label className="goal-field-wide">{t('Notes (optional)')}<Input value={notes} maxLength={2000} onChange={event => setNotes(event.target.value)}/></label>
   </fieldset>
-  <div className="goal-activity-actions"><Button type="submit" disabled={busy || !goal || amount <= 0 || type === 'transfer' && !target}>{t(operation ? 'Retry' : 'Save')}</Button>{operation && !busy && <Button type="button" variant="outline" onClick={() => setOperation(null)}>{t('Edit details after checking activity')}</Button>}</div>
+  <div className="goal-activity-actions"><Button type="submit" disabled={busy || !goal || amount <= 0 || exceedsIncome || type === 'transfer' && !target}>{t(operation ? 'Retry' : 'Save')}</Button>{operation && !busy && <Button type="button" variant="outline" onClick={() => setOperation(null)}>{t('Edit details after checking activity')}</Button>}</div>
   {operation && !busy && <p className="muted">{t('Check goal activity before changing a request whose result is uncertain. Retry keeps the same operation identifier.')}</p>}
   {guard}
  </form>;

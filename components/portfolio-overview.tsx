@@ -6,8 +6,6 @@ import { InvestmentComparison } from '@/components/investment-comparison';
 import { investmentValueChange } from '@/lib/investment-portfolio';
 import { shiftDay } from '@/lib/benchmark-data';
 import { refreshRead } from '@/lib/refresh-read';
-import { PortfolioTooltip } from '@/components/portfolio-tooltip';
-import { portfolioChanges, type PortfolioChange } from '@/lib/portfolio-changes';
 import { PartialTotal } from '@/components/partial-total';
 import { IncomeHistoryChart } from '@/components/income-history-chart';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -22,10 +20,10 @@ import { depositToday } from '@/lib/deposit-interest';
 import { mergePortfolioPoints, type PortfolioSnapshot } from '@/lib/portfolio-snapshots';
 import { portfolioHistory, portfolioWindow } from '@/lib/portfolio-history';
 import { type HistoryEvent } from '@/lib/investment-history';
-import { convertAmount, type MarketData } from '@/lib/market';
+import { type MarketData } from '@/lib/market';
 
 type History = { movements?:BenchmarkMovement[]; records: Entry[]; events: HistoryEvent[]; cashflows?: Entry[]; incomeRecords?: Entry[] };
-export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecords, currency, market, demo, revision, onOpenActivity, children }: { children?: ReactNode; demoRecords?: Entry[]; onOpenActivity?:(activity:PortfolioChange)=>void; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
+export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecords, currency, market, demo, revision, children }: { children?: ReactNode; demoRecords?: Entry[]; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
  const { t, locale } = useLanguage();
  const [savedHistory, setHistory] = useState<History | null>(null);
  const [error, setError] = useState(false);
@@ -42,7 +40,7 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
   return () => controller.abort();
  }, [demo, revision, retry]);
  const today = depositToday();
- const history = useMemo(() => demo ? demoHistory(demoRecords ?? [], today) : savedHistory, [demo, demoRecords, today, savedHistory]);
+ const history: History | null = useMemo(() => demo ? demoHistory(demoRecords ?? [], today) : savedHistory, [demo, demoRecords, today, savedHistory]);
  const money = (amount: number) => formatMoney(amount, currency, locale);
  const {totalAssets:assetTotal,totalDebt:debt}=financialTotals(entries);
  const allRecords = history?.records ?? [];
@@ -51,15 +49,6 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
  const portfolioValue = assetTotal - debt;
  const points = mergePortfolioPoints(recorded.points, [], {date:today,assets:assetTotal,debt,net:portfolioValue});
  const visible = portfolioWindow(points, range, today);
- const detailEvents = history?.events ?? [];
- const details = portfolioChanges(visible, allRecords, detailEvents, history?.cashflows ?? [], currency, rates);
- for(const detail of details.values())for(const row of detail.activity){
-  const event=detailEvents.find(event=>event.id===row.id);
-  if(event?.event_type==='mortgage_payment'){
-   row.amount=convertAmount(Number(event.principal),row.record!.currency,currency,rates);
-   row.label='Principal repaid';
-  }
- }
  const partialHistory = visible.some(point=>point.partial);
  const change = partialHistory ? null : investmentValueChange(visible.map(point=>point.net));
  const loading = !demo && !history && !error;
@@ -77,7 +66,7 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
     <div className="portfolio-ranges overview-segments" role="group" aria-label={t('History period')}>{[30, 90, 365, null].map(days => <Button key={String(days)} size="sm" variant="ghost" aria-pressed={range === days} onClick={() => setRange(days)}>{days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) })}</Button>)}</div>
    </header>
    {loading ? <ChartSkeleton label={t('Loading history…')}/> : error ? <p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}>{t('Retry')}</Button></p> : <>
-    <InvestmentComparison history={history??{records:[],events:[]}} today={today} currency={currency} market={market} demo={demo} embedded={{openingNetWorth:recorded.points[0]?{date:recorded.points[0].date,amount:recorded.points[0].net}:undefined,days:range??0,points:visible,tooltip:<PortfolioTooltip valueKey="actual" showBalanceDifference={!partialHistory} valueLabel="NET WORTH" details={details} currency={currency} onOpenActivity={onOpenActivity}/>,summary:<InvestmentPeriodSummary input={{records:allRecords,events:history?.events??[],cashflows:history?.cashflows,market,currency,today}} start={range===null?'0000-01-01':shiftDay(today,-range)}/>}}/>
+    <InvestmentComparison history={history??{records:[],events:[]}} today={today} currency={currency} market={market} demo={demo} days={range??0} points={visible} summary={<InvestmentPeriodSummary input={{records:allRecords,events:history?.events??[],cashflows:history?.cashflows,movements:history?.movements,market,currency,today}} start={range===null?'0000-01-01':shiftDay(today,-range)}/>}/>
     {recorded.missing > 0 && <p className="muted overview-hero-note">{t('Some holdings have no recorded history yet.')}</p>}
     {excludedCurrencies.length > 0 && <p className="muted overview-hero-note">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
    </>}

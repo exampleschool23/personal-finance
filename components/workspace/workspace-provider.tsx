@@ -1,12 +1,13 @@
 "use client";
 import { createContext, useContext, useEffect, useState, useRef, useEffectEvent, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { showSaved } from '@/lib/feedback';
+import { showSaved, showError } from '@/lib/feedback';
+import { decimalSum } from '@/lib/decimal-amounts';
 import { demoRecords, demoMarket } from '@/lib/demo-finance';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { applyRecordChange } from '@/lib/record-balance';
 import { refreshRead } from '@/lib/refresh-read';
-import { requiresCashAccount } from '@/lib/cash-account-required';
+import { requiresCashAccount, cashFlowAmountMissing } from '@/lib/cash-account-required';
 import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
 import { useRecordFilters } from '@/hooks/use-record-filters';
 import { useTransactionTools } from '@/hooks/use-transaction-tools';
@@ -70,7 +71,7 @@ function useWorkspaceState() {
     const [stopping,setStopping]=useState<Entry|null>(null);
     async function stopRecord(end_date:string) {
         if(!stopping)return;
-        const stopped={...stopping,end_date};
+        const stopped={...normalizeEntry(stopping),end_date,account_exchange_rate:undefined};
         if(demo)setRows(previous=>previous.map(row=>row.id===stopped.id?stopped:row));
         else {
             const response=await fetch('/api/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(stopped)});
@@ -88,11 +89,11 @@ function useWorkspaceState() {
             setRows(previous => {
                 if (previous.some(row => row.id === payment.id)) return previous;
                 const mortgage = previous.find(row => row.id === payment.mortgage_id)!;
-                return [...previous.map(row => row.id === mortgage.id ? { ...row, amount: row.amount - payment.principal } : row), { ...fresh(), id: payment.id, name: mortgage.name, kind: 'Other expense', currency: mortgage.currency, amount: payment.principal + payment.interest, date: payment.date, notes: payment.notes, mortgage_payment_id: payment.id, payment_principal: payment.principal, payment_interest: payment.interest }];
+                return [...previous.map(row => row.id === mortgage.id ? { ...row, amount: row.amount - payment.principal } : row), { ...fresh(), id: payment.id, name: mortgage.name, kind: 'Other expense', currency: mortgage.currency, amount: decimalSum([payment.principal, payment.interest]), date: payment.date, notes: payment.notes, mortgage_payment_id: payment.id, payment_principal: payment.principal, payment_interest: payment.interest }];
             });
         } else {
             const crossCurrency=payment.exchange_rate!==undefined;
-            const payload=crossCurrency?{...payment,record_id:payment.mortgage_id,type:'mortgage_payment',amount:payment.principal+payment.interest,balance:null}:payment;
+            const payload=crossCurrency?{...payment,record_id:payment.mortgage_id,type:'mortgage_payment',amount:decimalSum([payment.principal,payment.interest]),balance:null}:payment;
             const response = await fetch(crossCurrency?'/api/investment-history/exchange':'/api/mortgage-payments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const result = await response.json() as { error?: string };
             if (!response.ok) throw Object.assign(new Error(result.error || 'Payment could not be confirmed. Retry with the same details.'),{confirmedFailure:response.status<500});
@@ -174,7 +175,9 @@ function useWorkspaceState() {
     const overdueCount = upcomingPayments(planning.data.records, planning.data.occurrences).filter(item => item.overdue).length;
     const lastLoadedKey = useEffectEvent(() => loadedKey);
     const receiveServerPage=useEffectEvent((next:number)=>{if(!useFilteredRecords&&next!==page)setPageState({key:paginationKey,page:next});});
-    const expensePlans = useExpensePlans(user, demo, rows, reload, refreshRecords, section === 'Savings goals' ? expensePlanMonth() : forecastMonth);
+    // The month picker belongs to Cash flow. Every other screen plans for the current month.
+    const planningMonth = section === 'Income & expenses' ? forecastMonth : expensePlanMonth();
+    const expensePlans = useExpensePlans(user, demo, rows, reload, refreshRecords, planningMonth);
     useEffect(() => {
         if (!user || demo || section === 'Settings') return;
         const controller = new AbortController();
@@ -238,8 +241,13 @@ function useWorkspaceState() {
     finally {
         setBusy(false);
     } }
+    // A repeated message leaves the error state unchanged, so show the popup directly as well.
+    const fail = (message: string) => { setError(message); showError(message); };
     async function save(e: React.FormEvent) { e.preventDefault(); if (!editing)
-        return; if ((editing.kind === 'Money lent' && (!editing.lent_date || (editing.date && editing.date < editing.lent_date))) || (editing.kind !== 'Money lent' && !editing.date)) { setError('Check the record fields.'); return; } setBusy(true); setError(''); try {
+        return; if ((editing.kind === 'Money lent' && (!editing.lent_date || (editing.date && editing.date < editing.lent_date))) || (editing.kind !== 'Money lent' && !editing.date)) { fail('Check the record fields.'); return; }
+        if (cashFlowAmountMissing(editing)) { fail('Enter an amount greater than zero.'); return; }
+        if (requiresCashAccount(editing) && editing.date > today()) { fail('Actual income and expenses cannot be dated in the future.'); return; }
+        setBusy(true); setError(''); try {
         if (editing.expense_plan_id) {
             const plan = expensePlans.plans.find(p => p.id === editing.expense_plan_id);
             if (!plan || editing.currency !== plan.currency || editing.frequency !== 'Once' || !expenses.includes(editing.kind) || editing.business_id || editing.date < plan.start_date || (plan.end_date && editing.date > plan.end_date)) throw Error('Check the expense plan, currency and spending date.');
@@ -271,7 +279,7 @@ function useWorkspaceState() {
         showSaved();
     }
     catch (e) {
-        setError((e as Error).message);
+        fail((e as Error).message);
     }
     finally {
         setBusy(false);
@@ -295,7 +303,7 @@ function useWorkspaceState() {
         setDeleting(null);
     }
     catch (e) {
-        setError((e as Error).message);
+        fail((e as Error).message);
     }
     finally {
         setBusy(false);
@@ -315,7 +323,7 @@ function useWorkspaceState() {
     const current = (demo ? rows : summary).map(r => marketEntry(r, currency, market)).filter((r): r is Entry => r !== null);
     const monthlyIncomeEntries = planning.data.records.map(r => marketEntry(r, currency, market)).filter((r): r is Entry => r !== null);
     const { totalDebt, netWorth } = financialTotals(current);
-    const forecast = estimatedCashFlow(current, planProjection, forecastMonth);
+    const forecast = estimatedCashFlow(current, planProjection, planningMonth);
     const sortRecords = (entries: Entry[]) => [...entries].sort((a,b) => compareRecordDates(a.kind === 'Money lent' ? a.lent_date || a.date : a.date, b.kind === 'Money lent' ? b.lent_date || b.date : b.date) || b.id.localeCompare(a.id));
     const demoVisible = (sectionKey === 'assets' ? sortAssetsByWorth : sortRecords)(current.filter(r => section === 'Overview' || (section === 'Assets & investments' ? assetRecordKinds : section === 'Loans & debts' ? lendingRecordKinds : [...income, ...expenses]).includes(r.kind)));
     const filteredRecords = filterRecords((demo ? rows : planning.data.records).filter(r => (!historyOnly || isTransactionHistory(r)) && (sectionKey === 'all' || (sectionKey === 'debts' ? lendingRecordKinds : [...income,...expenses]).includes(r.kind)) && (!currencyFilter || r.currency === currencyFilter)),filters,locale);
@@ -379,19 +387,25 @@ function useWorkspaceState() {
         refreshRecords();
         showSaved();
     };
+    // Tables show display-currency copies. Dialogs must work on the saved record, in its own
+    // currency. Transaction history returns raw rows, so normalize to the record shape forms expect.
+    const storedRecord = (record: Entry) => normalizeEntry(historyPage.data.records.find(r=>r.id===record.id) || planning.data.records.find(r=>r.id===record.id) || rows.find(r => r.id === record.id) || (demo ? record : summary.find(r => r.id === record.id) || record));
     const editRecord = (record: Entry) => {
         const source=earningSources.sources.find(source=>source.schedule_id===record.id);
         if(source){setEditingIncomeSource(source);return;}
         setError('');
         setRecordKinds(income.includes(record.kind) ? income : expenses.includes(record.kind) ? expenses : assetRecordKinds.includes(record.kind) ? assetRecordKinds : lendingRecordKinds);
-        setEditing({ ...(historyPage.data.records.find(r=>r.id===record.id) || planning.data.records.find(r=>r.id===record.id) || rows.find(r => r.id === record.id) || record) });
+        setEditing(storedRecord(record));
     };
+    const closeEditing = () => { setError(''); setEditing(null); };
+    const closeDeleting = () => { setError(''); setDeleting(null); };
+    const navigate = (path: string) => router.push(path);
     const field = (key: keyof Entry, v: string | number) => setEditing(p => p ? { ...p, [key]: v, ...(key === 'currency' ? {account_id: null} : {}) } : p);
 
     const startDemo = () => { setRows(withAssetIncomePlans(sample())); setDemo(true); setError(''); };
-    const quickExpense = () => { setRecordKinds(expenses); setEditing({ ...fresh(), currency, kind: 'Other expense', frequency: 'Once' }); };
-    const recordFromSource = (source: EarningSource, bonus?: boolean) => { const entry = { ...fresh(), kind: source.kind, currency: source.currency, frequency: 'Once' as const }; setRecordKinds(income); setEditing({ ...entry, ...selectEarningSource(entry, source, bonus) }); };
-    const reviewRecurring = (record: Entry) => { setRecordKinds([...income, ...expenses]); setEditing(record); };
+    const quickExpense = () => { setError(''); setRecordKinds(expenses); setEditing({ ...fresh(), currency, kind: 'Other expense', frequency: 'Once' }); };
+    const recordFromSource = (source: EarningSource, bonus?: boolean) => { setError(''); const entry = { ...fresh(), kind: source.kind, currency: source.currency, frequency: 'Once' as const }; setRecordKinds(income); setEditing({ ...entry, ...selectEarningSource(entry, source, bonus) }); };
+    const reviewRecurring = (record: Entry) => { setError(''); setRecordKinds([...income, ...expenses]); setEditing(record); };
     const requestDelete = (record: Entry) => { setError(''); setDeleting(record); };
     const discardDeletedItem = (item: DeletedItem) => setDeletedItems(items => items.filter(existing => existing.id !== item.id));
     const showFirstPage = () => setPageState({ key: paginationKey, page: 1 });
@@ -409,7 +423,7 @@ function useWorkspaceState() {
         filters, setFilters, filtersActive, historyOnly, useFilteredRecords, remoteHistory, historyPage, visible, totalRecords, pageCount, tablePage, tableLoading,
         recordsLoading, showFirstPage, showPage,
         // Actions
-        addRecord, addCashFlow, addAccountRecord, editRecord, quickExpense, recordFromSource, reviewRecurring, requestDelete, spendFromPlan, removePlan,
+        addRecord, addCashFlow, addAccountRecord, editRecord, storedRecord, closeEditing, closeDeleting, navigate, quickExpense, recordFromSource, reviewRecurring, requestDelete, spendFromPlan, removePlan,
         saveHoldingAccount, assignHolding, recordMortgagePayment, save, remove, stopRecord, field, fetchPrice, fetchingPrice, priceMessage,
         // Open dialogs
         editing, setEditing, editingCashFlow, recordKinds, linkedExpensePlan, deleting, setDeleting, stopping, setStopping, splitting, setSplitting,

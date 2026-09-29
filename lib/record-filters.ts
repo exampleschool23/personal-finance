@@ -8,8 +8,10 @@ export function activeFilterCount(filters:RecordFiltersValue) {
 export function changeFilterStart(filters:RecordFiltersValue,from:string):RecordFiltersValue {
  return {...filters,from,to:from&&filters.to&&from>filters.to?'':filters.to};
 }
+// Money lent is dated by the day it was lent; its due date is optional.
+const recordDay=(record:Entry)=>record.kind==='Money lent'?record.lent_date||record.date:record.date;
 export function filterRecords(records:Entry[],filters:RecordFiltersValue,locale:string) {
- return records.filter(record=>(!filters.query.trim()||`${record.name} ${record.notes}`.toLocaleLowerCase(locale).includes(filters.query.trim().toLocaleLowerCase(locale)))&&(filters.category==='all'||record.kind===filters.category||record.custom_category_id===filters.category)&&matchesRecordDate(record.date,filters.from,filters.to)).sort((a,b)=>filters.order==='name'?a.name.localeCompare(b.name,locale):compareRecordDates(a.date,b.date,filters.order)||a.id.localeCompare(b.id));
+ return records.filter(record=>(!filters.query.trim()||`${record.name} ${record.notes}`.toLocaleLowerCase(locale).includes(filters.query.trim().toLocaleLowerCase(locale)))&&(filters.category==='all'||record.kind===filters.category||record.custom_category_id===filters.category)&&matchesRecordDate(recordDay(record),filters.from,filters.to)).sort((a,b)=>filters.order==='name'?a.name.localeCompare(b.name,locale):compareRecordDates(recordDay(a),recordDay(b),filters.order)||a.id.localeCompare(b.id));
 }
 // Local filter changes must never change the server request identity.
 export function recordsRequestKey(user:string|null,section:string,currency:string,page:number) {

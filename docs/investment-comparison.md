@@ -2,10 +2,12 @@
 
 The Overview comparison supports two methods, saved per account in this browser:
 
-- **From original purchases:** each recorded investment contribution funds benchmarks on its actual date. When original purchases are missing, Overview automatically selects the chosen-date method at the earliest usable recorded valuation date, with an explicit notice. No observed balance is labeled as purchase cost.
+- **From original purchases:** each recorded investment contribution funds benchmarks on its actual date. A holding recorded with a value but no purchase joins on the day that value was first recorded: the recorded value is added to your line and the same amount funds every benchmark that day, so it is never shown as a gain. It is labeled "Recorded value · purchase not recorded", not as a purchase cost, and the settings show a notice. Days before a holding's history begins do not include it, so adding a record never shortens or resets the chart. The comparison opens on the first day investment money moved (the earliest holding history, principal repayment or, when expenses fund benchmarks, expense); cash accounts and the day a debt was opened do not move that date. Market history begins on 1 January 2016: earlier purchases are compared from their recorded values on that day.
 - **From a chosen start date:** seed each benchmark with the recorded non-cash investment value at the end of that date, then add later fresh investment payments. Same-day payments are already part of the opening value. Valuations carry forward; today's valuation uses available market quotes.
 
 Ordinary cash, salary, unspent savings, groceries and family support do not fund benchmarks. Mortgage/debt principal payments count; interest and transaction fees do not. Business contributions and recorded asset purchases count. Daily closing prices and dated FX are used, rather than intraday execution prices. Display currency conversion uses current rates.
+
+A purchase recorded for a holding that has no recorded value yet is carried at the money put in until its first value is recorded. The same security moved between two of your holdings is one position: it is neither sale proceeds nor a new purchase. Repayments recorded from Accounts count like repayments recorded in Tracker.
 
 Explicit transfers between investments add no fresh capital. Cash-account history does not prove which receipt funded a payment: a purchase or principal repayment from cash counts in full, even when an earlier sale or income receipt reached that account. Separate sale-to-cash and later purchase transactions are not automatically linked; use a direct investment transfer to record reuse. Interest and fees never fund benchmarks.
 
@@ -20,7 +22,19 @@ Transfers between the user's own accounts are never expense records and never fu
 
 A watch or similar item bought as an investment belongs in the **Valuables** asset category (migration 070). Valuables track a value like Property: valuations, cash-linked contributions and withdrawals, deletable corrections and optional income/expense updates, without estimated monthly income or trading. They count as investments in both scopes and in net worth. Bought as ordinary spending, the same item is an expense and funds benchmarks only under Including expenses.
 
-The actual line is **Investment value and proceeds**: remaining holdings plus cumulative sale/distribution payouts and retained repaid principal. Once paid out to ordinary cash, proceeds remain historical payouts in this total; unrelated later cash-funded purchases add both new capital and holdings. Ordinary cash balances themselves are excluded. This is not net worth; net worth remains in the Overview summary.
+The actual line is **Investment value and proceeds**: remaining holdings plus cumulative sale/distribution payouts and retained repaid principal. Once paid out to ordinary cash, proceeds remain historical payouts in this total; unrelated later cash-funded purchases add both new capital and holdings. Cash balances themselves are excluded, including cash marked "Include in investments" and cash held in a cash investment account: a cash balance moves with salary and spending, which would appear as gains and losses. This is not net worth; net worth remains in the Overview summary.
+
+## Summary figures
+
+The three figures under the chart use the same rules as the chart, for the period shown and at current exchange rates:
+
+- **Money invested** is what funds benchmarks under Excluding expenses: purchases, contributions and principal repayments. Money moved from another investment is not counted again, and a purchase fee is not part of it.
+- **Expenses paid** is what Including expenses adds: every actual one-time expense, mortgage and loan interest, and trade and transfer fees.
+- **Overall income received** is recorded income, with Tracker receipts counted once.
+
+Recorded values that joined without a purchase fund benchmarks but are not money invested, and the chart converts each amount at its dated exchange rate, so its funding total can differ slightly from these figures.
+
+A purchase fee remains part of the holding's recorded cost until its next valuation. Under Excluding expenses the chart therefore shows the fee as a small gain until then; under Including expenses the fee funds benchmarks and the two agree.
 
 Tap a point for funding details, reused proceeds and historical benchmark unit prices. Period buttons only zoom. Missing valuations or required exchange rates pause the comparison. Preserve sold holdings as zero-balance records to retain their history.
 

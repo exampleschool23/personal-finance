@@ -21,6 +21,7 @@ import { depositInterest, depositProjection, depositToday } from '@/lib/deposit-
 import { AssetMovementDialog, type MovementDraft } from '@/components/planning/asset-movement-dialog';
 import type { AssetMovement } from '@/lib/asset-movements';
 import type { Entry } from '@/lib/finance';
+import { categoryColor } from '@/lib/category-colors';
 
 type Draft={exchange_rate?:number;account_id?:string;id:string;record_id:string;type:HistoryUpdateType;date:string;amount:number;balance:number|null;notes:string};
 export function InvestmentTracker({inline=false,onDraftState,initialType,record,accounts=[],accountsReady=true,onClose,onSaved,onPayment}:{inline?:boolean;onDraftState?:(dirty:boolean,busy:boolean)=>void;initialType?:HistoryUpdateType;accounts?:Entry[];accountsReady?:boolean;record:Entry;onClose:()=>void;onSaved:()=>void;onPayment:()=>void}){
@@ -40,6 +41,8 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
  const updateTypes=historyUpdateTypes(record.kind);
  const makeDraft=():Draft=>({id:crypto.randomUUID(),record_id:record.id,type:initialType&&updateTypes.includes(initialType)?initialType:updateTypes[0],date:depositToday(),amount:0,balance:lending||initialType==='contribution'||initialType==='withdrawal'?null:0,notes:''});
  const [draft,setDraft]=useState<Draft>(makeDraft);
+ // A blank value field reads as zero; saving it would silently wipe the asset's value.
+ const [balanceBlank,setBalanceBlank]=useState(true);
  const guard=useDraftDialog(draft,onClose,busy);
  // Each reset draws a new idempotency id; it is not a user edit.
  const draftContent=(value:Draft)=>JSON.stringify({...value,id:undefined});
@@ -82,7 +85,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
  const accountMoney=(amount:number)=>formatMoney(amount,selectedAccount?.currency??record.currency,locale);
  const cashOutgoing=historyCashDelta(record.kind,draft.type,1)<0;
  const cashAfter=selectedAccount&&cashDelta!==null?Number(selectedAccount.amount)+cashDelta:null;
- const canSave=!busy&&(submitted||(!loading&&!!draft.date&&draft.date<=depositToday()&&updateTypes.includes(draft.type)&&(draft.type==='valuation'||draft.amount>0)&&(draft.type==='valuation'||(accountsReady&&!!selectedAccount&&cashAfter!==null&&cashAfter>=0&&cashAfter<=1e15))&&(!lending||(accountsReady&&!!selectedAccount&&draft.date>=latestBalanceDate&&remainingBalance>=0&&remainingBalance<=1e15))));
+ const canSave=!busy&&(submitted||(!loading&&!!draft.date&&draft.date<=depositToday()&&updateTypes.includes(draft.type)&&(draft.type==='valuation'||draft.amount>0)&&(!hasBalance||!balanceBlank)&&(draft.type==='valuation'||(accountsReady&&!!selectedAccount&&cashAfter!==null&&cashAfter>=0&&cashAfter<=1e15))&&(!lending||(accountsReady&&!!selectedAccount&&draft.date>=latestBalanceDate&&remainingBalance>=0&&remainingBalance<=1e15))));
  async function save(event?:React.FormEvent){
   event?.preventDefault();if(!canSave)return;setBusy(true);setSubmitted(true);setError('');
   try{
@@ -90,17 +93,17 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
    setDraft(payload);
    const response=await fetch(payload.exchange_rate!==undefined?'/api/investment-history/exchange':'/api/investment-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
    const result=await response.json() as {error?:string};if(!response.ok){if(response.status>=400&&response.status<500){setSubmitted(false);if(crossCurrency)fx.retry();}throw Error(result.error);}
-   showSaved();setDraft(makeDraft());setSubmitted(false);setLoading(true);setReload(n=>n+1);onSaved();if(inline)onClose();
+   showSaved();setDraft(makeDraft());setBalanceBlank(true);setSubmitted(false);setLoading(true);setReload(n=>n+1);onSaved();if(inline)onClose();
   }catch(e){setError((e as Error).message);}finally{setBusy(false);}
  }
  const paymentFields=<div className="record-form">
    {!inline&&<h3>{t('Add a dated update')}</h3>}{inline&&<p className="muted">{t('Enter any amount up to the outstanding balance. You can repay the rest later.')}</p>}
    <fieldset disabled={busy||submitted||loading} className="tracker-fields">
-    <div className="form-grid">{!inline&&<label>{t('Update type')}<NativeSelect value={draft.type} onChange={e=>{const type=e.target.value as Draft['type'];setDraft({...draft,type,account_id:undefined,exchange_rate:undefined,amount:0,balance:!lending&&type==='valuation'?0:null});}}>
+    <div className="form-grid">{!inline&&<label>{t('Update type')}<NativeSelect value={draft.type} onChange={e=>{const type=e.target.value as Draft['type'];setBalanceBlank(true);setDraft({...draft,type,account_id:undefined,exchange_rate:undefined,amount:0,balance:!lending&&type==='valuation'?0:null});}}>
      {updateTypes.map(type=><option key={type} value={type}>{t(eventLabel(type))}</option>)}
     </NativeSelect></label>}<label>{t(inline?'Payment date':'Date')}<DatePicker value={draft.date} min={lending?latestBalanceDate:undefined} max={depositToday()} onChange={date=>setDraft({...draft,date,exchange_rate:undefined})}/></label></div>
-    {optionalValuation&&<div className="tracker-value-choice"><span className="tracker-value-label">{t('Asset value')}</span><ToggleGroup type="single" aria-label={t('Asset value')} value={draft.balance===null?'keep':'change'} disabled={busy||submitted||loading} onValueChange={choice=>{if(choice&&choice!==(draft.balance===null?'keep':'change'))setDraft({...draft,balance:choice==='change'?0:null});}}><ToggleGroupItem value="keep">{t('Keep current value')}</ToggleGroupItem><ToggleGroupItem value="change">{t('Enter new value')}</ToggleGroupItem></ToggleGroup>{draft.balance===null&&<small className="muted">{t('The asset value stays unchanged. Only the cash movement is recorded.')}</small>}</div>}
-    {hasBalance&&<label>{t(deposit||cash?'Account balance after update':'Full asset value after update')}<FormattedNumberInput value={draft.balance??0} required={false} onValueChange={balance=>setDraft({...draft,balance})}/></label>}
+    {optionalValuation&&<div className="tracker-value-choice"><span className="tracker-value-label">{t('Asset value')}</span><ToggleGroup type="single" aria-label={t('Asset value')} value={draft.balance===null?'keep':'change'} disabled={busy||submitted||loading} onValueChange={choice=>{if(choice&&choice!==(draft.balance===null?'keep':'change')){setBalanceBlank(true);setDraft({...draft,balance:choice==='change'?0:null});}}}><ToggleGroupItem value="keep">{t('Keep current value')}</ToggleGroupItem><ToggleGroupItem value="change">{t('Enter new value')}</ToggleGroupItem></ToggleGroup>{draft.balance===null&&<small className="muted">{t('The asset value stays unchanged. Only the cash movement is recorded.')}</small>}</div>}
+    {hasBalance&&<label>{t(deposit||cash?'Account balance after update':'Full asset value after update')}<FormattedNumberInput value={draft.balance??0} requireEntry onValueChange={(balance,blank)=>{setBalanceBlank(blank);setDraft({...draft,balance});}}/><small className="muted">{t('Enter 0 only when the asset is worth nothing.')}</small></label>}
     {draft.type!=='valuation'&&<label>{t(lending?(cashOutgoing?'Pay from cash account':'Receive into cash account'):'Cash account')}<NativeSelect required disabled={!accountsReady} value={draft.account_id??''} onChange={e=>setDraft({...draft,account_id:e.target.value||undefined,exchange_rate:undefined})}><option value="" disabled>{t('Choose a cash account')}</option>{cashAccounts.map(a=><option key={a.id} value={a.id}>{a.name} · {formatMoney(Number(a.amount),a.currency,locale)}</option>)}</NativeSelect>{accountsReady&&!cashAccounts.length&&<small>{t('Add a cash account to record this transaction.')}</small>}{!accountsReady&&<small>{t('Waiting for current cash account balances.')}</small>}</label>}{draft.type!=='valuation'&&<label>{t(lending?'Principal amount':'Cash amount (your share)')} · {record.currency}<FormattedNumberInput value={draft.amount} max={lending&&draft.type==='withdrawal'?currentBalance:1e15} onValueChange={amount=>setDraft({...draft,amount})}/></label>}
     {crossCurrency&&<ExchangeRatePreview fx={fx}/>}
     {selectedAccount&&cashOutgoing&&fx.rate&&<p className="muted">{t('Available for this payment')}: {money(Number(selectedAccount.amount)*fx.rate)}</p>}
@@ -135,8 +138,8 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
      <Tooltip labelFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} formatter={v=>money(Number(v))} contentStyle={{background:'var(--background)',borderColor:'var(--border)',borderRadius:10}}/>
      <Legend/>
      <Line type="linear" dataKey="balance" name={t(lending?(record.kind==='Money lent'?'Amount owed to you':'Outstanding balance'):cash||deposit?'Account balance':'Value (your share)')} stroke="var(--primary)" strokeWidth={2} dot={{r:3}} connectNulls={false}/>
-     {!lending&&!cash&&<Line type="stepAfter" dataKey="contributions" name={t('Net contributions recorded')} stroke="#8b5cf6" strokeDasharray="5 4" dot={false}/>}
-     {!lending&&!cash&&<Line type="stepAfter" dataKey="receipts" name={t('Income received')} stroke="#0d9488" dot={false}/>}
+     {!lending&&!cash&&<Line type="stepAfter" dataKey="contributions" name={t('Net contributions recorded')} stroke={categoryColor('Property')} strokeDasharray="5 4" dot={false}/>}
+     {!lending&&!cash&&<Line type="stepAfter" dataKey="receipts" name={t('Income received')} stroke={categoryColor('Deposit')} dot={false}/>}
     </LineChart></ResponsiveContainer>
    </div>}
    <p className="muted tracker-help">{t(lending?'History starts with a balance snapshot. Additions increase the balance; principal repayments reduce it.':cash?'History shows confirmed balances and account movements.':'History starts with a current snapshot. Add older values and contributions if known. Recorded contributions are not a complete purchase cost unless you enter them all.')}</p>

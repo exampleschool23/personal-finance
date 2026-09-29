@@ -43,6 +43,28 @@ test('comparison UI translates messages and uses the shared date picker without 
  for(const language of ['en','ru','uz']){const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));for(const message of messages)assert.ok(labels[message],`${language}: ${message}`);}
  assert.ok(source.includes('<DatePicker'));assert.ok(!source.includes('setRequestedStart'));assert.ok(!source.includes('setCapital'));assert.ok(!/<[Ii]nput\b[^>]*type="number"/.test(source));assert.ok(!source.includes('type="date"'));
 });
+test('comparison chart shows monetary values from the purchase-based comparison, never percentages',()=>{
+ const source=fs.readFileSync('components/investment-comparison.tsx','utf8');
+ assert.ok(source.includes('investmentDecisionComparison('));
+ assert.ok(source.includes('<InvestmentValueChart'));
+ assert.ok(!/getInvestment(Portfolio|Comparison)/.test(source));
+ const chart=fs.readFileSync('components/investment-value-chart.tsx','utf8');
+ assert.ok(chart.includes('tickFormatter={amount=>formatCompactMoney(Number(amount),currency,locale)}'));
+ assert.ok(chart.includes('money(Number(amount))'));
+ for(const text of [source,chart]){
+  assert.ok(!text.includes('percentagePerformance'));
+  assert.ok(!text.includes('tickFormatter={percent}'));
+  assert.ok(!text.includes('percentage points'));
+ }
+});
+test('monetary comparison retains small-price precision and unavailable benchmark gaps',()=>{
+ const flows=[{date:'2026-09-01',amount:100.125},{date:'2026-09-02',amount:50.375}];
+ const prices={BTC:[{date:'2026-09-01',close:.000001},{date:'2026-09-02',close:.000002}]};
+ const result=compareInvestments(0,flows,[{date:'2026-09-01',amount:100.125},{date:'2026-09-02',amount:190.75}],{start:'2026-09-01',end:'2026-09-02',fx:[],prices,errors:{}},'USD',true);
+ near(result.points.at(-1).BTC,250.625);
+ near(result.points.at(-1).actual-result.points.at(-1).BTC,-59.875);
+ assert.equal(result.points.at(-1).depositUZS,null);
+});
 test('valuation gaps recover when quotes return, without inventing a trade price',()=>{
  const prices={SPY:[{date:'2025-01-01',close:10},{date:'2025-01-10',close:12}]};
  const result=compareInvestments(100,[],[],data('2025-01-01','2025-01-10',prices),'USD');

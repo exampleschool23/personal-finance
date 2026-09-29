@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/components/language-provider';
 import { formatNumberInput, numberInputValue, numberSymbols } from '@/lib/format';
 
-export function FormattedNumberInput({ value, onValueChange, max = 1e15, required = true, displayFractionDigits = 20, placeholder = '0' }: { value: number; onValueChange: (value: number) => void; max?: number; required?: boolean; displayFractionDigits?: number; placeholder?: string }) {
+/** A blank field reads as zero. `requireEntry` is for fields where zero must be typed, never assumed; `onValueChange` reports whether the field is blank. */
+export function FormattedNumberInput({ value, onValueChange, max = 1e15, required = true, requireEntry = false, displayFractionDigits = 20, placeholder = '0' }: { value: number; onValueChange: (value: number, blank: boolean) => void; max?: number; required?: boolean; requireEntry?: boolean; displayFractionDigits?: number; placeholder?: string }) {
   const { locale } = useLanguage();
   const [text, setText] = useState(() => value === 0 ? '' : numberInputValue(value, locale, displayFractionDigits));
   const lastEmitted = useRef(value);
@@ -14,7 +15,7 @@ export function FormattedNumberInput({ value, onValueChange, max = 1e15, require
     if (value !== lastEmitted.current || locale !== previousLocale.current || displayFractionDigits !== previousDisplayFractionDigits.current) setText(value === 0 ? '' : numberInputValue(value, locale, displayFractionDigits));
     lastEmitted.current = value; previousLocale.current = locale; previousDisplayFractionDigits.current = displayFractionDigits;
   }, [value, locale, displayFractionDigits]);
-  return <Input type="text" inputMode="decimal" autoComplete="off" placeholder={placeholder} value={text} required={required && value !== 0} onChange={event => {
+  return <Input type="text" inputMode="decimal" autoComplete="off" placeholder={placeholder} value={text} required={requireEntry || (required && value !== 0)} onChange={event => {
     const input = event.currentTarget;
     const raw = input.value, cursor = input.selectionStart ?? raw.length;
     const parsed = formatNumberInput(raw, locale);
@@ -24,7 +25,7 @@ export function FormattedNumberInput({ value, onValueChange, max = 1e15, require
     const before = significant(raw.slice(0, cursor));
     setText(parsed.text);
     lastEmitted.current = parsed.value ?? 0;
-    onValueChange(parsed.value ?? 0);
+    onValueChange(parsed.value ?? 0, parsed.text === '');
     requestAnimationFrame(() => {
       let position = 0;
       while (position < parsed.text.length && significant(parsed.text.slice(0, position)) < before) position++;

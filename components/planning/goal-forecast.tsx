@@ -77,7 +77,7 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
     <p className="goal-help">{t('Adjust the numbers to explore your future.')}</p>
     <fieldset className="goal-scenario-fields" disabled={busy || goal.archived}>
      <div className="goal-control">
-      <label className="goal-input-label">{t('Monthly investment')}<span className="goal-amount-input"><FormattedNumberInput value={contribution ?? 0} displayFractionDigits={0} required={false} onValueChange={setMonthly} /><span>{currency}</span></span></label>
+      <label className="goal-input-label">{t('Monthly investment')}<span className="goal-amount-input"><FormattedNumberInput value={contribution ?? 0} displayFractionDigits={monthly === null ? 0 : undefined} required={false} onValueChange={setMonthly} /><span>{currency}</span></span></label>
       <input className="goal-range" type="range" min={0} max={monthlyMax} step="any" value={contribution ?? 0} style={rangeStyle(contribution ?? 0, monthlyMax)} aria-label={t('Monthly investment')} aria-valuetext={contribution === null ? t('Surplus is unavailable. Enter a monthly investment to explore a scenario.') : money(contribution)} onChange={event => setMonthly(Math.round(Number(event.target.value)))} />
       <div className="goal-range-labels"><span>{money(0)}</span><span>{money(monthlyMax)}</span></div>
       <div className="goal-quick-actions"><Button type="button" variant={monthly === null ? 'secondary' : 'outline'} aria-pressed={monthly === null} disabled={surplus === null} onClick={() => setMonthly(null)}><Wallet size={14} aria-hidden="true" />{t('Use my surplus')}</Button><Button type="button" variant="outline" disabled={requiredContribution === null || requiredContribution > 1e15} onClick={() => { if (requiredContribution !== null) setMonthly(requiredContribution); }}>{t('Use required contribution')}</Button></div>
@@ -106,7 +106,7 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
 
      <div className="goal-summary-stats">
       <div><span>{t(goal.kind === 'net_worth' ? 'Current net worth' : 'Allocated amount')}</span><strong>{starting === null ? '—' : money(starting)}</strong></div>
-      <div><span>{t('Monthly contribution needed')}</span><strong>{result.required === null ? '—' : money(result.required)}</strong></div>
+      <div><span>{t('Monthly contribution needed')}</span><strong>{requiredContribution === null ? '—' : money(requiredContribution)}</strong></div>
       <div><span>{t('Assumed annual return')}</span><strong>{percent(rate)}</strong></div>
      </div>
 
@@ -114,7 +114,7 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
       {overBudget > 0 || !reached ? <CircleHelp size={19} aria-hidden="true" /> : <Check size={19} aria-hidden="true" />}
       <div>{result.required === null ? <p>{t(result.overdue ? 'The deadline has passed. Choose a future date to make a new plan.' : 'The deadline is before the first monthly contribution. Extend it or add funds now.')}</p> : <>
        <strong>{t(reached ? 'This scenario reaches your goal.' : 'This scenario falls short by {amount}.', { amount: money(Math.max(0, goal.target - result.projected)) })}</strong>
-       {overBudget > 0 ? <p>{t('This monthly investment exceeds your available surplus by {amount}.', { amount: money(overBudget) })}</p> : surplus !== null && result.required > Math.max(0, surplus) ? <p>{t('You need {amount} more per month than your available surplus.', { amount: money(result.required - Math.max(0, surplus)) })}</p> : surplus !== null ? <p>{t('Your monthly investment fits within your available surplus.')}</p> : null}
+       {overBudget > 0 ? <p>{t('This monthly investment exceeds your available surplus by {amount}.', { amount: money(overBudget) })}</p> : surplus !== null && result.required > Math.max(0, surplus) ? <p>{t('You need {amount} more per month than your available surplus.', { amount: money(Math.ceil(result.required - Math.max(0, surplus))) })}</p> : surplus !== null ? <p>{t('Your monthly investment fits within your available surplus.')}</p> : null}
       </>}</div>
      </div>
     </> : <div className="goal-projection-empty"><TrendingUp size={36} aria-hidden="true" /><h3>{t('Build your projection')}</h3>

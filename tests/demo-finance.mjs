@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
 const { demoRecords, demoHistory, demoMarket, demoBenchmarkKeys } = loadTS('lib/demo-finance.ts');
-const { getInvestmentPortfolio, getInvestmentComparison } = loadTS('lib/investment-portfolio.ts');
+const { investmentDecisionComparison } = loadTS('lib/investment-benchmarks.ts');
 const { investmentPeriodTotals } = loadTS('lib/investment-period.ts');
-const { portfolioWindow } = loadTS('lib/portfolio-history.ts');
+const { portfolioHistory, portfolioWindow } = loadTS('lib/portfolio-history.ts');
 const { shiftDay } = loadTS('lib/benchmark-data.ts');
 const today = '2026-09-24';
 // Mock feed data belongs only in tests; production demo requests the real API.
@@ -16,14 +16,22 @@ const benchmarkFixture = day => {
 const records = demoRecords(today);
 const history = demoHistory(records, today);
 const input = { ...history, today, market: demoMarket, currency: 'USD' };
+const compare = (currency, data) => investmentDecisionComparison({ ...input, currency, method: { mode: 'purchases', date: shiftDay(today, -365) } }, data);
 
 test('demo has a year of funded history, receipts and expenses in all chart windows', () => {
- const portfolio = getInvestmentPortfolio(input);
- assert.equal(portfolio.performance.missing, false);
- assert.ok(portfolio.value > 0);
- assert.equal(portfolio.points[0].date, shiftDay(today, -365));
- assert.equal(portfolio.points.at(-1).date, today);
- for (const days of [30, 90, 365, null]) assert.ok(portfolioWindow(portfolio.points, days, today).length > 1);
+ const comparison = compare('USD', benchmarkFixture(today));
+ assert.ok(comparison, 'No holding or exchange rate is missing');
+ assert.deepEqual(comparison.missingPurchases, []);
+ const chart = comparison.result.points;
+ assert.ok(chart.at(-1).actual > 0);
+ assert.equal(chart[0].date, shiftDay(today, -365));
+ assert.equal(chart.at(-1).date, today);
+ const netWorth = portfolioHistory(history.records, history.events, 'USD', demoMarket.rates, today, true);
+ assert.equal(netWorth.points[0].date, shiftDay(today, -365));
+ for (const days of [30, 90, 365, null]) {
+  assert.ok(portfolioWindow(netWorth.points, days, today).length > 1);
+  assert.ok(chart.filter(point => days === null || point.date >= shiftDay(today, -days)).length > 1);
+ }
  const totals = investmentPeriodTotals(input, '0000-01-01');
  assert.ok(totals.invested > 0);
  assert.ok(totals.income > 0);
@@ -34,15 +42,15 @@ test('demo has a year of funded history, receipts and expenses in all chart wind
 
 test('BTC, S&P and deposit comparisons accept provider data and preserve currency precision', () => {
  const data = benchmarkFixture(today);
- const usd = getInvestmentComparison(input, data);
- const uzs = getInvestmentComparison({ ...input, currency: 'UZS' }, data);
+ const usd = compare('USD', data).result;
+ const uzs = compare('UZS', data).result;
  assert.ok(usd.points.length > 365);
  for (const key of ['actual', ...demoBenchmarkKeys, 'depositUZS']) {
   assert.ok(usd.points.every(point => Number.isFinite(point[key])), key);
   assert.notEqual(usd.points[0][key], usd.points.at(-1)[key]);
   for (let i = 0; i < usd.points.length; i++) assert.ok(Math.abs(uzs.points[i][key] / 12500 - usd.points[i][key]) < 1e-8);
  }
- assert.equal(getInvestmentComparison({ ...input, currency: 'EUR' }, data), null, 'No inferred exchange rate');
+ assert.equal(compare('EUR', data), null, 'No inferred exchange rate');
 });
 
 test('demo fixtures do not mutate records, leak removed holdings or add history to new records', () => {

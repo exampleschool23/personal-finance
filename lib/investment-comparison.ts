@@ -83,5 +83,3 @@ export function compareInvestments(starting: number, flows: CashFlow[], actual: 
  });
  return {points,unavailable:[...unavailable],netCashFlow:contributed-starting};
 }
-
-// Cumulative profit / gross invested capital. Keep gross purchases separate from

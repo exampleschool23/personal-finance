@@ -20,7 +20,7 @@ export function TransactionDetailsDialog({record,incoming,categoryName,businessN
  if(record.mortgage_payment_id)rows.push([t('Principal'),money(Number(record.payment_principal))],[t('Interest'),money(Number(record.payment_interest))]);
  if(businessName)rows.push([t('Business'),businessName]);
  if(accountName)rows.push([t('Account'),accountName]);
- if(record.account_currency&&record.account_currency!==record.currency&&record.account_exchange_rate)rows.push([t('Exchange rate'),`1 ${record.currency} = ${formatNumber(record.account_exchange_rate,locale)} ${record.account_currency}`]);
+ if(record.account_currency&&record.account_currency!==record.currency&&record.account_exchange_rate)rows.push([t('Exchange rate'),`1 ${record.account_currency} = ${formatNumber(record.account_exchange_rate,locale)} ${record.currency}`]);
  if(record.notes)rows.push([t('Notes'),<span key="n" className="whitespace-pre-wrap break-words">{record.notes}</span>]);
  return <Dialog open onOpenChange={open=>{if(!open)onClose();}}><DialogContent><DialogTitle>{record.name}</DialogTitle><DialogDescription>{t('Transaction details')}</DialogDescription><dl className="grid grid-cols-[minmax(0,8rem)_1fr] gap-x-4 gap-y-3 text-sm">{rows.map(([label,value])=><div key={label} className="contents"><dt className="muted">{label}</dt><dd>{value}</dd></div>)}</dl><div className="record-form-footer"><Button type="button" variant="outline" onClick={onClose}>{t('Close')}</Button>{editable&&<Button type="button" onClick={onEdit}>{t('Edit')}</Button>}</div></DialogContent></Dialog>;
 }

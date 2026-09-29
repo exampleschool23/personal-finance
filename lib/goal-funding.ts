@@ -14,8 +14,13 @@ export function fundingPlan(goals:Goal[],surplus:number|null,currency:string,tod
  });
  return {rows,requested:unknown?null:requested,remaining,shortfall:unknown||surplus===null?null:Math.max(0,requested-Math.max(0,surplus)),complete:!unknown&&surplus!==null};
 }
+// What the shared plan leaves for this goal: the surplus after every goal funded before it.
+// A goal outside the plan comes after all funded goals.
 export function fundingRoom(goals:Goal[],selected:Goal,surplus:number|null,currency:string,today:string,rates?:Record<string,number>){
  if(surplus===null)return null;
- const plan=fundingPlan(goals.filter(goal=>goal.id!==selected.id),surplus,currency,today,rates);
- return plan.requested===null?null:Math.max(0,surplus-plan.requested);
+ const rows=fundingPlan(goals,surplus,currency,today,rates).rows;
+ const position=rows.findIndex(row=>row.goal.id===selected.id);
+ let room=surplus;
+ for(const row of position<0?rows:rows.slice(0,position)){if(row.requested===null)return null;room-=row.requested;}
+ return Math.max(0,room);
 }

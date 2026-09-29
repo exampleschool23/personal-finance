@@ -10,8 +10,25 @@ test('benchmark tooltip shows selected values, cumulative funding and only recei
  assert.ok(!html.includes('Earlier receipt'));assert.ok(!html.includes('$999'));
  assert.ok(html.includes('tabindex="0"'));
 });
+test('interacting with the tooltip does not move the chart hover target or intercept native scrolling',()=>{
+ const card=BenchmarkTooltip(props);
+ for(const name of ['onMouseMove','onTouchMove','onWheel']){
+  let stopped=false;
+  card.props[name]({stopPropagation(){stopped=true;},preventDefault(){assert.fail('Native scrolling must stay enabled');}});
+  assert.equal(stopped,true);
+ }
+});
+test('activity is keyboard focusable and scrolling keys do not navigate chart points; Escape still dismisses',()=>{
+ const body=BenchmarkTooltip(props).props.children.find(child=>child.props.className==='portfolio-tooltip-body');
+ assert.equal(body.props.tabIndex,0);assert.equal(body.props.role,'region');
+ for(const key of ['ArrowDown','ArrowUp','PageDown','PageUp','Home','End']){
+  let stopped=false;body.props.onKeyDown({key,stopPropagation(){stopped=true;}});assert.equal(stopped,true);
+ }
+ body.props.onKeyDown({key:'Escape',stopPropagation(){assert.fail('Escape must reach the dismissal handler');}});
+});
 test('days without receipts are explicit and inactive tooltips render nothing',()=>{
  assert.equal(BenchmarkTooltip({...props,active:false}),null);
+ assert.equal(BenchmarkTooltip({...props,payload:[]}),null);
  assert.ok(renderToStaticMarkup(BenchmarkTooltip({...props,receipts:[]})).includes('No new income invested on this date.'));
 });
 

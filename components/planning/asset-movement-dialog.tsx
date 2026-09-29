@@ -12,6 +12,7 @@ import { FormattedNumberInput } from '@/components/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney, formatNumber } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
+import { decimalSum } from '@/lib/decimal-amounts';
 import { isHolding, movementSources, movementTargets, type AssetMovement, type MovementKind } from '@/lib/asset-movements';
 import type { Entry } from '@/lib/finance';
 import type { HoldingAccount } from '@/lib/holding-accounts';
@@ -28,7 +29,8 @@ export function AssetMovementDialog({initial,records,accounts=[],save,onClose}:{
  const fx=useDatedExchangeRate(draft.kind==='transfer'?source?.currency:undefined,target?.currency,draft.date);
  const crossTransfer=draft.kind==='transfer'&&!!source&&!!target&&!sameCurrency;
  const rate=submitted?draft.exchange_rate??fx.rate:fx.rate;
- const received=draft.kind==='transfer'?(sameCurrency?Math.max(0,draft.sent-draft.fee):rate?Math.max(0,draft.sent-draft.fee)*rate:0):draft.received;
+ const net=Math.max(0,decimalSum([draft.sent,-draft.fee]));
+ const received=draft.kind==='transfer'?(sameCurrency?net:rate?net*rate:0):draft.received;
  let sourceValue=source&&!isHolding(source)?draft.sent:draft.source_value;
  let targetValue=target&&!isHolding(target)?received:draft.target_value;
  if(trade&&sameCurrency){
@@ -65,7 +67,7 @@ export function AssetMovementDialog({initial,records,accounts=[],save,onClose}:{
     {!interest&&<label>{t('Fee included in these amounts')} {draft.kind==='buy'?target?.currency:source?.currency}<FormattedNumberInput value={draft.fee} required={false} onValueChange={amount=>change('fee',amount)}/><small className="muted">{t('This records the fee as an expense without deducting it again.')}</small></label>}
     {crossTransfer&&<ExchangeRatePreview fx={fx}/>}
     {draft.kind==='transfer'&&target&&rate&&<p>{t('Net amount received')}: {formatMoney(received,target.currency,locale)}</p>}
-    <label>{t('Date')}<DatePicker value={draft.date} onChange={date=>change('date',date)}/></label>
+    <label>{t('Date')}<DatePicker value={draft.date} max={depositToday()} onChange={date=>change('date',date)}/></label>
     <label>{t('Notes (optional)')}<textarea rows={2} maxLength={2000} value={draft.notes} onChange={event=>change('notes',event.target.value)}/></label>
    </fieldset>
    {source&&target&&valid&&<div className="ownership-summary">{!interest&&<p>{source.name}: {units(source,available-draft.sent)}</p>}<p>{target.name}: {units(target,(isHolding(target)?target.quantity:target.amount)+received)}</p><small>{t('Balances after this transaction')}</small></div>}
