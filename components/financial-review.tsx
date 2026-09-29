@@ -3,7 +3,8 @@ import { normalizeEntry } from '@/lib/finance';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import type { MarketData } from '@/lib/market';
 import { useState } from 'react';
-import { ArrowUp, ArrowDown, Equal, CircleHelp, CalendarDays, ReceiptText, X } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Equal, CircleHelp, CalendarDays, ReceiptText, X } from 'lucide-react';
+import { StatTile, StatTiles } from '@/components/stat-tile';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { DatePicker } from '@/components/date-picker';
@@ -28,11 +29,11 @@ export function MonthlyReview({data:providedData,owner,demo=false,revision=0,too
  if(owner&&!demo&&(remote.loading||remote.error))return <section className="panel tools-panel monthly-review"><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2>{remote.error?<p role="alert">{t(remote.error)} <Button onClick={remote.retry}>{t('Retry')}</Button></p>:<p role="status">{t('Loading records…')}</p>}</section>;
  if(compact)return <section className="cashflow-summary" aria-label={t('Monthly review')}>
   {tools.error&&<p className="error" role="alert">{t(tools.error)} <Button onClick={tools.retry}>{t('Retry')}</Button></p>}
-  <div className="cashflow-summary-grid">{[
-   {label:'Income received',value:result.received,estimate:estimates?.income,Icon:ArrowUp,tone:'income'},
-   {label:'Actual spending',value:result.spent,estimate:estimates?.spending,Icon:ArrowDown,tone:'spending'},
-   {label:'Net cash flow',value:result.saved,estimate:estimates?.net,Icon:Equal,tone:result.saved<0?'negative':'income'},
-  ].map(({label,value,estimate,Icon,tone})=><article key={label} className={`cashflow-summary-card ${tone}`}><span className="cashflow-summary-icon"><Icon size={25} aria-hidden="true"/></span><div><h2>{t(label)}</h2><strong>{tools.loading||tools.error?'—':money(value)}</strong><p>{t(label==='Net cash flow'?'Estimated monthly surplus':'Monthly estimate')}: {estimate==null?'—':money(estimate)}</p></div></article>)}</div>
+  <StatTiles columns={3}>{[
+   {label:'Income received',value:result.received,estimate:estimates?.income,Icon:ArrowDownLeft},
+   {label:'Actual spending',value:result.spent,estimate:estimates?.spending,Icon:ArrowUpRight},
+   {label:'Net cash flow',value:result.saved,estimate:estimates?.net,Icon:Equal,tone:result.saved<0?'negative' as const:'positive' as const},
+  ].map(({label,value,estimate,Icon,tone})=><StatTile key={label} label={t(label)} icon={<Icon aria-hidden="true"/>} value={tools.loading||tools.error?'—':money(value)} tone={tools.loading||tools.error?undefined:tone}><p>{t(label==='Net cash flow'?'Estimated monthly surplus':'Monthly estimate')}: {estimate==null?'—':money(estimate)}</p></StatTile>)}</StatTiles>
   <p className="cashflow-summary-note muted">{t('Estimates exclude one-time entries. Actuals include recorded mortgage payments.')}</p>
   {!!result.missing&&<p className="partial-total" role="status">{t('Some transactions could not be converted. Current or previous month totals are incomplete.')}</p>}
  </section>;

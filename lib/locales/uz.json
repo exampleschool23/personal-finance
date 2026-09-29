@@ -1998,7 +1998,7 @@
   "Total funding invested by this date": "Shu sanagacha investitsiya qilingan jami mablag‘",
   "Opening net worth invested": "Boshlang‘ich sof boylik investitsiya qilindi",
   "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Har bir benchmark boshlang‘ich sof boylik bilan boshlanadi. Keyingi daromad olingan sanada investitsiya qilinadi; boshlang‘ich qoldiqdagi daromad qayta qo‘shilmaydi.",
-  "BTC price (USD)": "BTC narxi (USD)",
+  "{symbol} price (USD)": "{symbol} narxi (USD)",
   "Your money, clearly organized.": "Mablag‘laringiz tartibli va tushunarli.",
   "{currency} balances": "{currency} qoldiqlari",
   "All accounts": "Barcha hisoblar",
@@ -2075,5 +2075,14 @@
   "The goal and its activity move to Recently deleted. Money stays in your accounts, and you can restore the goal later.": "Maqsad va uning tarixi «Yaqinda o‘chirilganlar»ga o‘tkaziladi. Pul hisoblaringizda qoladi va maqsadni keyinroq tiklash mumkin.",
   "This repayment was recorded from Accounts and cannot be deleted here.": "Bu to‘lov «Hisoblar» bo‘limida qayd etilgan va uni bu yerda o‘chirib bo‘lmaydi.",
   "Goal deletion needs the latest database update.": "Maqsadlarni o‘chirish uchun ma’lumotlar bazasining so‘nggi yangilanishi kerak.",
-  "Could not delete the goal. Please try again.": "Maqsadni o‘chirib bo‘lmadi. Qayta urinib ko‘ring."
+  "Could not delete the goal. Please try again.": "Maqsadni o‘chirib bo‘lmadi. Qayta urinib ko‘ring.",
+  "View all": "Hammasini ko‘rish",
+  "Comparison settings": "Taqqoslash sozlamalari",
+  "Income by source": "Manbalar bo‘yicha daromad",
+  "Return on purchase cost: {percent}": "Xarid narxiga nisbatan daromadlilik: {percent}",
+  "Only holdings with a purchase price are included.": "Faqat xarid narxi kiritilgan aktivlar hisobga olinadi.",
+  "Nothing is due in the next 31 days.": "Keyingi 31 kun ichida to‘lovlar yo‘q.",
+  "Money": "Pul",
+  "Planning": "Rejalashtirish",
+  "Skip": "O‘tkazib yuborish"
 }

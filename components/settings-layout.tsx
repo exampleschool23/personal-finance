@@ -2,6 +2,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { UserRound, ChartNoAxesColumnIncreasing, ShieldCheck, Tags, Database } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
+import { PageHeader } from '@/components/page-header';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const sections = [
@@ -23,7 +24,7 @@ export function SettingsLayout({preferences,benchmarks,security,categories,data}
  useEffect(()=>{document.querySelector(`.settings-navigation-list [data-state="active"]`)?.scrollIntoView({block:'nearest',inline:'nearest'});},[active]);
  const panels:Record<string,ReactNode>={preferences,benchmarks,security,categories,'data-tools':data};
  return <div className="settings-layout">
-  <header className="page-heading"><div><h1>{t('Settings')}</h1><p className="muted">{t('Manage your preferences, security, and financial data.')}</p></div></header>
+  <PageHeader title={t('Settings')} description={t('Manage your preferences, security, and financial data.')}/>
   <Tabs value={active} onValueChange={value=>{setActive(value);window.history.replaceState(null,'','#'+value);}} className="settings-navigation">
    <TabsList aria-label={t('Settings')} className="settings-navigation-list">{sections.map(({id,label,icon:Icon})=><TabsTrigger key={id} value={id}><Icon size={18}/>{t(label)}</TabsTrigger>)}</TabsList>
    <div className="settings-section-content">{sections.map(({id})=><TabsContent key={id} value={id} forceMount hidden={active!==id}>{panels[id]}</TabsContent>)}</div>

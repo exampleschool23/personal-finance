@@ -33,4 +33,9 @@ export function portfolioAssetKey(asset:PortfolioAsset,portfolio:DiversifiedPort
  return portfolio.assets?'portfolio_'+asset.id:({crypto:'portfolioCrypto',stock:'portfolioStock',business:'portfolioBusiness',cash:'portfolioCash',deposit:'depositUZS',property:'portfolioProperty',custom:'portfolioCustom'} as const)[asset.kind];
 }
 
+/** Market-priced portfolio assets and the key their price history is stored under. */
+export function portfolioQuotes(portfolio:DiversifiedPortfolio) {
+ return portfolioAssets(portfolio).filter(asset=>['stock','crypto'].includes(asset.kind)&&!!asset.symbol&&asset.weight>0).map(asset=>({key:portfolioAssetKey(asset,portfolio),symbol:asset.symbol}));
+}
+
 export function portfolioAssetCurrency(asset:PortfolioAsset){return asset.currency??(asset.kind==='deposit'?'UZS':'USD');}

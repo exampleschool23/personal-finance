@@ -3,5 +3,6 @@ import {Suspense} from 'react';
 import {useSearchParams} from 'next/navigation';
 import {LanguageProvider,LanguageSelector} from '@/components/language-provider';
 import {AccountAccessPanel} from '@/components/account-access-panel';
+import {Brand} from '@/components/brand';
 function Confirmation(){const query=useSearchParams();return <AccountAccessPanel tokenHash={query.get('token_hash')??''} tokenType={query.get('type')??'email'}/>;}
-export default function Confirm(){return <LanguageProvider><main className="content"><LanguageSelector/><Suspense><Confirmation/></Suspense></main></LanguageProvider>;}
+export default function Confirm(){return <LanguageProvider><main className="auth-page"><header className="auth-page-header"><Brand/><LanguageSelector/></header><Suspense><Confirmation/></Suspense></main></LanguageProvider>;}

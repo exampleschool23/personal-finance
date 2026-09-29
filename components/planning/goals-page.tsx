@@ -8,7 +8,8 @@ import { useGoalOrder } from '@/hooks/use-goal-order';
 import { CurrencyValue } from '@/components/currency-value';
 import { useDraftDialog } from '@/components/discard-changes';
 import { useEffect, useId, useRef, useState } from 'react';
-import { Bitcoin, CalendarDays, ChartNoAxesCombined, Check, Pencil, Target, Wallet } from 'lucide-react';
+import { Bitcoin, CalendarDays, ChartNoAxesCombined, Check, Pencil, Plus, Target, Wallet } from 'lucide-react';
+import { PageHeader } from '@/components/page-header';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -59,13 +60,13 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
  const totals=new Map([...new Set([...currencies,...data.goals.map(goalCurrency)])].map(currency=>[currency,goalFinancials(data.records,plans,today.slice(0,7),currency,market,plansReady)]));
  const financials=active?totals.get(goalCurrency(active)):null;
  return <>
-  <div className="page-heading"><div><h1>{t('Savings goals')}</h1><p className="muted">{t('Plan your future net worth and the savings that matter to you.')}</p></div><Button onClick={()=>open()}>{t('Add goal')}</Button></div>
+  <PageHeader title={t('Savings goals')} description={t('Plan your future net worth and the savings that matter to you.')}><Button onClick={()=>open()}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></PageHeader>
   {!accounts.length&&<p className="panel">{t('Net-worth and investment goals do not need a cash account. Cash savings goals reserve money in a cash account.')} <Link href="/accounts">{t('Accounts')}</Link></p>}
   <GoalFundingPanel data={data} currency={currency} surplus={totals.get(currency)?.surplus??null} today={today} rates={market?.rates} owner={owner} demo={demo} revision={revision} onSaved={onSaved}/>
   <ErrorPopup message={order.error}/>
   {preferences.error&&!demo&&<p className="error" role="alert">{t('Load saved preferences before making changes.')} <Button onClick={preferences.retry}>{t('Retry')}</Button></p>}
   <div className="goal-list-toolbar">{visible.length>1&&<p className="muted">{t(demo?'Drag the handles to reorder goals. Demo changes last for this visit.':'Drag the handles to reorder goals. Your order is saved automatically.')}</p>}<label className="planning-check"><Checkbox aria-label={t('Show archived goals')} checked={archived} onCheckedChange={checked=>setArchived(checked===true)}/>{t('Show archived goals')}</label></div>
-  {!visible.length&&<section className="panel goal-empty"><h2>{t('What are you working toward?')}</h2><p>{t('Set a target amount and date, then explore how monthly investments can get you there.')}</p><Button onClick={()=>open()}>{t('Add goal')}</Button></section>}
+  {!visible.length&&<section className="panel empty goal-empty"><Target aria-hidden="true"/><h3>{t('What are you working toward?')}</h3><p>{t('Set a target amount and date, then explore how monthly investments can get you there.')}</p><Button onClick={()=>open()}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></section>}
   <div ref={cardsRef} className="planning-cards goal-cards goal-cards-compact">{visible.map(goal=>{
    const investment=goal.kind==='investment',holdingItems=investmentGoalItems(goal,data);
    const currency=goalCurrency(goal),account=accounts.find(account=>account.id===goal.account_id),current=goal.kind==='net_worth'?totals.get(currency)?.netWorth??null:Number(goal.allocated),money=(n:number)=>formatMoney(n,currency,locale);

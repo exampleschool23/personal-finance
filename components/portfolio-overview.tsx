@@ -10,7 +10,9 @@ import { PortfolioTooltip } from '@/components/portfolio-tooltip';
 import { portfolioChanges, type PortfolioChange } from '@/lib/portfolio-changes';
 import { PartialTotal } from '@/components/partial-total';
 import { IncomeHistoryChart } from '@/components/income-history-chart';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { TrendingDown, TrendingUp } from 'lucide-react';
+import { changePercent } from '@/lib/overview';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { ChartSkeleton } from '@/components/loading-placeholder';
@@ -23,7 +25,7 @@ import { type HistoryEvent } from '@/lib/investment-history';
 import { convertAmount, type MarketData } from '@/lib/market';
 
 type History = { movements?:BenchmarkMovement[]; records: Entry[]; events: HistoryEvent[]; cashflows?: Entry[]; incomeRecords?: Entry[] };
-export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecords, currency, market, demo, revision, onOpenActivity }: { demoRecords?: Entry[]; onOpenActivity?:(activity:PortfolioChange)=>void; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
+export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecords, currency, market, demo, revision, onOpenActivity, children }: { children?: ReactNode; demoRecords?: Entry[]; onOpenActivity?:(activity:PortfolioChange)=>void; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
  const { t, locale } = useLanguage();
  const [savedHistory, setHistory] = useState<History | null>(null);
  const [error, setError] = useState(false);
@@ -42,10 +44,7 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
  const today = depositToday();
  const history = useMemo(() => demo ? demoHistory(demoRecords ?? [], today) : savedHistory, [demo, demoRecords, today, savedHistory]);
  const money = (amount: number) => formatMoney(amount, currency, locale);
- const {totalAssets:assetTotal,totalDebt:debt,cash}=financialTotals(entries);
- const investments = entries.filter(entry => ['Stock', 'Crypto'].includes(entry.kind) && entry.cost > 0);
- const cost = investments.reduce((sum, entry) => sum + entry.cost * entry.quantity, 0);
- const gain = investments.reduce((sum, entry) => sum + (entry.amount - entry.cost) * entry.quantity, 0);
+ const {totalAssets:assetTotal,totalDebt:debt}=financialTotals(entries);
  const allRecords = history?.records ?? [];
  const rates = market?.rates ?? market?.fx?.rate;
  const recorded = portfolioHistory(allRecords, history?.events ?? [], currency, rates, today, true);
@@ -64,22 +63,26 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
  const partialHistory = visible.some(point=>point.partial);
  const change = partialHistory ? null : investmentValueChange(visible.map(point=>point.net));
  const loading = !demo && !history && !error;
- const headline = <><div><span>{t('Net worth today')}</span><strong>{portfolioValue===null?'—':money(portfolioValue)}</strong><PartialTotal currencies={excludedCurrencies}/></div>{!loading && !error && change !== null && <div><span>{t('Change in selected period')}</span><strong className={change >= 0 ? 'positive' : 'negative'}>{money(change)}</strong></div>}</>;
+ const percent = changePercent(portfolioValue, change);
+ const Trend = change !== null && change < 0 ? TrendingDown : TrendingUp;
  return <>
-  <section className="panel portfolio-trend">
-   <div className="panel-title"><div><h2>{t('Portfolio over time')}</h2></div><div className="portfolio-ranges" aria-label={t('History period')}>{[30, 90, 365, null].map(days => <Button key={String(days)} size="sm" variant={range === days ? 'default' : 'outline'} aria-pressed={range === days} onClick={() => setRange(days)}>{days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) })}</Button>)}</div></div>
-   {!loading&&!error?<InvestmentPeriodSummary input={{records:allRecords,events:history?.events??[],cashflows:history?.cashflows,market,currency,today}} start={range===null?'0000-01-01':shiftDay(today,-range)}>{headline}</InvestmentPeriodSummary>:<div className="portfolio-headline">{headline}</div>}
+  <section className="panel portfolio-trend overview-hero" aria-labelledby="overview-net-worth">
+   <header className="overview-hero-head">
+    <div className="overview-hero-value">
+     <h2 id="overview-net-worth">{t('Net worth')}</h2>
+     <strong>{money(portfolioValue)}</strong>
+     {!loading && !error && change !== null && <p><span className={change >= 0 ? 'overview-delta positive' : 'overview-delta negative'}><Trend size={15} aria-hidden="true"/>{change > 0 ? '+' : ''}{money(change)}{percent !== null && <> · {percent > 0 ? '+' : ''}{formatNumber(percent, locale, 1)}%</>}</span><span>{t('Change in selected period')}</span></p>}
+     <PartialTotal currencies={excludedCurrencies}/>
+    </div>
+    <div className="portfolio-ranges overview-segments" role="group" aria-label={t('History period')}>{[30, 90, 365, null].map(days => <Button key={String(days)} size="sm" variant="ghost" aria-pressed={range === days} onClick={() => setRange(days)}>{days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) })}</Button>)}</div>
+   </header>
    {loading ? <ChartSkeleton label={t('Loading history…')}/> : error ? <p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}>{t('Retry')}</Button></p> : <>
-    <InvestmentComparison history={history??{records:[],events:[]}} today={today} currency={currency} market={market} demo={demo} embedded={{openingNetWorth:recorded.points[0]?{date:recorded.points[0].date,amount:recorded.points[0].net}:undefined,days:range??0,points:visible,tooltip:<PortfolioTooltip valueKey="actual" showBalanceDifference={!partialHistory} valueLabel="NET WORTH" details={details} currency={currency} onOpenActivity={onOpenActivity}/>}}/>
-    {recorded.missing > 0 && <p className="muted">{t('Some holdings have no recorded history yet.')}</p>}
-    {excludedCurrencies.length > 0 && <p className="muted">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
+    <InvestmentComparison history={history??{records:[],events:[]}} today={today} currency={currency} market={market} demo={demo} embedded={{openingNetWorth:recorded.points[0]?{date:recorded.points[0].date,amount:recorded.points[0].net}:undefined,days:range??0,points:visible,tooltip:<PortfolioTooltip valueKey="actual" showBalanceDifference={!partialHistory} valueLabel="NET WORTH" details={details} currency={currency} onOpenActivity={onOpenActivity}/>,summary:<InvestmentPeriodSummary input={{records:allRecords,events:history?.events??[],cashflows:history?.cashflows,market,currency,today}} start={range===null?'0000-01-01':shiftDay(today,-range)}/>}}/>
+    {recorded.missing > 0 && <p className="muted overview-hero-note">{t('Some holdings have no recorded history yet.')}</p>}
+    {excludedCurrencies.length > 0 && <p className="muted overview-hero-note">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
    </>}
   </section>
+  {children}
   {!loading&&!error&&<IncomeHistoryChart records={history?.records??[]} events={history?.events??[]} incomeRecords={history?.incomeRecords??[]} currency={currency} rates={market?.rates??market?.fx?.rate} today={today}/>}
-  <div className="portfolio-indicators">
-   <article className="panel"><span>{t('Cash share')}</span><strong>{assetTotal > 0 ? formatNumber(cash / assetTotal * 100, locale, 1) + '%' : '—'}</strong><p>{t('Cash available')}: {money(cash)}</p></article>
-   <article className="panel"><span>{t('Debt to assets')}</span><strong>{assetTotal > 0 ? formatNumber(debt / assetTotal * 100, locale, 1) + '%' : '—'}</strong><p>{t('Outstanding debt compared with everything you own.')}</p></article>
-   <article className="panel"><span>{t('Stock & crypto gain / loss')}</span><strong className={cost > 0 ? gain >= 0 ? 'positive' : 'negative' : ''}>{cost > 0 ? money(gain) : '—'}</strong><p>{t('Current value minus entered purchase cost. Only holdings with a purchase price are included.')}</p></article>
-  </div>
  </>;
 }

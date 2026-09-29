@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {loadTS} from './helpers/load-ts.mjs';
-const {BenchmarkTooltip}=loadTS('components/benchmark-tooltip.tsx',{'@/components/language-provider':{useLanguage:()=>({locale:'en',t:s=>s})}});
-const props={active:true,currency:'USD',series:[{key:'BTC',label:'Bitcoin',color:'orange'}],payload:[{payload:{date:'2026-09-25',BTC:1500,actual:999,contributed:1234}}],receipts:[{id:'one',date:'2026-09-25',amount:123.45,currency:'USD',name:'Salary received'},{id:'two',date:'2026-09-24',amount:50,currency:'USD',name:'Earlier receipt'}]};
+const {BenchmarkTooltip}=loadTS('components/benchmark-tooltip.tsx',{'@/components/language-provider':{useLanguage:()=>({locale:'en',t:(s,values={})=>s.replace(/\{(\w+)\}/g,(match,key)=>values[key]??match)})}});
+const props={active:true,currency:'USD',series:[{key:'BTC',label:'Bitcoin',color:'orange',quotes:[{key:'BTC',symbol:'BTC'}]}],payload:[{payload:{date:'2026-09-25',BTC:1500,actual:999,contributed:1234}}],receipts:[{id:'one',date:'2026-09-25',amount:123.45,currency:'USD',name:'Salary received'},{id:'two',date:'2026-09-24',amount:50,currency:'USD',name:'Earlier receipt'}]};
 test('benchmark tooltip shows selected values, cumulative funding and only receipts invested on the hovered date',()=>{
  const html=renderToStaticMarkup(BenchmarkTooltip(props));
  for(const text of ['Bitcoin','$1,500','$1,234','Salary received','$123','Income received and invested'])assert.ok(html.includes(text),text);
@@ -28,4 +28,18 @@ test('expense funding rows are labeled by category and the note follows the fund
  for(const text of ['Watch','Expense funding · Other expense','$800','SPY shares','Fresh investment funding','every recorded expense'])assert.ok(including.includes(text),text);
  const excluding=renderToStaticMarkup(BenchmarkTooltip({...props,fundingDetails:fundingDetails.slice(1)}));
  assert.ok(excluding.includes('Interest, fees and living expenses are excluded.'));assert.ok(!excluding.includes('Expense funding'));
+});
+
+test('every priced benchmark shows its own unit price; deposits and the user portfolio show none',()=>{
+ const series=[{key:'actual',label:'My investments',color:'green'},{key:'SPY',label:'S&P 500',color:'blue',quotes:[{key:'SPY',symbol:'SPY'}]},{key:'depositUSD',label:'USD deposit',color:'teal'},{key:'PORTFOLIO',label:'Diversified portfolio',color:'gray',quotes:[{key:'portfolio_a',symbol:'ETH'},{key:'portfolio_b',symbol:'QQQ'}]}];
+ const marketHistory={prices:{SPY:[{date:'2026-09-25',close:612.5}],portfolio_a:[{date:'2026-09-24',close:0.00001234}]},fx:[]};
+ const html=renderToStaticMarkup(BenchmarkTooltip({...props,series,marketHistory}));
+ for(const text of ['SPY price (USD): $612.5','ETH price (USD): $0.00001234','QQQ price (USD): —'])assert.ok(html.includes(text),text);
+ assert.equal(html.split('price (USD)').length-1,3);
+});
+test('diversified portfolio quotes list only market-priced assets with a weight',()=>{
+ const {portfolioQuotes,defaultDiversifiedPortfolio}=loadTS('lib/diversified-portfolio.ts');
+ assert.deepEqual(portfolioQuotes(defaultDiversifiedPortfolio),[{key:'portfolioCrypto',symbol:'BTC'},{key:'portfolioStock',symbol:'SPY'}]);
+ const assets=[{id:'a',kind:'crypto',name:'',weight:40,symbol:'ETH',currency:'USD',rate:0},{id:'b',kind:'deposit',name:'',weight:60,symbol:'',currency:'UZS',rate:21},{id:'c',kind:'stock',name:'',weight:0,symbol:'QQQ',currency:'USD',rate:0}];
+ assert.deepEqual(portfolioQuotes({...defaultDiversifiedPortfolio,assets}),[{key:'portfolio_a',symbol:'ETH'}]);
 });

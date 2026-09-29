@@ -1998,7 +1998,7 @@
   "Total funding invested by this date": "Всего средств инвестировано к этой дате",
   "Opening net worth invested": "Начальный чистый капитал инвестирован",
   "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Каждый бенчмарк начинается с начального чистого капитала. Доход после этой даты инвестируется при получении; доход, уже включённый в начальный баланс, повторно не добавляется.",
-  "BTC price (USD)": "Цена BTC (USD)",
+  "{symbol} price (USD)": "Цена {symbol} (USD)",
   "Your money, clearly organized.": "Ваши деньги — всё по порядку.",
   "{currency} balances": "Балансы в {currency}",
   "All accounts": "Все счета",
@@ -2075,5 +2075,14 @@
   "The goal and its activity move to Recently deleted. Money stays in your accounts, and you can restore the goal later.": "Цель и её история будут перемещены в «Недавно удалённые». Деньги останутся на ваших счетах, а цель можно будет восстановить.",
   "This repayment was recorded from Accounts and cannot be deleted here.": "Это погашение записано в разделе «Счета», и его нельзя удалить здесь.",
   "Goal deletion needs the latest database update.": "Для удаления целей нужно последнее обновление базы данных.",
-  "Could not delete the goal. Please try again.": "Не удалось удалить цель. Попробуйте ещё раз."
+  "Could not delete the goal. Please try again.": "Не удалось удалить цель. Попробуйте ещё раз.",
+  "View all": "Показать все",
+  "Comparison settings": "Настройки сравнения",
+  "Income by source": "Доход по источникам",
+  "Return on purchase cost: {percent}": "Доходность к цене покупки: {percent}",
+  "Only holdings with a purchase price are included.": "Учитываются только активы с указанной ценой покупки.",
+  "Nothing is due in the next 31 days.": "В ближайшие 31 день платежей нет.",
+  "Money": "Деньги",
+  "Planning": "Планирование",
+  "Skip": "Пропустить"
 }

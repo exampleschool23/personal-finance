@@ -158,25 +158,35 @@ async function loadBenchmarks(req: Request) {
 
 // Anonymous demo access is limited to one fixed public-data request. Coalesce
 // concurrent visitors and cache it without exposing arbitrary paid-feed queries.
-let demoCache: { day: string; expires: number; response: Promise<Response> } | null = null;
+// Cache the serialized result, never a Response: the Workers runtime binds a
+// response body to the request that created it, so reusing or cloning it from a
+// later request throws and surfaces as an empty 500.
+type DemoResult = { status: number; body: string; cacheControl: string };
+const demoFailure = (): DemoResult => ({ status: 503, body: JSON.stringify({ error: 'Could not load comparisons.' }), cacheControl: 'private, no-store' });
+let demoCache: { day: string; expires: number; result: Promise<DemoResult> } | null = null;
 export async function GET(req: Request) {
  if (new URL(req.url).searchParams.get('demo') === '1') {
-  const day = depositToday();
-  if (!demoCache || demoCache.day !== day || demoCache.expires <= Date.now()) {
-   const params = new URLSearchParams({ start: shiftDay(day, -365), end: day, benchmarks: 'BTC,SPY,depositUSD,depositUZS' });
-   const entry = { day, expires: Infinity, response: loadBenchmarks(new Request('https://local/api/benchmarks?' + params)) };
-   demoCache = entry;
-   entry.response = entry.response.then(async response => {
-    const result = await response.clone().json() as BenchmarkData;
-    const complete = response.ok && !Object.keys(result.errors ?? {}).length;
-    entry.expires = Date.now() + (complete ? 3600000 : 30000);
-    return response;
-   }).catch(() => {
-    entry.expires = Date.now() + 30000;
-    return Response.json({ error: 'Could not load comparisons.' }, { status: 503 });
-   });
-  }
-  return (await demoCache.response).clone();
+  try {
+   const day = depositToday();
+   if (!demoCache || demoCache.day !== day || demoCache.expires <= Date.now()) {
+    const params = new URLSearchParams({ start: shiftDay(day, -365), end: day, benchmarks: 'BTC,SPY,depositUSD,depositUZS' });
+    // A load abandoned with its request may never settle; let a later visitor replace it.
+    const entry = { day, expires: Date.now() + 60000, result: Promise.resolve(demoFailure()) };
+    entry.result = loadBenchmarks(new Request('https://local/api/benchmarks?' + params)).then(async response => {
+     const body = await response.text();
+     const result = JSON.parse(body) as BenchmarkData;
+     const complete = response.ok && !Object.keys(result.errors ?? {}).length;
+     entry.expires = Date.now() + (complete ? 3600000 : 30000);
+     return { status: response.status, body, cacheControl: response.headers.get('Cache-Control') ?? 'private, no-store' };
+    }).catch(() => {
+     entry.expires = Date.now() + 30000;
+     return demoFailure();
+    });
+    demoCache = entry;
+   }
+   const result = await demoCache.result;
+   return new Response(result.body, { status: result.status, headers: { 'Content-Type': 'application/json', 'Cache-Control': result.cacheControl } });
+  } catch { return Response.json({ error: 'Could not load comparisons.' }, { status: 503 }); }
  }
  try {
   if (!(await session())) return Response.json({ error: 'Please sign in again.' }, { status: 401 });

@@ -1,5 +1,6 @@
 import {WebAppRegistration} from "@/components/web-app-registration";
 import type { Metadata } from "next";
+import "@fontsource-variable/inter";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";

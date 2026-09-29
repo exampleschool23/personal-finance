@@ -11,9 +11,44 @@ All user-facing prices, amounts, exchange rates, quantities, percentages, and da
 - Store numbers and ISO dates, never formatted display strings. Formatting must not mutate amounts, purchase costs, or exchange-rate calculations.
 - Add regression coverage to `tests/format.mjs` when changing shared formatting. Check EN, RU, and UZ, grouping, decimals, small crypto prices, missing dates, and date-only timezone behavior.
 
+# Interface design system
+
+Every workspace page shares one visual language, first built for Overview. Extend
+it instead of styling a page on its own.
+
+- Tokens live at the top of `app/globals.css`: `--font-ui`, the `--type-*` scale
+  (`caption` 13px, `small` 14px, `compact` 15px, `body` 16px, `title`, `stat`,
+  `page`), `--radius-card`, `--radius-control`, `--shadow-card`, `--space-page`,
+  `--hairline`, `--field`, and the `--positive` / `--negative` / `--caution`
+  tones. Use them rather than literal colours, radii or pixel font sizes, so
+  light and dark mode stay in step.
+- Open each page with `PageHeader` from `components/page-header.tsx`. Pass page
+  actions as children; the main action is the default `Button`, others `outline`.
+- Show key figures with `StatTiles` and `StatTile` from `components/stat-tile.tsx`.
+  Colour a value only when its sign carries meaning, through `tone`.
+- Holdings and accounts use `AssetCard` from `components/asset-card.tsx`; the
+  product mark is `Brand` from `components/brand.tsx`.
+- Surfaces are `.panel`; headings inside use `.panel-title`. Secondary tools sit
+  in `.panel.tools-panel`, with rarely used settings behind `<details>`.
+- Switches between views of the same data use `.segmented` with
+  `aria-pressed` buttons. Row actions go in `.row-actions` with `size="sm"`
+  buttons; status text uses `.status-badge`; empty states use `.empty` with an icon.
+- Page children are spaced by the `.content` flex gap. Do not add outer margins
+  to page sections, and give a centred child an explicit `width:100%`.
+- Size layouts with `@container content (...)` queries, because the sidebar
+  changes the room a page really has. Record and upcoming tables turn into
+  stacked cards below 720px; keep new tables compatible with that.
+- Define each shared selector once. Change the existing rule instead of adding a
+  later override, and delete rules when their class is no longer rendered.
+- Cover shared UI pieces and label translations in `tests/design-system.mjs`.
+
 # Verification preference
 
-Do not perform browser debugging without asking the user first. Prefer focused code checks and production builds.
+Browser previews are pre-authorized: the user granted standing permission on
+2026-09-29, so do not ask before opening the app in the browser to check UI work.
+Use demo mode ("Explore sample workspace") or a session that is already signed in.
+Never store account passwords in this repository. Still run focused code checks
+and production builds.
 
 # Database migrations
 

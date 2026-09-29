@@ -1998,7 +1998,7 @@
   "Total funding invested by this date": "Total funding invested by this date",
   "Opening net worth invested": "Opening net worth invested",
   "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.",
-  "BTC price (USD)": "BTC price (USD)",
+  "{symbol} price (USD)": "{symbol} price (USD)",
   "Your money, clearly organized.": "Your money, clearly organized.",
   "{currency} balances": "{currency} balances",
   "All accounts": "All accounts",
@@ -2075,5 +2075,14 @@
   "The goal and its activity move to Recently deleted. Money stays in your accounts, and you can restore the goal later.": "The goal and its activity move to Recently deleted. Money stays in your accounts, and you can restore the goal later.",
   "This repayment was recorded from Accounts and cannot be deleted here.": "This repayment was recorded from Accounts and cannot be deleted here.",
   "Goal deletion needs the latest database update.": "Goal deletion needs the latest database update.",
-  "Could not delete the goal. Please try again.": "Could not delete the goal. Please try again."
+  "Could not delete the goal. Please try again.": "Could not delete the goal. Please try again.",
+  "View all": "View all",
+  "Comparison settings": "Comparison settings",
+  "Income by source": "Income by source",
+  "Return on purchase cost: {percent}": "Return on purchase cost: {percent}",
+  "Only holdings with a purchase price are included.": "Only holdings with a purchase price are included.",
+  "Nothing is due in the next 31 days.": "Nothing is due in the next 31 days.",
+  "Money": "Money",
+  "Planning": "Planning",
+  "Skip": "Skip"
 }

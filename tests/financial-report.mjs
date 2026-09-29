@@ -101,3 +101,12 @@ test('reports read signed backup downloads, including non-ASCII names, and rejec
   for(const broken of [{...signed,payload:'***'},{...signed,payload:12},{...signed,payload:'bm90LWpzb24'}])assert.throws(()=>parseFinanceBackup(broken),/Could not read the complete backup/);
  }finally{if(old===undefined)delete process.env.BACKUP_SIGNING_KEY;else process.env.BACKUP_SIGNING_KEY=old;}
 });
+test('reports read current version 2 backups exported by the database',()=>{
+ const owner='63000000-0000-4000-8000-000000000001';
+ const {income_sources,...rest}=reportFixture;
+ const v2={version:2,schema_version:67,id:'63000000-0000-4000-8000-000000000002',owner_id:owner,exported_at:'2026-09-28T10:00:00.123456+00:00',tables:{...rest.tables,income_sources:income_sources??[],account_reconciliations:[],corporate_events:[]}};
+ const parsed=parseFinanceBackup(v2);
+ assert.equal(parsed.version,2);assert.equal(parsed.tables.finance_records.length,reportFixture.tables.finance_records.length);
+ assert.ok(buildFinancialReport(v2,'ru','',null,{currency:'USD'}).blocks.length);
+ for(const version of [0,3,'2',undefined])assert.throws(()=>parseFinanceBackup({...v2,version}),/Could not read the complete backup/);
+});

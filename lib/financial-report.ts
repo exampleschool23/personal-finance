@@ -16,11 +16,13 @@ export type FinanceBackup={version:number;exported_at:string;tables:Record<strin
 export type ReportBlock={kind:'title'|'heading'|'subheading'|'text'|'pageBreak';text:string}|{kind:'table';text:string;headers:string[];rows:string[][];widths:number[];numeric?:number[]};
 export type FinancialReport={title:string;generated:string;locale:string;blocks:ReportBlock[]};
 export type ReportOptions={currency?:string;plans?:ExpensePlan[]};
+// Version 1 kept income sources beside tables; version 2 (migration 059+) signs owner-scoped tables.
+const SUPPORTED_BACKUP_VERSIONS=[1,2];
 export function parseFinanceBackup(signed:unknown):FinanceBackup {
  const input=unwrapSignedBackup(signed);
  if(!input||typeof input!=='object')throw Error('Could not read the complete backup.');
  const data=input as FinanceBackup;
- if(data.version!==1||!data.exported_at||!Number.isFinite(Date.parse(data.exported_at))||!data.tables||typeof data.tables!=='object'||!Array.isArray(data.tables.finance_records)||!Array.isArray(data.tables.savings_goals))throw Error('Could not read the complete backup.');
+ if(!SUPPORTED_BACKUP_VERSIONS.includes(data.version)||!data.exported_at||!Number.isFinite(Date.parse(data.exported_at))||!data.tables||typeof data.tables!=='object'||!Array.isArray(data.tables.finance_records)||!Array.isArray(data.tables.savings_goals))throw Error('Could not read the complete backup.');
  for(const rows of Object.values(data.tables))if(!Array.isArray(rows)||rows.some(row=>!row||typeof row!=='object'||Array.isArray(row)))throw Error('Could not read the complete backup.');
  if(data.income_sources!==undefined&&(!Array.isArray(data.income_sources)||data.income_sources.some(row=>!row||typeof row!=='object'||Array.isArray(row))))throw Error('Could not read the complete backup.');
  return data;
