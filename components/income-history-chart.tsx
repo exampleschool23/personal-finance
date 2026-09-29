@@ -13,7 +13,7 @@ import type { HistoryEvent } from '@/lib/investment-history';
 type Props={records:Entry[];events:HistoryEvent[];incomeRecords:Entry[];currency:string;rates:number|Record<string,number>|undefined;today:string};
 export function IncomeHistoryChart({records,events,incomeRecords,currency,rates,today}:Props){
  const {t,locale}=useLanguage();
- const [months,setMonths]=useState(6),[hidden,setHidden]=useState<string[]>([]);
+ const [months,setMonths]=useState(12),[hidden,setHidden]=useState<string[]>([]);
  const result=useMemo(()=>incomeHistory(records,events,incomeRecords,currency,rates,today,months),[records,events,incomeRecords,currency,rates,today,months]);
  const money=(value:number)=>formatMoney(value,currency,locale);
  const definitions:Array<{key:IncomeGroup;label:string;kind:string}>=[{key:'salary',label:t('Salary'),kind:'Salary'},{key:'dividends',label:t('Dividends'),kind:'Stock'},{key:'rent',label:t('Rent income'),kind:'Property'},{key:'business',label:t('Business income'),kind:'Business'},{key:'interest',label:t('Interest income'),kind:'Deposit'},{key:'other',label:t('Other income'),kind:'Other income'}];

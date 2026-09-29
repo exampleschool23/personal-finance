@@ -16,6 +16,14 @@ export const sections = [
 export type SectionName = (typeof sections)[number]['name'];
 export const navigationGroups = [...new Set(sections.map(section => section.group))];
 
+/** A drawer tap that has not reached its route yet: from the path it was tapped on, to its destination. */
+export type PendingNavigation = { from: string; to: string };
+
+/** The destination still loading, or null once the route changed (arrived, or the user went elsewhere). */
+export function pendingDestination(pending: PendingNavigation | null, pathname: string) {
+ return pending && pending.from === pathname && pending.to !== pathname ? pending.to : null;
+}
+
 /** The section a path belongs to. Unknown paths fall back to Overview. */
 export function sectionFor(pathname: string): SectionName {
  return sections.find(section => section.path === pathname)?.name ?? 'Overview';

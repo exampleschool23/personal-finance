@@ -52,3 +52,9 @@ test('overview text is translated and uses shared formatters',()=>{
   assert.ok(!source.includes('type="date"'));
  }
 });
+
+test('income over time opens on the 12-month range',()=>{
+ const source=fs.readFileSync('components/income-history-chart.tsx','utf8');
+ assert.match(source,/const \[months,setMonths\]=useState\(12\)/);
+ assert.match(source,/\[3,6,12\]\.map/);
+});

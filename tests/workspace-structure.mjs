@@ -36,8 +36,9 @@ test('screens contain only their own page and leave the drawer, top bar and dial
   assert.ok(!/usePathname|useRouter/.test(source),file);
  }
  const shell=read('components/workspace/workspace-shell.tsx');
- for(const part of ['<AppDrawer ','<TopBar/>','<WorkspaceDialogs/>'])assert.equal(shell.split(part).length,2,part);
- assert.match(shell,/<TopBar\/>\s*\{children\}\s*<footer/);
+ for(const part of ['<AppDrawer ','<TopBar ','<WorkspaceDialogs/>'])assert.equal(shell.split(part).length,2,part);
+ // Until a tapped destination's route arrives, its skeleton stands in for the routed screen.
+ assert.match(shell,/<TopBar pendingSection=\{destination && sectionFor\(destination\)\}\/>\s*\{destination \? <PageSkeleton .*?\/> : children\}\s*<footer/);
  for(const name of imports(shell))assert.ok(!name.includes('/screens/'),name);
 });
 
@@ -53,6 +54,7 @@ test('every destination has a unique path and unknown paths open Overview',()=>{
 });
 
 test('the drawer marks the current route, shows overdue payments and signs out through its prop',()=>{
+ const sheet=[];
  let path='/upcoming',signedOut=0;
  // Stand-ins for the sidebar kit: plain elements that drop the kit-only props.
  const element=tag=>function Element(all){const props={...all};delete props.asChild;delete props.isActive;return React.createElement(tag,props);};
@@ -61,7 +63,7 @@ test('the drawer marks the current route, shows overdue payments and signs out t
   '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:text=>text})},
   '@/components/drawer-link':{DrawerLink:element('a')},
   '@/components/ui/button':{Button:element('button')},
-  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div')},
+  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
  });
  const props={account:{initial:'H',title:'Personal account',detail:'owner@example.com'},overdueCount:1234,signOutLabel:'Sign out',onSignOut:()=>{signedOut++;}};
  const html=renderToStaticMarkup(React.createElement(AppDrawer,props));
@@ -74,4 +76,39 @@ test('the drawer marks the current route, shows overdue payments and signs out t
  assert.match(calm,/href="\/" aria-current="page"/);
  assert.ok(!calm.includes('class="count"'));
  assert.equal(signedOut,0);
+});
+
+test('a drawer tap highlights and shows its destination before the route arrives',()=>{
+ const {pendingDestination}=loadTS('components/workspace/navigation.ts');
+ assert.equal(pendingDestination(null,'/'),null);
+ assert.equal(pendingDestination({from:'/',to:'/goals'},'/'),'/goals');
+ // Arrived, or the route changed some other way (back button, another link): nothing is pending.
+ assert.equal(pendingDestination({from:'/',to:'/goals'},'/goals'),null);
+ assert.equal(pendingDestination({from:'/',to:'/goals'},'/assets'),null);
+
+ const navigated=[],sheet=[];
+ const element=tag=>function Element(all){const props={...all};delete props.asChild;delete props.isActive;return React.createElement(tag,props);};
+ const {AppDrawer}=loadTS('components/workspace/app-drawer.tsx',{
+  'next/navigation':{usePathname:()=>'/'},
+  '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:text=>text})},
+  '@/components/drawer-link':{DrawerLink:element('a')},
+  '@/components/ui/button':{Button:element('button')},
+  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
+ },new Map());
+ const props={account:{initial:'H',title:'Personal account',detail:'owner@example.com'},overdueCount:0,signOutLabel:'Sign out',onSignOut:()=>{},onNavigate:path=>navigated.push(path)};
+ const html=renderToStaticMarkup(React.createElement(AppDrawer,{...props,pendingPath:'/goals'}));
+ assert.equal((html.match(/aria-current="page"/g)||[]).length,1);
+ assert.match(html,/href="\/goals" aria-current="page"/);
+
+ const links=[];
+ const walk=node=>{if(!node||typeof node!=='object')return;if(Array.isArray(node))return node.forEach(walk);if(typeof node.type==='function'&&node.type.name!=='Element'){walk(node.type(node.props));return;}if(node.props?.href)links.push(node);walk(node.props?.children);};
+ walk(AppDrawer(props));
+ const link=path=>links.find(item=>item.props.href===path);
+ const click=(path,extra={})=>link(path).props.onClick({button:0,shiftKey:false,metaKey:false,ctrlKey:false,altKey:false,defaultPrevented:false,...extra});
+ click('/goals');
+ for(const modifier of [{shiftKey:true},{metaKey:true},{ctrlKey:true},{altKey:true},{button:1},{defaultPrevented:true}])click('/assets',modifier);
+ click('/');
+ assert.deepEqual(navigated,['/goals']);
+ // Every plain tap closes the phone drawer, including one on the current page; modified clicks leave it.
+ assert.deepEqual(sheet,[false,false]);
 });

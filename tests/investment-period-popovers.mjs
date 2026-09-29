@@ -22,3 +22,20 @@ test('summary opens only one popup and ignores delayed closes from the previous 
  initial[2].props.onOpenChange(false);
  assert.deepEqual(render().map(item=>item.props.open),[false,false,false]);
 });
+
+test('closing hover-opened details never draws a focus ring on the amount; keyboard focus inside still returns',()=>{
+ const refs=[];
+ const {InvestmentPeriodSummary}=loadTS('components/investment-period-summary.tsx',{
+  react:{useState:()=>[null,()=>{}],useRef:initial=>{const ref={current:initial};refs.push(ref);return ref;},useEffect:()=>{}},
+  '@/components/language-provider':{useLanguage:()=>({t:value=>value,locale:'en'})},
+  '@/components/ui/popover':{Popover:'Popover',PopoverTrigger:'PopoverTrigger',PopoverContent:'PopoverContent'},
+  '@/lib/investment-period':{investmentPeriodTotals:()=>({invested:100,expenses:20,income:30,missing:[]})},
+ });
+ const amount=InvestmentPeriodSummary({input:{currency:'USD'},start:'2026-09-01'}).props.children[0].props.children.flat().filter(Boolean)[0];
+ const content=amount.type(amount.props).props.children[1].props.children[1].props;
+ const event=()=>({prevented:false,preventDefault(){this.prevented=true;}});
+ const open=event();content.onOpenAutoFocus(open);assert.equal(open.prevented,true);
+ const hovered=event();content.onCloseAutoFocus(hovered);assert.equal(hovered.prevented,true);
+ content.onOpenAutoFocus(event());content.onFocus();
+ const focused=event();content.onCloseAutoFocus(focused);assert.equal(focused.prevented,false);
+});

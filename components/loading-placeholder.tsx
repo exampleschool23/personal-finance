@@ -9,6 +9,14 @@ export function LoadingPlaceholder({ label, rows = 4 }: { label: string; rows?: 
   </div>;
 }
 
+/** A destination opened from the drawer while its route loads: a heading placeholder, then the page's own skeleton. */
+export function PageSkeleton({ label, section }: { label: string; section: string }) {
+  return <div className="content page-loading">
+    <header aria-hidden="true" className="page-heading"><div><Skeleton className="h-9 w-64 max-w-full"/><Skeleton className="mt-3 h-4 w-80 max-w-full"/></div></header>
+    <WorkspaceSkeleton label={label} section={section}/>
+  </div>;
+}
+
 export function WorkspaceSkeleton({ label, section }: { label: string; section: string }) {
   if (section === 'Overview') return <div role="status" aria-busy="true" className="overview-content-loading">
     <span className="sr-only">{label}</span>

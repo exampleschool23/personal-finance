@@ -14,9 +14,11 @@ export function DisplayPreferences() {
 }
 
 /** The sticky bar above every screen: where you are, the display currency and the quick expense shortcut. */
-export function TopBar() {
+/** `pendingSection` names a destination tapped in the drawer whose route is still loading. */
+export function TopBar({ pendingSection }: { pendingSection?: string | null }) {
  const { t, locale } = useLanguage();
- const { section, currency, setCurrency, preferencesData, demo, market, marketLoading, refresh, quickExpense } = useWorkspace();
+ const { section: current, currency, setCurrency, preferencesData, demo, market, marketLoading, refresh, quickExpense } = useWorkspace();
+ const section = pendingSection ?? current;
  const date = (value: string) => formatDate(value, locale);
  return <header className="topbar">
   <div className="topbar-location"><SidebarTrigger aria-label={t('Toggle Sidebar')}/><span>{t(section)}</span></div>
