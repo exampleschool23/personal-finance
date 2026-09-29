@@ -1,19 +1,21 @@
 "use client";
 import { showSaved } from '@/lib/feedback';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { useDraftDialog } from '@/components/discard-changes';
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
-import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
-import { LoadingPlaceholder } from '@/components/loading-placeholder';
+import { ExchangeRatePreview } from '@/components/presentation-foundation/exchange-rate-preview';
+import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { useEffect, useState } from 'react';
 import { Line, LineChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
+import { FormFooter } from '@/components/presentation-foundation/form-footer';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { NativeSelect } from '@/components/ui/native-select';
-import { DatePicker } from '@/components/date-picker';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney, formatDate, formatMonthYear } from '@/lib/format';
 import { historyCashDelta, historySeries, historyChartDate, historyEventLabel, historyUpdateTypes, isLendingKind, type HistoryUpdateType, type HistoryEvent } from '@/lib/investment-history';
@@ -108,7 +110,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
     {crossCurrency&&<ExchangeRatePreview fx={fx}/>}
     {selectedAccount&&cashOutgoing&&fx.rate&&<p className="muted">{t('Available for this payment')}: {money(Number(selectedAccount.amount)*fx.rate)}</p>}
     {lending&&<p aria-live="polite">{t('Outstanding balance after update')}: {money(remainingBalance)}</p>}
-    {selectedAccount&&cashAfter!==null&&cashDelta!==null&&draft.type!=='valuation'&&<div className="ownership-summary" aria-live="polite"><p>{t(cashOutgoing?'Cash deducted from {account}: {amount}':'Cash added to {account}: {amount}',{account:selectedAccount.name,amount:accountMoney(Math.abs(cashDelta))})}</p><p>{t('Cash balance after update')}: {accountMoney(cashAfter!)}</p>{cashAfter!<0&&<p className="error" role="alert">{t('Not enough money in the selected cash account.')}</p>}</div>}
+    {selectedAccount&&cashAfter!==null&&cashDelta!==null&&draft.type!=='valuation'&&<div className="ownership-summary" aria-live="polite"><p>{t(cashOutgoing?'Cash deducted from {account}: {amount}':'Cash added to {account}: {amount}',{account:selectedAccount.name,amount:accountMoney(Math.abs(cashDelta))})}</p><p>{t('Cash balance after update')}: {accountMoney(cashAfter!)}</p>{cashAfter!<0&&<InlineError message={t('Not enough money in the selected cash account.')}/>}</div>}
     <label>{t('Notes (optional)')}<textarea rows={2} maxLength={2000} value={draft.notes} onChange={e=>setDraft({...draft,notes:e.target.value})}/></label>
    </fieldset>
    {deposit&&<p className="muted tracker-help">{t('Use Top-up or Withdraw to move money between accounts. Use Record capitalized interest when interest stays in the deposit; Income received is for interest paid out.')}</p>}
@@ -116,7 +118,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
    <p className="muted tracker-help">{t(lending?'Enter updates on or after the latest balance date. Repayments cannot exceed the outstanding balance.':record.kind==='Business'?'Past valuations do not replace a newer balance. Business valuations use the current ownership share.':'Past valuations do not replace a newer balance.')}</p>
    <ErrorPopup message={error}/>
    {submitted&&<p className="muted tracker-help">{t('Retry with the same details to avoid duplicates.')}</p>}
-   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Close')}</Button><Button type="button" onClick={()=>void save()} disabled={!canSave}>{t(busy?'Saving…':submitted?'Retry update':inline?'Save payment':'Save update')}</Button></div>
+   <FormFooter busy={busy} onCancel={guard.close} cancelLabel={t('Close')}><Button type="button" onClick={()=>void save()} disabled={!canSave}>{t(busy?'Saving…':submitted?'Retry update':inline?'Save payment':'Save update')}</Button></FormFooter>
   </div>;
  if(inline)return <>{paymentFields}{guard.confirmation}</>;
  if(movement)return <AssetMovementDialog initial={movement} records={movementRecords} save={saveMovement} onClose={()=>setMovement(null)}/>;
@@ -151,5 +153,5 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
   <div className="tracker-history"><h3>{t('History')}</h3>{(['Business','Property','Valuables'].includes(record.kind)||lending)&&<p className="muted">{t('Delete newer balance updates first. Starting snapshots and other transaction types are protected.')}</p>}{!events.length&&!loading&&<p>{t('No history yet.')}</p>}
    <ul>{[...events].reverse().map(e=><li key={e.id}><div><strong>{t(eventLabel(e.event_type))}</strong><time>{formatDate(e.occurred_on,locale)}</time>{e.notes&&<p>{e.notes}</p>}{e.account_link&&<small>{t(Number(e.account_link.amount)<0?'Cash deducted from {account}: {amount}':'Cash added to {account}: {amount}',{account:accounts.find(account=>account.id===e.account_link?.account_id)?.name??t('Cash account'),amount:formatMoney(Math.abs(Number(e.account_link.amount)),e.account_link.account_currency??record.currency,locale)})}</small>}</div><div>{e.balance!==null&&<strong>{money(Number(e.balance)*Number(e.ownership_percentage)/100)}</strong>}{e.amount>0&&<span>{t(lending&&['contribution','withdrawal'].includes(e.event_type)?'Principal amount':'Cash amount (your share)')}: {money(Number(e.amount))}</span>}{e.event_type==='mortgage_payment'&&<small>{t('Principal repayment')}: {money(Number(e.principal))} · {t('Interest paid')}: {money(Number(e.interest))}</small>}{deletableUpdate(e.event_type)&&<Button type="button" variant="outline" disabled={busy||loading||submitted||dirty} onClick={()=>setDeleting(e)}>{t('Delete update')}</Button>}</div></li>)}</ul>
   </div>
- </DialogContent></Dialog>{guard.confirmation}<AlertDialog open={!!deleting} onOpenChange={open=>{if(!open&&!busy)setDeleting(null);}}><AlertDialogContent><AlertDialogTitle>{t('Delete this tracker update?')}</AlertDialogTitle><AlertDialogDescription>{t('This removes the update. If it changed the asset value, the previous value and ownership are restored. Any linked cash movement is reversed using its original amount. This cannot be undone from the app.')}{deleting&&<> {t(eventLabel(deleting.event_type))} · {formatDate(deleting.occurred_on,locale)}{deleting.amount>0&&<> · {money(Number(deleting.amount))}</>}</>}</AlertDialogDescription><AlertDialogFooter><AlertDialogCancel disabled={busy}>{t('Cancel')}</AlertDialogCancel><AlertDialogAction disabled={busy} onClick={event=>{event.preventDefault();void deleteUpdate();}}>{t(busy?'Deleting…':'Delete update')}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></>;
+ </DialogContent></Dialog>{guard.confirmation}<ConfirmDialog open={!!deleting} onClose={()=>setDeleting(null)} busy={busy} title={t('Delete this tracker update?')} description={<>{t('This removes the update. If it changed the asset value, the previous value and ownership are restored. Any linked cash movement is reversed using its original amount. This cannot be undone from the app.')}{deleting&&<> {t(eventLabel(deleting.event_type))} · {formatDate(deleting.occurred_on,locale)}{deleting.amount>0&&<> · {money(Number(deleting.amount))}</>}</>}</>} confirmLabel={t(busy?'Deleting…':'Delete update')} onConfirm={()=>void deleteUpdate()}/></>;
 }

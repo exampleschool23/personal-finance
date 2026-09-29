@@ -7,7 +7,7 @@ export type { RecordFiltersValue } from '@/lib/record-filters';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/date-picker';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { useLanguage } from '@/components/language-provider';
 import type { Category } from '@/lib/planning';
 export function RecordFilters({value,onChange,categories,kinds}:{value:RecordFiltersValue;onChange:(v:RecordFiltersValue)=>void;categories:Category[];kinds:readonly string[]}){

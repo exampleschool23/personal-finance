@@ -7,6 +7,11 @@ export function numberSymbols(locale: string) {
 export function formatNumber(value: number, locale: string, maximumFractionDigits = 8) {
   return Number.isFinite(value) ? new Intl.NumberFormat(locale, { maximumFractionDigits }).format(value) : '—';
 }
+
+/** A share or rate as a percentage, using the locale digits and one decimal by default. Unknown values show an em dash. */
+export function formatPercent(value: number, locale: string, maximumFractionDigits = 1) {
+  return Number.isFinite(value) ? formatNumber(value, locale, maximumFractionDigits) + "%" : "\u2014";
+}
 export function formatMoney(value: number, currency: string, locale: string, unitPrice = false) {
   if (!Number.isFinite(value)) return '—';
   // Round balances for display only. Unit quotes retain small crypto prices,

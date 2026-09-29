@@ -16,7 +16,7 @@ test('failed settings render a retry control and prevent saving fallback prefere
  assert.match(html,/Retry loading settings/);assert.match(html,/role="alert"/);assert.match(html,/<button[^>]*disabled=""[^>]*>Save changes/);
 });
 test('partial totals explicitly name excluded currencies and disappear when coverage is complete',()=>{
- const {PartialTotal}=loadTS('components/partial-total.tsx',overrides);
+ const {PartialTotal}=loadTS('components/presentation-foundation/partial-total.tsx',overrides);
  assert.equal(renderToStaticMarkup(React.createElement(PartialTotal,{currencies:[]})),'');
  const html=renderToStaticMarkup(React.createElement(PartialTotal,{currencies:['EUR','UZS']}));assert.match(html,/Partial total/);assert.match(html,/EUR, UZS/);
 });

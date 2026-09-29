@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatNumberInput, numberInputValue, formatMoney, formatCompactMoney, formatDate, formatDateTime } from '../lib/format.ts';
+import { formatNumberInput, numberInputValue, formatMoney, formatCompactMoney, formatDate, formatDateTime, formatPercent } from '../lib/format.ts';
 test('amount entry groups digits and round-trips supported locales',()=>{
  for(const locale of ['en-US','ru-RU','uz-UZ']) {
   const formatted=numberInputValue(9300.25,locale);
@@ -80,4 +80,13 @@ test('compact money shortens chart axis labels in every supported language',()=>
  assert.equal(formatCompactMoney(0,'USD','en-US'),'$0');
  assert.equal(formatCompactMoney(NaN,'USD','en-US'),'—');
  for(const locale of ['ru-RU','uz-UZ'])assert.ok(formatCompactMoney(25000000,'UZS',locale).startsWith('25'));
+});
+test('percentages use the locale digits, one decimal by default, and a dash for unknown values',()=>{
+ assert.equal(formatPercent(12.345,'en-US'),'12.3%');
+ assert.equal(formatPercent(12.345,'ru-RU'),'12,3%');
+ assert.equal(formatPercent(1234.5,'uz-UZ'),'1 234,5%');
+ assert.equal(formatPercent(8,'en-US',2),'8%');
+ assert.equal(formatPercent(-3.14159,'en-US',2),'-3.14%');
+ assert.equal(formatPercent(NaN,'en-US'),'—');
+ assert.equal(formatPercent(Infinity,'en-US'),'—');
 });

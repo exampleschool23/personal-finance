@@ -1,10 +1,10 @@
 "use client";
 import { ExpensePlanChart } from '@/components/expense-plan-chart';
-import { ErrorPopup } from '@/components/error-popup';
-import { CurrencySelect } from '@/components/currency-select';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
+import { CurrencySelect } from '@/components/presentation-foundation/currency-select';
 import { useDraftDialog } from '@/components/discard-changes';
 import { StopScheduleDialog } from '@/components/stop-schedule-dialog';
-import { LoadingPlaceholder } from '@/components/loading-placeholder';
+import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { useState } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,10 +12,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
-import { DatePicker } from '@/components/date-picker';
-import { CategoryBadge } from '@/components/category-badge';
+import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
+import { FormFooter } from '@/components/presentation-foundation/form-footer';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
+import { PanelTitle } from '@/components/presentation-foundation/panel-title';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
+import { CategoryBadge } from '@/components/presentation-foundation/category-badge';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney, formatDate, formatMonthYear } from '@/lib/format';
 import { expensePlanCategories, expensePlanTotals, type ExpensePlan } from '@/lib/expense-plans';
@@ -30,9 +33,9 @@ export function ExpensePlans({plans,month,currency,currencies,loading,error,save
  const open=(plan?:ExpensePlan)=>{setFailure('');setDraft(plan?{...plan,amount:plan.amount||plan.base_amount||0}:{id:crypto.randomUUID(),name:'',category:'Groceries',currency,amount:0,start_date:month+'-01',end_date:null});};
  async function submit(e:React.FormEvent){e.preventDefault();if(!draft||!draft.amount)return;setBusy(true);setFailure('');try{await save(draft);setDraft(null);}catch(e){setFailure((e as Error).message);}finally{setBusy(false);}}
  return <section className="panel expense-plans">
-  <div className="panel-title"><div><h2>{t('Monthly expense plans')}</h2><p className="muted">{formatMonthYear(month,locale)}</p></div><Button variant="outline" disabled={loading||!!error} onClick={()=>open()}><Plus size={16}/>{t('Add monthly plan')}</Button></div>
+  <PanelTitle title={t('Monthly expense plans')} description={formatMonthYear(month,locale)}><Button variant="outline" disabled={loading||!!error} onClick={()=>open()}><Plus size={16}/>{t('Add monthly plan')}</Button></PanelTitle>
   <p className="muted">{t('Plan groceries and support for each family member. Record spending against a plan to track what remains.')}</p>
-  {error?<div role="alert" className="error">{t(error)} <Button variant="outline" onClick={onRetry}>{t('Retry')}</Button></div>:loading?<LoadingPlaceholder label={t('Loading plans…')}/>:!plans.length?<p className="expense-plans-empty">{t('No monthly plans yet. Add groceries, Mum’s allowance or another regular expense.')}</p>:<div className="table-scroll"><table><thead><tr><th>{t('Plan')}</th><th>{t('Planned')}</th><th>{t('Spent')}</th><th>{t('Remaining')}</th><th>{t('Budget used')}</th><th>{t('Actions')}</th></tr></thead><tbody>
+  {error?<InlineError as="div" message={t(error)} onRetry={onRetry}/>:loading?<LoadingPlaceholder label={t('Loading plans…')}/>:!plans.length?<p className="expense-plans-empty">{t('No monthly plans yet. Add groceries, Mum’s allowance or another regular expense.')}</p>:<div className="table-scroll"><table><thead><tr><th>{t('Plan')}</th><th>{t('Planned')}</th><th>{t('Spent')}</th><th>{t('Remaining')}</th><th>{t('Budget used')}</th><th>{t('Actions')}</th></tr></thead><tbody>
    {[...plans].sort((a,b)=>a.category.localeCompare(b.category)||a.name.localeCompare(b.name)).map(plan=>{const totals=expensePlanTotals(plan,month);return <tr key={plan.id}>
     <td><div className="expense-plan-name"><strong>{plan.name}</strong><div className="expense-plan-meta"><CategoryBadge kind={plan.category} label={t(plan.category)}/><small className="muted">{formatDate(plan.start_date,locale)}{plan.end_date?` – ${formatDate(plan.end_date,locale)}`:''}</small></div>{!totals.active&&<small className="muted">{t('Not active in the selected month')}</small>}</div></td>
     <td>{money(totals.planned,plan.currency)}{Number(plan.carryover)>0&&<small className="block">{t('Carried over')}: {money(Number(plan.carryover),plan.currency)}</small>}</td><td>{money(totals.spent,plan.currency)}</td><td className={totals.remaining<0?'negative':''}>{totals.remaining<0?t('Over budget by {amount}',{amount:money(-totals.remaining,plan.currency)}):money(totals.remaining,plan.currency)}</td>
@@ -49,8 +52,8 @@ export function ExpensePlans({plans,month,currency,currencies,loading,error,save
     <div className="form-grid"><label>{t('Category')}<NativeSelect value={draft.category} onChange={e=>setDraft({...draft,category:e.target.value as ExpensePlan['category']})}>{expensePlanCategories.map(category=><option key={category} value={category}>{t(category)}</option>)}</NativeSelect></label><CurrencySelect value={draft.currency} currencies={currencies} savedCurrency={plans.find(plan=>plan.id===draft.id)?.currency} onChange={currency=>setDraft({...draft,currency})}/></div>
     <label>{t('Monthly amount')}<FormattedNumberInput value={draft.amount} onValueChange={amount=>setDraft({...draft,amount})}/></label>
     <label className="planning-check"><Checkbox checked={draft.rollover??false} disabled={busy} onCheckedChange={checked=>setDraft({...draft,rollover:checked===true})}/><span>{t('Carry unused budget into the next month')}</span></label><p className="muted">{t('Amount changes apply from the selected forecast month. Earlier months keep their budgets.')}</p><div className="form-grid"><label>{t('Start date')}<DatePicker value={draft.start_date} onChange={start_date=>setDraft({...draft,start_date})}/></label><label>{t('End date (optional)')}<DatePicker value={draft.end_date||''} required={false} min={draft.start_date} onChange={end_date=>setDraft({...draft,end_date:end_date||null})}/></label></div>
-   </fieldset><ErrorPopup message={failure}/><div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||!draft.amount||!draft.name.trim()||!!(draft.end_date&&draft.end_date<draft.start_date)}>{t(busy?'Saving…':'Save plan')}</Button></div></form>}
+   </fieldset><ErrorPopup message={failure}/><FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy||!draft.amount||!draft.name.trim()||!!(draft.end_date&&draft.end_date<draft.start_date)}>{t(busy?'Saving…':'Save plan')}</Button></FormFooter></form>}
   </DialogContent></Dialog>{guard.confirmation}
-  <AlertDialog open={!!deleting} onOpenChange={open=>{if(!open&&!busy)setDeleting(null);}}><AlertDialogContent><AlertDialogTitle>{t('Delete monthly plan?')}</AlertDialogTitle><AlertDialogDescription>{t('This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.')}</AlertDialogDescription><ErrorPopup message={failure}/><AlertDialogFooter><AlertDialogCancel disabled={busy}>{t('Cancel')}</AlertDialogCancel><AlertDialogAction disabled={busy} onClick={async e=>{e.preventDefault();if(!deleting)return;setBusy(true);setFailure('');try{await remove(deleting.id);setDeleting(null);}catch(e){setFailure((e as Error).message);}finally{setBusy(false);}}}>{t('Delete plan')}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+  <ConfirmDialog open={!!deleting} onClose={()=>setDeleting(null)} busy={busy} title={t('Delete monthly plan?')} description={t('This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.')} error={failure} confirmLabel={t('Delete plan')} onConfirm={async()=>{if(!deleting)return;setBusy(true);setFailure('');try{await remove(deleting.id);setDeleting(null);}catch(e){setFailure((e as Error).message);}finally{setBusy(false);}}}/>
  </section>;
 }

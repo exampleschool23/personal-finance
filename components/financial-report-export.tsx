@@ -1,6 +1,6 @@
 "use client";
 import type { MarketData } from '@/lib/market';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { useRef, useState } from 'react';
 import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';

@@ -61,7 +61,7 @@ test('the drawer marks the current route, shows overdue payments and signs out t
  const {AppDrawer}=loadTS('components/workspace/app-drawer.tsx',{
   'next/navigation':{usePathname:()=>path},
   '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:text=>text})},
-  '@/components/drawer-link':{DrawerLink:element('a')},
+  '@/components/presentation-foundation/drawer-link':{DrawerLink:element('a')},
   '@/components/ui/button':{Button:element('button')},
   '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
  });
@@ -91,7 +91,7 @@ test('a drawer tap highlights and shows its destination before the route arrives
  const {AppDrawer}=loadTS('components/workspace/app-drawer.tsx',{
   'next/navigation':{usePathname:()=>'/'},
   '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:text=>text})},
-  '@/components/drawer-link':{DrawerLink:element('a')},
+  '@/components/presentation-foundation/drawer-link':{DrawerLink:element('a')},
   '@/components/ui/button':{Button:element('button')},
   '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
  },new Map());

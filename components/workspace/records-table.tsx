@@ -1,11 +1,15 @@
 "use client";
+import { Count } from '@/components/presentation-foundation/count';
+import { EmptyState } from '@/components/presentation-foundation/empty-state';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
+import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 import { Pencil, Plus, Trash2, Wallet } from 'lucide-react';
-import { CategoryBadge } from '@/components/category-badge';
+import { CategoryBadge } from '@/components/presentation-foundation/category-badge';
 import { useLanguage } from '@/components/language-provider';
-import { LoadingPlaceholder } from '@/components/loading-placeholder';
+import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { RecordFilters, emptyRecordFilters } from '@/components/record-filters';
-import { RecordIcon } from '@/components/record-icon';
+import { RecordIcon } from '@/components/presentation-foundation/record-icon';
 import { Button } from '@/components/ui/button';
 import { expenses, income, kinds, lendingRecordKinds, liabilities, value } from '@/lib/finance';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
@@ -35,10 +39,10 @@ export function RecordsTable({ title, caption, transactions = false, limit, pagi
  const date = (day: string) => formatDate(day, locale);
  const shown = limit === undefined ? visible : visible.slice(0, limit);
  return <section id="workspace-records" className={`panel records${historyOnly ? ' transaction-history' : ''}`}>
-  <div className="panel-title"><h2>{title} <span className="count">{tableLoading ? '—' : formatNumber(totalRecords, locale, 0)}</span></h2><span>{caption}</span></div>
+  <PanelTitle title={title} count={<Count value={totalRecords} loading={tableLoading}/>}><span>{caption}</span></PanelTitle>
   <RecordFilters value={filters} onChange={setFilters} categories={planning.data.categories} kinds={sectionKey === 'debts' ? lendingRecordKinds : sectionKey === 'cashflow' ? [...income,...expenses] : kinds}/>
-  {remoteHistory&&historyPage.error&&<p role="alert" className="error">{t(historyPage.error)} <Button onClick={historyPage.retry}>{t('Retry')}</Button></p>}
-  {useFilteredRecords&&planning.error&&<p role="alert" className="error">{t(planning.error)}</p>}
+  {remoteHistory&&historyPage.error&&<InlineError message={t(historyPage.error)} onRetry={historyPage.retry}/>}
+  {useFilteredRecords&&planning.error&&<InlineError message={t(planning.error)}/>}
   {tableLoading ? <LoadingPlaceholder label={t("Loading records…")}/> : visible.length ? <div className="table-scroll"><table>
    <thead><tr><th>{t("Name")}</th><th>{t("Category")}</th><th>{transactions ? t("Date") : t("Date / due date")}</th><th>{transactions ? t("Amount") : t("Value")}</th><th>{t("Actions")}</th></tr></thead>
    <tbody>{shown.map(r => <tr key={r.id} {...(transactions?{className:'clickable-row',tabIndex:0,'aria-label':t('View details for {name}',{name:r.name}),onClick:(event:ReactMouseEvent)=>{if(!(event.target as HTMLElement).closest('button,a,input'))setViewing(storedRecord(r));},onKeyDown:(event:ReactKeyboardEvent)=>{if(event.target===event.currentTarget&&(event.key==='Enter'||event.key===' ')){event.preventDefault();setViewing(storedRecord(r));}}}:{})}>
@@ -48,7 +52,7 @@ export function RecordsTable({ title, caption, transactions = false, limit, pagi
     <td className={transactions?`amount ${income.includes(r.kind)?'positive':'negative'}`:"amount"}>{transactions?`${income.includes(r.kind)?'+':'−'}${money(value(r),r.currency)}`:money(value(r), r.currency)}</td>
     <td><div className="row-actions">{[...income,...expenses].includes(r.kind)&&r.frequency!=='Once'&&!r.end_date&&<Button size="sm" variant="outline" onClick={()=>setStopping(storedRecord(r))}>{t("Stop")}</Button>}{!demo && trackedKinds.includes(r.kind) && <Button size="sm" variant="outline" onClick={() => setTracking(storedRecord(r))}>{t("Tracker")}</Button>}{r.kind === 'Mortgage' && <Button size="sm" variant="outline" onClick={() => setPayingMortgage(storedRecord(r))}>{t("Record payment")}</Button>}{!r.movement_id && !r.operation_id && !r.mortgage_payment_id && !r.history_event_id && <>{isTransactionHistory(r)&&<Button variant="outline" size="sm" disabled={transactionTools.loading||!!transactionTools.error} onClick={()=>setSplitting(storedRecord(r))}>{t('Split')}</Button>}<Button size="icon" variant="ghost" aria-label={t('Edit {name}', { name: r.name })} onClick={() => editRecord(r)}><Pencil size={15}/></Button><Button size="icon" variant="ghost" aria-label={t('Delete {name}', { name: r.name })} onClick={() => requestDelete(r)}><Trash2 size={15}/></Button></>}</div></td>
    </tr>)}</tbody>
-  </table></div> : <div className="empty"><Wallet /><h3>{t(filtersActive?'No matching records.':'A fresh start.')}</h3><p>{t(filtersActive?'Try another search or clear the filters.':'Add a record in {currency} to start building your overview.', { currency })}</p>{filtersActive&&<Button variant="outline" onClick={()=>setFilters(emptyRecordFilters)}>{t('Clear filters')}</Button>}<Button variant="outline" onClick={addRecord}><Plus />{transactions ? t("Add your first expense") : t("Add your first record")}</Button></div>}
+  </table></div> : <EmptyState icon={<Wallet />} title={t(filtersActive?'No matching records.':'A fresh start.')} description={t(filtersActive?'Try another search or clear the filters.':'Add a record in {currency} to start building your overview.', { currency })}>{filtersActive&&<Button variant="outline" onClick={()=>setFilters(emptyRecordFilters)}>{t('Clear filters')}</Button>}<Button variant="outline" onClick={addRecord}><Plus />{transactions ? t("Add your first expense") : t("Add your first record")}</Button></EmptyState>}
   {children}
   {!tableLoading && pagination && <nav className="records-pagination" aria-label={t('Record pages')}><span>{t('Page {page} of {pages} · {count} records', { page: formatNumber(tablePage, locale, 0), pages: formatNumber(pageCount, locale, 0), count: formatNumber(totalRecords, locale, 0) })}</span><div><Button variant="outline" disabled={tableLoading || recordsLoading || busy || tablePage <= 1} onClick={() => showPage(tablePage - 1)}>{t('Previous')}</Button><Button variant="outline" disabled={tableLoading || recordsLoading || busy || tablePage >= pageCount} onClick={() => showPage(tablePage + 1)}>{t('Next')}</Button></div></nav>}
  </section>;

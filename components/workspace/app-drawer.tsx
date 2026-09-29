@@ -1,8 +1,8 @@
 "use client";
 import { usePathname } from 'next/navigation';
 import { LogOut } from 'lucide-react';
-import { Brand } from '@/components/brand';
-import { DrawerLink } from '@/components/drawer-link';
+import { Brand } from '@/components/presentation-foundation/brand';
+import { DrawerLink } from '@/components/presentation-foundation/drawer-link';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';

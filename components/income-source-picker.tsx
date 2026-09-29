@@ -5,7 +5,7 @@ import { ChevronDown, Search } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CategoryBadge } from '@/components/category-badge';
+import { CategoryBadge } from '@/components/presentation-foundation/category-badge';
 import { useLanguage } from '@/components/language-provider';
 import { formatNumber, formatMoney, formatDate } from '@/lib/format';
 import { income } from '@/lib/finance';

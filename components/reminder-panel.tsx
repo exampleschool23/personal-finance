@@ -1,5 +1,5 @@
 "use client";
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import {useState} from 'react';
 import {useLanguage} from '@/components/language-provider';
 import {Button} from '@/components/ui/button';

@@ -1,14 +1,16 @@
 "use client";
+import {FormFooter} from '@/components/presentation-foundation/form-footer';
+import {InlineError} from '@/components/presentation-foundation/inline-error';
 import { showSaved } from '@/lib/feedback';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import {decimalTotalEquals} from '@/lib/decimal-amounts';
 import {useState} from 'react';
 import {useOwnerResource} from '@/hooks/use-owner-resource';
 import {useLanguage} from '@/components/language-provider';
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
 import {Button} from '@/components/ui/button';
-import {DatePicker} from '@/components/date-picker';
-import {FormattedNumberInput} from '@/components/formatted-number-input';
+import {DatePicker} from '@/components/presentation-foundation/date-picker';
+import {FormattedNumberInput} from '@/components/presentation-foundation/formatted-number-input';
 import {useDiscardChanges} from '@/components/discard-changes';
 import {formatDate,formatMoney} from '@/lib/format';
 import {depositToday} from '@/lib/deposit-interest';
@@ -24,7 +26,7 @@ export function StatementReconciliation({account,owner,onClose,onSaved}:{account
  const resource=useOwnerResource(`/api/reconciliation?account=${account.id}&from=${from}&to=${to}`,owner,true,0,empty);
  return <Dialog open onOpenChange={open=>{if(!open&&!editing)onClose();}}><DialogContent className="record-dialog" showCloseButton={!editing}><DialogTitle>{t('Statement reconciliation')} · {account.name}</DialogTitle><DialogDescription>{t('Enter the opening cleared balance immediately before the first day. Match transactions to the bank statement. This review does not change your cash balance.')}</DialogDescription>
  {!editing?<><div className="form-grid"><label>{t('First day')}<DatePicker value={from} max={to} onChange={v=>{setFrom(v);setSelected(null);}}/></label><label>{t('Statement closing date')}<DatePicker value={to} min={from} max={today} onChange={v=>{setTo(v);setSelected(null);}}/></label></div>
- {resource.error&&<p role="alert" className="error">{t(resource.error)} <Button onClick={resource.retry}>{t('Retry')}</Button></p>}
+ {resource.error&&<InlineError message={t(resource.error)} onRetry={resource.retry}/>}
  {resource.loading?<p>{t('Loading records…')}</p>:!resource.error&&<><Button onClick={()=>setEditing(true)}>{t(selected?'Review statement':'Start statement review')}</Button><h3>{t('Saved statements')}</h3><ul className="tool-list">{resource.data.saved.map(s=><li key={s.id}><span>{formatDate(s.start_date,locale)} — {formatDate(s.end_date,locale)}</span><Button variant="outline" onClick={()=>{setFrom(s.start_date);setTo(s.end_date);setSelected(s);}}>{t('Open')}</Button></li>)}</ul></>}
  <Button variant="outline" onClick={onClose}>{t('Close')}</Button></>:<StatementForm key={selected?.id??'new'} initial={selected} account={account} from={from} to={to} state={resource.data} onClose={()=>setEditing(false)} onSaved={()=>{resource.invalidate();setEditing(false);setSelected(null);onSaved();}}/>}
  </DialogContent></Dialog>;
@@ -42,5 +44,5 @@ function StatementForm({initial,account,from,to,state,onClose,onSaved}:{initial:
  <div className="table-scroll daily-ledger"><table><thead><tr><th>{t('Cleared')}</th><th>{t('Date')}</th><th>{t('Name')}</th><th>{t('Amount')}</th></tr></thead><tbody>{state.entries.map(e=><tr key={e.key}><td><input type="checkbox" aria-label={`${t('Cleared')}: ${e.name}`} checked={draft.cleared.includes(e.key)} onChange={event=>setDraft({...draft,cleared:event.target.checked?[...draft.cleared,e.key]:draft.cleared.filter(k=>k!==e.key)})}/></td><td>{formatDate(e.date,locale)}{e.date<from&&<small className="block">{t('Pending from an earlier statement')}</small>}</td><td>{t(operationNames[e.name]??e.name)}</td><td>{formatMoney(Number(e.amount),account.currency,locale)}</td></tr>)}</tbody></table></div>
  <p>{t('Cleared balance')}: <strong>{formatMoney(sum,account.currency,locale)}</strong></p><p>{t('Difference')}: <strong>{formatMoney(difference,account.currency,locale)}</strong></p>{difference!==0&&Math.abs(difference)<1&&<p>{t('A fractional difference remains. Check the precise statement amounts.')}</p>}
  <p className="muted">{t('Any subsequent account balance update requires another review, including a payment after this statement period.')}</p>
- </fieldset><ErrorPopup message={error}/><div className="record-form-footer"><Button variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button variant="outline" disabled={busy} onClick={()=>void save('draft')}>{t('Save draft')}</Button><Button disabled={busy||!decimalTotalEquals([draft.opening_balance,...state.entries.filter(e=>draft.cleared.includes(e.key)).map(e=>Number(e.amount))],draft.closing_balance)} onClick={()=>void save('reconciled')}>{t('Reconcile statement')}</Button></div>{guard.confirmation}</>;
+ </fieldset><ErrorPopup message={error}/><FormFooter busy={busy} onCancel={guard.close}><Button variant="outline" disabled={busy} onClick={()=>void save('draft')}>{t('Save draft')}</Button><Button disabled={busy||!decimalTotalEquals([draft.opening_balance,...state.entries.filter(e=>draft.cleared.includes(e.key)).map(e=>Number(e.amount))],draft.closing_balance)} onClick={()=>void save('reconciled')}>{t('Reconcile statement')}</Button></FormFooter>{guard.confirmation}</>;
 }

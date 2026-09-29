@@ -9,7 +9,7 @@ function fixture(){
   react:{...React,useState(initial){const i=cursor++;if(!(i in states))states[i]=initial;return [states[i],value=>{states[i]=value;}];},useRef:()=>downloading},
   '@/components/language-provider':{useLanguage:()=>({t:key=>key,language:'uz'})},
   '@/lib/financial-report':{buildFinancialReport:(backup,language,context,market,options)=>{built.push({backup,language,context,market,options});return {}; }},
-  '@/components/error-popup':{ErrorPopup:function ErrorPopup(){return null;}},
+  '@/components/presentation-foundation/error-popup':{ErrorPopup:function ErrorPopup(){return null;}},
   '@/lib/financial-report-pdf':{renderFinancialReportPdf:async()=>new Uint8Array([37,80,68,70,45])},
  });
  return {render:(demo=false)=>{cursor=0;return FinancialReportExport({demo,currency:'UZS'});},built};

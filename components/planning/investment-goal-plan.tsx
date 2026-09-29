@@ -1,11 +1,11 @@
 "use client";
 import { useId, useState } from 'react';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import Link from 'next/link';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
 import { formatDate, formatMonthYear, formatNumber, formatMoney } from '@/lib/format';
 import { investmentGoalItems, investmentGoalPlan, investmentGoalTargets, investmentGoalStatus } from '@/lib/investment-goals';

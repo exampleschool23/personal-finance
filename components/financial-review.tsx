@@ -4,10 +4,12 @@ import { useOwnerResource } from '@/hooks/use-owner-resource';
 import type { MarketData } from '@/lib/market';
 import { useState } from 'react';
 import { ArrowDownLeft, ArrowUpRight, Equal, CircleHelp, CalendarDays, ReceiptText, X } from 'lucide-react';
-import { StatTile, StatTiles } from '@/components/stat-tile';
+import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
+import { signTone } from '@/components/presentation-foundation/tone';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
-import { DatePicker } from '@/components/date-picker';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { useLanguage } from '@/components/language-provider';
 import { monthlyReview } from '@/lib/transaction-tools';
 import type { ToolsController } from '@/components/transaction-tools-panel';
@@ -26,13 +28,13 @@ export function MonthlyReview({data:providedData,owner,demo=false,revision=0,too
  const priorDate=new Date(month+'-01T00:00:00Z');priorDate.setUTCMonth(priorDate.getUTCMonth()-1);
  const previous=monthlyReview(data.records,tools.data.splits,snapshots,priorDate.toISOString().slice(0,7),currency,today,data.activity,market?.rates??market?.fx?.rate,data.investmentLinks);
  const money=(amount:number)=>formatMoney(amount,currency,locale);
- if(owner&&!demo&&(remote.loading||remote.error))return <section className="panel tools-panel monthly-review"><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2>{remote.error?<p role="alert">{t(remote.error)} <Button onClick={remote.retry}>{t('Retry')}</Button></p>:<p role="status">{t('Loading records…')}</p>}</section>;
+ if(owner&&!demo&&(remote.loading||remote.error))return <section className="panel tools-panel monthly-review"><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2>{remote.error?<InlineError message={t(remote.error)} onRetry={remote.retry}/>:<p role="status">{t('Loading records…')}</p>}</section>;
  if(compact)return <section className="cashflow-summary" aria-label={t('Monthly review')}>
-  {tools.error&&<p className="error" role="alert">{t(tools.error)} <Button onClick={tools.retry}>{t('Retry')}</Button></p>}
+  {tools.error&&<InlineError message={t(tools.error)} onRetry={tools.retry}/>}
   <StatTiles columns={3}>{[
    {label:'Income received',value:result.received,estimate:estimates?.income,Icon:ArrowDownLeft},
    {label:'Actual spending',value:result.spent,estimate:estimates?.spending,Icon:ArrowUpRight},
-   {label:'Net cash flow',value:result.saved,estimate:estimates?.net,Icon:Equal,tone:result.saved<0?'negative' as const:'positive' as const},
+   {label:'Net cash flow',value:result.saved,estimate:estimates?.net,Icon:Equal,tone:signTone(result.saved)},
   ].map(({label,value,estimate,Icon,tone})=><StatTile key={label} label={t(label)} icon={<Icon aria-hidden="true"/>} value={tools.loading||tools.error?'—':money(value)} tone={tools.loading||tools.error?undefined:tone}><p>{t(label==='Net cash flow'?'Estimated monthly surplus':'Monthly estimate')}: {estimate==null?'—':money(estimate)}</p></StatTile>)}</StatTiles>
   <p className="cashflow-summary-note muted">{t('Estimates exclude one-time entries. Actuals include recorded mortgage payments.')}</p>
   {!!result.missing&&<p className="partial-total" role="status">{t('Some transactions could not be converted. Current or previous month totals are incomplete.')}</p>}
@@ -53,7 +55,7 @@ export function MonthlyReview({data:providedData,owner,demo=false,revision=0,too
    </Dialog></div><p className="muted">{t('Recorded income and spending converted to {currency}. Includes principal and interest payments.',{currency})}</p></div>
    <label>{t('Month')}<DatePicker mode="month" value={month} max={today} onChange={setMonth}/></label>
   </header>
-  {tools.error&&<p className="error" role="alert">{t(tools.error)} <Button type="button" variant="outline" onClick={tools.retry}>{t('Retry')}</Button></p>}
+  {tools.error&&<InlineError message={t(tools.error)} onRetry={tools.retry}/>}
   <div className="review-grid monthly-review-metrics">{[
    {label:'Income received',value:result.received,previous:previous.received},
    {label:'Actual spending',value:result.spent,previous:previous.spent},

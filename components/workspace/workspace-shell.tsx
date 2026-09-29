@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState, type ReactNode } from 'react';
 import { ShieldCheck } from 'lucide-react';
-import { Brand } from '@/components/brand';
+import { Brand } from '@/components/presentation-foundation/brand';
 import { DatabaseStatus } from '@/components/database-status';
 import { LanguageProvider, useLanguage } from '@/components/language-provider';
-import { LoadingPlaceholder, PageSkeleton } from '@/components/loading-placeholder';
+import { LoadingPlaceholder, PageSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { SignInScreen } from '@/components/sign-in-screen';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppDrawer } from '@/components/workspace/app-drawer';

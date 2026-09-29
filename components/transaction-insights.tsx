@@ -1,4 +1,5 @@
 "use client";
+import {ResourceState} from '@/components/presentation-foundation/resource-state';
 import {useState} from 'react';
 import {useOwnerResource} from '@/hooks/use-owner-resource';
 import {emptyPlanning} from '@/lib/planning';
@@ -18,5 +19,5 @@ export function TransactionInsights({owner,demo=false,revision=0,...props}:{owne
  const {t}=useLanguage();const [open,setOpen]=useState(false);
  const resource=useOwnerResource('/api/planning?scope=insights',owner??null,!!owner&&!demo&&open,revision,emptyPlanning);
  if(!owner||demo)return <TransactionInsightsContent {...props}/>;
- return <section className="panel tools-panel"><Button variant="outline" aria-expanded={open} onClick={()=>setOpen(value=>!value)}>{t('Transaction review suggestions')}</Button>{open&&(resource.loading?<p role="status">{t('Loading records…')}</p>:resource.error?<p role="alert">{t(resource.error)} <Button onClick={resource.retry}>{t('Retry')}</Button></p>:<TransactionInsightsContent {...props} records={resource.data.records}/>)}</section>;
+ return <section className="panel tools-panel"><Button variant="outline" aria-expanded={open} onClick={()=>setOpen(value=>!value)}>{t('Transaction review suggestions')}</Button>{open&&<ResourceState loading={resource.loading} error={resource.error} onRetry={resource.retry}><TransactionInsightsContent {...props} records={resource.data.records}/></ResourceState>}</section>;
 }

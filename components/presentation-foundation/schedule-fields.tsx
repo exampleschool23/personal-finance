@@ -1,6 +1,6 @@
 "use client";
 import {NativeSelect} from '@/components/ui/native-select';
-import {FormattedNumberInput} from '@/components/formatted-number-input';
+import {FormattedNumberInput} from '@/components/presentation-foundation/formatted-number-input';
 import {useLanguage} from '@/components/language-provider';
 import {frequencies,frequencyLabels,type Frequency} from '@/lib/finance';
 export function ScheduleFields({frequency,days,onChange,once=false,disabled=false}:{frequency:Frequency;days?:number|null;onChange:(frequency:Frequency,days:number|null)=>void;once?:boolean;disabled?:boolean}){

@@ -1,15 +1,15 @@
 "use client";
 import { isInstrumentAccount } from '@/lib/holding-accounts';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import {useGoalLayoutAnimation} from '@/hooks/use-goal-layout-animation';
 import { GoalDragHandle } from './goal-drag-handle';
 import { GoalCard } from './goal-card';
 import { useGoalOrder } from '@/hooks/use-goal-order';
-import { CurrencyValue } from '@/components/currency-value';
+import { CurrencyValue } from '@/components/presentation-foundation/currency-value';
 import { useDraftDialog } from '@/components/discard-changes';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Bitcoin, CalendarDays, ChartNoAxesCombined, Check, Pencil, Plus, Target, Wallet } from 'lucide-react';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader } from '@/components/presentation-foundation/page-header';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,9 +17,11 @@ import { GoalInvestmentEditor } from './goal-investment-editor';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Dialog,DialogContent,DialogTitle,DialogDescription } from '@/components/ui/dialog';
-import { AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription,AlertDialogFooter,AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { DatePicker } from '@/components/date-picker';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
+import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
+import { EmptyState } from '@/components/presentation-foundation/empty-state';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
 import { formatDate,formatMoney,formatNumber,calendarIso,parseCalendarDate } from '@/lib/format';
 import { type Goal,type PlanningData } from '@/lib/planning';
@@ -64,9 +66,9 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
   {!accounts.length&&<p className="panel">{t('Net-worth and investment goals do not need a cash account. Cash savings goals reserve money in a cash account.')} <Link href="/accounts">{t('Accounts')}</Link></p>}
   <GoalFundingPanel data={data} currency={currency} surplus={totals.get(currency)?.surplus??null} today={today} rates={market?.rates} owner={owner} demo={demo} revision={revision} onSaved={onSaved}/>
   <ErrorPopup message={order.error}/>
-  {preferences.error&&!demo&&<p className="error" role="alert">{t('Load saved preferences before making changes.')} <Button onClick={preferences.retry}>{t('Retry')}</Button></p>}
+  {preferences.error&&!demo&&<InlineError message={t('Load saved preferences before making changes.')} onRetry={preferences.retry}/>}
   <div className="goal-list-toolbar">{visible.length>1&&<p className="muted">{t(demo?'Drag the handles to reorder goals. Demo changes last for this visit.':'Drag the handles to reorder goals. Your order is saved automatically.')}</p>}<label className="planning-check"><Checkbox aria-label={t('Show archived goals')} checked={archived} onCheckedChange={checked=>setArchived(checked===true)}/>{t('Show archived goals')}</label></div>
-  {!visible.length&&<section className="panel empty goal-empty"><Target aria-hidden="true"/><h3>{t('What are you working toward?')}</h3><p>{t('Set a target amount and date, then explore how monthly investments can get you there.')}</p><Button onClick={()=>open()}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></section>}
+  {!visible.length&&<EmptyState as="section" className="panel goal-empty" icon={<Target aria-hidden="true"/>} title={t('What are you working toward?')} description={t('Set a target amount and date, then explore how monthly investments can get you there.')}><Button onClick={()=>open()}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></EmptyState>}
   <div ref={cardsRef} className="planning-cards goal-cards goal-cards-compact">{visible.map(goal=>{
    const investment=goal.kind==='investment',holdingItems=investmentGoalItems(goal,data);
    const currency=goalCurrency(goal),account=accounts.find(account=>account.id===goal.account_id),current=goal.kind==='net_worth'?totals.get(currency)?.netWorth??null:Number(goal.allocated),money=(n:number)=>formatMoney(n,currency,locale);
@@ -99,6 +101,6 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
    {draft.kind!=='investment'&&<label>{t('Target amount')}<FormattedNumberInput max={1e15} value={draft.target} onValueChange={target=>setDraft({...draft,target})}/></label>}
    <label>{t('Target date')}<DatePicker required={draft.kind==='net_worth'} value={draft.target_date??''} min={data.goals.some(goal=>goal.id===draft.id)?undefined:today} max={maxDate} onChange={date=>setDraft({...draft,target_date:date||null})}/></label>
   <label className="planning-check"><Checkbox checked={draft.archived} onCheckedChange={checked=>setDraft({...draft,archived:checked===true})}/><span>{t('Archived')}</span></label>
-  </fieldset></div><div className="goal-dialog-actions"><ErrorPopup message={error}/><div className="record-form-footer">{!demo&&data.goals.some(goal=>goal.id===draft.id)&&<Button type="button" variant="destructive" className="goal-delete" disabled={busy} onClick={()=>setDeleting(true)}>{t('Delete goal')}</Button>}<Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||draft.target<=0||draft.allocated>draft.target||(draft.kind==='net_worth'&&!draft.target_date)||(draft.kind==='savings'&&!draft.account_id)||(draft.kind==='investment'&&(!investmentGoalTargets(draft).length||investmentGoalTargets(draft).some(item=>!item.holding_account_id||!item.asset_symbol||item.target<=0)||new Set(investmentGoalTargets(draft).map(item=>item.holding_account_id+':'+item.asset_symbol)).size!==investmentGoalTargets(draft).length))}>{t(busy?'Saving…':'Save')}</Button></div></div></form>}</DialogContent></Dialog><AlertDialog open={deleting} onOpenChange={next=>{if(!next&&!busy)setDeleting(false);}}><AlertDialogContent><AlertDialogTitle>{t('Delete {name}?',{name:draft?.name??''})}</AlertDialogTitle><AlertDialogDescription>{t('The goal and its activity move to Recently deleted. Money stays in your accounts, and you can restore the goal later.')}</AlertDialogDescription><ErrorPopup message={error}/><AlertDialogFooter><AlertDialogCancel disabled={busy}>{t('Cancel')}</AlertDialogCancel><AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90" disabled={busy} onClick={async event=>{event.preventDefault();if(!draft)return;setBusy(true);setError('');try{await save('delete_goal',{id:draft.id});if(selected===draft.id)setSelected('');setDeleting(false);setDraft(null);}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}>{t(busy?'Deleting…':'Delete goal')}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>{guard.confirmation}
+  </fieldset></div><div className="goal-dialog-actions"><ErrorPopup message={error}/><div className="record-form-footer">{!demo&&data.goals.some(goal=>goal.id===draft.id)&&<Button type="button" variant="destructive" className="goal-delete" disabled={busy} onClick={()=>setDeleting(true)}>{t('Delete goal')}</Button>}<Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||draft.target<=0||draft.allocated>draft.target||(draft.kind==='net_worth'&&!draft.target_date)||(draft.kind==='savings'&&!draft.account_id)||(draft.kind==='investment'&&(!investmentGoalTargets(draft).length||investmentGoalTargets(draft).some(item=>!item.holding_account_id||!item.asset_symbol||item.target<=0)||new Set(investmentGoalTargets(draft).map(item=>item.holding_account_id+':'+item.asset_symbol)).size!==investmentGoalTargets(draft).length))}>{t(busy?'Saving…':'Save')}</Button></div></div></form>}</DialogContent></Dialog><ConfirmDialog open={deleting} onClose={()=>setDeleting(false)} busy={busy} title={t('Delete {name}?',{name:draft?.name??''})} description={t('The goal and its activity move to Recently deleted. Money stays in your accounts, and you can restore the goal later.')} confirmLabel={t(busy?'Deleting…':'Delete goal')} destructive error={error} onConfirm={async()=>{if(!draft)return;setBusy(true);setError('');try{await save('delete_goal',{id:draft.id});if(selected===draft.id)setSelected('');setDeleting(false);setDraft(null);}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}/>{guard.confirmation}
  </>;
 }

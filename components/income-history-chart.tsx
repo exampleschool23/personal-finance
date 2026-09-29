@@ -2,7 +2,8 @@
 import { useMemo,useState } from 'react';
 import Link from 'next/link';
 import { Bar,BarChart,CartesianGrid,ResponsiveContainer,Tooltip,XAxis,YAxis } from 'recharts';
-import { Button } from '@/components/ui/button';
+import { PanelTitle } from '@/components/presentation-foundation/panel-title';
+import { Segmented } from '@/components/presentation-foundation/segmented';
 import { useLanguage } from '@/components/language-provider';
 import { formatCompactMoney,formatMoney,formatMonthYear,formatNumber } from '@/lib/format';
 import { categoryColor } from '@/lib/category-colors';
@@ -20,7 +21,7 @@ export function IncomeHistoryChart({records,events,incomeRecords,currency,rates,
  const names=Object.fromEntries([...definitions.map(item=>[item.key,item.label]),['estimate',t('Estimated monthly income')]]);
  const active=definitions.filter(item=>result.received[item.key]>0||result.expected[item.key]>0);
  return <section className="panel income-history-chart">
-  <div className="panel-title"><div><h2>{t('Income over time')}</h2><p className="muted">{t('Salary, dividends, rent, business income, interest and other income.')}</p></div><div className="portfolio-ranges overview-segments" role="group" aria-label={t('History period')}>{[3,6,12].map(value=><Button key={value} size="sm" variant="ghost" aria-pressed={months===value} onClick={()=>setMonths(value)}>{t('{count} months',{count:formatNumber(value,locale,0)})}</Button>)}</div></div>
+  <PanelTitle title={t('Income over time')} description={t('Salary, dividends, rent, business income, interest and other income.')}><Segmented label={t('History period')} options={[3,6,12].map(value=>({value,label:t('{count} months',{count:formatNumber(value,locale,0)})}))} value={months} onChange={setMonths}/></PanelTitle>
   <div className="portfolio-headline"><div><span>{t('Recorded income in this period')}</span><strong>{result.missing?'—':money(result.totalReceived)}</strong></div><div><span>{t('Monthly estimate · {month}',{month:formatMonthYear(today.slice(0,7),locale)})}</span><strong>{result.estimateMissing?'—':money(result.estimatedTotal)}</strong></div><div><span>{t('Dividends received')}</span><strong>{result.missing?'—':money(result.received.dividends)}</strong></div></div>
   <div className="comparison-legend">{active.map(item=><button key={item.key} type="button" aria-pressed={!hidden.includes(item.key)} onClick={()=>setHidden(previous=>previous.includes(item.key)?previous.filter(key=>key!==item.key):[...previous,item.key])}><i style={{background:categoryColor(item.kind)}}/>{item.label}</button>)}<button type="button" aria-pressed={!hidden.includes('estimate')} onClick={()=>setHidden(previous=>previous.includes('estimate')?previous.filter(key=>key!=='estimate'):[...previous,'estimate'])}><i className="income-estimate-key"/>{t('Estimated monthly income')}</button></div>
   <div className="portfolio-chart"><ResponsiveContainer width="100%" height={300}><BarChart data={result.points} accessibilityLayer margin={{top:20,right:15,left:5,bottom:10}}><CartesianGrid stroke="var(--border)" strokeOpacity={.6} strokeDasharray="2 6" vertical={false}/><XAxis dataKey="month" tickFormatter={month=>formatMonthYear(String(month),locale)} minTickGap={50} axisLine={false} tickLine={false} tickMargin={14}/><YAxis width={72} tickFormatter={amount=>formatCompactMoney(Number(amount),currency,locale)} axisLine={false} tickLine={false} tickMargin={12}/><Tooltip cursor={{fill:'var(--accent)',fillOpacity:.45}} labelFormatter={month=>{

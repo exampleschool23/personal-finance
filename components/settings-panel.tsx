@@ -1,8 +1,9 @@
 "use client";
+import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { showSaved } from '@/lib/feedback';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { useUnsavedNavigation } from '@/components/discard-changes';
-import { LoadingPlaceholder } from '@/components/loading-placeholder';
+import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { useState } from 'react';
 
 import { countryOptions } from '@/lib/countries';
@@ -35,7 +36,7 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
   }
   return <section className="settings-page">
     <header className="preferences-heading"><h2>{t('Profile & preferences')}</h2><p className="muted">{t('Keep your profile details, language, and currency preferences up to date.')}</p></header>
-    {loadError && <p className="error" role="alert">{t(loadError)} <Button type="button" variant="outline" onClick={onRetry}>{t('Retry loading settings')}</Button></p>}
+    {loadError && <InlineError message={t(loadError)}><Button type="button" variant="outline" onClick={onRetry}>{t('Retry loading settings')}</Button></InlineError>}
     {loading ? <LoadingPlaceholder label={t('Loading settings…')}/> : <form onSubmit={event => { event.preventDefault(); if(dirty&&!busy&&!loadError) void save(); }} className="settings-form preferences-form">
       <fieldset disabled={busy || !!loadError} className="preferences-fields">
         <section className="panel preferences-card"><header><h3>{t('About you')}</h3><p className="muted">{t('Personal details for your profile.')}</p></header>

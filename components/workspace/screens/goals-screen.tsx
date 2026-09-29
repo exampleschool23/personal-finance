@@ -1,6 +1,6 @@
 "use client";
 import { useLanguage } from '@/components/language-provider';
-import { LoadingPlaceholder } from '@/components/loading-placeholder';
+import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { GoalsPage } from '@/components/planning/goals-page';
 import { PlanningError } from '@/components/workspace/screen-notices';
 import { useWorkspace } from '@/components/workspace/workspace-provider';

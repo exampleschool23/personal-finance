@@ -1,12 +1,13 @@
 "use client";
 import { showSaved } from '@/lib/feedback';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { useRef,useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { formatDateTime,formatNumber } from '@/lib/format';
 import { Button } from '@/components/ui/button';
-import { AlertDialog,AlertDialogContent,AlertDialogTitle,AlertDialogDescription,AlertDialogFooter,AlertDialogCancel,AlertDialogAction } from '@/components/ui/alert-dialog';
+import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
+import { ResourceState } from '@/components/presentation-foundation/resource-state';
 
 const emptyRecoveries={items:[] as Array<{id:string;created_at:string}>,hasMore:false};
 type Preview={id:string;exported_at:string;counts:Record<string,number>;current_records:number;expected_state:string};
@@ -38,7 +39,7 @@ export function BackupRestore({demo,owner,onSaved}:{demo:boolean;owner:string|nu
   <ErrorPopup message={error}/>
   {recovery&&<div role="status"><p>{t('Backup restored. Reload the workspace to apply all restored settings.')}</p><Button variant="outline" asChild><a href={'/api/backup?recovery='+recovery}>{t('Download pre-restore backup')}</a></Button> <Button type="button" onClick={()=>window.location.reload()}>{t('Reload workspace')}</Button></div>}
   <Button type="button" variant="outline" disabled={demo} aria-expanded={historyOpen} onClick={()=>setHistoryOpen(value=>!value)}>{t('Previous recovery copies')}</Button>
-  {historyOpen&&<div>{copies.loading?<p>{t('Loading records…')}</p>:copies.error?<p role="alert" className="error">{t(copies.error)} <Button type="button" onClick={copies.retry}>{t('Retry')}</Button></p>:<>{!copies.data.items.length?<p>{t('No recovery copies yet.')}</p>:<ul>{copies.data.items.map(item=><li key={item.id}><a href={'/api/backup?recovery='+item.id}>{t('Download pre-restore backup')} · {formatDateTime(item.created_at,locale)}</a></li>)}</ul>}<Button type="button" variant="outline" disabled={historyPage<=1} onClick={()=>setHistoryPage(value=>value-1)}>{t('Previous')}</Button><Button type="button" variant="outline" disabled={!copies.data.hasMore} onClick={()=>setHistoryPage(value=>value+1)}>{t('Next')}</Button></>}</div>}
-  <AlertDialog open={confirm} onOpenChange={open=>{if(!busy)setConfirm(open);}}><AlertDialogContent><AlertDialogTitle>{t('Replace account data?')}</AlertDialogTitle><AlertDialogDescription>{t('Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.')}</AlertDialogDescription><ErrorPopup message={error}/><AlertDialogFooter><AlertDialogCancel disabled={busy}>{t('Cancel')}</AlertDialogCancel><AlertDialogAction disabled={busy} onClick={async event=>{event.preventDefault();setBusy(true);setError('');try{const result=await request<{recovery_id:string}>('restore');setRecovery(result.recovery_id);setRevision(value=>value+1);setConfirm(false);showSaved();onSaved();}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}>{t(busy?'Restoring…':'Restore this backup')}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+  {historyOpen&&<div><ResourceState loading={copies.loading} error={copies.error} onRetry={copies.retry}>{!copies.data.items.length?<p>{t('No recovery copies yet.')}</p>:<ul>{copies.data.items.map(item=><li key={item.id}><a href={'/api/backup?recovery='+item.id}>{t('Download pre-restore backup')} · {formatDateTime(item.created_at,locale)}</a></li>)}</ul>}<Button type="button" variant="outline" disabled={historyPage<=1} onClick={()=>setHistoryPage(value=>value-1)}>{t('Previous')}</Button><Button type="button" variant="outline" disabled={!copies.data.hasMore} onClick={()=>setHistoryPage(value=>value+1)}>{t('Next')}</Button></ResourceState></div>}
+  <ConfirmDialog open={confirm} onClose={()=>setConfirm(false)} busy={busy} title={t('Replace account data?')} description={t('Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.')} error={error} confirmLabel={t(busy?'Restoring…':'Restore this backup')} onConfirm={async()=>{setBusy(true);setError('');try{const result=await request<{recovery_id:string}>('restore');setRecovery(result.recovery_id);setRevision(value=>value+1);setConfirm(false);showSaved();onSaved();}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}/>
  </section>;
 }

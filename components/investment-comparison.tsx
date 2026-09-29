@@ -1,5 +1,5 @@
 "use client";
-import { DatePicker } from '@/components/date-picker';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { NativeSelect } from '@/components/ui/native-select';
 import { benchmarkHistoryStart, benchmarkMethodStorageKey, readBenchmarkMethod, investmentComparisonCoverage, investmentDecisionComparison, purchaseComparisonStart, type ComparisonMethod, type BenchmarkMovement, type FundingScope } from '@/lib/investment-benchmarks';
 import { validDay } from '@/lib/benchmark-data';
@@ -13,7 +13,8 @@ import { refreshRead } from '@/lib/refresh-read';
 import { InvestmentValueChart } from '@/components/investment-value-chart';
 import { useEffect,useMemo,useState,type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChartSkeleton } from '@/components/loading-placeholder';
+import { ChartSkeleton } from '@/components/presentation-foundation/loading-placeholder';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { useLanguage } from '@/components/language-provider';
 import { formatDate,formatNumber } from '@/lib/format';
 import { categoryColor } from '@/lib/category-colors';
@@ -124,6 +125,6 @@ export function InvestmentComparison({history,today,currency,market,demo,days,po
     <BenchmarkTooltip scope={scope} marketHistory={ready} fundingDetails={decision?.details} active payload={[{payload:detailPoint}]} receipts={[]} currency={currency} series={chartSeries}/>
    </>}
   </DialogContent></Dialog>
-  {error&&<p role="alert" className="error">{t(error)} <Button variant="outline" onClick={()=>{setLoadedKey('');setError('');setRetry(n=>n+1);}}>{t('Retry')}</Button></p>}
+  {error&&<InlineError message={t(error)} onRetry={()=>{setLoadedKey('');setError('');setRetry(n=>n+1);}}/>}
  </>;
 }

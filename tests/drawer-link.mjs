@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
-const {DrawerLink}=loadTS('components/drawer-link.tsx',{'next/link':{default:'a',__esModule:true}});
+const {DrawerLink}=loadTS('components/presentation-foundation/drawer-link.tsx',{'next/link':{default:'a',__esModule:true}});
 test('Shift-click opens the drawer destination in a new tab without navigating the current tab',()=>{
  const calls=[];
  const previous=globalThis.window;

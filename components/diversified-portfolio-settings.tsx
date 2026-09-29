@@ -1,8 +1,8 @@
 "use client";
-import { CurrencySelect } from '@/components/currency-select';
+import { CurrencySelect } from '@/components/presentation-foundation/currency-select';
 import { Trash2 } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { InstrumentPicker } from '@/components/instrument-picker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

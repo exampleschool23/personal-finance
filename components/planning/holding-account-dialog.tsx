@@ -1,6 +1,7 @@
 "use client";
-import { CurrencySelect } from '@/components/currency-select';
-import { ErrorPopup } from '@/components/error-popup';
+import {FormFooter} from '@/components/presentation-foundation/form-footer';
+import { CurrencySelect } from '@/components/presentation-foundation/currency-select';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { useDiscardChanges } from '@/components/discard-changes';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -23,7 +24,7 @@ export function HoldingAccountDialog({ account, existing, currencies, save, onCl
     <CurrencySelect value={draft.currency} currencies={currencies} savedCurrency={existing?account.currency:undefined} disabled={busy} onChange={currency=>setDraft({...draft,currency})}/>
    </fieldset>
    <ErrorPopup message={error}/>
-   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy || !draft.name.trim()}>{t(busy ? 'Saving…' : 'Save account')}</Button></div>
+   <FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy || !draft.name.trim()}>{t(busy ? 'Saving…' : 'Save account')}</Button></FormFooter>
   </form>
  </DialogContent></Dialog>{guard.confirmation}</>;
 }

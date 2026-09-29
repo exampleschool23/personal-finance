@@ -2,7 +2,7 @@
 import { requiresCashAccount } from '@/lib/cash-account-required';
 import { NativeSelect } from '@/components/ui/native-select';
 import { useLanguage } from '@/components/language-provider';
-import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
+import { ExchangeRatePreview } from '@/components/presentation-foundation/exchange-rate-preview';
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
 import { formatMoney } from '@/lib/format';
 import type { Entry } from '@/lib/finance';

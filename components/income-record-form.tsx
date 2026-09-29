@@ -1,6 +1,8 @@
 "use client";
-import {ScheduleFields} from './schedule-fields';
-import { ErrorPopup } from '@/components/error-popup';
+import {ScheduleFields} from '@/components/presentation-foundation/schedule-fields';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
+import { FormFooter } from '@/components/presentation-foundation/form-footer';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
 import {frequencyLabels} from '@/lib/finance';
 import { selectTransactionCategory } from '@/lib/transaction-categories';
 import { IncomeSourcePicker } from '@/components/income-source-picker';
@@ -10,10 +12,10 @@ import { useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
-import { RecordIcon } from '@/components/record-icon';
+import { RecordIcon } from '@/components/presentation-foundation/record-icon';
 import { RecordNameInput } from '@/components/record-name-input';
-import { AmountCurrencyFields } from '@/components/amount-currency-fields';
-import { DatePicker } from '@/components/date-picker';
+import { AmountCurrencyFields } from '@/components/presentation-foundation/amount-currency-fields';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { CashAccountField } from '@/components/cash-account-field';
 import { earningSourcePaymentStatus, selectEarningSource } from '@/lib/earning-sources';
 import { depositToday } from '@/lib/deposit-interest';
@@ -89,9 +91,9 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
   {!simple&&!reusable&&(editing.kind!=='Salary'||salaryPlan)&&<ScheduleFields frequency={editing.frequency} days={editing.recurrence_days} disabled={busy} once={!salaryPlan} onChange={(frequency,recurrence_days)=>update({frequency,recurrence_days,account_id:null,end_date:frequency==='Once'?null:editing.end_date})}/>}</div>
   {editing.frequency!=='Once'&&<><label>{t('End date (optional)')}<DatePicker value={editing.end_date??''} required={false} min={editing.date} onChange={date=>update({end_date:date||null})}/></label><p className="muted">{t('{amount} {frequency} from {date}. This is a recurring plan; it does not automatically create transactions or change account balances.',{amount:formatMoney(editing.amount,editing.currency,locale),frequency:t(frequencyLabels[editing.frequency]),date:formatDate(editing.date,locale)})}</p></>}
   {!salaryPlan&&<CashAccountField entry={editing} records={planning.data.records} loading={planning.loading} error={planning.error} busy={busy} onChange={account_id=>update({account_id})}/>}
-  {planning.error&&<p className="error" role="alert">{t(planning.error)}</p>}
+  {planning.error&&<InlineError message={t(planning.error)}/>}
   <label>{t('Notes (optional)')}<textarea value={editing.notes} maxLength={2000} rows={2} onChange={event=>update({notes:event.target.value})}/></label>
   <ErrorPopup message={error}/>
-  <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={()=>setEditing(null)}>{t('Cancel')}</Button><Button className="primary" disabled={busy||missing||(!named&&(planning.loading||!!planning.error))|| (!!editing.earning_source_id&&(earningSources?.loading||!!earningSources?.error))}>{t(busy?'Saving…':salaryPlan?'Save salary plan':demo?'Save in demo':'Save income')}</Button></div>
+  <FormFooter busy={busy} onCancel={()=>setEditing(null)}><Button className="primary" disabled={busy||missing||(!named&&(planning.loading||!!planning.error))|| (!!editing.earning_source_id&&(earningSources?.loading||!!earningSources?.error))}>{t(busy?'Saving…':salaryPlan?'Save salary plan':demo?'Save in demo':'Save income')}</Button></FormFooter>
  </form>;
 }

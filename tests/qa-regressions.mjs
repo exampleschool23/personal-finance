@@ -61,7 +61,7 @@ test('income and expenses cannot be saved with a blank or zero amount',async()=>
 function numberInput(props){
  // The caret is restored after the browser paints; there is no browser here.
  globalThis.requestAnimationFrame??=()=>0;
- const {FormattedNumberInput}=loadTS('components/formatted-number-input.tsx',{
+ const {FormattedNumberInput}=loadTS('components/presentation-foundation/formatted-number-input.tsx',{
   react:{...React,useState:initial=>[typeof initial==='function'?initial():initial,()=>{}],useRef:current=>({current}),useEffect:()=>{}},
   '@/components/ui/input':{Input:'input'},
   '@/components/language-provider':{useLanguage:()=>({locale:'en-US'})},
@@ -88,7 +88,7 @@ test('tracker valuations must be typed and amounts use the required entry rule',
  // Every reset of the draft starts from a blank value again.
  assert.equal(tracker.match(/setBalanceBlank\(true\)/g).length,3);
  assert.doesNotMatch(tracker,/stroke="#/);
- assert.match(fs.readFileSync('components/amount-currency-fields.tsx','utf8'),/<FormattedNumberInput[^>]* requireEntry /);
+ assert.match(fs.readFileSync('components/presentation-foundation/amount-currency-fields.tsx','utf8'),/<FormattedNumberInput[^>]* requireEntry /);
 });
 
 test('actual transactions and payments cannot be dated in the future',()=>{

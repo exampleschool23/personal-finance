@@ -2,8 +2,8 @@
 import { Plus } from 'lucide-react';
 import { AssetDashboard } from '@/components/asset-dashboard';
 import { useLanguage } from '@/components/language-provider';
-import { WorkspaceSkeleton } from '@/components/loading-placeholder';
-import { PageHeader } from '@/components/page-header';
+import { WorkspaceSkeleton } from '@/components/presentation-foundation/loading-placeholder';
+import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { PortfolioAllocationPlan } from '@/components/portfolio-allocation-plan';
 import { Button } from '@/components/ui/button';
 import { DemoBanner, ScreenNotices } from '@/components/workspace/screen-notices';

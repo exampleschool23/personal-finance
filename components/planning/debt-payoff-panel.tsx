@@ -1,7 +1,8 @@
 "use client";
+import {ResourceState} from '@/components/presentation-foundation/resource-state';
 import {useState} from 'react';
 import {useLanguage} from '@/components/language-provider';
-import {FormattedNumberInput} from '@/components/formatted-number-input';
+import {FormattedNumberInput} from '@/components/presentation-foundation/formatted-number-input';
 import {Button} from '@/components/ui/button';
 import {NativeSelect} from '@/components/ui/native-select';
 import {useUnsavedNavigation} from '@/components/discard-changes';
@@ -13,7 +14,7 @@ import type {WorkspacePreference} from '@/lib/workspace-preferences';
 type Plan=Extract<WorkspacePreference,{key:'debt_plan'}>['data'];
 export function DebtPayoffPanel({records,currency,today,preferences}:{records:Entry[];currency:string;today:string;preferences:PreferenceResource}){
  const {t}=useLanguage();const saved=preferences.data.preferences.find(p=>p.key==='debt_plan');
- return <section className="panel tools-panel"><h2>{t('Debt payoff planner')}</h2><p className="muted">{t('Compare fixed-rate monthly scenarios. Minimum payments are planning assumptions; this does not record payments. Fees, new borrowing and rate changes are excluded.')}</p>{preferences.loading?<p>{t('Loading records…')}</p>:preferences.error?<p role="alert">{t(preferences.error)} <Button onClick={preferences.retry}>{t('Retry')}</Button></p>:<PayoffEditor key={JSON.stringify(saved)+currency} records={records} currency={currency} today={today} initial={saved?.data.currency===currency?saved.data:{currency,extra:0,method:'avalanche',payments:{}}} save={preferences.save}/>}</section>;
+ return <section className="panel tools-panel"><h2>{t('Debt payoff planner')}</h2><p className="muted">{t('Compare fixed-rate monthly scenarios. Minimum payments are planning assumptions; this does not record payments. Fees, new borrowing and rate changes are excluded.')}</p><ResourceState loading={preferences.loading} error={preferences.error} onRetry={preferences.retry}><PayoffEditor key={JSON.stringify(saved)+currency} records={records} currency={currency} today={today} initial={saved?.data.currency===currency?saved.data:{currency,extra:0,method:'avalanche',payments:{}}} save={preferences.save}/></ResourceState></section>;
 }
 function PayoffEditor({records,currency,today,initial,save}:{records:Entry[];currency:string;today:string;initial:Plan;save:PreferenceResource['save']}){
  const {t,locale}=useLanguage();const [draft,setDraft]=useState(initial),[saved,setSaved]=useState(initial),[busy,setBusy]=useState(false),[error,setError]=useState('');const guard=useUnsavedNavigation(JSON.stringify(draft)!==JSON.stringify(saved));

@@ -1,14 +1,16 @@
 "use client";
+import { FormFooter } from '@/components/presentation-foundation/form-footer';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { X } from 'lucide-react';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { DeleteCategoryDialog } from '@/components/delete-category-dialog';
 import { useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
-import { CategoryBadge } from '@/components/category-badge';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
+import { CategoryBadge } from '@/components/presentation-foundation/category-badge';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useDiscardChanges, useUnsavedNavigation } from '@/components/discard-changes';
 import { formatMoney } from '@/lib/format';
@@ -20,7 +22,7 @@ export type ToolsController={data:TransactionTools;loading:boolean;error:string;
 export function TransactionToolsPanel({categories,saveCategory,loading,error,onRetry,onDeleted}:{categories:Category[];saveCategory:(name:string,direction:Category['direction'])=>Promise<void>;loading:boolean;error:string;onRetry:()=>void;onDeleted:()=>void}){
  const {t}=useLanguage();const [deleting,setDeleting]=useState<Category|null>(null);
  return <section id="categories" className="panel tools-panel category-settings"><h2>{t('Categories')}</h2><p className="muted">{t('Add income and expense categories to use when recording transactions.')}</p>
- {error&&<p role="alert" className="error">{t(error)} <Button onClick={onRetry}>{t('Retry')}</Button></p>}
+ {error&&<InlineError message={t(error)} onRetry={onRetry}/>}
  {(['income','expense'] as const).map(direction=><CategoryGroup key={direction} direction={direction} categories={categories.filter(category=>category.direction===direction)} saveCategory={saveCategory} disabled={loading||!!error} onDelete={setDeleting}/>)}
  {deleting&&<DeleteCategoryDialog key={deleting.id} category={deleting} categories={categories} onClose={()=>setDeleting(null)} onDeleted={onDeleted}/>}
  </section>;
@@ -43,5 +45,5 @@ export function SplitTransactionDialog({record,tools,categories,onClose}:{record
  const valid=parts.length===0||(parts.length>=2&&parts.every(part=>part.category_id&&part.amount>0)&&decimalTotalEquals(parts.map(part=>part.amount),record.amount));
  return <><Dialog open onOpenChange={open=>{if(!open)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t('Split transaction')}</DialogTitle><DialogDescription>{t('Allocate the existing transaction across categories. Its total and account balance do not change.')}</DialogDescription><p>{record.name} · {formatMoney(record.amount,record.currency,locale)}</p><form className="record-form" onSubmit={async event=>{event.preventDefault();if(!valid)return;setBusy(true);setError('');try{await tools.save('split',{record_id:record.id,splits:parts});onClose();}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}>
  <fieldset disabled={busy} className="tracker-fields">{parts.map((part,index)=><div className="inline-tool-form" key={index}><label>{t('Category')}<NativeSelect required value={part.category_id} onChange={event=>setParts(parts.map((item,i)=>i===index?{...item,category_id:event.target.value}:item))}><option value="">{t('Select category')}</option>{categories.filter(category=>category.direction===(income.includes(record.kind)?'income':'expense')).map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</NativeSelect></label><label>{t('Amount')}<FormattedNumberInput value={part.amount} max={1e15} onValueChange={amount=>setParts(parts.map((item,i)=>i===index?{...item,amount}:item))}/></label><Button type="button" variant="ghost" onClick={()=>setParts(parts.filter((_,i)=>i!==index))}>{t('Remove')}</Button></div>)}<Button type="button" variant="outline" disabled={parts.length>=50} onClick={()=>setParts([...parts,{category_id:'',amount:0}])}>{t('Add split')}</Button><Button type="button" variant="ghost" onClick={()=>setParts([])}>{t('Clear split')}</Button></fieldset>
- {!valid&&<p role="status">{t('Use at least two categories and make the amounts equal the transaction total.')}</p>}{!categories.length&&<p>{t('Add income or expense categories in Settings first.')}</p>}<ErrorPopup message={error}/><div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||!valid||!!tools.error||tools.loading}>{t(busy?'Saving…':'Save split')}</Button></div></form></DialogContent></Dialog>{guard.confirmation}</>;
+ {!valid&&<p role="status">{t('Use at least two categories and make the amounts equal the transaction total.')}</p>}{!categories.length&&<p>{t('Add income or expense categories in Settings first.')}</p>}<ErrorPopup message={error}/><FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy||!valid||!!tools.error||tools.loading}>{t(busy?'Saving…':'Save split')}</Button></FormFooter></form></DialogContent></Dialog>{guard.confirmation}</>;
 }

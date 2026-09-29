@@ -1,15 +1,17 @@
 "use client";
 
 import { useId, useState } from 'react';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
+import { ResourceState } from '@/components/presentation-foundation/resource-state';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { ChevronDown, History, Plus, SlidersHorizontal } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DatePicker } from '@/components/date-picker';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useUnsavedNavigation } from '@/components/discard-changes';
 import { formatMoney, formatDate } from '@/lib/format';
 import { income } from '@/lib/finance';
@@ -70,8 +72,8 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
     {activeSavings.length > 0 && <Button type="button" variant="outline" disabled={busy || demo} aria-expanded={activityOpen} aria-controls={`${activityId}-form`} onClick={() => setActivityOpen(open => !open)}><Plus size={16} aria-hidden="true"/>{t('Record goal activity')}</Button>}
    </header>
    {demo && <p className="muted">{t('Sign in to record cash goal activity.')}</p>}
-   {activeSavings.length > 0 && <div id={`${activityId}-form`} hidden={!activityOpen}>{activityOpen&&incomeHistory.loading?<p role="status">{t('Loading records…')}</p>:activityOpen&&incomeHistory.error?<p role="alert">{t(incomeHistory.error)} <Button onClick={incomeHistory.retry}>{t('Retry')}</Button></p>:<GoalActivityForm data={demo||!activityOpen?data:{...data,records:incomeHistory.data.records}} goals={activeSavings} today={today} busy={busy || demo} save={save}/>}</div>}
-   {activity.error ? <div className="goal-funding-notice" role="alert"><p>{t('Goal activity could not be loaded. Please try again.')}</p><Button type="button" variant="outline" onClick={activity.retry}>{t('Retry')}</Button></div>
+   {activeSavings.length > 0 && <div id={`${activityId}-form`} hidden={!activityOpen}><ResourceState loading={activityOpen&&incomeHistory.loading} error={activityOpen?incomeHistory.error:null} onRetry={incomeHistory.retry}><GoalActivityForm data={demo||!activityOpen?data:{...data,records:incomeHistory.data.records}} goals={activeSavings} today={today} busy={busy || demo} save={save}/></ResourceState></div>}
+   {activity.error ? <InlineError as="div" className="goal-funding-notice" message={<p>{t('Goal activity could not be loaded. Please try again.')}</p>} onRetry={activity.retry}/>
     : activity.loading ? <p role="status">{t('Loading goal activity…')}</p>
     : events.length > 0 ? <ul className="tool-list goal-activity-list">{events.map(event => {
       const goal = savingsGoals.find(item => item.id === event.goal_id);

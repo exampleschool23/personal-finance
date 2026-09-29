@@ -1,13 +1,15 @@
 "use client";
+import {FormFooter} from '@/components/presentation-foundation/form-footer';
+import {ResourceState} from '@/components/presentation-foundation/resource-state';
 import { showSaved } from '@/lib/feedback';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import {useState} from 'react';
 import {useLanguage} from '@/components/language-provider';
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
 import {Button} from '@/components/ui/button';
 import {NativeSelect} from '@/components/ui/native-select';
-import {DatePicker} from '@/components/date-picker';
-import {FormattedNumberInput} from '@/components/formatted-number-input';
+import {DatePicker} from '@/components/presentation-foundation/date-picker';
+import {FormattedNumberInput} from '@/components/presentation-foundation/formatted-number-input';
 import {useDiscardChanges} from '@/components/discard-changes';
 import {useOwnerResource} from '@/hooks/use-owner-resource';
 import {depositToday} from '@/lib/deposit-interest';
@@ -30,7 +32,7 @@ export function CorporateEventDialog({record,records,accounts,owner,onSaved,onCl
  {draft.kind!=='split'&&<label>{t(draft.kind==='dividend'?'Cash account':'Destination holding')}<NativeSelect required value={draft.target_id??''} onChange={e=>{const r=targets.find(r=>r.id===e.target.value);setDraft({...draft,target_id:r?.id??null,target_revision:r?.revision??null});}}><option value="">{t('Select account')}</option>{targets.map(r=><option key={r.id} value={r.id}>{r.name} · {r.currency} · {r.holding_account_id?accounts.find(a=>a.id===r.holding_account_id)?.name??t('Investment account'):t('Cash')}</option>)}</NativeSelect></label>}
  {draft.kind==='dividend'?<><label>{t('Gross dividend')}<FormattedNumberInput value={draft.gross} onValueChange={gross=>setDraft({...draft,gross})}/></label><label>{t('Withholding tax')}<FormattedNumberInput required={false} value={draft.withholding} onValueChange={withholding=>setDraft({...draft,withholding})}/></label><label>{t('Amount reinvested')}<FormattedNumberInput required={false} value={draft.reinvest_amount} onValueChange={reinvest_amount=>setDraft({...draft,reinvest_amount,quantity:reinvest_amount===0?0:draft.quantity})}/></label>{draft.reinvest_amount>0&&<label>{t('Shares received')}<FormattedNumberInput value={draft.quantity} max={1e12} onValueChange={quantity=>setDraft({...draft,quantity})}/></label>}<p>{t('Cash remaining')}: {formatMoney(draft.gross-draft.withholding-draft.reinvest_amount,record.currency,locale)}</p></>:draft.kind==='split'?<><label>{t('New shares in ratio')}<FormattedNumberInput value={draft.numerator} onValueChange={numerator=>setDraft({...draft,numerator})}/></label><label>{t('Old shares in ratio')}<FormattedNumberInput value={draft.denominator} onValueChange={denominator=>setDraft({...draft,denominator})}/></label>{draft.denominator>0&&<p>{t('Resulting quantity')}: {formatNumber(record.quantity*draft.numerator/draft.denominator,locale,8)}</p>}<p className="muted">{t('Total purchase cost and recorded value stay unchanged. Fractional shares are preserved.')}</p></>:<label>{t('Quantity transferred')}<FormattedNumberInput value={draft.quantity} max={record.quantity} onValueChange={quantity=>setDraft({...draft,quantity})}/></label>}
  <label>{t('Event date')}<DatePicker value={draft.date} max={today} onChange={date=>setDraft({...draft,date})}/></label><label>{t('Notes (optional)')}<textarea maxLength={2000} value={draft.notes} onChange={e=>setDraft({...draft,notes:e.target.value})}/></label></fieldset>
- <ErrorPopup message={error}/><div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||!valid||!owner}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></div></form>
- <details><summary>{t('Recent investment events')}</summary>{history.loading?<p>{t('Loading records…')}</p>:history.error?<p role="alert">{t(history.error)}</p>:<ul>{history.data.map(e=><li key={e.id}>{formatDate(e.occurred_on,locale)} · {t(e.kind==='dividend'?'Dividend':e.kind==='split'?'Stock split':'Security transfer')}{e.kind==='dividend'&&<> · {t('Gross dividend')}: {formatMoney(Number(e.result.gross),record.currency,locale)} · {t('Withholding tax')}: {formatMoney(Number(e.result.withholding),record.currency,locale)}</>}</li>)}</ul>}</details>
+ <ErrorPopup message={error}/><FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy||!valid||!owner}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></FormFooter></form>
+ <details><summary>{t('Recent investment events')}</summary><ResourceState loading={history.loading} error={history.error}><ul>{history.data.map(e=><li key={e.id}>{formatDate(e.occurred_on,locale)} · {t(e.kind==='dividend'?'Dividend':e.kind==='split'?'Stock split':'Security transfer')}{e.kind==='dividend'&&<> · {t('Gross dividend')}: {formatMoney(Number(e.result.gross),record.currency,locale)} · {t('Withholding tax')}: {formatMoney(Number(e.result.withholding),record.currency,locale)}</>}</li>)}</ul></ResourceState></details>
  </DialogContent></Dialog>{guard.confirmation}</>;
 }

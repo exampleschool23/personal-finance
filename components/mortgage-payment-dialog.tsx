@@ -1,7 +1,8 @@
 "use client";
+import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
-import { ErrorPopup } from '@/components/error-popup';
-import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
+import { ExchangeRatePreview } from '@/components/presentation-foundation/exchange-rate-preview';
 import { NativeSelect } from '@/components/ui/native-select';
 import { depositToday } from '@/lib/deposit-interest';
 import { useDiscardChanges } from '@/components/discard-changes';
@@ -9,8 +10,8 @@ import { useEffect, useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/date-picker';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { formatMoney } from '@/lib/format';
 import type { Entry } from '@/lib/finance';
 export type MortgagePayment = { id: string; mortgage_id: string; principal: number; interest: number; date: string; notes: string; account_id?:string;exchange_rate?:number };
@@ -49,7 +50,7 @@ export function MortgagePaymentDialog({ mortgage, accounts = [], onClose, onSave
    <div className="ownership-summary"><p>{t('Total payment: {amount}', { amount: money(payment.principal + payment.interest) })}</p><p>{t('Remaining balance: {amount}', { amount: money(mortgage.amount - payment.principal) })}</p></div>
    <p className="muted">{t('Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.')}</p>
    <ErrorPopup message={error} detail="Retry the same payment to avoid duplicates."/>
-   <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy || !valid} type="button" onClick={()=>void submit()}>{t(busy ? 'Saving…' : 'Save payment')}</Button></div>
+   <FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy || !valid} type="button" onClick={()=>void submit()}>{t(busy ? 'Saving…' : 'Save payment')}</Button></FormFooter>
   </div>;
  if(inline)return <>{content}{guard.confirmation}</>;
  return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}>

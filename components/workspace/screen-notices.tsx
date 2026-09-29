@@ -1,7 +1,7 @@
 "use client";
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { useLanguage } from '@/components/language-provider';
-import { Button } from '@/components/ui/button';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { marketEntry } from '@/lib/market';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
@@ -19,7 +19,7 @@ export function ScreenNotices({ planErrors = true }: { planErrors?: boolean }) {
  return <>
   {(demo ? rows : summary).some(r => marketEntry(r, currency, market) === null) && <p className="muted">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
   {marketError && <p role="status" className="muted">{t(marketError)}</p>}
-  {planErrors && expensePlans.error && <p role="alert" className="error">{t(expensePlans.error)} <Button variant="outline" onClick={refreshRecords}>{t('Retry')}</Button></p>}
+  {planErrors && expensePlans.error && <InlineError message={t(expensePlans.error)} onRetry={refreshRecords}/>}
   {budget.missingCurrencies.length > 0 && <p className="muted">{t('Some expense plans could not be converted and are excluded from the forecast.')}</p>}
   <ErrorPopup message={error}/>
  </>;
@@ -29,12 +29,12 @@ export function ScreenNotices({ planErrors = true }: { planErrors?: boolean }) {
 export function PlanningError() {
  const { t } = useLanguage();
  const { planning, refreshRecords } = useWorkspace();
- return planning.error ? <div className="error" role="alert">{t(planning.error)} <Button onClick={refreshRecords}>{t('Retry')}</Button></div> : null;
+ return planning.error ? <InlineError as="div" message={t(planning.error)} onRetry={refreshRecords}/> : null;
 }
 
 /** Estimates on this screen depend on tools that failed to load. */
 export function ToolsUnavailable() {
  const { t } = useLanguage();
  const { refreshRecords } = useWorkspace();
- return <div className="content"><p className="error" role="alert">{t('Daily finance tools could not load. Refresh before relying on their estimates.')} <Button onClick={refreshRecords}>{t('Retry')}</Button></p></div>;
+ return <div className="content"><InlineError message={t('Daily finance tools could not load. Refresh before relying on their estimates.')} onRetry={refreshRecords}/></div>;
 }

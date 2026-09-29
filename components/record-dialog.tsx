@@ -1,17 +1,18 @@
 "use client";
-import {ScheduleFields} from './schedule-fields';
-import { ErrorPopup } from '@/components/error-popup';
+import { FormFooter } from '@/components/presentation-foundation/form-footer';
+import {ScheduleFields} from '@/components/presentation-foundation/schedule-fields';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import {frequencyLabels} from '@/lib/finance';
 import { RecordEditHistory } from '@/components/record-edit-history';
 import { CashInvestmentOption } from '@/components/cash-investment-option';
 import { selectTransactionCategory } from '@/lib/transaction-categories';
 import { InvestmentTracker } from '@/components/investment-tracker';
 import { MortgagePaymentDialog, type MortgagePayment } from '@/components/mortgage-payment-dialog';
-import { AmountCurrencyFields } from '@/components/amount-currency-fields';
+import { AmountCurrencyFields } from '@/components/presentation-foundation/amount-currency-fields';
 import { IncomeRecordForm } from '@/components/income-record-form';
 import Link from 'next/link';
-import { CurrencySelect } from '@/components/currency-select';
-import { CurrencyValue } from '@/components/currency-value';
+import { CurrencySelect } from '@/components/presentation-foundation/currency-select';
+import { CurrencyValue } from '@/components/presentation-foundation/currency-value';
 import { useDiscardChanges } from '@/components/discard-changes';
 import { useState } from 'react';
 import type { Dispatch,SetStateAction,FormEvent } from 'react';
@@ -22,10 +23,10 @@ import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { InstrumentPicker } from '@/components/instrument-picker';
-import { RecordIcon } from '@/components/record-icon';
+import { RecordIcon } from '@/components/presentation-foundation/record-icon';
 import { RecordNameInput } from '@/components/record-name-input';
-import { DatePicker } from '@/components/date-picker';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney, formatDate as sharedFormatDate } from '@/lib/format';
 import { instrumentFor } from '@/lib/market';
@@ -98,6 +99,6 @@ function ExpenseRecordForm({onDebtSaved,onMortgageSave,onMortgageDone,onPaymentD
    </div></section>}
    {editing.frequency!=='Once'&&<p className="muted">{t('{amount} {frequency} from {date}. This is a recurring plan; it does not automatically create transactions or change account balances.',{amount:formatMoney(editing.amount,editing.currency,locale),frequency:t(frequencyLabels[editing.frequency]),date:sharedFormatDate(editing.date,locale)})}</p>}
   </TabsContent></Tabs>
-  {!(mode==='debt'&&selectedDebt&&((selectedDebt.kind==='Mortgage'&&onMortgageSave)||(!demo&&selectedDebt.kind!=='Mortgage')))&&<div className="expense-form-actions"><ErrorPopup message={error}/><div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={()=>setEditing(null)}>{t('Cancel')}</Button>{mode!=='debt'&&<Button className="primary" disabled={busy||(mode==='plan'&&(!linkedExpensePlan||expensePlans.loading||!!expensePlans.error))}>{t(busy?'Saving…':demo?'Save in demo':'Save expense')}</Button>}</div></div>}
+  {!(mode==='debt'&&selectedDebt&&((selectedDebt.kind==='Mortgage'&&onMortgageSave)||(!demo&&selectedDebt.kind!=='Mortgage')))&&<div className="expense-form-actions"><ErrorPopup message={error}/><FormFooter busy={busy} onCancel={()=>setEditing(null)}>{mode!=='debt'&&<Button className="primary" disabled={busy||(mode==='plan'&&(!linkedExpensePlan||expensePlans.loading||!!expensePlans.error))}>{t(busy?'Saving…':demo?'Save in demo':'Save expense')}</Button>}</FormFooter></div>}
  </form>;
 }

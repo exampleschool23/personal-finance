@@ -1,7 +1,7 @@
 "use client";
 import { useLanguage } from '@/components/language-provider';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
-import { CurrencySelect } from '@/components/currency-select';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
+import { CurrencySelect } from '@/components/presentation-foundation/currency-select';
 
 type Props={amount:number;currency:string;currencies:string[];savedCurrency?:string;disabled?:boolean;label?:string;amountPlaceholder?:string;currencyLocked?:boolean;onAmountChange:(amount:number)=>void;onCurrencyChange:(currency:string)=>void};
 

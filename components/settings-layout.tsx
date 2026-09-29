@@ -2,7 +2,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { UserRound, ChartNoAxesColumnIncreasing, ShieldCheck, Tags, Database } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const sections = [

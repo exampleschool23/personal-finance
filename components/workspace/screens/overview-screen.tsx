@@ -1,7 +1,7 @@
 "use client";
 import { MonthlyReview } from '@/components/financial-review';
 import { useLanguage } from '@/components/language-provider';
-import { WorkspaceSkeleton } from '@/components/loading-placeholder';
+import { WorkspaceSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { OverviewHeading, OverviewSummary } from '@/components/overview-page';
 import { PortfolioOverview } from '@/components/portfolio-overview';
 import { DemoBanner, ScreenNotices, ToolsUnavailable } from '@/components/workspace/screen-notices';

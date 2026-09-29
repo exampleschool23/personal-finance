@@ -1,10 +1,10 @@
 "use client";
 import type { CSSProperties, ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { AssetIcon } from '@/components/asset-icon';
-import { CategoryBadge } from '@/components/category-badge';
+import { AssetIcon } from '@/components/presentation-foundation/asset-icon';
+import { CategoryBadge } from '@/components/presentation-foundation/category-badge';
 import { useLanguage } from '@/components/language-provider';
-import type { StatTone } from '@/components/stat-tile';
+import type { StatTone } from '@/components/presentation-foundation/stat-tile';
 import { toggleAssetDetailsRow } from '@/lib/asset-details';
 import { categoryColor } from '@/lib/category-colors';
 import { formatNumber } from '@/lib/format';

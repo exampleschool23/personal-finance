@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
-import { AlertDialog, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { useLanguage } from '@/components/language-provider';
 export function useDiscardChanges(dirty:boolean,onClose:()=>void,busy=false){
  const [pending,setPending]=useState<(()=>void)|null>(null);
@@ -10,7 +10,7 @@ export function useDiscardChanges(dirty:boolean,onClose:()=>void,busy=false){
  return {close:()=>request(onClose),request,confirmation:<DiscardChanges open={!!pending} setOpen={open=>{if(!open)setPending(null);}} discard={()=>{approved.current=true;pending?.();setPending(null);}}/>};
 }
 function DiscardChanges({open,setOpen,discard}:{open:boolean;setOpen:(open:boolean)=>void;discard:()=>void}){
- const {t}=useLanguage();return <AlertDialog open={open} onOpenChange={setOpen}><AlertDialogContent><AlertDialogTitle>{t('Discard unsaved changes?')}</AlertDialogTitle><AlertDialogDescription>{t('Your changes have not been saved. Keep editing to finish them.')}</AlertDialogDescription><AlertDialogFooter><AlertDialogCancel>{t('Keep editing')}</AlertDialogCancel><AlertDialogAction onClick={discard}>{t('Discard changes')}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>;
+ const {t}=useLanguage();return <ConfirmDialog open={open} onClose={()=>setOpen(false)} title={t('Discard unsaved changes?')} description={t('Your changes have not been saved. Keep editing to finish them.')} cancelLabel={t('Keep editing')} confirmLabel={t('Discard changes')} onConfirm={discard}/>;
 }
 export function useDraftDialog(value:{id:string}|null,onClose:()=>void,busy=false){
  const key=value?.id??'';const serialized=JSON.stringify(value);

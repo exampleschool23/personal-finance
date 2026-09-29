@@ -1,6 +1,6 @@
 "use client";
 import { showSaved } from '@/lib/feedback';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { BackupRestore } from '@/components/backup-restore';
 import type { MarketData } from '@/lib/market';
 import { FinancialReportExport } from '@/components/financial-report-export';

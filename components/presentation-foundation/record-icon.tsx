@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { BriefcaseBusiness, BadgeDollarSign, BanknoteArrowDown, BanknoteArrowUp, CirclePlus, CreditCard, HandHeart, House, HousePlus, KeyRound, ReceiptText, ShoppingBasket, type LucideIcon } from 'lucide-react';
-import { AssetIcon } from '@/components/asset-icon';
+import { AssetIcon } from '@/components/presentation-foundation/asset-icon';
 import { categoryHue } from '@/lib/category-colors';
 import type { Entry, Kind } from '@/lib/finance';
 

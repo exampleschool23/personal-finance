@@ -1,6 +1,7 @@
 "use client";
-import { ExchangeRatePreview } from '@/components/exchange-rate-preview';
-import { ErrorPopup } from '@/components/error-popup';
+import {FormFooter} from '@/components/presentation-foundation/form-footer';
+import { ExchangeRatePreview } from '@/components/presentation-foundation/exchange-rate-preview';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
 import { useDiscardChanges } from '@/components/discard-changes';
 import { useState } from 'react';
@@ -8,8 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Dialog,DialogContent,DialogTitle,DialogDescription } from '@/components/ui/dialog';
-import { DatePicker } from '@/components/date-picker';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney,formatNumber } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
@@ -51,6 +52,6 @@ export function AccountOperation({operation,records,save,onClose}:{operation:Ope
  {convertedPayment&&<><ExchangeRatePreview fx={fx}/>{fx.rate&&account&&<p className="muted">{t('Account amount')}: {formatMoney((operation.action==='occurrence'?draft.amount:draft.amount+draft.fee)/fx.rate,account.currency,locale)}</p>}</>}
  {operation.action==='reconcile'&&<p className="muted">{t('This records a balance correction today. It is not income or spending.')}</p>}
  <ErrorPopup message={error}/>
- <div className="record-form-footer"><Button type="button" variant="outline" disabled={busy} onClick={guard.close}>{t('Cancel')}</Button><Button disabled={busy||!draft.account_id||(['occurrence','transfer','repayment'].includes(operation.action)&&draft.amount<=0)||(operation.action==='mortgage'&&draft.amount+draft.fee<=0)||(operation.action==='reconcile'&&balanceBlank)||(convertedPayment&&!fx.rate)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></div>
+ <FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy||!draft.account_id||(['occurrence','transfer','repayment'].includes(operation.action)&&draft.amount<=0)||(operation.action==='mortgage'&&draft.amount+draft.fee<=0)||(operation.action==='reconcile'&&balanceBlank)||(convertedPayment&&!fx.rate)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></FormFooter>
  </form></DialogContent></Dialog>{guard.confirmation}</>;
 }

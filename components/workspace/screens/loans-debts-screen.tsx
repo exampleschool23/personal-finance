@@ -2,8 +2,8 @@
 import { Plus } from 'lucide-react';
 import { DebtSummary } from '@/components/debt-summary';
 import { useLanguage } from '@/components/language-provider';
-import { WorkspaceSkeleton } from '@/components/loading-placeholder';
-import { PageHeader } from '@/components/page-header';
+import { WorkspaceSkeleton } from '@/components/presentation-foundation/loading-placeholder';
+import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { DebtPayoffPanel } from '@/components/planning/debt-payoff-panel';
 import { Button } from '@/components/ui/button';
 import { depositToday } from '@/lib/deposit-interest';

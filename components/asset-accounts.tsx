@@ -1,9 +1,11 @@
 "use client";
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { AssetCard } from '@/components/asset-card';
+import { AssetCard } from '@/components/presentation-foundation/asset-card';
 import { Button } from '@/components/ui/button';
-import { LoadingPlaceholder } from '@/components/loading-placeholder';
+import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
+import { Count } from '@/components/presentation-foundation/count';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { useLanguage } from '@/components/language-provider';
 import { holdingAccountLabel, holdingAccountValue, type HoldingAccount } from '@/lib/holding-accounts';
 import { formatMoney, formatNumber } from '@/lib/format';
@@ -16,8 +18,8 @@ export function AssetAccounts({accounts,records,market,loading,error,onRetry,onA
 }) {
  const {t,locale}=useLanguage();
  return <section className="asset-account-section">
-  <div className="asset-holdings-heading"><h2>{t('Accounts')}<span className="count">{formatNumber(accounts.length+accountCount,locale,0)}</span></h2><Link href="/accounts">{t('Manage accounts')}</Link></div>
-  {error ? <p role="alert" className="error">{t(error)} <Button variant="outline" onClick={onRetry}>{t('Retry')}</Button></p> : loading ? <LoadingPlaceholder label={t('Loading records…')}/> : !accounts.length&&!accountCount ? <p className="muted">{t('No accounts yet.')}</p> : <div className="asset-card-grid">{children}{accounts.map(account=>{
+  <div className="asset-holdings-heading"><h2>{t('Accounts')}<Count value={accounts.length+accountCount}/></h2><Link href="/accounts">{t('Manage accounts')}</Link></div>
+  {error ? <InlineError message={t(error)} onRetry={onRetry}/> : loading ? <LoadingPlaceholder label={t('Loading records…')}/> : !accounts.length&&!accountCount ? <p className="muted">{t('No accounts yet.')}</p> : <div className="asset-card-grid">{children}{accounts.map(account=>{
    const {holdings,total}=holdingAccountValue(account,records,market);
    const converted=total===null?null:convertAmount(total,account.currency,currency,market?.rates??market?.fx?.rate);
    const share=converted!==null&&portfolioTotal>0?converted/portfolioTotal*100:null;

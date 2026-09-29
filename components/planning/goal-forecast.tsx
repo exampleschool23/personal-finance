@@ -1,15 +1,16 @@
 "use client";
 import { useUnsavedNavigation } from '@/components/discard-changes';
-import { ErrorPopup } from '@/components/error-popup';
+import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useId, useMemo, useState, type CSSProperties } from 'react';
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from 'recharts';
 import { ArrowUpRight, Check, ChevronDown, CircleHelp, RotateCcw, Save, SlidersHorizontal, Target, TrendingUp, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
+import { Segmented } from '@/components/presentation-foundation/segmented';
 import { useLanguage } from '@/components/language-provider';
-import { formatDate, formatMoney, formatMonthYear, formatNumber } from '@/lib/format';
+import { formatDate, formatMoney, formatMonthYear, formatNumber, formatPercent } from '@/lib/format';
 import { projectGoal } from '@/lib/goal-projection';
 import type { Goal } from '@/lib/planning';
 import { snapshotPoints, type PortfolioSnapshot } from '@/lib/portfolio-snapshots';
@@ -36,7 +37,6 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
   ? projectGoal(starting, goal.target, today, goal.target_date, contribution, rate) : null,
  [starting, contribution, goal.target, goal.target_date, today, rate]);
  const money = (n: number) => formatMoney(n, currency, locale);
- const percent = (n: number) => `${formatNumber(n, locale, 2)}%`;
  const history = useMemo(() => goal.kind === 'net_worth'
   ? snapshotPoints(snapshots, currency).filter(point => point.date < today).map(point => ({ date: point.date, actual: point.net })) : [],
  [goal.kind, snapshots, currency, today]);
@@ -85,8 +85,8 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
 
      <div className="goal-control">
       <label className="goal-input-label">{t('Assumed annual return')}<span className="goal-amount-input"><FormattedNumberInput value={rate} max={100} required={false} onValueChange={setRate} /><span>%</span></span></label>
-      <input className="goal-range" type="range" min={0} max={100} step={0.5} value={rate} style={rangeStyle(rate, 100)} aria-label={t('Assumed annual return')} aria-valuetext={percent(rate)} onChange={event => setRate(Number(event.target.value))} />
-      <div className="goal-rate-presets" role="group" aria-label={t('Return presets')}>{[0, 5, 8, 12].map(preset => <button type="button" key={preset} aria-pressed={rate === preset} onClick={() => setRate(preset)}>{percent(preset)}</button>)}</div>
+      <input className="goal-range" type="range" min={0} max={100} step={0.5} value={rate} style={rangeStyle(rate, 100)} aria-label={t('Assumed annual return')} aria-valuetext={formatPercent(rate, locale, 2)} onChange={event => setRate(Number(event.target.value))} />
+      <div className="goal-rate-presets" role="group" aria-label={t('Return presets')}>{[0, 5, 8, 12].map(preset => <button type="button" key={preset} aria-pressed={rate === preset} onClick={() => setRate(preset)}>{formatPercent(preset, locale, 2)}</button>)}</div>
       <p className="goal-help">{t('Applies to new monthly investments. Returns are assumptions, not guarantees.')}</p>
      </div>
     </fieldset>
@@ -107,7 +107,7 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
      <div className="goal-summary-stats">
       <div><span>{t(goal.kind === 'net_worth' ? 'Current net worth' : 'Allocated amount')}</span><strong>{starting === null ? '—' : money(starting)}</strong></div>
       <div><span>{t('Monthly contribution needed')}</span><strong>{requiredContribution === null ? '—' : money(requiredContribution)}</strong></div>
-      <div><span>{t('Assumed annual return')}</span><strong>{percent(rate)}</strong></div>
+      <div><span>{t('Assumed annual return')}</span><strong>{formatPercent(rate, locale, 2)}</strong></div>
      </div>
 
      <div className={`goal-insight ${overBudget > 0 || !reached ? 'goal-insight-attention' : ''}`} role="status">
@@ -126,7 +126,7 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
   </div>
 
   {result && <section className="goal-chart-section" aria-labelledby={`${id}-chart-title`}>
-   <div className="goal-chart-heading"><h3 id={`${id}-chart-title`}>{t('Your path to the goal')}</h3><div className="goal-view-switch" role="group" aria-label={t('Projection view')}><button type="button" aria-pressed={view === 'chart'} onClick={() => setView('chart')}>{t('Chart')}</button><button type="button" aria-pressed={view === 'table'} onClick={() => setView('table')}>{t('Monthly milestones')}</button></div></div>
+   <div className="goal-chart-heading"><h3 id={`${id}-chart-title`}>{t('Your path to the goal')}</h3><Segmented label={t('Projection view')} options={[{ value: 'chart', label: t('Chart') }, { value: 'table', label: t('Monthly milestones') }]} value={view} onChange={setView}/></div>
    {compact&&<p className="goal-help">{t('Tap the chart for exact amounts, or open Monthly milestones.')}</p>}{view === 'chart' ? <>
     <div className="comparison-legend goal-chart-legend">{lines.map(line => <button key={line.key} type="button" aria-pressed={!hidden.includes(line.key)} onClick={() => setHidden(previous => previous.includes(line.key) ? previous.filter(key => key !== line.key) : [...previous, line.key])}><svg width="24" height="12" viewBox="0 0 24 12" aria-hidden="true">{line.key === 'actual' ? <circle cx="12" cy="6" r="4" fill={line.color} /> : <line x1="0" y1="6" x2="24" y2="6" stroke={line.color} strokeWidth="2" strokeDasharray={line.dash} />}</svg>{t(line.label)}</button>)}</div>
     {goal.kind === 'net_worth' && <p className="goal-help">{t('Actual net worth today: {amount}. Actual values stop at today; future values are forecasts.', { amount: starting === null ? '—' : money(starting) })}</p>}

@@ -1,6 +1,6 @@
 "use client";
 import { useLanguage } from '@/components/language-provider';
-import { LoadingPlaceholder } from '@/components/loading-placeholder';
+import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { UpcomingPage } from '@/components/planning/upcoming-page';
 import { ReminderPanel } from '@/components/reminder-panel';
 import { PlanningError, ToolsUnavailable } from '@/components/workspace/screen-notices';

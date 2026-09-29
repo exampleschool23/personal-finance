@@ -4,7 +4,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
 import { InstrumentPicker } from '@/components/instrument-picker';
-import { FormattedNumberInput } from '@/components/formatted-number-input';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
 import { formatNumber } from '@/lib/format';
 import { instrumentFor } from '@/lib/market';

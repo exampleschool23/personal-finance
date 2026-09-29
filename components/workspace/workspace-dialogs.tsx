@@ -1,5 +1,5 @@
 "use client";
-import { ErrorPopup } from '@/components/error-popup';
+import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { IncomeSourceEditor } from '@/components/income-sources-panel';
 import { InvestmentTracker } from '@/components/investment-tracker';
 import { useLanguage } from '@/components/language-provider';
@@ -8,7 +8,6 @@ import { RecordDialog } from '@/components/record-dialog';
 import { StopScheduleDialog } from '@/components/stop-schedule-dialog';
 import { TransactionDetailsDialog } from '@/components/transaction-details-dialog';
 import { SplitTransactionDialog } from '@/components/transaction-tools-panel';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { income } from '@/lib/finance';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
@@ -26,7 +25,7 @@ export function WorkspaceDialogs() {
  {debtPayment&&<InvestmentTracker key={debtPayment.id} initialType="withdrawal" record={debtPayment} accounts={planning.data.records} accountsReady={!planning.loading&&!planning.refreshing&&!planning.error} onClose={()=>setDebtPayment(null)} onSaved={refreshRecords} onPayment={()=>{}}/>}
  {tracking && <InvestmentTracker key={tracking.id} record={tracking} accounts={planning.data.records} accountsReady={!planning.loading&&!planning.refreshing&&!planning.error} onClose={() => setTracking(null)} onSaved={refreshRecords} onPayment={() => { setPayingMortgage(storedRecord(tracking)); setTracking(null); }}/>}
  {payingMortgage && <MortgagePaymentDialog key={payingMortgage.id} mortgage={payingMortgage} accounts={planning.data.records} onClose={() => setPayingMortgage(null)} onSave={recordMortgagePayment}/>}
- <AlertDialog open={!!deleting} onOpenChange={o => { if (!o && !busy) closeDeleting(); }}><AlertDialogContent><AlertDialogTitle>{t("Delete this record?")}</AlertDialogTitle><AlertDialogDescription>{t('Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.',{name:deleting?.name||''})}{deleting?.frequency!=='Once'&&<span className="block">{t('To keep past planning and only end future repeats, choose Stop instead.')}</span>}</AlertDialogDescription><ErrorPopup message={error}/><AlertDialogFooter><AlertDialogCancel disabled={busy}>{t("Keep record")}</AlertDialogCancel><AlertDialogAction disabled={busy} onClick={e => { e.preventDefault(); void remove(); }}>{t("Delete record")}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+ <ConfirmDialog open={!!deleting} onClose={closeDeleting} busy={busy} error={error} title={t("Delete this record?")} description={<>{t('Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.',{name:deleting?.name||''})}{deleting?.frequency!=='Once'&&<span className="block">{t('To keep past planning and only end future repeats, choose Stop instead.')}</span>}</>} cancelLabel={t("Keep record")} confirmLabel={t("Delete record")} onConfirm={() => void remove()}/>
  {stopping&&<StopScheduleDialog name={stopping.name} start={stopping.date} onSave={stopRecord} onClose={()=>setStopping(null)}/>}
  </>;
 }

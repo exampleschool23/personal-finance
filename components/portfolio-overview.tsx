@@ -1,4 +1,6 @@
 "use client";
+import { InlineError } from '@/components/presentation-foundation/inline-error';
+import { Segmented } from '@/components/presentation-foundation/segmented';
 import type { BenchmarkMovement } from '@/lib/investment-benchmarks';
 import { demoHistory } from '@/lib/demo-finance';
 import { InvestmentPeriodSummary } from '@/components/investment-period-summary';
@@ -6,16 +8,15 @@ import { InvestmentComparison } from '@/components/investment-comparison';
 import { investmentValueChange } from '@/lib/investment-portfolio';
 import { shiftDay } from '@/lib/benchmark-data';
 import { refreshRead } from '@/lib/refresh-read';
-import { PartialTotal } from '@/components/partial-total';
+import { PartialTotal } from '@/components/presentation-foundation/partial-total';
 import { IncomeHistoryChart } from '@/components/income-history-chart';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { changePercent } from '@/lib/overview';
 import { useLanguage } from '@/components/language-provider';
-import { Button } from '@/components/ui/button';
-import { ChartSkeleton } from '@/components/loading-placeholder';
+import { ChartSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { financialTotals, type Entry } from '@/lib/finance';
-import { formatMoney, formatNumber } from '@/lib/format';
+import { formatMoney, formatNumber, formatPercent } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
 import { mergePortfolioPoints, type PortfolioSnapshot } from '@/lib/portfolio-snapshots';
 import { portfolioHistory, portfolioWindow } from '@/lib/portfolio-history';
@@ -60,12 +61,12 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
     <div className="overview-hero-value">
      <h2 id="overview-net-worth">{t('Net worth')}</h2>
      <strong>{money(portfolioValue)}</strong>
-     {!loading && !error && change !== null && <p><span className={change >= 0 ? 'overview-delta positive' : 'overview-delta negative'}><Trend size={15} aria-hidden="true"/>{change > 0 ? '+' : ''}{money(change)}{percent !== null && <> · {percent > 0 ? '+' : ''}{formatNumber(percent, locale, 1)}%</>}</span><span>{t('Change in selected period')}</span></p>}
+     {!loading && !error && change !== null && <p><span className={change >= 0 ? 'overview-delta positive' : 'overview-delta negative'}><Trend size={15} aria-hidden="true"/>{change > 0 ? '+' : ''}{money(change)}{percent !== null && <> · {percent > 0 ? '+' : ''}{formatPercent(percent, locale)}</>}</span><span>{t('Change in selected period')}</span></p>}
      <PartialTotal currencies={excludedCurrencies}/>
     </div>
-    <div className="portfolio-ranges overview-segments" role="group" aria-label={t('History period')}>{[30, 90, 365, null].map(days => <Button key={String(days)} size="sm" variant="ghost" aria-pressed={range === days} onClick={() => setRange(days)}>{days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) })}</Button>)}</div>
+    <Segmented label={t('History period')} options={[30, 90, 365, null].map(days => ({ value: days, label: days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) }) }))} value={range} onChange={setRange}/>
    </header>
-   {loading ? <ChartSkeleton label={t('Loading history…')}/> : error ? <p role="alert" className="error">{t('Could not load portfolio history.')} <Button variant="outline" onClick={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}>{t('Retry')}</Button></p> : <>
+   {loading ? <ChartSkeleton label={t('Loading history…')}/> : error ? <InlineError message={t('Could not load portfolio history.')} onRetry={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}/> : <>
     <InvestmentComparison history={history??{records:[],events:[]}} today={today} currency={currency} market={market} demo={demo} days={range??0} points={visible} summary={<InvestmentPeriodSummary input={{records:allRecords,events:history?.events??[],cashflows:history?.cashflows,movements:history?.movements,market,currency,today}} start={range===null?'0000-01-01':shiftDay(today,-range)}/>}/>
     {recorded.missing > 0 && <p className="muted overview-hero-note">{t('Some holdings have no recorded history yet.')}</p>}
     {excludedCurrencies.length > 0 && <p className="muted overview-hero-note">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
