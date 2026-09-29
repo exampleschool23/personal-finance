@@ -46,3 +46,6 @@ next-env.d.ts
 /work/
 
 !.env.example
+
+# claude code local tooling
+/.claude/
