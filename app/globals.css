@@ -345,15 +345,10 @@ tbody tr:last-child td{border-bottom:0}
 .date-picker-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--input);border-radius:var(--radius-control);background:var(--field);color:var(--foreground);text-align:left;font-size:var(--type-small)}
 .finance-date-picker{width:min(860px,calc(100vw - 24px));max-height:var(--radix-popover-content-available-height);overflow:auto;border-radius:18px;padding:16px;background:var(--background);color:var(--foreground);z-index:70}
 .date-picker-body{display:flex;gap:16px}
-.date-picker-body [data-slot=calendar]{flex:1}
-.date-picker-body .rdp-months{display:flex;flex-direction:row;gap:20px}
-.date-picker-body .rdp-month{flex:1}
-.date-picker-body [data-slot=calendar]{--cell-size:36px}
-.date-picker-body button[data-day]{border-radius:12px}
 .date-picker-presets{display:flex;flex-direction:column;gap:6px;border-left:1px solid var(--border);padding-left:16px;min-width:130px}
 .date-picker-presets strong{font-size:var(--type-small);text-transform:uppercase;letter-spacing:.1em;color:var(--muted-foreground);margin-bottom:8px}
 .date-picker-presets button{justify-content:flex-start}
-@media(max-width:720px){.finance-date-picker{width:min(380px,calc(100vw - 24px))}.date-picker-body{flex-direction:column}.date-picker-body .rdp-months{flex-direction:column}.date-picker-presets{border-left:0;border-top:1px solid var(--border);padding:12px 0 0;flex-direction:row;flex-wrap:wrap}.date-picker-presets strong{width:100%}}
+@media(max-width:720px){.finance-date-picker{width:min(380px,calc(100vw - 24px))}.date-picker-body{flex-direction:column}.date-picker-presets{border-left:0;border-top:1px solid var(--border);padding:12px 0 0;flex-direction:row;flex-wrap:wrap}.date-picker-presets strong{width:100%}}
 
 /* Ported POS MonthCalendar layout: fixed six rows, pill days, outer navigation. */
 .finance-date-picker{width:min(1000px,calc(100vw - 24px));padding:20px}

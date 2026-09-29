@@ -1,28 +1,11 @@
 import { convertAmount } from './market';
 import { income, expenses, type Entry } from './finance';
-import { upcomingPayments, type Occurrence, type Activity, type PlanningData } from './planning';
+import type { Activity, PlanningData } from './planning';
 import { snapshotPoints, type PortfolioSnapshot } from './portfolio-snapshots';
 export type TransactionSplit={record_id:string;position:number;category_id:string;amount:number};
 export type ForecastAssignment={record_id:string;account_id:string;exchange_rate?:number;from_currency?:string;to_currency?:string};
 export type TransactionTools={splits:TransactionSplit[];assignments:ForecastAssignment[]};
 export const emptyTransactionTools:TransactionTools={splits:[],assignments:[]};
-export function accountForecast(records:Entry[],occurrences:Occurrence[],assignments:ForecastAssignment[],today:string,through:string) {
- const accounts=records.filter(record=>record.kind==='Cash');
- const schedules=upcomingPayments(records,occurrences,today,through).filter(item=>item.type==='scheduled');
- const unassigned:typeof schedules=[];
- const result=accounts.map(account=>({account,current:account.amount,ending:account.amount,lowest:account.amount,events:[] as Array<{key:string;date:string;name:string;amount:number;balance:number;overdue:boolean}>}));
- // At an equal date, outflows precede inflows to expose possible intraday shortfalls.
- for(const item of [...schedules].sort((a,b)=>a.date.localeCompare(b.date)||Number(income.includes(a.record.kind))-Number(income.includes(b.record.kind)))){
-  const assignment=assignments.find(value=>value.record_id===item.record.id);
-  const target=result.find(value=>value.account.id===assignment?.account_id);
-  const rate=target?.account.currency===item.record.currency?1:assignment?.from_currency===item.record.currency&&assignment?.to_currency===target?.account.currency?Number(assignment?.exchange_rate):NaN;
-  if(!target||!Number.isFinite(rate)||rate<=0){unassigned.push(item);continue;}
-  const amount=item.record.amount*rate*(income.includes(item.record.kind)?1:-1);
-  target.ending+=amount;target.lowest=Math.min(target.lowest,target.ending);
-  target.events.push({key:item.key,date:item.date<today?today:item.date,name:item.record.name,amount,balance:target.ending,overdue:item.overdue});
- }
- return {accounts:result,unassigned};
-}
 export function monthlyReview(records:Entry[],splits:TransactionSplit[],snapshots:PortfolioSnapshot[],month:string,currency:string,today:string,activity:Activity[]=[],rates?:number|Record<string,number>,investmentLinks:NonNullable<PlanningData['investmentLinks']>=[]) {
  const actual=records.filter(record=>record.frequency==='Once'&&record.date.slice(0,7)===month&&record.date<=today);
  let received=0,spent=0,missing=0;

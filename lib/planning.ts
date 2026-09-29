@@ -9,11 +9,6 @@ export type Occurrence = {id:string;record_id:string;due_on:string;status:'paid'
 export type Activity = {id:string;action:string;account_id:string;target_id:string|null;amount:number;received:number;fee:number;occurred_on:string;notes:string;before_balance:number;after_balance:number};
 export type PlanningData = {movements?:Array<Omit<AssetMovement,'date'> & {occurred_on:string;realized_gain:number|null}>;holdingAccounts?:HoldingAccount[];records:Entry[];categories:Category[];goals:Goal[];occurrences:Occurrence[];activity:Activity[];investmentLinks?:Array<{id:string;account_id:string;account_currency?:string|null;amount:number;investment_history:{occurred_on:string;record_id:string;event_type:string}}>};
 export const emptyPlanning:PlanningData={records:[],categories:[],goals:[],occurrences:[],activity:[]};
-export function goalProgress(goal:Goal,today=depositToday()) {
- const remaining=Math.max(0,goal.target-goal.allocated);
- const months=goal.target_date?Math.max(1,(Number(goal.target_date.slice(0,4))-Number(today.slice(0,4)))*12+Number(goal.target_date.slice(5,7))-Number(today.slice(5,7))+1):null;
- return {remaining,percent:Math.min(100,goal.allocated/goal.target*100),monthly:months?remaining/months:null};
-}
 export type DueItem = {key:string;record:Entry;date:string;overdue:boolean;type:'scheduled'|'repayment'|'maturity'};
 export function upcomingPayments(records:Entry[],occurrences:Occurrence[],today=depositToday(),through?:string):DueItem[] {
  const end=through??new Date(Date.parse(today+'T00:00:00Z')+31*86400000).toISOString().slice(0,10);

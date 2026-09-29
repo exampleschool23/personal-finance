@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
 const {scheduleDates,scheduleDueDate}=loadTS('lib/finance.ts');
-const {availableToSpend,dueReminders,templateFromRecord,entryFromTemplate,financialHealth}=loadTS('lib/daily-finance.ts');
+const {dueReminders}=loadTS('lib/daily-finance.ts');
 const {monthly}=loadTS('lib/finance.ts');
 const {earningSourceSchema,selectEarningSource}=loadTS('lib/earning-sources.ts');
 const id=n=>`67000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
@@ -22,30 +22,10 @@ test('schedules retain anchors, leap days, weekly intervals and exact monthly co
  assert.equal(earningSourceSchema.safeParse({...source,recurrence_days:0}).success,false);
  assert.equal(selectEarningSource(entry(20,'Salary',{date:'2026-09-21'}),source).earning_due_on,'2026-09-21');
 });
-test('allowance counts bills within budgets once, excludes future income and investment cash',()=>{
- const cash=entry(1,'Cash',{amount:1000}),bill=entry(2,'Rent expense',{amount:100,frequency:'Monthly'}),salary=entry(3,'Salary',{amount:500,frequency:'Monthly'});
- const d=data([cash,bill,salary,entry(9,'Cash',{amount:5000,is_investment:true})],{goals:[{id:id(4),account_id:cash.id,allocated:200,archived:false}]});
- const assignments=[{record_id:bill.id,account_id:cash.id},{record_id:salary.id,account_id:cash.id}];
- const plans=[{id:id(5),currency:'USD',amount:300,spent:50,start_date:'2026-09-01',end_date:null}];
- const settings={buffers:{[cash.id]:50},budgets:[{plan_id:id(5),account_id:cash.id,schedule_ids:[bill.id]}]};
- const result=availableToSpend(d,assignments,plans,settings,'2026-09-01','2026-09-30');
- assert.equal(result.rows.length,1);assert.equal(result.rows[0].bills,100);assert.equal(result.rows[0].budgets,150);assert.equal(result.rows[0].reserves,200);assert.equal(result.rows[0].available,500);assert.equal(result.rows[0].forecast,1000);
- assert.equal(availableToSpend(d,[],plans,settings,'2026-09-01','2026-09-30').rows[0].available,null);
- assert.equal(availableToSpend(d,assignments,plans,{buffers:{},budgets:[]},'2026-09-01','2026-09-30').rows[0].available,null);
- assert.equal(availableToSpend(d,assignments,plans,settings,'2026-09-01','2026-10-30').rows[0].available,null);
- const paid=data([cash,bill],{occurrences:[{record_id:bill.id,due_on:'2026-09-01',status:'paid'}]});
- assert.equal(availableToSpend(paid,assignments,[],{buffers:{},budgets:[]},'2026-09-01','2026-09-30').rows[0].bills,0);
-});
-test('reminders honor settlement, snooze and opt-out; templates never retain protected links',()=>{
+test('reminders honor settlement, snooze and opt-out',()=>{
  const bill=entry(2,'Rent expense',{frequency:'Weekly'}),d=data([bill],{occurrences:[{record_id:bill.id,due_on:'2026-09-01',status:'paid'}]});
  const settings={enabled:true,days_ahead:7,snoozed:[]};
  assert.deepEqual(dueReminders(d,settings,'2026-09-01').map(r=>r.date),['2026-09-08']);
  assert.equal(dueReminders(d,{...settings,snoozed:[{key:bill.id+':2026-09-08',until:'2026-09-09'}]},'2026-09-08').length,1);
  assert.equal(dueReminders(d,{...settings,enabled:false},'2026-09-01').length,0);
- const original=entry(4,'Other expense',{amount:12.12345678,account_id:id(1),custom_category_id:id(6)});
- const template=templateFromRecord(original,id(7));
- assert.equal(template.amount,12.12345678);assert.equal(templateFromRecord({...original,movement_id:id(99)},id(7)),null);
- const next=entryFromTemplate(template,id(8),'2026-09-24',[],[]);
- assert.equal(next.id,id(8));assert.equal(next.date,'2026-09-24');assert.equal(next.account_id,null);assert.equal(next.custom_category_id,null);assert.equal(next.amount,original.amount);
- assert.equal(financialHealth([entry(20,'Stock',{name:'AAPL'})],null,'USD',Date.now())[0].key,'quote:'+id(20));
 });

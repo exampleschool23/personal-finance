@@ -5,7 +5,7 @@ import ts from 'typescript';
 import {income,expenses,scheduleDates} from '../lib/finance.ts';
 import {depositToday} from '../lib/deposit-interest.ts';
 const source=ts.transpileModule(fs.readFileSync('lib/planning.ts','utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const {upcomingPayments,goalProgress}=new Function('income','expenses','depositToday','scheduleDates',source+';return {upcomingPayments,goalProgress};')(income,expenses,depositToday,scheduleDates);
+const {upcomingPayments}=new Function('income','expenses','depositToday','scheduleDates',source+';return {upcomingPayments};')(income,expenses,depositToday,scheduleDates);
 import {parseCSV,mapCSV,exportCSV,FINANCE_RECORD_CSV_COLUMNS} from '../lib/csv.ts';
 import {categoryHue} from '../lib/category-colors.ts';
 const r={id:'rent',name:'Rent',kind:'Rent expense',amount:10,date:'2026-01-31',frequency:'Monthly'};
@@ -14,11 +14,6 @@ test('recurring payment dates clip month ends without drifting and preserve over
  assert.deepEqual(upcomingPayments([{...r,end_date:'2026-02-28'}],[{record_id:r.id,due_on:'2026-01-31'}],'2026-03-01','2026-03-31').map(i=>i.date),['2026-02-28']);
  const yearly=upcomingPayments([{...r,date:'2024-02-29',frequency:'Yearly'}],[],'2025-03-01','2026-03-01');assert.deepEqual(yearly.map(i=>i.date),['2024-02-29','2025-02-28','2026-02-28']);
  assert.equal(upcomingPayments([{...r,kind:'Loan',frequency:'Once',amount:0}],[],'2026-03-01').length,0);
-});
-test('goal projections reserve existing balances and handle expired deadlines',()=>{
- assert.deepEqual(goalProgress({target:1000,allocated:400,target_date:'2026-12-31'},'2026-09-17'),{remaining:600,percent:40,monthly:150});
- assert.equal(goalProgress({target:1000,allocated:400,target_date:'2026-08-31'},'2026-09-17').monthly,600);
- assert.equal(goalProgress({target:1000,allocated:1000,target_date:null}).monthly,null);
 });
 test('CSV handles quotes, newlines, locale amounts and rejects malformed input',()=>{
  const rows=parseCSV('Name;Date;Amount;Notes\r\n"Shop; market";17/09/2026;"-1.234,50";"line one\nline ""two"""',';');

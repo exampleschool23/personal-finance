@@ -60,15 +60,16 @@ function find(node,predicate){
 test('new expense plans inherit current header currency while editing preserves saved currency and precision',()=>{
  const render=component('components/expense-plans.tsx','ExpensePlans');
  const plan={id:'existing',name:'Groceries',category:'Groceries',currency:'USD',amount:12.125,start_date:'2026-09-01',end_date:null};
- const props={plans:[plan],month:'2026-09',currency:'EUR',loading:false,error:'',save:async()=>{},remove:async()=>{},onSpend(){},onRetry(){}};
+ const props={plans:[plan],month:'2026-09',currency:'EUR',currencies:['EUR','USD'],loading:false,error:'',save:async()=>{},remove:async()=>{},onSpend(){},onRetry(){}};
+ const currencyChoice=tree=>find(tree,node=>node.props?.value&&React.Children.toArray(node.props.children).some(option=>option.type==='option'&&option.props.value==='EUR'));
  let tree=render.tree({...props,currency:'USD'});
  tree=render.tree(props);
  find(tree,node=>node.props?.onClick&&React.Children.toArray(node.props.children).includes('Add monthly plan')).props.onClick();
  tree=render.tree(props);
- assert.equal(find(tree,node=>node.type?.name==='CurrencyValue').props.currency,'EUR');
+ assert.equal(currencyChoice(tree).props.value,'EUR');
  find(tree,node=>node.props?.['aria-label']==='Edit {name}').props.onClick();
  tree=render.tree(props);
- assert.equal(find(tree,node=>node.type?.name==='CurrencyValue').props.currency,'USD');
+ assert.equal(currencyChoice(tree).props.value,'USD');
  assert.equal(find(tree,node=>node.props?.value===12.125).props.value,12.125);
  assert.equal(plan.currency,'USD');assert.equal(plan.amount,12.125);
 });

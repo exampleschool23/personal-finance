@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
 const {emptyRecordFilters,changeFilterStart,filterRecords,recordsRequestKey,activeFilterCount}=loadTS('lib/record-filters.ts');
-const {accountForecast,monthlyReview}=loadTS('lib/transaction-tools.ts');
+const {monthlyReview}=loadTS('lib/transaction-tools.ts');
 const {decimalTotalEquals}=loadTS('lib/decimal-amounts.ts');
 const entry=(id,kind,amount,extra={})=>({id,name:id,kind,amount,currency:'USD',date:'2026-09-01',frequency:'Once',quantity:1,cost:0,notes:'',rate:0,...extra});
 test('filters clear contradictory end dates and changing local search never changes request identity',()=>{
@@ -20,14 +20,6 @@ test('decimal split equality preserves small, fractional and very large entered 
  assert.equal(decimalTotalEquals([.1,.2],.3),true);assert.equal(decimalTotalEquals([1e-8,2e-8],3e-8),true);
  assert.equal(decimalTotalEquals([100000000000000,.25],100000000000000.25),true);
  assert.equal(decimalTotalEquals([.1,.2000000001],.3),false);assert.equal(decimalTotalEquals([NaN],1),false);
-});
-test('forecasts exclude settled items, show overdue and unassigned schedules, and never count actual transactions twice',()=>{
- const records=[entry('cash','Cash',100),entry('rent','Rent expense',150,{frequency:'Monthly'}),entry('salary','Salary',200,{frequency:'Monthly'}),entry('paid','Other expense',20,{account_id:'cash'}),entry('foreign','Other expense',10,{currency:'EUR',frequency:'Monthly'}),entry('deposit','Deposit',1000)];
- const assignments=[{record_id:'rent',account_id:'cash'},{record_id:'salary',account_id:'cash'},{record_id:'foreign',account_id:'cash'}];
- const result=accountForecast(records,[],assignments,'2026-09-10','2026-09-30');
- assert.equal(result.accounts[0].ending,150);assert.equal(result.accounts[0].lowest,-50);assert.equal(result.accounts[0].events[0].overdue,true);assert.equal(result.accounts[0].events[0].date,'2026-09-10');assert.equal(result.unassigned.length,1);
- const paid=accountForecast(records,[{record_id:'rent',due_on:'2026-09-01',status:'paid'}],assignments,'2026-09-10','2026-09-30');assert.equal(paid.accounts[0].ending,300);
- assert.equal(records[0].amount,100);
 });
 test('monthly review uses actuals and splits once, keeps currencies separate and requires observed net-worth coverage',()=>{
  const records=[entry('salary','Salary',1000),entry('shop','Other expense',100),entry('plan','Salary',1000,{frequency:'Monthly'}),entry('foreign','Other expense',999,{currency:'EUR'}),entry('future','Other expense',999,{date:'2026-09-25'}),entry('principal','Loan',100)];

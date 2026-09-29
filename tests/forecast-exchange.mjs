@@ -2,18 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {PGlite} from '@electric-sql/pglite';
-import {loadTS} from './helpers/load-ts.mjs';
-const {accountForecast}=loadTS('lib/transaction-tools.ts');
 const id=n=>`55000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
-test('forecast applies explicit directional rates without rounding stored amounts',()=>{
- const records=[{id:'a',kind:'Cash',currency:'USD',amount:100,frequency:'Once'},{id:'s',kind:'Salary',currency:'UZS',amount:1200000,date:'2026-09-01',frequency:'Monthly'}];
- const assignment={record_id:'s',account_id:'a',exchange_rate:1/12000,from_currency:'UZS',to_currency:'USD'};
- const run=a=>accountForecast(records,[],[a],'2026-09-01','2026-09-30');
- assert.equal(run(assignment).accounts[0].ending,200);
- for(const rate of [0,-1,NaN,undefined])assert.equal(run({...assignment,exchange_rate:rate}).unassigned.length,1);
- assert.equal(run({...assignment,to_currency:'EUR'}).unassigned.length,1);
- assert.equal(records[0].amount,100);
-});
 test('database supports cross-currency assignments and rejects missing rates and foreign accounts',async()=>{
  const db=new PGlite();try{
  await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${id(1)}'),('${id(2)}');`);

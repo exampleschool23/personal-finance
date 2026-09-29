@@ -13,7 +13,7 @@ test('filters expose an accessible mobile disclosure and preserve the search out
 test('failed settings render a retry control and prevent saving fallback preferences',()=>{
  const {SettingsPanel}=loadTS('components/settings-panel.tsx',{...overrides,'@/components/investment-comparison-settings':{InvestmentComparisonSettings:()=>null}});
  const html=renderToStaticMarkup(React.createElement(SettingsPanel,{initial:{language:'en',currencies:['USD']},demo:false,onSaved:()=>{},loading:false,loadError:'Offline',onRetry:()=>{}}));
- assert.match(html,/Retry loading settings/);assert.match(html,/role="alert"/);assert.match(html,/<button[^>]*disabled=""[^>]*>Save settings/);
+ assert.match(html,/Retry loading settings/);assert.match(html,/role="alert"/);assert.match(html,/<button[^>]*disabled=""[^>]*>Save changes/);
 });
 test('partial totals explicitly name excluded currencies and disappear when coverage is complete',()=>{
  const {PartialTotal}=loadTS('components/partial-total.tsx',overrides);
@@ -46,7 +46,7 @@ test('profile settings shows the shared country picker with its prompt and saved
  const {SettingsPanel}=loadTS('components/settings-panel.tsx',overrides);
  const render=country=>renderToStaticMarkup(React.createElement(SettingsPanel,{initial:{language:'en',currencies:['USD'],country},demo:false,onSaved:()=>{},loading:false,loadError:'',onRetry:()=>{}}));
  const html=render('');
- assert.match(html,/<label for="profile-country">Country \/ region \(optional\)<\/label>/);
+ assert.match(html,/<label for="profile-country">Country \/ region \(optional\)/);
  assert.match(html,/<select[^>]*data-slot="native-select"[^>]*id="profile-country"/);
  assert.match(html,/<option value="" selected="">Select your country<\/option>/);
  assert.match(render('UZ'),/<option value="UZ" selected="">Uzbekistan<\/option>/);

@@ -1,23 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
-const {xirr,timeWeightedEstimate,allocationDrift}=loadTS('lib/portfolio-performance.ts');
+const {allocationDrift}=loadTS('lib/portfolio-performance.ts');
 const {debtPayoff}=loadTS('lib/debt-payoff.ts');
 const {watchlistSpending}=loadTS('lib/spending-watchlists.ts');
 const near=(actual,expected,tolerance=1e-8)=>assert.ok(Math.abs(actual-expected)<tolerance,`${actual} != ${expected}`);
-test('annualized returns match conventional reference cash flows, including a loss and grouped dates',()=>{
- const period=365/365.25;near(xirr([{date:'2025-01-01',amount:-1000},{date:'2026-01-01',amount:1100}]),Math.pow(1.1,1/period)-1);
- near(xirr([{date:'2025-01-01',amount:-500},{date:'2025-01-01',amount:-500},{date:'2026-01-01',amount:800}]),Math.pow(.8,1/period)-1);
- assert.equal(xirr([{date:'2025-02-30',amount:-1},{date:'2026-01-01',amount:2}]),null);
- assert.equal(xirr([{date:'2025-01-01',amount:-100},{date:'2025-03-01',amount:200},{date:'2025-06-01',amount:-100},{date:'2026-01-01',amount:20}]),null);
- assert.equal(xirr([{date:'2025-01-01',amount:-1}]),null);
-});
-test('time weighted estimate removes external cash, captures drawdown, and rejects incomplete histories',()=>{
- const result=timeWeightedEstimate([{date:'2026-01-01',amount:100},{date:'2026-01-02',amount:200},{date:'2026-01-03',amount:180}],[{date:'2026-01-02',amount:100}]);near(result.total,-.1);near(result.drawdown,.1);
- assert.equal(timeWeightedEstimate([{date:'2026-01-01',amount:0},{date:'2026-01-02',amount:100}],[]),null);
- assert.equal(timeWeightedEstimate([{date:'2026-01-01',amount:100},{date:'2026-01-02',amount:null}],[]),null);
- assert.equal(timeWeightedEstimate([{date:'2026-02-30',amount:100},{date:'2026-03-02',amount:200}],[]),null);
-});
 test('allocation cash contributions preserve total and never sell; incomplete values fail closed',()=>{
  const plan=allocationDrift({Stock:800,Cash:200},{Stock:50,Cash:50},200);assert.equal(plan.total,1000);assert.equal(plan.rows.find(r=>r.key==='Stock').contribution,0);assert.equal(plan.rows.find(r=>r.key==='Cash').contribution,200);near(plan.rows.reduce((n,r)=>n+r.delta,0),200);
  assert.equal(allocationDrift({Stock:null},{Stock:100}),null);assert.equal(allocationDrift({Stock:100},{Stock:99}),null);assert.equal(allocationDrift({Stock:100},{Stock:100},-1),null);

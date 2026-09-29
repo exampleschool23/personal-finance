@@ -2,7 +2,7 @@
 import { showSaved } from '@/lib/feedback';
 import { ErrorPopup } from '@/components/error-popup';
 import { demoRecords, demoMarket } from '@/lib/demo-finance';
-import {ReminderPanel} from '@/components/daily-finance-panel';
+import {ReminderPanel} from '@/components/reminder-panel';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { DrawerLink } from '@/components/drawer-link';
 import { PageHeader } from '@/components/page-header';

@@ -16,7 +16,7 @@ import { useEffect,useMemo,useState,type ReactElement,type ReactNode } from 'rea
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChartSkeleton, LoadingPlaceholder } from '@/components/loading-placeholder';
+import { ChartSkeleton } from '@/components/loading-placeholder';
 import { useLanguage } from '@/components/language-provider';
 import { formatDate,formatMoney,formatNumber } from '@/lib/format';
 import { categoryColor } from '@/lib/category-colors';

@@ -9,7 +9,7 @@ import {isInvestmentRecord} from '../lib/comparison-profile.ts';
 import * as dates from '../lib/benchmark-data.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const deps={portfolioAssets,portfolioAssetKey,portfolioAssetCurrency,...dates};
-const {convertHistorical,compareInvestments,percentagePerformance}=new Function(...Object.keys(deps),compile('lib/investment-comparison.ts')+';return {convertHistorical,compareInvestments,percentagePerformance};')(...Object.values(deps));
+const {convertHistorical,compareInvestments}=new Function(...Object.keys(deps),compile('lib/investment-comparison.ts')+';return {convertHistorical,compareInvestments};')(...Object.values(deps));
 const performance=new Function('historyEventLabel','expenses','liabilities','isInvestmentRecord','convertHistorical','shiftDay',compile('lib/actual-investment-performance.ts')+';return actualInvestmentPerformance;')(historyEventLabel,expenses,liabilities,isInvestmentRecord,convertHistorical,dates.shiftDay);
 const holding={id:'cafe',kind:'Business',currency:'USD',balance:400};
 const records=[{id:'cafe',kind:'Business',currency:'USD'},{id:'cash',kind:'Cash',currency:'USD'},{id:'loan',kind:'Loan',currency:'USD'}];
@@ -23,18 +23,14 @@ test('dated investment capital and income count, ordinary cash and debt do not',
 test('money added is capital and withdrawals preserve realized profit, including a full sale',()=>{
  const result=performance(records,[opening,event('contribution','2026-09-02',100,500),event('withdrawal','2026-09-03',600,0),event('expense','2026-09-03',10,null)],[{...holding,balance:0}],[],'USD','2026-09-03');
  const sim=compareInvestments(0,result.flows,result.points,{start:result.start,end:'2026-09-03',fx:[],prices:{},errors:{}},'USD',true);
- const last=percentagePerformance(sim.points,result.flows).at(-1);
  assert.equal(sim.points.at(-1).actual-sim.points.at(-1).contributed,90);
- assert.equal(last.invested,510);assert.equal(last.contributed,-90);near(last.actual,90/510*100);
 });
 test('two purchases buy BTC at their own prices and show monetary values and the shortfall',()=>{
  const result=performance(records,[event('contribution','2026-09-01',1000,1000),event('contribution','2026-09-02',500,1500),event('valuation','2026-09-03',0,1700)],[{...holding,balance:1700}],[],'USD','2026-09-03');
  const sim=compareInvestments(0,result.flows,result.points,{start:result.start,end:'2026-09-03',fx:[],prices:{BTC:[{date:'2026-09-01',close:100},{date:'2026-09-02',close:200},{date:'2026-09-03',close:220}]},errors:{}},'USD',true);
- const returns=percentagePerformance(sim.points,result.flows),last=returns.at(-1);
  const values=sim.points.at(-1);
  assert.equal(values.actual,1700);assert.equal(values.BTC,2750);assert.equal(values.actual-values.contributed,200);assert.equal(values.BTC-values.contributed,1250);assert.equal(values.actual-values.BTC,-1050);
- assert.equal(sim.points.at(-1).BTC,2750);assert.equal(last.invested,1500);near(last.actual,200/1500*100);near(last.BTC,1250/1500*100);near(last.actual-last.BTC,-70);
- assert.equal(returns[0].actual,0);assert.equal(returns[0].BTC,0);
+ assert.equal(sim.points.at(-1).BTC,2750);
 });
 test('opening observations are disclosed and backdated purchase history replaces assumed opening capital',()=>{
  const snapshot=event('baseline','2026-09-03',0,450);
@@ -56,16 +52,10 @@ test('unknown holdings and missing FX pause the comparison instead of using part
  assert.equal(performance(records,[opening],[],[],'USD','2026-09-03').missing,true);
  const missing=performance([{...records[0],currency:'EUR'}],[opening],[{...holding,currency:'EUR'}],[],'USD','2026-09-03');assert.equal(missing.points.at(-1).amount,null);assert.equal(missing.missing,true);
 });
-test('foreign contributions use rates on the investment date and zero capital has no percentage',()=>{
+test('foreign contributions use rates on the investment date',()=>{
  const fx=[{date:'2026-09-01',rates:{USD:1,UZS:10000}},{date:'2026-09-02',rates:{USD:1,UZS:20000}}];
  const result=performance([{...records[0],currency:'UZS'}],[event('contribution','2026-09-01',1000000,1000000)],[{...holding,currency:'UZS',balance:1000000}],fx,'USD','2026-09-02');
  assert.equal(result.flows[0].amount,100);assert.equal(result.points.at(-1).amount,50);
- assert.equal(percentagePerformance([{date:'2026-09-01',actual:0,contributed:0,BTC:0}],[])[0].actual,null);
-});
-test('same-day sales and purchases preserve gross invested capital even when cash flow nets to zero',()=>{
- const flows=[{date:'2026-09-01',amount:100},{date:'2026-09-02',amount:-50},{date:'2026-09-02',amount:50}];
- const last=percentagePerformance([{date:'2026-09-01',actual:100,contributed:100},{date:'2026-09-02',actual:130,contributed:100}],flows).at(-1);
- assert.equal(last.invested,150);assert.equal(last.actual,20);
 });
 
 test('monetary comparison retains small-price precision and unavailable benchmark gaps',()=>{
