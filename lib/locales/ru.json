@@ -1604,5 +1604,9 @@
   "Replace {code}": "Заменить {code}",
   "Keep at least one currency": "Оставьте хотя бы одну валюту",
   "{code} is your only currency, so it can’t be cleared. Pick another currency first.": "{code} — ваша единственная валюта, её нельзя убрать. Сначала выберите другую.",
-  "OK": "ОК"
+  "OK": "ОК",
+  "Appearance": "Внешний вид",
+  "Choose the font used across the app. It is saved to your account, so the web and mobile apps match.": "Выберите шрифт для всего приложения. Он сохраняется в аккаунте, поэтому веб-версия и мобильное приложение совпадают.",
+  "Font": "Шрифт",
+  "{font} (current)": "{font} (текущий)"
 }

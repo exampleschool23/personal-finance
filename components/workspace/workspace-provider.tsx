@@ -26,6 +26,7 @@ import { useEarningSources } from '@/hooks/use-earning-sources';
 import { withAssetIncomePlans, legacyEarningSources, sourceSchedule, selectEarningSource, resolveEarningSource, type EarningSource } from '@/lib/earning-sources';
 import { resolveIncomeSource } from '@/lib/income-sources';
 import { defaultPreferences, type Preferences } from '@/lib/currencies';
+import { applyFont, resolveFont } from '@/lib/fonts';
 import type { MortgagePayment } from '@/components/mortgage-payment-dialog';
 import { instrumentFor, instrumentKey, convertAmount, marketEntry } from '@/lib/market';
 import { usePortfolioSnapshots } from '@/hooks/use-portfolio-snapshots';
@@ -55,7 +56,7 @@ function useWorkspaceState() {
     const [settingsError, setSettingsError] = useState('');
     const [settingsRevision,setSettingsRevision]=useState(0);
     const retrySettings=()=>{setSettingsLoading(true);setSettingsError('');setSettingsRevision(n=>n+1);};
-    function applyPreferences(next: Preferences) { setPreferencesData(next); if (demo) setLanguage(next.language); else setDefaultLanguage(next.language); setCurrency(next.currencies[0]); }
+    function applyPreferences(next: Preferences) { setPreferencesData(next); if (demo) setLanguage(next.language); else setDefaultLanguage(next.language); applyFont(resolveFont(next.font), !demo); setCurrency(next.currencies[0]); }
     const receivePreferences = useEffectEvent(applyPreferences);
     useEffect(() => {
         if (!user || demo) return;

@@ -1604,5 +1604,9 @@
   "Replace {code}": "{code} o‘rniga",
   "Keep at least one currency": "Kamida bitta valyuta qoldiring",
   "{code} is your only currency, so it can’t be cleared. Pick another currency first.": "{code} yagona valyutangiz, uni olib tashlab bo‘lmaydi. Avval boshqa valyutani tanlang.",
-  "OK": "OK"
+  "OK": "OK",
+  "Appearance": "Ko‘rinish",
+  "Choose the font used across the app. It is saved to your account, so the web and mobile apps match.": "Butun ilova uchun shriftni tanlang. U hisobingizda saqlanadi, shuning uchun veb va mobil ilova bir xil ko‘rinadi.",
+  "Font": "Shrift",
+  "{font} (current)": "{font} (joriy)"
 }

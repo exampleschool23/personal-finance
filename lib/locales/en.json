@@ -1604,5 +1604,9 @@
   "Replace {code}": "Replace {code}",
   "Keep at least one currency": "Keep at least one currency",
   "{code} is your only currency, so it can’t be cleared. Pick another currency first.": "{code} is your only currency, so it can’t be cleared. Pick another currency first.",
-  "OK": "OK"
+  "OK": "OK",
+  "Appearance": "Appearance",
+  "Choose the font used across the app. It is saved to your account, so the web and mobile apps match.": "Choose the font used across the app. It is saved to your account, so the web and mobile apps match.",
+  "Font": "Font",
+  "{font} (current)": "{font} (current)"
 }

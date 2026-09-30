@@ -5,14 +5,15 @@ import ts from 'typescript';
 import { z } from 'zod';
 import { isCountry, countryCodes, countryOptions } from '../lib/countries.ts';
 import { defaultPreferences, isCurrency, maxPreferredCurrencies } from '../lib/currencies.ts';
+import { fontIds, resolveFont } from '../lib/fonts.ts';
 const source=fs.readFileSync(new URL('../app/api/settings/route.ts',import.meta.url),'utf8').replace(/^import .*;\n/gm,'').replace(/export async function/g,'async function');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let authenticated=true, calls=[], rows=[], databaseFailure=false;
-const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry);
+const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry','fontIds','resolveFont',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry,fontIds,resolveFont);
 const request=body=>new Request('https://app.local/api/settings',{method:'PUT',headers:{origin:'https://app.local','Content-Type':'application/json'},body:JSON.stringify(body)});
 test('persists validated preferences for the authenticated owner',async()=>{
  calls=[];const response=await api.PUT(request({language:'uz',currencies:['EUR','INR']}));
- assert.equal(response.status,200);assert.deepEqual(JSON.parse(calls[0].init.body),{user_id:'owner',language:'uz',currencies:['EUR','INR']});
+ assert.equal(response.status,200);assert.deepEqual(JSON.parse(calls[0].init.body),{user_id:'owner',language:'uz',currencies:['EUR','INR'],font:'inter'});
  calls=[];assert.equal((await api.PUT(request({language:'en',currencies:['USD']}))).status,200);assert.deepEqual(JSON.parse(calls[0].init.body).currencies,['USD']);
  assert.equal(calls[0].token,'owner-token');
 });
@@ -34,7 +35,7 @@ test('optional name is trimmed, persisted for the owner, loaded, and clearable',
  assert.deepEqual(JSON.parse(calls[0].init.body),{...defaultPreferences,display_name:'Jasur',user_id:'owner'});
  rows=[{...defaultPreferences,display_name:'Jasur'}];
  assert.equal((await (await api.GET()).json()).display_name,'Jasur');
- assert.match(calls.at(-1).path,/display_name,country&user_id=eq.owner$/);
+ assert.match(calls.at(-1).path,/display_name,country,font&user_id=eq.owner$/);
  rows=[];
  assert.equal((await (await api.PUT(request({...defaultPreferences,display_name:'   '}))).json()).display_name,'');
 });
@@ -99,4 +100,22 @@ test('the migration keeps the first two preferred currencies and rejects longer 
   assert.equal(maxPreferredCurrencies,2);
   assert.ok(fs.readFileSync('database/setup.sql','utf8').includes('CONSTRAINT user_preferences_currencies_limit CHECK (cardinality(currencies) <= 2)'));
  }finally{await db.close();}
+});
+
+test('font preference validates the catalogue, persists for the owner, loads and falls back to Inter',async()=>{
+ calls=[];
+ const result=await api.PUT(request({...defaultPreferences,font:'onest',user_id:'other'}));
+ assert.equal(result.status,200);
+ assert.equal((await result.json()).font,'onest');
+ assert.deepEqual(JSON.parse(calls[0].init.body),{...defaultPreferences,font:'onest',user_id:'owner'});
+ rows=[{...defaultPreferences,font:'onest'}];
+ assert.equal((await (await api.GET()).json()).font,'onest');
+ assert.match(calls.at(-1).path,/select=language,currencies,display_name,country,font&/);
+ // Rows saved before the font column, and clients that omit it, keep the current font.
+ for(const row of [{language:'en',currencies:['USD']},{...defaultPreferences,font:null}]){rows=[row];assert.equal((await (await api.GET()).json()).font,'inter');}
+ rows=[];
+ assert.equal((await (await api.PUT(request({language:'en',currencies:['USD']}))).json()).font,'inter');
+ for(const font of ['Onest','comic-sans','',42,['onest']]){
+  calls=[];assert.equal((await api.PUT(request({...defaultPreferences,font}))).status,400);assert.equal(calls.length,0);
+ }
 });

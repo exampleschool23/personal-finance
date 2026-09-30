@@ -7,6 +7,8 @@ import { LoadingPlaceholder } from '@/components/presentation-foundation/loading
 import { useState } from 'react';
 
 import { countryOptions } from '@/lib/countries';
+import { fonts, isFont, resolveFont } from '@/lib/fonts';
+import { formatMoney } from '@/lib/format';
 import { Plus, X } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
@@ -52,6 +54,10 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
         </section>
         <section className="panel preferences-card"><header><h3>{t('Language')}</h3><p className="muted">{t('Choose the language for the app.')}</p></header>
           <label className="preferences-setting-row">{t('App language')}<NativeSelect value={draft.language} onChange={event => setDraft({ ...draft, language: event.target.value as Preferences['language'] })}><option value="en">English</option><option value="ru">Русский</option><option value="uz">O‘zbekcha</option></NativeSelect></label>
+        </section>
+        <section className="panel preferences-card"><header><h3>{t('Appearance')}</h3><p className="muted">{t('Choose the font used across the app. It is saved to your account, so the web and mobile apps match.')}</p></header>
+          <label className="preferences-setting-row">{t('Font')}<NativeSelect value={resolveFont(draft.font)} onChange={event => { if (isFont(event.target.value)) setDraft({ ...draft, font: event.target.value }); }}>{fonts.map(font => <option key={font.id} value={font.id}>{font.id === 'inter' ? t('{font} (current)', { font: font.name }) : font.name}</option>)}</NativeSelect></label>
+          <p className="font-preview" data-font={resolveFont(draft.font)} aria-hidden="true"><strong>{t('Net worth')} · Умумий · Jami</strong><span>{formatMoney(1234567, draft.currencies[0], locale)} · AaBbCc ÁáĞğ АаБбВв Oʻoʻ Gʻgʻ</span></p>
         </section>
         <section className="panel preferences-card"><header><h3>{t('Currencies')}</h3><p className="muted">{t('Choose the currencies you use.')}</p></header>
           <label className="preferences-setting-row">{t('Primary currency')}<NativeSelect value={draft.currencies[0]} onChange={event => setDraft({ ...draft, currencies: [event.target.value, ...draft.currencies.filter(c => c !== event.target.value)] })}>{draft.currencies.map(code => <option key={code} value={code}>{currencyLabel(code, locale)}</option>)}</NativeSelect></label>

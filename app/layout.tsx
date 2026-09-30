@@ -1,6 +1,8 @@
 import {WebAppRegistration} from "@/components/web-app-registration";
 import type { Metadata } from "next";
 import "@fontsource-variable/inter";
+import "@fontsource-variable/onest";
+import { fontBootScript } from "@/lib/fonts";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -26,6 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: fontBootScript }}/></head>
       <body className="antialiased"><ThemeProvider>{children}<Toaster position="top-center" duration={4000} offset="max(24px, env(safe-area-inset-top))" mobileOffset="max(16px, env(safe-area-inset-top))" /><WebAppRegistration/></ThemeProvider></body>
     </html>
   );

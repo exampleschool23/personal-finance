@@ -69,7 +69,8 @@
   --caution: #dfb883;
   --field: #141a16;
   --hairline: color-mix(in srgb, var(--border) 60%, transparent);
-  --font-ui: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-system: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-ui: "Inter Variable", var(--font-system);
   --radius-card: 20px;
   --shadow-card: 0 1px 2px rgb(0 0 0 / 24%), 0 10px 28px rgb(0 0 0 / 18%);
 }
@@ -121,12 +122,15 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-ui);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
 }
 
 :root { --background:#101412; --foreground:#edf3ef; --card:#181e1b; --card-foreground:#edf3ef; --popover:#1b231f; --popover-foreground:#edf3ef; --primary:#c4f36b; --primary-foreground:#15200b; --secondary:#242d27; --secondary-foreground:#edf3ef; --muted:#222a25; --muted-foreground:#a1afa5; --accent:#2a362b; --accent-foreground:#c4f36b; --border:#303b33; --input:#354239; --ring:#c4f36b; --sidebar:#151b17; --sidebar-foreground:#c1cdc4; --sidebar-accent:#293523; --sidebar-accent-foreground:#d4f99b; --sidebar-border:#303b33; }
+/* The Settings font choice: the root carries the account default, and the Settings preview reuses the same attribute. */
+[data-font="inter"]{--font-ui:"Inter Variable",var(--font-system)}
+[data-font="onest"]{--font-ui:"Onest Variable",var(--font-system)}
 body{margin:0;background:var(--background);color:var(--foreground);font-family:var(--font-ui);font-size:var(--type-body);line-height:1.6}
 button,a,input,select{touch-action:manipulation}
 button{cursor:pointer}
@@ -1705,6 +1709,9 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .settings-layout .preferences-card label{font-size:14px;line-height:1.5;display:flex;flex-direction:column;gap:6px;margin:0;min-width:0}
 .workspace .content .preferences-card input,.workspace .content .preferences-card select{min-height:42px;height:42px;font-size:var(--type-small);padding-block:8px;box-shadow:none}
 .settings-layout .preferences-card .preferences-setting-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr);align-items:center;gap:20px}
+.font-preview{margin-top:14px;padding:14px 16px;border:1px solid var(--hairline);border-radius:var(--radius-control);background:var(--muted);font-family:var(--font-ui);line-height:1.5}
+.font-preview strong{display:block;font-size:var(--type-title);font-weight:600;letter-spacing:-.01em}
+.font-preview span{display:block;font-size:var(--type-small);color:var(--muted-foreground);font-variant-numeric:tabular-nums}
 .preferences-currency-section{border-top:1px solid var(--border);margin-top:14px;padding-top:12px}
 .preferences-currency-section h4{font-size:14px;font-weight:600;margin:0 0 3px}
 .preferences-currency-list{padding:0;margin:10px 0 4px;list-style:none;border:1px solid var(--border);border-radius:12px;overflow:hidden}
