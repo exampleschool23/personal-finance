@@ -17,4 +17,6 @@ Run migrations in numeric order. 004 adds account preferences with owner RLS,
 widens record currency validation, and updates the paginated RPC. The saved
 language is applied on account load. The top-right switcher changes the current
 visit without replacing that default. The first preferred currency is primary;
-at least one is required. Removing a preference never deletes existing records.
+one or two are required (`maxPreferredCurrencies`), and the top-bar currency
+switcher and record currency choices offer only these. Removing a preference
+never deletes existing records.

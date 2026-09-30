@@ -188,7 +188,6 @@
   "Next": "Next",
   "Settings": "Settings",
   "Preferred currencies": "Preferred currencies",
-  "Choose as many as you need. The primary currency opens by default.": "Choose as many as you need. The primary currency opens by default.",
   "Primary currency": "Primary currency",
   "Remove {currency}": "Remove {currency}",
   "Search currencies": "Search currencies",
@@ -1484,7 +1483,6 @@
   "Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.": "Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.",
   "Some holdings have no recorded history yet.": "Some holdings have no recorded history yet.",
   "Country / region (optional)": "Country / region (optional)",
-  "Choose a language, at least one currency, a valid country, and a name of up to 80 characters.": "Choose a language, at least one currency, a valid country, and a name of up to 80 characters.",
   "Select your country": "Select your country",
   "Saved": "Saved",
   "Budget used": "Budget used",
@@ -1520,7 +1518,6 @@
   "Choose the language for the app.": "Choose the language for the app.",
   "App language": "App language",
   "Choose the currencies you use.": "Choose the currencies you use.",
-  "Available when choosing a currency.": "Available when choosing a currency.",
   "Primary": "Primary",
   "Add currency": "Add currency",
   "All changes saved": "All changes saved",
@@ -1597,5 +1594,9 @@
   "Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.": "Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.",
   "Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.": "Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.",
   "Choose a valid tracking start date.": "Choose a valid tracking start date.",
-  "Could not save the tracking start date.": "Could not save the tracking start date."
+  "Could not save the tracking start date.": "Could not save the tracking start date.",
+  "Shown in the top bar and whenever you choose a currency. Choose one or two.": "Shown in the top bar and whenever you choose a currency. Choose one or two.",
+  "Choose one or two currencies. To pick another, clear one first. The primary currency opens by default.": "Choose one or two currencies. To pick another, clear one first. The primary currency opens by default.",
+  "Change currencies": "Change currencies",
+  "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters.": "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters."
 }

@@ -4,19 +4,20 @@ import fs from 'node:fs';
 import ts from 'typescript';
 import { z } from 'zod';
 import { isCountry, countryCodes, countryOptions } from '../lib/countries.ts';
-import { defaultPreferences, isCurrency, fiatCurrencies } from '../lib/currencies.ts';
+import { defaultPreferences, isCurrency, maxPreferredCurrencies } from '../lib/currencies.ts';
 const source=fs.readFileSync(new URL('../app/api/settings/route.ts',import.meta.url),'utf8').replace(/^import .*;\n/gm,'').replace(/export async function/g,'async function');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let authenticated=true, calls=[], rows=[], databaseFailure=false;
-const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','fiatCurrencies','isCountry',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,fiatCurrencies,isCountry);
+const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry);
 const request=body=>new Request('https://app.local/api/settings',{method:'PUT',headers:{origin:'https://app.local','Content-Type':'application/json'},body:JSON.stringify(body)});
 test('persists validated preferences for the authenticated owner',async()=>{
- calls=[];const response=await api.PUT(request({language:'uz',currencies:['EUR','UZS','JPY']}));
- assert.equal(response.status,200);assert.deepEqual(JSON.parse(calls[0].init.body),{user_id:'owner',language:'uz',currencies:['EUR','UZS','JPY']});
+ calls=[];const response=await api.PUT(request({language:'uz',currencies:['EUR','INR']}));
+ assert.equal(response.status,200);assert.deepEqual(JSON.parse(calls[0].init.body),{user_id:'owner',language:'uz',currencies:['EUR','INR']});
+ calls=[];assert.equal((await api.PUT(request({language:'en',currencies:['USD']}))).status,200);assert.deepEqual(JSON.parse(calls[0].init.body).currencies,['USD']);
  assert.equal(calls[0].token,'owner-token');
 });
-test('rejects empty, duplicate, and non-fiat currencies',async()=>{
- for(const currencies of [[],['EUR','EUR'],['BTC']]) assert.equal((await api.PUT(request({language:'en',currencies}))).status,400);
+test('rejects empty, duplicate, non-fiat, and more than two currencies',async()=>{
+ for(const currencies of [[],['EUR','EUR'],['BTC'],['USD','INR','UZS']]) assert.equal((await api.PUT(request({language:'en',currencies}))).status,400);
  assert.equal((await api.PUT(request({language:'fr',currencies:['USD']}))).status,400);
 });
 test('protects settings from anonymous and cross-origin writes',async()=>{
@@ -76,4 +77,26 @@ test('country names are localized and the migration validates the same catalogue
  const migration=fs.readFileSync('migrations/068_profile_country.sql','utf8');
  assert.deepEqual([...migration.matchAll(/'([A-Z]{2})'/g)].map(match=>match[1]),countryCodes);
  assert.ok(fs.readFileSync('database/setup.sql','utf8').includes(migration));
+});
+test('preferences saved before the two-currency limit load with their first two, primary first',async()=>{
+ rows=[{language:'en',currencies:['EUR','UZS','JPY']}];
+ assert.deepEqual((await (await api.GET()).json()).currencies,['EUR','UZS']);
+ rows=[];
+});
+test('the migration keeps the first two preferred currencies and rejects longer lists',async()=>{
+ const { PGlite }=await import('@electric-sql/pglite');
+ const db=new PGlite();
+ const owner='a0000000-0000-4000-8000-000000000001',other='b0000000-0000-4000-8000-000000000001';
+ try{
+  await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY); CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$; INSERT INTO auth.users VALUES('${owner}'),('${other}');`);
+  const original=fs.readFileSync('migrations/004_settings_and_fiat_currencies.sql','utf8');
+  await db.exec(original.slice(original.indexOf('CREATE TABLE IF NOT EXISTS public.user_preferences'),original.indexOf('-- Run after the lending-date')));
+  await db.exec(`INSERT INTO user_preferences(user_id,currencies) VALUES('${owner}',ARRAY['EUR','UZS','JPY']),('${other}',ARRAY['INR']);`);
+  await db.exec(fs.readFileSync('migrations/074_two_preferred_currencies.sql','utf8'));
+  assert.deepEqual((await db.query('SELECT currencies FROM user_preferences ORDER BY user_id')).rows.map(row=>row.currencies),[['EUR','UZS'],['INR']]);
+  await assert.rejects(db.exec(`UPDATE user_preferences SET currencies=ARRAY['USD','INR','UZS'] WHERE user_id='${other}'`),/check constraint/);
+  await db.exec(`UPDATE user_preferences SET currencies=ARRAY['USD','INR'] WHERE user_id='${other}'`);
+  assert.equal(maxPreferredCurrencies,2);
+  assert.ok(fs.readFileSync('database/setup.sql','utf8').includes('CONSTRAINT user_preferences_currencies_limit CHECK (cardinality(currencies) <= 2)'));
+ }finally{await db.close();}
 });

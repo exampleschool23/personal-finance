@@ -188,7 +188,6 @@
   "Next": "Keyingi",
   "Settings": "Sozlamalar",
   "Preferred currencies": "Tanlangan valyutalar",
-  "Choose as many as you need. The primary currency opens by default.": "Kerakli valyutalarni tanlang. Asosiy valyuta avtomatik ochiladi.",
   "Primary currency": "Asosiy valyuta",
   "Remove {currency}": "{currency} ni olib tashlash",
   "Search currencies": "Valyutalarni qidirish",
@@ -1484,7 +1483,6 @@
   "Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.": "Namuna portfeli BTC va SPY haqiqiy narxlar tarixi bilan taqqoslanadi. SPY S&P 500 indeksini kuzatadi; omonatlar uchun taxminiy yillik stavkalar ishlatiladi.",
   "Some holdings have no recorded history yet.": "Ayrim aktivlar va qarzlar tarixi hali qayd etilmagan.",
   "Country / region (optional)": "Mamlakat / hudud (ixtiyoriy)",
-  "Choose a language, at least one currency, a valid country, and a name of up to 80 characters.": "Til, kamida bitta valyuta, haqiqiy mamlakat va 80 belgigacha bo‘lgan ismni tanlang.",
   "Select your country": "Mamlakatingizni tanlang",
   "Saved": "Saqlandi",
   "Budget used": "Sarflangan budjet",
@@ -1520,7 +1518,6 @@
   "Choose the language for the app.": "Ilova tilini tanlang.",
   "App language": "Ilova tili",
   "Choose the currencies you use.": "Foydalanadigan valyutalaringizni tanlang.",
-  "Available when choosing a currency.": "Valyuta tanlashda mavjud.",
   "Primary": "Asosiy",
   "Add currency": "Valyuta qo‘shish",
   "All changes saved": "Barcha o‘zgarishlar saqlandi",
@@ -1597,5 +1594,9 @@
   "Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.": "Kuzatuv {date} kuni boshlanadi. Benchmarklar shu kundagi investitsiyalaringiz qiymatidan boshlanadi, undan oldingi ma’lumotlar ko‘rsatilmaydi. Birinchi investitsiyadan kuzatish uchun sanani tozalang.",
   "Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.": "Kuzatuv birinchi investitsiya amalidan boshlanadi. Keyinroq boshlash uchun sana tanlang — masalan, mavjud aktivlarni kiritib bo‘lganingizdan keyin.",
   "Choose a valid tracking start date.": "Kuzatuv boshlanishi uchun to‘g‘ri sana tanlang.",
-  "Could not save the tracking start date.": "Kuzatuv boshlanish sanasini saqlab bo‘lmadi."
+  "Could not save the tracking start date.": "Kuzatuv boshlanish sanasini saqlab bo‘lmadi.",
+  "Shown in the top bar and whenever you choose a currency. Choose one or two.": "Yuqori panelda va valyuta tanlashda ko‘rsatiladi. Bitta yoki ikkitasini tanlang.",
+  "Choose one or two currencies. To pick another, clear one first. The primary currency opens by default.": "Bitta yoki ikkita valyutani tanlang. Boshqasini tanlash uchun avval bittasini olib tashlang. Asosiy valyuta avtomatik ochiladi.",
+  "Change currencies": "Valyutalarni o‘zgartirish",
+  "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters.": "Til, bitta yoki ikkita valyuta, haqiqiy mamlakat va 80 belgigacha bo‘lgan ismni tanlang."
 }

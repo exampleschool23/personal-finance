@@ -51,3 +51,12 @@ test('profile settings shows the shared country picker with its prompt and saved
  assert.match(html,/<option value="" selected="">Select your country<\/option>/);
  assert.match(render('UZ'),/<option value="UZ" selected="">Uzbekistan<\/option>/);
 });
+test('preferred currencies stop at two: the trigger adds below the limit and changes at it',()=>{
+ const {SettingsPanel}=loadTS('components/settings-panel.tsx',overrides);
+ const render=currencies=>renderToStaticMarkup(React.createElement(SettingsPanel,{initial:{language:'en',currencies},demo:false,onSaved:()=>{},loading:false,loadError:'',onRetry:()=>{}}));
+ const one=render(['USD']),two=render(['USD','INR']);
+ assert.match(one,/Add currency/);assert.doesNotMatch(one,/Change currencies/);
+ assert.match(two,/Change currencies/);assert.doesNotMatch(two,/Add currency/);
+ assert.match(two,/Choose one or two\./);
+ assert.match(two,/aria-label="Remove INR"/);assert.doesNotMatch(two,/aria-label="Remove USD"/);
+});

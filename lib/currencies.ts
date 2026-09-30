@@ -9,4 +9,6 @@ export function currencyLabel(code: string, locale: string) {
   catch { return `${code} · ${catalogue.find(c => c.code === code)?.name || code}`; }
 }
 export type Preferences = { display_name?: string; country?: string; language: 'en' | 'ru' | 'uz'; currencies: string[] };
+// The top bar switches between these; the first is the primary currency.
+export const maxPreferredCurrencies = 2;
 export const defaultPreferences: Preferences = { language: 'en', currencies: ['USD', 'UZS'] };

@@ -10,7 +10,7 @@ test('test-account seed is atomic, owner isolated, repeat-safe and reconciles hi
  try{
   await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY,email text);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${target}','wrong@example.com'),('${source}','owner@example.com');`);
   await db.exec(fs.readFileSync('database/setup.sql','utf8'));
-  await db.query("INSERT INTO user_preferences(user_id,language,currencies) VALUES($1,'uz',ARRAY['UZS','USD','EUR'])",[source]);
+  await db.query("INSERT INTO user_preferences(user_id,language,currencies) VALUES($1,'uz',ARRAY['UZS','USD'])",[source]);
   for(const [kind,amount,quantity,currency] of [['Cash',.01,1,'CHF'],['Cash',5000,1,'USD'],['Salary',21000000,1,'UZS'],['Stock',125.12345678,3.125,'USD'],['Crypto',.00000017,12345.6789,'USD'],['Deposit',100000000,1,'UZS'],['Business',40000,1,'USD'],['Property',60000,1,'USD'],['Money lent',2000,1,'USD'],['Mortgage',20000,1,'USD'],['Loan',1234.56789,1,'EUR'],['Debt',1000,1,'USD']]){
    await db.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,quantity,date,rate,ownership_percentage) VALUES(gen_random_uuid(),$1,$2,$2,$3,$4,$5,'2025-01-01',12,$6)",[source,kind,currency,amount,quantity,kind==='Business'?35:100]);
   }
@@ -28,7 +28,7 @@ test('test-account seed is atomic, owner isolated, repeat-safe and reconciles hi
   await db.exec(sql);
   assert.equal(await sourceState(),before);
   const prefs=(await db.query('SELECT * FROM user_preferences WHERE user_id=$1',[target])).rows[0];
-  assert.equal(prefs.language,'uz');assert.deepEqual(prefs.currencies,['UZS','CHF','EUR','USD']);
+  assert.equal(prefs.language,'uz');assert.deepEqual(prefs.currencies,['UZS','USD']);
   const history=(await db.query("SELECT min(occurred_on)::text first,max(occurred_on)::text last,count(*)::int n FROM investment_history WHERE user_id=$1",[target])).rows[0];
   assert.equal(history.first,'2020-01-01');assert.ok(history.n>600);
   assert.equal(history.last,(await db.query("SELECT (now() AT TIME ZONE 'Asia/Tashkent')::date::text AS day")).rows[0].day);

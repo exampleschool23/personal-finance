@@ -39,9 +39,10 @@ BEGIN
   SELECT unnest(up.currencies) AS currency FROM public.user_preferences up WHERE up.user_id=reference_owner
   UNION SELECT currency FROM public.finance_records WHERE user_id=reference_owner
  ) currency_list;
- -- Keep the reference primary currency first, also retaining currencies used by its records.
+ -- Keep the reference preferences in order, then currencies used by its records;
+ -- owners keep at most two preferred currencies.
  SELECT ARRAY(SELECT currency FROM unnest(currencies) x(currency)
-  ORDER BY CASE WHEN currency=(SELECT up.currencies[1] FROM public.user_preferences up WHERE up.user_id=reference_owner) THEN 0 ELSE 1 END,currency) INTO currencies;
+  ORDER BY array_position((SELECT up.currencies FROM public.user_preferences up WHERE up.user_id=reference_owner),currency) NULLS LAST,currency LIMIT 2) INTO currencies;
  INSERT INTO public.user_preferences(user_id,language,currencies,display_name)
  VALUES(target_owner,coalesce(language_code,'en'),currencies,'Test account — history from 2020')
  ON CONFLICT(user_id) DO UPDATE SET language=excluded.language,currencies=excluded.currencies,display_name=excluded.display_name;

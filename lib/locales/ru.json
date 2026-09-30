@@ -188,7 +188,6 @@
   "Next": "Далее",
   "Settings": "Настройки",
   "Preferred currencies": "Предпочитаемые валюты",
-  "Choose as many as you need. The primary currency opens by default.": "Выберите нужное количество валют. Основная валюта открывается по умолчанию.",
   "Primary currency": "Основная валюта",
   "Remove {currency}": "Удалить {currency}",
   "Search currencies": "Поиск валют",
@@ -1484,7 +1483,6 @@
   "Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.": "Примерный портфель сравнивается с реальной историей цен BTC и SPY. SPY отслеживает S&P 500; для вкладов используются условные годовые ставки.",
   "Some holdings have no recorded history yet.": "Для некоторых активов и долгов история ещё не записана.",
   "Country / region (optional)": "Страна / регион (необязательно)",
-  "Choose a language, at least one currency, a valid country, and a name of up to 80 characters.": "Выберите язык, хотя бы одну валюту, допустимую страну и имя длиной до 80 символов.",
   "Select your country": "Выберите свою страну",
   "Saved": "Сохранено",
   "Budget used": "Использовано бюджета",
@@ -1520,7 +1518,6 @@
   "Choose the language for the app.": "Выберите язык приложения.",
   "App language": "Язык приложения",
   "Choose the currencies you use.": "Выберите валюты, которыми пользуетесь.",
-  "Available when choosing a currency.": "Доступны при выборе валюты.",
   "Primary": "Основная",
   "Add currency": "Добавить валюту",
   "All changes saved": "Все изменения сохранены",
@@ -1597,5 +1594,9 @@
   "Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.": "Отслеживание начинается {date}. Бенчмарки стартуют со стоимости ваших инвестиций в этот день, более ранние данные не показываются. Очистите дату, чтобы отслеживать с первой инвестиции.",
   "Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.": "Отслеживание начинается с первой инвестиционной операции. Выберите дату начала, чтобы начать позже — например, после того как вы внесли существующие активы.",
   "Choose a valid tracking start date.": "Выберите корректную дату начала отслеживания.",
-  "Could not save the tracking start date.": "Не удалось сохранить дату начала отслеживания."
+  "Could not save the tracking start date.": "Не удалось сохранить дату начала отслеживания.",
+  "Shown in the top bar and whenever you choose a currency. Choose one or two.": "Показываются в верхней панели и при выборе валюты. Выберите одну или две.",
+  "Choose one or two currencies. To pick another, clear one first. The primary currency opens by default.": "Выберите одну или две валюты. Чтобы выбрать другую, сначала снимите одну из выбранных. Основная валюта открывается по умолчанию.",
+  "Change currencies": "Изменить валюты",
+  "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters.": "Выберите язык, одну или две валюты, допустимую страну и имя длиной до 80 символов."
 }

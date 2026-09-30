@@ -84,7 +84,7 @@ the SQL function is installed; there is no unbounded-fetch fallback.
 Run `migrations/004_settings_and_fiat_currencies.sql` after migration 003 before
 deploying Settings. This creates owner-only account preferences and broadens
 record/RPC currency validation. The language switcher is temporary; Settings
-stores the account default. At least one preferred currency is required.
+stores the account default. One or two preferred currencies are required.
 See `docs/currencies.md` for ISO catalogue provenance and rate-provider rules.
 
 ## Business assets

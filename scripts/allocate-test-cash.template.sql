@@ -123,8 +123,9 @@ BEGIN
  UPDATE public.finance_records f SET estimated_monthly_income=round(f.amount*f.ownership_percentage/100*
   coalesce(reference_business.estimated_monthly_income,0)/(reference_business.amount*reference_business.ownership_percentage/100))
  FROM allocation_businesses reference_business WHERE f.id=reference_business.new_id AND f.user_id=target_owner;
- -- Allow the new USD holdings to appear in the test account's currency dropdowns.
- UPDATE public.user_preferences SET currencies=array_append(currencies,'USD') WHERE user_id=target_owner AND NOT ('USD'=ANY(currencies));
+ -- Allow the new USD holdings to appear in the test account's currency dropdowns,
+ -- keeping the primary currency within the two-currency limit.
+ UPDATE public.user_preferences SET currencies=ARRAY[currencies[1],'USD'] WHERE user_id=target_owner AND NOT ('USD'=ANY(currencies));
  IF EXISTS(SELECT 1 FROM allocation_cash original JOIN public.finance_records current_cash ON current_cash.id=original.id
   WHERE abs(current_cash.amount-(original.amount-floor(original.amount*.60)-2*floor(original.amount*.15)))>.00000001) THEN
   RAISE EXCEPTION 'Cash allocation failed reconciliation; all changes rolled back.';

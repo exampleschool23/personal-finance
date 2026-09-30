@@ -19,7 +19,7 @@ test('sample investments spend existing cash once, convert currencies, preserve 
  try{
   await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY,email text);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${target}','hoggish@gmail.com'),('${source}','owner@example.com');`);
   await db.exec(fs.readFileSync('database/setup.sql','utf8'));
-  await db.query("INSERT INTO user_preferences(user_id,language,currencies) VALUES($1,'en',ARRAY['USD','UZS','EUR'])",[source]);
+  await db.query("INSERT INTO user_preferences(user_id,language,currencies) VALUES($1,'en',ARRAY['USD','UZS'])",[source]);
   for(const [name,kind,currency,amount,share] of [['Reference cafe','Business','UZS',1000000000,30],['Reference studio','Business','USD',70000,50],['Salary','Salary','USD',4000,100],['Euro cash','Cash','EUR',1000,100]]){
    await db.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,ownership_percentage,estimated_monthly_income,date) VALUES(gen_random_uuid(),$1,$2,$3,$4,$5,$6,100,'2020-01-01')",[source,name,kind,currency,amount,share]);
   }
@@ -30,7 +30,7 @@ test('sample investments spend existing cash once, convert currencies, preserve 
   const historyBefore=(await db.query('SELECT * FROM investment_history WHERE user_id=$1 ORDER BY id',[target])).rows;
   const cashBefore=(await db.query("SELECT id,amount FROM finance_records WHERE user_id=$1 AND kind='Cash'",[target])).rows;
   // Missing any held currency aborts before changing the account.
-  const missing=structuredClone(snapshot);delete missing.rates.EUR;
+  const missing=structuredClone(snapshot);delete missing.rates.UZS;
   await assert.rejects(db.exec(renderInvestmentSql(missing)),/no retrieved exchange rate/);await db.exec('ROLLBACK');assert.equal(await state(target),before);
   // A failure during a purchase rolls back earlier FX and business funding as well.
   await db.exec(`CREATE FUNCTION fail_test_purchase() RETURNS trigger LANGUAGE plpgsql AS $$BEGIN IF NEW.user_id='${target}' AND NEW.kind='buy' THEN RAISE EXCEPTION 'simulated purchase failure'; END IF;RETURN NEW;END$$;CREATE TRIGGER fail_test_purchase BEFORE INSERT ON asset_movements FOR EACH ROW EXECUTE FUNCTION fail_test_purchase();`);
