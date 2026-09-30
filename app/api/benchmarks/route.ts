@@ -3,7 +3,7 @@ import { diversifiedPortfolioSchema, portfolioAssets, portfolioAssetKey } from '
 import { benchmarkSelectionSchema, stockBenchmarks } from '@/lib/benchmark-selection';
 import { session } from '@/lib/supabase';
 import { depositToday } from '@/lib/deposit-interest';
-import { checkpointDates, dateMillis, dayMillis, shiftDay, validDay, type BenchmarkData, type PricePoint, type FxPoint } from '@/lib/benchmark-data';
+import { checkpointDates, loadFxCheckpoints, dateMillis, dayMillis, shiftDay, validDay, type BenchmarkData, type PricePoint, type FxPoint } from '@/lib/benchmark-data';
 
 async function read(url: string, fresh = false): Promise<unknown> {
  for (let attempt = 0; attempt < 2; attempt++) {
@@ -138,15 +138,7 @@ async function loadBenchmarks(req: Request) {
   if(selected.includes('BTC'))jobs.push(async () => { try { data.prices.BTC = await history('crypto','BTC'); } catch { data.errors.BTC = 'Market history is unavailable for this period.'; } });
   if(selected.includes('PORTFOLIO')&&portfolioCrypto)jobs.push(async()=>{try{data.prices.portfolioCrypto=await history('crypto',portfolioCrypto);}catch{data.errors.portfolioCrypto='Market history is unavailable for this period.';}});
   jobs.push(async () => {
-   try {
-    const dates = checkpointDates(start, end);
-    // Check the source before scheduling the rest; a failed FX feed stays unavailable.
-    const first = await fxAt(dates[0]);
-    const points: FxPoint[] = [first];
-    let index = 1;
-    await Promise.all(Array.from({ length: 3 }, async () => { while (index < dates.length) { const date = dates[index++]; points.push(await fxAt(date)); } }));
-    data.fx = points.sort((a,b) => a.date.localeCompare(b.date));
-   } catch { data.errors.fx = 'Historical exchange rates are unavailable.'; }
+   try { data.fx = await loadFxCheckpoints(checkpointDates(start, end), fxAt); } catch { data.errors.fx = 'Historical exchange rates are unavailable.'; }
   });
   let index = 0;
   await Promise.all(Array.from({ length: 3 }, async () => { while (index < jobs.length) await jobs[index++](); }));

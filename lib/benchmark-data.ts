@@ -14,6 +14,25 @@ export function checkpointDates(start: string, end: string) {
  for (let day = 0; day < days; day += step) dates.push(shiftDay(start, day));
  return [...dates, end];
 }
+// A published rate stays in force until the next one, so a checkpoint the feed
+// fails to serve uses the closest earlier day it does serve. Each point keeps the
+// day it was actually loaded for.
+export async function loadFxCheckpoints(dates: string[], load: (date: string) => Promise<FxPoint>, lookback = 2): Promise<FxPoint[]> {
+ async function near(date: string) {
+  let failure: unknown;
+  for (let back = 0; back <= lookback; back++) {
+   try { return await load(shiftDay(date, -back)); } catch (error) { failure = error; }
+  }
+  throw failure;
+ }
+ // Check the source before scheduling the rest; a failed FX feed stays unavailable.
+ const points = new Map<string, FxPoint>();
+ const first = await near(dates[0]);
+ points.set(first.date, first);
+ let index = 1;
+ await Promise.all(Array.from({ length: 3 }, async () => { while (index < dates.length) { const point = await near(dates[index++]); points.set(point.date, point); } }));
+ return [...points.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
 export function latestOn<T extends { date: string }>(points: T[], date: string): T | undefined {
  // Inputs are sorted by their source adapter.
  return points.findLast(point => point.date <= date);

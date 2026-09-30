@@ -264,3 +264,21 @@ test('Tashkent midnight carries the latest completed UTC candle across a two-day
   assert.equal(result.errors.BTC,undefined);assert.equal(result.prices.BTC[0].date,'2026-09-15');
  }finally{globalThis.fetch=original;}
 });
+test('a day the exchange-rate feed misses uses the closest earlier published day instead of failing the comparison',async()=>{
+ const original=globalThis.fetch,key=process.env.TWELVE_DATA_API_KEY;
+ const rates=date=>{const display=date.split('-').reverse().join('.');return Response.json([{Ccy:'USD',Rate:'12000',Nominal:'1',Date:display}]);};
+ try{
+  delete process.env.TWELVE_DATA_API_KEY;
+  // 16 September is unavailable on every attempt; 17 September fails once, then recovers.
+  let flaky=0;
+  globalThis.fetch=async raw=>{const url=new URL(raw);if(url.hostname!=='cbu.uz')throw Error('offline');const date=url.pathname.split('/').filter(Boolean).at(-1);if(date==='2026-09-16')return new Response('',{status:503});if(date==='2026-09-17'&&!flaky++)throw Error('reset');return rates(date);};
+  const data=await(await GET(request('start=2026-09-14&end=2026-09-17&benchmarks=depositUSD'))).json();
+  assert.equal(data.errors.fx,undefined);
+  assert.deepEqual(data.fx.map(point=>point.date),['2026-09-14','2026-09-15','2026-09-17']);
+  assert.equal(dates.historicalRate(data.fx,'UZS','2026-09-16'),12000);
+  // A feed that is down across the whole lookback still reports the gap rather than guessing.
+  globalThis.fetch=async raw=>{const url=new URL(raw);const date=url.pathname.split('/').filter(Boolean).at(-1);return date<='2026-09-14'?new Response('',{status:503}):rates(date);};
+  const down=await(await GET(request('start=2026-09-14&end=2026-09-17&benchmarks=depositUSD'))).json();
+  assert.ok(down.errors.fx);assert.deepEqual(down.fx,[]);
+ }finally{globalThis.fetch=original;if(key!==undefined)process.env.TWELVE_DATA_API_KEY=key;}
+});
