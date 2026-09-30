@@ -67,6 +67,8 @@ test('milestones mark the months that receive an investment and show both monthl
  assert.deepEqual(skipped.points.map(point=>point.contributes),[false,false,true]);
  const planner=fs.readFileSync('components/planning/goal-forecast.tsx','utf8');
  assert.match(planner,/<th scope="col">\{t\('Monthly investment'\)\}<\/th><th scope="col">\{t\('Your projected path'\)\}<\/th><th scope="col">\{t\('Monthly contribution needed'\)\}<\/th><th scope="col">\{t\('Path to your goal'\)\}<\/th>/);
+ // Monthly rows name their month; the opening row is today and an off-cycle target date keeps its day.
+ assert.match(planner,/\{index === 0 \? t\('Today'\) : point\.contributes \? formatMonthYear\(point\.date, locale\) : formatDate\(point\.date, locale\)\}/);
  // The needed amount is the same whole figure as the summary tile, never an exact calculation tail.
  assert.match(planner,/point\.contributes && requiredContribution !== null \? money\(requiredContribution\) : '—'/);
 });
