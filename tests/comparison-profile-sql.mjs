@@ -12,6 +12,8 @@ test('first-use date and frozen capital survive visits, retries and preference c
   await db.exec(`INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,created_at) VALUES('20000000-0000-4000-8000-000000000001','${owner}','Café','Business','USD',100,'2000-01-01','2026-09-01T01:00:00Z');`);
   await db.exec(migration);
   await db.exec(fs.readFileSync('migrations/060_diversified_portfolio.sql','utf8'));
+  // 073 is safe to run twice.
+  for(let run=0;run<2;run++)await db.exec(fs.readFileSync('migrations/073_portfolio_tracking_start.sql','utf8'));
   await db.exec(`SET ROLE authenticated;SET request.jwt.claim.sub='${owner}';`);
   const initial=(await db.query('SELECT mark_app_started() AS value')).rows[0].value;
   assert.equal(initial.source,'earliest_record');assert.ok(initial.started_at.startsWith('2026-09-01'));assert.deepEqual((await db.query('SELECT mark_app_started() AS value')).rows[0].value,initial);
@@ -25,9 +27,13 @@ test('first-use date and frozen capital survive visits, retries and preference c
   assert.deepEqual((await db.query('SELECT benchmarks FROM investment_comparison_preferences')).rows[0].benchmarks,['SPY']);
   await db.query('UPDATE investment_comparison_preferences SET portfolio=$1',[JSON.stringify(defaultDiversifiedPortfolio)]);
   assert.deepEqual((await db.query('SELECT portfolio FROM investment_comparison_preferences')).rows[0].portfolio,defaultDiversifiedPortfolio);
+  await db.query("UPDATE investment_comparison_preferences SET tracking_start='2026-09-15'");
+  assert.equal((await db.query('SELECT tracking_start::text AS day FROM investment_comparison_preferences')).rows[0].day,'2026-09-15');
+  await assert.rejects(db.query("UPDATE investment_comparison_preferences SET tracking_start='2015-12-31'"),/check constraint/);
   await db.exec(`SET request.jwt.claim.sub='${other}';`);
   assert.equal((await db.query('SELECT * FROM investment_comparison_preferences')).rows.length,0);
   assert.equal((await db.query('UPDATE investment_comparison_preferences SET portfolio=null RETURNING user_id')).rows.length,0);
+  assert.equal((await db.query('UPDATE investment_comparison_preferences SET tracking_start=null RETURNING user_id')).rows.length,0);
   await assert.rejects(db.query('INSERT INTO investment_comparison_preferences(user_id,portfolio) VALUES($1,$2)',[owner,JSON.stringify(defaultDiversifiedPortfolio)]),/row-level security/);assert.equal((await db.query('SELECT * FROM investment_comparison_baselines')).rows.length,0);assert.equal((await db.query('SELECT * FROM user_app_activity')).rows.length,0);
   const fresh=(await db.query('SELECT mark_app_started() AS value')).rows[0].value;assert.equal(fresh.source,'first_visit');
   await assert.rejects(db.query('INSERT INTO investment_comparison_baselines(user_id,starting_amount,currency,holdings) VALUES($1,1000,\'USD\',\'[]\')',[owner]),/row-level security/);

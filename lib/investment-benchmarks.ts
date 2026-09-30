@@ -51,13 +51,14 @@ export function accountRepaymentEvents(activity:readonly AccountRepayment[],reco
 }
 
 export function benchmarkMethodStorageKey(owner:string){return 'finance:benchmark-method:'+owner;}
-// Saved choices from before funding scopes lack `scope`; they keep excluding expenses.
-export function readBenchmarkMethod(storage:Pick<Storage,'getItem'>,owner:string,today:string):Required<ComparisonMethod>|null{
+// Only the funding scope is kept in this browser; the tracking start is saved to the account.
+// Choices saved before funding scopes lack `scope`; they keep excluding expenses.
+export function readBenchmarkScope(storage:Pick<Storage,'getItem'>,owner:string):FundingScope|null{
  try{
   const saved=JSON.parse(storage.getItem(benchmarkMethodStorageKey(owner))??'null');
-  if(!saved||!['purchases','date'].includes(saved.mode)||typeof saved.date!=='string'||!validDay(saved.date)||saved.date>today)return null;
-  if(saved.scope!==undefined&&!['investments','expenses'].includes(saved.scope))return null;
-  return {mode:saved.mode,date:saved.date,scope:saved.scope??'investments'};
+  if(!saved||typeof saved!=='object')return null;
+  if(saved.scope===undefined)return 'investments';
+  return ['investments','expenses'].includes(saved.scope)?saved.scope:null;
  }catch{return null;}
 }
 

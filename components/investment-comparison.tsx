@@ -1,8 +1,8 @@
 "use client";
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { NativeSelect } from '@/components/ui/native-select';
-import { benchmarkHistoryStart, benchmarkMethodStorageKey, readBenchmarkMethod, investmentComparisonCoverage, investmentDecisionComparison, purchaseComparisonStart, type ComparisonMethod, type BenchmarkMovement, type FundingScope } from '@/lib/investment-benchmarks';
-import { validDay } from '@/lib/benchmark-data';
+import { benchmarkHistoryStart, benchmarkMethodStorageKey, readBenchmarkScope, investmentComparisonCoverage, investmentDecisionComparison, purchaseComparisonStart, type ComparisonMethod, type BenchmarkMovement, type FundingScope } from '@/lib/investment-benchmarks';
+import { showError } from '@/lib/feedback';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { BenchmarkTooltip } from '@/components/benchmark-tooltip';
 import { demoBenchmarkKeys } from '@/lib/demo-finance';
@@ -12,7 +12,6 @@ import { stockBenchmarks } from '@/lib/benchmark-selection';
 import { refreshRead } from '@/lib/refresh-read';
 import { InvestmentValueChart } from '@/components/investment-value-chart';
 import { useEffect,useMemo,useState,type ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
 import { ChartSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { useLanguage } from '@/components/language-provider';
@@ -21,23 +20,17 @@ import { categoryColor } from '@/lib/category-colors';
 import { type Entry } from '@/lib/finance';
 import { type MarketData } from '@/lib/market';
 import { type HistoryEvent } from '@/lib/investment-history';
-import { shiftDay,type BenchmarkData } from '@/lib/benchmark-data';
+import { type BenchmarkData } from '@/lib/benchmark-data';
 import { defaultComparisonPreferences,type ComparisonProfile } from '@/lib/comparison-profile';
 
 type History={movements?:BenchmarkMovement[];records:Entry[];events:HistoryEvent[];cashflows?:Entry[]};
-export function InvestmentComparison({history,today,currency,market,demo,days,points,summary}:{days:number;points:{date:string;net:number}[];summary?:ReactNode;history:History;today:string;currency:string;market:MarketData|null;demo:boolean}){
+export function InvestmentComparison({history,today,currency,market,demo,windowStart,points,summary,profile,profileError,trackingStart,onTrackingStartChange}:{windowStart:string;points:{date:string;net:number}[];summary?:ReactNode;history:History;today:string;currency:string;market:MarketData|null;demo:boolean;profile:ComparisonProfile|null;profileError:string;trackingStart:string|null;onTrackingStartChange:(date:string|null)=>Promise<void>}){
  const {t,locale}=useLanguage();
- const [profile,setProfile]=useState<ComparisonProfile|null>(null),[profileError,setProfileError]=useState(''),[profileRetry,setProfileRetry]=useState(0);
  const [data,setData]=useState<BenchmarkData|null>(null),[error,setError]=useState(''),[retry,setRetry]=useState(0),[loadedKey,setLoadedKey]=useState('');
  const [overviewSelection,setOverviewSelection]=useState<{owner:string;keys:string[]}|null>(null);
- const [methodChoice,setMethodChoice]=useState<{owner:string;method:ComparisonMethod}|null>(null);
+ const [scopeChoice,setScopeChoice]=useState<{owner:string;scope:FundingScope}|null>(null);
+ const [savingStart,setSavingStart]=useState(false);
  const [detailDate,setDetailDate]=useState<string|null>(null);
- useEffect(()=>{
-  if(demo)return;const controller=new AbortController();
-  refreshRead('/api/comparison-profile',{signal:controller.signal}).then(async response=>{const result=await response.json() as ComparisonProfile&{error?:string};if(!response.ok)throw Error(result.error);if(!controller.signal.aborted){setProfile(result);setProfileError('');}}).catch(reason=>{if(!controller.signal.aborted)setProfileError(reason.message);});
-  return()=>controller.abort();
- },[demo,profileRetry]);
- useEffect(()=>{const refresh=()=>setProfileRetry(value=>value+1);window.addEventListener('comparison-settings-saved',refresh);window.addEventListener('focus',refresh);return()=>{window.removeEventListener('comparison-settings-saved',refresh);window.removeEventListener('focus',refresh);};},[]);
  const overviewOwner=demo?'demo':profile?.owner_id;
  useEffect(()=>{
   if(!overviewOwner)return;
@@ -48,21 +41,20 @@ export function InvestmentComparison({history,today,currency,market,demo,days,po
    let keys:string[]=[...demoBenchmarkKeys];
    try{if(localStorage.getItem(overviewBenchmarkStorageKey(overviewOwner))!==null)keys=readOverviewBenchmarks(localStorage,overviewOwner);}catch{}
    setOverviewSelection({owner:overviewOwner,keys});
-   try{const saved=readBenchmarkMethod(localStorage,overviewOwner,today);if(saved)setMethodChoice({owner:overviewOwner,method:saved});}catch{}
-
+   try{const saved=readBenchmarkScope(localStorage,overviewOwner);if(saved)setScopeChoice({owner:overviewOwner,scope:saved});}catch{}
   });
   return()=>{cancelled=true;};
- },[overviewOwner,demo,today]);
+ },[overviewOwner,demo]);
  const coverage=useMemo(()=>investmentComparisonCoverage(history.records,history.events,today),[history.records,history.events,today]);
- const savedMethod=methodChoice&&methodChoice.owner===overviewOwner?methodChoice.method:null;
- const scope=savedMethod?.scope??'investments';
+ const scope=scopeChoice&&scopeChoice.owner===overviewOwner?scopeChoice.scope:'investments';
  const purchaseStart=useMemo(()=>purchaseComparisonStart({records:history.records,events:history.events,movements:history.movements,cashflows:history.cashflows,today},scope),[history,today,scope]);
  // Market history is limited. Earlier purchases compare from recorded values on its first day.
  const earliestStart=purchaseStart<benchmarkHistoryStart?benchmarkHistoryStart:purchaseStart;
- const requestedMethod:ComparisonMethod=savedMethod??{mode:'purchases',date:earliestStart,scope};
- const beforeMarketHistory=requestedMethod.mode==='purchases'&&purchaseStart<benchmarkHistoryStart;
- const method:ComparisonMethod=beforeMarketHistory?{mode:'date',date:earliestStart,scope}:{...requestedMethod,scope};
- function chooseMethod(next:ComparisonMethod){if(!overviewOwner)return;setMethodChoice({owner:overviewOwner,method:next});setDetailDate(null);try{localStorage.setItem(benchmarkMethodStorageKey(overviewOwner),JSON.stringify(next));}catch{}}
+ const beforeMarketHistory=!trackingStart&&purchaseStart<benchmarkHistoryStart;
+ // A tracking start compares from the investment value recorded on that day; nothing earlier is shown.
+ const method:ComparisonMethod=trackingStart&&trackingStart<=today?{mode:'date',date:trackingStart,scope}:beforeMarketHistory?{mode:'date',date:earliestStart,scope}:{mode:'purchases',date:purchaseStart,scope};
+ function chooseScope(next:FundingScope){if(!overviewOwner)return;setScopeChoice({owner:overviewOwner,scope:next});setDetailDate(null);try{localStorage.setItem(benchmarkMethodStorageKey(overviewOwner),JSON.stringify({scope:next}));}catch{}}
+ async function chooseTrackingStart(date:string|null){setSavingStart(true);try{await onTrackingStartChange(date);setDetailDate(null);}catch(reason){showError((reason as Error).message);}finally{setSavingStart(false);}}
  const overviewKeys=overviewSelection?.owner===overviewOwner?overviewSelection?.keys??[]:[];
  function toggleOverview(key:string){
   if(!overviewOwner)return;
@@ -70,7 +62,7 @@ export function InvestmentComparison({history,today,currency,market,demo,days,po
   setOverviewSelection({owner:overviewOwner,keys});
   try{localStorage.setItem(overviewBenchmarkStorageKey(overviewOwner),JSON.stringify(keys));}catch{/* The current selection still works when browser storage is unavailable. */}
  }
- const start=method.mode==='date'?method.date:purchaseStart;
+ const start=method.date;
  const selected:readonly string[]=profile?.preferences.benchmarks??defaultComparisonPreferences.benchmarks;
  // Legend visibility is presentation state. Keep every configured benchmark
  // loaded so hiding and restoring lines never changes the request or simulation.
@@ -101,23 +93,22 @@ export function InvestmentComparison({history,today,currency,market,demo,days,po
  const visibleSeries=displayed.filter(item=>overviewSeriesVisible(overviewKeys,item.key));
  const visibleKeys=new Set(visibleSeries.map(item=>item.key));
  const overviewResult=decision?.result;
- const windowStart=days?shiftDay(today,-days):'0000-01-01';
  const chartPoints=(overviewResult?.points??[]).filter(point=>point.date>=windowStart);
  const chartSeries=visibleSeries;
  const detailPoint=chartPoints.find(point=>point.date===detailDate);
  return <>
-  <div className="overview-chart-heading"><h3>{t('Portfolio over time')}</h3><div className="comparison-legend" aria-busy={comparisonsLoading}>{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div></div>
+  <div className="overview-chart-heading"><div className="overview-chart-title"><h3>{t('Portfolio over time')}</h3><div className="tracking-start" aria-busy={savingStart}><span>{t('Tracking since')}</span><DatePicker value={trackingStart??''} required={false} min={benchmarkHistoryStart} max={today} onChange={date=>{if(!savingStart)void chooseTrackingStart(date||null);}}/></div></div><div className="comparison-legend" aria-busy={comparisonsLoading}>{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div></div>
   {ready&&!decision&&<p className="comparison-notice">{t('Investment history or exchange rates are incomplete for this comparison.')}</p>}
   {ready&&visibleSeries.filter(item=>item.key!=='actual').map(item=>{const reason=ready.errors[item.key]??ready.errors.fx??(overviewResult?.unavailable.includes(item.key)?'Price data, exchange rates or funds needed for a matching withdrawal are unavailable.':null);return reason?<p key={item.key} className="comparison-note">{item.label}: {t(reason)}</p>:null;})}
   {comparisonsLoading?<ChartSkeleton label={t('Loading comparisons…')}/>:!!chartPoints.length&&<><InvestmentValueChart onPointSelect={setDetailDate} label="Investment value and proceeds" points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={<BenchmarkTooltip scope={scope} marketHistory={ready} fundingDetails={decision?.details} receipts={[]} currency={currency} series={chartSeries}/>}/>
   <p className="comparison-note">{t('Tap a chart point to open its activity and investments.')}</p></>}
   {summary}
   <details className="overview-details"><summary>{t('Comparison settings')}</summary>
-   <div className="form-grid"><label>{t('Comparison method')}<NativeSelect value={method.mode} disabled={!overviewOwner} onChange={event=>chooseMethod({...method,mode:event.target.value as ComparisonMethod['mode']})}><option value="purchases">{t('From original purchases')}</option><option value="date">{t('From a chosen start date')}</option></NativeSelect></label><label>{t('Benchmark funding')}<NativeSelect value={scope} disabled={!overviewOwner} onChange={event=>chooseMethod({...requestedMethod,scope:event.target.value as FundingScope})}><option value="investments">{t('Excluding expenses')}</option><option value="expenses">{t('Including expenses')}</option></NativeSelect></label>{method.mode==='date'&&<label>{t('Starting date')}<DatePicker value={method.date} min="2016-01-01" max={today} required onChange={date=>{if(validDay(date))chooseMethod({...method,date});}}/></label>}</div>
+   <div className="form-grid"><label>{t('Benchmark funding')}<NativeSelect value={scope} disabled={!overviewOwner} onChange={event=>chooseScope(event.target.value as FundingScope)}><option value="investments">{t('Excluding expenses')}</option><option value="expenses">{t('Including expenses')}</option></NativeSelect></label></div>
+   <p className="comparison-note">{trackingStart?t('Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.',{date:formatDate(trackingStart,locale)}):t('Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.')}</p>
    <p className="comparison-note">{t(scope==='expenses'?'Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.':'Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.')}</p>
    {beforeMarketHistory&&<p className="comparison-note">{t('Market history starts on {date}. Earlier purchases are compared from their recorded values on that day.',{date:formatDate(earliestStart,locale)})}</p>}
    {coverage.missing.length>0&&<p className="comparison-note">{t('Some investments have no recorded purchase. Their first recorded value counts as invested on the day it was recorded, so it is never shown as a gain.')}</p>}
-   {method.mode==='date'&&method.date!==earliestStart&&<Button variant="outline" onClick={()=>chooseMethod({mode:'date',date:earliestStart,scope})}>{t('Use earliest recorded date')}</Button>}
    {demo&&<p className="comparison-note">{t("Sample portfolio compared with real BTC and SPY price history. SPY tracks the S&P 500; deposits use assumed annual rates.")}</p>}
   </details>
   <Dialog open={!!detailPoint} onOpenChange={open=>{if(!open)setDetailDate(null);}}><DialogContent className="chart-point-details sm:max-w-xl"><DialogHeader><DialogTitle>{t('Activity and investments')}</DialogTitle><DialogDescription>{detailDate?formatDate(detailDate,locale):''}</DialogDescription></DialogHeader>

@@ -21,3 +21,9 @@ export function buildRangeCalendar(monthKey: string) {
 export function calendarYearAnchor(monthKey: string, year: number, panel: 0 | 1) {
   return shiftCalendarMonth(`${String(year).padStart(4, '0')}-${monthKey.slice(5)}`, -panel);
 }
+// The day the picker opens on: the chosen date, otherwise today kept within min and max.
+export function openingCalendarDay(value: string, today: string, min?: string, max?: string) {
+  if (value) return value;
+  if (min && today < min) return min;
+  return max && today > max ? max : today;
+}

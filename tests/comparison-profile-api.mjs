@@ -7,11 +7,13 @@ import ts from 'typescript';
 import {z} from 'zod';
 import {isCurrency} from '../lib/currencies.ts';
 import {benchmarkKeys,investmentKinds,defaultComparisonPreferences} from '../lib/comparison-profile.ts';
+import {validDay} from '../lib/benchmark-data.ts';
+const benchmarkHistoryStart='2016-01-01';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-let authenticated=true,calls=[];
-const supa=async(path,init,token)=>{calls.push({path,init,token});return Response.json(path.includes('mark_app_started')?{started_at:'2026-09-01T00:00:00Z',source:'first_visit'}:[]);};
-const deps={benchmarkSelectionSchema,stockBenchmarks,diversifiedPortfolioSchema,z,isCurrency,benchmarkKeys,investmentKinds,defaultComparisonPreferences,session:async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,supa,sameOrigin:req=>req.headers.get('origin')==='https://local'};
-const api=new Function(...Object.keys(deps),compile('app/api/comparison-profile/route.ts')+';return {GET,PUT,POST};')(...Object.values(deps));
+let authenticated=true,calls=[],rows=[],updated=[];
+const supa=async(path,init,token)=>{calls.push({path,init,token});return Response.json(path.includes('mark_app_started')?{started_at:'2026-09-01T00:00:00Z',source:'first_visit'}:init?.method==='PATCH'?updated:path.includes('preferences?select')?rows:[]);};
+const deps={validDay,benchmarkHistoryStart,benchmarkSelectionSchema,stockBenchmarks,diversifiedPortfolioSchema,z,isCurrency,benchmarkKeys,investmentKinds,defaultComparisonPreferences,session:async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,supa,sameOrigin:req=>req.headers.get('origin')==='https://local'};
+const api=new Function(...Object.keys(deps),compile('app/api/comparison-profile/route.ts')+';return {GET,PUT,POST,PATCH};')(...Object.values(deps));
 const req=body=>new Request('https://local',{method:'POST',headers:{origin:'https://local','Content-Type':'application/json'},body:JSON.stringify(body)});
 test('owner-scoped settings default to Bitcoin and first-use timestamp comes from the database',async()=>{
  calls=[];const response=await api.GET();assert.equal(response.status,200);const data=await response.json();assert.deepEqual(data.preferences,defaultComparisonPreferences);assert.equal(data.activity.source,'first_visit');assert.equal(data.baseline,null);assert.ok(calls.every(call=>call.token==='owner-token'));assert.equal(response.headers.get('cache-control'),'no-store');
@@ -78,4 +80,34 @@ test('UZS deposit is opt-in: absent from defaults and accepted when selected in 
  const removed=await api.PUT(req({benchmarks:['BTC','SPY','depositUSD'],custom_symbol:''}));
  assert.equal(removed.status,200);
  assert.ok(!JSON.parse(calls[0].init.body).benchmarks.includes('depositUZS'));
+});
+
+test('tracking start loads with the profile, before and after migration 073',async()=>{
+ rows=[{user_id:'owner',benchmarks:['BTC'],custom_symbol:'',portfolio:null,tracking_start:'2026-09-15'}];
+ let data=await (await api.GET()).json();
+ assert.equal(data.tracking_start,'2026-09-15');assert.deepEqual(data.preferences,{benchmarks:['BTC'],custom_symbol:'',portfolio:null});
+ rows=[{user_id:'owner',benchmarks:['BTC'],custom_symbol:''}];
+ data=await (await api.GET()).json();
+ assert.equal(data.tracking_start,null);assert.deepEqual(data.preferences,{benchmarks:['BTC'],custom_symbol:''});
+ rows=[];
+});
+test('tracking start saves only that column for the signed-in owner, and clears',async()=>{
+ const patch=body=>new Request('https://local',{method:'PATCH',headers:{origin:'https://local','Content-Type':'application/json'},body:JSON.stringify(body)});
+ updated=[{user_id:'owner'}];calls=[];
+ assert.equal((await api.PATCH(patch({tracking_start:'2026-09-15',user_id:'other',benchmarks:['BAD']}))).status,200);
+ assert.equal(calls.length,1);assert.equal(calls[0].init.method,'PATCH');assert.ok(calls[0].path.endsWith('user_id=eq.owner'));assert.equal(calls[0].token,'owner-token');
+ assert.deepEqual(JSON.parse(calls[0].init.body),{tracking_start:'2026-09-15'});
+ calls=[];assert.equal((await api.PATCH(patch({tracking_start:null}))).status,200);assert.deepEqual(JSON.parse(calls[0].init.body),{tracking_start:null});
+ // Without saved choices yet, the first save keeps the default benchmarks rather than the column default.
+ updated=[];calls=[];
+ assert.equal((await api.PATCH(patch({tracking_start:'2026-09-15'}))).status,200);
+ assert.deepEqual(JSON.parse(calls[1].init.body),{...defaultComparisonPreferences,tracking_start:'2026-09-15',user_id:'owner'});
+ for(const body of [{tracking_start:'2015-12-31'},{tracking_start:'2026-02-30'},{tracking_start:'15 September'},{}]){calls=[];assert.equal((await api.PATCH(patch(body))).status,400,JSON.stringify(body));assert.equal(calls.length,0);}
+ assert.equal((await api.PATCH(new Request('https://local',{method:'PATCH',body:'{}'}))).status,403);
+ authenticated=false;assert.equal((await api.PATCH(patch({tracking_start:null}))).status,401);authenticated=true;
+});
+test('migration 073 adds an optional tracking start under the existing owner policies',()=>{
+ const sql=fs.readFileSync('migrations/073_portfolio_tracking_start.sql','utf8');
+ assert.match(sql,/ADD COLUMN IF NOT EXISTS tracking_start date CHECK \(tracking_start IS NULL OR tracking_start >= DATE '2016-01-01'\)/);
+ assert.ok(fs.readFileSync('database/setup.sql','utf8').includes('ADD COLUMN IF NOT EXISTS tracking_start date'));
 });

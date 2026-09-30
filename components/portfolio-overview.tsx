@@ -6,7 +6,6 @@ import { demoHistory } from '@/lib/demo-finance';
 import { InvestmentPeriodSummary } from '@/components/investment-period-summary';
 import { InvestmentComparison } from '@/components/investment-comparison';
 import { investmentValueChange } from '@/lib/investment-portfolio';
-import { shiftDay } from '@/lib/benchmark-data';
 import { refreshRead } from '@/lib/refresh-read';
 import { PartialTotal } from '@/components/presentation-foundation/partial-total';
 import { IncomeHistoryChart } from '@/components/income-history-chart';
@@ -19,7 +18,8 @@ import { financialTotals, type Entry } from '@/lib/finance';
 import { formatMoney, formatNumber, formatPercent } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
 import { mergePortfolioPoints, type PortfolioSnapshot } from '@/lib/portfolio-snapshots';
-import { portfolioHistory, portfolioWindow } from '@/lib/portfolio-history';
+import { portfolioHistory, portfolioWindow, trackingWindowStart } from '@/lib/portfolio-history';
+import { useComparisonProfile } from '@/hooks/use-comparison-profile';
 import { type HistoryEvent } from '@/lib/investment-history';
 import { type MarketData } from '@/lib/market';
 
@@ -30,6 +30,7 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
  const [error, setError] = useState(false);
  const [retry, setRetry] = useState(0);
  const [range, setRange] = useState<number | null>(null);
+ const comparison = useComparisonProfile(demo);
  useEffect(() => {
   if (demo) return;
   const controller = new AbortController();
@@ -49,7 +50,8 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
  const recorded = portfolioHistory(allRecords, history?.events ?? [], currency, rates, today, true);
  const portfolioValue = assetTotal - debt;
  const points = mergePortfolioPoints(recorded.points, [], {date:today,assets:assetTotal,debt,net:portfolioValue});
- const visible = portfolioWindow(points, range, today);
+ const windowStart = trackingWindowStart(range, today, comparison.trackingStart);
+ const visible = portfolioWindow(points, range, today, comparison.trackingStart);
  const partialHistory = visible.some(point=>point.partial);
  const change = partialHistory ? null : investmentValueChange(visible.map(point=>point.net));
  const loading = !demo && !history && !error;
@@ -67,7 +69,7 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
     <Segmented label={t('History period')} options={[30, 90, 365, null].map(days => ({ value: days, label: days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) }) }))} value={range} onChange={setRange}/>
    </header>
    {loading ? <ChartSkeleton label={t('Loading history…')}/> : error ? <InlineError message={t('Could not load portfolio history.')} onRetry={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}/> : <>
-    <InvestmentComparison history={history??{records:[],events:[]}} today={today} currency={currency} market={market} demo={demo} days={range??0} points={visible} summary={<InvestmentPeriodSummary input={{records:allRecords,events:history?.events??[],cashflows:history?.cashflows,movements:history?.movements,market,currency,today}} start={range===null?'0000-01-01':shiftDay(today,-range)}/>}/>
+    <InvestmentComparison history={history??{records:[],events:[]}} today={today} currency={currency} market={market} demo={demo} windowStart={windowStart} points={visible} profile={comparison.profile} profileError={comparison.error} trackingStart={comparison.trackingStart} onTrackingStartChange={comparison.saveTrackingStart} summary={<InvestmentPeriodSummary input={{records:allRecords,events:history?.events??[],cashflows:history?.cashflows,movements:history?.movements,market,currency,today}} start={windowStart}/>}/>
     {recorded.missing > 0 && <p className="muted overview-hero-note">{t('Some holdings have no recorded history yet.')}</p>}
     {excludedCurrencies.length > 0 && <p className="muted overview-hero-note">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
    </>}

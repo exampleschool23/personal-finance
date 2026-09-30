@@ -40,7 +40,7 @@ test('migration 072 upgrades the functions in place and is safe to run again',{s
  const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
  try{
   const migration=fs.readFileSync('migrations/072_edit_over_reserved_goals.sql','utf8'),setup=fs.readFileSync('database/setup.sql','utf8');
-  assert.ok(setup.trimEnd().endsWith(migration.trimEnd()),'database/setup.sql ends with migration 072');
+  assert.ok(setup.includes(migration.trimEnd()),'database/setup.sql includes migration 072');
   // The schema as it was before 072.
   await prepare(db,id(1),setup.slice(0,setup.lastIndexOf(migration.trimEnd())));
   await db.query("SELECT planning_action('goal',$1)",[goal(20)]);

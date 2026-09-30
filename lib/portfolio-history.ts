@@ -39,9 +39,15 @@ export function portfolioHistory(records: Entry[], events: HistoryEvent[], curre
  return { points: [...days.values()], missing: included.length - balances.size, excluded: eligible.length - included.length };
 }
 
-export function portfolioWindow(points: PortfolioPoint[], days: number | null, today: string) {
- if (days === null || !points.length) return points;
- const start = new Date(Date.parse(today + 'T00:00:00Z') - days * 86400000).toISOString().slice(0,10);
+// The first day a history period shows: the period's own start, or the owner's
+// tracking start when that is later. '0000-01-01' shows every recorded day.
+export function trackingWindowStart(days: number | null, today: string, origin?: string | null) {
+ const period = days === null ? '0000-01-01' : new Date(Date.parse(today + 'T00:00:00Z') - days * 86400000).toISOString().slice(0,10);
+ return origin && origin > period ? origin : period;
+}
+export function portfolioWindow(points: PortfolioPoint[], days: number | null, today: string, origin?: string | null) {
+ const start = trackingWindowStart(days, today, origin);
+ if (start === '0000-01-01' || !points.length) return points;
  const previous = points.filter(point => point.date < start).at(-1);
  return [...(previous ? [{ ...previous, date: start }] : []), ...points.filter(point => point.date >= start)];
 }

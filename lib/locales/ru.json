@@ -1507,10 +1507,6 @@
   "Recent activity": "Последние операции",
   "Investments": "Инвестиции",
   "Deposits": "Вклады",
-  "Comparison method": "Метод сравнения",
-  "From original purchases": "С первоначальных покупок",
-  "From a chosen start date": "С выбранной даты",
-  "Starting date": "Начальная дата",
   "Investment value and proceeds": "Стоимость инвестиций и полученные средства",
   "Investment history or exchange rates are incomplete for this comparison.": "Для сравнения не хватает истории инвестиций или курсов валют.",
   "Investment activity on this date": "Инвестиционные операции в эту дату",
@@ -1544,7 +1540,6 @@
   "View full transactions": "Все операции",
   "Recent transactions": "Последние операции",
   "Manage": "Управление",
-  "Use earliest recorded date": "Использовать самую раннюю записанную дату",
   "Transferred from an existing investment": "Переведено из существующей инвестиции",
   "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Погашение основной суммы и покупки инвестиций пополняют бенчмарки. Исключаются только явно связанные переводы из существующих инвестиций. Проценты, комиссии и бытовые расходы не учитываются.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Покупки инвестиций и погашение основной суммы пополняют бенчмарки. Явные переводы между инвестициями повторно не учитываются. Остатки денежных средств и поступления дохода исключены.",
@@ -1597,5 +1592,10 @@
   "Enter no more than the linked income: {amount}.": "Введите не больше связанного дохода: {amount}.",
   "Some investments have no recorded purchase. Their first recorded value counts as invested on the day it was recorded, so it is never shown as a gain.": "У некоторых инвестиций нет записанной покупки. Их первая записанная стоимость считается вложенной в день записи, поэтому она никогда не показывается как прибыль.",
   "Recorded value · purchase not recorded": "Записанная стоимость · покупка не записана",
-  "This account has savings goals. Delete or move those goals first.": "К этому счёту привязаны цели накоплений. Сначала удалите или перенесите эти цели."
+  "This account has savings goals. Delete or move those goals first.": "К этому счёту привязаны цели накоплений. Сначала удалите или перенесите эти цели.",
+  "Tracking since": "Отслеживание с",
+  "Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.": "Отслеживание начинается {date}. Бенчмарки стартуют со стоимости ваших инвестиций в этот день, более ранние данные не показываются. Очистите дату, чтобы отслеживать с первой инвестиции.",
+  "Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.": "Отслеживание начинается с первой инвестиционной операции. Выберите дату начала, чтобы начать позже — например, после того как вы внесли существующие активы.",
+  "Choose a valid tracking start date.": "Выберите корректную дату начала отслеживания.",
+  "Could not save the tracking start date.": "Не удалось сохранить дату начала отслеживания."
 }

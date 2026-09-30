@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
-import { buildRangeCalendar, shiftCalendarMonth, calendarYearAnchor } from '@/lib/date-picker-calendar';
+import { buildRangeCalendar, shiftCalendarMonth, calendarYearAnchor, openingCalendarDay } from '@/lib/date-picker-calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
@@ -56,7 +56,7 @@ function DayPicker({ value, onChange, min, max, required = true }: { value: stri
     setOpen(false);
   };
   const preset = (offset: number) => { const day = new Date(); day.setDate(day.getDate() + offset); const iso = calendarIso(day); if (!min || iso >= min) { selectDate(iso); } };
-  return <Popover open={open} onOpenChange={next => { if (next) { setMonth(parseCalendarDate(value) || parseCalendarDate(min || '') || new Date()); } setOpen(next); }}>
+  return <Popover open={open} onOpenChange={next => { if (next) { setMonth(parseCalendarDate(openingCalendarDay(parseCalendarDate(value) ? value : '', calendarIso(new Date()), min, max)) || new Date()); } setOpen(next); }}>
     <PopoverTrigger asChild><button type="button" className="date-picker-trigger" aria-label={value ? formatDate(value, locale) : t('Select date')}><span>{value ? formatDate(value, locale) : t('Select date')}</span><CalendarDays size={17}/></button></PopoverTrigger>
     <PopoverContent className="finance-date-picker" align="start" collisionPadding={12} aria-label={t('Select date')}>
       <div className="date-picker-body"><MonthCalendar monthKey={calendarIso(month).slice(0, 7)} draft={value} min={min} max={max} onSelect={selectDate} onYearChange={year => setMonth(parseCalendarDate(calendarYearAnchor(calendarIso(month).slice(0, 7), year, 0) + '-01')!)} previous={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), -1) + '-01')!)} next={compact ? () => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!) : undefined}/>{!compact && <MonthCalendar monthKey={shiftCalendarMonth(calendarIso(month).slice(0, 7), 1)} draft={value} min={min} max={max} onSelect={selectDate} onYearChange={year => setMonth(parseCalendarDate(calendarYearAnchor(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1), year, 1) + '-01')!)} next={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!)}/>}

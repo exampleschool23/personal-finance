@@ -4821,3 +4821,9 @@ DO $$ DECLARE fn regprocedure; BEGIN
 END $$;
 NOTIFY pgrst,'reload schema';
 COMMIT;
+-- Optional day portfolio tracking begins; null tracks from the first investment activity.
+BEGIN;
+ALTER TABLE public.investment_comparison_preferences
+ ADD COLUMN IF NOT EXISTS tracking_start date CHECK (tracking_start IS NULL OR tracking_start >= DATE '2016-01-01');
+NOTIFY pgrst,'reload schema';
+COMMIT;

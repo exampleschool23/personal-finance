@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRangeCalendar, shiftCalendarMonth, calendarYearAnchor } from '../lib/date-picker-calendar.ts';
+import { buildRangeCalendar, shiftCalendarMonth, calendarYearAnchor, openingCalendarDay } from '../lib/date-picker-calendar.ts';
 test('POS calendar grid starts Monday and always has six weeks',()=>{
  const days=buildRangeCalendar('2026-09');
  assert.equal(days.length,42);assert.equal(days[0].date,'2026-08-31');
@@ -18,4 +18,10 @@ test('year selection keeps either panel aligned across December and leap years',
  assert.equal(calendarYearAnchor('2027-01',2034,1),'2033-12');
  assert.equal(calendarYearAnchor('2026-02',2024,1),'2024-01');
  assert.equal(buildRangeCalendar(shiftCalendarMonth(calendarYearAnchor('2026-02',2024,1),1)).filter(d=>d.inMonth).length,29);
+});
+test('an empty picker opens on today within its limits, not on a distant minimum',()=>{
+ assert.equal(openingCalendarDay('','2026-09-30','2016-01-01','2026-09-30'),'2026-09-30');
+ assert.equal(openingCalendarDay('2026-09-15','2026-09-30','2016-01-01'),'2026-09-15');
+ assert.equal(openingCalendarDay('','2026-09-30','2026-10-05'),'2026-10-05');
+ assert.equal(openingCalendarDay('','2026-09-30',undefined,'2026-06-01'),'2026-06-01');
 });

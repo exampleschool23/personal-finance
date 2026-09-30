@@ -1507,10 +1507,6 @@
   "Recent activity": "Recent activity",
   "Investments": "Investments",
   "Deposits": "Deposits",
-  "Comparison method": "Comparison method",
-  "From original purchases": "From original purchases",
-  "From a chosen start date": "From a chosen start date",
-  "Starting date": "Starting date",
   "Investment value and proceeds": "Investment value and proceeds",
   "Investment history or exchange rates are incomplete for this comparison.": "Investment history or exchange rates are incomplete for this comparison.",
   "Investment activity on this date": "Investment activity on this date",
@@ -1544,7 +1540,6 @@
   "View full transactions": "View full transactions",
   "Recent transactions": "Recent transactions",
   "Manage": "Manage",
-  "Use earliest recorded date": "Use earliest recorded date",
   "Transferred from an existing investment": "Transferred from an existing investment",
   "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.",
@@ -1597,5 +1592,10 @@
   "Enter no more than the linked income: {amount}.": "Enter no more than the linked income: {amount}.",
   "Some investments have no recorded purchase. Their first recorded value counts as invested on the day it was recorded, so it is never shown as a gain.": "Some investments have no recorded purchase. Their first recorded value counts as invested on the day it was recorded, so it is never shown as a gain.",
   "Recorded value · purchase not recorded": "Recorded value · purchase not recorded",
-  "This account has savings goals. Delete or move those goals first.": "This account has savings goals. Delete or move those goals first."
+  "This account has savings goals. Delete or move those goals first.": "This account has savings goals. Delete or move those goals first.",
+  "Tracking since": "Tracking since",
+  "Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.": "Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.",
+  "Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.": "Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.",
+  "Choose a valid tracking start date.": "Choose a valid tracking start date.",
+  "Could not save the tracking start date.": "Could not save the tracking start date."
 }

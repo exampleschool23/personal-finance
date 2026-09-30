@@ -1815,6 +1815,10 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .overview-chart-heading{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;margin-top:28px;padding-top:20px;border-top:1px solid var(--border)}
 .overview-chart-heading h3{font-size:var(--type-body);font-weight:600;letter-spacing:-.01em}
 .overview-chart-heading .comparison-legend{margin-top:0}
+.overview-chart-title{display:flex;flex-direction:column;gap:8px}
+.tracking-start{display:flex;align-items:center;gap:10px;font-size:var(--type-caption);color:var(--muted-foreground)}
+.tracking-start .date-picker-trigger{width:auto;min-height:36px;padding:6px 10px;gap:8px}
+.tracking-start[aria-busy=true]{opacity:.6}
 .overview-content .comparison-legend button{min-height:32px;padding:4px 10px;border-radius:999px;font-size:var(--type-caption)}
 .overview-content .portfolio-chart{margin:12px 0 0}
 .overview-content .portfolio-chart+.comparison-note{font-size:var(--type-caption);margin:4px 0 0}

@@ -1507,10 +1507,6 @@
   "Recent activity": "So‘nggi amallar",
   "Investments": "Investitsiyalar",
   "Deposits": "Omonatlar",
-  "Comparison method": "Taqqoslash usuli",
-  "From original purchases": "Dastlabki xaridlardan",
-  "From a chosen start date": "Tanlangan boshlanish sanasidan",
-  "Starting date": "Boshlanish sanasi",
   "Investment value and proceeds": "Investitsiyalar qiymati va tushumlar",
   "Investment history or exchange rates are incomplete for this comparison.": "Taqqoslash uchun investitsiya tarixi yoki valyuta kurslari to‘liq emas.",
   "Investment activity on this date": "Shu sanadagi investitsiya amallari",
@@ -1544,7 +1540,6 @@
   "View full transactions": "Barcha operatsiyalar",
   "Recent transactions": "So‘nggi operatsiyalar",
   "Manage": "Boshqarish",
-  "Use earliest recorded date": "Eng avvalgi qayd etilgan sanadan foydalanish",
   "Transferred from an existing investment": "Mavjud investitsiyadan o‘tkazilgan",
   "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Asosiy qarz to‘lovlari va investitsiya xaridlari benchmarklarni moliyalashtiradi. Faqat mavjud investitsiyalardan aniq bog‘langan o‘tkazmalar chiqarib tashlanadi. Foizlar, komissiyalar va kundalik xarajatlar hisobga olinmaydi.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Investitsiya xaridlari va asosiy qarz to‘lovlari benchmarklarni moliyalashtiradi. Investitsiyalar orasidagi aniq o‘tkazmalar qayta hisoblanmaydi. Naqd pul qoldiqlari va daromad tushumlari hisobga olinmaydi.",
@@ -1597,5 +1592,10 @@
   "Enter no more than the linked income: {amount}.": "Bog‘langan daromaddan ko‘p kiritmang: {amount}.",
   "Some investments have no recorded purchase. Their first recorded value counts as invested on the day it was recorded, so it is never shown as a gain.": "Ba’zi investitsiyalarning xaridi yozilmagan. Ularning birinchi qayd etilgan qiymati yozilgan kuni kiritilgan mablag‘ hisoblanadi, shuning uchun u hech qachon foyda sifatida ko‘rsatilmaydi.",
   "Recorded value · purchase not recorded": "Qayd etilgan qiymat · xarid yozilmagan",
-  "This account has savings goals. Delete or move those goals first.": "Bu hisobga jamg‘arma maqsadlari bog‘langan. Avval ularni o‘chiring yoki ko‘chiring."
+  "This account has savings goals. Delete or move those goals first.": "Bu hisobga jamg‘arma maqsadlari bog‘langan. Avval ularni o‘chiring yoki ko‘chiring.",
+  "Tracking since": "Kuzatuv boshlanishi",
+  "Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.": "Kuzatuv {date} kuni boshlanadi. Benchmarklar shu kundagi investitsiyalaringiz qiymatidan boshlanadi, undan oldingi ma’lumotlar ko‘rsatilmaydi. Birinchi investitsiyadan kuzatish uchun sanani tozalang.",
+  "Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.": "Kuzatuv birinchi investitsiya amalidan boshlanadi. Keyinroq boshlash uchun sana tanlang — masalan, mavjud aktivlarni kiritib bo‘lganingizdan keyin.",
+  "Choose a valid tracking start date.": "Kuzatuv boshlanishi uchun to‘g‘ri sana tanlang.",
+  "Could not save the tracking start date.": "Kuzatuv boshlanish sanasini saqlab bo‘lmadi."
 }

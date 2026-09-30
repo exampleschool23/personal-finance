@@ -5,7 +5,7 @@ import ts from 'typescript';
 import { assets, liabilities } from '../lib/finance.ts';
 const compile = path => ts.transpileModule(fs.readFileSync(new URL(path, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/export /g, ''), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
 const convertAmount = new Function(compile('../lib/market.ts') + ';return convertAmount;')();
-const { portfolioHistory, portfolioWindow } = new Function('assets', 'liabilities', 'convertAmount', compile('../lib/portfolio-history.ts') + ';return {portfolioHistory,portfolioWindow};')(assets, liabilities, convertAmount);
+const { portfolioHistory, portfolioWindow, trackingWindowStart } = new Function('assets', 'liabilities', 'convertAmount', compile('../lib/portfolio-history.ts') + ';return {portfolioHistory,portfolioWindow,trackingWindowStart};')(assets, liabilities, convertAmount);
 const record = (id, kind, currency = 'USD') => ({ id, kind, currency });
 const event = (record_id, date, balance, ownership_percentage = 100) => ({ id: record_id + date, record_id, occurred_on: date, balance, ownership_percentage, created_at: date });
 test('waits for full coverage, applies ownership and FX, and carries debt forward', () => {
@@ -26,6 +26,17 @@ test('period starts with last known balance, without inventing pre-history', () 
  assert.deepEqual(portfolioWindow(points,30,'2026-09-17'),[{date:'2026-08-18',net:100},...points.slice(1)]);
  assert.deepEqual(portfolioWindow(points.slice(1),30,'2026-09-17'),points.slice(1));
  assert.deepEqual(portfolioWindow(points,null,'2026-09-17'),points);
+});
+test('a tracking start hides earlier history in every period and carries the balance into its first day', () => {
+ const points = [{date:'2026-09-12',net:469},{date:'2026-09-14',net:400000},{date:'2026-09-30',net:410000}];
+ assert.equal(trackingWindowStart(null,'2026-09-30',null),'0000-01-01');
+ assert.equal(trackingWindowStart(null,'2026-09-30','2026-09-15'),'2026-09-15');
+ assert.equal(trackingWindowStart(30,'2026-09-30','2026-09-15'),'2026-09-15');
+ // A later period start wins over an earlier tracking start.
+ assert.equal(trackingWindowStart(7,'2026-09-30','2026-09-15'),'2026-09-23');
+ assert.deepEqual(portfolioWindow(points,null,'2026-09-30','2026-09-15'),[{date:'2026-09-15',net:400000},points[2]]);
+ assert.deepEqual(portfolioWindow(points,90,'2026-09-30','2026-09-15'),[{date:'2026-09-15',net:400000},points[2]]);
+ assert.deepEqual(portfolioWindow(points,null,'2026-09-30',null),points);
 });
 
 
