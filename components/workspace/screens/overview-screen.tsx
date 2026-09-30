@@ -4,6 +4,7 @@ import { useLanguage } from '@/components/language-provider';
 import { WorkspaceSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { OverviewHeading, OverviewSummary } from '@/components/overview-page';
 import { PortfolioOverview } from '@/components/portfolio-overview';
+import { TelegramNudge } from '@/components/telegram-nudge';
 import { DemoBanner, ScreenNotices, ToolsUnavailable } from '@/components/workspace/screen-notices';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
@@ -15,6 +16,7 @@ export function OverviewScreen() {
    <DemoBanner/>
    <OverviewHeading name={preferencesData.display_name?.trim()}/>
    <ScreenNotices/>
+   {!workspaceLoading&&<TelegramNudge demo={demo}/>}
    {workspaceLoading ? <WorkspaceSkeleton label={t("Loading your workspace…")} section="Overview"/> : <PortfolioOverview excludedCurrencies={excludedCurrencies} snapshots={snapshots.snapshots} snapshotError={snapshots.error} onSnapshotRetry={snapshots.retry} key={demo ? 'demo' : user} entries={current} demoRecords={demo ? rows : undefined} currency={currency} market={market} demo={demo} revision={reload}>
     <OverviewSummary entries={current} currency={currency} excludedCurrencies={excludedCurrencies} forecast={forecast} forecastReady={forecastReady} planning={demo || (!planning.loading && !planning.error) ? planning.data : null}/>
    </PortfolioOverview>}

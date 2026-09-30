@@ -1702,5 +1702,8 @@
   "Please try again.": "Please try again.",
   "Saved.": "Saved.",
   "No payments due in the next 31 days.": "No payments due in the next 31 days.",
-  "into {account}": "into {account}"
+  "into {account}": "into {account}",
+  "Get reminders in Telegram": "Get reminders in Telegram",
+  "A morning digest of upcoming payments, a message after every saved action, and quick entry with buttons. Press Connect, then Start in Telegram.": "A morning digest of upcoming payments, a message after every saved action, and quick entry with buttons. Press Connect, then Start in Telegram.",
+  "Not now": "Not now"
 }

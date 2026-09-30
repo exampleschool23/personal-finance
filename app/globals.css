@@ -1713,6 +1713,11 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .settings-layout .telegram-panel .telegram-option{display:flex;flex-direction:row;align-items:center;gap:10px;margin:0 0 10px;font-size:var(--type-small);cursor:pointer}
 .workspace .content .telegram-panel .telegram-option input{width:18px;height:18px;min-height:0;margin:0;accent-color:var(--primary)}
 .telegram-panel .entry-actions{margin-top:4px}
+.telegram-nudge{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 20px;padding:16px 20px}
+.telegram-nudge-text{display:flex;align-items:flex-start;gap:12px;min-width:0;flex:1 1 320px;color:var(--primary)}
+.telegram-nudge-text strong{display:block;color:var(--foreground);font-size:var(--type-compact);font-weight:600}
+.telegram-nudge-text p{margin:2px 0 0;font-size:var(--type-small);line-height:1.5}
+.telegram-nudge>.entry-actions{flex:0 0 auto}
 .font-preview{margin-top:14px;padding:14px 16px;border:1px solid var(--hairline);border-radius:var(--radius-control);background:var(--muted);font-family:var(--font-ui);line-height:1.5}
 .font-preview strong{display:block;font-size:var(--type-title);font-weight:600;letter-spacing:-.01em}
 .font-preview span{display:block;font-size:var(--type-small);color:var(--muted-foreground);font-variant-numeric:tabular-nums}

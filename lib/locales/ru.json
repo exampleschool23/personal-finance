@@ -1702,5 +1702,8 @@
   "Please try again.": "Попробуйте ещё раз.",
   "Saved.": "Сохранено.",
   "No payments due in the next 31 days.": "В ближайший 31 день платежей нет.",
-  "into {account}": "на счёт {account}"
+  "into {account}": "на счёт {account}",
+  "Get reminders in Telegram": "Получайте напоминания в Telegram",
+  "A morning digest of upcoming payments, a message after every saved action, and quick entry with buttons. Press Connect, then Start in Telegram.": "Утренняя сводка предстоящих платежей, сообщение после каждого сохранённого действия и быстрый ввод кнопками. Нажмите «Подключить», затем «Start» в Telegram.",
+  "Not now": "Не сейчас"
 }

@@ -1702,5 +1702,8 @@
   "Please try again.": "Qayta urinib ko‘ring.",
   "Saved.": "Saqlandi.",
   "No payments due in the next 31 days.": "Keyingi 31 kunda to‘lovlar yo‘q.",
-  "into {account}": "{account} hisobiga"
+  "into {account}": "{account} hisobiga",
+  "Get reminders in Telegram": "Telegramda eslatmalar oling",
+  "A morning digest of upcoming payments, a message after every saved action, and quick entry with buttons. Press Connect, then Start in Telegram.": "Yaqinlashayotgan to‘lovlarning ertalabki xulosasi, har bir saqlangan amaldan keyin xabar va tugmalar bilan tez kiritish. «Ulash» ni, so‘ng Telegramda «Start» ni bosing.",
+  "Not now": "Hozir emas"
 }
