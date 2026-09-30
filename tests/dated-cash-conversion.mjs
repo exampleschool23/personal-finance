@@ -76,11 +76,11 @@ test('converted debt, mortgage and transfers cannot spend more than the locked s
 
 test('transfer API requires the selected date rate and does not trust a submitted conversion rate',async()=>{
  let calls=[],offline=false,prior=[];
- const post=new Function('z','session','sameOrigin','supa','loadDatedExchangeRate',compile('app/api/asset-movements/route.ts')+';return POST;')(z,async()=>({token:'owner'}),()=>true,async(path,init)=>{
+ const post=new Function('z','session','sameOrigin','supa','loadDatedExchangeRate','queueActionNotification',compile('app/api/asset-movements/route.ts')+';return POST;')(z,async()=>({token:'owner'}),()=>true,async(path,init)=>{
   if(path.includes('finance_records?'))return Response.json([{id:id(2),currency:'USD'},{id:id(3),currency:'UZS'}]);
   if(path.includes('asset_movements?'))return Response.json(prior);
   calls.push({path,args:JSON.parse(init.body)});return Response.json({ok:true});
- },async(from,to,date)=>{assert.equal(from,'USD');assert.equal(to,'UZS');assert.equal(date,'2020-01-02');if(offline)throw Error('offline');return {rate:12000,effective_date:'2020-01-01'};});
+ },async(from,to,date)=>{assert.equal(from,'USD');assert.equal(to,'UZS');assert.equal(date,'2020-01-02');if(offline)throw Error('offline');return {rate:12000,effective_date:'2020-01-01'};},()=>{});
  const body={id:id(20),kind:'transfer',source_id:id(2),target_id:id(3),sent:100,received:1200000,source_value:100,target_value:1200000,fee:0,date:'2020-01-02',notes:''};
  const request=patch=>new Request('https://local',{method:'POST',body:JSON.stringify({...body,...patch})});
  assert.equal((await post(request({}))).status,400);

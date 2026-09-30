@@ -1709,6 +1709,10 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .settings-layout .preferences-card label{font-size:14px;line-height:1.5;display:flex;flex-direction:column;gap:6px;margin:0;min-width:0}
 .workspace .content .preferences-card input,.workspace .content .preferences-card select{min-height:42px;height:42px;font-size:var(--type-small);padding-block:8px;box-shadow:none}
 .settings-layout .preferences-card .preferences-setting-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr);align-items:center;gap:20px}
+.telegram-panel p{margin:0 0 12px;font-size:var(--type-small);line-height:1.5}
+.settings-layout .telegram-panel .telegram-option{display:flex;flex-direction:row;align-items:center;gap:10px;margin:0 0 10px;font-size:var(--type-small);cursor:pointer}
+.workspace .content .telegram-panel .telegram-option input{width:18px;height:18px;min-height:0;margin:0;accent-color:var(--primary)}
+.telegram-panel .entry-actions{margin-top:4px}
 .font-preview{margin-top:14px;padding:14px 16px;border:1px solid var(--hairline);border-radius:var(--radius-control);background:var(--muted);font-family:var(--font-ui);line-height:1.5}
 .font-preview strong{display:block;font-size:var(--type-title);font-weight:600;letter-spacing:-.01em}
 .font-preview span{display:block;font-size:var(--type-small);color:var(--muted-foreground);font-variant-numeric:tabular-nums}

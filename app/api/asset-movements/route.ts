@@ -1,6 +1,7 @@
 import { loadDatedExchangeRate } from '@/lib/dated-exchange-rate';
 import { z } from 'zod';
 import { session, sameOrigin, supa } from '@/lib/supabase';
+import { queueActionNotification } from '@/lib/notify-action';
 const amount = z.number().finite().min(0).max(1e15);
 const schema = z.object({
  exchange_rate:z.number().finite().positive().max(1e15).optional(),id:z.string().uuid(), kind:z.enum(['transfer','buy','sell','interest']), source_id:z.string().uuid(), target_id:z.string().uuid(),
@@ -34,6 +35,7 @@ export async function POST(req:Request) {
   }
   const response=await supa('/rest/v1/rpc/'+rpc,{method:'POST',body:JSON.stringify(args)},auth.token);
   if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='P0001'?error.message:'Could not save the movement. Check that the latest migrations are installed.'},{status:409});}
+  queueActionNotification(auth,{type:'movement',kind:p.kind,source_id:p.source_id,target_id:p.target_id,sent:p.sent,received:p.received,date:p.date});
   return Response.json({ok:true});
  }catch{return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
 }

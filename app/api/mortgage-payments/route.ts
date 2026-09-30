@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { session, supa, sameOrigin } from '@/lib/supabase';
+import { queueActionNotification } from '@/lib/notify-action';
 const schema = z.object({
  account_id:z.string().uuid().optional(), id: z.string().uuid(), mortgage_id: z.string().uuid(),
  principal: z.number().finite().min(0).max(1e15), interest: z.number().finite().min(0).max(1e15),
@@ -21,6 +22,7 @@ export async function POST(req: Request) {
    const error = await result.json() as { message: string };
    return Response.json({ error: errors.includes(error.message) ? error.message : 'Could not save the payment. Check the database migration and try again.' }, { status: errors.includes(error.message) ? 400 : 503 });
   }
+  queueActionNotification(auth,{type:'mortgage',account_id:p.account_id,target_id:p.mortgage_id,principal:p.principal,interest:p.interest,date:p.date});
   return Response.json(await result.json());
  } catch { return Response.json({ error: 'Payment could not be confirmed. Retry with the same details.' }, { status: 503 }); }
 }

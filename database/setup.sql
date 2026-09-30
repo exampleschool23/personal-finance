@@ -4558,6 +4558,30 @@ ALTER TABLE public.user_preferences ADD COLUMN IF NOT EXISTS country text DEFAUL
  CHECK (country = '' OR country IN ('AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BV', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HM', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ', 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UM', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA', 'ZM', 'ZW'));
 NOTIFY pgrst, 'reload schema';
 
+-- Each owner may link one Telegram chat. The app sends a morning digest of
+-- upcoming payments and a message after every saved action to that chat, and
+-- the bot lets the owner add records with buttons. A short-lived link code
+-- created in Settings ties the chat to the owner when they press Start.
+-- Chat links are personal to the device, so they are not part of backups.
+-- Apply after 074. No existing rows are rewritten.
+BEGIN;
+CREATE TABLE IF NOT EXISTS public.telegram_subscriptions (
+ user_id uuid PRIMARY KEY DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+ chat_id bigint UNIQUE,
+ digest_enabled boolean NOT NULL DEFAULT true,
+ actions_enabled boolean NOT NULL DEFAULT true,
+ link_code text UNIQUE CHECK (link_code IS NULL OR link_code ~ '^[A-Z0-9]{8}$'),
+ link_code_expires_at timestamptz,
+ linked_at timestamptz,
+ updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.telegram_subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Owners manage telegram subscription" ON public.telegram_subscriptions;
+CREATE POLICY "Owners manage telegram subscription" ON public.telegram_subscriptions FOR ALL TO authenticated USING ((SELECT auth.uid())=user_id) WITH CHECK ((SELECT auth.uid())=user_id);
+REVOKE ALL ON public.telegram_subscriptions FROM anon;
+GRANT SELECT,INSERT,UPDATE,DELETE ON public.telegram_subscriptions TO authenticated;
+NOTIFY pgrst,'reload schema';
+COMMIT;
 -- Interface font chosen in Settings; the web and mobile apps read the same
 -- value. Existing owners keep Inter. Owner RLS already protects the row.
 -- Apply after 075.
@@ -4832,5 +4856,66 @@ COMMIT;
 BEGIN;
 ALTER TABLE public.investment_comparison_preferences
  ADD COLUMN IF NOT EXISTS tracking_start date CHECK (tracking_start IS NULL OR tracking_start >= DATE '2016-01-01');
+NOTIFY pgrst,'reload schema';
+COMMIT;
+-- The Telegram bot adds records with buttons. Its half-finished entry lives in
+-- telegram_drafts until the owner saves or cancels. Saving goes through the
+-- same functions the app uses, run as the linked owner: the wrappers below set
+-- the owner claim for the transaction and hand off, so validation, revisions
+-- and undo behave exactly as in the app. Only the service role may call them,
+-- and only for an owner whose chat is linked.
+-- Apply after 076. No existing rows are rewritten.
+BEGIN;
+CREATE TABLE IF NOT EXISTS public.telegram_drafts (
+ user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+ step text NOT NULL CHECK (char_length(step) <= 40),
+ data jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(data)='object' AND pg_column_size(data) <= 16384),
+ updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.telegram_drafts ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.telegram_drafts FROM PUBLIC,anon,authenticated;
+DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN
+ GRANT SELECT,INSERT,UPDATE,DELETE ON public.telegram_drafts TO service_role;
+ GRANT SELECT,INSERT,UPDATE,DELETE ON public.telegram_subscriptions TO service_role;
+END IF; END $$;
+
+CREATE OR REPLACE FUNCTION public.telegram_owner_context(p_owner uuid) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ IF p_owner IS NULL OR NOT EXISTS (SELECT 1 FROM public.telegram_subscriptions WHERE user_id=p_owner AND chat_id IS NOT NULL) THEN
+  RAISE EXCEPTION 'Telegram is not connected.';
+ END IF;
+ PERFORM set_config('request.jwt.claim.sub',p_owner::text,true);
+ PERFORM set_config('request.jwt.claims',json_build_object('sub',p_owner,'role','authenticated')::text,true);
+ PERFORM set_config('request.jwt.claim.role','authenticated',true);
+END $$;
+REVOKE ALL ON FUNCTION public.telegram_owner_context(uuid) FROM PUBLIC,anon,authenticated;
+
+CREATE OR REPLACE FUNCTION public.telegram_save_finance_record(p_owner uuid,p_record jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ PERFORM public.telegram_owner_context(p_owner);
+ RETURN public.save_finance_record(p_record,NULL);
+END $$;
+REVOKE ALL ON FUNCTION public.telegram_save_finance_record(uuid,jsonb) FROM PUBLIC,anon,authenticated;
+DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN GRANT EXECUTE ON FUNCTION public.telegram_save_finance_record(uuid,jsonb) TO service_role; END IF; END $$;
+
+CREATE OR REPLACE FUNCTION public.telegram_planning_action(p_owner uuid,p_action text,p_data jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ PERFORM public.telegram_owner_context(p_owner);
+ IF p_action='occurrence' THEN RETURN public.planning_action_with_actual_amount(p_action,p_data); END IF;
+ RETURN public.planning_action(p_action,p_data);
+END $$;
+REVOKE ALL ON FUNCTION public.telegram_planning_action(uuid,text,jsonb) FROM PUBLIC,anon,authenticated;
+DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN GRANT EXECUTE ON FUNCTION public.telegram_planning_action(uuid,text,jsonb) TO service_role; END IF; END $$;
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+-- Welcome setup after the first sign-in (migration 078). Accounts that already
+-- saved preferences count as set up; Settings can run the setup again.
+BEGIN;
+ALTER TABLE public.user_preferences ADD COLUMN IF NOT EXISTS onboarded_at timestamptz;
+UPDATE public.user_preferences SET onboarded_at=now() WHERE onboarded_at IS NULL;
 NOTIFY pgrst,'reload schema';
 COMMIT;

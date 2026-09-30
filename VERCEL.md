@@ -133,3 +133,43 @@ For daily portfolio capture while the app is closed, configure server-only
 `CRON_SECRET` and `SUPABASE_SERVICE_ROLE_KEY`, then deploy. The daily schedule
 is already declared in `vercel.json`; missing prices leave prior observations
 intact and cause a failure response for monitoring.
+
+## Telegram notifications and bot entry
+
+Apply `migrations/075_telegram_subscriptions.sql` and
+`migrations/077_telegram_bot_entry.sql` after 076. Then create a bot
+with [@BotFather](https://t.me/BotFather) (`/newbot`), and set three server-only
+variables on Vercel: `TELEGRAM_BOT_TOKEN` (from BotFather),
+`TELEGRAM_BOT_USERNAME` (the bot's handle without `@`) and
+`TELEGRAM_WEBHOOK_SECRET` (any long random string). Deploy, then register the
+webhook once, substituting your values:
+
+```bash
+curl -sS "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook" -d "url=https://<your-domain>/api/telegram/webhook" -d "secret_token=<TELEGRAM_WEBHOOK_SECRET>" -d "allowed_updates=[\"message\",\"callback_query\"]"
+```
+
+Owners connect from **Settings → Profile & preferences → Telegram
+notifications**: Connect opens the bot with a code that works for ten minutes,
+and pressing Start in Telegram links the chat. `/stop` in the chat or
+Disconnect in Settings unlinks it. Chat links are not part of backups. Without
+the three variables, the Settings panel reports that Telegram is awaiting server
+setup and nothing is sent.
+
+The morning digest runs from `vercel.json` at 04:00 UTC (09:00 in Tashkent)
+through `/api/cron/telegram-digest`, protected by the same `CRON_SECRET`. It
+uses each owner's reminder window and snoozes from the Upcoming page, sends
+nothing when nothing is due, and answers 503 when any owner could not be
+reached so monitoring notices. A message after every saved action is sent from
+the write routes themselves, after the response, and never delays or fails a
+save.
+
+Once linked, the bot's keyboard adds records with buttons: Expense, Income,
+Transfer, Pay loan or debt, Mortgage payment and Upcoming payments. Only the
+amount, an optional name and a typed date are ever entered as text. Expenses
+and income take the chosen cash account's currency; repayments and mortgage
+payments offer only accounts in the liability's currency; transfers across
+currencies ask for the amount received. Saving goes through
+`telegram_save_finance_record` and `telegram_planning_action`, which run the
+app's own save functions as the linked owner and are callable only by the
+service role, so validation, revisions, undo and Recently deleted behave as in
+the app. A half-finished entry lives in `telegram_drafts` for thirty minutes.

@@ -7,7 +7,7 @@ import { marketEntry } from '../lib/market.ts';
 const source=fs.readFileSync('app/api/mortgage-payments/route.ts','utf8').replace(/^import .*;\n/gm,'').replace(/export async function/g,'async function');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let authenticated=true, calls=[];
-const api=new Function('z','session','supa','sameOrigin',js+';return {POST};')(z,async()=>authenticated?{token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return Response.json({ok:true});},req=>req.headers.get('origin')==='https://app.local');
+const api=new Function('z','session','supa','sameOrigin','queueActionNotification',js+';return {POST};')(z,async()=>authenticated?{token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return Response.json({ok:true});},req=>req.headers.get('origin')==='https://app.local',()=>{});
 const body={id:'10000000-0000-4000-8000-000000000001',mortgage_id:'10000000-0000-4000-8000-000000000002',principal:506.79,interest:1062.31,date:'2025-11-05',notes:''};
 const request=data=>new Request('https://app.local/api/mortgage-payments',{method:'POST',headers:{origin:'https://app.local','Content-Type':'application/json'},body:JSON.stringify(data)});
 test('submits one atomic RPC under the signed-in user token',async()=>{

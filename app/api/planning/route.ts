@@ -1,38 +1,13 @@
 import { planningReadFilters,currentReviewMonth } from '@/lib/planning-reads';
-import { isoDate,uuid,nonnegativeAmount,fiatCurrency,notes } from '@/lib/api-validation';
 import { loadDatedExchangeRate } from '@/lib/dated-exchange-rate';
 import { depositForecasts } from '@/lib/deposit-forecasts';
 import type { Entry } from '@/lib/finance';
-import { z } from 'zod';
-import { instrumentFor } from '@/lib/market';
+import { isoDate } from '@/lib/api-validation';
+import { planningSchemas } from '@/lib/planning-schemas';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { readOwnerRows } from '@/lib/server-records';
-const date=isoDate;
-const id=uuid, amount=nonnegativeAmount;
-const base=z.object({exchange_rate:z.number().finite().positive().max(1e15).optional(),id,account_id:id,target_id:id.nullable().optional(),amount,received:amount.default(0),fee:amount.default(0),date,notes:notes});
-const investmentTarget=z.object({holding_account_id:id,asset_kind:z.enum(['Stock','Crypto']),asset_symbol:z.string().trim().max(15),target:amount.positive().max(1e12),monthly_contribution:amount.max(1e12).nullable().default(null)}).refine(v=>instrumentFor({kind:v.asset_kind,name:v.asset_symbol})?.symbol===v.asset_symbol);
-const schemas={
- exception:z.object({target_id:id,date,skip:z.boolean()}),
- transfer:base.refine(v=>!!v.target_id&&v.target_id!==v.account_id&&v.amount>0&&v.received>0),
- reconcile:base.refine(v=>!v.target_id&&v.received===0&&v.fee===0),
- repayment:base.refine(v=>!!v.target_id&&v.amount>0&&v.received===0),
- mortgage:base.refine(v=>!!v.target_id&&v.amount+v.fee>0&&v.received===0),
- occurrence:z.object({amount:z.number().finite().positive().max(1e15),exchange_rate:z.number().finite().positive().max(1e15).optional(),id,account_id:id,target_id:id,date,notes:notes}),
- dismiss:z.object({id,target_id:id,date}),
- delete_goal:z.object({id}),
- category:z.object({id,name:z.string().trim().min(1).max(80),direction:z.enum(['income','expense'])}),
- goal:z.object({investment_targets:z.array(investmentTarget).max(50).optional(),id,name:z.string().trim().min(1).max(120),account_id:id.nullable(),kind:z.enum(['savings','net_worth','investment']).default('savings'),currency:fiatCurrency.optional(),target:amount.positive(),allocated:amount,target_date:date.nullable(),archived:z.boolean().default(false),monthly_contribution:amount.nullable().default(null),annual_return:z.number().finite().min(0).max(100).default(0),holding_account_id:id.nullable().default(null),asset_kind:z.enum(['Stock','Crypto']).nullable().default(null),asset_symbol:z.string().trim().max(15).nullable().default(null)}).transform(v=>v.kind==='investment'&&v.investment_targets?.length?{...v,...v.investment_targets[0]}:v).refine(v=>{
-  if(v.investment_targets!==undefined){
-   if(v.kind==='investment'&&!v.investment_targets.length)return false;
-   if(v.kind!=='investment'&&v.investment_targets.length)return false;
-   if(new Set(v.investment_targets.map(item=>item.holding_account_id.toLowerCase()+':'+item.asset_symbol)).size!==v.investment_targets.length)return false;
-  }
-  if(v.allocated>v.target)return false;
-  if(v.kind==='investment')return v.account_id===null&&v.allocated===0&&!!v.holding_account_id&&!!v.asset_kind&&!!v.asset_symbol&&instrumentFor({kind:v.asset_kind,name:v.asset_symbol})?.symbol===v.asset_symbol&&v.annual_return===0&&v.target<=1e12&&(v.monthly_contribution===null||v.monthly_contribution<=1e12);
-  if(v.holding_account_id!==null||v.asset_kind!==null||v.asset_symbol!==null)return false;
-  return v.kind==='net_worth'?v.account_id===null&&v.allocated===0&&!!v.currency&&!!v.target_date:!!v.account_id;
- }),
-};
+import { queueActionNotification } from '@/lib/notify-action';
+import type { ActionEvent } from '@/lib/action-messages';
 export async function GET(req?:Request){
  try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
  const scope=req?new URL(req.url).searchParams.get('scope')??'full':'full';
@@ -51,18 +26,20 @@ export async function GET(req?:Request){
 export async function POST(req:Request){
  if(!sameOrigin(req))return new Response(null,{status:403});
  try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
- const body=await req.json() as {action:keyof typeof schemas;data:unknown};
- if(!Object.hasOwn(schemas,body.action))return Response.json({error:'Check the account fields.'},{status:400});
- const parsed=schemas[body.action].safeParse(body.data);if(!parsed.success)return Response.json({error:'Check the account fields.'},{status:400});
+ const body=await req.json() as {action:keyof typeof planningSchemas;data:unknown};
+ if(!Object.hasOwn(planningSchemas,body.action))return Response.json({error:'Check the account fields.'},{status:400});
+ const parsed=planningSchemas[body.action].safeParse(body.data);if(!parsed.success)return Response.json({error:'Check the account fields.'},{status:400});
  if(body.action==='delete_goal'){
   // Moves the goal and its activity to Recently deleted; retries are harmless.
   const response=await supa('/rest/v1/rpc/delete_savings_goal',{method:'POST',body:JSON.stringify({p_id:(parsed.data as {id:string}).id})},auth.token);
   if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='PGRST202'?'Goal deletion needs the latest database update.':error.code==='P0001'?error.message:'Could not delete the goal. Please try again.'},{status:error.code==='PGRST202'?503:409});}
+  queueActionNotification(auth,{type:'goal_deleted'});
   return Response.json({ok:true});
  }
  if(body.action==='exception'&&'skip' in parsed.data){
   const response=await supa('/rest/v1/rpc/set_schedule_exception',{method:'POST',body:JSON.stringify({p_record:parsed.data.target_id,p_day:parsed.data.date,p_skip:parsed.data.skip})},auth.token);
   if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='P0001'?error.message:'Could not update the scheduled occurrence.'},{status:409});}
+  queueActionNotification(auth,{type:'exception',target_id:parsed.data.target_id,date:parsed.data.date,skip:parsed.data.skip});
   return Response.json({ok:true});
  }
  let paymentData=parsed.data;
@@ -92,6 +69,7 @@ export async function POST(req:Request){
     // Use the same atomic dated-payment function as Tracker and mortgage payments.
     const result=await supa(body.action==='repayment'?'/rest/v1/rpc/record_repayment_with_fx':'/rest/v1/rpc/record_investment_with_fx',{method:'POST',body:JSON.stringify(body.action==='repayment'?{p_data:p,p_rate:rate,p_rate_date:rateDate,p_account_currency:account.currency,p_record_currency:target.currency}:{p_id:p.id,p_record_id:target.id,p_type:body.action==='mortgage'?'mortgage_payment':'withdrawal',p_date:p.date,p_amount:Number(p.amount)+Number(p.fee??0),p_balance:null,p_notes:p.notes??'',p_account:account.id,p_rate:rate,p_rate_date:rateDate,p_account_currency:account.currency,p_record_currency:target.currency,p_principal:body.action==='mortgage'?p.amount:0,p_interest:body.action==='mortgage'?p.fee:0})},auth.token);
     if(!result.ok){const failure=await result.json() as {code?:string;message?:string};return Response.json({error:failure.code==='P0001'?failure.message:'Could not save the operation. Please try again.'},{status:409});}
+    const fxEvent=planningEvent(body.action,parsed.data);if(fxEvent)queueActionNotification(auth,fxEvent);
     return Response.json(await result.json());
    }
   }
@@ -105,6 +83,21 @@ export async function POST(req:Request){
  const multiGoal=body.action==='goal'&&'kind' in parsed.data&&parsed.data.kind==='investment'&&'investment_targets' in parsed.data&&Array.isArray(parsed.data.investment_targets);
  const result=await supa(multiGoal?'/rest/v1/rpc/planning_investment_goal':body.action==='occurrence'?'/rest/v1/rpc/planning_action_with_actual_amount':'/rest/v1/rpc/planning_action',{method:'POST',body:JSON.stringify(multiGoal?{p_data:parsed.data}:{p_action:body.action,p_data:paymentData})},auth.token);
  if(!result.ok){const error=await result.json() as {code?:string;message?:string};return Response.json({error:multiGoal&&error.code==='PGRST202'?'Could not save the goal. Check that the latest migrations are installed.':error.code==='P0001'?error.message:error.code==='23514'?'Insufficient balance or invalid amount.':error.code==='23505'?'This name or payment already exists.':'Could not save the operation. Please try again.'},{status:409});}
+ const event=planningEvent(body.action,parsed.data);if(event)queueActionNotification(auth,event);
  return Response.json(await result.json());
  }catch{return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
+}
+/** The message-worthy summary of a saved planning action; categories and skipped kinds give null. */
+function planningEvent(action:string,data:unknown):ActionEvent|null{
+ const p=data as {account_id:string;target_id:string|null;amount:number;received:number;fee:number;date:string;name:string;target:number;currency?:string};
+ switch(action){
+  case 'occurrence':return {type:'occurrence',account_id:p.account_id,target_id:p.target_id!,amount:p.amount,date:p.date};
+  case 'repayment':return {type:'repayment',account_id:p.account_id,target_id:p.target_id!,amount:p.amount,date:p.date};
+  case 'mortgage':return {type:'mortgage',account_id:p.account_id,target_id:p.target_id!,principal:p.amount,interest:p.fee,date:p.date};
+  case 'transfer':return {type:'transfer',account_id:p.account_id,target_id:p.target_id!,amount:p.amount,received:p.received,date:p.date};
+  case 'reconcile':return {type:'reconcile',account_id:p.account_id,amount:p.amount,date:p.date};
+  case 'dismiss':return {type:'dismiss',target_id:p.target_id!,date:p.date};
+  case 'goal':return {type:'goal',name:p.name,target:p.target,currency:p.currency??''};
+  default:return null;
+ }
 }
