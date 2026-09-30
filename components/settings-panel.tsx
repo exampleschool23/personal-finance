@@ -13,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { currencyLabel, fiatCurrencies, maxPreferredCurrencies, type Preferences } from '@/lib/currencies';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { currencyLabel, fiatCurrencies, maxPreferredCurrencies, replacePreferredCurrency, togglePreferredCurrency, type Preferences } from '@/lib/currencies';
 export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRetry }: { initial: Preferences; demo: boolean; onSaved: (p: Preferences) => void; loading: boolean; loadError: string; onRetry:()=>void }) {
   const { t, locale } = useLanguage();
   const [draft, setDraft] = useState(initial);
@@ -22,7 +23,13 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
   const confirmation=useUnsavedNavigation(!loading&&!loadError&&dirty);
   const [query, setQuery] = useState('');
   const [currencySearchOpen, setCurrencySearchOpen] = useState(false);
+  const [currencyNotice, setCurrencyNotice] = useState<{ code: string; reason: 'full' | 'last' } | null>(null);
   const [busy, setBusy] = useState(false);
+  function toggleCurrency(code: string) {
+    const result = togglePreferredCurrency(draft.currencies, code);
+    if ('blocked' in result) setCurrencyNotice({ code, reason: result.blocked });
+    else setDraft({ ...draft, currencies: result.currencies });
+  }
   const [message, setMessage] = useState('');
   const currencies = fiatCurrencies.filter(c => currencyLabel(c.code, locale).toLowerCase().includes(query.trim().toLowerCase()));
   async function save() {
@@ -50,7 +57,12 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
           <label className="preferences-setting-row">{t('Primary currency')}<NativeSelect value={draft.currencies[0]} onChange={event => setDraft({ ...draft, currencies: [event.target.value, ...draft.currencies.filter(c => c !== event.target.value)] })}>{draft.currencies.map(code => <option key={code} value={code}>{currencyLabel(code, locale)}</option>)}</NativeSelect></label>
           <div className="preferences-currency-section"><h4>{t('Preferred currencies')}</h4><p className="muted">{t('Shown in the top bar and whenever you choose a currency. Choose one or two.')}</p>
             <ul className="preferences-currency-list">{draft.currencies.map((code,index) => <li key={code}><span className="preferences-currency-code">{code}</span><span className="preferences-currency-name">{currencyLabel(code,locale).split(' · ').slice(1).join(' · ')}</span>{index===0?<span className="preferences-primary">{t('Primary')}</span>:<Button type="button" variant="ghost" size="icon" onClick={() => setDraft({ ...draft, currencies: draft.currencies.filter(c => c !== code) })} aria-label={t('Remove {currency}', { currency: code })}><X size={16} aria-hidden="true"/></Button>}</li>)}</ul>
-            <Dialog open={currencySearchOpen} onOpenChange={open=>{setCurrencySearchOpen(open);if(!open)setQuery('');}}><DialogTrigger asChild><Button type="button" variant="ghost" className="currency-search-trigger"><Plus size={18} aria-hidden="true"/>{t(draft.currencies.length<maxPreferredCurrencies?'Add currency':'Change currencies')}</Button></DialogTrigger><DialogContent className="currency-search-dialog sm:max-w-xl" showCloseButton={false}><DialogHeader><DialogTitle>{t('Preferred currencies')}</DialogTitle><DialogDescription>{t('Choose one or two currencies. To pick another, clear one first. The primary currency opens by default.')}</DialogDescription></DialogHeader><Input aria-label={t('Search currencies')} placeholder={t('Search currencies')} value={query} onChange={e=>setQuery(e.target.value)}/><div className="currency-catalogue">{currencies.map(c => <label key={c.code}><input type="checkbox" checked={draft.currencies.includes(c.code)} disabled={draft.currencies.includes(c.code) ? draft.currencies.length === 1 : draft.currencies.length >= maxPreferredCurrencies} onChange={e => setDraft({ ...draft, currencies: e.target.checked ? [...draft.currencies, c.code] : draft.currencies.filter(code => code !== c.code) })}/><span>{currencyLabel(c.code, locale)}</span></label>)}{!currencies.length&&<p className="muted currency-search-empty" role="status">{t('No matching currencies.')}</p>}</div><div className="currency-search-footer"><DialogClose asChild><Button type="button">{t('Done')}</Button></DialogClose></div></DialogContent></Dialog>
+            <Dialog open={currencySearchOpen} onOpenChange={open=>{setCurrencySearchOpen(open);if(!open)setQuery('');}}><DialogTrigger asChild><Button type="button" variant="ghost" className="currency-search-trigger"><Plus size={18} aria-hidden="true"/>{t(draft.currencies.length<maxPreferredCurrencies?'Add currency':'Change currencies')}</Button></DialogTrigger><DialogContent className="currency-search-dialog sm:max-w-xl" showCloseButton={false}><DialogHeader><DialogTitle>{t('Preferred currencies')}</DialogTitle><DialogDescription>{t('Choose one or two currencies. The primary currency opens by default.')}</DialogDescription></DialogHeader><Input aria-label={t('Search currencies')} placeholder={t('Search currencies')} value={query} onChange={e=>setQuery(e.target.value)}/><div className="currency-catalogue">{currencies.map(c => <label key={c.code}><input type="checkbox" checked={draft.currencies.includes(c.code)} onChange={() => toggleCurrency(c.code)}/><span>{currencyLabel(c.code, locale)}</span></label>)}{!currencies.length&&<p className="muted currency-search-empty" role="status">{t('No matching currencies.')}</p>}</div><div className="currency-search-footer"><DialogClose asChild><Button type="button">{t('Done')}</Button></DialogClose></div></DialogContent></Dialog>
+            <AlertDialog open={!!currencyNotice} onOpenChange={open=>{if(!open)setCurrencyNotice(null);}}><AlertDialogContent>
+              <AlertDialogTitle>{t(currencyNotice?.reason==='last'?'Keep at least one currency':'You already have two currencies')}</AlertDialogTitle>
+              <AlertDialogDescription>{currencyNotice&&t(currencyNotice.reason==='last'?'{code} is your only currency, so it can’t be cleared. Pick another currency first.':'You can keep up to two preferred currencies. Choose which one {code} replaces.',{code:currencyNotice.code})}</AlertDialogDescription>
+              <AlertDialogFooter>{currencyNotice?.reason==='full'?<><AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>{draft.currencies.map(code=><AlertDialogAction key={code} onClick={()=>setDraft({...draft,currencies:replacePreferredCurrency(draft.currencies,code,currencyNotice.code)})}>{t('Replace {code}',{code})}</AlertDialogAction>)}</>:<AlertDialogAction>{t('OK')}</AlertDialogAction>}</AlertDialogFooter>
+            </AlertDialogContent></AlertDialog>
           </div>
         </section>
       </fieldset>

@@ -329,7 +329,6 @@ tbody tr:last-child td{border-bottom:0}
  --sidebar:#ffffff;--sidebar-foreground:#34483a;--sidebar-primary:#35691e;--sidebar-primary-foreground:#ffffff;
  --sidebar-accent:#e2eedb;--sidebar-accent-foreground:#31551d;--sidebar-border:#d3ddd4;--sidebar-ring:#427526;
 }
-[data-theme="light"] .currency-switch .selected{background:var(--accent);color:var(--accent-foreground)}
 
 .preferences{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .language-selector{width:auto;min-width:max-content;max-width:none;padding:6px 36px 6px 12px;font-size:var(--type-body)}
@@ -337,7 +336,6 @@ tbody tr:last-child td{border-bottom:0}
 .preferences [data-slot="native-select-wrapper"]{flex-shrink:0}
 .preferences .language-selector{min-height:38px!important;height:38px;font-size:var(--type-small);border-radius:var(--radius-control)}
 
-.market-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:-8px 0 22px; color:var(--muted-foreground); font-size:var(--type-small); }
 .record-name small { display:block; }
 
 .session-loading{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px}
@@ -405,9 +403,6 @@ tbody tr:last-child td{border-bottom:0}
 .currency-catalogue label{display:flex;align-items:center;gap:10px;margin:0;padding:10px;border-radius:8px;font-size:var(--type-compact)}
 .currency-catalogue label:hover{background:var(--accent)}
 .currency-catalogue input[type=checkbox]{min-height:18px!important;width:18px;height:18px;padding:0;flex-shrink:0;accent-color:#79ac43}
-.currency-switch{flex-wrap:wrap;max-height:150px;overflow:auto}
-.fx-attribution{font-size:var(--type-small);color:var(--muted-foreground);margin:-12px 0 18px}
-.fx-attribution a{text-decoration:underline}
 @media(max-width:600px){.currency-catalogue{grid-template-columns:1fr}.settings-form{padding:18px}}
 
 .ownership-summary{padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:var(--accent);font-size:var(--type-compact);font-weight:600;margin-top:-8px}
@@ -592,10 +587,6 @@ tbody tr:last-child td{border-bottom:0}
 @media(prefers-reduced-motion:reduce){.asset-card,.asset-category-filters>button,.asset-card-details summary svg{transition:none}}
 
 /* Panels that still carry their own layout. */
-.workspace .content .currency-bar,.workspace .content .market-bar{margin:0}
-.workspace .content .fx-attribution{width:100%;text-align:right;margin:0;font-size:var(--type-caption)}
-.workspace .content .currency-switch{border-radius:10px;padding:3px;background:var(--card)}
-.workspace .content .currency-switch button{border-radius:7px}
 .forecast-panel{display:flex;align-items:center;justify-content:space-between;gap:24px}
 .forecast-panel h2{font-size:var(--type-title);font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
 .forecast-panel p{font-size:var(--type-small);max-width:60ch}
@@ -644,7 +635,7 @@ tbody tr:last-child td{border-bottom:0}
 /* Larger type needs room to wrap, without shrinking on smaller screens. */
 [data-slot="button"] { font-size: var(--type-small); font-weight: 500; min-height: 40px; border-radius: var(--radius-control); }
 [data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"] { font-size: var(--type-body); }
-:is(.currency-switch, .comparison-legend) button { min-height: 40px; }
+.comparison-legend button { min-height: 40px; }
 .recharts-cartesian-axis-tick text { font-size: var(--type-small); fill: var(--muted-foreground); }
 .recharts-legend-wrapper { font-size: var(--type-small); line-height: 1.7; }
 .recharts-default-tooltip { font-size: var(--type-small); line-height: 1.6; color: var(--foreground); }
@@ -654,7 +645,7 @@ tbody tr:last-child td{border-bottom:0}
   .portfolio-chart { margin-left: 0; width: 100%; }
 }
 @media (pointer: coarse) {
-  [data-slot="button"], .currency-switch button, .comparison-legend button, .asset-category-filters > button, .segmented > button { min-height: 44px; }
+  [data-slot="button"], .comparison-legend button, .asset-category-filters > button, .segmented > button { min-height: 44px; }
 }
 
 /* Planning pages reuse the finance panel, form and table styles. */
@@ -982,15 +973,17 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 
 /* Keep display preferences in the header instead of a full-width panel. */
 .header-currency-trigger{flex-shrink:0;gap:8px}
-.header-currency-popover{width:min(360px,calc(100vw - 32px));padding:18px;border-radius:14px}
-.header-currency-panel{display:grid;gap:16px;min-width:0}
-.header-currency-panel .currency-bar{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin:0}
-.header-currency-panel .currency-switch{flex-wrap:wrap;border-color:var(--border)}
-.header-currency-panel .currency-switch button{color:var(--muted-foreground)}
-.header-currency-panel .currency-switch .selected{background:var(--accent);color:var(--accent-foreground)}
-.header-currency-panel .currency-bar>span,.header-currency-panel .market-bar>span{color:var(--muted-foreground);font-size:var(--type-small);line-height:1.5}
-.header-currency-panel .market-bar{display:flex;flex-direction:column;align-items:stretch;gap:12px;margin:0}
-.header-currency-panel .fx-attribution{margin:0;color:var(--muted-foreground);font-size:var(--type-caption);line-height:1.5}
+.header-currency-popover{width:min(320px,calc(100vw - 32px));padding:0;border-radius:var(--radius-card);box-shadow:var(--shadow-card)}
+.header-currency-section{display:grid;gap:10px;padding:16px}
+.header-currency-section+.header-currency-section{border-top:1px solid var(--hairline)}
+.header-currency-section h2{margin:0;font-size:var(--type-caption);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted-foreground)}
+.header-currency-section p{margin:0;font-size:var(--type-small);line-height:1.45;color:var(--muted-foreground)}
+.header-currency-section .segmented{display:flex;width:100%}
+.header-currency-section .segmented>button{flex:1}
+.header-currency-rates{grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px}
+.header-currency-rates>div{display:grid;gap:4px;min-width:0}
+.header-currency-rates>div p{color:var(--foreground)}
+.header-currency-rates .fx-attribution{grid-column:1/-1;font-size:var(--type-caption);color:var(--muted-foreground);text-decoration:underline;text-underline-offset:3px;justify-self:start}
 
 /* History filters align with the panel heading and share one control baseline. */
 .workspace .content .records .record-filters{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,3fr);align-items:end;gap:12px;padding:0 24px 20px;margin:0}

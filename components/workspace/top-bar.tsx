@@ -1,7 +1,8 @@
 "use client";
-import { ChevronDown, Plus } from 'lucide-react';
+import { ChevronDown, Plus, RefreshCw } from 'lucide-react';
 import { LanguageSelector, useLanguage } from '@/components/language-provider';
 import { ThemeToggle } from '@/components/theme-provider';
+import { Segmented } from '@/components/presentation-foundation/segmented';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -20,16 +21,27 @@ export function TopBar({ pendingSection }: { pendingSection?: string | null }) {
  const { section: current, currency, setCurrency, preferencesData, demo, market, marketLoading, refresh, quickExpense } = useWorkspace();
  const section = pendingSection ?? current;
  const date = (value: string) => formatDate(value, locale);
+ const rateStatus = demo ? t('Illustrative sample prices and exchange rates.')
+  : market?.ratesDate && currency !== 'UZS' ? t('Updated {date}', { date: date(market.ratesDate) })
+  : market?.fx ? t('1 USD = {rate} UZS · CBU · {date}', { rate: formatNumber(market.fx.rate, locale), date: date(market.fx.date) })
+  : t(marketLoading ? 'Fetching prices…' : 'Exchange rate unavailable. Only records in the selected currency are included.');
  return <header className="topbar">
   <div className="topbar-location"><SidebarTrigger aria-label={t('Toggle Sidebar')}/><span>{t(section)}</span></div>
   <div className="topbar-actions">
    <Popover>
     <PopoverTrigger asChild><Button variant="outline" size="sm" className="header-currency-trigger" aria-label={t('Display currency')}>{currency}<ChevronDown size={14} aria-hidden="true"/></Button></PopoverTrigger>
-    <PopoverContent align="end" className="header-currency-popover"><div className="header-currency-panel">
-     <div className="currency-bar"><div className="currency-switch" aria-label={t("Display currency")}>{preferencesData.currencies.map(c => <button key={c} aria-pressed={currency === c} className={currency === c ? 'selected' : ''} onClick={() => setCurrency(c)}>{c}</button>)}</div><span>{t('Balances converted to {currency}.', { currency })}</span></div>
-     <div className="market-bar"><span>{demo ? t('Illustrative sample prices and exchange rates.') : market?.ratesDate && currency !== 'UZS' ? t('Daily exchange rates · {date}', { date: date(market.ratesDate) }) : market?.fx ? t('1 USD = {rate} UZS · CBU · {date}', { rate: formatNumber(market.fx.rate, locale), date: date(market.fx.date) }) : t(marketLoading ? 'Fetching prices…' : 'Exchange rate unavailable. Only records in the selected currency are included.')}</span><Button variant="outline" size="sm" disabled={marketLoading || demo} onClick={refresh}>{t(marketLoading ? 'Fetching prices…' : 'Refresh prices')}</Button></div>
-     {market?.ratesDate && <p className="fx-attribution"><a href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">Rates By Exchange Rate API</a> · {date(market.ratesDate)}</p>}
-    </div></PopoverContent>
+    <PopoverContent align="end" className="header-currency-popover">
+     <section className="header-currency-section">
+      <h2>{t('Display currency')}</h2>
+      <Segmented label={t('Display currency')} options={preferencesData.currencies.map(c => ({ value: c, label: c }))} value={currency} onChange={setCurrency}/>
+      <p>{t('Balances converted to {currency}.', { currency })}</p>
+     </section>
+     <section className="header-currency-section header-currency-rates">
+      <div><h2>{t('Exchange rates')}</h2><p>{rateStatus}</p></div>
+      <Button variant="outline" size="icon" aria-label={t(marketLoading ? 'Fetching prices…' : 'Refresh prices')} title={t('Refresh prices')} disabled={marketLoading || demo} onClick={refresh}><RefreshCw className={marketLoading ? 'animate-spin motion-reduce:animate-none' : undefined} aria-hidden="true"/></Button>
+      {market?.ratesDate && <a className="fx-attribution" href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">Rates By Exchange Rate API</a>}
+     </section>
+    </PopoverContent>
    </Popover>
    <Button size="sm" className="quick-expense" aria-label={t('Quick expense')} onClick={quickExpense}><Plus size={16} aria-hidden="true"/><span>{t('Quick expense')}</span></Button>
    <DisplayPreferences/>

@@ -196,7 +196,7 @@
   "Could not load settings.": "Could not load settings.",
   "Could not save settings. Try again.": "Could not save settings. Try again.",
   "Some currencies could not be converted and are excluded from totals.": "Some currencies could not be converted and are excluded from totals.",
-  "Daily exchange rates · {date}": "Daily exchange rates · {date}",
+  "Updated {date}": "Updated {date}",
   "Business": "Business",
   "Linked business (optional)": "Linked business (optional)",
   "No linked business": "No linked business",
@@ -1596,7 +1596,13 @@
   "Choose a valid tracking start date.": "Choose a valid tracking start date.",
   "Could not save the tracking start date.": "Could not save the tracking start date.",
   "Shown in the top bar and whenever you choose a currency. Choose one or two.": "Shown in the top bar and whenever you choose a currency. Choose one or two.",
-  "Choose one or two currencies. To pick another, clear one first. The primary currency opens by default.": "Choose one or two currencies. To pick another, clear one first. The primary currency opens by default.",
   "Change currencies": "Change currencies",
-  "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters.": "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters."
+  "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters.": "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters.",
+  "Choose one or two currencies. The primary currency opens by default.": "Choose one or two currencies. The primary currency opens by default.",
+  "You already have two currencies": "You already have two currencies",
+  "You can keep up to two preferred currencies. Choose which one {code} replaces.": "You can keep up to two preferred currencies. Choose which one {code} replaces.",
+  "Replace {code}": "Replace {code}",
+  "Keep at least one currency": "Keep at least one currency",
+  "{code} is your only currency, so it can’t be cleared. Pick another currency first.": "{code} is your only currency, so it can’t be cleared. Pick another currency first.",
+  "OK": "OK"
 }

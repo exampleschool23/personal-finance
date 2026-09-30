@@ -196,7 +196,7 @@
   "Could not load settings.": "Не удалось загрузить настройки.",
   "Could not save settings. Try again.": "Не удалось сохранить настройки. Повторите попытку.",
   "Some currencies could not be converted and are excluded from totals.": "Некоторые валюты не удалось пересчитать, они не включены в итоги.",
-  "Daily exchange rates · {date}": "Ежедневные курсы · {date}",
+  "Updated {date}": "Обновлено {date}",
   "Business": "Бизнес",
   "Linked business (optional)": "Связанный бизнес (необязательно)",
   "No linked business": "Без привязки к бизнесу",
@@ -1596,7 +1596,13 @@
   "Choose a valid tracking start date.": "Выберите корректную дату начала отслеживания.",
   "Could not save the tracking start date.": "Не удалось сохранить дату начала отслеживания.",
   "Shown in the top bar and whenever you choose a currency. Choose one or two.": "Показываются в верхней панели и при выборе валюты. Выберите одну или две.",
-  "Choose one or two currencies. To pick another, clear one first. The primary currency opens by default.": "Выберите одну или две валюты. Чтобы выбрать другую, сначала снимите одну из выбранных. Основная валюта открывается по умолчанию.",
   "Change currencies": "Изменить валюты",
-  "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters.": "Выберите язык, одну или две валюты, допустимую страну и имя длиной до 80 символов."
+  "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters.": "Выберите язык, одну или две валюты, допустимую страну и имя длиной до 80 символов.",
+  "Choose one or two currencies. The primary currency opens by default.": "Выберите одну или две валюты. Основная валюта открывается по умолчанию.",
+  "You already have two currencies": "У вас уже две валюты",
+  "You can keep up to two preferred currencies. Choose which one {code} replaces.": "Можно выбрать не больше двух валют. Выберите, какую заменить на {code}.",
+  "Replace {code}": "Заменить {code}",
+  "Keep at least one currency": "Оставьте хотя бы одну валюту",
+  "{code} is your only currency, so it can’t be cleared. Pick another currency first.": "{code} — ваша единственная валюта, её нельзя убрать. Сначала выберите другую.",
+  "OK": "ОК"
 }

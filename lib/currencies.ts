@@ -11,4 +11,11 @@ export function currencyLabel(code: string, locale: string) {
 export type Preferences = { display_name?: string; country?: string; language: 'en' | 'ru' | 'uz'; currencies: string[] };
 // The top bar switches between these; the first is the primary currency.
 export const maxPreferredCurrencies = 2;
+/** Toggles `code` in the preferred list. Returns why the tap was refused instead of dropping it silently. */
+export function togglePreferredCurrency(list: string[], code: string): { currencies: string[] } | { blocked: 'full' | 'last' } {
+  if (list.includes(code)) return list.length === 1 ? { blocked: 'last' } : { currencies: list.filter(c => c !== code) };
+  return list.length >= maxPreferredCurrencies ? { blocked: 'full' } : { currencies: [...list, code] };
+}
+/** Swaps `next` in for `old`, keeping its position so the primary stays first. */
+export const replacePreferredCurrency = (list: string[], old: string, next: string) => list.map(c => c === old ? next : c);
 export const defaultPreferences: Preferences = { language: 'en', currencies: ['USD', 'UZS'] };

@@ -196,7 +196,7 @@
   "Could not load settings.": "Sozlamalarni yuklab bo‘lmadi.",
   "Could not save settings. Try again.": "Sozlamalarni saqlab bo‘lmadi. Qayta urinib ko‘ring.",
   "Some currencies could not be converted and are excluded from totals.": "Ayrim valyutalarni aylantirib bo‘lmadi, ular jami summaga kiritilmagan.",
-  "Daily exchange rates · {date}": "Kunlik valyuta kurslari · {date}",
+  "Updated {date}": "Yangilangan: {date}",
   "Business": "Biznes",
   "Linked business (optional)": "Bog‘langan biznes (ixtiyoriy)",
   "No linked business": "Biznesga bog‘lanmagan",
@@ -1596,7 +1596,13 @@
   "Choose a valid tracking start date.": "Kuzatuv boshlanishi uchun to‘g‘ri sana tanlang.",
   "Could not save the tracking start date.": "Kuzatuv boshlanish sanasini saqlab bo‘lmadi.",
   "Shown in the top bar and whenever you choose a currency. Choose one or two.": "Yuqori panelda va valyuta tanlashda ko‘rsatiladi. Bitta yoki ikkitasini tanlang.",
-  "Choose one or two currencies. To pick another, clear one first. The primary currency opens by default.": "Bitta yoki ikkita valyutani tanlang. Boshqasini tanlash uchun avval bittasini olib tashlang. Asosiy valyuta avtomatik ochiladi.",
   "Change currencies": "Valyutalarni o‘zgartirish",
-  "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters.": "Til, bitta yoki ikkita valyuta, haqiqiy mamlakat va 80 belgigacha bo‘lgan ismni tanlang."
+  "Choose a language, one or two currencies, a valid country, and a name of up to 80 characters.": "Til, bitta yoki ikkita valyuta, haqiqiy mamlakat va 80 belgigacha bo‘lgan ismni tanlang.",
+  "Choose one or two currencies. The primary currency opens by default.": "Bitta yoki ikkita valyutani tanlang. Asosiy valyuta avtomatik ochiladi.",
+  "You already have two currencies": "Sizda allaqachon ikkita valyuta bor",
+  "You can keep up to two preferred currencies. Choose which one {code} replaces.": "Ko‘pi bilan ikkita valyuta tanlash mumkin. {code} qaysi birining o‘rniga qo‘yilishini tanlang.",
+  "Replace {code}": "{code} o‘rniga",
+  "Keep at least one currency": "Kamida bitta valyuta qoldiring",
+  "{code} is your only currency, so it can’t be cleared. Pick another currency first.": "{code} yagona valyutangiz, uni olib tashlab bo‘lmaydi. Avval boshqa valyutani tanlang.",
+  "OK": "OK"
 }

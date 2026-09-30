@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fiatCurrencies, isCurrency } from '../lib/currencies.ts';
+import { fiatCurrencies, isCurrency, replacePreferredCurrency, togglePreferredCurrency } from '../lib/currencies.ts';
 import { formatMoney } from '../lib/format.ts';
 import { convertAmount, marketEntry } from '../lib/market.ts';
 test('fiat catalogue excludes metals and supports common and minor currencies',()=>{
@@ -20,4 +20,12 @@ test('cross-currency conversions are USD-relative and never assume missing rates
  const record={id:'x',name:'Bitcoin (BTC)',kind:'Crypto',currency:'EUR',amount:80,cost:40,quantity:2};
  const converted=marketEntry(record,'GBP',{rates,fx:null,quotes:{'Crypto:BTC':{usd:120}}});
  assert.equal(converted.amount,60);assert.equal(converted.cost,25);assert.equal(record.cost,40);
+});
+test('preferred currency taps explain the limit instead of being ignored',()=>{
+ assert.deepEqual(togglePreferredCurrency(['USD'],'UZS'),{currencies:['USD','UZS']});
+ assert.deepEqual(togglePreferredCurrency(['USD','UZS'],'UZS'),{currencies:['USD']});
+ assert.deepEqual(togglePreferredCurrency(['USD','UZS'],'AUD'),{blocked:'full'});
+ assert.deepEqual(togglePreferredCurrency(['USD'],'USD'),{blocked:'last'});
+ assert.deepEqual(replacePreferredCurrency(['USD','UZS'],'USD','AUD'),['AUD','UZS']);
+ assert.deepEqual(replacePreferredCurrency(['USD','UZS'],'UZS','AUD'),['USD','AUD']);
 });
