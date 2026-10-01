@@ -1653,7 +1653,7 @@
   "Share my week": "Поделиться неделей",
   "I check in on my money every week with Hoggish 💪": "Каждую неделю я слежу за своими деньгами с Hoggish 💪",
   "Welcome, {name}! You are connected.": "Добро пожаловать, {name}! Вы подключены.",
-  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "Вы вышли. Отправьте /start, чтобы войти снова. Чтобы подключить аккаунт, которым вы пользуетесь на сайте, откройте его Настройки и нажмите «Подключить Telegram».",
+  "You are signed out. Sad to see you go! 👋 Come back any time: send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "Вы вышли. Жаль, что вы уходите! 👋 Возвращайтесь в любое время: отправьте /start, чтобы войти снова. Чтобы подключить аккаунт, которым вы пользуетесь на сайте, откройте его Настройки и нажмите «Подключить Telegram».",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Этот чат не подключён. Откройте «Настройки» в приложении и нажмите «Подключить Telegram».",
   "Added {kind}": "Добавлено: {kind}",
   "Updated {kind}": "Обновлено: {kind}",

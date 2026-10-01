@@ -1653,7 +1653,7 @@
   "Share my week": "分享我的一周",
   "I check in on my money every week with Hoggish 💪": "我每周都用 Hoggish 查看自己的财务 💪",
   "Welcome, {name}! You are connected.": "欢迎，{name}！您已连接。",
-  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "您已退出登录。发送 /start 可重新登录。要连接您在网页上使用的账户，请打开其设置并点击“连接 Telegram”。",
+  "You are signed out. Sad to see you go! 👋 Come back any time: send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "您已退出登录。舍不得您离开！👋 随时欢迎回来：发送 /start 即可重新登录。要连接您在网页上使用的账户，请打开其设置并点击“连接 Telegram”。",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "此聊天尚未连接。请在应用中打开“设置”，然后点击“连接到 Telegram”。",
   "Added {kind}": "已添加{kind}",
   "Updated {kind}": "已更新{kind}",

@@ -252,7 +252,7 @@ test('signing out keeps the identity of an account that signs in with its number
  for(const word of [t('ru','Sign out'),'/signout','/stop']){
   const context=setup({seed:structuredClone(seed)});
   const out=await run(text(word),context);
-  assert.equal(out.replies[0].text,t('ru','You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.'),word);
+  assert.equal(out.replies[0].text,t('ru','You are signed out. Sad to see you go! 👋 Come back any time: send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.'),word);
   const row=context.db.tables.telegram_subscriptions[0];
   assert.equal(row.chat_id,null);assert.equal(row.telegram_user_id,777);assert.equal(row.phone,'+998901234567');
   // Sharing the same number signs back in without creating anything.

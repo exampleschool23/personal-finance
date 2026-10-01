@@ -66,7 +66,7 @@ async function signOut(db:ServiceDatabase,subscription:TelegramSubscription,now:
  const cleared=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+subscription.user_id,{method:'PATCH',body:JSON.stringify({chat_id:null,linked_at:null,updated_at:now.toISOString(),...(subscription.phone?{}:{telegram_user_id:null,first_name:null})})});
  if(!cleared.ok)throw Error('Database request failed.');
  await db.write('/rest/v1/telegram_drafts?user_id=eq.'+subscription.user_id,{method:'DELETE'});
- return {chat_id:subscription.chat_id!,text:t(language,'You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.'),keyboard:{remove:true}};
+ return {chat_id:subscription.chat_id!,text:t(language,'You are signed out. Sad to see you go! 👋 Come back any time: send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.'),keyboard:{remove:true}};
 }
 type AnyDraft=Draft|OnboardDraft;
 async function loadDraft(db:ServiceDatabase,owner:string,now:Date):Promise<AnyDraft|null>{

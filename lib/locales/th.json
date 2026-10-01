@@ -1653,7 +1653,7 @@
   "Share my week": "แชร์สัปดาห์ของฉัน",
   "I check in on my money every week with Hoggish 💪": "ฉันตรวจสอบเงินของฉันทุกสัปดาห์ด้วย Hoggish 💪",
   "Welcome, {name}! You are connected.": "ยินดีต้อนรับ {name}! เชื่อมต่อแล้ว",
-  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "คุณออกจากระบบแล้ว ส่ง /start เพื่อเข้าสู่ระบบอีกครั้ง หากต้องการเชื่อมต่อบัญชีที่ใช้บนเว็บ ให้เปิดการตั้งค่าของบัญชีนั้นแล้วกดเชื่อมต่อ Telegram",
+  "You are signed out. Sad to see you go! 👋 Come back any time: send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "คุณออกจากระบบแล้ว เสียดายที่คุณต้องไป! 👋 กลับมาได้ทุกเมื่อ ส่ง /start เพื่อเข้าสู่ระบบอีกครั้ง หากต้องการเชื่อมต่อบัญชีที่ใช้บนเว็บ ให้เปิดการตั้งค่าของบัญชีนั้นแล้วกดเชื่อมต่อ Telegram",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "แชตนี้ยังไม่ได้เชื่อมต่อ เปิดการตั้งค่าในแอปแล้วกดเชื่อมต่อกับ Telegram",
   "Added {kind}": "เพิ่ม {kind} แล้ว",
   "Updated {kind}": "อัปเดต {kind} แล้ว",
