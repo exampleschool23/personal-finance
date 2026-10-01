@@ -68,23 +68,30 @@ test('the onboarding walks language, currency and a first cash account, saving a
  assert.equal(advanceOnboarding(named.draft,{text:'0'},{language:'en'},777).effects.account.amount,0,'an empty account is allowed');
 });
 
-test('a new chat is welcomed in its Telegram language, asked to agree or sign in, then asked for its own number',async()=>{
+test('a new chat is greeted in its Telegram language, any leftover number button is cleared, then it chooses a new or an existing account',async()=>{
  const context=setup();
- const welcome=(await run(text('/start'),context)).replies[0];
- assert.equal(welcome.text,`${t('ru','Welcome to Hoggish. Track your money here in Telegram and in the app.')}\n\n${t('ru','By continuing you agree to the terms of use and privacy policy of Hoggish.')}`);
- assert.deepEqual(callbacks(welcome),['o:agree','o:signin']);
- // The terms and privacy policy open in the browser before anyone agrees, translated like the rest of the chat.
- assert.deepEqual(welcome.keyboard.inline[0],[{text:t('ru','Terms of use'),url:'https://app.example/terms'},{text:t('ru','Privacy policy'),url:'https://app.example/privacy'}]);
- assert.deepEqual(welcome.keyboard.inline[1],[{text:t('ru','I agree'),callback_data:'o:agree'}]);
- assert.deepEqual(welcome.keyboard.inline[2],[{text:t('ru','I already have an account'),callback_data:'o:signin'}]);
+ const [greeting,choice]=(await run(text('/start'),context)).replies;
+ assert.equal(greeting.text,t('ru','Welcome to Hoggish. Track your money here in Telegram and in the app.'));assert.deepEqual(greeting.keyboard,{remove:true});
+ assert.equal(choice.text,t('ru','By creating an account you agree to the terms of use and privacy policy of Hoggish.'));
+ // One clear choice first; the terms and privacy policy open in the browser before anyone creates an account.
+ assert.deepEqual(choice.keyboard.inline,[[{text:t('ru','Create an account'),callback_data:'o:agree'}],[{text:t('ru','I already have an account'),callback_data:'o:signin'}],[{text:t('ru','Terms of use'),url:'https://app.example/terms'},{text:t('ru','Privacy policy'),url:'https://app.example/privacy'}]]);
  const offline=setup();offline.env.appOrigin=null;
- assert.deepEqual((await run(text('/start'),offline)).replies[0].keyboard.inline,[[{text:t('ru','I agree'),callback_data:'o:agree'}],[{text:t('ru','I already have an account'),callback_data:'o:signin'}]],'without an address the links are left out rather than broken');
- for(const update of [text('hello'),text('Expense'),press('f:save')])assert.deepEqual(callbacks((await run(update,context)).replies[0]),['o:agree','o:signin']);
+ assert.deepEqual((await run(text('/start'),offline)).replies[1].keyboard.inline,[[{text:t('ru','Create an account'),callback_data:'o:agree'}],[{text:t('ru','I already have an account'),callback_data:'o:signin'}]],'without an address the links are left out rather than broken');
+ for(const update of [text('hello'),text('Expense'),press('f:save')])assert.deepEqual(callbacks((await run(update,context)).replies[1]),['o:agree','o:signin']);
  const agreed=await run(press('o:agree'),context);
  assert.equal(agreed.callbackId,'cb-o:agree');
  assert.deepEqual(agreed.replies[0].keyboard,{contact:t('ru','Share my number')});
  assert.equal(agreed.replies[0].text,t('ru','Share your phone number to create your account. It is also how you sign in on the web.'));
  assert.equal(context.db.writes.length,0);assert.equal(context.created.length,0);
+});
+
+test('someone who signed out of an account made in the bot is only asked for their number, in the account language',async()=>{
+ const context=setup({seed:{telegram_subscriptions:[subscription({chat_id:null,telegram_user_id:777,phone:'+998901234567',consented_at:'x',linked_at:null})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]}});
+ for(const update of [text('/start'),press('f:save')]){
+  const replies=(await run(update,context)).replies;
+  assert.deepEqual(replies,[{chat_id:777,text:t('en','Welcome back! Share your phone number to sign in again.'),keyboard:{contact:t('en','Share my number')}}]);
+ }
+ assert.equal(context.db.writes.length,0);
 });
 
 test('sharing your own number creates a confirmed phone account, links the chat and starts the setup',async()=>{
@@ -248,7 +255,7 @@ test('signing out releases an account linked from the app, so the same person ca
  const row=context.db.tables.telegram_subscriptions[0];
  assert.equal(row.chat_id,null);assert.equal(row.telegram_user_id,null,'the Telegram identity is released');
  // The chat is a stranger again: it is invited, and sharing a number starts a new account instead of being refused.
- assert.equal(callbacks((await run(text('hello'),context)).replies[0])[0],'o:agree');
+ assert.equal(callbacks((await run(text('hello'),context)).replies[1])[0],'o:agree');
  const signup=await run(contact(),context);
  assert.equal(context.created.length,1);assert.equal(signup.replies[0].text,t('ru','Account created. Let us set up a few things.'));
  // An identity left behind by the app's own Disconnect is released the same way when the person shares a number.

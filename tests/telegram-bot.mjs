@@ -79,8 +79,8 @@ test('stop unlinks a connected chat, drops its draft and removes the keyboard; a
 
 test('an unlinked chat is only invited to create an account or sign in, whether it types or presses, and nothing is written',async()=>{
  const db=fakeDb({subscriptions:[linked]});
- const invited=(await handleTelegramUpdate(message(999,'/stop','ru'),db,clock)).replies[0];
- assert.match(invited.text,/^Добро пожаловать в Hoggish/);assert.deepEqual(invited.keyboard.inline.flat().map(button=>button.callback_data).filter(Boolean),['o:agree','o:signin']);
+ const [greeting,invited]=(await handleTelegramUpdate(message(999,'/stop','ru'),db,clock)).replies;
+ assert.match(greeting.text,/^Добро пожаловать в Hoggish/);assert.deepEqual(invited.keyboard.inline.flat().map(button=>button.callback_data).filter(Boolean),['o:agree','o:signin']);
  const pressed=await handleTelegramUpdate({callback_query:{id:'cb1',data:'f:save',message:{chat:{id:999}},from:{language_code:'en'}}},db,clock);
  assert.equal(pressed.callbackId,'cb1');assert.match(pressed.replies[0].text,/^Welcome to Hoggish/);
  assert.equal(db.writes.length,0);

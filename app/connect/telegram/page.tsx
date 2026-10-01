@@ -22,10 +22,14 @@ function ConnectTelegram() {
   const started = useRef(false);
   const run = async (action: 'preview' | 'confirm' | 'cancel') => {
     setBusy(true);
-    try { setView(await request(action)); } catch (reason) { setView({ state: 'error', message: (reason as Error).message }); } finally { setBusy(false); }
+    try {
+      const next = await request(action);
+      // Connecting returns the person straight to the chat; the connected panel only shows if Telegram cannot be opened.
+      if (next.state === 'connected' && next.bot) window.location.href = `https://t.me/${next.bot}`;
+      setView(next);
+    } catch (reason) { setView({ state: 'error', message: (reason as Error).message }); } finally { setBusy(false); }
   };
   useEffect(() => { if (started.current) return; started.current = true; void run('preview'); }, []);
-  const anotherAccount = async () => { setBusy(true); await fetch('/api/auth', { method: 'DELETE' }).catch(() => null); router.push('/'); };
   const bot = 'bot' in view && view.bot ? `https://t.me/${view.bot}` : null;
   const openTelegram = bot && <Button asChild><a href={bot}>{t('Open Telegram')}</a></Button>;
   return <section className="panel connect-telegram">
@@ -45,11 +49,7 @@ function ConnectTelegram() {
         <div><dt>{t('Account')}</dt><dd>{view.account || '—'}</dd></div>
       </dl>
       <p>{t('Only connect if you pressed Sign in in the Hoggish bot yourself.')}</p>
-      <div className="entry-actions">
-        <Button disabled={busy} onClick={() => void run('confirm')}>{t('Connect')}</Button>
-        <Button variant="outline" disabled={busy} onClick={() => void anotherAccount()}>{t('Use another account')}</Button>
-        <Button variant="outline" disabled={busy} onClick={() => void run('cancel')}>{t('Cancel')}</Button>
-      </div>
+      <div className="entry-actions"><Button disabled={busy} onClick={() => void run('confirm')}>{t('Connect')}</Button></div>
     </>}
     {view.state === 'connected' && <>
       <p role="status">{t('Telegram is connected. Go back to the chat to continue.')}</p>

@@ -11,7 +11,7 @@ export const legalPaths={terms:'/terms',privacy:'/privacy'} as const;
 
 export const termsOfUse:LegalDocument={kind:'terms',sections:[
  {heading:'About these terms',paragraphs:[
-  `Hoggish is a personal finance app on the web and in Telegram. It is operated by ${legalOperator} ("we", "us"). These terms apply when you create an account or use Hoggish in either place. By creating an account or pressing "I agree" in the Telegram bot, you accept them.`,
+  `Hoggish is a personal finance app on the web and in Telegram. It is operated by ${legalOperator} ("we", "us"). These terms apply when you create an account or use Hoggish in either place. By creating an account, on the web or with "Create an account" in the Telegram bot, you accept them.`,
  ]},
  {heading:'Your account',paragraphs:[
   'You can create an account with an email address and password, with Google, or by sharing your phone number with our Telegram bot. You are responsible for keeping access to your email, Google account, phone number and Telegram account secure, and for everything done with your account.',

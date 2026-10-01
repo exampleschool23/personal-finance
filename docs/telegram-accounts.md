@@ -7,8 +7,11 @@ needed.
 
 ## How it works
 
-1. **Bot sign-up.** `/start` shows a welcome and an **I agree** button, then a
-   **Share my number** button. Only the person's own contact is accepted
+1. **Bot sign-up.** `/start` greets (clearing any number button left from an
+   earlier visit) and offers **Create an account** or **I already have an
+   account**, with the terms and privacy links below. Creating shows a
+   **Share my number** button. Someone who signed out of an account made in
+   the bot is only asked for their number again. Only the person's own contact is accepted
    (Telegram reports the contact's user, which must equal the sender).
 2. **Account.** The server creates a Supabase user with the phone already
    confirmed, a preferences row, and a linked Telegram chat. Its password is
@@ -37,8 +40,8 @@ chat and Telegram user (`lib/telegram-connect.ts`, table
    works: after signing in, `/api/auth` sees the cookie and returns them to the
    confirmation page, so new methods (Google, Facebook, phone) need no extra work.
 3. The page shows the Telegram name and the account, warns to continue only if
-   they pressed **Sign in** in the bot themselves, and offers **Connect**,
-   **Use another account** and **Cancel**.
+   they pressed **Sign in** in the bot themselves, and offers one **Connect**
+   button. After connecting, the page returns straight to the Telegram chat.
 4. **Connect** spends the request atomically, links the chat (an earlier owner
    of the chat is signed out first), and the bot sends "Connected" with the menu.
 
