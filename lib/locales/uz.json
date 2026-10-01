@@ -1653,7 +1653,7 @@
   "Share my week": "Haftamni ulashish",
   "I check in on my money every week with Hoggish 💪": "Men har hafta Hoggish bilan pulimni tekshiraman 💪",
   "Welcome, {name}! You are connected.": "Xush kelibsiz, {name}! Ulandingiz.",
-  "Disconnected. Open Settings in the app to connect again.": "Uzildi. Qayta ulash uchun ilovada Sozlamalarni oching.",
+  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "Siz hisobdan chiqdingiz. Qayta kirish uchun /start yuboring. Saytda foydalanadigan hisobni ulash uchun uning Sozlamalarini oching va Telegram’ga ulash tugmasini bosing.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Bu chat ulanmagan. Ilovada Sozlamalarni oching va «Telegramga ulash» ni bosing.",
   "Added {kind}": "Qo‘shildi: {kind}",
   "Updated {kind}": "Yangilandi: {kind}",

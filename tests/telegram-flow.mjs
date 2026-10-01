@@ -22,7 +22,8 @@ function run(steps,context=ctx()){
 }
 
 test('the menu is translated and recognised in every language, and cancel returns to it',()=>{
- assert.deepEqual(mainMenu('en').reply,[['Expense','Income'],['Transfer','Pay loan or debt'],['Mortgage payment','Upcoming payments'],['Add cash account','Add loan or debt']]);
+ assert.deepEqual(mainMenu('en').reply,[['Expense','Income'],['Transfer','Pay loan or debt'],['Mortgage payment','Upcoming payments'],['Add cash account','Add loan or debt'],['Sign out']]);
+ assert.equal(menuChoice(translate('ru','Sign out')),'signout');assert.equal(advance(null,{text:'Sign out'},ctx(),chat).draft,null,'signing out never starts an entry');
  assert.equal(menuChoice(translate('ru','Expense')),'expense');assert.equal(menuChoice(' '+translate('ru','Income').toUpperCase()+' '),'income');assert.equal(menuChoice('Upcoming payments'),'upcoming');assert.equal(menuChoice('hello'),null);
  const stray=advance(null,{text:'hello'},ctx(),chat);
  assert.equal(stray.draft,null);assert.equal(stray.reply.text,'Choose what to add.');assert.deepEqual(stray.reply.keyboard,mainMenu('en'));

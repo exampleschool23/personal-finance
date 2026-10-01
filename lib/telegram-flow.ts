@@ -18,16 +18,16 @@ export type FlowContext={language:Language;today:string;newId:string;categories:
 export type FlowInput={text?:string;callback?:string};
 export type Commit={type:'record';record:RecordInput;resume?:Draft}|{type:'planning';action:'transfer'|'repayment'|'mortgage';data:{id:string;account_id:string;target_id:string;amount:number;received:number;fee:number;date:string;notes:string}};
 export type FlowResult={draft:Draft|null;reply:TelegramMessage|null;commit?:Commit;menu?:'upcoming'};
-const menuItems:Array<{kind:FlowKind|'upcoming';label:string}>=[{kind:'expense',label:'Expense'},{kind:'income',label:'Income'},{kind:'transfer',label:'Transfer'},{kind:'repayment',label:'Pay loan or debt'},{kind:'mortgage',label:'Mortgage payment'},{kind:'upcoming',label:'Upcoming payments'},{kind:'account',label:'Add cash account'},{kind:'liability',label:'Add loan or debt'}];
+const menuItems:Array<{kind:FlowKind|'upcoming'|'signout';label:string}>=[{kind:'expense',label:'Expense'},{kind:'income',label:'Income'},{kind:'transfer',label:'Transfer'},{kind:'repayment',label:'Pay loan or debt'},{kind:'mortgage',label:'Mortgage payment'},{kind:'upcoming',label:'Upcoming payments'},{kind:'account',label:'Add cash account'},{kind:'liability',label:'Add loan or debt'},{kind:'signout',label:'Sign out'}];
 const pageSize=8;
 const t=(language:Language,key:string,params?:Record<string,string|number>)=>translate(language,key,params);
 /** The persistent keyboard under the text box. */
 export function mainMenu(language:Language):TelegramKeyboard{
  const label=(kind:string)=>t(language,menuItems.find(item=>item.kind===kind)!.label);
- return {reply:[[label('expense'),label('income')],[label('transfer'),label('repayment')],[label('mortgage'),label('upcoming')],[label('account'),label('liability')]]};
+ return {reply:[[label('expense'),label('income')],[label('transfer'),label('repayment')],[label('mortgage'),label('upcoming')],[label('account'),label('liability')],[label('signout')]]};
 }
 /** Which menu item a typed label means, in any of the app languages. */
-export function menuChoice(text:string):FlowKind|'upcoming'|null{
+export function menuChoice(text:string):FlowKind|'upcoming'|'signout'|null{
  const wanted=text.trim().toLowerCase();
  for(const item of menuItems)for(const language of Object.keys(dictionaries) as Language[])if(t(language,item.label).toLowerCase()===wanted)return item.kind;
  return null;
@@ -190,7 +190,8 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
  if(!draft){
   const choice=input.text?menuChoice(input.text):null;
   if(choice==='upcoming')return {draft:null,reply:null,menu:'upcoming'};
-  if(!choice)return {draft:null,reply:{chat_id:chat,text:t(language,'Choose what to add.'),keyboard:mainMenu(language)}};
+  // Sign out is handled by the bot before the flow; here it is just not something to add.
+  if(!choice||choice==='signout')return {draft:null,reply:{chat_id:chat,text:t(language,'Choose what to add.'),keyboard:mainMenu(language)}};
   const started:Draft={kind:choice,step:firstStep(choice),data:{}};
   return {draft:started,reply:prompt(started,ctx,chat)};
  }

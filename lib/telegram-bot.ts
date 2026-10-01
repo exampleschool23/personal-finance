@@ -16,7 +16,7 @@ import {normalizePhone} from './phone';
 import {recordSchema} from './record-schema';
 import type {ServiceDatabase} from './service-role';
 import {adminAccounts,createLoginToken,createTelegramAccount,type AdminAccounts} from './telegram-account';
-import {advance,mainMenu,prompt,retryKeyboard,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
+import {advance,mainMenu,menuChoice,prompt,retryKeyboard,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
 import {linkExpired,startCode,type TelegramSubscription} from './telegram-link';
 import {advanceOnboarding,isOnboardDraft,onboardPrompt,startOnboarding,type OnboardDraft} from './telegram-onboarding';
 import type {TelegramMessage} from './telegram';
@@ -49,9 +49,9 @@ async function connect(db:ServiceDatabase,chatId:number,code:string,now:Date,hin
  const rows=await db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&link_code=eq.'+code);
  const pending=rows[0];
  if(!pending||linkExpired(pending,now))return {chat_id:chatId,text:t(hint,'This link has expired. Open Settings in the app and press Connect to Telegram again.')};
- // A chat can serve one owner: an earlier owner of this chat is unlinked first.
+ // A chat can serve one owner: an earlier owner of this chat is signed out first, as the Sign out button would.
  const earlier=await subscriptionByChat(db,chatId);
- if(earlier&&earlier.user_id!==pending.user_id){const cleared=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+earlier.user_id,{method:'PATCH',body:JSON.stringify({chat_id:null,linked_at:null,updated_at:now.toISOString()})});if(!cleared.ok)throw Error('Database request failed.');}
+ if(earlier&&earlier.user_id!==pending.user_id){const cleared=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+earlier.user_id,{method:'PATCH',body:JSON.stringify({chat_id:null,linked_at:null,updated_at:now.toISOString(),...(earlier.phone?{}:{telegram_user_id:null,first_name:null})})});if(!cleared.ok)throw Error('Database request failed.');}
  // The Telegram user is recorded only when no other account already holds it, so one person cannot be tied to two owners.
  const taken=from?.id?await db.read<Array<{user_id:string}>>('/rest/v1/telegram_subscriptions?select=user_id&telegram_user_id=eq.'+from.id):[];
  const identity=from?.id&&!taken.some(row=>row.user_id!==pending.user_id)?{telegram_user_id:from.id,first_name:(from.first_name??'').trim().slice(0,80)||null}:{};
@@ -60,12 +60,13 @@ async function connect(db:ServiceDatabase,chatId:number,code:string,now:Date,hin
  const language=await ownerLanguage(db,pending.user_id);
  return {chat_id:chatId,text:connectedText(language,await ownerName(db,pending.user_id)),keyboard:mainMenu(language)};
 }
-async function disconnect(db:ServiceDatabase,subscription:TelegramSubscription,now:Date):Promise<TelegramMessage>{
+/** Sign the chat out. An account that signs in with its number keeps its Telegram identity, so sharing the number returns to it; an account linked from the app is released completely, so the same person can use another account. */
+async function signOut(db:ServiceDatabase,subscription:TelegramSubscription,now:Date):Promise<TelegramMessage>{
  const language=await ownerLanguage(db,subscription.user_id);
- const cleared=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+subscription.user_id,{method:'PATCH',body:JSON.stringify({chat_id:null,linked_at:null,updated_at:now.toISOString()})});
+ const cleared=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+subscription.user_id,{method:'PATCH',body:JSON.stringify({chat_id:null,linked_at:null,updated_at:now.toISOString(),...(subscription.phone?{}:{telegram_user_id:null,first_name:null})})});
  if(!cleared.ok)throw Error('Database request failed.');
  await db.write('/rest/v1/telegram_drafts?user_id=eq.'+subscription.user_id,{method:'DELETE'});
- return {chat_id:subscription.chat_id!,text:t(language,'Disconnected. Open Settings in the app to connect again.'),keyboard:{remove:true}};
+ return {chat_id:subscription.chat_id!,text:t(language,'You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.'),keyboard:{remove:true}};
 }
 type AnyDraft=Draft|OnboardDraft;
 async function loadDraft(db:ServiceDatabase,owner:string,now:Date):Promise<AnyDraft|null>{
@@ -208,8 +209,14 @@ async function handleContact(db:ServiceDatabase,message:NonNullable<TelegramUpda
   return say(language,'Your number is saved. You can now sign in on the web with it.',menu);
  }
  const [byPhone,byTelegram]=await Promise.all([subscriptionsWhere(db,'phone=eq.'+encodeURIComponent(phone)),subscriptionsWhere(db,'telegram_user_id=eq.'+from.id)]);
- const own=byTelegram[0];
- // Someone who pressed /stop and returns is signed back in, but only with the same number.
+ let own:TelegramSubscription|undefined=byTelegram[0];
+ // An identity left on an account without a number (one unlinked from the app) is stale: release it so this person can sign up or sign in.
+ if(own&&!own.phone){
+  const released=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+own.user_id,{method:'PATCH',body:JSON.stringify({telegram_user_id:null,first_name:null,updated_at:now.toISOString()})});
+  if(!released.ok)throw Error('Database request failed.');
+  own=undefined;
+ }
+ // Someone who signed out and returns is signed back in, but only with the same number.
  if(own){
   if(own.phone!==phone)return say(hint,taken);
   const relinked=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+own.user_id,{method:'PATCH',body:JSON.stringify({chat_id:chatId,linked_at:now.toISOString(),updated_at:now.toISOString()})});
@@ -245,7 +252,7 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
  const subscription=await subscriptionByChat(db,chatId);
  // A chat nobody has linked is invited to create an account.
  if(!subscription)return {replies:[welcome(chatId,hint)]};
- if(/^\/stop(?:@\w+)?$/.test(text))return {replies:[await disconnect(db,subscription,now)]};
+ if(/^\/(?:stop|signout)(?:@\w+)?$/.test(text)||menuChoice(text)==='signout')return {replies:[await signOut(db,subscription,now)]};
  const language=await ownerLanguage(db,subscription.user_id);
  if(/^\/phone(?:@\w+)?$/.test(text))return {replies:[contactRequest(chatId,language)]};
  if(/^\/app(?:@\w+)?$/.test(text)){const open=await openAppReply(db,subscription,chatId,language,now,env);return {replies:open?[open]:[]};}

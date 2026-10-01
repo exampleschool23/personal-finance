@@ -1653,7 +1653,7 @@
   "Share my week": "Shiriki wiki yangu",
   "I check in on my money every week with Hoggish 💪": "Kila wiki ninakagua pesa zangu na Hoggish 💪",
   "Welcome, {name}! You are connected.": "Karibu, {name}! Umeunganishwa.",
-  "Disconnected. Open Settings in the app to connect again.": "Imetenganishwa. Fungua Mipangilio kwenye programu ili kuunganisha tena.",
+  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "Umeondoka kwenye akaunti. Tuma /start ili kuingia tena. Ili kuunganisha akaunti unayotumia kwenye wavuti, fungua Mipangilio yake na ubonyeze Unganisha na Telegram.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Mazungumzo haya hayajaunganishwa. Fungua Mipangilio kwenye programu kisha ubonyeze Unganisha na Telegram.",
   "Added {kind}": "{kind} imeongezwa",
   "Updated {kind}": "{kind} imesasishwa",

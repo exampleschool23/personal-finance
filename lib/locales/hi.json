@@ -1653,7 +1653,7 @@
   "Share my week": "मेरा सप्ताह साझा करें",
   "I check in on my money every week with Hoggish 💪": "मैं हर सप्ताह Hoggish के साथ अपने पैसों की समीक्षा करता हूँ 💪",
   "Welcome, {name}! You are connected.": "स्वागत है, {name}! आप जुड़ गए हैं।",
-  "Disconnected. Open Settings in the app to connect again.": "डिस्कनेक्ट हो गया। फिर से कनेक्ट करने के लिए ऐप में सेटिंग्स खोलें।",
+  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "आप साइन आउट हो गए हैं। फिर से साइन इन करने के लिए /start भेजें। वेब पर इस्तेमाल होने वाला अकाउंट जोड़ने के लिए उसकी सेटिंग्स खोलें और Telegram से जोड़ें दबाएँ।",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "यह चैट कनेक्ट नहीं है। ऐप में सेटिंग्स खोलें और \"Telegram से कनेक्ट करें\" दबाएं।",
   "Added {kind}": "{kind} जोड़ा गया",
   "Updated {kind}": "{kind} अपडेट किया गया",

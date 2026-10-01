@@ -1653,7 +1653,7 @@
   "Share my week": "Compartir mi semana",
   "I check in on my money every week with Hoggish 💪": "Reviso mi dinero cada semana con Hoggish 💪",
   "Welcome, {name}! You are connected.": "¡Bienvenido, {name}! Ya estás conectado.",
-  "Disconnected. Open Settings in the app to connect again.": "Desconectado. Abre Ajustes en la app para volver a conectar.",
+  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "Has cerrado sesión. Envía /start para iniciar sesión de nuevo. Para conectar una cuenta que usas en la web, abre su Configuración y pulsa Conectar con Telegram.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Este chat no está conectado. Abre Ajustes en la app y pulsa Conectar con Telegram.",
   "Added {kind}": "Añadido: {kind}",
   "Updated {kind}": "Actualizado: {kind}",

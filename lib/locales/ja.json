@@ -1653,7 +1653,7 @@
   "Share my week": "今週をシェア",
   "I check in on my money every week with Hoggish 💪": "毎週Hoggishでお金をチェックしています 💪",
   "Welcome, {name}! You are connected.": "ようこそ、{name}さん！連携が完了しました。",
-  "Disconnected. Open Settings in the app to connect again.": "連携を解除しました。再び連携するには、アプリで設定を開いてください。",
+  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "サインアウトしました。もう一度サインインするには /start を送信してください。ウェブで使っているアカウントを接続するには、その設定を開いて「Telegram に接続」を押してください。",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "このチャットは連携されていません。アプリで設定を開き、「Telegramに連携」を押してください。",
   "Added {kind}": "{kind}を追加しました",
   "Updated {kind}": "{kind}を更新しました",

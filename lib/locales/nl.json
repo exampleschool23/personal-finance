@@ -1653,7 +1653,7 @@
   "Share my week": "Deel mijn week",
   "I check in on my money every week with Hoggish 💪": "Elke week check ik mijn geld met Hoggish 💪",
   "Welcome, {name}! You are connected.": "Welkom, {name}! Je bent verbonden.",
-  "Disconnected. Open Settings in the app to connect again.": "Verbinding verbroken. Open Instellingen in de app om opnieuw te verbinden.",
+  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "Je bent uitgelogd. Stuur /start om weer in te loggen. Om een account te koppelen dat je op het web gebruikt, open je de Instellingen ervan en druk je op Verbinden met Telegram.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Deze chat is niet verbonden. Open Instellingen in de app en druk op Verbinden met Telegram.",
   "Added {kind}": "{kind} toegevoegd",
   "Updated {kind}": "{kind} bijgewerkt",

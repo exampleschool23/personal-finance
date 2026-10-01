@@ -1653,7 +1653,7 @@
   "Share my week": "Chia sẻ tuần của tôi",
   "I check in on my money every week with Hoggish 💪": "Tuần nào tôi cũng xem lại tiền bạc cùng Hoggish 💪",
   "Welcome, {name}! You are connected.": "Chào mừng {name}! Bạn đã được kết nối.",
-  "Disconnected. Open Settings in the app to connect again.": "Đã ngắt kết nối. Hãy mở Cài đặt trong ứng dụng để kết nối lại.",
+  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "Bạn đã đăng xuất. Gửi /start để đăng nhập lại. Để kết nối tài khoản bạn dùng trên web, hãy mở Cài đặt của tài khoản đó và nhấn Kết nối Telegram.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Cuộc trò chuyện này chưa được kết nối. Hãy mở Cài đặt trong ứng dụng và nhấn Kết nối với Telegram.",
   "Added {kind}": "Đã thêm {kind}",
   "Updated {kind}": "Đã cập nhật {kind}",

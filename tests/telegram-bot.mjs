@@ -63,15 +63,15 @@ test('a chat that already served another owner is released before it is linked',
  const db=fakeDb({subscriptions:[pending,{...linked,user_id:other}],languages:{[owner]:'en'}});
  await handleTelegramUpdate(message(500,'/start ABCDEFGH'),db,clock);
  assert.equal(db.writes[0].path,'/rest/v1/telegram_subscriptions?user_id=eq.'+other);
- assert.deepEqual(db.writes[0].body,{chat_id:null,linked_at:null,updated_at:now.toISOString()});
+ assert.deepEqual(db.writes[0].body,{chat_id:null,linked_at:null,updated_at:now.toISOString(),telegram_user_id:null,first_name:null});
  assert.equal(db.writes[1].body.chat_id,500);
 });
 
 test('stop unlinks a connected chat, drops its draft and removes the keyboard; a bare start shows the menu again',async()=>{
  const db=fakeDb({subscriptions:[linked],languages:{[owner]:'ru'},drafts:[{user_id:owner,step:'expense:amount',data:{},updated_at:now.toISOString()}]});
  const stopped=await handleTelegramUpdate(message(500,'/stop'),db,clock);
- assert.match(stopped.replies[0].text,/^Отключено\./);assert.deepEqual(stopped.replies[0].keyboard,{remove:true});
- assert.deepEqual(db.writes[0].body,{chat_id:null,linked_at:null,updated_at:now.toISOString()});
+ assert.match(stopped.replies[0].text,/^Вы вышли\./);assert.deepEqual(stopped.replies[0].keyboard,{remove:true});
+ assert.deepEqual(db.writes[0].body,{chat_id:null,linked_at:null,updated_at:now.toISOString(),telegram_user_id:null,first_name:null});
  assert.equal(db.writes[1].method,'DELETE');assert.equal(db.drafts.length,0);
  const again=await handleTelegramUpdate(message(500,'/start'),db,clock);
  assert.match(again.replies[0].text,/^Подключено\./);assert.ok(again.replies[0].keyboard.reply);

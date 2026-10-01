@@ -1653,7 +1653,7 @@
   "Share my week": "شارك أسبوعي",
   "I check in on my money every week with Hoggish 💪": "أراجع أموالي كل أسبوع مع Hoggish 💪",
   "Welcome, {name}! You are connected.": "أهلاً بك يا {name}! تم الاتصال.",
-  "Disconnected. Open Settings in the app to connect again.": "تم الفصل. افتح «الإعدادات» في التطبيق للربط مرة أخرى.",
+  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "تم تسجيل خروجك. أرسل /start لتسجيل الدخول مجددًا. لربط حساب تستخدمه على الويب، افتح إعداداته واضغط «الاتصال بتيليغرام».",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "هذه المحادثة غير مربوطة. افتح «الإعدادات» في التطبيق واضغط «اربط بـ Telegram».",
   "Added {kind}": "تمت إضافة {kind}",
   "Updated {kind}": "تم تحديث {kind}",

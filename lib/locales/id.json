@@ -1653,7 +1653,7 @@
   "Share my week": "Bagikan minggu saya",
   "I check in on my money every week with Hoggish 💪": "Setiap minggu saya mengecek uang saya dengan Hoggish 💪",
   "Welcome, {name}! You are connected.": "Selamat datang, {name}! Kamu sudah terhubung.",
-  "Disconnected. Open Settings in the app to connect again.": "Terputus. Buka Pengaturan di aplikasi untuk menghubungkan lagi.",
+  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "Anda sudah keluar. Kirim /start untuk masuk lagi. Untuk menghubungkan akun yang Anda pakai di web, buka Pengaturannya lalu tekan Hubungkan ke Telegram.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Obrolan ini tidak terhubung. Buka Pengaturan di aplikasi dan tekan Hubungkan ke Telegram.",
   "Added {kind}": "{kind} ditambahkan",
   "Updated {kind}": "{kind} diperbarui",

@@ -29,6 +29,18 @@ to add a number to an email account. An account created with a phone number can
 add an email and password in Settings, which also unlocks changing the password
 and deleting the account.
 
+## Signing out
+
+The bot's menu has a **Sign out** button (`/signout` and `/stop` do the same). It
+unlinks the chat, drops any half-finished entry and removes the keyboard, and the
+app's Settings then shows Telegram as not connected.
+
+- An account that signs in with its number keeps its Telegram identity, so
+  sharing the same number in the chat signs back in.
+- An account linked from the app has no number, so its Telegram identity is
+  released. The same person can then share a number to start a new account, or
+  connect any web account from its Settings.
+
 ## Setup
 
 1. Apply `migrations/081_telegram_accounts.sql` after 080.

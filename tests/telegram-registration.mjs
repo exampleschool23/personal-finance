@@ -60,7 +60,7 @@ test('the onboarding walks language, currency and a first cash account, saving a
  for(const bad of ['abc','-5','','1e99'])assert.equal(advanceOnboarding(named.draft,{text:bad},{language:'en'},777).draft.step,'balance',bad);
  const finished=advanceOnboarding(named.draft,{text:'1 500,50'},{language:'ru'},777);
  assert.equal(finished.draft,null);assert.deepEqual(finished.effects,{account:{name:'Savings jar',amount:1500.5,currency:'EUR'},finished:true});
- assert.deepEqual(finished.reply.keyboard.reply.flat(),[t('ru','Expense'),t('ru','Income'),t('ru','Transfer'),t('ru','Pay loan or debt'),t('ru','Mortgage payment'),t('ru','Upcoming payments'),t('ru','Add cash account'),t('ru','Add loan or debt')]);
+ assert.deepEqual(finished.reply.keyboard.reply.flat(),[t('ru','Expense'),t('ru','Income'),t('ru','Transfer'),t('ru','Pay loan or debt'),t('ru','Mortgage payment'),t('ru','Upcoming payments'),t('ru','Add cash account'),t('ru','Add loan or debt'),t('ru','Sign out')]);
  assert.equal(advanceOnboarding(named.draft,{text:'0'},{language:'en'},777).effects.account.amount,0,'an empty account is allowed');
 });
 
@@ -227,4 +227,36 @@ test('linking an existing account with a code records the Telegram user once, ne
  await run({message:{chat:chat(),text:'/start '+code,from:from()}},held);
  const mine=held.db.tables.telegram_subscriptions.find(row=>row.user_id===ownerId);
  assert.equal(mine.chat_id,777);assert.equal(mine.telegram_user_id??null,null,'the Telegram user stays with its first account');
+});
+
+test('signing out releases an account linked from the app, so the same person can start a new one or return to it by code',async()=>{
+ // Linked from the app: an identity but no number.
+ const seed={telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:null,consented_at:null,first_name:'Aziz'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:'Anti'}]};
+ const context=setup({seed:structuredClone(seed)});
+ const out=await run(text('Sign out'),context);
+ assert.match(out.replies[0].text,/^You are signed out\./);assert.deepEqual(out.replies[0].keyboard,{remove:true});
+ const row=context.db.tables.telegram_subscriptions[0];
+ assert.equal(row.chat_id,null);assert.equal(row.telegram_user_id,null,'the Telegram identity is released');
+ // The chat is a stranger again: it is invited, and sharing a number starts a new account instead of being refused.
+ assert.equal(callbacks((await run(text('hello'),context)).replies[0])[0],'o:agree');
+ const signup=await run(contact(),context);
+ assert.equal(context.created.length,1);assert.equal(signup.replies[0].text,t('ru','Account created. Let us set up a few things.'));
+ // An identity left behind by the app's own Disconnect is released the same way when the person shares a number.
+ const stale=setup({seed:{...structuredClone(seed),telegram_subscriptions:[subscription({chat_id:null,telegram_user_id:777,phone:null,consented_at:null,linked_at:null})]}});
+ await run(contact(),stale);
+ assert.equal(stale.created.length,1);
+});
+
+test('signing out keeps the identity of an account that signs in with its number, in every language of the button',async()=>{
+ const seed={telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'ru',currencies:['USD'],display_name:'Aziz'}]};
+ for(const word of [t('ru','Sign out'),'/signout','/stop']){
+  const context=setup({seed:structuredClone(seed)});
+  const out=await run(text(word),context);
+  assert.equal(out.replies[0].text,t('ru','You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.'),word);
+  const row=context.db.tables.telegram_subscriptions[0];
+  assert.equal(row.chat_id,null);assert.equal(row.telegram_user_id,777);assert.equal(row.phone,'+998901234567');
+  // Sharing the same number signs back in without creating anything.
+  const back=await run(contact(),context);
+  assert.equal(context.created.length,0);assert.equal(context.db.tables.telegram_subscriptions[0].chat_id,777);assert.match(back.replies[0].text,/Aziz/);
+ }
 });

@@ -1653,7 +1653,7 @@
   "Share my week": "میرا ہفتہ شیئر کریں",
   "I check in on my money every week with Hoggish 💪": "میں ہر ہفتے Hoggish کے ساتھ اپنے پیسوں کا جائزہ لیتا ہوں 💪",
   "Welcome, {name}! You are connected.": "خوش آمدید، {name}! آپ جڑ گئے ہیں۔",
-  "Disconnected. Open Settings in the app to connect again.": "منقطع ہو گیا۔ دوبارہ جڑنے کے لیے ایپ میں ترتیبات کھولیں۔",
+  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "آپ سائن آؤٹ ہو گئے ہیں۔ دوبارہ سائن اِن کرنے کے لیے /start بھیجیں۔ ویب پر استعمال ہونے والا اکاؤنٹ جوڑنے کے لیے اس کی ترتیبات کھولیں اور Telegram سے جوڑیں دبائیں۔",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "یہ چیٹ جڑی ہوئی نہیں ہے۔ ایپ میں ترتیبات کھولیں اور Telegram سے جڑیں دبائیں۔",
   "Added {kind}": "{kind} شامل کیا گیا",
   "Updated {kind}": "{kind} اپ ڈیٹ کیا گیا",

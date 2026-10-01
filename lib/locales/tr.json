@@ -1653,7 +1653,7 @@
   "Share my week": "Haftamı paylaş",
   "I check in on my money every week with Hoggish 💪": "Her hafta Hoggish ile paramı kontrol ediyorum 💪",
   "Welcome, {name}! You are connected.": "Hoş geldin, {name}! Bağlandın.",
-  "Disconnected. Open Settings in the app to connect again.": "Bağlantı kesildi. Yeniden bağlanmak için uygulamada Ayarlar'ı açın.",
+  "You are signed out. Send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.": "Oturumu kapattınız. Yeniden giriş yapmak için /start gönderin. Web’de kullandığınız bir hesabı bağlamak için o hesabın Ayarlarını açıp Telegram’a bağlan’a basın.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Bu sohbet bağlı değil. Uygulamada Ayarlar'ı açın ve Telegram'a bağlan'a basın.",
   "Added {kind}": "{kind} eklendi",
   "Updated {kind}": "{kind} güncellendi",
