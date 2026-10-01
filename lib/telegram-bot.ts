@@ -19,7 +19,7 @@ import type {ServiceDatabase} from './service-role';
 import {adminAccounts,createLoginToken,createTelegramAccount,type AdminAccounts} from './telegram-account';
 import {advance,mainMenu,menuChoice,prompt,retryKeyboard,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
 import {linkExpired,startCode,type TelegramSubscription} from './telegram-link';
-import {advanceOnboarding,isOnboardDraft,onboardPrompt,startOnboarding,type OnboardDraft} from './telegram-onboarding';
+import {advanceOnboarding,isOnboardDraft,startOnboarding,type OnboardDraft} from './telegram-onboarding';
 import type {TelegramMessage} from './telegram';
 type TelegramFrom={id?:number;first_name?:string;language_code?:string};
 export type TelegramUpdate={update_id?:number;message?:{message_id?:number;chat:{id:number};text?:string;from?:TelegramFrom;contact?:{phone_number?:string;user_id?:number;first_name?:string}};callback_query?:{id:string;data?:string;message?:{chat:{id:number}};from?:TelegramFrom}};
@@ -73,8 +73,10 @@ type AnyDraft=Draft|OnboardDraft;
 async function loadDraft(db:ServiceDatabase,owner:string,now:Date):Promise<AnyDraft|null>{
  const rows=await db.read<Array<{step:string;data:Draft['data'];updated_at:string}>>('/rest/v1/telegram_drafts?select=step,data,updated_at&user_id=eq.'+owner);
  const row=rows[0];
- if(!row||now.getTime()-Date.parse(row.updated_at)>draftMinutes*60000)return null;
+ if(!row)return null;
  const [kind,step]=row.step.split(':');
+ // The setup questions never expire: an account that stops halfway must be able to finish later. Record entries do.
+ if(kind!=='onboard'&&now.getTime()-Date.parse(row.updated_at)>draftMinutes*60000)return null;
  return kind==='onboard'?{kind:'onboard',step:step as OnboardDraft['step'],data:row.data as OnboardDraft['data']}:{kind:kind as FlowKind,step:step as Step,data:row.data as Draft['data']};
 }
 async function storeDraft(db:ServiceDatabase,owner:string,draft:AnyDraft|null,now:Date){
@@ -260,7 +262,8 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
  if(/^\/app(?:@\w+)?$/.test(text)){const open=await openAppReply(db,subscription,chatId,language,now,env);return {replies:open?[open]:[]};}
  if(/^\/start(?:@\w+)?$/.test(text)){
   const draft=await loadDraft(db,subscription.user_id,now);
-  if(isOnboardDraft(draft))return {replies:[onboardPrompt(draft,language,chatId)]};
+  // Mid-setup, Start means start over: the questions begin again from the language.
+  if(isOnboardDraft(draft)){const restarted=startOnboarding(language,chatId);await storeDraft(db,subscription.user_id,restarted.draft,now);return {replies:restarted.reply?[restarted.reply]:[]};}
   return {replies:[{chat_id:chatId,text:connectedText(language,await ownerName(db,subscription.user_id)),keyboard:mainMenu(language)}]};
  }
  return {replies:await converse(db,subscription,chatId,{text},clock,env)};

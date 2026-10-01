@@ -17,6 +17,10 @@ export type OnboardContext={language:Language;currency?:string};
 const checkMark='✓ ';
 const t=(language:Language,key:string,params?:Record<string,string|number>)=>translate(language,key,params);
 const rows=<T,>(buttons:T[],perRow:number)=>{const out:T[][]=[];for(let index=0;index<buttons.length;index+=perRow)out.push(buttons.slice(index,index+perRow));return out;};
+const backLabel=(language:Language)=>'‹ '+t(language,'Back');
+// The question before each one, for the Back button. Going back forgets the answers given after it.
+const previous:Record<OnboardStep,OnboardStep|null>={language:null,currency:'language',currency_other:'currency',account:'currency',balance:'account'};
+const forget:Record<OnboardStep,Array<keyof OnboardData>>={language:['currency','account_name'],currency:['currency','account_name'],currency_other:['currency','account_name'],account:['account_name'],balance:[]};
 const chosen=(draft:OnboardDraft,step:OnboardStep,data:Partial<OnboardData>={}):OnboardDraft=>({kind:'onboard',step,data:{...draft.data,...data}});
 export const isOnboardDraft=(draft:{kind:string}|null):draft is OnboardDraft=>draft?.kind==='onboard';
 /** The prompt for a step, written in `language`. */
@@ -27,10 +31,10 @@ export function onboardPrompt(draft:OnboardDraft,language:Language,chat:number):
    const ordered=[...languageCatalogue].sort((a,b)=>Number(b.code===language)-Number(a.code===language));
    return {chat_id:chat,text:t(language,'Choose your language'),keyboard:{reply:rows(ordered.map(item=>(item.code===language?checkMark:'')+item.native),3)}};
   }
-  case 'currency':return {chat_id:chat,text:t(language,'Which currency do you use most?'),keyboard:{reply:[...rows(suggestedCurrencies,3),[t(language,'Other currency')]]}};
-  case 'currency_other':return {chat_id:chat,text:t(language,'Type a currency code, such as USD'),keyboard:{remove:true}};
-  case 'account':return {chat_id:chat,text:t(language,'Name your first cash account, for example Wallet.'),keyboard:{reply:[[t(language,'Cash')]]}};
-  case 'balance':return {chat_id:chat,text:t(language,'How much is in it? Type 0 if it is empty.'),keyboard:{remove:true}};
+  case 'currency':return {chat_id:chat,text:t(language,'Which currency do you use most?'),keyboard:{reply:[...rows(suggestedCurrencies,3),[t(language,'Other currency')],[backLabel(language)]]}};
+  case 'currency_other':return {chat_id:chat,text:t(language,'Type a currency code, such as USD'),keyboard:{reply:[[backLabel(language)]]}};
+  case 'account':return {chat_id:chat,text:t(language,'Name your first cash account, for example Wallet.'),keyboard:{reply:[[t(language,'Cash')],[backLabel(language)]]}};
+  case 'balance':return {chat_id:chat,text:t(language,'How much is in it? Type 0 if it is empty.'),keyboard:{reply:[['0'],[backLabel(language)]]}};
  }
 }
 export function startOnboarding(language:Language,chat:number):OnboardResult{
@@ -47,6 +51,18 @@ export function advanceOnboarding(draft:OnboardDraft,input:{text?:string;callbac
  const callback=input.callback??'',text=(input.text??'').trim();
  const again=(message?:string):OnboardResult=>({draft,reply:message?{chat_id:chat,text:message}:onboardPrompt(draft,ctx.language,chat),effects:{}});
  const move=(next:OnboardDraft,language:Language,effects:OnboardEffects={}):OnboardResult=>({draft:next,reply:onboardPrompt(next,language,chat),effects});
+ // Back returns to the previous question and forgets what was answered from there on.
+ const earlier=previous[draft.step];
+ if(earlier&&text===backLabel(ctx.language)){const data={...draft.data};for(const field of forget[earlier])delete data[field];return move({kind:'onboard',step:earlier,data},ctx.language);}
+ // Replies take a few seconds, so a second tap on an earlier keyboard can arrive after the bot has moved on. Such a tap changes that earlier answer instead of becoming the next one, so "USD" or "Other currency" is never saved as an account name.
+ if(draft.step!=='language'){
+  const late=languageCatalogue.find(item=>item.native===(text.startsWith(checkMark)?text.slice(checkMark.length):text))?.code;
+  if(late)return move(draft,late,{language:late});
+ }
+ if(draft.step==='account'||draft.step==='balance'){
+  if(text===t(ctx.language,'Other currency'))return move(chosen(draft,'currency_other'),ctx.language);
+  if(suggestedCurrencies.includes(text))return move(chosen(draft,'account',{currency:text,account_name:undefined}),ctx.language,{currency:text});
+ }
  switch(draft.step){
   case 'language':{
    // A keyboard tap arrives as the native name; buttons on older messages still send o:lang:<code>.

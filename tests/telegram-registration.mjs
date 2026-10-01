@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
 import {botDb,ownerId,subscription} from './helpers/bot-db.mjs';
 const {handleTelegramUpdate}=loadTS('lib/telegram-bot.ts');
-const {advanceOnboarding,startOnboarding}=loadTS('lib/telegram-onboarding.ts');
+const {advanceOnboarding,startOnboarding,onboardPrompt}=loadTS('lib/telegram-onboarding.ts');
 const {derivedPassword,consumeLoginToken}=loadTS('lib/telegram-account.ts');
 const {translate,languageCatalogue}=loadTS('lib/i18n.ts');
 const {suggestedCurrencies}=loadTS('lib/onboarding.ts');
@@ -43,19 +43,19 @@ test('the onboarding walks language, currency and a first cash account, saving a
  // Unknown choices and typing keep the question.
  for(const input of [{callback:'o:lang:xx'},{text:'hello'},{callback:'f:save'}])assert.equal(advanceOnboarding(started.draft,input,{language:'ru'},777).draft.step,'language');
  // The keyboard moves on with the questions.
- assert.deepEqual(picked.reply.keyboard.reply.flat(),[...suggestedCurrencies,t('ja','Other currency')]);
+ assert.deepEqual(picked.reply.keyboard.reply.flat(),[...suggestedCurrencies,t('ja','Other currency'),'‹ '+t('ja','Back')]);
  assert.deepEqual(advanceOnboarding(picked.draft,{text:'EUR'},{language:'ja'},777).effects,{currency:'EUR'});
  assert.equal(advanceOnboarding(picked.draft,{text:t('ja','Other currency')},{language:'ja'},777).draft.step,'currency_other');
  const euro=advanceOnboarding(picked.draft,{callback:'o:cur:EUR'},{language:'ja'},777);
  assert.deepEqual(euro.effects,{currency:'EUR'});assert.equal(euro.draft.step,'account');assert.deepEqual(euro.draft.data,{currency:'EUR'});
  assert.equal(advanceOnboarding(picked.draft,{callback:'o:cur:ZZZ'},{language:'ja'},777).draft.step,'currency');
  const other=advanceOnboarding(picked.draft,{callback:'o:cur:other'},{language:'ja'},777);
- assert.equal(other.draft.step,'currency_other');assert.deepEqual(other.reply.keyboard,{remove:true});
+ assert.equal(other.draft.step,'currency_other');assert.deepEqual(other.reply.keyboard,{reply:[['‹ '+t('ja','Back')]]});
  for(const bad of ['dollars','US','12','XXX','usd1'])assert.equal(advanceOnboarding(other.draft,{text:bad},{language:'en'},777).draft.step,'currency_other',bad);
  assert.deepEqual(advanceOnboarding(other.draft,{text:' chf '},{language:'en'},777).effects,{currency:'CHF'});
  const named=advanceOnboarding(euro.draft,{text:'  Savings jar '},{language:'en'},777);
- assert.equal(named.draft.step,'balance');assert.deepEqual(named.reply.keyboard,{remove:true});
- assert.deepEqual(euro.reply.keyboard,{reply:[[t('ja','Cash')]]});
+ assert.equal(named.draft.step,'balance');assert.deepEqual(named.reply.keyboard,{reply:[['0'],['‹ '+t('en','Back')]]});
+ assert.deepEqual(euro.reply.keyboard,{reply:[[t('ja','Cash')],['‹ '+t('ja','Back')]]});
  assert.equal(advanceOnboarding(euro.draft,{text:t('ru','Cash')},{language:'ru'},777).draft.data.account_name,t('ru','Cash'));assert.equal(named.draft.data.account_name,'Savings jar');
  assert.equal(advanceOnboarding(euro.draft,{callback:'o:name:cash'},{language:'ru'},777).draft.data.account_name,t('ru','Cash'));
  assert.equal(advanceOnboarding(euro.draft,{text:'x'.repeat(121)},{language:'en'},777).draft.step,'account');
@@ -267,4 +267,33 @@ test('signing out keeps the identity of an account that signs in with its number
   const back=await run(contact(),context);
   assert.equal(context.created.length,0);assert.equal(context.db.tables.telegram_subscriptions[0].chat_id,777);assert.match(back.replies[0].text,/Aziz/);
  }
+});
+
+test('setup questions survive late taps, offer Back, never expire, and Start begins them again',async()=>{
+ const en=(step,data={})=>({kind:'onboard',step,data});
+ const back='‹ '+t('en','Back');
+ // A second tap on the currency keyboard after the bot moved on changes the currency instead of naming the account.
+ const late=advanceOnboarding(en('account',{currency:'USD'}),{text:t('en','Other currency')},{language:'en'},777);
+ assert.equal(late.draft.step,'currency_other');assert.equal(late.effects.account,undefined);
+ const code=advanceOnboarding(en('balance',{currency:'USD',account_name:'Wallet'}),{text:'EUR'},{language:'en'},777);
+ assert.equal(code.draft.step,'account');assert.equal(code.draft.data.currency,'EUR');assert.equal(code.effects.currency,'EUR');assert.equal(code.effects.account,undefined);
+ // A late language tap switches the language and asks the same question again in it.
+ const russian=languageCatalogue.find(item=>item.code==='ru').native;
+ const switched=advanceOnboarding(en('currency'),{text:russian},{language:'en'},777);
+ assert.equal(switched.draft.step,'currency');assert.equal(switched.effects.language,'ru');assert.equal(switched.reply.text,t('ru','Which currency do you use most?'));
+ // Back on every question after the first, forgetting later answers; the balance offers a 0 button.
+ assert.deepEqual(advanceOnboarding(en('balance',{currency:'USD',account_name:'Wallet'}),{text:back},{language:'en'},777).draft,en('account',{currency:'USD'}));
+ assert.deepEqual(advanceOnboarding(en('account',{currency:'USD'}),{text:back},{language:'en'},777).draft,en('currency',{}));
+ assert.equal(advanceOnboarding(en('currency'),{text:back},{language:'en'},777).draft.step,'language');
+ assert.deepEqual(onboardPrompt(en('balance'),'en',777).keyboard,{reply:[['0'],[back]]});
+ assert.ok(!onboardPrompt(en('language'),'en',777).keyboard.reply.flat().includes(back),'no Back on the first question');
+ const zero=advanceOnboarding(en('balance',{currency:'USD',account_name:'Wallet'}),{text:'0'},{language:'en'},777);
+ assert.equal(zero.effects.account.amount,0);assert.equal(zero.effects.finished,true);
+ // In the chat: a setup left for hours still continues, and /start starts it over from the language.
+ const stale={user_id:ownerId,step:'onboard:balance',data:{currency:'USD',account_name:'Other currency'},updated_at:'2026-09-30T09:00:00Z'};
+ const context=setup({seed:{telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}],telegram_drafts:[stale]}});
+ assert.equal((await run(text('abc'),context)).replies[0].text,t('en','Type a positive number, such as 250000 or 12.50'));
+ const restarted=await run(text('/start'),context);
+ assert.equal(restarted.replies[0].text,t('en','Choose your language'));
+ assert.equal(context.db.tables.telegram_drafts[0].step,'onboard:language');assert.deepEqual(context.db.tables.telegram_drafts[0].data,{});
 });
