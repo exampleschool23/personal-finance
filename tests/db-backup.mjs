@@ -18,6 +18,8 @@ test('backups are encrypted and the workflow passes secrets only through env',()
   const script=read('scripts/db-backup.sh'), flow=read('.github/workflows/db-backup.yml');
   assert.match(script,/age -r/);
   assert.doesNotMatch(script,/pg_dump[^\n]*>\s*[^"$]/);
+  assert.match(flow,/PG_DUMP: \/usr\/lib\/postgresql\/17\/bin\/pg_dump/);
+  assert.match(script,/"\$\{PG_DUMP:-pg_dump\}"/);
   assert.match(flow,/cron:/);
   assert.match(flow,/workflow_dispatch/);
   assert.match(flow,/if: failure\(\)/);

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Nightly encrypted dump of the Supabase database to Cloudflare R2.
 # Required env: SUPABASE_DB_URL, AGE_PUBLIC_KEY, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID,
-# R2_SECRET_ACCESS_KEY, R2_BUCKET. Optional: BACKUP_RETENTION_DAYS (default 30).
+# R2_SECRET_ACCESS_KEY, R2_BUCKET. Optional: BACKUP_RETENTION_DAYS (default 30), PG_DUMP
+# (path to a pg_dump at least as new as the server; the runner ships an older one first on PATH).
 set -euo pipefail
 
 for name in SUPABASE_DB_URL AGE_PUBLIC_KEY R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET; do
@@ -18,7 +19,7 @@ export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$R2_SECRET_A
 endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
 # public holds the app data; auth holds the accounts, so restored users can still sign in.
-pg_dump "$SUPABASE_DB_URL" --format=custom --no-owner --no-privileges --schema=public --schema=auth \
+"${PG_DUMP:-pg_dump}" "$SUPABASE_DB_URL" --format=custom --no-owner --no-privileges --schema=public --schema=auth \
   | age -r "$AGE_PUBLIC_KEY" > "$file"
 
 # A truncated or empty dump must fail the job instead of looking like a backup.
