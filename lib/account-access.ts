@@ -9,7 +9,8 @@ export const accountAccessSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('verify'),token_hash:z.string().regex(/^[a-zA-Z0-9_-]{20,512}$/),type:z.enum(['email','recovery'])}),
  z.object({action:z.literal('reset'),password}),
  z.object({action:z.literal('change_password'),current_password:z.string().min(1).max(1024),password}),
- z.object({action:z.literal('delete_account'),current_password:z.string().min(1).max(1024),confirmation:z.literal('DELETE')})
+ // An account made with a phone number never had a password, so it confirms deletion with DELETE alone.
+ z.object({action:z.literal('delete_account'),current_password:z.string().max(1024).optional(),confirmation:z.literal('DELETE')})
 ]);
 export const recoveryCookie='hf_recovery';
 export const recoveryOptions={httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax' as const,path:'/api/account-access',maxAge:600};

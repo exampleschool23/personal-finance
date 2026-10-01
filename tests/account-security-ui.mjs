@@ -107,10 +107,10 @@ test('results are shown as popups, never as inline text, and the sent screen is 
  }
 });
 
-test('settings for a phone-only account offers only adding an email and password',()=>{
- const html=(()=>{
+test('settings for a phone-only account offers adding an email and password, and deleting the account without one',()=>{
+ const render=mode=>{
   const {AccountAccessPanel}=loadTS('components/account-access-panel.tsx',{
-   react:{...React,useEffect(){},useState(initial){return [initial&&typeof initial==='object'&&'phoneOnly' in initial?{...initial,phoneOnly:true}:initial===null?null:initial,()=>{}];}},
+   react:{...React,useEffect(){},useState(initial){return [initial&&typeof initial==='object'&&'phoneOnly' in initial?{...initial,phoneOnly:true,deletion:true}:initial==='change_password'?mode:initial===null?null:initial,()=>{}];}},
    'next/navigation':{useRouter:()=>({})},
    'next/link':{__esModule:true,default:({children})=>React.createElement('a',null,children)},
    '@/components/language-provider':{useLanguage:()=>({t:key=>key})},
@@ -119,9 +119,13 @@ test('settings for a phone-only account offers only adding an email and password
    'lucide-react':{MailCheck:()=>null},
   });
   return renderToStaticMarkup(React.createElement(AccountAccessPanel,{settings:true}));
- })();
+ };
+ const html=render('change_password');
  assert.ok(html.includes('<h2>Add an email and password</h2>'));
- assert.ok(html.includes('Your account was created with a phone number.'));
+ assert.ok(html.includes('Your account was created with a phone number. Add an email and password to sign in with them too.'));
  assert.ok(html.includes('type="email"'));assert.equal((html.match(/type="password"/g)||[]).length,2);
- assert.ok(!html.includes('Permanently delete account'));assert.ok(!html.includes('Current password'));assert.ok(!html.includes('Change password'));
+ assert.ok(html.includes('Permanently delete account'));assert.ok(!html.includes('Current password'));assert.ok(!html.includes('Change password'));
+ // Deleting asks only for DELETE: the account never had a password.
+ const deleting=render('delete_account');
+ assert.ok(deleting.includes('Type DELETE to confirm'));assert.ok(!deleting.includes('Current password'));assert.equal((deleting.match(/type="password"/g)||[]).length,0);
 });

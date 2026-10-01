@@ -53,8 +53,9 @@ embedded web views.
 
 Existing email accounts can also connect from Settings, and can send `/phone` to the bot from a linked chat
 to add a number to an email account. An account created with a phone number can
-add an email and password in Settings, which also unlocks changing the password
-and deleting the account.
+add an email and password in Settings. It can delete itself in Settings by
+typing DELETE (it never had a password to re-enter); a linked chat is then told
+the account was deleted and loses its menu, and `/start` offers sign-up again.
 
 ## Signing out
 

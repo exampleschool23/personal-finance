@@ -75,7 +75,7 @@ export const privacyPolicy:LegalDocument={kind:'privacy',sections:[
   'We keep your data while your account is open. Records you delete go to Recently deleted, where you can restore them. When you delete your account, your records are deleted; copies in encrypted backups are removed as those backups expire.',
  ]},
  {heading:'Your choices and rights',paragraphs:[
-  'You can see and correct your data in the app, download a full backup in Settings, turn off Telegram messages or sign out of the bot at any time, and delete your account in Settings. Accounts created in Telegram can add an email in Settings to use deletion, or write to us.',
+  'You can see and correct your data in the app, download a full backup in Settings, turn off Telegram messages or sign out of the bot at any time, and delete your account in Settings, including an account created in Telegram.',
   `Depending on where you live, you may also have the right to ask what data we hold, to object to or restrict its use, or to complain to a data protection authority. Write to ${legalContact} and we will reply as soon as we can.`,
  ]},
  {heading:'Security',paragraphs:[

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
 import {botDb,ownerId,subscription} from './helpers/bot-db.mjs';
-const {handleTelegramUpdate}=loadTS('lib/telegram-bot.ts');
+const {handleTelegramUpdate,deletionNotice}=loadTS('lib/telegram-bot.ts');
 const {advanceOnboarding,startOnboarding,onboardPrompt}=loadTS('lib/telegram-onboarding.ts');
 const {derivedPassword,consumeLoginToken}=loadTS('lib/telegram-account.ts');
 const {translate,languageCatalogue}=loadTS('lib/i18n.ts');
@@ -372,3 +372,12 @@ test('I already have an account sends a single-use sign-in link for this chat, a
  await run(press('o:signin'),linked);
  assert.equal(linked.db.tables.telegram_connect_requests.length,0);
 });
+
+test('deleting an account on the web tells its linked chat in the account language and removes the menu',async()=>{
+ const linked=setup({seed:{telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'ru',currencies:['USD']}]}});
+ assert.deepEqual(await deletionNotice(linked.db,ownerId),{chat_id:777,text:t('ru','Your Hoggish account was deleted. Send /start to create a new one.'),keyboard:{remove:true}});
+ const signedOut=setup({seed:{telegram_subscriptions:[subscription({chat_id:null,telegram_user_id:777,phone:'+998901234567',consented_at:'x',linked_at:null})]}});
+ assert.equal(await deletionNotice(signedOut.db,ownerId),null,'a signed-out chat is left alone');
+ assert.equal(await deletionNotice(setup().db,ownerId),null);
+});
+

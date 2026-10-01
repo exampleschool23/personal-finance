@@ -102,3 +102,19 @@ test('the account page reports whether the signed-in account has no email, so Se
  }
  assert.equal((await (await api({auth:false}).GET()).json()).phoneOnly,false);
 });
+
+test('a phone-only account deletes with DELETE alone, while an email account still needs its password',async context=>{
+ const previous=process.env.SUPABASE_SERVICE_ROLE_KEY;process.env.SUPABASE_SERVICE_ROLE_KEY='test-admin-key';const calls=[];context.mock.method(globalThis,'fetch',async(url,init)=>{calls.push({url,init});return Response.json({});});
+ try{
+  const phone=api({email:''});
+  const result=await phone.POST(request({action:'delete_account',confirmation:'DELETE'}));
+  assert.equal(result.status,200);assert.equal(phone.calls.length,0,'no password check');
+  assert.equal(calls.length,1);assert.equal(calls[0].url,'https://supabase.invalid/auth/v1/admin/users/'+id);assert.deepEqual(phone.deleted,['hf_access','hf_refresh']);
+  assert.equal((await api({email:''}).POST(request({action:'delete_account',confirmation:'delete'}))).status,400,'DELETE is still required');
+  const emailed=api();
+  assert.equal((await emailed.POST(request({action:'delete_account',confirmation:'DELETE'}))).status,403);
+  assert.equal(emailed.calls.length,0);assert.equal(calls.length,1);assert.deepEqual(emailed.deleted,[]);
+  // A phone-only account still cannot change a password it never had.
+  assert.equal((await api({email:'',provider:()=>Response.json({},{status:400})}).POST(request({action:'change_password',current_password:'x',password:'new secure password'}))).status,403);
+ }finally{if(previous===undefined)delete process.env.SUPABASE_SERVICE_ROLE_KEY;else process.env.SUPABASE_SERVICE_ROLE_KEY=previous;}
+});

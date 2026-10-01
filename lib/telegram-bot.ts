@@ -37,6 +37,12 @@ export async function ownerLanguage(db:ServiceDatabase,userId:string){
  const rows=await db.read<Array<{language?:string}>>('/rest/v1/user_preferences?select=language&user_id=eq.'+userId);
  return languageOf(rows[0]?.language);
 }
+/** What a linked chat is told when its account is deleted on the web: the menu goes, and /start begins again. Read before deleting, because deletion removes the link. */
+export async function deletionNotice(db:ServiceDatabase,userId:string):Promise<TelegramMessage|null>{
+ const [row]=await db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=chat_id&user_id=eq.'+userId);
+ if(!row?.chat_id)return null;
+ return {chat_id:row.chat_id,text:t(await ownerLanguage(db,userId),'Your Hoggish account was deleted. Send /start to create a new one.'),keyboard:{remove:true}};
+}
 /** The name saved in the app's Settings; Telegram's own profile name is never used. */
 const ownerName=async(db:ServiceDatabase,userId:string)=>(await ownerProfile(db,userId)).name;
 async function subscriptionByChat(db:ServiceDatabase,chatId:number){

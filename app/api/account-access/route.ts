@@ -2,7 +2,9 @@ import {cookies} from 'next/headers';
 import {z} from 'zod';
 import {accountAccessSchema,recoveryCookie,recoveryOptions,accountOrigin} from '@/lib/account-access';
 import {config,supa,session,saveSession,sameOrigin} from '@/lib/supabase';
-import {serviceKeyHeaders} from '@/lib/service-role';
+import {serviceDatabase,serviceKeyHeaders} from '@/lib/service-role';
+import {sendTelegramMessage} from '@/lib/telegram';
+import {deletionNotice} from '@/lib/telegram-bot';
 const authSession=z.object({access_token:z.string().min(1),refresh_token:z.string().min(1),expires_in:z.number().positive(),user:z.object({id:z.string().uuid()})});
 const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
 export async function GET(){
@@ -51,7 +53,10 @@ export async function POST(req:Request){
   if(!added.ok)return reply({error:'Could not add the email. Check the address and try another password.'},400);
   return reply({message:'Check your email to confirm it.'});
  }
- // Credential changes and deletion require fresh password verification.
+ // Credential changes and deletion require fresh password verification; an account made with a phone number has no password and deletes on DELETE alone.
+ const phoneOnly=!auth.user.email;
+ if(!phoneOnly||data.action!=='delete_account'){
+ if(!data.current_password)return reply({error:'Current password is incorrect.'},403);
  const check=await supa('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:auth.user.email,password:data.current_password})});
  if(!check.ok)return reply({error:'Current password is incorrect.'},403);
  const fresh=authSession.safeParse(await check.json());if(!fresh.success||fresh.data.user.id!==auth.user.id)return reply({error:'Request rejected.'},403);
@@ -59,9 +64,13 @@ export async function POST(req:Request){
  const response=await supa('/auth/v1/user',{method:'PUT',body:JSON.stringify({password:data.password})},fresh.data.access_token);if(!response.ok)return reply({error:'Could not change the password.'},400);
  await supa('/auth/v1/logout?scope=global',{method:'POST'},fresh.data.access_token);jar.delete('hf_access');jar.delete('hf_refresh');return reply({message:'Password changed. Sign in with your new password.'});
  }
+ }
  const key=process.env.SUPABASE_SERVICE_ROLE_KEY;if(!key)return reply({error:'Account deletion is awaiting server setup.'},503);
+ // A linked Telegram chat is told afterwards, so it is not left with the menu of an account that is gone.
+ const db=serviceDatabase(),notice=db?await deletionNotice(db,auth.user.id).catch(()=>null):null;
  const response=await fetch(config().url+'/auth/v1/admin/users/'+auth.user.id,{method:'DELETE',headers:serviceKeyHeaders(key),cache:'no-store',signal:AbortSignal.timeout(15000)});
  if(!response.ok)return reply({error:'Could not delete the account. Please try again.'},503);
+ if(notice)await sendTelegramMessage(notice);
  jar.delete('hf_access');jar.delete('hf_refresh');return reply({message:'Account deleted.'});
  }catch{return reply({error:'Account service is unavailable. Please try again.'},503);}
 }
