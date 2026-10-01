@@ -53,6 +53,20 @@ test('resource state shows loading, then the error with retry, then the content'
  assert.equal(render(ResourceState,{loading:true,error:'x'},child).includes('ready'),false);
 });
 
+test('loading skeletons keep the shape of the content they replace, so the page does not jump',()=>{
+ const {StatTilesSkeleton,PanelSkeleton,CashflowPreviewSkeleton,WorkspaceSkeleton}=load('loading-placeholder.tsx',{'@/components/ui/skeleton':{Skeleton:element('span')}});
+ const tiles=render(StatTilesSkeleton,{label:'Loading records…'});
+ assert.match(tiles,/^<div role="status" aria-busy="true"><span class="sr-only">Loading records…<\/span><div aria-hidden="true" class="stat-tiles" data-columns="3">/);
+ assert.equal(tiles.match(/class="stat-tile"/g).length,3);
+ assert.equal(render(StatTilesSkeleton,{columns:4}).match(/class="stat-tile"/g).length,4);
+ assert.match(render(PanelSkeleton,{label:'Loading records…',rows:2,className:'tools-panel'}),/^<section class="panel tools-panel">.*role="status" aria-busy="true".*Loading records…/);
+ const preview=render(CashflowPreviewSkeleton,{label:'Loading records…'});
+ assert.match(preview,/class="cashflow-preview-grid"/);
+ assert.equal(preview.match(/class="panel"/g).length,2);
+ const cashflow=render(WorkspaceSkeleton,{label:'Loading',section:'Income & expenses'});
+ assert.ok(cashflow.indexOf('stat-tiles')<cashflow.indexOf('cashflow-preview-grid')&&cashflow.indexOf('cashflow-preview-grid')<cashflow.indexOf('panel records'));
+});
+
 test('segmented control presses exactly the current option and reports the chosen value',()=>{
  const {Segmented}=load('segmented.tsx');
  const options=[{value:30,label:'30 days'},{value:null,label:'All history'}];

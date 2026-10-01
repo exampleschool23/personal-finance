@@ -1,4 +1,5 @@
 "use client";
+import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import {ScheduleFields} from '@/components/presentation-foundation/schedule-fields';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
@@ -69,7 +70,7 @@ function ExpenseRecordForm({onDebtSaved,onMortgageSave,onMortgageDone,onPaymentD
    <TabsList aria-label={t('Expense type')}><TabsTrigger value="plan" disabled={busy}>{t('Plan')}</TabsTrigger><TabsTrigger value="expense" disabled={busy}>{t('Expense')}</TabsTrigger>{onDebtPayment&&<TabsTrigger value="debt" disabled={busy}>{t('Debt / mortgage')}</TabsTrigger>}</TabsList>
    <TabsContent value="debt" className="expense-form-scroll">
     <p className="muted">{t('Choose a debt to record a payment.')}</p>
-    {planning.loading?<p role="status">{t('Loading records…')}</p>:planning.error?<p role="alert" className="error">{t(planning.error)}</p>:debts.length?<>
+    {planning.loading?<LoadingPlaceholder label={t('Loading records…')} rows={2}/>:planning.error?<p role="alert" className="error">{t(planning.error)}</p>:debts.length?<>
      <label>{t('Loans & debts')}<NativeSelect value={paymentId} disabled={busy} onChange={event=>{const id=event.target.value;const change=()=>{onPaymentDraftState?.(false,false);setPaymentId(id);};if(requestPaymentSwitch)requestPaymentSwitch(change);else change();}}><option value="">{t('Choose a debt')}</option>{debts.map(record=><option key={record.id} value={record.id}>{record.name} · {t(record.kind)} · {formatMoney(record.amount,record.currency,locale)}</option>)}</NativeSelect></label>
      {demo&&selectedDebt&&selectedDebt.kind!=='Mortgage'&&<p className="muted">{t('Debt repayments are available in your signed-in workspace.')}</p>}
      {selectedDebt?.kind==='Mortgage'&&onMortgageSave?<MortgagePaymentDialog inline key={selectedDebt.id} mortgage={selectedDebt} accounts={planning.data.records} onClose={()=>onMortgageDone?.()} onSave={onMortgageSave} onDraftState={onPaymentDraftState}/>:selectedDebt&&!demo?<InvestmentTracker inline key={selectedDebt.id} initialType="withdrawal" record={selectedDebt} accounts={planning.data.records} accountsReady={!planning.loading&&!planning.error} onClose={()=>onMortgageDone?.()} onSaved={()=>onDebtSaved?.()} onPayment={()=>{}} onDraftState={onPaymentDraftState}/>:<Button type="button" disabled={busy||!selectedDebt||(demo&&selectedDebt.kind!=='Mortgage')} onClick={()=>{if(selectedDebt)onDebtPayment?.(selectedDebt);}}>{t('Record payment')}</Button>}

@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { ArrowDownLeft, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
+import { CashflowPreviewSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney } from '@/lib/format';
@@ -18,7 +19,7 @@ export function CashflowPreview({entries,sources,plans,month,currency,loading,er
  const cards=monthlyIncomeCards(entries,month,sources).slice(0,5);
  const selectedPlans=plans.filter(plan=>plan.currency===currency&&expensePlanTotals(plan,month).active).slice(0,3);
  if(error)return <InlineError message={t(error)} onRetry={onRetry}/>;
- if(loading)return <p role="status">{t('Loading records…')}</p>;
+ if(loading)return <CashflowPreviewSkeleton label={t('Loading records…')}/>;
  return <div className="cashflow-preview-grid">
   <section className="panel cashflow-income-preview"><PanelTitle title={t('Income this month')}><Button variant="link" onClick={onIncome}>{t('View all')}</Button></PanelTitle>
    <div className="table-scroll"><table><thead><tr><th>{t('Source')}</th><th>{t('Monthly estimate')}</th><th>{t('Received this month')}</th></tr></thead><tbody>{cards.map(card=><tr key={card.entry.id}><td><div className="cashflow-source-name"><span className="cashflow-source-icon" style={{'--source-color':categoryColor(card.entry.kind)} as CSSProperties}><ArrowDownLeft size={19} aria-hidden="true"/></span><div><strong>{card.entry.name||t(card.entry.kind)}</strong><small className="muted">{t(card.entry.kind)}</small></div></div></td><td>{card.excluded?'—':formatMoney(card.amount,currency,locale)}</td><td>{card.received?formatMoney(card.receivedAmount,currency,locale): '—'}</td></tr>)}</tbody></table></div>

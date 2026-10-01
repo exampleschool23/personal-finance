@@ -2,7 +2,7 @@
 import { Plus } from 'lucide-react';
 import { DebtSummary } from '@/components/debt-summary';
 import { useLanguage } from '@/components/language-provider';
-import { WorkspaceSkeleton } from '@/components/presentation-foundation/loading-placeholder';
+import { PanelSkeleton, WorkspaceSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { DebtPayoffPanel } from '@/components/planning/debt-payoff-panel';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ export function LoansDebtsScreen() {
     <RecordsTable title={t('Loans & debts')} caption={t("Fetched prices where available")}/>
    </>}
   </div>
+  {planning.loading&&<div className="content review-content"><PanelSkeleton label={t('Loading records…')}/></div>}
   {!planning.loading&&!planning.error&&<div className="content review-content" key={user??'demo'}><DebtPayoffPanel records={planning.data.records} currency={currency} today={depositToday()} preferences={workspacePreferences}/></div>}
  </>;
 }

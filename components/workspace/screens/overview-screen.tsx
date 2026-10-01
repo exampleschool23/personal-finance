@@ -1,7 +1,7 @@
 "use client";
 import { MonthlyReview } from '@/components/financial-review';
 import { useLanguage } from '@/components/language-provider';
-import { WorkspaceSkeleton } from '@/components/presentation-foundation/loading-placeholder';
+import { PanelSkeleton, WorkspaceSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { OverviewHeading, OverviewSummary } from '@/components/overview-page';
 import { PortfolioOverview } from '@/components/portfolio-overview';
 import { TelegramNudge } from '@/components/telegram-nudge';
@@ -22,6 +22,7 @@ export function OverviewScreen() {
    </PortfolioOverview>}
   </div>
   {(workspacePreferences.error||planning.error||transactionTools.error||expensePlans.error)&&<ToolsUnavailable/>}
+  {planning.loading&&<div className="content review-content"><PanelSkeleton label={t('Loading records…')} className="tools-panel monthly-review"/></div>}
   {!planning.loading&&!planning.error&&<div className="content review-content"><MonthlyReview owner={user} demo={demo} revision={reload} market={market} data={planning.data} tools={transactionTools} snapshots={snapshots.snapshots} historyError={snapshots.error} currency={currency}/></div>}
  </>;
 }

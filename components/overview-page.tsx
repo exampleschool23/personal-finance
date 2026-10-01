@@ -1,4 +1,5 @@
 "use client";
+import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { liabilityTone, signTone } from '@/components/presentation-foundation/tone';
@@ -58,7 +59,7 @@ export function OverviewSummary({ entries, currency, excludedCurrencies, forecas
     {due.length ? <ul className="overview-list overview-due">{due.map(item => {
      const incoming = income.includes(item.record.kind);
      return <li key={item.key}><span className={incoming ? 'icon-box' : 'icon-box outgoing'}>{incoming ? <ArrowDownLeft/> : <ArrowUpRight/>}</span><span>{item.record.name}<small className={item.overdue ? 'negative' : undefined}>{item.overdue ? t('Overdue') + ' · ' : ''}{formatDate(item.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{money(item.record.amount, item.record.currency)}</strong></li>;
-    })}</ul> : <EmptyState icon={<CalendarClock/>} description={t(planning ? 'Nothing is due in the next 31 days.' : 'Loading records…')}/>}
+    })}</ul> : planning ? <EmptyState icon={<CalendarClock/>} description={t('Nothing is due in the next 31 days.')}/> : <LoadingPlaceholder label={t('Loading records…')} rows={3}/>}
    </section>
   </div>
  </>;

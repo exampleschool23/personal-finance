@@ -51,6 +51,8 @@ test('remote monthly review normalizes undated lending and never presents failed
  const remote=()=>renderToStaticMarkup(React.createElement(RemoteReview,{...props,owner:'one',revision:4}));
  assert.match(remote(),/\$75/);assert.equal(calls[0][0],'/api/planning?scope=review&month=2026-09');assert.equal(calls[0][1],'one');assert.equal(calls[0][3],4);
  loading=true;assert.match(remote(),/Loading records/);assert.doesNotMatch(remote(),/\$0|\$75/);
+ const compact=()=>renderToStaticMarkup(React.createElement(RemoteReview,{...props,owner:'one',compact:true}));
+ assert.match(compact(),/class="cashflow-summary".*aria-busy="true".*class="stat-tiles" data-columns="3"/);assert.equal(compact().match(/class="stat-tile"/g).length,3);assert.doesNotMatch(compact(),/\$0|\$75/);
  loading=false;failure='Could not load planning data.';assert.match(remote(),/role="alert"/);assert.doesNotMatch(remote(),/\$0|\$75/);
 });
 

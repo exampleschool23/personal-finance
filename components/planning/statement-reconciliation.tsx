@@ -1,4 +1,5 @@
 "use client";
+import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import {FormFooter} from '@/components/presentation-foundation/form-footer';
 import {InlineError} from '@/components/presentation-foundation/inline-error';
 import { showSaved } from '@/lib/feedback';
@@ -27,7 +28,7 @@ export function StatementReconciliation({account,owner,onClose,onSaved}:{account
  return <Dialog open onOpenChange={open=>{if(!open&&!editing)onClose();}}><DialogContent className="record-dialog" showCloseButton={!editing}><DialogTitle>{t('Statement reconciliation')} · {account.name}</DialogTitle><DialogDescription>{t('Enter the opening cleared balance immediately before the first day. Match transactions to the bank statement. This review does not change your cash balance.')}</DialogDescription>
  {!editing?<><div className="form-grid"><label>{t('First day')}<DatePicker value={from} max={to} onChange={v=>{setFrom(v);setSelected(null);}}/></label><label>{t('Statement closing date')}<DatePicker value={to} min={from} max={today} onChange={v=>{setTo(v);setSelected(null);}}/></label></div>
  {resource.error&&<InlineError message={t(resource.error)} onRetry={resource.retry}/>}
- {resource.loading?<p>{t('Loading records…')}</p>:!resource.error&&<><Button onClick={()=>setEditing(true)}>{t(selected?'Review statement':'Start statement review')}</Button><h3>{t('Saved statements')}</h3><ul className="tool-list">{resource.data.saved.map(s=><li key={s.id}><span>{formatDate(s.start_date,locale)} — {formatDate(s.end_date,locale)}</span><Button variant="outline" onClick={()=>{setFrom(s.start_date);setTo(s.end_date);setSelected(s);}}>{t('Open')}</Button></li>)}</ul></>}
+ {resource.loading?<LoadingPlaceholder label={t('Loading records…')} rows={2}/>:!resource.error&&<><Button onClick={()=>setEditing(true)}>{t(selected?'Review statement':'Start statement review')}</Button><h3>{t('Saved statements')}</h3><ul className="tool-list">{resource.data.saved.map(s=><li key={s.id}><span>{formatDate(s.start_date,locale)} — {formatDate(s.end_date,locale)}</span><Button variant="outline" onClick={()=>{setFrom(s.start_date);setTo(s.end_date);setSelected(s);}}>{t('Open')}</Button></li>)}</ul></>}
  <Button variant="outline" onClick={onClose}>{t('Close')}</Button></>:<StatementForm key={selected?.id??'new'} initial={selected} account={account} from={from} to={to} state={resource.data} onClose={()=>setEditing(false)} onSaved={()=>{resource.invalidate();setEditing(false);setSelected(null);onSaved();}}/>}
  </DialogContent></Dialog>;
 }

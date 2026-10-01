@@ -7,10 +7,10 @@ import { CashflowPreview } from '@/components/cashflow-preview';
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { EstimatedIncomeSources } from '@/components/estimated-income-sources';
 import { ExpensePlans } from '@/components/expense-plans';
-import { MonthlyReview } from '@/components/financial-review';
+import { CashflowSummarySkeleton, MonthlyReview } from '@/components/financial-review';
 import { IncomeSourcesPanel } from '@/components/income-sources-panel';
 import { useLanguage } from '@/components/language-provider';
-import { LoadingPlaceholder, WorkspaceSkeleton } from '@/components/presentation-foundation/loading-placeholder';
+import { LoadingPlaceholder, PanelSkeleton, WorkspaceSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { MonthlyMortgagePayments } from '@/components/monthly-mortgage-payments';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { SpendingWatchlists } from '@/components/spending-watchlists';
@@ -41,7 +41,7 @@ export function CashFlowScreen() {
    <Segmented as="nav" className="cashflow-tabs" label={t('Cash flow')} options={tabs.map(name=>({value:name,label:t(name)}))} value={tab} onChange={name=>{setTab(name);if(name==='Overview')showFirstPage();}}/>
    <ScreenNotices planErrors={false}/>
    {workspaceLoading ? <WorkspaceSkeleton label={t("Loading your workspace…")} section="Income & expenses"/> : <>
-    {!planning.loading&&!planning.error&&<MonthlyReview compact selectedMonth={forecastMonth} estimates={forecastReady?{income:forecast.plannedIncome,spending:forecast.monthlyExpenses+forecast.mortgagePayments,net:forecast.forecast}:null} owner={user} demo={demo} revision={reload} market={market} data={planning.data} tools={transactionTools} snapshots={snapshots.snapshots} historyError={snapshots.error} currency={currency}/>}
+    {planning.loading?<CashflowSummarySkeleton/>:!planning.error&&<MonthlyReview compact selectedMonth={forecastMonth} estimates={forecastReady?{income:forecast.plannedIncome,spending:forecast.monthlyExpenses+forecast.mortgagePayments,net:forecast.forecast}:null} owner={user} demo={demo} revision={reload} market={market} data={planning.data} tools={transactionTools} snapshots={snapshots.snapshots} historyError={snapshots.error} currency={currency}/>}
     {transactionTools.error&&<InlineError message={t(transactionTools.error)} onRetry={transactionTools.retry}/>}
     {tab==='Overview'&&<CashflowPreview entries={monthlyIncomeEntries} sources={earningSources.sources} plans={expensePlans.plans} month={forecastMonth} currency={currency} loading={planning.loading||earningSources.loading||expensePlans.loading} error={planning.error||earningSources.error||expensePlans.error} onRetry={refreshRecords} onIncome={()=>setTab('Income')} onSpending={()=>setTab('Spending')} mortgages={mortgages} watchlists={watchlists}/>}
     {tab==='Income'&&<IncomeSourcesPanel controller={earningSources} currencies={preferencesData.currencies} records={planning.data.records} onRecord={recordFromSource}/>}
@@ -53,6 +53,7 @@ export function CashFlowScreen() {
    </>}
   </div>
   {(workspacePreferences.error||planning.error)&&<ToolsUnavailable/>}
+  {planning.loading&&(tab==='Transactions'||tab==='Spending')&&<div className="content review-content"><PanelSkeleton label={t('Loading records…')} rows={2}/></div>}
   {!planning.loading&&!planning.error&&<div className="content review-content" key={user??'demo'}>
    {tab==='Transactions'&&<TransactionInsights owner={user} demo={demo} revision={reload} records={planning.data.records} today={depositToday()} onReview={reviewRecurring}/>}
    {tab==='Spending'&&watchlists}

@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { useId, useState } from 'react';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { ResourceState } from '@/components/presentation-foundation/resource-state';
@@ -74,7 +75,7 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
    {demo && <p className="muted">{t('Sign in to record cash goal activity.')}</p>}
    {activeSavings.length > 0 && <div id={`${activityId}-form`} hidden={!activityOpen}><ResourceState loading={activityOpen&&incomeHistory.loading} error={activityOpen?incomeHistory.error:null} onRetry={incomeHistory.retry}><GoalActivityForm data={demo||!activityOpen?data:{...data,records:incomeHistory.data.records}} goals={activeSavings} today={today} busy={busy || demo} save={save}/></ResourceState></div>}
    {activity.error ? <InlineError as="div" className="goal-funding-notice" message={<p>{t('Goal activity could not be loaded. Please try again.')}</p>} onRetry={activity.retry}/>
-    : activity.loading ? <p role="status">{t('Loading goal activity…')}</p>
+    : activity.loading ? <LoadingPlaceholder label={t('Loading goal activity…')} rows={2}/>
     : events.length > 0 ? <ul className="tool-list goal-activity-list">{events.map(event => {
       const goal = savingsGoals.find(item => item.id === event.goal_id);
       return <li key={event.id}><div><strong>{goal?.name ?? t('Goal')}</strong><p className="muted">{formatDate(event.occurred_on, locale)} · {t(event.event_type)}{event.source_name && ` · ${event.source_name}`}</p>{event.notes && <p>{event.event_type === 'opening' ? t(event.notes) : event.notes}</p>}</div><strong className="goal-activity-amount">{formatMoney(Number(event.delta), goal?.currency ?? currency, locale)}</strong></li>;
