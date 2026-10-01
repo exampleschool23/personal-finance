@@ -1879,5 +1879,7 @@
   "What else would you like to do?": "আর কী করতে চান?",
   "No investments yet": "এখনো কোনো বিনিয়োগ নেই",
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "একটি স্টক, ক্রিপ্টো, আমানত, ট্রেজারি বিল বা অন্য বিনিয়োগ যোগ করুন, এর মূল্য দেখতে ও বাজারের সঙ্গে তুলনা করতে।",
-  "Type an amount, such as 250000, or 0 if it is empty.": "একটি পরিমাণ লিখুন, যেমন 250000, বা খালি হলে 0।"
+  "Type an amount, such as 250000, or 0 if it is empty.": "একটি পরিমাণ লিখুন, যেমন 250000, বা খালি হলে 0।",
+  "Send a new code": "নতুন কোড পাঠান",
+  "Send a new code in {seconds} s": "{seconds} সেকেন্ডে নতুন কোড পাঠান"
 }

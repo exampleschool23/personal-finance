@@ -1879,5 +1879,7 @@
   "What else would you like to do?": "또 무엇을 하시겠어요?",
   "No investments yet": "아직 투자가 없습니다",
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "주식, 암호화폐, 예금, 단기 국채 등 투자를 추가하면 가치를 추적하고 시장과 비교할 수 있습니다.",
-  "Type an amount, such as 250000, or 0 if it is empty.": "금액을 입력하세요. 예: 250000, 비어 있으면 0."
+  "Type an amount, such as 250000, or 0 if it is empty.": "금액을 입력하세요. 예: 250000, 비어 있으면 0.",
+  "Send a new code": "새 코드 보내기",
+  "Send a new code in {seconds} s": "{seconds}초 후 새 코드 보내기"
 }

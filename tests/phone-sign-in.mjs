@@ -6,12 +6,12 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {loadTS} from './helpers/load-ts.mjs';
 const styles=new Proxy({},{get:(_,key)=>String(key)});
 function render(state){
- // useState is called in a fixed order: step, phone, code, busy, error.
- const order=['step','phone','code','busy','error'];let call=0;
+ // useState is called in a fixed order: step, phone, code, busy, error, wait.
+ const order=['step','phone','code','busy','error','wait'];let call=0;
  const {PhoneSignIn}=loadTS('components/phone-sign-in.tsx',{
   react:{...React,useState(initial){const key=order[call++%order.length];return [key in state?state[key]:initial,()=>{}];}},
   './sign-in-screen.module.css':styles,
-  '@/components/language-provider':{useLanguage:()=>({t:(key,values={})=>key.replace(/\{(\w+)\}/g,(_,name)=>values[name]??name)})},
+  '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:(key,values={})=>key.replace(/\{(\w+)\}/g,(_,name)=>values[name]??name)})},
   '@/components/ui/button':{Button:props=>React.createElement('button',{...props,variant:undefined})},
   '@/components/ui/input':{Input:props=>React.createElement('input',props)},
   '@/lib/feedback':{showNotice:()=>{}},
@@ -49,3 +49,13 @@ test('the sign-in page shows phone sign-in only when the server reports it, and 
  assert.match(page,/query\.get\('t'\)/);assert.match(page,/webApp\?\.initData/);
  assert.ok(!/localStorage|document\.cookie/.test(page),'no credential is kept in the page');
 });
+
+test('the code step offers a new code once the minute between codes has passed',()=>{
+ const waiting=render({step:'code',phone:'+998901234567',wait:42});
+ assert.match(waiting,/<button[^>]*disabled=""[^>]*>Send a new code in 42 s<\/button>/);
+ const ready=render({step:'code',phone:'+998901234567',wait:0});
+ assert.match(ready,/<button[^>]*>Send a new code<\/button>/);assert.doesNotMatch(ready,/disabled="">Send a new code/);
+ assert.doesNotMatch(render({}),/Send a new code/,'the phone step has no resend');
+ assert.equal(loadTS('components/phone-sign-in.tsx',{'./sign-in-screen.module.css':{}}).resendSeconds,60);
+});
+

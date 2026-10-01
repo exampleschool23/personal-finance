@@ -1879,5 +1879,7 @@
   "What else would you like to do?": "Bạn muốn làm gì nữa?",
   "No investments yet": "Chưa có khoản đầu tư",
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "Thêm cổ phiếu, tiền mã hóa, tiền gửi, tín phiếu kho bạc hoặc khoản đầu tư khác để theo dõi giá trị và so sánh với thị trường.",
-  "Type an amount, such as 250000, or 0 if it is empty.": "Nhập số tiền, ví dụ 250000, hoặc 0 nếu trống."
+  "Type an amount, such as 250000, or 0 if it is empty.": "Nhập số tiền, ví dụ 250000, hoặc 0 nếu trống.",
+  "Send a new code": "Gửi mã mới",
+  "Send a new code in {seconds} s": "Gửi mã mới sau {seconds} giây"
 }

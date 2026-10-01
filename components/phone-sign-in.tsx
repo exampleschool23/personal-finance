@@ -1,10 +1,11 @@
 "use client";
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/components/language-provider';
 import { showNotice } from '@/lib/feedback';
+import { formatNumber } from '@/lib/format';
 import styles from './sign-in-screen.module.css';
 
 async function call(body: { action: 'send'; phone: string } | { action: 'verify'; phone: string; code: string }) {
@@ -14,12 +15,23 @@ async function call(body: { action: 'send'; phone: string } | { action: 'verify'
   return result;
 }
 
+/** Supabase sends at most one code a minute to a number; the resend button waits the same time. */
+export const resendSeconds = 60;
 /** Sign in with a phone number: the code goes to the person's Telegram chat, so no SMS is involved. */
 export function PhoneSignIn({ botUsername, onUseEmail }: { botUsername: string | null; onUseEmail: () => void }) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [phone, setPhone] = useState(''), [code, setCode] = useState('');
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
+  const [wait, setWait] = useState(0);
+  useEffect(() => { if (wait <= 0) return; const timer = setTimeout(() => setWait(seconds => seconds - 1), 1000); return () => clearTimeout(timer); }, [wait]);
+  async function resend() {
+    if (busy || wait > 0) return;
+    setBusy(true); setError(''); setCode('');
+    try { const result = await call({ action: 'send', phone }); if (result.message) showNotice(result.message); setWait(resendSeconds); }
+    catch (reason) { setError((reason as Error).message); }
+    finally { setBusy(false); }
+  }
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (busy) return;
@@ -28,7 +40,7 @@ export function PhoneSignIn({ botUsername, onUseEmail }: { botUsername: string |
       if (step === 'phone') {
         const result = await call({ action: 'send', phone });
         if (result.message) showNotice(result.message);
-        setStep('code');
+        setStep('code'); setWait(resendSeconds);
       } else {
         await call({ action: 'verify', phone, code });
         // A full load picks up the new session cookie.
@@ -45,6 +57,7 @@ export function PhoneSignIn({ botUsername, onUseEmail }: { botUsername: string |
         <p className={styles.notice}>{t('Enter the code we sent to your Telegram chat.')}</p></>}
     {error && <p className={styles.error} role="alert">{t(error)}</p>}
     <Button type="submit" className={styles.submit} disabled={busy}>{t(step === 'phone' ? 'Send code' : 'Verify')}<ArrowRight size={18}/></Button>
+    {step === 'code' && <Button type="button" variant="outline" disabled={busy || wait > 0} onClick={() => void resend()}>{wait > 0 ? t('Send a new code in {seconds} s', { seconds: formatNumber(wait, locale, 0) }) : t('Send a new code')}</Button>}
     <Button type="button" variant="ghost" onClick={step === 'code' ? () => { setStep('phone'); setCode(''); setError(''); } : onUseEmail}>{t(step === 'code' ? 'Use a different number' : 'Use email instead')}</Button>
   </form>;
 }

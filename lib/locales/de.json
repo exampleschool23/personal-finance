@@ -1879,5 +1879,7 @@
   "What else would you like to do?": "Was möchtest du noch tun?",
   "No investments yet": "Noch keine Investments",
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "Füge eine Aktie, Krypto, Einlage, einen Schatzwechsel oder ein anderes Investment hinzu, um seinen Wert zu verfolgen und mit dem Markt zu vergleichen.",
-  "Type an amount, such as 250000, or 0 if it is empty.": "Gib einen Betrag ein, zum Beispiel 250000, oder 0, wenn es leer ist."
+  "Type an amount, such as 250000, or 0 if it is empty.": "Gib einen Betrag ein, zum Beispiel 250000, oder 0, wenn es leer ist.",
+  "Send a new code": "Neuen Code senden",
+  "Send a new code in {seconds} s": "Neuen Code senden in {seconds} s"
 }
