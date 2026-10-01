@@ -5,6 +5,7 @@ import {after} from 'next/server';
 import {actionMessage,referencedIds,type ActionEvent,type ActionLookup,type NamedGoal,type NamedRecord} from './action-messages';
 import {isLanguage,translate,type Language} from './i18n';
 import {mainMenu} from './telegram-flow';
+import {sendActionMilestone} from './telegram-milestones';
 import {supa} from './supabase';
 import {sendTelegramMessage,telegramConfig,type TelegramConfig} from './telegram';
 export type ActionAuth={token:string;user?:{id:string}};
@@ -26,7 +27,8 @@ export async function sendActionNotification(auth:ActionAuth,event:ActionEvent,{
 }
 /** Call after a successful save. Never throws and never delays the response. */
 export function queueActionNotification(auth:ActionAuth,event:ActionEvent){
- const run=()=>sendActionNotification(auth,event).catch(()=>false);
+ // The celebration follows the confirmation, and neither can fail the other.
+ const run=async()=>{await sendActionNotification(auth,event).catch(()=>false);await sendActionMilestone(auth,event).catch(()=>false);};
  try{after(run);}catch{void run();}
 }
 

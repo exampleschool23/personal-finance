@@ -22,7 +22,7 @@ function run(steps,context=ctx()){
 }
 
 test('the menu is translated and recognised in every language, and cancel returns to it',()=>{
- assert.deepEqual(mainMenu('en').reply,[['Expense','Income'],['Transfer','Pay loan or debt'],['Mortgage payment','Upcoming payments']]);
+ assert.deepEqual(mainMenu('en').reply,[['Expense','Income'],['Transfer','Pay loan or debt'],['Mortgage payment','Upcoming payments'],['Add cash account']]);
  assert.equal(menuChoice(translate('ru','Expense')),'expense');assert.equal(menuChoice(' '+translate('ru','Income').toUpperCase()+' '),'income');assert.equal(menuChoice('Upcoming payments'),'upcoming');assert.equal(menuChoice('hello'),null);
  const stray=advance(null,{text:'hello'},ctx(),chat);
  assert.equal(stray.draft,null);assert.equal(stray.reply.text,'Choose what to add.');assert.deepEqual(stray.reply.keyboard,mainMenu('en'));
@@ -109,7 +109,7 @@ test('dates must be real and not in the future; long lists page eight at a time'
  const second=advance(first.draft,{callback:'f:page:1'},many,chat);
  assert.equal(second.draft,first.draft);assert.ok(buttons(second.reply).includes('f:cat:Other expense'));assert.ok(buttons(second.reply).includes('f:page:0'));
  const empty=ctx();empty.accounts=[];
- assert.equal(run([{text:'Expense'},{callback:'f:cat:Charity'}],empty).reply.text,'Add a cash account in the app first.');
+ assert.equal(run([{text:'Expense'},{callback:'f:cat:Charity'}],empty).reply.text,'Add a cash account to continue.');
 });
 
 test('every bot string exists in all three locales and prompts stay under Telegram limits',()=>{
@@ -180,4 +180,44 @@ test('the Back button is translated and shown with a chevron in every language',
   assert.equal(back.text,'‹ '+translate(language,'Back'),language);
   if(language!=='en')assert.notEqual(back.text,'‹ Back',language);
  }
+});
+
+test('the bot creates a cash account itself, from the menu or from a dead end, and returns to the interrupted question',()=>{
+ const withCurrencies=(context=ctx())=>({...context,currencies:['UZS','USD']});
+ // From the menu: name, currency, balance, then a valid Cash record.
+ const named=run([{text:'Add cash account'},{text:'Wallet'}],withCurrencies());
+ assert.equal(named.draft.step,'currency');assert.deepEqual(buttons(named.reply),['f:cur:UZS','f:cur:USD','f:back','f:cancel']);
+ const wrong=advance(named.draft,{callback:'f:cur:EUR'},withCurrencies(),chat);assert.equal(wrong.draft.step,'currency');
+ const balance=advance(named.draft,{callback:'f:cur:USD'},withCurrencies(),chat);assert.equal(balance.draft.step,'balance');
+ const bad=advance(balance.draft,{text:'lots'},withCurrencies(),chat);assert.equal(bad.draft.step,'balance');assert.equal(bad.commit,undefined);
+ const saved=advance(balance.draft,{text:'1250.5'},withCurrencies(),chat);
+ assert.equal(saved.draft,null);assert.equal(saved.commit.resume,undefined);
+ assert.equal(recordSchema.safeParse(saved.commit.record).success,true);
+ assert.deepEqual({name:saved.commit.record.name,kind:saved.commit.record.kind,currency:saved.commit.record.currency,amount:saved.commit.record.amount},{name:'Wallet',kind:'Cash',currency:'USD',amount:1250.5});
+ // An empty account is allowed through the 0 button, and the record id survives a redelivered update.
+ const zero=advance(balance.draft,{callback:'f:zero'},withCurrencies(),chat);assert.equal(zero.commit.record.amount,0);assert.equal(zero.commit.record.id,id(99));
+ // A user with no account at all is offered the button instead of being sent to the app.
+ const empty=withCurrencies();empty.accounts=[];
+ const stuck=run([{text:'Expense'},{callback:'f:cat:Charity'}],empty);
+ assert.equal(stuck.reply.text,'Add a cash account to continue.');assert.ok(buttons(stuck.reply).includes('f:newacc'));
+ const inside=advance(stuck.draft,{callback:'f:newacc'},empty,chat);
+ assert.equal(inside.draft.kind,'account');assert.equal(inside.draft.data.resume.step,'account');assert.equal(inside.reply.text,'Name the cash account, for example Wallet.');
+ const cash=advance(inside.draft,{callback:'f:accname:cash'},empty,chat);
+ const done=advance(advance(cash.draft,{callback:'f:cur:UZS'},empty,chat).draft,{text:'500000'},empty,chat);
+ assert.equal(done.commit.record.name,'Cash');assert.equal(done.commit.resume.kind,'expense');assert.equal(done.commit.resume.data.category,'Charity');
+});
+
+test('an account added while paying a loan uses the loan currency without asking, and a missing second account can be added',()=>{
+ const usdOnly=ctx();usdOnly.accounts=[entry(1,'Wallet','Cash',900000)];usdOnly.currencies=['UZS','USD'];
+ const stuck=run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)}],usdOnly);
+ assert.equal(stuck.reply.text,'No cash account uses USD. Add one to continue.');
+ const named=advance(advance(stuck.draft,{callback:'f:newacc'},usdOnly,chat).draft,{text:'Dollars'},usdOnly,chat);
+ assert.equal(named.draft.step,'balance');assert.equal(named.draft.data.currency,'USD');
+ // Back from the balance skips the currency question that was never asked.
+ assert.equal(advance(named.draft,{callback:'f:back'},usdOnly,chat).draft.step,'accname');
+ const saved=advance(named.draft,{text:'100'},usdOnly,chat);
+ assert.equal(saved.commit.record.currency,'USD');assert.equal(saved.commit.resume.step,'account');
+ const one=ctx();one.accounts=[entry(1,'Wallet','Cash',900000)];
+ const second=run([{text:'Transfer'},{callback:'f:acc:'+id(1)}],one);
+ assert.equal(second.reply.text,'Add a second cash account to continue.');assert.ok(buttons(second.reply).includes('f:newacc'));
 });

@@ -8,21 +8,21 @@ import {dictionaries,locales,translate,type Language} from './i18n';
 import type {Category} from './planning';
 import type {RecordInput} from './record-schema';
 import {escapeHtml,type TelegramButton,type TelegramKeyboard,type TelegramMessage} from './telegram';
-export type FlowKind='expense'|'income'|'transfer'|'repayment'|'mortgage';
-export type Step='category'|'account'|'target'|'amount'|'received'|'interest'|'name'|'date'|'confirm';
-export type DraftData={id?:string;category?:string;custom_category_id?:string|null;category_name?:string;account_id?:string;target_id?:string;amount?:number;received?:number;interest?:number;name?:string;date?:string};
+export type FlowKind='expense'|'income'|'transfer'|'repayment'|'mortgage'|'account';
+export type Step='category'|'account'|'target'|'amount'|'received'|'interest'|'name'|'date'|'confirm'|'accname'|'currency'|'balance';
+export type DraftData={id?:string;category?:string;custom_category_id?:string|null;category_name?:string;account_id?:string;target_id?:string;amount?:number;received?:number;interest?:number;name?:string;date?:string;account_name?:string;currency?:string;resume?:Draft};
 export type Draft={kind:FlowKind;step:Step;data:DraftData};
-export type FlowContext={language:Language;today:string;newId:string;categories:Category[];accounts:Entry[];liabilities:Entry[]};
+export type FlowContext={language:Language;today:string;newId:string;categories:Category[];accounts:Entry[];liabilities:Entry[];currencies?:string[]};
 export type FlowInput={text?:string;callback?:string};
-export type Commit={type:'record';record:RecordInput}|{type:'planning';action:'transfer'|'repayment'|'mortgage';data:{id:string;account_id:string;target_id:string;amount:number;received:number;fee:number;date:string;notes:string}};
+export type Commit={type:'record';record:RecordInput;resume?:Draft}|{type:'planning';action:'transfer'|'repayment'|'mortgage';data:{id:string;account_id:string;target_id:string;amount:number;received:number;fee:number;date:string;notes:string}};
 export type FlowResult={draft:Draft|null;reply:TelegramMessage|null;commit?:Commit;menu?:'upcoming'};
-const menuItems:Array<{kind:FlowKind|'upcoming';label:string}>=[{kind:'expense',label:'Expense'},{kind:'income',label:'Income'},{kind:'transfer',label:'Transfer'},{kind:'repayment',label:'Pay loan or debt'},{kind:'mortgage',label:'Mortgage payment'},{kind:'upcoming',label:'Upcoming payments'}];
+const menuItems:Array<{kind:FlowKind|'upcoming';label:string}>=[{kind:'expense',label:'Expense'},{kind:'income',label:'Income'},{kind:'transfer',label:'Transfer'},{kind:'repayment',label:'Pay loan or debt'},{kind:'mortgage',label:'Mortgage payment'},{kind:'upcoming',label:'Upcoming payments'},{kind:'account',label:'Add cash account'}];
 const pageSize=8;
 const t=(language:Language,key:string,params?:Record<string,string|number>)=>translate(language,key,params);
 /** The persistent keyboard under the text box. */
 export function mainMenu(language:Language):TelegramKeyboard{
  const label=(kind:string)=>t(language,menuItems.find(item=>item.kind===kind)!.label);
- return {reply:[[label('expense'),label('income')],[label('transfer'),label('repayment')],[label('mortgage'),label('upcoming')]]};
+ return {reply:[[label('expense'),label('income')],[label('transfer'),label('repayment')],[label('mortgage'),label('upcoming')],[label('account')]]};
 }
 /** Which menu item a typed label means, in any of the app languages. */
 export function menuChoice(text:string):FlowKind|'upcoming'|null{
@@ -31,6 +31,7 @@ export function menuChoice(text:string):FlowKind|'upcoming'|null{
  return null;
 }
 const cancelButton=(language:Language):TelegramButton=>({text:t(language,'Cancel'),callback_data:'f:cancel'});
+const newAccountButton=(language:Language):TelegramButton=>({text:'+ '+t(language,'Add cash account'),callback_data:'f:newacc'});
 const backButton=(language:Language):TelegramButton=>({text:'‹ '+t(language,'Back'),callback_data:'f:back'});
 /** The bottom row of every prompt: Back to the previous question when there is one, and Cancel. */
 const controls=(language:Language,canGoBack:boolean):TelegramButton[]=>canGoBack?[backButton(language),cancelButton(language)]:[cancelButton(language)];
@@ -41,13 +42,16 @@ const stepOrder:Record<FlowKind,Step[]>={
  transfer:['account','target','amount','received','date','confirm'],
  repayment:['target','account','amount','date','confirm'],
  mortgage:['target','account','amount','interest','date','confirm'],
+ account:['accname','currency','balance'],
 };
 // What each question stores, so going back can forget it and everything asked after it.
-const stepFields:Record<Step,Array<keyof DraftData>>={category:['category','custom_category_id','category_name'],account:['account_id'],target:['target_id'],amount:['amount'],received:['received'],interest:['interest'],name:['name'],date:['date'],confirm:[]};
+const stepFields:Record<Step,Array<keyof DraftData>>={category:['category','custom_category_id','category_name'],account:['account_id'],target:['target_id'],amount:['amount'],received:['received'],interest:['interest'],name:['name'],date:['date'],confirm:[],accname:['account_name'],currency:['currency'],balance:[]};
 const find=(list:Entry[],id?:string)=>list.find(item=>item.id===id);
+/** A new account started from a loan or mortgage payment must use that loan's currency, so the question is not asked. */
+const presetCurrency=(draft:Draft,ctx:Pick<FlowContext,'liabilities'>)=>{const from=draft.data.resume;return from&&(from.kind==='repayment'||from.kind==='mortgage')?find(ctx.liabilities,from.data.target_id)?.currency:undefined;};
 /** The question asked before the current one, or null at the first question. */
-export function backStep(draft:Draft,ctx:Pick<FlowContext,'accounts'>):Step|null{
- const order=stepOrder[draft.kind].filter(step=>step!=='received'||(()=>{const from=find(ctx.accounts,draft.data.account_id),to=find(ctx.accounts,draft.data.target_id);return !!from&&!!to&&from.currency!==to.currency;})());
+export function backStep(draft:Draft,ctx:Pick<FlowContext,'accounts'|'liabilities'>):Step|null{
+ const order=stepOrder[draft.kind].filter(step=>step==='currency'?!presetCurrency(draft,ctx):step!=='received'||(()=>{const from=find(ctx.accounts,draft.data.account_id),to=find(ctx.accounts,draft.data.target_id);return !!from&&!!to&&from.currency!==to.currency;})());
  const index=order.indexOf(draft.step);
  return index>0?order[index-1]:null;
 }
@@ -65,6 +69,7 @@ function choicePage(language:Language,chat:number,text:string,options:TelegramBu
  if(start+pageSize<options.length)nav.push({text:'›',callback_data:`f:${pageField}:${page+1}`});
  return {chat_id:chat,text,keyboard:{inline:[...rows(slice),...(nav.length?[nav]:[]),controls(language,canGoBack)]}};
 }
+const currencyList=(ctx:FlowContext)=>ctx.currencies?.length?ctx.currencies:['USD'];
 const money=(value:number,currency:string,language:Language)=>formatMoney(value,currency,locales[language]);
 const isCash=(entry:Entry)=>entry.kind==='Cash';
 function categoryOptions(kind:'expense'|'income',ctx:FlowContext):TelegramButton[]{
@@ -85,13 +90,13 @@ export function prompt(draft:Draft,ctx:FlowContext,chat:number,page=0):TelegramM
   case 'account':{
    const currency=draft.kind==='repayment'||draft.kind==='mortgage'?target?.currency:undefined;
    const options=accountOptions(ctx,currency);
-   if(!options.length)return {chat_id:chat,text:t(language,currency?'No cash account uses {currency}. Add one in the app first.':'Add a cash account in the app first.',{currency:currency??''}),keyboard:{inline:[controlRow]}};
+   if(!options.length)return {chat_id:chat,text:t(language,currency?'No cash account uses {currency}. Add one to continue.':'Add a cash account to continue.',{currency:currency??''}),keyboard:{inline:[[newAccountButton(language)],controlRow]}};
    return choicePage(language,chat,t(language,draft.kind==='transfer'?'From which account?':draft.kind==='income'?'Into which account?':'From which account?'),options,page,'page',backStep(draft,ctx)!==null);
   }
   case 'target':{
    if(draft.kind==='transfer'){
     const options=accountOptions(ctx,undefined,draft.data.account_id).map(option=>({...option,callback_data:option.callback_data.replace('f:acc:','f:tgt:')}));
-    return options.length?choicePage(language,chat,t(language,'To which account?'),options,page,'page',backStep(draft,ctx)!==null):{chat_id:chat,text:t(language,'Add a second cash account in the app first.'),keyboard:{inline:[controlRow]}};
+    return options.length?choicePage(language,chat,t(language,'To which account?'),options,page,'page',backStep(draft,ctx)!==null):{chat_id:chat,text:t(language,'Add a second cash account to continue.'),keyboard:{inline:[[newAccountButton(language)],controlRow]}};
    }
    const options=liabilityOptions(ctx,draft.kind==='mortgage'?['Mortgage']:['Loan','Debt']);
    return options.length?choicePage(language,chat,t(language,draft.kind==='mortgage'?'Which mortgage?':'Which loan or debt?'),options,page,'page',backStep(draft,ctx)!==null):{chat_id:chat,text:t(language,draft.kind==='mortgage'?'No open mortgage found.':'No open loan or debt found.'),keyboard:{inline:[controlRow]}};
@@ -104,6 +109,9 @@ export function prompt(draft:Draft,ctx:FlowContext,chat:number,page=0):TelegramM
   case 'interest':return {chat_id:chat,text:t(language,'Type the interest amount in {currency}, or 0',{currency:target?.currency??''}),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
   case 'name':return {chat_id:chat,text:t(language,'Type a name for this record, or skip to use the category'),keyboard:{inline:[[{text:t(language,'Skip'),callback_data:'f:skip'}],controlRow]}};
   case 'date':return {chat_id:chat,text:t(language,'Which day? Choose, or type a date like 2026-09-30'),keyboard:{inline:[[{text:t(language,'Today'),callback_data:'f:date:today'},{text:t(language,'Yesterday'),callback_data:'f:date:yesterday'}],controlRow]}};
+  case 'accname':return {chat_id:chat,text:t(language,'Name the cash account, for example Wallet.'),keyboard:{inline:[[{text:t(language,'Cash'),callback_data:'f:accname:cash'}],controlRow]}};
+  case 'currency':return {chat_id:chat,text:t(language,'Which currency is this account in?'),keyboard:{inline:[currencyList(ctx).map(code=>({text:code,callback_data:'f:cur:'+code})),controlRow]}};
+  case 'balance':return {chat_id:chat,text:t(language,'How much is in it? Type 0 if it is empty.'),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
   case 'confirm':return {chat_id:chat,text:summary(draft,ctx),keyboard:{inline:[[{text:t(language,'Save'),callback_data:'f:save'}],controlRow]}};
  }
 }
@@ -133,9 +141,14 @@ export function parseDay(text:string,today:string):string|null{
  return isoDate.safeParse(candidate).success&&candidate<=today?candidate:null;
 }
 const next=(draft:Draft,step:Step,data:Partial<DraftData>={}):Draft=>({...draft,step,data:{...draft.data,...data}});
-function firstStep(kind:FlowKind):Step{return kind==='expense'||kind==='income'?'category':kind==='transfer'?'account':'target';}
+function firstStep(kind:FlowKind):Step{return kind==='account'?'accname':kind==='expense'||kind==='income'?'category':kind==='transfer'?'account':'target';}
 function commitFor(draft:Draft,ctx:FlowContext):Commit{
- const d=draft.data,account=find(ctx.accounts,d.account_id)!;
+ const d=draft.data;
+ if(draft.kind==='account'){
+  const record:RecordInput={id:d.id??ctx.newId,name:d.account_name??'',kind:'Cash',currency:d.currency??'',amount:d.amount??0,quantity:1,cost:0,rate:0,date:ctx.today,frequency:'Once',notes:'',business_id:null,ownership_percentage:100,estimated_monthly_income:0,estimated_monthly_payment:0};
+  return {type:'record',record,resume:d.resume};
+ }
+ const account=find(ctx.accounts,d.account_id)!;
  if(draft.kind==='expense'||draft.kind==='income'){
   const custom=!!d.custom_category_id;
   const record:RecordInput={id:d.id??ctx.newId,name:(d.name||d.category_name||'').trim(),kind:(custom?(draft.kind==='income'?'Other income':'Other expense'):d.category) as RecordInput['kind'],custom_category_id:d.custom_category_id??null,currency:account.currency,amount:d.amount??0,quantity:0,cost:0,rate:0,date:d.date??ctx.today,frequency:'Once',notes:'',account_id:account.id,payment_type:'regular',estimated_monthly_payment:0,estimated_monthly_income:0,ownership_percentage:100};
@@ -165,6 +178,11 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
   const earlier=backStep(draft,ctx);
   const moved=earlier?rewind(draft,earlier):draft;
   return {draft:moved,reply:prompt(moved,ctx,chat)};
+ }
+ // From a dead end the owner can create the missing account here; saving it returns to the interrupted question.
+ if(callback==='f:newacc'&&draft.kind!=='account'){
+  const started:Draft={kind:'account',step:'accname',data:{id:ctx.newId,resume:draft,currency:presetCurrency({kind:'account',step:'accname',data:{resume:draft}},ctx)}};
+  return {draft:started,reply:prompt(started,ctx,chat)};
  }
  const page=/^f:page:(\d+)$/.exec(callback);
  if(page)return {draft,reply:prompt(draft,ctx,chat,Number(page[1]))};
@@ -230,6 +248,23 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
    if(!date)return invalid(t(language,'Type a past or present date like 2026-09-30 or 30.09.2026'));
    // The id is fixed here so a redelivered update saves the same record once.
    const moved=next(draft,'confirm',{date,id:draft.data.id??ctx.newId});return {draft:moved,reply:prompt(moved,ctx,chat)};
+  }
+  case 'accname':{
+   const name=callback==='f:accname:cash'?t(language,'Cash'):(input.text??'').trim();
+   if(!name)return {draft,reply:prompt(draft,ctx,chat)};
+   if(name.length>120)return invalid(t(language,'Keep the name under 120 characters.'));
+   const preset=presetCurrency(draft,ctx);
+   const moved=next(draft,preset?'balance':'currency',{account_name:name,id:draft.data.id??ctx.newId,...(preset?{currency:preset}:{})});return {draft:moved,reply:prompt(moved,ctx,chat)};
+  }
+  case 'currency':{
+   const code=value('f:cur:');
+   if(!code||!currencyList(ctx).includes(code))return {draft,reply:prompt(draft,ctx,chat)};
+   const moved=next(draft,'balance',{currency:code});return {draft:moved,reply:prompt(moved,ctx,chat)};
+  }
+  case 'balance':{
+   const amount=callback==='f:zero'?0:input.text?(parseAmount(input.text,language)??(input.text.trim()==='0'?0:null)):null;
+   if(amount===null)return invalid(t(language,'Type a positive number, such as 250000 or 12.50'));
+   return {draft:null,reply:null,commit:commitFor(next(draft,'balance',{amount}),ctx)};
   }
   case 'confirm':{
    if(callback!=='f:save')return {draft,reply:prompt(draft,ctx,chat)};

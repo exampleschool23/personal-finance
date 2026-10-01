@@ -4976,3 +4976,19 @@ END $$;
 SELECT pg_temp.patch_source('public.save_income_source(jsonb)'::regprocedure,$old$schedule_id=EXCLUDED.schedule_id;$old$,$new$schedule_id=EXCLUDED.schedule_id,approx_monthly=EXCLUDED.approx_monthly;$new$);
 NOTIFY pgrst,'reload schema';
 COMMIT;
+-- One-time Telegram celebrations (migration 083).
+BEGIN;
+CREATE TABLE IF NOT EXISTS public.telegram_milestones (
+ user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+ key text NOT NULL CHECK (char_length(key) BETWEEN 1 AND 80),
+ value numeric CHECK (value IS NULL OR abs(value) < 1e30),
+ achieved_at timestamptz NOT NULL DEFAULT now(),
+ PRIMARY KEY (user_id, key)
+);
+ALTER TABLE public.telegram_milestones ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.telegram_milestones FROM PUBLIC,anon,authenticated;
+DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN
+ GRANT SELECT,INSERT,UPDATE,DELETE ON public.telegram_milestones TO service_role;
+END IF; END $$;
+NOTIFY pgrst,'reload schema';
+COMMIT;

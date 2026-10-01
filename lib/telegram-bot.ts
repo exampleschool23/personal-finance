@@ -4,9 +4,10 @@
 // chats add records through the button flow in telegram-flow.ts, saved by the
 // owner-scoped wrappers from migration 077.
 import {accountOrigin} from './account-access';
+import {ownerProfile} from './telegram-owner';
 import {actionMessage,type ActionEvent,type ActionLookup} from './action-messages';
 import {depositToday} from './deposit-interest';
-import {digestMessage} from './digest-message';
+import {paymentsSection} from './digest-message';
 import type {Entry} from './finance';
 import {translate,isLanguage,detectLanguage,type Language} from './i18n';
 import {upcomingPayments,type Category,type Occurrence} from './planning';
@@ -15,7 +16,7 @@ import {normalizePhone} from './phone';
 import {recordSchema} from './record-schema';
 import type {ServiceDatabase} from './service-role';
 import {adminAccounts,createLoginToken,createTelegramAccount,type AdminAccounts} from './telegram-account';
-import {advance,mainMenu,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
+import {advance,mainMenu,prompt,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
 import {linkExpired,startCode,type TelegramSubscription} from './telegram-link';
 import {advanceOnboarding,isOnboardDraft,onboardPrompt,startOnboarding,type OnboardDraft} from './telegram-onboarding';
 import type {TelegramMessage} from './telegram';
@@ -34,6 +35,8 @@ export async function ownerLanguage(db:ServiceDatabase,userId:string){
  const rows=await db.read<Array<{language?:string}>>('/rest/v1/user_preferences?select=language&user_id=eq.'+userId);
  return languageOf(rows[0]?.language);
 }
+/** The name saved in the app's Settings; Telegram's own profile name is never used. */
+const ownerName=async(db:ServiceDatabase,userId:string)=>(await ownerProfile(db,userId)).name;
 async function subscriptionByChat(db:ServiceDatabase,chatId:number){
  const rows=await db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&chat_id=eq.'+chatId);
  return rows[0];
@@ -55,7 +58,7 @@ async function connect(db:ServiceDatabase,chatId:number,code:string,now:Date,hin
  const saved=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+pending.user_id+'&link_code=eq.'+code,{method:'PATCH',body:JSON.stringify({chat_id:chatId,link_code:null,link_code_expires_at:null,linked_at:now.toISOString(),updated_at:now.toISOString(),...identity})});
  if(!saved.ok)throw Error('Database request failed.');
  const language=await ownerLanguage(db,pending.user_id);
- return {chat_id:chatId,text:connectedText(language,from?.first_name||pending.first_name),keyboard:mainMenu(language)};
+ return {chat_id:chatId,text:connectedText(language,await ownerName(db,pending.user_id)),keyboard:mainMenu(language)};
 }
 async function disconnect(db:ServiceDatabase,subscription:TelegramSubscription,now:Date):Promise<TelegramMessage>{
  const language=await ownerLanguage(db,subscription.user_id);
@@ -79,11 +82,12 @@ async function storeDraft(db:ServiceDatabase,owner:string,draft:AnyDraft|null,no
  if(!response.ok)throw Error('Database request failed.');
 }
 async function loadContext(db:ServiceDatabase,owner:string,language:Language,clock:BotClock):Promise<FlowContext&{records:Entry[]}>{
- const [records,categories]=await Promise.all([
+ const [records,categories,preferences]=await Promise.all([
   db.read<Entry[]>(`/rest/v1/finance_records?select=*&user_id=eq.${owner}&order=name.asc`),
   db.read<Category[]>(`/rest/v1/transaction_categories?select=id,name,direction&user_id=eq.${owner}`),
+  db.read<Array<{currencies?:string[]}>>('/rest/v1/user_preferences?select=currencies&user_id=eq.'+owner),
  ]);
- return {language,today:clock.today,newId:clock.newId(),categories,records,accounts:records.filter(record=>record.kind==='Cash'),liabilities:records.filter(record=>['Loan','Debt','Mortgage'].includes(record.kind))};
+ return {language,currencies:preferences[0]?.currencies??[],today:clock.today,newId:clock.newId(),categories,records,accounts:records.filter(record=>record.kind==='Cash'),liabilities:records.filter(record=>['Loan','Debt','Mortgage'].includes(record.kind))};
 }
 function commitEvent(commit:Commit):ActionEvent{
  if(commit.type==='record')return {type:'record',created:true,kind:commit.record.kind,name:commit.record.name,amount:commit.record.amount,currency:commit.record.currency,date:commit.record.date||null,frequency:commit.record.frequency};
@@ -93,9 +97,10 @@ function commitEvent(commit:Commit):ActionEvent{
  return {type:'mortgage',account_id:d.account_id,target_id:d.target_id,principal:d.amount,interest:d.fee,date:d.date};
 }
 /** Save what the flow produced through the owner-scoped wrappers. Returns the reply text. */
-async function commitDraft(db:ServiceDatabase,owner:string,commit:Commit,ctx:FlowContext&{records:Entry[]}):Promise<string>{
+async function commitDraft(db:ServiceDatabase,owner:string,commit:Commit,ctx:FlowContext&{records:Entry[]}):Promise<{text:string;saved:boolean}>{
  const language=ctx.language;
- const invalid=()=>t(language,'Could not save. {reason}',{reason:t(language,'Check the record fields.')});
+ const failed=(text:string)=>({text,saved:false});
+ const invalid=()=>failed(t(language,'Could not save. {reason}',{reason:t(language,'Check the record fields.')}));
  let response:Response;
  if(commit.type==='record'){
   const parsed=recordSchema.safeParse(commit.record);
@@ -108,17 +113,17 @@ async function commitDraft(db:ServiceDatabase,owner:string,commit:Commit,ctx:Flo
  }
  if(!response.ok){
   const failure=await response.json().catch(()=>({})) as {code?:string;message?:string};
-  return t(language,'Could not save. {reason}',{reason:failure.code==='P0001'&&failure.message?failure.message:t(language,'Please try again.')});
+  return failed(t(language,'Could not save. {reason}',{reason:failure.code==='P0001'&&failure.message?failure.message:t(language,'Please try again.')}));
  }
  const lookup:ActionLookup={records:Object.fromEntries(ctx.records.map(record=>[record.id,{name:record.name,kind:record.kind,currency:record.currency}])),goals:{},deleted:{}};
- return `${t(language,'Saved.')}\n${actionMessage(commitEvent(commit),lookup,language)}`;
+ return {text:`${t(language,'Saved.')}\n${actionMessage(commitEvent(commit),lookup,language)}`,saved:true};
 }
 async function upcomingReply(db:ServiceDatabase,owner:string,language:Language,today:string){
  const [records,occurrences]=await Promise.all([
   db.read<Entry[]>(`/rest/v1/finance_records?select=*&user_id=eq.${owner}&order=id.asc`),
   db.read<Occurrence[]>(`/rest/v1/payment_occurrences?select=id,record_id,due_on,status&user_id=eq.${owner}`),
  ]);
- return digestMessage(upcomingPayments(records,occurrences,today),language,today)??t(language,'No payments due in the next 31 days.');
+ return paymentsSection(upcomingPayments(records,occurrences,today),language,today)??t(language,'No payments due in the next 31 days.');
 }
 /** The "your account also works on the web" message. Accounts created in Telegram get one-tap buttons; other accounts get a plain link. */
 async function openAppReply(db:ServiceDatabase,subscription:TelegramSubscription,chatId:number,language:Language,now:Date,env:BotEnv):Promise<TelegramMessage|null>{
@@ -159,7 +164,17 @@ async function converse(db:ServiceDatabase,subscription:TelegramSubscription,cha
  const result=advance(draft,input,ctx,chatId);
  if(result.menu==='upcoming')return [{chat_id:chatId,text:await upcomingReply(db,owner,language,clock.today),keyboard:mainMenu(language)}];
  if(result.draft!==draft)await storeDraft(db,owner,result.draft,clock.now);
- if(result.commit)return [{chat_id:chatId,text:await commitDraft(db,owner,result.commit,ctx),keyboard:mainMenu(language)}];
+ if(result.commit){
+  const outcome=await commitDraft(db,owner,result.commit,ctx);
+  const resume=result.commit.type==='record'?result.commit.resume:undefined;
+  // A new account made from a dead end hands the conversation back to the question that needed it.
+  if(outcome.saved&&resume){
+   const fresh=await loadContext(db,owner,language,clock);
+   await storeDraft(db,owner,resume,clock.now);
+   return [{chat_id:chatId,text:outcome.text},prompt(resume,fresh,chatId)];
+  }
+  return [{chat_id:chatId,text:outcome.text,keyboard:mainMenu(language)}];
+ }
  return result.reply?[result.reply]:[];
 }
 const welcome=(chatId:number,language:Language):TelegramMessage=>({chat_id:chatId,text:`${t(language,'Welcome to Hoggish. Track your money here in Telegram and in the app.')}\n\n${t(language,'By continuing you agree to the terms of use and privacy policy of Hoggish.')}`,keyboard:{inline:[[{text:t(language,'I agree'),callback_data:'o:agree'}]]}});
@@ -176,7 +191,7 @@ async function handleContact(db:ServiceDatabase,message:NonNullable<TelegramUpda
  const existing=await subscriptionByChat(db,chatId);
  if(existing){
   const language=await ownerLanguage(db,existing.user_id),menu=mainMenu(language);
-  if(existing.phone===phone)return {replies:[{chat_id:chatId,text:connectedText(language,existing.first_name||from.first_name),keyboard:menu}]};
+  if(existing.phone===phone)return {replies:[{chat_id:chatId,text:connectedText(language,await ownerName(db,existing.user_id)),keyboard:menu}]};
   if(existing.phone)return say(language,'This chat is already linked to a different number.',menu);
   if(!env.admin)return say(language,'Registration is not available yet. Please try again later.',menu);
   if((await subscriptionsWhere(db,'phone=eq.'+encodeURIComponent(phone))).length||!await env.admin.setUserPhone(existing.user_id,phone))return say(language,taken,menu);
@@ -193,7 +208,7 @@ async function handleContact(db:ServiceDatabase,message:NonNullable<TelegramUpda
   const relinked=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+own.user_id,{method:'PATCH',body:JSON.stringify({chat_id:chatId,linked_at:now.toISOString(),updated_at:now.toISOString()})});
   if(!relinked.ok)throw Error('Database request failed.');
   const language=await ownerLanguage(db,own.user_id);
-  return {replies:[{chat_id:chatId,text:connectedText(language,own.first_name||from.first_name),keyboard:mainMenu(language)}]};
+  return {replies:[{chat_id:chatId,text:connectedText(language,await ownerName(db,own.user_id)),keyboard:mainMenu(language)}]};
  }
  if(byPhone.length)return say(hint,taken);
  if(!env.admin||!env.loginSecret)return say(hint,'Registration is not available yet. Please try again later.');
@@ -230,7 +245,7 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
  if(/^\/start(?:@\w+)?$/.test(text)){
   const draft=await loadDraft(db,subscription.user_id,now);
   if(isOnboardDraft(draft))return {replies:[onboardPrompt(draft,language,chatId)]};
-  return {replies:[{chat_id:chatId,text:connectedText(language,subscription.first_name),keyboard:mainMenu(language)}]};
+  return {replies:[{chat_id:chatId,text:connectedText(language,await ownerName(db,subscription.user_id)),keyboard:mainMenu(language)}]};
  }
  return {replies:await converse(db,subscription,chatId,{text},clock,env)};
 }

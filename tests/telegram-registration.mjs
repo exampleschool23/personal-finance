@@ -60,7 +60,7 @@ test('the onboarding walks language, currency and a first cash account, saving a
  for(const bad of ['abc','-5','','1e99'])assert.equal(advanceOnboarding(named.draft,{text:bad},{language:'en'},777).draft.step,'balance',bad);
  const finished=advanceOnboarding(named.draft,{text:'1 500,50'},{language:'ru'},777);
  assert.equal(finished.draft,null);assert.deepEqual(finished.effects,{account:{name:'Savings jar',amount:1500.5,currency:'EUR'},finished:true});
- assert.deepEqual(finished.reply.keyboard.reply.flat(),[t('ru','Expense'),t('ru','Income'),t('ru','Transfer'),t('ru','Pay loan or debt'),t('ru','Mortgage payment'),t('ru','Upcoming payments')]);
+ assert.deepEqual(finished.reply.keyboard.reply.flat(),[t('ru','Expense'),t('ru','Income'),t('ru','Transfer'),t('ru','Pay loan or debt'),t('ru','Mortgage payment'),t('ru','Upcoming payments'),t('ru','Add cash account')]);
  assert.equal(advanceOnboarding(named.draft,{text:'0'},{language:'en'},777).effects.account.amount,0,'an empty account is allowed');
 });
 
@@ -162,18 +162,20 @@ test('only your own number counts, and a number can belong to one account',async
 });
 
 test('someone who pressed stop signs back in with the same number, and with no other',async()=>{
- const seed={telegram_subscriptions:[subscription({chat_id:null,telegram_user_id:777,phone:'+998901234567',consented_at:'x',linked_at:null})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]};
+ const seed={telegram_subscriptions:[subscription({chat_id:null,telegram_user_id:777,phone:'+998901234567',consented_at:'x',linked_at:null})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:'Jasurbek'}]};
  const back=setup({seed:structuredClone(seed)});
  const outcome=await run(contact(),back);
  assert.equal(back.created.length,0);assert.equal(back.db.tables.telegram_subscriptions[0].chat_id,777);
  const connected=t('en','Connected. You will get a morning digest of upcoming payments and a message after every saved action.');
- // The greeting uses the Telegram first name when there is one, and the plain text when there is not.
- assert.match(outcome.replies[0].text,/^Welcome, .+! You are connected\.\n\n/);assert.ok(outcome.replies[0].text.endsWith(connected));
+ // The greeting uses the name saved in the app, never Telegram's profile name (the sender here is "Aziz"); with no saved name there is no greeting.
+ assert.equal(outcome.replies[0].text,'Welcome, Jasurbek! You are connected.\n\n'+connected);
+ const unnamed=setup({seed:{...structuredClone(seed),user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:''}]}});
+ assert.equal((await run(contact(),unnamed)).replies[0].text,connected);
  const stranger=setup({seed:structuredClone(seed)});
  assert.equal((await run(contact({},'998900000000'),stranger)).replies[0].text,t('ru','This number is already used with another Telegram account.'));
  assert.equal(stranger.db.tables.telegram_subscriptions[0].chat_id,null);
  // The same number from the linked chat is simply welcomed back.
- const linked=setup({seed:{telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]}});
+ const linked=setup({seed:{telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:'Aziz'}]}});
  assert.match((await run(contact(),linked)).replies[0].text,/^Welcome, Aziz! You are connected\.\n\nConnected/);
 });
 

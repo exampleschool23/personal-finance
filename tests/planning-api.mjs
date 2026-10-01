@@ -44,7 +44,7 @@ test('statement import produces stable distinct duplicate keys and authenticates
 });
 test('background capture refuses missing or invalid secret before accessing service credentials',async()=>{
  const before=process.env.CRON_SECRET;
- const api=apiFunction('timingSafeEqual','loadMarket','instrumentFor','snapshotTotals','depositToday',compile('app/api/cron/portfolio-snapshots/route.ts')+';return GET;')(timingSafeEqual,()=>{throw Error('unexpected');},()=>null,()=>null,()=> '2026-09-17');
+ const {GET:api}=loadTS('app/api/cron/portfolio-snapshots/route.ts',{'@/lib/server-market':{loadMarket:()=>{throw Error('unexpected');}},'@/lib/service-role':{serviceKeyHeaders:()=>({})},'@/lib/market':{instrumentFor:()=>null},'@/lib/portfolio-snapshots':{snapshotTotals:()=>null},'@/lib/deposit-interest':{depositToday:()=>'2026-09-17'},'@/lib/telegram-milestones':{announceNetWorthHigh:async()=>false}});
  try{delete process.env.CRON_SECRET;assert.equal((await api(new Request('https://local'))).status,401);process.env.CRON_SECRET='test-only-secret';assert.equal((await api(new Request('https://local',{headers:{authorization:'Bearer nope'}}))).status,401);}finally{if(before===undefined)delete process.env.CRON_SECRET;else process.env.CRON_SECRET=before;}
 });
 test('backup uses one owner-scoped database snapshot and fails closed on incomplete reads',async()=>{

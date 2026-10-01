@@ -157,9 +157,18 @@ setup and nothing is sent.
 
 The morning digest runs from `vercel.json` at 04:00 UTC (09:00 in Tashkent)
 through `/api/cron/telegram-digest`, protected by the same `CRON_SECRET`. It
-uses each owner's reminder window and snoozes from the Upcoming page, sends
-nothing when nothing is due, and answers 503 when any owner could not be
-reached so monitoring notices. A message after every saved action is sent from
+opens with a greeting by the name saved in Settings and one line of
+encouragement, then lists what is overdue or due in each owner's reminder window
+(snoozes from the Upcoming page apply), yesterday's net-worth change and the
+last seven days' spending against the seven before. It is sent every morning,
+and answers 503 when any owner could not be reached so monitoring notices.
+`/api/cron/telegram-recap` sends a weekly recap on Sundays at 15:00 UTC: money
+saved, the top spending category and the goals that received contributions, with
+a share button that carries no amounts. Celebrations (first record, a savings
+goal passing 25/50/75/100 percent, a new net-worth high found by the daily
+snapshot cron) are sent once each and recorded in `telegram_milestones`
+(migration 083). Digest and recap follow the digest switch; celebrations follow
+the action-message switch. A message after every saved action is sent from
 the write routes themselves, after the response, and never delays or fails a
 save.
 
