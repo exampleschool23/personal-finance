@@ -17,8 +17,23 @@ export const languageCatalogue = [
   { code: 'th', native: 'ไทย', locale: 'th-TH-u-nu-latn-ca-gregory', dir: 'ltr', short: 'TH' },
   { code: 'vi', native: 'Tiếng Việt', locale: 'vi-VN', dir: 'ltr', short: 'VI' },
   { code: 'uz', native: 'O‘zbekcha', locale: 'uz-UZ', dir: 'ltr', short: 'UZ' },
+  { code: 'de', native: 'Deutsch', locale: 'de-DE', dir: 'ltr', short: 'DE' },
+  { code: 'it', native: 'Italiano', locale: 'it-IT', dir: 'ltr', short: 'IT' },
+  { code: 'tr', native: 'Türkçe', locale: 'tr-TR', dir: 'ltr', short: 'TR' },
+  { code: 'id', native: 'Bahasa Indonesia', locale: 'id-ID', dir: 'ltr', short: 'ID' },
+  { code: 'ms', native: 'Bahasa Melayu', locale: 'ms-MY', dir: 'ltr', short: 'MS' },
+  { code: 'pl', native: 'Polski', locale: 'pl-PL', dir: 'ltr', short: 'PL' },
+  { code: 'uk', native: 'Українська', locale: 'uk-UA', dir: 'ltr', short: 'UK' },
+  { code: 'nl', native: 'Nederlands', locale: 'nl-NL', dir: 'ltr', short: 'NL' },
+  { code: 'cs', native: 'Čeština', locale: 'cs-CZ', dir: 'ltr', short: 'CS' },
+  { code: 'ro', native: 'Română', locale: 'ro-RO', dir: 'ltr', short: 'RO' },
+  // Persian formats numbers with Persian digits by default; Latin digits keep amounts and inputs consistent.
+  { code: 'fa', native: 'فارسی', locale: 'fa-IR-u-nu-latn', dir: 'rtl', short: 'FA' },
+  { code: 'he', native: 'עברית', locale: 'he-IL', dir: 'rtl', short: 'HE' },
+  { code: 'fil', native: 'Filipino', locale: 'fil-PH', dir: 'ltr', short: 'FIL' },
+  { code: 'sw', native: 'Kiswahili', locale: 'sw-KE', dir: 'ltr', short: 'SW' },
 ] as const;
 export type Language = (typeof languageCatalogue)[number]['code'];
 export const languageCodes = languageCatalogue.map(language => language.code) as [Language, ...Language[]];
 /** Scripts the bundled PDF font cannot draw; reports in these languages are written in English. */
-export const pdfUnsupportedLanguages: readonly Language[] = ['ar', 'ur', 'hi', 'bn', 'zh', 'ja', 'ko', 'th'];
+export const pdfUnsupportedLanguages: readonly Language[] = ['ar', 'ur', 'hi', 'bn', 'zh', 'ja', 'ko', 'th', 'fa', 'he'];

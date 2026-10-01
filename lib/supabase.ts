@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-type AuthSession = {access_token:string;refresh_token:string;expires_in:number;user:{id:string;email:string}};
+type AuthSession = {access_token:string;refresh_token:string;expires_in:number;user:{id:string;email:string;phone?:string}};
 export function config(){const url=process.env.SUPABASE_URL;const key=process.env.SUPABASE_PUBLISHABLE_KEY;if(!url||!key)throw new Error('Supabase connection is not configured yet.');return {url,key};}
 export async function supa(path:string,init:RequestInit={},token?:string){const {url,key}=config();return fetch(url+path,{cache:'no-store',signal:AbortSignal.timeout(15000),...init,headers:{apikey:key,'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`} :{}),...init.headers}});}
 export async function saveSession(s:{access_token:string;refresh_token:string;expires_in:number}){const c=await cookies();const options={httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax' as const,path:'/'};c.set('hf_access',s.access_token,{...options,maxAge:s.expires_in});c.set('hf_refresh',s.refresh_token,{...options,maxAge:60*60*24*30});}

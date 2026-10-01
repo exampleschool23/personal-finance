@@ -3,7 +3,8 @@
 // use the owner's own token, so row security scopes every lookup.
 import {after} from 'next/server';
 import {actionMessage,referencedIds,type ActionEvent,type ActionLookup,type NamedGoal,type NamedRecord} from './action-messages';
-import {isLanguage,type Language} from './i18n';
+import {isLanguage,translate,type Language} from './i18n';
+import {mainMenu} from './telegram-flow';
 import {supa} from './supabase';
 import {sendTelegramMessage,telegramConfig,type TelegramConfig} from './telegram';
 export type ActionAuth={token:string;user?:{id:string}};
@@ -26,5 +27,18 @@ export async function sendActionNotification(auth:ActionAuth,event:ActionEvent,{
 /** Call after a successful save. Never throws and never delays the response. */
 export function queueActionNotification(auth:ActionAuth,event:ActionEvent){
  const run=()=>sendActionNotification(auth,event).catch(()=>false);
+ try{after(run);}catch{void run();}
+}
+
+/** After the owner saves a new language, replace the bot's keyboard so the buttons match it without pressing Start. Resolves to true only when Telegram accepted the message. */
+export async function sendLanguageMenu(auth:ActionAuth,language:Language,{config=telegramConfig(),read=supa,send=sendTelegramMessage}:Deps={}){
+ if(!config)return false;
+ const [subscription]=await rows<{chat_id:number|null}>(read,'/rest/v1/telegram_subscriptions?select=chat_id',auth.token);
+ if(!subscription?.chat_id)return false;
+ return send({chat_id:subscription.chat_id,text:translate(language,'Choose what to add.'),keyboard:mainMenu(language)},config);
+}
+/** Call after a language change is saved. Never throws and never delays the response. */
+export function queueLanguageMenu(auth:ActionAuth,language:Language){
+ const run=()=>sendLanguageMenu(auth,language).catch(()=>false);
  try{after(run);}catch{void run();}
 }

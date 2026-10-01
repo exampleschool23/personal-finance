@@ -11,13 +11,14 @@ const { isLanguage, languageCodes } = loadTS('lib/i18n.ts');
 const source=fs.readFileSync(new URL('../app/api/settings/route.ts',import.meta.url),'utf8').replace(/^import .*;\n/gm,'').replace(/export async function/g,'async function');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let authenticated=true, calls=[], rows=[], databaseFailure=false;
-const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry','fontIds','resolveFont','isLanguage','languageCodes',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry,fontIds,resolveFont,isLanguage,languageCodes);
+const menuCalls=[];
+const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry','fontIds','resolveFont','isLanguage','languageCodes','queueLanguageMenu',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry,fontIds,resolveFont,isLanguage,languageCodes,(auth,language)=>menuCalls.push({auth,language}));
 const request=body=>new Request('https://app.local/api/settings',{method:'PUT',headers:{origin:'https://app.local','Content-Type':'application/json'},body:JSON.stringify(body)});
 test('persists validated preferences for the authenticated owner',async()=>{
  calls=[];const response=await api.PUT(request({language:'ru',currencies:['EUR','INR']}));
- assert.equal(response.status,200);assert.deepEqual(JSON.parse(calls[0].init.body),{user_id:'owner',language:'ru',currencies:['EUR','INR'],font:'inter'});
- calls=[];assert.equal((await api.PUT(request({language:'en',currencies:['USD']}))).status,200);assert.deepEqual(JSON.parse(calls[0].init.body).currencies,['USD']);
- assert.equal(calls[0].token,'owner-token');
+ assert.equal(response.status,200);assert.deepEqual(JSON.parse(calls.at(-1).init.body),{user_id:'owner',language:'ru',currencies:['EUR','INR'],font:'inter'});
+ calls=[];assert.equal((await api.PUT(request({language:'en',currencies:['USD']}))).status,200);assert.deepEqual(JSON.parse(calls.at(-1).init.body).currencies,['USD']);
+ assert.equal(calls.at(-1).token,'owner-token');
 });
 test('rejects empty, duplicate, non-fiat, and more than two currencies',async()=>{
  for(const currencies of [[],['EUR','EUR'],['BTC'],['USD','INR','UZS']]) assert.equal((await api.PUT(request({language:'en',currencies}))).status,400);
@@ -34,7 +35,7 @@ test('optional name is trimmed, persisted for the owner, loaded, and clearable',
  const response=await api.PUT(request({...defaultPreferences,display_name:'  Jasur  ',user_id:'someone-else'}));
  assert.equal(response.status,200);
  assert.equal((await response.json()).display_name,'Jasur');
- assert.deepEqual(JSON.parse(calls[0].init.body),{...defaultPreferences,display_name:'Jasur',user_id:'owner'});
+ assert.deepEqual(JSON.parse(calls.at(-1).init.body),{...defaultPreferences,display_name:'Jasur',user_id:'owner'});
  rows=[{...defaultPreferences,display_name:'Jasur'}];
  assert.equal((await (await api.GET()).json()).display_name,'Jasur');
  assert.match(calls.at(-1).path,/select=\*&user_id=eq.owner$/);
@@ -59,8 +60,8 @@ test('country preference validates codes, persists only for the owner, loads and
  const result=await api.PUT(request({...defaultPreferences,country:'UZ',user_id:'other'}));
  assert.equal(result.status,200);
  assert.equal((await result.json()).country,'UZ');
- assert.equal(JSON.parse(calls[0].init.body).user_id,'owner');
- assert.equal(JSON.parse(calls[0].init.body).country,'UZ');
+ assert.equal(JSON.parse(calls.at(-1).init.body).user_id,'owner');
+ assert.equal(JSON.parse(calls.at(-1).init.body).country,'UZ');
  rows=[{...defaultPreferences,country:'UZ'}];
  assert.equal((await (await api.GET()).json()).country,'UZ');
  rows=[{...defaultPreferences,country:null}];
@@ -109,7 +110,7 @@ test('font preference validates the catalogue, persists for the owner, loads and
  const result=await api.PUT(request({...defaultPreferences,font:'onest',user_id:'other'}));
  assert.equal(result.status,200);
  assert.equal((await result.json()).font,'onest');
- assert.deepEqual(JSON.parse(calls[0].init.body),{...defaultPreferences,font:'onest',user_id:'owner'});
+ assert.deepEqual(JSON.parse(calls.at(-1).init.body),{...defaultPreferences,font:'onest',user_id:'owner'});
  rows=[{...defaultPreferences,font:'onest'}];
  assert.equal((await (await api.GET()).json()).font,'onest');
  assert.match(calls.at(-1).path,/select=\*&/);
@@ -136,15 +137,15 @@ test('the welcome setup is recorded once, cleared on request, and left alone by 
  const finished=await api.PUT(request({...defaultPreferences,onboarded:true}));
  assert.equal(finished.status,200);
  assert.equal((await finished.json()).onboarded,true);
- let body=JSON.parse(calls[0].init.body);
+ let body=JSON.parse(calls.at(-1).init.body);
  assert.ok(!('onboarded' in body));
  assert.match(body.onboarded_at,/^\d{4}-\d{2}-\d{2}T/);
  calls=[];
  await api.PUT(request({...defaultPreferences,onboarded:false}));
- assert.equal(JSON.parse(calls[0].init.body).onboarded_at,null);
+ assert.equal(JSON.parse(calls.at(-1).init.body).onboarded_at,null);
  calls=[];
  await api.PUT(request(defaultPreferences));
- body=JSON.parse(calls[0].init.body);
+ body=JSON.parse(calls.at(-1).init.body);
  assert.ok(!('onboarded_at' in body)&&!('onboarded' in body));
  assert.equal((await api.PUT(request({...defaultPreferences,onboarded:'yes'}))).status,400);
 });
@@ -153,9 +154,9 @@ test('every offered language can be saved, unknown ones are refused, and an unkn
  for(const language of languageCodes){
   calls=[];
   assert.equal((await api.PUT(request({...defaultPreferences,language}))).status,200,language);
-  assert.equal(JSON.parse(calls[0].init.body).language,language);
+  assert.equal(JSON.parse(calls.at(-1).init.body).language,language);
  }
- assert.equal(languageCodes.length,16);
+ assert.equal(languageCodes.length,30);
  calls=[];
  for(const language of ['xx','EN','es_MX','',null,42])assert.equal((await api.PUT(request({...defaultPreferences,language}))).status,400,String(language));
  assert.equal(calls.length,0);
@@ -166,4 +167,21 @@ test('every offered language can be saved, unknown ones are refused, and an unkn
  rows=[{...defaultPreferences,language:'ar',onboarded_at:'2026-09-30T10:00:00Z'}];
  assert.equal((await (await api.GET()).json()).language,'ar');
  rows=[];
+});
+
+test('a saved language change refreshes the Telegram menu once, and nothing else does',async()=>{
+ const save=async(language,previous)=>{menuCalls.length=0;rows=previous===undefined?[]:[{...defaultPreferences,language:previous}];const response=await api.PUT(request({...defaultPreferences,language}));rows=[];return response;};
+ assert.equal((await save('ru','en')).status,200);
+ assert.deepEqual(menuCalls.map(call=>[call.language,call.auth.token]),[['ru','owner-token']]);
+ await save('en','en');assert.equal(menuCalls.length,0);
+ await save('ru','ru');assert.equal(menuCalls.length,0);
+ await save('ja','ru');assert.deepEqual(menuCalls.map(call=>call.language),['ja']);
+ // A first save with no earlier row counts from English; a failed save sends nothing.
+ await save('en',undefined);assert.equal(menuCalls.length,0);
+ await save('fr',undefined);assert.deepEqual(menuCalls.map(call=>call.language),['fr']);
+ menuCalls.length=0;databaseFailure=true;
+ try{assert.equal((await api.PUT(request({...defaultPreferences,language:'ru'}))).status,503);}finally{databaseFailure=false;}
+ assert.equal(menuCalls.length,0);
+ assert.equal((await api.PUT(request({...defaultPreferences,language:'xx'}))).status,400);
+ assert.equal(menuCalls.length,0);
 });

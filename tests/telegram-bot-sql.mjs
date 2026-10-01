@@ -49,3 +49,35 @@ test('planning actions run as the owner too, and app roles cannot call the wrapp
   assert.deepEqual(balances.map(row=>Number(row.amount)),[100,400]);
  }finally{await db.close();}
 });
+
+test('owners manage their notification settings but never the identity columns, and login tokens stay server-side',async()=>{
+ const db=await database();try{
+  const phone='+998901234567';
+  await db.exec(`INSERT INTO auth.users(id) VALUES('${owner}'),('${other}') ON CONFLICT DO NOTHING;`);
+  await db.exec(`SET request.jwt.claim.sub='${owner}';SET ROLE authenticated;`);
+  // Settings and the link flow still work for the owner.
+  await db.exec(`INSERT INTO telegram_subscriptions(user_id,link_code,link_code_expires_at) VALUES('${owner}','ABCDEFGH',now());`);
+  await db.exec(`UPDATE telegram_subscriptions SET digest_enabled=false,actions_enabled=false,chat_id=NULL,linked_at=NULL WHERE user_id='${owner}';`);
+  // Identity columns are written only by the server.
+  for(const statement of [`UPDATE telegram_subscriptions SET phone='${phone}' WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET telegram_user_id=777 WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET consented_at=now() WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET first_name='x' WHERE user_id='${owner}'`,`INSERT INTO telegram_subscriptions(user_id,phone) VALUES('${other}','${phone}')`])
+   await assert.rejects(db.exec(statement),/permission denied/,statement);
+  await assert.rejects(db.query('SELECT * FROM telegram_login_tokens'),/permission denied/);
+  await assert.rejects(db.exec(`INSERT INTO telegram_login_tokens(token_hash,user_id,expires_at) VALUES('${'a'.repeat(64)}','${owner}',now())`),/permission denied/);
+  await db.exec('RESET ROLE;RESET request.jwt.claim.sub;SET ROLE service_role;');
+  // The server may record identity, and the database keeps it unique and well formed.
+  await db.exec(`UPDATE telegram_subscriptions SET phone='${phone}',telegram_user_id=777,first_name='Aziz',consented_at=now() WHERE user_id='${owner}'`);
+  await db.exec(`INSERT INTO telegram_subscriptions(user_id,chat_id) VALUES('${other}',900)`);
+  await assert.rejects(db.exec(`UPDATE telegram_subscriptions SET phone='${phone}' WHERE user_id='${other}'`),/unique|duplicate/);
+  await assert.rejects(db.exec(`UPDATE telegram_subscriptions SET telegram_user_id=777 WHERE user_id='${other}'`),/unique|duplicate/);
+  for(const bad of ['998901234567','+0123456789','+12','abc','+1234567890123456'])await assert.rejects(db.exec(`UPDATE telegram_subscriptions SET phone='${bad}' WHERE user_id='${other}'`),/check/i,bad);
+  await db.exec(`INSERT INTO telegram_login_tokens(token_hash,user_id,expires_at) VALUES('${'a'.repeat(64)}','${owner}',now()+interval '5 minutes')`);
+  await assert.rejects(db.exec(`INSERT INTO telegram_login_tokens(token_hash,user_id,expires_at) VALUES('short','${owner}',now())`),/check/i);
+  const spent=await db.query(`UPDATE telegram_login_tokens SET used_at=now() WHERE token_hash='${'a'.repeat(64)}' AND used_at IS NULL AND expires_at>now() RETURNING user_id`);
+  assert.equal(spent.rows.length,1);
+  assert.equal((await db.query(`UPDATE telegram_login_tokens SET used_at=now() WHERE token_hash='${'a'.repeat(64)}' AND used_at IS NULL AND expires_at>now() RETURNING user_id`)).rows.length,0,'a spent token cannot be spent again');
+  // Deleting the account removes its tokens.
+  await db.exec('RESET ROLE;');
+  await db.exec(`DELETE FROM auth.users WHERE id='${owner}'`);
+  assert.equal((await db.query('SELECT count(*)::int AS n FROM telegram_login_tokens')).rows[0].n,0);
+ }finally{await db.close();}
+});

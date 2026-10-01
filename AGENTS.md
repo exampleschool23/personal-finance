@@ -124,10 +124,12 @@ Reuse shared components, hooks, validators, and calculation helpers instead of d
 
 # Languages and audience
 
-This is an international app, not an Uzbek one. It offers sixteen interface
+This is an international app, not an Uzbek one. It offers thirty interface
 languages, all defined once in `lib/languages.ts`: English, Spanish, Mexican
 Spanish, Portuguese, French, Russian, Arabic, Urdu, Hindi, Bengali, Chinese,
-Japanese, Korean, Thai, Vietnamese and Uzbek. Uzbek is one option among equals:
+Japanese, Korean, Thai, Vietnamese, Uzbek, German, Italian, Turkish, Indonesian,
+Malay, Polish, Ukrainian, Dutch, Czech, Romanian, Persian, Hebrew, Filipino and
+Swahili. Uzbek is one option among equals:
 never a default, never listed first, never special-cased.
 
 - English is the default for new accounts. Signed-out pages (sign-in, account
@@ -138,7 +140,7 @@ never a default, never listed first, never special-cased.
   `tests/locales.mjs`), month and weekday tables in `lib/pos-date-format.js`, a
   format test in `tests/format.mjs`, and a migration widening the
   `user_preferences.language` check.
-- Arabic and Urdu are right to left; the language provider sets `dir`. Use logical
+- Arabic, Urdu, Persian and Hebrew are right to left; the language provider sets `dir`. Use logical
   CSS properties (`margin-inline-start`, `inset-inline-end`) in new rules.
 - Amounts always use Latin digits, whatever the language. The financial report PDF
   falls back to English for scripts the bundled font cannot draw

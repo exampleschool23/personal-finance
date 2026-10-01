@@ -13,7 +13,7 @@ test('filters expose an accessible mobile disclosure and preserve the search out
 test('failed settings render a retry control and prevent saving fallback preferences',()=>{
  const {SettingsPanel}=loadTS('components/settings-panel.tsx',{...overrides,'@/components/investment-comparison-settings':{InvestmentComparisonSettings:()=>null}});
  const html=renderToStaticMarkup(React.createElement(SettingsPanel,{initial:{language:'en',currencies:['USD']},demo:false,onSaved:()=>{},loading:false,loadError:'Offline',onRetry:()=>{}}));
- assert.match(html,/Retry loading settings/);assert.match(html,/role="alert"/);assert.match(html,/<button[^>]*disabled=""[^>]*>Save changes/);
+ assert.match(html,/Retry loading settings/);assert.match(html,/role="alert"/);assert.match(html,/<fieldset[^>]*disabled=""/);assert.doesNotMatch(html,/Save changes/);
 });
 test('partial totals explicitly name excluded currencies and disappear when coverage is complete',()=>{
  const {PartialTotal}=loadTS('components/presentation-foundation/partial-total.tsx',overrides);

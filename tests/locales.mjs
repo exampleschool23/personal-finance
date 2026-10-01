@@ -9,10 +9,10 @@ const en=JSON.parse(fs.readFileSync('lib/locales/en.json','utf8'));
 const placeholders=text=>[...text.matchAll(/\{\w+\}/g)].map(match=>match[0]).sort().join();
 const tags=text=>[...text.matchAll(/<\/?\w+[^>]*>/g)].map(match=>match[0]).sort().join();
 
-test('the catalogue lists sixteen languages with a locale, a direction and a dictionary each',()=>{
- assert.equal(languageCatalogue.length,16);
- assert.equal(new Set(languageCodes).size,16);
- assert.deepEqual([...languageCodes].sort(),['ar','bn','en','es','es-MX','fr','hi','ja','ko','pt','ru','th','uz','ur','vi','zh'].sort());
+test('the catalogue lists thirty languages with a locale, a direction and a dictionary each',()=>{
+ assert.equal(languageCatalogue.length,30);
+ assert.equal(new Set(languageCodes).size,30);
+ assert.deepEqual([...languageCodes].sort(),['ar','bn','en','es','es-MX','fr','hi','ja','ko','pt','ru','th','uz','ur','vi','zh','de','it','tr','id','ms','pl','uk','nl','cs','ro','fa','he','fil','sw'].sort());
  for(const {code,locale,dir,native,short} of languageCatalogue){
   assert.ok(isLanguage(code),code);
   assert.equal(locales[code],locale);
@@ -22,11 +22,11 @@ test('the catalogue lists sixteen languages with a locale, a direction and a dic
   // Every locale must be a valid Intl locale that formats numbers and money.
   assert.ok(new Intl.NumberFormat(locale,{style:'currency',currency:'USD'}).format(1234).length>3,locale);
  }
- assert.deepEqual(languageCatalogue.filter(item=>item.dir==='rtl').map(item=>item.code),['ar','ur']);
+ assert.deepEqual(languageCatalogue.filter(item=>item.dir==='rtl').map(item=>item.code),['ar','ur','fa','he']);
  assert.ok(!isLanguage('xx')&&!isLanguage('EN')&&!isLanguage(undefined));
  // The bundled PDF font covers Latin and Cyrillic only.
- for(const code of ['en','es','es-MX','pt','fr','ru','vi','uz'])assert.ok(!pdfUnsupportedLanguages.includes(code),code);
- for(const code of ['ar','ur','hi','bn','zh','ja','ko','th'])assert.ok(pdfUnsupportedLanguages.includes(code),code);
+ for(const code of ['en','es','es-MX','pt','fr','ru','vi','uz','de','it','tr','id','ms','pl','uk','nl','cs','ro','fil','sw'])assert.ok(!pdfUnsupportedLanguages.includes(code),code);
+ for(const code of ['ar','ur','hi','bn','zh','ja','ko','th','fa','he'])assert.ok(pdfUnsupportedLanguages.includes(code),code);
 });
 
 test('Latin digits are used for amounts in every language, so inputs and totals stay readable',()=>{

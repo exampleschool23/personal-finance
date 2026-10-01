@@ -55,7 +55,7 @@ test('expired, unknown or malformed codes never write and reply in the Telegram 
  const db=fakeDb({subscriptions:[{...pending,link_code_expires_at:'2026-09-30T08:59:59.000Z'}]});
  assert.match((await handleTelegramUpdate(message(500,'/start ABCDEFGH','uz'),db,clock)).replies[0].text,/^Havola muddati tugagan/);
  assert.match((await handleTelegramUpdate(message(500,'/start ZZZZZZZZ','ru'),db,clock)).replies[0].text,/^Срок действия ссылки истёк/);
- assert.match((await handleTelegramUpdate(message(500,'/start 0000','de'),db,clock)).replies[0].text,/^This chat is not connected/);
+ assert.match((await handleTelegramUpdate(message(500,'/start 0000','fi'),db,clock)).replies[0].text,/^Welcome to Hoggish/);
  assert.equal(db.writes.length,0);
 });
 
@@ -77,11 +77,12 @@ test('stop unlinks a connected chat, drops its draft and removes the keyboard; a
  assert.match(again.replies[0].text,/^Подключено\./);assert.ok(again.replies[0].keyboard.reply);
 });
 
-test('an unlinked chat only learns how to connect, whether it types or presses',async()=>{
+test('an unlinked chat is only invited to create an account, whether it types or presses, and nothing is written',async()=>{
  const db=fakeDb({subscriptions:[linked]});
- assert.match((await handleTelegramUpdate(message(999,'/stop','ru'),db,clock)).replies[0].text,/^Этот чат не подключён/);
+ const invited=(await handleTelegramUpdate(message(999,'/stop','ru'),db,clock)).replies[0];
+ assert.match(invited.text,/^Добро пожаловать в Hoggish/);assert.deepEqual(invited.keyboard.inline.flat().map(button=>button.callback_data),['o:agree']);
  const pressed=await handleTelegramUpdate({callback_query:{id:'cb1',data:'f:save',message:{chat:{id:999}},from:{language_code:'en'}}},db,clock);
- assert.equal(pressed.callbackId,'cb1');assert.match(pressed.replies[0].text,/^This chat is not connected/);
+ assert.equal(pressed.callbackId,'cb1');assert.match(pressed.replies[0].text,/^Welcome to Hoggish/);
  assert.equal(db.writes.length,0);
  assert.deepEqual(await handleTelegramUpdate({update_id:1},db,clock),{replies:[]});
 });
@@ -137,4 +138,31 @@ test('Upcoming answers with the digest or a friendly empty line',async()=>{
 test('database failures surface so the webhook can ask Telegram to retry',async()=>{
  const db=fakeDb({subscriptions:[pending],failWrites:true});
  await assert.rejects(handleTelegramUpdate(message(500,'/start ABCDEFGH'),db,clock),/Database request failed/);
+});
+
+test('pressing Back in the chat returns to the previous question, stores the shorter draft and saves the corrected choice',async()=>{
+ const db=fakeDb(workspace());
+ await handleTelegramUpdate(message(500,'Expense'),db,clock);
+ await handleTelegramUpdate(press(500,'f:cat:'+id(20)),db,clock);
+ await handleTelegramUpdate(press(500,'f:acc:'+id(1)),db,clock);
+ assert.deepEqual(db.drafts.map(d=>d.step),['expense:amount']);
+ // The owner meant the card account: Back, then the other choice.
+ const back=await handleTelegramUpdate(press(500,'f:back'),db,clock);
+ assert.equal(back.callbackId,'cb-f:back');
+ assert.equal(back.replies[0].text,'From which account?');
+ assert.deepEqual(db.drafts.map(d=>d.step),['expense:account']);
+ assert.equal(db.drafts[0].data.account_id,undefined);assert.equal(db.drafts[0].data.category_name,'Groceries');
+ const amount=await handleTelegramUpdate(press(500,'f:acc:'+id(2)),db,clock);
+ assert.equal(amount.replies[0].text,'Type the amount in USD');
+ await handleTelegramUpdate(message(500,'40'),db,clock);
+ await handleTelegramUpdate(press(500,'f:skip'),db,clock);
+ await handleTelegramUpdate(press(500,'f:date:today'),db,clock);
+ const before=db.writes.length;
+ await handleTelegramUpdate(press(500,'f:save'),db,clock);
+ const rpc=db.writes.slice(before).find(write=>write.path==='/rest/v1/rpc/telegram_save_finance_record');
+ assert.equal(rpc.body.p_record.currency,'USD');assert.equal(rpc.body.p_record.amount,40);assert.equal(rpc.body.p_record.account_id,id(2));
+ // Back at the first question asks it again and never leaves the conversation.
+ await handleTelegramUpdate(message(500,'Expense'),db,clock);
+ const first=await handleTelegramUpdate(press(500,'f:back'),db,clock);
+ assert.equal(first.replies[0].text,'Choose an expense category');assert.deepEqual(db.drafts.map(d=>d.step),['expense:category']);
 });

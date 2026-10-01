@@ -65,3 +65,30 @@ test('the write routes queue a notification only after a successful save',()=>{
   assert.ok(source.includes('queueActionNotification('),route);
  }
 });
+
+test('a new language replaces the bot keyboard in the linked chat, with no new text to translate',async()=>{
+ const {sendLanguageMenu}=loadTS('lib/notify-action.ts');
+ const h=harness({subscription:[{chat_id:77,actions_enabled:false}]});
+ assert.equal(await sendLanguageMenu(auth,'ru',h.deps),true);
+ assert.equal(h.sent.length,1);
+ const {message,used}=h.sent[0];
+ assert.equal(message.chat_id,77);
+ assert.equal(message.text,'Выберите, что добавить.');
+ assert.deepEqual(message.keyboard,{reply:[['Расход','Доходы'],['Перевод','Погасить кредит или долг'],['Ипотечный платёж','Предстоящие платежи']]});
+ assert.equal(used,config);
+ // Only the owner's own token reads the chat, and the message is sent even when action messages are off.
+ assert.deepEqual(h.reads.map(read=>read.token),['owner-token']);
+ const ja=harness();await sendLanguageMenu(auth,'ja',ja.deps);
+ assert.notEqual(ja.sent[0].message.text,'Choose what to add.');
+ assert.notDeepEqual(ja.sent[0].message.keyboard,{reply:[['Expense','Income'],['Transfer','Pay loan or debt'],['Mortgage payment','Upcoming payments']]});
+ const unlinked=harness({subscription:[{chat_id:null,actions_enabled:true}]});
+ assert.equal(await sendLanguageMenu(auth,'ru',unlinked.deps),false);assert.equal(unlinked.sent.length,0);
+ const none=harness({subscription:[]});assert.equal(await sendLanguageMenu(auth,'ru',none.deps),false);
+ assert.equal(await sendLanguageMenu(auth,'ru',{...h.deps,config:null}),false);
+ const failing=harness({fail:'telegram_subscriptions'});
+ await assert.rejects(()=>sendLanguageMenu(auth,'ru',failing.deps),/lookup failed/);
+});
+test('queueing a language menu never throws',()=>{
+ const {queueLanguageMenu}=loadTS('lib/notify-action.ts');
+ assert.doesNotThrow(()=>queueLanguageMenu({token:'t'},'ru'));
+});

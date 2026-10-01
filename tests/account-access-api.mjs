@@ -4,10 +4,10 @@ import fs from 'node:fs';
 import {loadTS} from './helpers/load-ts.mjs';
 const id='a0000000-0000-4000-8000-000000000001';
 const verified={access_token:'verified-token',refresh_token:'refresh',expires_in:3600,user:{id}};
-function api({auth=true,origin=true,provider,jarValues={}}={}){
+function api({auth=true,origin=true,provider,jarValues={},email='owner@example.com'}={}){
  const calls=[],saved=[],writes=[],deleted=[];const values=new Map(Object.entries(jarValues));
  const jar={get:name=>values.has(name)?{value:values.get(name)}:undefined,set:(name,value,options)=>{writes.push({name,value,options});values.set(name,value);},delete:name=>{deleted.push(name);values.delete(name);}};
- const route=loadTS('app/api/account-access/route.ts',{'@/lib/account-access':{...loadTS('lib/account-access.ts'),accountOrigin:()=> 'https://canonical.example'},'next/headers':{cookies:async()=>jar},'@/lib/supabase':{session:async()=>auth?{user:{id,email:'owner@example.com'},token:'owner'}:null,sameOrigin:()=>origin,config:()=>({url:'https://supabase.invalid'}),saveSession:async data=>saved.push(data),supa:async(path,init,token)=>{calls.push({path,init,token});return provider?provider(path,init,token):Response.json(verified);}}});return {...route,calls,saved,writes,deleted};
+ const route=loadTS('app/api/account-access/route.ts',{'@/lib/account-access':{...loadTS('lib/account-access.ts'),accountOrigin:()=> 'https://canonical.example'},'next/headers':{cookies:async()=>jar},'@/lib/supabase':{session:async()=>auth?{user:{id,email},token:'owner'}:null,sameOrigin:()=>origin,config:()=>({url:'https://supabase.invalid'}),saveSession:async data=>saved.push(data),supa:async(path,init,token)=>{calls.push({path,init,token});return provider?provider(path,init,token):Response.json(verified);}}});return {...route,calls,saved,writes,deleted};
 }
 const request=body=>new Request('https://local/api/account-access',{method:'POST',body:JSON.stringify(body)});
 test('account access rejects cross-origin, anonymous changes, short passwords and destructive requests without confirmation',async()=>{
@@ -72,4 +72,33 @@ test('passwords need at least six characters everywhere, and the messages say so
  assert.ok(fs.readFileSync('components/account-access-panel.tsx','utf8').includes(hint));
  assert.ok(fs.readFileSync('app/api/account-access/route.ts','utf8').includes(failure));
  for(const language of ['en','ru','uz']){const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));assert.ok(labels[hint],language);assert.ok(labels[failure],language);assert.ok(!/12/.test(labels[hint]+labels[failure]),language);}
+});
+
+test('an account made with a phone number can add an email and password, and nobody else can use that path',async()=>{
+ const add={action:'add_email',email:'new@example.com',password:'secret1'};
+ const phoneOnly=api({email:'',provider:()=>Response.json({})});
+ const done=await phoneOnly.POST(request(add));
+ assert.equal(done.status,200);assert.equal((await done.json()).message,'Check your email to confirm it.');
+ assert.equal(phoneOnly.calls.length,1);
+ assert.equal(phoneOnly.calls[0].path,'/auth/v1/user');assert.equal(phoneOnly.calls[0].init.method,'PUT');assert.equal(phoneOnly.calls[0].token,'owner');
+ assert.deepEqual(JSON.parse(phoneOnly.calls[0].init.body),{email:'new@example.com',password:'secret1'});
+ // An account that already has an email keeps using its password screens.
+ const withEmail=api({provider:()=>Response.json({})});
+ assert.equal((await withEmail.POST(request(add))).status,400);assert.equal(withEmail.calls.length,0);
+ // Anonymous visitors, foreign sites and weak or malformed input never reach Supabase.
+ const anonymous=api({auth:false,email:''});assert.equal((await anonymous.POST(request(add))).status,401);assert.equal(anonymous.calls.length,0);
+ const foreign=api({origin:false,email:''});assert.equal((await foreign.POST(request(add))).status,403);
+ const strict=api({email:''});
+ for(const body of [{...add,password:'short'},{...add,email:'not an email'},{action:'add_email'},{...add,password:'x'.repeat(129)}])assert.equal((await strict.POST(request(body))).status,400,JSON.stringify(body));
+ assert.equal(strict.calls.length,0);
+ // Supabase may refuse the address, for example when it belongs to someone else.
+ const refused=api({email:'',provider:()=>Response.json({error_code:'email_exists'},{status:422})});
+ const failure=await refused.POST(request(add));assert.equal(failure.status,400);assert.equal((await failure.json()).error,'Could not add the email. Check the address and try another password.');
+});
+test('the account page reports whether the signed-in account has no email, so Settings offers the right form',async()=>{
+ for(const [email,expected] of [['',true],['owner@example.com',false]]){
+  const result=await api({email}).GET();
+  assert.equal((await result.json()).phoneOnly,expected,email);
+ }
+ assert.equal((await (await api({auth:false}).GET()).json()).phoneOnly,false);
 });

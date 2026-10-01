@@ -106,3 +106,22 @@ test('results are shown as popups, never as inline text, and the sent screen is 
   for(const key of ['We sent a confirmation link to {email}. Press it to finish creating your account.','If an account exists for {email}, we sent a link to reset your password.']){assert.ok(labels[key].includes('{email}'),`${language}: ${key}`);}
  }
 });
+
+test('settings for a phone-only account offers only adding an email and password',()=>{
+ const html=(()=>{
+  const {AccountAccessPanel}=loadTS('components/account-access-panel.tsx',{
+   react:{...React,useEffect(){},useState(initial){return [initial&&typeof initial==='object'&&'phoneOnly' in initial?{...initial,phoneOnly:true}:initial===null?null:initial,()=>{}];}},
+   'next/navigation':{useRouter:()=>({})},
+   'next/link':{__esModule:true,default:({children})=>React.createElement('a',null,children)},
+   '@/components/language-provider':{useLanguage:()=>({t:key=>key})},
+   '@/components/ui/button':{Button:props=>React.createElement('button',props)},
+   '@/components/ui/input':{Input:props=>React.createElement('input',props)},
+   'lucide-react':{MailCheck:()=>null},
+  });
+  return renderToStaticMarkup(React.createElement(AccountAccessPanel,{settings:true}));
+ })();
+ assert.ok(html.includes('<h2>Add an email and password</h2>'));
+ assert.ok(html.includes('Your account was created with a phone number.'));
+ assert.ok(html.includes('type="email"'));assert.equal((html.match(/type="password"/g)||[]).length,2);
+ assert.ok(!html.includes('Permanently delete account'));assert.ok(!html.includes('Current password'));assert.ok(!html.includes('Change password'));
+});

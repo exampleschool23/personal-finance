@@ -62,10 +62,15 @@ test('the browser language picks the first supported language, with English as t
   assert.equal(i18n.detectLanguage(['vi-VN']), 'vi');
   assert.equal(i18n.detectLanguage(['ar-SA']), 'ar');
   assert.equal(i18n.detectLanguage(['ja', 'ko']), 'ja');
-  assert.equal(i18n.detectLanguage(['de-DE', 'uz', 'ru']), 'uz');
-  assert.equal(i18n.detectLanguage(['de-DE', 'it']), 'en');
+  assert.equal(i18n.detectLanguage(['de-DE', 'uz', 'ru']), 'de');
+  assert.equal(i18n.detectLanguage(['fi-FI', 'uz', 'ru']), 'uz');
+  assert.equal(i18n.detectLanguage(['tr-TR']), 'tr');
+  assert.equal(i18n.detectLanguage(['fil-PH']), 'fil');
+  assert.equal(i18n.detectLanguage(['he-IL']), 'he');
+  assert.equal(i18n.detectLanguage(['pl', 'en']), 'pl');
+  assert.equal(i18n.detectLanguage(['fi-FI', 'sv']), 'en');
   assert.equal(i18n.detectLanguage(['EN-gb']), 'en');
-  assert.equal(i18n.detectLanguage(['de-DE', 'it']), 'en');
+  assert.equal(i18n.detectLanguage(['fi-FI', 'sv']), 'en');
   assert.equal(i18n.detectLanguage([]), 'en');
   assert.equal(i18n.detectLanguage(undefined), 'en');
 });
@@ -93,8 +98,8 @@ test('a saved default wins over the browser, and the browser is never written as
   };
   assert.deepEqual(run(null, ['ru-RU']).updates, ['ru']);
   assert.deepEqual(run(null, ['uz']).updates, ['uz']);
-  assert.deepEqual(run(null, ['de']).updates, []);
-  assert.deepEqual(run(null, ['de']).updates, []);
+  assert.deepEqual(run(null, ['de']).updates, ['de']);
+  assert.deepEqual(run(null, ['fi']).updates, []);
   assert.deepEqual(run('ru', ['en-US']).updates, ['ru']);
   assert.deepEqual(run('uz', ['ru-RU']).updates, ['uz']);
   // A saved value this version does not offer is ignored, so the browser decides.

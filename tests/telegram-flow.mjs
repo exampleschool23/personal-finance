@@ -38,7 +38,7 @@ test('an expense walks category, account, amount, name and date, then saves a va
  assert.deepEqual(buttons(start.reply),['f:cat:'+id(20),'f:cat:Rent expense','f:cat:Living expense','f:cat:Charity','f:cat:Other expense','f:cancel']);
  const account=advance(start.draft,{callback:'f:cat:'+id(20)},ctx(),chat);
  assert.equal(account.reply.text,'From which account?');
- assert.deepEqual(buttons(account.reply),['f:acc:'+id(1),'f:acc:'+id(2),'f:cancel']);
+ assert.deepEqual(buttons(account.reply),['f:acc:'+id(1),'f:acc:'+id(2),'f:back','f:cancel']);
  assert.ok(!buttons(account.reply).includes('f:acc:'+id(3)),'holdings are not cash accounts');
  const amount=advance(account.draft,{callback:'f:acc:'+id(1)},ctx(),chat);
  assert.equal(amount.reply.text,'Type the amount in UZS');
@@ -51,7 +51,7 @@ test('an expense walks category, account, amount, name and date, then saves a va
  const confirm=advance(date.draft,{callback:'f:date:yesterday'},ctx(),chat);
  assert.equal(confirm.draft.step,'confirm');assert.equal(confirm.draft.data.date,'2026-09-29');assert.equal(confirm.draft.data.id,id(99));
  assert.equal(confirm.reply.text,'<b>Save this?</b>\nExpense · Groceries\n<b>Groceries</b> · UZS 250,000 · 29 September 2026\nfrom Wallet');
- assert.deepEqual(buttons(confirm.reply),['f:save','f:cancel']);
+ assert.deepEqual(buttons(confirm.reply),['f:save','f:back','f:cancel']);
  const saved=advance(confirm.draft,{callback:'f:save'},ctx(),chat);
  assert.equal(saved.draft,null);assert.equal(saved.reply,null);
  assert.equal(saved.commit.type,'record');
@@ -71,7 +71,7 @@ test('a default category keeps its kind, a typed name is used and Russian decima
 
 test('transfers ask for the received amount only across currencies and exclude the source account',()=>{
  const same=run([{text:'Transfer'},{callback:'f:acc:'+id(1)}]);
- assert.equal(same.reply.text,'To which account?');assert.deepEqual(buttons(same.reply),['f:tgt:'+id(2),'f:cancel']);
+ assert.equal(same.reply.text,'To which account?');assert.deepEqual(buttons(same.reply),['f:tgt:'+id(2),'f:back','f:cancel']);
  const cross=run([{text:'Transfer'},{callback:'f:acc:'+id(2)},{callback:'f:tgt:'+id(1)},{text:'100'}]);
  assert.equal(cross.draft.step,'received');assert.equal(cross.reply.text,'Type the amount received in UZS');
  const done=run([{text:'Transfer'},{callback:'f:acc:'+id(2)},{callback:'f:tgt:'+id(1)},{text:'100'},{text:'1250000'},{callback:'f:date:today'},{callback:'f:save'}]);
@@ -84,7 +84,7 @@ test('loan repayments and mortgage payments offer only matching-currency account
  const pick=run([{text:'Pay loan or debt'}]);
  assert.equal(pick.reply.text,'Which loan or debt?');assert.deepEqual(buttons(pick.reply),['f:tgt:'+id(10),'f:cancel'],'settled debts are left out');
  const accounts=run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)}]);
- assert.deepEqual(buttons(accounts.reply),['f:acc:'+id(2),'f:cancel'],'only the USD account can repay a USD loan');
+ assert.deepEqual(buttons(accounts.reply),['f:acc:'+id(2),'f:back','f:cancel'],'only the USD account can repay a USD loan');
  assert.equal(run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)},{callback:'f:acc:'+id(1)}]).draft.step,'account');
  const tooMuch=run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)},{callback:'f:acc:'+id(2)},{text:'2500'}]);
  assert.equal(tooMuch.draft.step,'amount');assert.equal(tooMuch.reply.text,'Repayment cannot exceed the outstanding balance.');
@@ -120,4 +120,64 @@ test('every bot string exists in all three locales and prompts stay under Telegr
  const start=advance(null,{text:'Expense'},ctx(),chat);
  for(const button of start.reply.keyboard.inline.flat())assert.ok(Buffer.byteLength(button.callback_data)<=64,button.callback_data);
  prompt(start.draft,ctx('ru'),chat);
+});
+
+test('Back returns to the previous question in every conversation and forgets what was answered after it',()=>{
+ // The first question has nothing before it, so only Cancel is offered.
+ for(const label of ['Expense','Income','Transfer','Pay loan or debt','Mortgage payment']){
+  const first=run([{text:label}]);
+  assert.ok(!buttons(first.reply).includes('f:back'),label);assert.ok(buttons(first.reply).includes('f:cancel'),label);
+ }
+ // Expense: category, account, amount, name, date, confirm.
+ const toConfirm=run([{text:'Expense'},{callback:'f:cat:'+id(20)},{callback:'f:acc:'+id(1)},{text:'250000'},{callback:'f:skip'},{callback:'f:date:today'}]);
+ assert.equal(toConfirm.draft.step,'confirm');
+ assert.deepEqual(buttons(toConfirm.reply),['f:save','f:back','f:cancel']);
+ let draft=toConfirm.draft;const seen=[];
+ for(let n=0;n<5;n++){const back=advance(draft,{callback:'f:back'},ctx(),chat);seen.push(back.draft.step);assert.equal(back.reply.chat_id,chat);assert.ok(back.reply.text);draft=back.draft;}
+ assert.deepEqual(seen,['date','name','amount','account','category']);
+ assert.deepEqual(draft.data,{id:id(99)},'every answer after the first question is forgotten, the record id stays');
+ // Going back one step keeps earlier answers, and a new choice replaces the old one.
+ const backToAccount=advance(run([{text:'Expense'},{callback:'f:cat:'+id(20)},{callback:'f:acc:'+id(1)}]).draft,{callback:'f:back'},ctx(),chat);
+ assert.equal(backToAccount.draft.step,'account');assert.equal(backToAccount.draft.data.category_name,'Groceries');assert.equal(backToAccount.draft.data.account_id,undefined);
+ assert.equal(backToAccount.reply.text,'From which account?');
+ const changed=advance(backToAccount.draft,{callback:'f:acc:'+id(2)},ctx(),chat);
+ assert.equal(changed.draft.data.account_id,id(2));assert.equal(changed.reply.text,'Type the amount in USD');
+ // Transfers skip the received amount when both accounts share a currency, so Back skips it too.
+ const twoUsd=ctx();twoUsd.accounts=[...twoUsd.accounts,entry(4,'Second card','Cash',50,'USD')];
+ const sameCurrency=run([{text:'Transfer'},{callback:'f:acc:'+id(2)},{callback:'f:tgt:'+id(4)},{text:'20'}],twoUsd);
+ assert.equal(sameCurrency.draft.step,'date');
+ assert.equal(advance(sameCurrency.draft,{callback:'f:back'},twoUsd,chat).draft.step,'amount');
+ // Across currencies the received amount is asked, so Back stops there.
+ const crossDate=run([{text:'Transfer'},{callback:'f:acc:'+id(2)},{callback:'f:tgt:'+id(1)},{text:'100'},{text:'1200000'}]);
+ assert.equal(crossDate.draft.step,'date');
+ const crossBack=advance(crossDate.draft,{callback:'f:back'},ctx(),chat);
+ assert.equal(crossBack.draft.step,'received');assert.equal(crossBack.draft.data.received,undefined);assert.equal(crossBack.draft.data.amount,100);
+ // A stale received amount cannot survive a change of accounts.
+ const rewound=advance(advance(crossBack.draft,{callback:'f:back'},ctx(),chat).draft,{callback:'f:back'},ctx(),chat);
+ assert.equal(rewound.draft.step,'target');assert.equal(rewound.draft.data.target_id,undefined);assert.equal(rewound.draft.data.account_id,id(2));
+ // Loan and mortgage flows: target, account, amount, interest, date.
+ const mortgage=run([{text:'Mortgage payment'},{callback:'f:tgt:'+id(11)},{callback:'f:acc:'+id(1)},{text:'1000000'},{callback:'f:zero'}]);
+ assert.equal(mortgage.draft.step,'date');
+ const mortgageBack=advance(mortgage.draft,{callback:'f:back'},ctx(),chat);
+ assert.equal(mortgageBack.draft.step,'interest');assert.equal(mortgageBack.draft.data.interest,undefined);assert.equal(mortgageBack.draft.data.amount,1000000);
+ const repaymentBack=advance(run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)},{callback:'f:acc:'+id(2)}]).draft,{callback:'f:back'},ctx(),chat);
+ assert.equal(repaymentBack.draft.step,'account');assert.equal(repaymentBack.draft.data.target_id,id(10));
+ // Back from an old message at the first question just asks it again; the menu ignores it.
+ const first=run([{text:'Expense'}]);
+ const stale=advance(first.draft,{callback:'f:back'},ctx(),chat);
+ assert.equal(stale.draft.step,'category');assert.equal(stale.reply.text,'Choose an expense category');
+ assert.equal(advance(null,{callback:'f:back'},ctx(),chat).reply.text,'Choose what to add.');
+ // Typing while at the amount step still works, and the callback data stays short enough for Telegram.
+ for(const reply of [toConfirm.reply,backToAccount.reply,mortgageBack.reply])for(const button of reply.keyboard.inline.flat())assert.ok(Buffer.byteLength(button.callback_data)<=64);
+ assert.equal(buttons(advance(toConfirm.draft,{callback:'f:back'},ctx(),chat).reply).at(-2),'f:back');
+});
+test('the Back button is translated and shown with a chevron in every language',()=>{
+ const {languageCodes}=loadTS('lib/languages.ts');
+ for(const language of languageCodes){
+  const reply=advance(run([{text:translate(language,'Expense')},{callback:'f:cat:'+id(20)}],ctx(language)).draft,{callback:'f:cat:'+id(20)},ctx(language),chat).reply;
+  const back=reply.keyboard.inline.flat().find(button=>button.callback_data==='f:back');
+  assert.ok(back,language);
+  assert.equal(back.text,'‹ '+translate(language,'Back'),language);
+  if(language!=='en')assert.notEqual(back.text,'‹ Back',language);
+ }
 });

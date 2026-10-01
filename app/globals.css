@@ -1702,7 +1702,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .preferences-heading p{font-size:var(--type-small);line-height:1.5}
 .settings-layout .preferences-form{display:block;padding:0;background:transparent;border:0;box-shadow:none}
 .preferences-fields{border:0;padding:0;margin:0;min-width:0}
-.workspace .content .settings-layout .preferences-card,.workspace .content .settings-layout .preferences-save-bar{margin:0 0 16px}
+.workspace .content .settings-layout .preferences-card{margin:0 0 16px}
 .preferences-card header{margin-bottom:14px}
 .workspace .content .preferences-card h3{font-size:var(--type-title);font-weight:600;line-height:1.4;margin:0 0 2px}
 .preferences-card .muted{font-size:13px;line-height:1.5}
@@ -1736,13 +1736,6 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .preferences-primary{background:var(--accent);color:var(--primary);border-radius:20px;padding:4px 12px;font-size:12px}
 .preferences-currency-list button{width:32px;height:32px;min-height:32px;flex-shrink:0;color:var(--muted-foreground)}
 .preferences-card .currency-search-trigger{color:var(--primary);padding:6px 0;min-height:36px;height:auto;font-size:14px;margin-top:4px;box-shadow:none}
-.workspace .content .settings-layout .preferences-save-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:12px 20px;margin-bottom:0}
-.preferences-save-bar>div{display:flex;gap:14px}
-.preferences-save-status{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted-foreground)}
-.preferences-status-dot{width:12px;height:12px;border-radius:50%;background:var(--primary)}
-.preferences-status-dot.is-dirty{background:#f5b925}
-.preferences-save-bar button{min-height:40px;padding-inline:20px}
-.preferences-save-bar>.error{flex-basis:100%;margin:0}
 @media(max-width:760px){.settings-layout .settings-navigation{grid-template-columns:1fr;gap:20px}.settings-layout .settings-navigation-list{position:static;flex-direction:row;overflow-x:auto;gap:6px}.settings-layout .settings-navigation-list button{white-space:nowrap;flex-shrink:0}.preferences-heading{margin-bottom:16px}}
 @media(max-width:520px){.preferences-profile-grid{grid-template-columns:1fr;gap:14px}.settings-layout .preferences-card .preferences-setting-row{grid-template-columns:1fr;gap:6px}.workspace .content .settings-layout .preferences-card{padding:18px 16px}.preferences-save-bar>div{width:100%}.preferences-save-bar button{flex:1}.preferences-currency-list li{gap:10px}.workspace .content .preferences-heading h2{font-size:24px}.workspace .content .preferences-card input,.workspace .content .preferences-card select{font-size:16px}}
 

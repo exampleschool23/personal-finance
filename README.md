@@ -44,3 +44,5 @@ GitHub Actions runs the test suite, production build, type check and auth integr
 Background capture additionally requires server-only `CRON_SECRET` and `SUPABASE_SERVICE_ROLE_KEY`. The Vercel schedule invokes `/api/cron/portfolio-snapshots` daily at 18:00 UTC (23:00 Tashkent). It cannot run while developing locally without an external scheduler. Missing quotes or FX prevent incomplete totals from overwriting snapshots; failed captures return a non-success status for monitoring. No historical prices are invented.
 
 See [the competitive feature research](docs/competitive-feature-research.md), [the public-launch audit](docs/public-launch-audit.md), [workspace improvements and migration 035](docs/workspace-improvements.md), [Vercel setup](VERCEL.md), [currency handling](docs/currencies.md), [portfolio history](docs/portfolio-snapshots.md) and [benchmark calculations](docs/investment-comparison.md). Project conventions are in [AGENTS.md](AGENTS.md).
+
+Accounts can also start in the Telegram bot and sign in on the web with the same phone number; see [the Telegram accounts guide](docs/telegram-accounts.md).

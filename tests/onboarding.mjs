@@ -79,7 +79,7 @@ test('the screen renders its four steps with pressed cards, a progress bar and t
  // The language is a dropdown like the country, with the current language selected and every language listed.
  assert.match(html,/<select id="onboarding-language"/);
  assert.match(html,/<option value="ru" lang="ru" selected="">Русский<\/option>/);
- assert.equal((html.match(/<option value="[a-zA-Z-]+" lang=/g)||[]).length,16);
+ assert.equal((html.match(/<option value="[a-zA-Z-]+" lang=/g)||[]).length,30);
  assert.equal((html.match(/aria-pressed="true"/g)||[]).length,0);
  assert.match(html,/id="onboarding-country"/);
  assert.match(html,/Skip setup/);
@@ -102,7 +102,7 @@ test('the shell shows the setup instead of the drawer, and Settings can run it a
  assert.match(provider,/savePreferences\(\{ \.\.\.preferencesData, onboarded: false \}\)/);
  const panel=fs.readFileSync('components/settings-panel.tsx','utf8');
  // The Settings form never re-stamps the setup; only the wizard and "Run setup again" do.
- assert.match(panel,/JSON\.stringify\(\{ \.\.\.draft, onboarded: undefined \}\)/);
+ assert.match(panel,/JSON\.stringify\(\{ \.\.\.snapshot, onboarded: undefined \}\)/);
  assert.match(panel,/Run setup again/);
 });
 

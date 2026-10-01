@@ -31,13 +31,39 @@ export function menuChoice(text:string):FlowKind|'upcoming'|null{
  return null;
 }
 const cancelButton=(language:Language):TelegramButton=>({text:t(language,'Cancel'),callback_data:'f:cancel'});
+const backButton=(language:Language):TelegramButton=>({text:'‹ '+t(language,'Back'),callback_data:'f:back'});
+/** The bottom row of every prompt: Back to the previous question when there is one, and Cancel. */
+const controls=(language:Language,canGoBack:boolean):TelegramButton[]=>canGoBack?[backButton(language),cancelButton(language)]:[cancelButton(language)];
+// The questions each conversation asks, in order. Currency-dependent steps are skipped when they do not apply.
+const stepOrder:Record<FlowKind,Step[]>={
+ expense:['category','account','amount','name','date','confirm'],
+ income:['category','account','amount','name','date','confirm'],
+ transfer:['account','target','amount','received','date','confirm'],
+ repayment:['target','account','amount','date','confirm'],
+ mortgage:['target','account','amount','interest','date','confirm'],
+};
+// What each question stores, so going back can forget it and everything asked after it.
+const stepFields:Record<Step,Array<keyof DraftData>>={category:['category','custom_category_id','category_name'],account:['account_id'],target:['target_id'],amount:['amount'],received:['received'],interest:['interest'],name:['name'],date:['date'],confirm:[]};
+const find=(list:Entry[],id?:string)=>list.find(item=>item.id===id);
+/** The question asked before the current one, or null at the first question. */
+export function backStep(draft:Draft,ctx:Pick<FlowContext,'accounts'>):Step|null{
+ const order=stepOrder[draft.kind].filter(step=>step!=='received'||(()=>{const from=find(ctx.accounts,draft.data.account_id),to=find(ctx.accounts,draft.data.target_id);return !!from&&!!to&&from.currency!==to.currency;})());
+ const index=order.indexOf(draft.step);
+ return index>0?order[index-1]:null;
+}
+/** Return to an earlier question, forgetting its answer and every answer given after it. The record id stays fixed. */
+function rewind(draft:Draft,step:Step):Draft{
+ const order=stepOrder[draft.kind],data={...draft.data};
+ for(const later of order.slice(order.indexOf(step)))for(const field of stepFields[later])delete data[field];
+ return {...draft,step,data};
+}
 const rows=(buttons:TelegramButton[],perRow=2)=>{const out:TelegramButton[][]=[];for(let index=0;index<buttons.length;index+=perRow)out.push(buttons.slice(index,index+perRow));return out;};
-function choicePage(language:Language,chat:number,text:string,options:TelegramButton[],page:number,pageField:string):TelegramMessage{
+function choicePage(language:Language,chat:number,text:string,options:TelegramButton[],page:number,pageField:string,canGoBack:boolean):TelegramMessage{
  const start=page*pageSize,slice=options.slice(start,start+pageSize);
  const nav:TelegramButton[]=[];
  if(page>0)nav.push({text:'‹',callback_data:`f:${pageField}:${page-1}`});
  if(start+pageSize<options.length)nav.push({text:'›',callback_data:`f:${pageField}:${page+1}`});
- return {chat_id:chat,text,keyboard:{inline:[...rows(slice),...(nav.length?[nav]:[]),[cancelButton(language)]]}};
+ return {chat_id:chat,text,keyboard:{inline:[...rows(slice),...(nav.length?[nav]:[]),controls(language,canGoBack)]}};
 }
 const money=(value:number,currency:string,language:Language)=>formatMoney(value,currency,locales[language]);
 const isCash=(entry:Entry)=>entry.kind==='Cash';
@@ -50,35 +76,35 @@ function accountOptions(ctx:FlowContext,currency?:string,exclude?:string):Telegr
  return ctx.accounts.filter(isCash).filter(account=>(!currency||account.currency===currency)&&account.id!==exclude).map(account=>({text:`${account.name} · ${money(account.amount,account.currency,ctx.language)}`,callback_data:'f:acc:'+account.id}));
 }
 const liabilityOptions=(ctx:FlowContext,kinds:string[])=>ctx.liabilities.filter(item=>kinds.includes(item.kind)&&item.amount>0).map(item=>({text:`${item.name} · ${money(item.amount,item.currency,ctx.language)}`,callback_data:'f:tgt:'+item.id}));
-const find=(list:Entry[],id?:string)=>list.find(item=>item.id===id);
 /** The prompt for the draft's current step. */
 export function prompt(draft:Draft,ctx:FlowContext,chat:number,page=0):TelegramMessage{
  const language=ctx.language,account=find(ctx.accounts,draft.data.account_id),target=find(ctx.liabilities,draft.data.target_id);
+ const controlRow=controls(language,backStep(draft,ctx)!==null);
  switch(draft.step){
-  case 'category':return choicePage(language,chat,t(language,draft.kind==='income'?'Choose an income category':'Choose an expense category'),categoryOptions(draft.kind as 'expense'|'income',ctx),page,'page');
+  case 'category':return choicePage(language,chat,t(language,draft.kind==='income'?'Choose an income category':'Choose an expense category'),categoryOptions(draft.kind as 'expense'|'income',ctx),page,'page',backStep(draft,ctx)!==null);
   case 'account':{
    const currency=draft.kind==='repayment'||draft.kind==='mortgage'?target?.currency:undefined;
    const options=accountOptions(ctx,currency);
-   if(!options.length)return {chat_id:chat,text:t(language,currency?'No cash account uses {currency}. Add one in the app first.':'Add a cash account in the app first.',{currency:currency??''}),keyboard:{inline:[[cancelButton(language)]]}};
-   return choicePage(language,chat,t(language,draft.kind==='transfer'?'From which account?':draft.kind==='income'?'Into which account?':'From which account?'),options,page,'page');
+   if(!options.length)return {chat_id:chat,text:t(language,currency?'No cash account uses {currency}. Add one in the app first.':'Add a cash account in the app first.',{currency:currency??''}),keyboard:{inline:[controlRow]}};
+   return choicePage(language,chat,t(language,draft.kind==='transfer'?'From which account?':draft.kind==='income'?'Into which account?':'From which account?'),options,page,'page',backStep(draft,ctx)!==null);
   }
   case 'target':{
    if(draft.kind==='transfer'){
     const options=accountOptions(ctx,undefined,draft.data.account_id).map(option=>({...option,callback_data:option.callback_data.replace('f:acc:','f:tgt:')}));
-    return options.length?choicePage(language,chat,t(language,'To which account?'),options,page,'page'):{chat_id:chat,text:t(language,'Add a second cash account in the app first.'),keyboard:{inline:[[cancelButton(language)]]}};
+    return options.length?choicePage(language,chat,t(language,'To which account?'),options,page,'page',backStep(draft,ctx)!==null):{chat_id:chat,text:t(language,'Add a second cash account in the app first.'),keyboard:{inline:[controlRow]}};
    }
    const options=liabilityOptions(ctx,draft.kind==='mortgage'?['Mortgage']:['Loan','Debt']);
-   return options.length?choicePage(language,chat,t(language,draft.kind==='mortgage'?'Which mortgage?':'Which loan or debt?'),options,page,'page'):{chat_id:chat,text:t(language,draft.kind==='mortgage'?'No open mortgage found.':'No open loan or debt found.'),keyboard:{inline:[[cancelButton(language)]]}};
+   return options.length?choicePage(language,chat,t(language,draft.kind==='mortgage'?'Which mortgage?':'Which loan or debt?'),options,page,'page',backStep(draft,ctx)!==null):{chat_id:chat,text:t(language,draft.kind==='mortgage'?'No open mortgage found.':'No open loan or debt found.'),keyboard:{inline:[controlRow]}};
   }
   case 'amount':{
    const currency=(draft.kind==='repayment'||draft.kind==='mortgage'?target?.currency:account?.currency)??'';
-   return {chat_id:chat,text:t(language,draft.kind==='mortgage'?'Type the principal amount in {currency}':'Type the amount in {currency}',{currency}),keyboard:{inline:[[cancelButton(language)]]}};
+   return {chat_id:chat,text:t(language,draft.kind==='mortgage'?'Type the principal amount in {currency}':'Type the amount in {currency}',{currency}),keyboard:{inline:[controlRow]}};
   }
-  case 'received':return {chat_id:chat,text:t(language,'Type the amount received in {currency}',{currency:find(ctx.accounts,draft.data.target_id)?.currency??''}),keyboard:{inline:[[cancelButton(language)]]}};
-  case 'interest':return {chat_id:chat,text:t(language,'Type the interest amount in {currency}, or 0',{currency:target?.currency??''}),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],[cancelButton(language)]]}};
-  case 'name':return {chat_id:chat,text:t(language,'Type a name for this record, or skip to use the category'),keyboard:{inline:[[{text:t(language,'Skip'),callback_data:'f:skip'}],[cancelButton(language)]]}};
-  case 'date':return {chat_id:chat,text:t(language,'Which day? Choose, or type a date like 2026-09-30'),keyboard:{inline:[[{text:t(language,'Today'),callback_data:'f:date:today'},{text:t(language,'Yesterday'),callback_data:'f:date:yesterday'}],[cancelButton(language)]]}};
-  case 'confirm':return {chat_id:chat,text:summary(draft,ctx),keyboard:{inline:[[{text:t(language,'Save'),callback_data:'f:save'},cancelButton(language)]]}};
+  case 'received':return {chat_id:chat,text:t(language,'Type the amount received in {currency}',{currency:find(ctx.accounts,draft.data.target_id)?.currency??''}),keyboard:{inline:[controlRow]}};
+  case 'interest':return {chat_id:chat,text:t(language,'Type the interest amount in {currency}, or 0',{currency:target?.currency??''}),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
+  case 'name':return {chat_id:chat,text:t(language,'Type a name for this record, or skip to use the category'),keyboard:{inline:[[{text:t(language,'Skip'),callback_data:'f:skip'}],controlRow]}};
+  case 'date':return {chat_id:chat,text:t(language,'Which day? Choose, or type a date like 2026-09-30'),keyboard:{inline:[[{text:t(language,'Today'),callback_data:'f:date:today'},{text:t(language,'Yesterday'),callback_data:'f:date:yesterday'}],controlRow]}};
+  case 'confirm':return {chat_id:chat,text:summary(draft,ctx),keyboard:{inline:[[{text:t(language,'Save'),callback_data:'f:save'}],controlRow]}};
  }
 }
 /** What the owner is about to save, in their language. */
@@ -134,9 +160,15 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
  }
  if(input.text&&menuChoice(input.text))return advance(null,input,ctx,chat);
  const callback=input.callback??'';
+ // Back returns to the question before this one. At the first question, or from an old message, the current question is asked again.
+ if(callback==='f:back'){
+  const earlier=backStep(draft,ctx);
+  const moved=earlier?rewind(draft,earlier):draft;
+  return {draft:moved,reply:prompt(moved,ctx,chat)};
+ }
  const page=/^f:page:(\d+)$/.exec(callback);
  if(page)return {draft,reply:prompt(draft,ctx,chat,Number(page[1]))};
- const invalid=(text:string):FlowResult=>({draft,reply:{chat_id:chat,text,keyboard:{inline:[[cancelButton(language)]]}}});
+ const invalid=(text:string):FlowResult=>({draft,reply:{chat_id:chat,text,keyboard:{inline:[controls(language,backStep(draft,ctx)!==null)]}}});
  const value=(prefix:string)=>callback.startsWith(prefix)?callback.slice(prefix.length):null;
  switch(draft.step){
   case 'category':{

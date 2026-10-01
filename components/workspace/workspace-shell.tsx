@@ -40,7 +40,7 @@ function WorkspaceShell({ children }: { children: ReactNode }) {
   return <OnboardingScreen brand={<Brand/>} initial={preferencesData} telegram={<TelegramPanel demo={false}/>} savePreferences={savePreferences} applyPreferences={applyPreferences} saveGoal={goal => planning.save('goal', goal)} saveTrackingStart={saveTrackingStart}/>;
  const account = demo
   ? { initial: 'D', title: t("Demo workspace"), detail: t("Sample data") }
-  : { initial: user!.slice(0, 1).toUpperCase(), title: t("Personal account"), detail: user! };
+  : { initial: (preferencesData.display_name?.trim() || user!).replace(/^\+/, '').slice(0, 1).toUpperCase(), title: t("Personal account"), detail: user! };
  return <SidebarProvider>
   <AppDrawer account={account} overdueCount={overdueCount} signOutLabel={demo ? t("Exit demo") : t("Sign out")} onSignOut={logout} pendingPath={destination} onNavigate={navigate}/>
   <main className="workspace">

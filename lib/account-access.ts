@@ -5,6 +5,7 @@ const email=z.string().trim().email().max(254);
 export const accountAccessSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('signup'),email,password}),
  z.object({action:z.literal('recover'),email}),
+ z.object({action:z.literal('add_email'),email,password}),
  z.object({action:z.literal('verify'),token_hash:z.string().regex(/^[a-zA-Z0-9_-]{20,512}$/),type:z.enum(['email','recovery'])}),
  z.object({action:z.literal('reset'),password}),
  z.object({action:z.literal('change_password'),current_password:z.string().min(1).max(1024),password}),

@@ -105,6 +105,20 @@ const formatLocales = {
   'ko-KR': ['2026년 9월 16일', '2026년 9월'],
   'th-TH-u-nu-latn-ca-gregory': ['16 กันยายน 2026', 'กันยายน 2026'],
   'vi-VN': ['16 tháng 9 năm 2026', 'Tháng 9 năm 2026'],
+  'de-DE': ['16. September 2026', 'September 2026'],
+  'it-IT': ['16 settembre 2026', 'Settembre 2026'],
+  'tr-TR': ['16 Eylül 2026', 'Eylül 2026'],
+  'id-ID': ['16 September 2026', 'September 2026'],
+  'ms-MY': ['16 September 2026', 'September 2026'],
+  'pl-PL': ['16 września 2026', 'Wrzesień 2026'],
+  'uk-UA': ['16 вересня 2026', 'Вересень 2026'],
+  'nl-NL': ['16 september 2026', 'September 2026'],
+  'cs-CZ': ['16. září 2026', 'Září 2026'],
+  'ro-RO': ['16 septembrie 2026', 'Septembrie 2026'],
+  'fa-IR-u-nu-latn': ['16 سپتامبر 2026', 'سپتامبر 2026'],
+  'he-IL': ['16 בספטמבר 2026', 'ספטמבר 2026'],
+  'fil-PH': ['16 Setyembre 2026', 'Setyembre 2026'],
+  'sw-KE': ['16 Septemba 2026', 'Septemba 2026'],
 };
 test('dates read naturally in every offered language, stay on their calendar day and never depend on the timezone', () => {
   for (const [locale, [day, month]] of Object.entries(formatLocales)) {

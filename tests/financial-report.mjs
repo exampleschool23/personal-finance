@@ -65,11 +65,11 @@ test('investment goals use owned quantities rather than treating units as money'
  f.tables.savings_goals.push({id:'units',name:'BTC target',kind:'investment',holding_account_id:'wallet',asset_kind:'Crypto',asset_symbol:'BTC',target:4,allocated:0,target_date:'2027-01-01'});
  const r=buildFinancialReport(f,'en');assert.deepEqual(tables(r,'Investment target')[0].rows[0].slice(0,3),['BTC','2 / 4','50%']);
 });
-test('all relevant records and long names remain present in readable multipage PDFs in EN RU',async()=>{
+test('all relevant records and long names remain present in readable multipage PDFs in every language the bundled font can draw',async()=>{
  const {renderFinancialReportPdf}=loadTS('lib/financial-report-pdf.ts'),{PDFDocument}=await import('pdf-lib');
  const f=structuredClone(reportFixture);
  f.tables.finance_records.push(...Array.from({length:35},(_,i)=>entry(`Asset ${i} Мои сбережения O‘zbekcha ${'long '.repeat(i===0?300:3)}`,'Property',1000)));
- for(const language of ['en','ru','uz','es','pt','fr','vi']){
+ for(const language of ['en','ru','uz','es','pt','fr','vi','de','it','tr','id','ms','pl','uk','nl','cs','ro','fil','sw']){
   const r=buildFinancialReport(f,language,'Interests and priorities',reportMarket);
   const assetRows=r.blocks.filter(b=>b.kind==='table'&&b.headers.length===3).flatMap(b=>b.rows).filter(row=>row[0].startsWith('Asset '));assert.equal(assetRows.length,35);
   const bytes=await renderFinancialReportPdf(r,fs.readFileSync('public/fonts/NotoSans-Regular.ttf'));

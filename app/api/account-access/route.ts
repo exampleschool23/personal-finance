@@ -5,7 +5,11 @@ import {config,supa,session,saveSession,sameOrigin} from '@/lib/supabase';
 import {serviceKeyHeaders} from '@/lib/service-role';
 const authSession=z.object({access_token:z.string().min(1),refresh_token:z.string().min(1),expires_in:z.number().positive(),user:z.object({id:z.string().uuid()})});
 const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
-export async function GET(){return reply({signup:process.env.PUBLIC_SIGNUP_ENABLED==='true',deletion:!!process.env.SUPABASE_SERVICE_ROLE_KEY});}
+export async function GET(){
+ // An account created with a phone number has no email, so Settings offers to add one instead of asking for a password it never had.
+ const auth=await session().catch(()=>null);
+ return reply({signup:process.env.PUBLIC_SIGNUP_ENABLED==='true',deletion:!!process.env.SUPABASE_SERVICE_ROLE_KEY,phoneOnly:!!auth&&!auth.user.email});
+}
 export async function POST(req:Request){
  if(!sameOrigin(req)||req.headers.get('sec-fetch-site')==='cross-site')return reply({error:'Request rejected.'},403);
  try{
@@ -41,6 +45,12 @@ export async function POST(req:Request){
  jar.delete('hf_access');jar.delete('hf_refresh');return reply({message:'Password changed. Sign in with your new password.'});
  }
  const auth=await session();if(!auth)return reply({error:'Please sign in again.'},401);
+ if(data.action==='add_email'){
+  if(auth.user.email)return reply({error:'This account already has an email.'},400);
+  const added=await supa('/auth/v1/user',{method:'PUT',body:JSON.stringify({email:data.email,password:data.password})},auth.token);
+  if(!added.ok)return reply({error:'Could not add the email. Check the address and try another password.'},400);
+  return reply({message:'Check your email to confirm it.'});
+ }
  // Credential changes and deletion require fresh password verification.
  const check=await supa('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:auth.user.email,password:data.current_password})});
  if(!check.ok)return reply({error:'Current password is incorrect.'},403);

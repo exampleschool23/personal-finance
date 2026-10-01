@@ -3,7 +3,7 @@
 export const linkCodeLength=8;
 export const linkCodeMinutes=10;
 const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-export type TelegramSubscription={user_id:string;chat_id:number|null;digest_enabled:boolean;actions_enabled:boolean;link_code:string|null;link_code_expires_at:string|null;linked_at:string|null};
+export type TelegramSubscription={user_id:string;chat_id:number|null;digest_enabled:boolean;actions_enabled:boolean;link_code:string|null;link_code_expires_at:string|null;linked_at:string|null;telegram_user_id?:number|null;phone?:string|null;first_name?:string|null;consented_at?:string|null};
 /** What the Settings panel shows; the code never reaches the browser after it is used. */
 export type TelegramStatus={configured:boolean;linked:boolean;digest_enabled:boolean;actions_enabled:boolean;bot_username:string|null};
 export function generateLinkCode(random:(max:number)=>number){

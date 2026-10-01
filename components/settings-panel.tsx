@@ -1,10 +1,8 @@
 "use client";
 import { InlineError } from '@/components/presentation-foundation/inline-error';
-import { showSaved } from '@/lib/feedback';
-import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
-import { useUnsavedNavigation } from '@/components/discard-changes';
+import { showError, showSaved } from '@/lib/feedback';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { countryOptions } from '@/lib/countries';
 import { fonts, isFont, resolveFont } from '@/lib/fonts';
@@ -22,8 +20,12 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
   const { t, locale } = useLanguage();
   const [draft, setDraft] = useState(initial);
   const [saved,setSaved]=useState(initial);
-  const dirty=JSON.stringify(draft)!==JSON.stringify(saved);
-  const confirmation=useUnsavedNavigation(!loading&&!loadError&&dirty);
+  const serialized=JSON.stringify(draft);
+  const dirty=serialized!==JSON.stringify(saved);
+  // Typing a name waits until the owner pauses or leaves the field; every other change saves at once.
+  const typingName=dirty&&JSON.stringify({...draft,display_name:saved.display_name})===JSON.stringify(saved);
+  const [committed,setCommitted]=useState('');
+  const [failed,setFailed]=useState('');
   const [query, setQuery] = useState('');
   const [currencySearchOpen, setCurrencySearchOpen] = useState(false);
   const [currencyNotice, setCurrencyNotice] = useState<{ code: string; reason: 'full' | 'last' } | null>(null);
@@ -33,26 +35,31 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
     if ('blocked' in result) setCurrencyNotice({ code, reason: result.blocked });
     else setDraft({ ...draft, currencies: result.currencies });
   }
-  const [message, setMessage] = useState('');
   const currencies = fiatCurrencies.filter(c => currencyLabel(c.code, locale).toLowerCase().includes(query.trim().toLowerCase()));
-  async function save() {
-    setBusy(true); setMessage('');
+  async function save(snapshot: Preferences) {
+    setBusy(true);
     try {
-      let next = { ...draft, display_name: (draft.display_name ?? '').trim() };
-      if (!demo) { const response = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...draft, onboarded: undefined }) }); if (!response.ok) { const data = await response.json() as { error: string }; throw Error(data.error); } next = await response.json() as typeof next; }
-      onSaved(next); setDraft(next); setSaved(next); showSaved(next.language);
-    } catch (error) { setMessage((error as Error).message); }
+      let next = { ...snapshot, display_name: (snapshot.display_name ?? '').trim() };
+      if (!demo) { const response = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...snapshot, onboarded: undefined }) }); if (!response.ok) { const data = await response.json() as { error: string }; throw Error(data.error); } next = await response.json() as typeof next; }
+      onSaved(next); setSaved(next); setDraft(current => JSON.stringify(current) === JSON.stringify(snapshot) ? next : current); showSaved(next.language);
+    } catch (error) { setFailed(JSON.stringify(snapshot)); showError((error as Error).message || 'Could not save settings. Try again.'); }
     finally { setBusy(false); }
   }
+  useEffect(() => {
+    if (loading || loadError || busy || !dirty || serialized === failed) return;
+    const timer = setTimeout(() => void save(draft), typingName && committed !== serialized ? 900 : 0);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, loadError, busy, dirty, serialized, failed, typingName, committed]);
   return <section className="settings-page">
     <header className="preferences-heading"><h2>{t('Profile & preferences')}</h2><p className="muted">{t('Keep your profile details, language, and currency preferences up to date.')}</p></header>
     {loadError && <InlineError message={t(loadError)}><Button type="button" variant="outline" onClick={onRetry}>{t('Retry loading settings')}</Button></InlineError>}
-    {loading ? <LoadingPlaceholder label={t('Loading settings…')}/> : <form onSubmit={event => { event.preventDefault(); if(dirty&&!busy&&!loadError) void save(); }} className="settings-form preferences-form">
-      <fieldset disabled={busy || !!loadError} className="preferences-fields">
+    {loading ? <LoadingPlaceholder label={t('Loading settings…')}/> : <form onSubmit={event => { event.preventDefault(); setCommitted(serialized); }} className="settings-form preferences-form">
+      <fieldset disabled={!!loadError} className="preferences-fields">
         <section className="panel preferences-card"><header><h3>{t('About you')}</h3><p className="muted">{t('Personal details for your profile.')}</p></header>
-          <div className="preferences-profile-grid"><label htmlFor="profile-name">{t('Your name (optional)')}<Input id="profile-name" name="name" autoComplete="given-name" maxLength={80} placeholder={t('What should we call you?')} value={draft.display_name ?? ''} onChange={event => setDraft({ ...draft, display_name: event.target.value })}/></label>
+          <div className="preferences-profile-grid"><label htmlFor="profile-name">{t('Your name (optional)')}<Input id="profile-name" name="name" autoComplete="given-name" maxLength={80} placeholder={t('What should we call you?')} value={draft.display_name ?? ''} onChange={event => setDraft({ ...draft, display_name: event.target.value })} onBlur={() => setCommitted(serialized)}/></label>
           <label htmlFor="profile-country">{t('Country / region (optional)')}<NativeSelect id="profile-country" name="country" autoComplete="country" value={draft.country ?? ''} onChange={event => setDraft({ ...draft, country: event.target.value })}><option value="">{t('Select your country')}</option>{countryOptions(locale).map(country => <option key={country.code} value={country.code}>{country.name}</option>)}</NativeSelect></label></div>
-          {onRestartSetup && <p className="muted preferences-setup-again">{t('Want to go through the welcome setup again?')} <Button type="button" variant="outline" size="sm" disabled={busy||dirty} onClick={() => { setBusy(true); setMessage(''); onRestartSetup().catch(error => setMessage((error as Error).message)).finally(() => setBusy(false)); }}>{t('Run setup again')}</Button></p>}
+          {onRestartSetup && <p className="muted preferences-setup-again">{t('Want to go through the welcome setup again?')} <Button type="button" variant="outline" size="sm" disabled={busy||dirty} onClick={() => { setBusy(true); onRestartSetup().catch(error => showError((error as Error).message)).finally(() => setBusy(false)); }}>{t('Run setup again')}</Button></p>}
         </section>
         <section className="panel preferences-card"><header><h3>{t('Language')}</h3><p className="muted">{t('Choose the language for the app.')}</p></header>
           <label className="preferences-setting-row">{t('App language')}<NativeSelect value={draft.language} onChange={event => setDraft({ ...draft, language: event.target.value as Preferences['language'] })}>{languageCatalogue.map(item => <option key={item.code} value={item.code}>{item.native}</option>)}</NativeSelect></label>
@@ -74,7 +81,6 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
           </div>
         </section>
       </fieldset>
-      <div className="panel preferences-save-bar"><span className="preferences-save-status" role="status"><span className={dirty?'preferences-status-dot is-dirty':'preferences-status-dot'} aria-hidden="true"/>{t(dirty?'Unsaved changes':'All changes saved')}</span><div><Button type="button" variant="outline" disabled={!dirty||busy} onClick={()=>{setDraft(saved);setMessage('');setQuery('');}}>{t('Discard')}</Button><Button type="submit" disabled={!dirty||busy||!!loadError}>{t(busy?'Saving…':'Save changes')}</Button></div><ErrorPopup message={message}/></div>
-    </form>}{confirmation}
+    </form>}
   </section>;
 }
