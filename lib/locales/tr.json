@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Telegram ayarlarını kontrol edin.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "Bu bağlantının süresi doldu. Uygulamada Ayarlar'ı açın ve Telegram'a bağlan'a yeniden basın.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "Bağlandı. Yaklaşan ödemelerin sabah özetini ve kaydedilen her işlemden sonra bir mesaj alacaksınız.",
+  "Welcome, {name}! You are connected.": "Hoş geldin, {name}! Bağlandın.",
   "Disconnected. Open Settings in the app to connect again.": "Bağlantı kesildi. Yeniden bağlanmak için uygulamada Ayarlar'ı açın.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Bu sohbet bağlı değil. Uygulamada Ayarlar'ı açın ve Telegram'a bağlan'a basın.",
   "Added {kind}": "{kind} eklendi",

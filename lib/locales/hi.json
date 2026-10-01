@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Telegram सेटिंग्स जांचें।",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "यह लिंक समाप्त हो गया है। ऐप में सेटिंग्स खोलें और फिर से \"Telegram से कनेक्ट करें\" दबाएं।",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "कनेक्ट हो गया। आपको आगामी भुगतानों का सुबह का डाइजेस्ट और हर सेव की गई कार्रवाई के बाद संदेश मिलेगा।",
+  "Welcome, {name}! You are connected.": "स्वागत है, {name}! आप जुड़ गए हैं।",
   "Disconnected. Open Settings in the app to connect again.": "डिस्कनेक्ट हो गया। फिर से कनेक्ट करने के लिए ऐप में सेटिंग्स खोलें।",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "यह चैट कनेक्ट नहीं है। ऐप में सेटिंग्स खोलें और \"Telegram से कनेक्ट करें\" दबाएं।",
   "Added {kind}": "{kind} जोड़ा गया",

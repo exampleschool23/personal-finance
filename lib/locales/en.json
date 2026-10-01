@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Check the Telegram settings.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "This link has expired. Open Settings in the app and press Connect to Telegram again.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "Connected. You will get a morning digest of upcoming payments and a message after every saved action.",
+  "Welcome, {name}! You are connected.": "Welcome, {name}! You are connected.",
   "Disconnected. Open Settings in the app to connect again.": "Disconnected. Open Settings in the app to connect again.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "This chat is not connected. Open Settings in the app and press Connect to Telegram.",
   "Added {kind}": "Added {kind}",

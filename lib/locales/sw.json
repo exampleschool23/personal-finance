@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Kagua mipangilio ya Telegram.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "Kiungo hiki kimeisha muda. Fungua Mipangilio kwenye programu kisha ubonyeze Unganisha na Telegram tena.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "Imeunganishwa. Utapata muhtasari wa asubuhi wa malipo yajayo na ujumbe baada ya kila kitendo kilichohifadhiwa.",
+  "Welcome, {name}! You are connected.": "Karibu, {name}! Umeunganishwa.",
   "Disconnected. Open Settings in the app to connect again.": "Imetenganishwa. Fungua Mipangilio kwenye programu ili kuunganisha tena.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Mazungumzo haya hayajaunganishwa. Fungua Mipangilio kwenye programu kisha ubonyeze Unganisha na Telegram.",
   "Added {kind}": "{kind} imeongezwa",

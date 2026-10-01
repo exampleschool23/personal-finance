@@ -17,17 +17,28 @@ test('status reads only the owner row and never exposes the link code',async()=>
  assert.equal(calls[0].token,'owner-token');assert.match(calls[0].path,/user_id=eq\.11111111-1111-4111-8111-111111111111$/);
 });
 
-test('link stores a fresh ten-minute code for the owner and returns the bot link',async()=>{
+test('link inserts the owner row when none exists and returns the bot link',async()=>{
  calls=[];rows=[];
  const before=Date.now();
  const response=await route.POST(request({action:'link'}));
  assert.equal(response.status,200);
  const {url}=await response.json();
  const match=/^https:\/\/t\.me\/hoggish_bot\?start=([A-Z0-9]{8})$/.exec(url);assert.ok(match,url);
- const body=JSON.parse(calls[0].init.body);
+ assert.deepEqual(calls.map(call=>call.init.method),['PATCH','POST']);
+ const body=JSON.parse(calls[1].init.body);
  assert.equal(body.user_id,owner);assert.equal(body.link_code,match[1]);
  assert.ok(Date.parse(body.link_code_expires_at)-before>=9*60000);assert.ok(Date.parse(body.link_code_expires_at)-before<=11*60000);
- assert.equal(calls[0].init.headers.Prefer,'resolution=merge-duplicates');assert.equal(calls[0].token,'owner-token');
+ assert.equal(calls[1].token,'owner-token');
+});
+
+test('link on an existing row patches only the code columns, never user_id, so column-level grants hold',async()=>{
+ calls=[];rows=[{user_id:owner}];
+ const response=await route.POST(request({action:'link'}));
+ assert.equal(response.status,200);
+ assert.equal(calls.length,1);assert.equal(calls[0].init.method,'PATCH');
+ assert.match(calls[0].path,/user_id=eq\.11111111-1111-4111-8111-111111111111$/);
+ assert.deepEqual(Object.keys(JSON.parse(calls[0].init.body)).sort(),['link_code','link_code_expires_at','updated_at']);
+ assert.ok(!('Prefer' in calls[0].init.headers)||!/merge-duplicates/.test(calls[0].init.headers.Prefer));
 });
 
 test('unlink and settings patch only the owner row and echo the new status',async()=>{

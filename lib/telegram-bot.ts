@@ -38,7 +38,10 @@ async function subscriptionByChat(db:ServiceDatabase,chatId:number){
  const rows=await db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&chat_id=eq.'+chatId);
  return rows[0];
 }
-const connectedText=(language:Language)=>t(language,'Connected. You will get a morning digest of upcoming payments and a message after every saved action.');
+const connectedText=(language:Language,name?:string|null)=>{
+ const body=t(language,'Connected. You will get a morning digest of upcoming payments and a message after every saved action.'),first=(name??'').trim();
+ return first?t(language,'Welcome, {name}! You are connected.',{name:first})+'\n\n'+body:body;
+};
 async function connect(db:ServiceDatabase,chatId:number,code:string,now:Date,hint:Language,from?:TelegramFrom):Promise<TelegramMessage>{
  const rows=await db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&link_code=eq.'+code);
  const pending=rows[0];
@@ -52,7 +55,7 @@ async function connect(db:ServiceDatabase,chatId:number,code:string,now:Date,hin
  const saved=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+pending.user_id+'&link_code=eq.'+code,{method:'PATCH',body:JSON.stringify({chat_id:chatId,link_code:null,link_code_expires_at:null,linked_at:now.toISOString(),updated_at:now.toISOString(),...identity})});
  if(!saved.ok)throw Error('Database request failed.');
  const language=await ownerLanguage(db,pending.user_id);
- return {chat_id:chatId,text:connectedText(language),keyboard:mainMenu(language)};
+ return {chat_id:chatId,text:connectedText(language,from?.first_name||pending.first_name),keyboard:mainMenu(language)};
 }
 async function disconnect(db:ServiceDatabase,subscription:TelegramSubscription,now:Date):Promise<TelegramMessage>{
  const language=await ownerLanguage(db,subscription.user_id);
@@ -173,7 +176,7 @@ async function handleContact(db:ServiceDatabase,message:NonNullable<TelegramUpda
  const existing=await subscriptionByChat(db,chatId);
  if(existing){
   const language=await ownerLanguage(db,existing.user_id),menu=mainMenu(language);
-  if(existing.phone===phone)return {replies:[{chat_id:chatId,text:connectedText(language),keyboard:menu}]};
+  if(existing.phone===phone)return {replies:[{chat_id:chatId,text:connectedText(language,existing.first_name||from.first_name),keyboard:menu}]};
   if(existing.phone)return say(language,'This chat is already linked to a different number.',menu);
   if(!env.admin)return say(language,'Registration is not available yet. Please try again later.',menu);
   if((await subscriptionsWhere(db,'phone=eq.'+encodeURIComponent(phone))).length||!await env.admin.setUserPhone(existing.user_id,phone))return say(language,taken,menu);
@@ -190,7 +193,7 @@ async function handleContact(db:ServiceDatabase,message:NonNullable<TelegramUpda
   const relinked=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+own.user_id,{method:'PATCH',body:JSON.stringify({chat_id:chatId,linked_at:now.toISOString(),updated_at:now.toISOString()})});
   if(!relinked.ok)throw Error('Database request failed.');
   const language=await ownerLanguage(db,own.user_id);
-  return {replies:[{chat_id:chatId,text:connectedText(language),keyboard:mainMenu(language)}]};
+  return {replies:[{chat_id:chatId,text:connectedText(language,own.first_name||from.first_name),keyboard:mainMenu(language)}]};
  }
  if(byPhone.length)return say(hint,taken);
  if(!env.admin||!env.loginSecret)return say(hint,'Registration is not available yet. Please try again later.');
@@ -227,7 +230,7 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
  if(/^\/start(?:@\w+)?$/.test(text)){
   const draft=await loadDraft(db,subscription.user_id,now);
   if(isOnboardDraft(draft))return {replies:[onboardPrompt(draft,language,chatId)]};
-  return {replies:[{chat_id:chatId,text:connectedText(language),keyboard:mainMenu(language)}]};
+  return {replies:[{chat_id:chatId,text:connectedText(language,subscription.first_name),keyboard:mainMenu(language)}]};
  }
  return {replies:await converse(db,subscription,chatId,{text},clock,env)};
 }

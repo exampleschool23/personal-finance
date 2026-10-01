@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Controleer de Telegram-instellingen.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "Deze link is verlopen. Open Instellingen in de app en druk opnieuw op Verbinden met Telegram.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "Verbonden. U ontvangt een ochtendoverzicht van aankomende betalingen en een bericht na elke opgeslagen actie.",
+  "Welcome, {name}! You are connected.": "Welkom, {name}! Je bent verbonden.",
   "Disconnected. Open Settings in the app to connect again.": "Verbinding verbroken. Open Instellingen in de app om opnieuw te verbinden.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Deze chat is niet verbonden. Open Instellingen in de app en druk op Verbinden met Telegram.",
   "Added {kind}": "{kind} toegevoegd",

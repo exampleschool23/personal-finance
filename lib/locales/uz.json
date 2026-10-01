@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Telegram sozlamalarini tekshiring.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "Havola muddati tugagan. Ilovada Sozlamalarni oching va yana «Telegramga ulash» ni bosing.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "Ulandi. Har kuni ertalab yaqinlashayotgan to‘lovlar xulosasini va har bir saqlangan amaldan keyin xabar olasiz.",
+  "Welcome, {name}! You are connected.": "Xush kelibsiz, {name}! Ulandingiz.",
   "Disconnected. Open Settings in the app to connect again.": "Uzildi. Qayta ulash uchun ilovada Sozlamalarni oching.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Bu chat ulanmagan. Ilovada Sozlamalarni oching va «Telegramga ulash» ni bosing.",
   "Added {kind}": "Qo‘shildi: {kind}",

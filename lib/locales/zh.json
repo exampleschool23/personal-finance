@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "请检查 Telegram 设置。",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "此链接已过期。请在应用中打开“设置”，再次点击“连接到 Telegram”。",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "已连接。您将收到即将到期付款的晨间摘要，以及每次保存操作后的消息。",
+  "Welcome, {name}! You are connected.": "欢迎，{name}！您已连接。",
   "Disconnected. Open Settings in the app to connect again.": "已断开连接。请在应用中打开“设置”以重新连接。",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "此聊天尚未连接。请在应用中打开“设置”，然后点击“连接到 Telegram”。",
   "Added {kind}": "已添加{kind}",

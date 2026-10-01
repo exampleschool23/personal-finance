@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Sprawdź ustawienia Telegramu.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "Ten link wygasł. Otwórz Ustawienia w aplikacji i ponownie naciśnij Połącz z Telegramem.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "Połączono. Będziesz otrzymywać poranny skrót nadchodzących płatności i wiadomość po każdej zapisanej czynności.",
+  "Welcome, {name}! You are connected.": "Witaj, {name}! Jesteś połączony.",
   "Disconnected. Open Settings in the app to connect again.": "Rozłączono. Otwórz Ustawienia w aplikacji, aby połączyć ponownie.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Ten czat nie jest połączony. Otwórz Ustawienia w aplikacji i naciśnij Połącz z Telegramem.",
   "Added {kind}": "Dodano: {kind}",

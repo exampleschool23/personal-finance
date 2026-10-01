@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Semak tetapan Telegram.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "Pautan ini telah tamat tempoh. Buka Tetapan dalam aplikasi dan tekan Sambung ke Telegram sekali lagi.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "Disambungkan. Anda akan menerima ringkasan pagi bayaran akan datang dan mesej selepas setiap tindakan yang disimpan.",
+  "Welcome, {name}! You are connected.": "Selamat datang, {name}! Anda sudah disambungkan.",
   "Disconnected. Open Settings in the app to connect again.": "Sambungan diputuskan. Buka Tetapan dalam aplikasi untuk menyambung semula.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Sembang ini tidak disambungkan. Buka Tetapan dalam aplikasi dan tekan Sambung ke Telegram.",
   "Added {kind}": "{kind} ditambah",

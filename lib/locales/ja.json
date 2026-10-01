@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Telegramの設定を確認してください。",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "このリンクは有効期限が切れています。アプリで設定を開き、もう一度「Telegramに連携」を押してください。",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "連携しました。今後の支払いの朝のダイジェストと、保存した操作ごとのメッセージが届きます。",
+  "Welcome, {name}! You are connected.": "ようこそ、{name}さん！連携が完了しました。",
   "Disconnected. Open Settings in the app to connect again.": "連携を解除しました。再び連携するには、アプリで設定を開いてください。",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "このチャットは連携されていません。アプリで設定を開き、「Telegramに連携」を押してください。",
   "Added {kind}": "{kind}を追加しました",

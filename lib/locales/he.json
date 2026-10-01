@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "בדקו את הגדרות Telegram.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "קישור זה פג תוקף. פתחו את ההגדרות באפליקציה ולחצו שוב על \"התחברות ל-Telegram\".",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "מחובר. תקבלו תקציר בוקר של תשלומים קרובים והודעה אחרי כל פעולה שנשמרה.",
+  "Welcome, {name}! You are connected.": "ברוך הבא, {name}! התחברת.",
   "Disconnected. Open Settings in the app to connect again.": "מנותק. פתחו את ההגדרות באפליקציה כדי להתחבר שוב.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "צ׳אט זה אינו מחובר. פתחו את ההגדרות באפליקציה ולחצו על \"התחברות ל-Telegram\".",
   "Added {kind}": "נוסף: {kind}",

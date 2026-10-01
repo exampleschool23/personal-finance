@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Hãy kiểm tra cài đặt Telegram.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "Liên kết này đã hết hạn. Hãy mở Cài đặt trong ứng dụng và nhấn Kết nối với Telegram lần nữa.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "Đã kết nối. Bạn sẽ nhận bản tóm tắt buổi sáng về các khoản thanh toán sắp tới và tin nhắn sau mỗi thao tác đã lưu.",
+  "Welcome, {name}! You are connected.": "Chào mừng {name}! Bạn đã được kết nối.",
   "Disconnected. Open Settings in the app to connect again.": "Đã ngắt kết nối. Hãy mở Cài đặt trong ứng dụng để kết nối lại.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Cuộc trò chuyện này chưa được kết nối. Hãy mở Cài đặt trong ứng dụng và nhấn Kết nối với Telegram.",
   "Added {kind}": "Đã thêm {kind}",

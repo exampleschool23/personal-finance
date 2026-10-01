@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Suriin ang mga setting ng Telegram.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "Nag-expire na ang link na ito. Buksan ang Mga setting sa app at pindutin muli ang Kumonekta sa Telegram.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "Nakakonekta na. Makakatanggap ka ng morning digest ng mga paparating na bayad at mensahe pagkatapos ng bawat na-save na aksyon.",
+  "Welcome, {name}! You are connected.": "Maligayang pagdating, {name}! Nakakonekta ka na.",
   "Disconnected. Open Settings in the app to connect again.": "Nadiskonekta na. Buksan ang Mga setting sa app para kumonekta muli.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Hindi nakakonekta ang chat na ito. Buksan ang Mga setting sa app at pindutin ang Kumonekta sa Telegram.",
   "Added {kind}": "Nagdagdag ng {kind}",

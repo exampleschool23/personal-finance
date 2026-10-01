@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "تنظیمات Telegram را بررسی کنید.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "این پیوند منقضی شده است. تنظیمات را در برنامه باز کنید و دوباره «اتصال به Telegram» را بزنید.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "متصل شد. خلاصهٔ صبحگاهی پرداخت‌های پیش رو و پیامی پس از هر اقدام ذخیره‌شده دریافت خواهید کرد.",
+  "Welcome, {name}! You are connected.": "خوش آمدید، {name}! شما متصل شدید.",
   "Disconnected. Open Settings in the app to connect again.": "اتصال قطع شد. برای اتصال دوباره، تنظیمات را در برنامه باز کنید.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "این گفتگو متصل نیست. تنظیمات را در برنامه باز کنید و «اتصال به Telegram» را بزنید.",
   "Added {kind}": "{kind} اضافه شد",

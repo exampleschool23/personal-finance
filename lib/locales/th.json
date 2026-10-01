@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "ตรวจสอบการตั้งค่า Telegram",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "ลิงก์นี้หมดอายุแล้ว เปิดการตั้งค่าในแอปแล้วกดเชื่อมต่อกับ Telegram อีกครั้ง",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "เชื่อมต่อแล้ว คุณจะได้รับสรุปตอนเช้าของการชำระเงินที่จะถึงและข้อความหลังทุกการดำเนินการที่บันทึก",
+  "Welcome, {name}! You are connected.": "ยินดีต้อนรับ {name}! เชื่อมต่อแล้ว",
   "Disconnected. Open Settings in the app to connect again.": "ยกเลิกการเชื่อมต่อแล้ว เปิดการตั้งค่าในแอปเพื่อเชื่อมต่ออีกครั้ง",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "แชตนี้ยังไม่ได้เชื่อมต่อ เปิดการตั้งค่าในแอปแล้วกดเชื่อมต่อกับ Telegram",
   "Added {kind}": "เพิ่ม {kind} แล้ว",

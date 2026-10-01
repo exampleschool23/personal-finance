@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Telegram 설정을 확인해 주세요.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "링크가 만료되었어요. 앱의 설정을 열고 Telegram 연결을 다시 누르세요.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "연결되었어요. 예정된 납부 아침 요약과 저장할 때마다 메시지를 받게 돼요.",
+  "Welcome, {name}! You are connected.": "환영합니다, {name}님! 연결되었습니다.",
   "Disconnected. Open Settings in the app to connect again.": "연결이 해제되었어요. 다시 연결하려면 앱의 설정을 여세요.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "이 채팅은 연결되어 있지 않아요. 앱의 설정을 열고 Telegram 연결을 누르세요.",
   "Added {kind}": "{kind} 추가됨",

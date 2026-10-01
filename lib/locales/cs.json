@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Zkontrolujte nastavení Telegramu.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "Platnost tohoto odkazu vypršela. Otevřete Nastavení v aplikaci a znovu stiskněte Připojit k Telegramu.",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "Připojeno. Budete dostávat ranní přehled nadcházejících plateb a zprávu po každé uložené akci.",
+  "Welcome, {name}! You are connected.": "Vítej, {name}! Jsi připojen.",
   "Disconnected. Open Settings in the app to connect again.": "Odpojeno. Otevřete Nastavení v aplikaci a připojte se znovu.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Tento chat není připojen. Otevřete Nastavení v aplikaci a stiskněte Připojit k Telegramu.",
   "Added {kind}": "Přidáno: {kind}",

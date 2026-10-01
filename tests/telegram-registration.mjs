@@ -166,13 +166,15 @@ test('someone who pressed stop signs back in with the same number, and with no o
  const back=setup({seed:structuredClone(seed)});
  const outcome=await run(contact(),back);
  assert.equal(back.created.length,0);assert.equal(back.db.tables.telegram_subscriptions[0].chat_id,777);
- assert.equal(outcome.replies[0].text,t('en','Connected. You will get a morning digest of upcoming payments and a message after every saved action.'));
+ const connected=t('en','Connected. You will get a morning digest of upcoming payments and a message after every saved action.');
+ // The greeting uses the Telegram first name when there is one, and the plain text when there is not.
+ assert.match(outcome.replies[0].text,/^Welcome, .+! You are connected\.\n\n/);assert.ok(outcome.replies[0].text.endsWith(connected));
  const stranger=setup({seed:structuredClone(seed)});
  assert.equal((await run(contact({},'998900000000'),stranger)).replies[0].text,t('ru','This number is already used with another Telegram account.'));
  assert.equal(stranger.db.tables.telegram_subscriptions[0].chat_id,null);
  // The same number from the linked chat is simply welcomed back.
  const linked=setup({seed:{telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]}});
- assert.match((await run(contact(),linked)).replies[0].text,/^Connected/);
+ assert.match((await run(contact(),linked)).replies[0].text,/^Welcome, Aziz! You are connected\.\n\nConnected/);
 });
 
 test('a linked email account can add its number from the chat, once and only if it is free',async()=>{

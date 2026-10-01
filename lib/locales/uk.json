@@ -1624,6 +1624,7 @@
   "Check the Telegram settings.": "Перевірте налаштування Telegram.",
   "This link has expired. Open Settings in the app and press Connect to Telegram again.": "Термін дії цього посилання минув. Відкрийте налаштування в застосунку й знову натисніть «Підключити до Telegram».",
   "Connected. You will get a morning digest of upcoming payments and a message after every saved action.": "Підключено. Ви отримуватимете ранковий дайджест майбутніх платежів і повідомлення після кожної збереженої дії.",
+  "Welcome, {name}! You are connected.": "Ласкаво просимо, {name}! Ви підключені.",
   "Disconnected. Open Settings in the app to connect again.": "Відключено. Відкрийте налаштування в застосунку, щоб підключити знову.",
   "This chat is not connected. Open Settings in the app and press Connect to Telegram.": "Цей чат не підключено. Відкрийте налаштування в застосунку й натисніть «Підключити до Telegram».",
   "Added {kind}": "Додано: {kind}",
