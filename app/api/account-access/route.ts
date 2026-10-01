@@ -1,6 +1,6 @@
 import {cookies} from 'next/headers';
 import {z} from 'zod';
-import {accountAccessSchema,recoveryCookie,recoveryOptions,accountOrigin} from '@/lib/account-access';
+import {accountAccessSchema,recoveryCookie,recoveryOptions,accountOrigin,signupError} from '@/lib/account-access';
 import {config,supa,session,saveSession,sameOrigin} from '@/lib/supabase';
 import {serviceDatabase,serviceKeyHeaders} from '@/lib/service-role';
 import {sendTelegramMessage} from '@/lib/telegram';
@@ -21,7 +21,13 @@ export async function POST(req:Request){
  if(data.action==='signup'){
  if(process.env.PUBLIC_SIGNUP_ENABLED!=='true')return reply({error:'Registration is by invitation.'},403);
  const response=await supa('/auth/v1/signup?redirect_to='+encodeURIComponent(origin+'/auth/confirm'),{method:'POST',body:JSON.stringify({email:data.email,password:data.password})});
- if(!response.ok)return reply({error:response.status===429?'Too many attempts. Please try again later.':'Could not start registration. Please try again.'},response.status===429?429:400);
+ if(!response.ok){
+  const failure=await response.json().catch(()=>({})) as {error_code?:string;code?:string|number};
+  const code=String(failure.error_code??failure.code??'');
+  // Only the provider's error code is logged, never the address or password.
+  console.error('Sign-up refused',response.status,code);
+  return reply({error:signupError(response.status,code)},response.status===429?429:400);
+ }
  // Never log in an unverified signup even if the provider is misconfigured.
  return reply({message:'Check your email to verify your account.'});
  }

@@ -1881,5 +1881,9 @@
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "株式、暗号資産、預金、短期国債などの投資を追加すると、価値を追跡して市場と比較できます。",
   "Type an amount, such as 250000, or 0 if it is empty.": "金額を入力してください（例: 250000）。空の場合は 0 を入力します。",
   "Send a new code": "新しいコードを送信",
-  "Send a new code in {seconds} s": "{seconds} 秒後に新しいコードを送信"
+  "Send a new code in {seconds} s": "{seconds} 秒後に新しいコードを送信",
+  "Choose a stronger password. Use at least 6 characters, mixing letters and numbers.": "より強いパスワードにしてください。英字と数字を含む 6 文字以上です。",
+  "Check the email address.": "メールアドレスを確認してください。",
+  "This email already has an account. Sign in or reset your password.": "このメールアドレスのアカウントは既にあります。サインインするかパスワードを再設定してください。",
+  "Registration by email is not available right now.": "現在メールでの登録はご利用いただけません。"
 }

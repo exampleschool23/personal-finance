@@ -1881,5 +1881,9 @@
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "הוסיפו מניה, קריפטו, פיקדון, אגרת חוב קצרת מועד או השקעה אחרת כדי לעקוב אחר ערכה ולהשוות אותה לשוק.",
   "Type an amount, such as 250000, or 0 if it is empty.": "הקלידו סכום, למשל 250000, או 0 אם הוא ריק.",
   "Send a new code": "שליחת קוד חדש",
-  "Send a new code in {seconds} s": "שליחת קוד חדש בעוד {seconds} שניות"
+  "Send a new code in {seconds} s": "שליחת קוד חדש בעוד {seconds} שניות",
+  "Choose a stronger password. Use at least 6 characters, mixing letters and numbers.": "בחרו סיסמה חזקה יותר: לפחות 6 תווים, אותיות ומספרים.",
+  "Check the email address.": "בדקו את כתובת האימייל.",
+  "This email already has an account. Sign in or reset your password.": "לאימייל הזה כבר יש חשבון. התחברו או אפסו את הסיסמה.",
+  "Registration by email is not available right now.": "הרשמה באימייל אינה זמינה כרגע."
 }

@@ -1881,5 +1881,9 @@
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "Dodaj akcję, kryptowalutę, lokatę, bon skarbowy lub inną inwestycję, aby śledzić jej wartość i porównywać ją z rynkiem.",
   "Type an amount, such as 250000, or 0 if it is empty.": "Wpisz kwotę, np. 250000, lub 0, jeśli jest puste.",
   "Send a new code": "Wyślij nowy kod",
-  "Send a new code in {seconds} s": "Wyślij nowy kod za {seconds} s"
+  "Send a new code in {seconds} s": "Wyślij nowy kod za {seconds} s",
+  "Choose a stronger password. Use at least 6 characters, mixing letters and numbers.": "Wybierz silniejsze hasło: co najmniej 6 znaków, litery i cyfry.",
+  "Check the email address.": "Sprawdź adres e-mail.",
+  "This email already has an account. Sign in or reset your password.": "Ten e-mail ma już konto. Zaloguj się lub zresetuj hasło.",
+  "Registration by email is not available right now.": "Rejestracja przez e-mail jest teraz niedostępna."
 }

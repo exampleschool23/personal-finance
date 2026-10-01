@@ -1881,5 +1881,9 @@
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "Tambahkan saham, kripto, deposito, surat perbendaharaan, atau investasi lain untuk memantau nilainya dan membandingkannya dengan pasar.",
   "Type an amount, such as 250000, or 0 if it is empty.": "Ketik jumlah, misalnya 250000, atau 0 jika kosong.",
   "Send a new code": "Kirim kode baru",
-  "Send a new code in {seconds} s": "Kirim kode baru dalam {seconds} dtk"
+  "Send a new code in {seconds} s": "Kirim kode baru dalam {seconds} dtk",
+  "Choose a stronger password. Use at least 6 characters, mixing letters and numbers.": "Pilih kata sandi yang lebih kuat: minimal 6 karakter, campuran huruf dan angka.",
+  "Check the email address.": "Periksa alamat email.",
+  "This email already has an account. Sign in or reset your password.": "Email ini sudah punya akun. Masuk atau atur ulang kata sandi.",
+  "Registration by email is not available right now.": "Pendaftaran dengan email belum tersedia saat ini."
 }

@@ -118,3 +118,22 @@ test('a phone-only account deletes with DELETE alone, while an email account sti
   assert.equal((await api({email:'',provider:()=>Response.json({},{status:400})}).POST(request({action:'change_password',current_password:'x',password:'new secure password'}))).status,403);
  }finally{if(previous===undefined)delete process.env.SUPABASE_SERVICE_ROLE_KEY;else process.env.SUPABASE_SERVICE_ROLE_KEY=previous;}
 });
+
+test('a refused sign-up explains the reason the provider gives, logging only its code',async context=>{
+ const {signupError}=loadTS('lib/account-access.ts');
+ assert.equal(signupError(422,'weak_password'),'Choose a stronger password. Use at least 6 characters, mixing letters and numbers.');
+ assert.equal(signupError(400,'email_address_invalid'),'Check the email address.');
+ assert.equal(signupError(400,'email_address_not_authorized'),'Registration by email is not available right now.');
+ assert.equal(signupError(422,'user_already_exists'),'This email already has an account. Sign in or reset your password.');
+ assert.equal(signupError(429,''),'Too many attempts. Please try again later.');
+ assert.equal(signupError(500,'unexpected_failure'),'Could not start registration. Please try again.');
+ const logged=[];context.mock.method(console,'error',(...args)=>logged.push(args));
+ const previous=process.env.PUBLIC_SIGNUP_ENABLED;process.env.PUBLIC_SIGNUP_ENABLED='true';
+ try{
+  const app=api({auth:false,provider:()=>Response.json({error_code:'email_address_not_authorized',msg:'Email address "new@example.com" cannot be used'},{status:400})});
+  const result=await app.POST(request({action:'signup',email:'new@example.com',password:'secret12'}));
+  assert.equal(result.status,400);assert.equal((await result.json()).error,'Registration by email is not available right now.');
+  assert.deepEqual(logged,[['Sign-up refused',400,'email_address_not_authorized']]);
+  assert.ok(!JSON.stringify(logged).includes('new@example.com'),'the address is never logged');
+ }finally{if(previous===undefined)delete process.env.PUBLIC_SIGNUP_ENABLED;else process.env.PUBLIC_SIGNUP_ENABLED=previous;}
+});

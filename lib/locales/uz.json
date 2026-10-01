@@ -1881,5 +1881,9 @@
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "Qiymatini kuzatish va bozor bilan solishtirish uchun aksiya, kripto, omonat, g‘azna veksili yoki boshqa investitsiya qo‘shing.",
   "Type an amount, such as 250000, or 0 if it is empty.": "Summani kiriting, masalan 250000, bo‘sh bo‘lsa 0.",
   "Send a new code": "Yangi kod yuborish",
-  "Send a new code in {seconds} s": "{seconds} soniyadan keyin yangi kod"
+  "Send a new code in {seconds} s": "{seconds} soniyadan keyin yangi kod",
+  "Choose a stronger password. Use at least 6 characters, mixing letters and numbers.": "Kuchliroq parol tanlang: kamida 6 belgi, harf va raqamlar bilan.",
+  "Check the email address.": "E-pochta manzilini tekshiring.",
+  "This email already has an account. Sign in or reset your password.": "Bu e-pochtada allaqachon hisob bor. Kiring yoki parolni tiklang.",
+  "Registration by email is not available right now.": "E-pochta orqali ro‘yxatdan o‘tish hozircha mavjud emas."
 }

@@ -1881,5 +1881,9 @@
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "Tambah saham, kripto, deposit, bil perbendaharaan atau pelaburan lain untuk menjejak nilainya dan membandingkannya dengan pasaran.",
   "Type an amount, such as 250000, or 0 if it is empty.": "Taip jumlah, contohnya 250000, atau 0 jika kosong.",
   "Send a new code": "Hantar kod baharu",
-  "Send a new code in {seconds} s": "Hantar kod baharu dalam {seconds} saat"
+  "Send a new code in {seconds} s": "Hantar kod baharu dalam {seconds} saat",
+  "Choose a stronger password. Use at least 6 characters, mixing letters and numbers.": "Pilih kata laluan yang lebih kukuh: sekurang-kurangnya 6 aksara, campuran huruf dan nombor.",
+  "Check the email address.": "Semak alamat e-mel.",
+  "This email already has an account. Sign in or reset your password.": "E-mel ini sudah mempunyai akaun. Log masuk atau tetapkan semula kata laluan.",
+  "Registration by email is not available right now.": "Pendaftaran melalui e-mel tidak tersedia buat masa ini."
 }

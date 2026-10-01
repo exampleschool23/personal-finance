@@ -1881,5 +1881,9 @@
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "Добавьте акцию, криптовалюту, вклад, казначейский вексель или другую инвестицию, чтобы следить за стоимостью и сравнивать её с рынком.",
   "Type an amount, such as 250000, or 0 if it is empty.": "Введите сумму, например 250000, или 0, если он пуст.",
   "Send a new code": "Отправить новый код",
-  "Send a new code in {seconds} s": "Новый код через {seconds} с"
+  "Send a new code in {seconds} s": "Новый код через {seconds} с",
+  "Choose a stronger password. Use at least 6 characters, mixing letters and numbers.": "Выберите более надёжный пароль: не меньше 6 символов, буквы и цифры.",
+  "Check the email address.": "Проверьте адрес электронной почты.",
+  "This email already has an account. Sign in or reset your password.": "С этой почтой уже есть аккаунт. Войдите или сбросьте пароль.",
+  "Registration by email is not available right now.": "Регистрация по почте сейчас недоступна."
 }

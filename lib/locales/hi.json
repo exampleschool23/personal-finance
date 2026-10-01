@@ -1881,5 +1881,9 @@
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "स्टॉक, क्रिप्टो, जमा, ट्रेज़री बिल या कोई अन्य निवेश जोड़ें ताकि उसका मूल्य देख सकें और बाज़ार से तुलना कर सकें।",
   "Type an amount, such as 250000, or 0 if it is empty.": "राशि लिखें, जैसे 250000, या खाली हो तो 0।",
   "Send a new code": "नया कोड भेजें",
-  "Send a new code in {seconds} s": "{seconds} सेकंड में नया कोड भेजें"
+  "Send a new code in {seconds} s": "{seconds} सेकंड में नया कोड भेजें",
+  "Choose a stronger password. Use at least 6 characters, mixing letters and numbers.": "मज़बूत पासवर्ड चुनें: कम से कम 6 अक्षर, अक्षर और अंक मिलाकर।",
+  "Check the email address.": "ईमेल पता जाँचें।",
+  "This email already has an account. Sign in or reset your password.": "इस ईमेल का खाता पहले से है। साइन इन करें या पासवर्ड रीसेट करें।",
+  "Registration by email is not available right now.": "ईमेल से पंजीकरण अभी उपलब्ध नहीं है।"
 }

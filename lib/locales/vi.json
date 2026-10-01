@@ -1881,5 +1881,9 @@
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "Thêm cổ phiếu, tiền mã hóa, tiền gửi, tín phiếu kho bạc hoặc khoản đầu tư khác để theo dõi giá trị và so sánh với thị trường.",
   "Type an amount, such as 250000, or 0 if it is empty.": "Nhập số tiền, ví dụ 250000, hoặc 0 nếu trống.",
   "Send a new code": "Gửi mã mới",
-  "Send a new code in {seconds} s": "Gửi mã mới sau {seconds} giây"
+  "Send a new code in {seconds} s": "Gửi mã mới sau {seconds} giây",
+  "Choose a stronger password. Use at least 6 characters, mixing letters and numbers.": "Hãy chọn mật khẩu mạnh hơn: ít nhất 6 ký tự, gồm chữ và số.",
+  "Check the email address.": "Kiểm tra địa chỉ email.",
+  "This email already has an account. Sign in or reset your password.": "Email này đã có tài khoản. Hãy đăng nhập hoặc đặt lại mật khẩu.",
+  "Registration by email is not available right now.": "Hiện chưa thể đăng ký bằng email."
 }

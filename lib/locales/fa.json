@@ -1881,5 +1881,9 @@
   "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "سهام، رمزارز، سپرده، اسناد خزانه یا سرمایه‌گذاری دیگری اضافه کنید تا ارزش آن را دنبال و با بازار مقایسه کنید.",
   "Type an amount, such as 250000, or 0 if it is empty.": "مبلغی وارد کنید، مثلاً 250000، یا اگر خالی است 0.",
   "Send a new code": "ارسال کد جدید",
-  "Send a new code in {seconds} s": "ارسال کد جدید تا {seconds} ثانیه دیگر"
+  "Send a new code in {seconds} s": "ارسال کد جدید تا {seconds} ثانیه دیگر",
+  "Choose a stronger password. Use at least 6 characters, mixing letters and numbers.": "رمز عبور قوی‌تری انتخاب کنید: دست‌کم ۶ نویسه، ترکیب حروف و اعداد.",
+  "Check the email address.": "نشانی ایمیل را بررسی کنید.",
+  "This email already has an account. Sign in or reset your password.": "این ایمیل از قبل حساب دارد. وارد شوید یا رمز عبور را بازنشانی کنید.",
+  "Registration by email is not available right now.": "ثبت‌نام با ایمیل در حال حاضر ممکن نیست."
 }
