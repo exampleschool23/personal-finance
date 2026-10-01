@@ -6,7 +6,7 @@ import {isCurrency} from './currencies';
 import {formatNumberInput} from './format';
 import {languageCatalogue,locales,translate,type Language} from './i18n';
 import {suggestedCurrencies} from './onboarding';
-import type {TelegramButton,TelegramMessage} from './telegram';
+import type {TelegramMessage} from './telegram';
 import {mainMenu} from './telegram-flow';
 export type OnboardStep='language'|'currency'|'currency_other'|'account'|'balance';
 export type OnboardData={currency?:string;account_name?:string};
@@ -14,27 +14,23 @@ export type OnboardDraft={kind:'onboard';step:OnboardStep;data:OnboardData};
 export type OnboardEffects={language?:Language;currency?:string;account?:{name:string;amount:number;currency:string};finished?:boolean};
 export type OnboardResult={draft:OnboardDraft|null;reply:TelegramMessage|null;effects:OnboardEffects};
 export type OnboardContext={language:Language;currency?:string};
-const pageSize=8;
+const checkMark='✓ ';
 const t=(language:Language,key:string,params?:Record<string,string|number>)=>translate(language,key,params);
-const rows=(buttons:TelegramButton[],perRow:number)=>{const out:TelegramButton[][]=[];for(let index=0;index<buttons.length;index+=perRow)out.push(buttons.slice(index,index+perRow));return out;};
+const rows=<T,>(buttons:T[],perRow:number)=>{const out:T[][]=[];for(let index=0;index<buttons.length;index+=perRow)out.push(buttons.slice(index,index+perRow));return out;};
 const chosen=(draft:OnboardDraft,step:OnboardStep,data:Partial<OnboardData>={}):OnboardDraft=>({kind:'onboard',step,data:{...draft.data,...data}});
 export const isOnboardDraft=(draft:{kind:string}|null):draft is OnboardDraft=>draft?.kind==='onboard';
 /** The prompt for a step, written in `language`. */
-export function onboardPrompt(draft:OnboardDraft,language:Language,chat:number,page=0):TelegramMessage{
+export function onboardPrompt(draft:OnboardDraft,language:Language,chat:number):TelegramMessage{
  switch(draft.step){
   case 'language':{
-   // The language already in use comes first, so confirming it takes one tap.
+   // A scrollable reply keyboard, three to a row; the language in use comes first, so confirming it takes one tap.
    const ordered=[...languageCatalogue].sort((a,b)=>Number(b.code===language)-Number(a.code===language));
-   const options=ordered.map(item=>({text:(item.code===language?'✓ ':'')+item.native,callback_data:'o:lang:'+item.code}));
-   const slice=options.slice(page*pageSize,page*pageSize+pageSize),nav:TelegramButton[]=[];
-   if(page>0)nav.push({text:'‹',callback_data:'o:page:'+(page-1)});
-   if((page+1)*pageSize<options.length)nav.push({text:'›',callback_data:'o:page:'+(page+1)});
-   return {chat_id:chat,text:t(language,'Choose your language'),keyboard:{inline:[...rows(slice,2),...(nav.length?[nav]:[])]}};
+   return {chat_id:chat,text:t(language,'Choose your language'),keyboard:{reply:rows(ordered.map(item=>(item.code===language?checkMark:'')+item.native),3)}};
   }
-  case 'currency':return {chat_id:chat,text:t(language,'Which currency do you use most?'),keyboard:{inline:[...rows(suggestedCurrencies.map(code=>({text:code,callback_data:'o:cur:'+code})),3),[{text:t(language,'Other currency'),callback_data:'o:cur:other'}]]}};
-  case 'currency_other':return {chat_id:chat,text:t(language,'Type a currency code, such as USD')};
-  case 'account':return {chat_id:chat,text:t(language,'Name your first cash account, for example Wallet.'),keyboard:{inline:[[{text:t(language,'Cash'),callback_data:'o:name:cash'}]]}};
-  case 'balance':return {chat_id:chat,text:t(language,'How much is in it? Type 0 if it is empty.')};
+  case 'currency':return {chat_id:chat,text:t(language,'Which currency do you use most?'),keyboard:{reply:[...rows(suggestedCurrencies,3),[t(language,'Other currency')]]}};
+  case 'currency_other':return {chat_id:chat,text:t(language,'Type a currency code, such as USD'),keyboard:{remove:true}};
+  case 'account':return {chat_id:chat,text:t(language,'Name your first cash account, for example Wallet.'),keyboard:{reply:[[t(language,'Cash')]]}};
+  case 'balance':return {chat_id:chat,text:t(language,'How much is in it? Type 0 if it is empty.'),keyboard:{remove:true}};
  }
 }
 export function startOnboarding(language:Language,chat:number):OnboardResult{
@@ -51,18 +47,17 @@ export function advanceOnboarding(draft:OnboardDraft,input:{text?:string;callbac
  const callback=input.callback??'',text=(input.text??'').trim();
  const again=(message?:string):OnboardResult=>({draft,reply:message?{chat_id:chat,text:message}:onboardPrompt(draft,ctx.language,chat),effects:{}});
  const move=(next:OnboardDraft,language:Language,effects:OnboardEffects={}):OnboardResult=>({draft:next,reply:onboardPrompt(next,language,chat),effects});
- const page=/^o:page:(\d+)$/.exec(callback);
- if(page&&draft.step==='language')return {draft,reply:onboardPrompt(draft,ctx.language,chat,Number(page[1])),effects:{}};
  switch(draft.step){
   case 'language':{
-   const code=callback.startsWith('o:lang:')?callback.slice(7):'';
-   const language=languageCatalogue.find(item=>item.code===code)?.code;
+   // A keyboard tap arrives as the native name; buttons on older messages still send o:lang:<code>.
+   const code=callback.startsWith('o:lang:')?callback.slice(7):'',name=text.startsWith(checkMark)?text.slice(checkMark.length):text;
+   const language=languageCatalogue.find(item=>item.code===code||(name&&item.native===name))?.code;
    if(!language)return again();
    return move(chosen(draft,'currency'),language,{language});
   }
   case 'currency':{
-   if(callback==='o:cur:other')return move(chosen(draft,'currency_other'),ctx.language);
-   const code=callback.startsWith('o:cur:')?callback.slice(6):'';
+   if(callback==='o:cur:other'||text===t(ctx.language,'Other currency'))return move(chosen(draft,'currency_other'),ctx.language);
+   const code=callback.startsWith('o:cur:')?callback.slice(6):text.toUpperCase();
    if(!isCurrency(code))return again();
    return move(chosen(draft,'account',{currency:code}),ctx.language,{currency:code});
   }

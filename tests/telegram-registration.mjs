@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
 import {botDb,ownerId,subscription} from './helpers/bot-db.mjs';
 const {handleTelegramUpdate}=loadTS('lib/telegram-bot.ts');
-const {advanceOnboarding,startOnboarding,onboardPrompt}=loadTS('lib/telegram-onboarding.ts');
+const {advanceOnboarding,startOnboarding}=loadTS('lib/telegram-onboarding.ts');
 const {derivedPassword,consumeLoginToken}=loadTS('lib/telegram-account.ts');
 const {translate,languageCatalogue}=loadTS('lib/i18n.ts');
 const {suggestedCurrencies}=loadTS('lib/onboarding.ts');
@@ -11,7 +11,7 @@ const now=new Date('2026-10-01T09:00:00Z');
 const clock={now,today:'2026-10-01',newId:()=>'99999999-9999-4999-8999-999999999999'};
 const t=(language,key,params)=>translate(language,key,params);
 const buttons=reply=>reply.keyboard.inline.flat();
-const callbacks=reply=>buttons(reply).map(button=>button.callback_data);
+const callbacks=reply=>buttons(reply).filter(button=>button.callback_data).map(button=>button.callback_data);
 
 function setup({admin=true,secret='server-secret',seed={}}={}){
  const db=botDb(seed),created=[],phones=[];
@@ -28,32 +28,35 @@ const run=(update,context)=>handleTelegramUpdate(update,context.db,clock,context
 test('the onboarding walks language, currency and a first cash account, saving as it goes',()=>{
  const started=startOnboarding('ru',777);
  assert.equal(started.draft.step,'language');assert.equal(started.reply.text,t('ru','Choose your language'));
- const first=buttons(started.reply);
- assert.equal(first[0].callback_data,'o:lang:ru');assert.equal(first[0].text,'✓ Русский','the language in use comes first and is marked');
- assert.equal(callbacks(started.reply).filter(data=>data.startsWith('o:lang:')).length,8);
- assert.ok(callbacks(started.reply).includes('o:page:1'));assert.ok(!callbacks(started.reply).includes('o:page:-1'));
- // Every language is reachable through the pages, once.
- const seen=new Set();let draft=started.draft,page=0;
- for(;;){const reply=onboardPrompt(draft,'ru',777,page);for(const data of callbacks(reply))if(data.startsWith('o:lang:'))seen.add(data.slice(7));if(!callbacks(reply).includes('o:page:'+(page+1)))break;page++;}
- assert.deepEqual([...seen].sort(),languageCatalogue.map(item=>item.code).sort());
- assert.deepEqual(callbacks(advanceOnboarding(started.draft,{callback:'o:page:1'},{language:'ru'},777).reply).filter(data=>data.startsWith('o:page:')),['o:page:0'].concat(callbacks(onboardPrompt(started.draft,'ru',777,1)).includes('o:page:2')?['o:page:2']:[]));
+ // Every language sits in one scrollable reply keyboard, three to a row, with no paging.
+ const keys=started.reply.keyboard.reply;
+ assert.equal(keys[0][0],'✓ Русский','the language in use comes first and is marked');
+ assert.ok(keys.every(row=>row.length<=3));
+ assert.deepEqual(keys.flat().map(name=>name.replace('✓ ','')).sort(),languageCatalogue.map(item=>item.native).sort());
+ // A tap arrives as the native name, with or without the mark.
+ assert.deepEqual(advanceOnboarding(started.draft,{text:'Deutsch'},{language:'ru'},777).effects,{language:'de'});
+ assert.deepEqual(advanceOnboarding(started.draft,{text:'✓ Русский'},{language:'ru'},777).effects,{language:'ru'});
  // Picking a language answers the next question in that language.
  const picked=advanceOnboarding(started.draft,{callback:'o:lang:ja'},{language:'ru'},777);
  assert.deepEqual(picked.effects,{language:'ja'});assert.equal(picked.draft.step,'currency');
  assert.equal(picked.reply.text,t('ja','Which currency do you use most?'));
  // Unknown choices and typing keep the question.
  for(const input of [{callback:'o:lang:xx'},{text:'hello'},{callback:'f:save'}])assert.equal(advanceOnboarding(started.draft,input,{language:'ru'},777).draft.step,'language');
- assert.deepEqual(callbacks(picked.reply).slice(0,suggestedCurrencies.length),suggestedCurrencies.map(code=>'o:cur:'+code));
- assert.ok(callbacks(picked.reply).includes('o:cur:other'));
+ // The keyboard moves on with the questions.
+ assert.deepEqual(picked.reply.keyboard.reply.flat(),[...suggestedCurrencies,t('ja','Other currency')]);
+ assert.deepEqual(advanceOnboarding(picked.draft,{text:'EUR'},{language:'ja'},777).effects,{currency:'EUR'});
+ assert.equal(advanceOnboarding(picked.draft,{text:t('ja','Other currency')},{language:'ja'},777).draft.step,'currency_other');
  const euro=advanceOnboarding(picked.draft,{callback:'o:cur:EUR'},{language:'ja'},777);
  assert.deepEqual(euro.effects,{currency:'EUR'});assert.equal(euro.draft.step,'account');assert.deepEqual(euro.draft.data,{currency:'EUR'});
  assert.equal(advanceOnboarding(picked.draft,{callback:'o:cur:ZZZ'},{language:'ja'},777).draft.step,'currency');
  const other=advanceOnboarding(picked.draft,{callback:'o:cur:other'},{language:'ja'},777);
- assert.equal(other.draft.step,'currency_other');
+ assert.equal(other.draft.step,'currency_other');assert.deepEqual(other.reply.keyboard,{remove:true});
  for(const bad of ['dollars','US','12','XXX','usd1'])assert.equal(advanceOnboarding(other.draft,{text:bad},{language:'en'},777).draft.step,'currency_other',bad);
  assert.deepEqual(advanceOnboarding(other.draft,{text:' chf '},{language:'en'},777).effects,{currency:'CHF'});
  const named=advanceOnboarding(euro.draft,{text:'  Savings jar '},{language:'en'},777);
- assert.equal(named.draft.step,'balance');assert.equal(named.draft.data.account_name,'Savings jar');
+ assert.equal(named.draft.step,'balance');assert.deepEqual(named.reply.keyboard,{remove:true});
+ assert.deepEqual(euro.reply.keyboard,{reply:[[t('ja','Cash')]]});
+ assert.equal(advanceOnboarding(euro.draft,{text:t('ru','Cash')},{language:'ru'},777).draft.data.account_name,t('ru','Cash'));assert.equal(named.draft.data.account_name,'Savings jar');
  assert.equal(advanceOnboarding(euro.draft,{callback:'o:name:cash'},{language:'ru'},777).draft.data.account_name,t('ru','Cash'));
  assert.equal(advanceOnboarding(euro.draft,{text:'x'.repeat(121)},{language:'en'},777).draft.step,'account');
  assert.equal(advanceOnboarding(euro.draft,{text:'   '},{language:'en'},777).draft.step,'account');
@@ -68,7 +71,12 @@ test('a new chat is welcomed in its Telegram language, asked to agree, then aske
  const context=setup();
  const welcome=(await run(text('/start'),context)).replies[0];
  assert.equal(welcome.text,`${t('ru','Welcome to Hoggish. Track your money here in Telegram and in the app.')}\n\n${t('ru','By continuing you agree to the terms of use and privacy policy of Hoggish.')}`);
- assert.deepEqual(callbacks(welcome),['o:agree']);assert.equal(buttons(welcome)[0].text,t('ru','I agree'));
+ assert.deepEqual(callbacks(welcome),['o:agree']);
+ // The terms and privacy policy open in the browser before anyone agrees, translated like the rest of the chat.
+ assert.deepEqual(welcome.keyboard.inline[0],[{text:t('ru','Terms of use'),url:'https://app.example/terms'},{text:t('ru','Privacy policy'),url:'https://app.example/privacy'}]);
+ assert.deepEqual(welcome.keyboard.inline[1],[{text:t('ru','I agree'),callback_data:'o:agree'}]);
+ const offline=setup();offline.env.appOrigin=null;
+ assert.deepEqual((await run(text('/start'),offline)).replies[0].keyboard.inline,[[{text:t('ru','I agree'),callback_data:'o:agree'}]],'without an address the links are left out rather than broken');
  for(const update of [text('hello'),text('Expense'),press('f:save')])assert.deepEqual(callbacks((await run(update,context)).replies[0]),['o:agree']);
  const agreed=await run(press('o:agree'),context);
  assert.equal(agreed.callbackId,'cb-o:agree');
@@ -99,7 +107,7 @@ test('sharing your own number creates a confirmed phone account, links the chat 
 test('the whole setup in the chat saves language, currency and the first account, then offers the web app',async()=>{
  const context=setup();
  await run(contact(),context);
- const language=await run(press('o:lang:en'),context);
+ const language=await run(text('English'),context);
  assert.equal(language.replies[0].text,t('en','Which currency do you use most?'));
  assert.equal(context.db.tables.user_preferences[0].language,'en');
  await run(press('o:cur:EUR'),context);
