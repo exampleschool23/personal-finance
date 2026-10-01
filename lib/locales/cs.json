@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Tento dokument je k dispozici v angličtině.",
   "Back to Hoggish": "Zpět do Hoggish",
   "Legal": "Právní informace",
-  "By creating an account, you agree to the terms of use and privacy policy.": "Vytvořením účtu souhlasíte s podmínkami použití a zásadami ochrany osobních údajů."
+  "By creating an account, you agree to the terms of use and privacy policy.": "Vytvořením účtu souhlasíte s podmínkami použití a zásadami ochrany osobních údajů.",
+  "I already have an account": "Už mám účet",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Přihlaste se na webu a propojte tento chat se svým účtem. Odkaz platí {minutes} minut.",
+  "Connect Telegram": "Propojit Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Přihlaste se k účtu, který chcete používat v Telegramu. Pak se sem vrátíte a dokončíte to.",
+  "Continue to sign in": "Pokračovat k přihlášení",
+  "Telegram": "Telegram",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Propojte jen tehdy, pokud jste v botovi Hoggish sami klepli na „Přihlásit se“.",
+  "Connect": "Propojit",
+  "Use another account": "Použít jiný účet",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Platnost odkazu vypršela nebo už byl použit. Otevřete bota a znovu klepněte na „Už mám účet“.",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram je propojen. Vraťte se do chatu a pokračujte.",
+  "Nothing was connected.": "Nic nebylo propojeno.",
+  "Open Telegram": "Otevřít Telegram",
+  "Could not connect Telegram. Please try again.": "Telegram se nepodařilo propojit. Zkuste to znovu."
 }

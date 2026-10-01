@@ -47,8 +47,8 @@ test('a valid start code links the chat, clears the code, answers in the owner l
  assert.match(outcome.replies[0].text,/^Подключено\./);
  assert.deepEqual(outcome.replies[0].keyboard.reply[0],['Расход','Доходы']);
  assert.equal(db.writes.length,1);
- assert.equal(db.writes[0].path,'/rest/v1/telegram_subscriptions?user_id=eq.'+owner+'&link_code=eq.ABCDEFGH');
- assert.deepEqual(db.writes[0].body,{chat_id:500,link_code:null,link_code_expires_at:null,linked_at:now.toISOString(),updated_at:now.toISOString()});
+ assert.equal(db.writes[0].path,'/rest/v1/telegram_subscriptions?on_conflict=user_id');
+ assert.deepEqual(db.writes[0].body,{user_id:owner,chat_id:500,link_code:null,link_code_expires_at:null,linked_at:now.toISOString(),updated_at:now.toISOString()});
 });
 
 test('expired, unknown or malformed codes never write and reply in the Telegram client language',async()=>{
@@ -77,10 +77,10 @@ test('stop unlinks a connected chat, drops its draft and removes the keyboard; a
  assert.match(again.replies[0].text,/^Подключено\./);assert.ok(again.replies[0].keyboard.reply);
 });
 
-test('an unlinked chat is only invited to create an account, whether it types or presses, and nothing is written',async()=>{
+test('an unlinked chat is only invited to create an account or sign in, whether it types or presses, and nothing is written',async()=>{
  const db=fakeDb({subscriptions:[linked]});
  const invited=(await handleTelegramUpdate(message(999,'/stop','ru'),db,clock)).replies[0];
- assert.match(invited.text,/^Добро пожаловать в Hoggish/);assert.deepEqual(invited.keyboard.inline.flat().map(button=>button.callback_data),['o:agree']);
+ assert.match(invited.text,/^Добро пожаловать в Hoggish/);assert.deepEqual(invited.keyboard.inline.flat().map(button=>button.callback_data).filter(Boolean),['o:agree','o:signin']);
  const pressed=await handleTelegramUpdate({callback_query:{id:'cb1',data:'f:save',message:{chat:{id:999}},from:{language_code:'en'}}},db,clock);
  assert.equal(pressed.callbackId,'cb1');assert.match(pressed.replies[0].text,/^Welcome to Hoggish/);
  assert.equal(db.writes.length,0);

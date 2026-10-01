@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Acest document este disponibil în limba engleză.",
   "Back to Hoggish": "Înapoi la Hoggish",
   "Legal": "Informații legale",
-  "By creating an account, you agree to the terms of use and privacy policy.": "Creând un cont, accepți termenii de utilizare și politica de confidențialitate."
+  "By creating an account, you agree to the terms of use and privacy policy.": "Creând un cont, accepți termenii de utilizare și politica de confidențialitate.",
+  "I already have an account": "Am deja un cont",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Conectează-te pe web pentru a lega acest chat de contul tău. Linkul este valabil {minutes} minute.",
+  "Connect Telegram": "Leagă Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Conectează-te la contul pe care vrei să-l folosești în Telegram. Vei reveni aici pentru a finaliza.",
+  "Continue to sign in": "Continuă spre conectare",
+  "Telegram": "Telegram",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Leagă doar dacă ai apăsat tu însuți „Conectare” în botul Hoggish.",
+  "Connect": "Leagă",
+  "Use another account": "Folosește alt cont",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Linkul a expirat sau a fost deja folosit. Deschide botul și apasă din nou „Am deja un cont”.",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram este legat. Revino în chat pentru a continua.",
+  "Nothing was connected.": "Nu a fost legat nimic.",
+  "Open Telegram": "Deschide Telegram",
+  "Could not connect Telegram. Please try again.": "Telegram nu a putut fi legat. Încearcă din nou."
 }

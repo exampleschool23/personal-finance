@@ -1847,5 +1847,19 @@
   "This document is available in English.": "This document is available in English.",
   "Back to Hoggish": "Back to Hoggish",
   "Legal": "Legal",
-  "By creating an account, you agree to the terms of use and privacy policy.": "By creating an account, you agree to the terms of use and privacy policy."
+  "By creating an account, you agree to the terms of use and privacy policy.": "By creating an account, you agree to the terms of use and privacy policy.",
+  "I already have an account": "I already have an account",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.",
+  "Connect Telegram": "Connect Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Sign in to the account you want to use in Telegram. You will come back here to finish.",
+  "Continue to sign in": "Continue to sign in",
+  "Telegram": "Telegram",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Only connect if you pressed Sign in in the Hoggish bot yourself.",
+  "Connect": "Connect",
+  "Use another account": "Use another account",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "This link has expired or was already used. Open the bot and press I already have an account again.",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram is connected. Go back to the chat to continue.",
+  "Nothing was connected.": "Nothing was connected.",
+  "Open Telegram": "Open Telegram",
+  "Could not connect Telegram. Please try again.": "Could not connect Telegram. Please try again."
 }

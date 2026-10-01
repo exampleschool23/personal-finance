@@ -1847,5 +1847,19 @@
   "This document is available in English.": "این سند به زبان انگلیسی در دسترس است.",
   "Back to Hoggish": "بازگشت به Hoggish",
   "Legal": "اطلاعات حقوقی",
-  "By creating an account, you agree to the terms of use and privacy policy.": "با ساختن حساب، شرایط استفاده و سیاست حریم خصوصی را می‌پذیرید."
+  "By creating an account, you agree to the terms of use and privacy policy.": "با ساختن حساب، شرایط استفاده و سیاست حریم خصوصی را می‌پذیرید.",
+  "I already have an account": "از قبل حساب دارم",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "برای اتصال این گفتگو به حساب خود، در وب وارد شوید. این پیوند {minutes} دقیقه اعتبار دارد.",
+  "Connect Telegram": "اتصال تلگرام",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "به حسابی که می‌خواهید در تلگرام استفاده کنید وارد شوید. برای پایان کار به اینجا برمی‌گردید.",
+  "Continue to sign in": "ادامه برای ورود",
+  "Telegram": "تلگرام",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "فقط اگر خودتان در ربات Hoggish روی «ورود» زده‌اید، متصل کنید.",
+  "Connect": "اتصال",
+  "Use another account": "استفاده از حساب دیگر",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "این پیوند منقضی شده یا قبلاً استفاده شده است. ربات را باز کنید و دوباره روی «از قبل حساب دارم» بزنید.",
+  "Telegram is connected. Go back to the chat to continue.": "تلگرام متصل شد. برای ادامه به گفتگو برگردید.",
+  "Nothing was connected.": "چیزی متصل نشد.",
+  "Open Telegram": "باز کردن تلگرام",
+  "Could not connect Telegram. Please try again.": "اتصال تلگرام ممکن نشد. لطفاً دوباره تلاش کنید."
 }

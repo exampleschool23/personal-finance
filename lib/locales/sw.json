@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Hati hii inapatikana kwa Kiingereza.",
   "Back to Hoggish": "Rudi kwa Hoggish",
   "Legal": "Taarifa za kisheria",
-  "By creating an account, you agree to the terms of use and privacy policy.": "Kwa kufungua akaunti, unakubali masharti ya matumizi na sera ya faragha."
+  "By creating an account, you agree to the terms of use and privacy policy.": "Kwa kufungua akaunti, unakubali masharti ya matumizi na sera ya faragha.",
+  "I already have an account": "Tayari nina akaunti",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Ingia kwenye tovuti ili kuunganisha gumzo hili na akaunti yako. Kiungo kinafanya kazi kwa dakika {minutes}.",
+  "Connect Telegram": "Unganisha Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Ingia kwenye akaunti unayotaka kutumia kwenye Telegram. Utarudi hapa kumaliza.",
+  "Continue to sign in": "Endelea kuingia",
+  "Telegram": "Telegram",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Unganisha tu ikiwa wewe mwenyewe ulibonyeza “Ingia” kwenye bot ya Hoggish.",
+  "Connect": "Unganisha",
+  "Use another account": "Tumia akaunti nyingine",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Kiungo hiki kimeisha muda wake au tayari kimetumika. Fungua bot na ubonyeze “Tayari nina akaunti” tena.",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram imeunganishwa. Rudi kwenye gumzo ili kuendelea.",
+  "Nothing was connected.": "Hakuna kilichounganishwa.",
+  "Open Telegram": "Fungua Telegram",
+  "Could not connect Telegram. Please try again.": "Imeshindikana kuunganisha Telegram. Tafadhali jaribu tena."
 }

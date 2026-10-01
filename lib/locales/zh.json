@@ -1847,5 +1847,19 @@
   "This document is available in English.": "本文件提供英文版本。",
   "Back to Hoggish": "返回 Hoggish",
   "Legal": "法律信息",
-  "By creating an account, you agree to the terms of use and privacy policy.": "创建账户即表示您同意使用条款和隐私政策。"
+  "By creating an account, you agree to the terms of use and privacy policy.": "创建账户即表示您同意使用条款和隐私政策。",
+  "I already have an account": "我已有账户",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "在网页上登录，将此聊天连接到你的账户。链接在 {minutes} 分钟内有效。",
+  "Connect Telegram": "连接 Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "登录你想在 Telegram 中使用的账户。之后会回到这里完成连接。",
+  "Continue to sign in": "继续登录",
+  "Telegram": "电报",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "只有在你本人于 Hoggish 机器人中点按了“登录”时才连接。",
+  "Connect": "连接",
+  "Use another account": "使用其他账户",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "此链接已过期或已被使用。请打开机器人并再次点按“我已有账户”。",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram 已连接。返回聊天继续。",
+  "Nothing was connected.": "未连接任何内容。",
+  "Open Telegram": "打开 Telegram",
+  "Could not connect Telegram. Please try again.": "无法连接 Telegram。请重试。"
 }

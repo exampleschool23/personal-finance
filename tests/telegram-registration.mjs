@@ -68,17 +68,18 @@ test('the onboarding walks language, currency and a first cash account, saving a
  assert.equal(advanceOnboarding(named.draft,{text:'0'},{language:'en'},777).effects.account.amount,0,'an empty account is allowed');
 });
 
-test('a new chat is welcomed in its Telegram language, asked to agree, then asked for its own number',async()=>{
+test('a new chat is welcomed in its Telegram language, asked to agree or sign in, then asked for its own number',async()=>{
  const context=setup();
  const welcome=(await run(text('/start'),context)).replies[0];
  assert.equal(welcome.text,`${t('ru','Welcome to Hoggish. Track your money here in Telegram and in the app.')}\n\n${t('ru','By continuing you agree to the terms of use and privacy policy of Hoggish.')}`);
- assert.deepEqual(callbacks(welcome),['o:agree']);
+ assert.deepEqual(callbacks(welcome),['o:agree','o:signin']);
  // The terms and privacy policy open in the browser before anyone agrees, translated like the rest of the chat.
  assert.deepEqual(welcome.keyboard.inline[0],[{text:t('ru','Terms of use'),url:'https://app.example/terms'},{text:t('ru','Privacy policy'),url:'https://app.example/privacy'}]);
  assert.deepEqual(welcome.keyboard.inline[1],[{text:t('ru','I agree'),callback_data:'o:agree'}]);
+ assert.deepEqual(welcome.keyboard.inline[2],[{text:t('ru','I already have an account'),callback_data:'o:signin'}]);
  const offline=setup();offline.env.appOrigin=null;
- assert.deepEqual((await run(text('/start'),offline)).replies[0].keyboard.inline,[[{text:t('ru','I agree'),callback_data:'o:agree'}]],'without an address the links are left out rather than broken');
- for(const update of [text('hello'),text('Expense'),press('f:save')])assert.deepEqual(callbacks((await run(update,context)).replies[0]),['o:agree']);
+ assert.deepEqual((await run(text('/start'),offline)).replies[0].keyboard.inline,[[{text:t('ru','I agree'),callback_data:'o:agree'}],[{text:t('ru','I already have an account'),callback_data:'o:signin'}]],'without an address the links are left out rather than broken');
+ for(const update of [text('hello'),text('Expense'),press('f:save')])assert.deepEqual(callbacks((await run(update,context)).replies[0]),['o:agree','o:signin']);
  const agreed=await run(press('o:agree'),context);
  assert.equal(agreed.callbackId,'cb-o:agree');
  assert.deepEqual(agreed.replies[0].keyboard,{contact:t('ru','Share my number')});
@@ -329,4 +330,32 @@ test('the other-currency question lists every currency like the languages, and t
  // A late tap on a full-list label after moving on changes the currency instead of naming the account.
  const late=advanceOnboarding({kind:'onboard',step:'account',data:{currency:'USD'}},{text:'ARS · Argentine Peso'},{language:'en'},777);
  assert.equal(late.draft.data.currency,'ARS');assert.equal(late.draft.step,'account');
+});
+
+test('I already have an account sends a single-use sign-in link for this chat, and only one stays open',async()=>{
+ const context=setup();
+ const first=await run(press('o:signin'),context);
+ assert.equal(first.callbackId,'cb-o:signin');
+ const reply=first.replies[0];
+ assert.equal(reply.text,t('ru','Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.',{minutes:15}));
+ const [button]=reply.keyboard.inline.flat();
+ assert.equal(button.text,t('ru','Sign in'));
+ const token=/^https:\/\/app\.example\/api\/telegram\/connect\?c=([0-9a-f]{64})$/.exec(button.url)?.[1];
+ assert.ok(token,button.url);
+ const [request]=context.db.tables.telegram_connect_requests;
+ assert.equal(request.chat_id,777);assert.equal(request.telegram_user_id,777);assert.equal(request.first_name,'Aziz');
+ assert.notEqual(request.token_hash,token,'only the hash is stored');
+ assert.equal(request.expires_at,new Date(now.getTime()+15*60000).toISOString());
+ // Asking again replaces the earlier link, and nothing about any account changes.
+ await run(press('o:signin'),context);
+ assert.equal(context.db.tables.telegram_connect_requests.length,1);assert.notEqual(context.db.tables.telegram_connect_requests[0].token_hash,request.token_hash);
+ assert.equal(context.db.tables.telegram_subscriptions.length,0);assert.equal(context.created.length,0);
+ // Without the web address there is nowhere to sign in.
+ const offline=setup();offline.env.appOrigin=null;
+ assert.equal((await run(press('o:signin'),offline)).replies[0].text,t('ru','Registration is not available yet. Please try again later.'));
+ assert.equal(offline.db.tables.telegram_connect_requests.length,0);
+ // A linked chat ignores the old button instead of handing out links.
+ const linked=setup({seed:{telegram_subscriptions:[subscription({chat_id:777})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]}});
+ await run(press('o:signin'),linked);
+ assert.equal(linked.db.tables.telegram_connect_requests.length,0);
 });

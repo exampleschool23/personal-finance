@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Available ang dokumentong ito sa Ingles.",
   "Back to Hoggish": "Bumalik sa Hoggish",
   "Legal": "Legal na impormasyon",
-  "By creating an account, you agree to the terms of use and privacy policy.": "Sa paggawa ng account, sumasang-ayon ka sa mga tuntunin ng paggamit at patakaran sa privacy."
+  "By creating an account, you agree to the terms of use and privacy policy.": "Sa paggawa ng account, sumasang-ayon ka sa mga tuntunin ng paggamit at patakaran sa privacy.",
+  "I already have an account": "May account na ako",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Mag-sign in sa web para ikonekta ang chat na ito sa iyong account. Gumagana ang link nang {minutes} minuto.",
+  "Connect Telegram": "Ikonekta ang Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Mag-sign in sa account na gusto mong gamitin sa Telegram. Babalik ka rito para tapusin.",
+  "Continue to sign in": "Magpatuloy sa pag-sign in",
+  "Telegram": "Telegram",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Ikonekta lang kung ikaw mismo ang pumindot ng “Mag-sign in” sa Hoggish bot.",
+  "Connect": "Ikonekta",
+  "Use another account": "Gumamit ng ibang account",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Nag-expire na o nagamit na ang link na ito. Buksan ang bot at pindutin muli ang “May account na ako”.",
+  "Telegram is connected. Go back to the chat to continue.": "Nakakonekta na ang Telegram. Bumalik sa chat para magpatuloy.",
+  "Nothing was connected.": "Walang naikonekta.",
+  "Open Telegram": "Buksan ang Telegram",
+  "Could not connect Telegram. Please try again.": "Hindi maikonekta ang Telegram. Pakisubukang muli."
 }

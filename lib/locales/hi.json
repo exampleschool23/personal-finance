@@ -1847,5 +1847,19 @@
   "This document is available in English.": "यह दस्तावेज़ अंग्रेज़ी में उपलब्ध है।",
   "Back to Hoggish": "Hoggish पर वापस जाएँ",
   "Legal": "कानूनी जानकारी",
-  "By creating an account, you agree to the terms of use and privacy policy.": "अकाउंट बनाकर आप उपयोग की शर्तों और गोपनीयता नीति से सहमत होते हैं।"
+  "By creating an account, you agree to the terms of use and privacy policy.": "अकाउंट बनाकर आप उपयोग की शर्तों और गोपनीयता नीति से सहमत होते हैं।",
+  "I already have an account": "मेरा पहले से खाता है",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "इस चैट को अपने खाते से जोड़ने के लिए वेब पर साइन इन करें। यह लिंक {minutes} मिनट तक काम करता है।",
+  "Connect Telegram": "Telegram जोड़ें",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "उस खाते में साइन इन करें जिसे आप Telegram में इस्तेमाल करना चाहते हैं। पूरा करने के लिए आप यहीं लौटेंगे।",
+  "Continue to sign in": "साइन इन पर जाएँ",
+  "Telegram": "टेलीग्राम",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "केवल तभी जोड़ें जब आपने खुद Hoggish बॉट में “साइन इन करें” दबाया हो।",
+  "Connect": "जोड़ें",
+  "Use another account": "दूसरा खाता इस्तेमाल करें",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "यह लिंक समाप्त हो गया है या पहले ही इस्तेमाल हो चुका है। बॉट खोलें और फिर से “मेरा पहले से खाता है” दबाएँ।",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram जुड़ गया है। जारी रखने के लिए चैट पर लौटें।",
+  "Nothing was connected.": "कुछ भी नहीं जोड़ा गया।",
+  "Open Telegram": "Telegram खोलें",
+  "Could not connect Telegram. Please try again.": "Telegram नहीं जोड़ा जा सका। कृपया फिर से कोशिश करें।"
 }

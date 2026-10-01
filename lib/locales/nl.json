@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Dit document is beschikbaar in het Engels.",
   "Back to Hoggish": "Terug naar Hoggish",
   "Legal": "Juridisch",
-  "By creating an account, you agree to the terms of use and privacy policy.": "Door een account aan te maken, ga je akkoord met de gebruiksvoorwaarden en het privacybeleid."
+  "By creating an account, you agree to the terms of use and privacy policy.": "Door een account aan te maken, ga je akkoord met de gebruiksvoorwaarden en het privacybeleid.",
+  "I already have an account": "Ik heb al een account",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Meld u aan op het web om deze chat aan uw account te koppelen. De link is {minutes} minuten geldig.",
+  "Connect Telegram": "Telegram koppelen",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Meld u aan bij het account dat u in Telegram wilt gebruiken. Daarna keert u hier terug om af te ronden.",
+  "Continue to sign in": "Verder naar aanmelden",
+  "Telegram": "Telegram",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Koppel alleen als u zelf op ‘Aanmelden’ hebt getikt in de Hoggish-bot.",
+  "Connect": "Koppelen",
+  "Use another account": "Ander account gebruiken",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Deze link is verlopen of al gebruikt. Open de bot en tik opnieuw op ‘Ik heb al een account’.",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram is gekoppeld. Ga terug naar de chat om verder te gaan.",
+  "Nothing was connected.": "Er is niets gekoppeld.",
+  "Open Telegram": "Telegram openen",
+  "Could not connect Telegram. Please try again.": "Telegram kon niet worden gekoppeld. Probeer het opnieuw."
 }

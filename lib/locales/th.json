@@ -1847,5 +1847,19 @@
   "This document is available in English.": "เอกสารนี้มีให้บริการเป็นภาษาอังกฤษ",
   "Back to Hoggish": "กลับไปที่ Hoggish",
   "Legal": "ข้อมูลทางกฎหมาย",
-  "By creating an account, you agree to the terms of use and privacy policy.": "การสร้างบัญชีหมายความว่าคุณยอมรับข้อกำหนดการใช้งานและนโยบายความเป็นส่วนตัว"
+  "By creating an account, you agree to the terms of use and privacy policy.": "การสร้างบัญชีหมายความว่าคุณยอมรับข้อกำหนดการใช้งานและนโยบายความเป็นส่วนตัว",
+  "I already have an account": "ฉันมีบัญชีอยู่แล้ว",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "ลงชื่อเข้าใช้บนเว็บเพื่อเชื่อมต่อแชตนี้กับบัญชีของคุณ ลิงก์ใช้ได้ {minutes} นาที",
+  "Connect Telegram": "เชื่อมต่อ Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "ลงชื่อเข้าใช้บัญชีที่คุณต้องการใช้ใน Telegram แล้วคุณจะกลับมาที่นี่เพื่อดำเนินการให้เสร็จ",
+  "Continue to sign in": "ไปที่การลงชื่อเข้าใช้",
+  "Telegram": "เทเลแกรม",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "เชื่อมต่อเฉพาะเมื่อคุณกด “ลงชื่อเข้าใช้” ในบอต Hoggish ด้วยตัวเองเท่านั้น",
+  "Connect": "เชื่อมต่อ",
+  "Use another account": "ใช้บัญชีอื่น",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "ลิงก์นี้หมดอายุหรือถูกใช้ไปแล้ว เปิดบอตแล้วกด “ฉันมีบัญชีอยู่แล้ว” อีกครั้ง",
+  "Telegram is connected. Go back to the chat to continue.": "เชื่อมต่อ Telegram แล้ว กลับไปที่แชตเพื่อดำเนินการต่อ",
+  "Nothing was connected.": "ไม่ได้เชื่อมต่ออะไร",
+  "Open Telegram": "เปิด Telegram",
+  "Could not connect Telegram. Please try again.": "ไม่สามารถเชื่อมต่อ Telegram ได้ โปรดลองอีกครั้ง"
 }

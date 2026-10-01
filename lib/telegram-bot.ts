@@ -18,6 +18,7 @@ import {recordSchema} from './record-schema';
 import type {ServiceDatabase} from './service-role';
 import {adminAccounts,createLoginToken,createTelegramAccount,type AdminAccounts} from './telegram-account';
 import {advance,mainMenu,menuChoice,prompt,retryKeyboard,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
+import {connectMinutes,connectStartPath,createConnectRequest,linkChat} from './telegram-connect';
 import {linkExpired,startCode,type TelegramSubscription} from './telegram-link';
 import {advanceOnboarding,isOnboardDraft,startOnboarding,type OnboardDraft} from './telegram-onboarding';
 import type {TelegramMessage} from './telegram';
@@ -46,20 +47,23 @@ const connectedText=(language:Language,name?:string|null)=>{
  const body=t(language,'Connected. You will get a morning digest of upcoming payments and a message after every saved action.'),first=(name??'').trim();
  return first?t(language,'Welcome, {name}! You are connected.',{name:first})+'\n\n'+body:body;
 };
+/** The "you are connected" message with the main menu, in the owner's language. */
+export async function connectedReply(db:ServiceDatabase,owner:string,chatId:number):Promise<TelegramMessage>{
+ const language=await ownerLanguage(db,owner);
+ return {chat_id:chatId,text:connectedText(language,await ownerName(db,owner)),keyboard:mainMenu(language)};
+}
 async function connect(db:ServiceDatabase,chatId:number,code:string,now:Date,hint:Language,from?:TelegramFrom):Promise<TelegramMessage>{
  const rows=await db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&link_code=eq.'+code);
  const pending=rows[0];
  if(!pending||linkExpired(pending,now))return {chat_id:chatId,text:t(hint,'This link has expired. Open Settings in the app and press Connect to Telegram again.')};
- // A chat can serve one owner: an earlier owner of this chat is signed out first, as the Sign out button would.
- const earlier=await subscriptionByChat(db,chatId);
- if(earlier&&earlier.user_id!==pending.user_id){const cleared=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+earlier.user_id,{method:'PATCH',body:JSON.stringify({chat_id:null,linked_at:null,updated_at:now.toISOString(),...(earlier.phone?{}:{telegram_user_id:null,first_name:null})})});if(!cleared.ok)throw Error('Database request failed.');}
- // The Telegram user is recorded only when no other account already holds it, so one person cannot be tied to two owners.
- const taken=from?.id?await db.read<Array<{user_id:string}>>('/rest/v1/telegram_subscriptions?select=user_id&telegram_user_id=eq.'+from.id):[];
- const identity=from?.id&&!taken.some(row=>row.user_id!==pending.user_id)?{telegram_user_id:from.id,first_name:(from.first_name??'').trim().slice(0,80)||null}:{};
- const saved=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+pending.user_id+'&link_code=eq.'+code,{method:'PATCH',body:JSON.stringify({chat_id:chatId,link_code:null,link_code_expires_at:null,linked_at:now.toISOString(),updated_at:now.toISOString(),...identity})});
- if(!saved.ok)throw Error('Database request failed.');
- const language=await ownerLanguage(db,pending.user_id);
- return {chat_id:chatId,text:connectedText(language,await ownerName(db,pending.user_id)),keyboard:mainMenu(language)};
+ await linkChat(db,pending.user_id,{chatId,telegramUserId:from?.id,firstName:from?.first_name},now);
+ return connectedReply(db,pending.user_id,chatId);
+}
+/** The bot's answer to "I already have an account": a single-use link to sign in on the web, where any sign-in method works. */
+async function webSignIn(db:ServiceDatabase,chatId:number,from:TelegramFrom|undefined,language:Language,now:Date,env:BotEnv):Promise<TelegramMessage>{
+ if(!env.appOrigin||!from?.id)return {chat_id:chatId,text:t(language,'Registration is not available yet. Please try again later.')};
+ const token=await createConnectRequest(db,{chatId,telegramUserId:from.id,firstName:from.first_name??''},now);
+ return {chat_id:chatId,text:t(language,'Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.',{minutes:connectMinutes}),keyboard:{inline:[[{text:t(language,'Sign in'),url:`${env.appOrigin}${connectStartPath}?c=${token}`}]]}};
 }
 /** Sign the chat out. An account that signs in with its number keeps its Telegram identity, so sharing the number returns to it; an account linked from the app is released completely, so the same person can use another account. */
 async function signOut(db:ServiceDatabase,subscription:TelegramSubscription,now:Date):Promise<TelegramMessage>{
@@ -189,7 +193,7 @@ async function converse(db:ServiceDatabase,subscription:TelegramSubscription,cha
  return result.reply?[result.reply]:[];
 }
 /** The first message a stranger sees. The terms and privacy policy open in the browser, so they can be read before agreeing. */
-const welcome=(chatId:number,language:Language,env:BotEnv):TelegramMessage=>({chat_id:chatId,text:`${t(language,'Welcome to Hoggish. Track your money here in Telegram and in the app.')}\n\n${t(language,'By continuing you agree to the terms of use and privacy policy of Hoggish.')}`,keyboard:{inline:[...(env.appOrigin?[[{text:t(language,'Terms of use'),url:env.appOrigin+legalPaths.terms},{text:t(language,'Privacy policy'),url:env.appOrigin+legalPaths.privacy}]]:[]),[{text:t(language,'I agree'),callback_data:'o:agree'}]]}});
+const welcome=(chatId:number,language:Language,env:BotEnv):TelegramMessage=>({chat_id:chatId,text:`${t(language,'Welcome to Hoggish. Track your money here in Telegram and in the app.')}\n\n${t(language,'By continuing you agree to the terms of use and privacy policy of Hoggish.')}`,keyboard:{inline:[...(env.appOrigin?[[{text:t(language,'Terms of use'),url:env.appOrigin+legalPaths.terms},{text:t(language,'Privacy policy'),url:env.appOrigin+legalPaths.privacy}]]:[]),[{text:t(language,'I agree'),callback_data:'o:agree'}],[{text:t(language,'I already have an account'),callback_data:'o:signin'}]]}});
 const contactRequest=(chatId:number,language:Language):TelegramMessage=>({chat_id:chatId,text:t(language,'Share your phone number to create your account. It is also how you sign in on the web.'),keyboard:{contact:t(language,'Share my number')}});
 const subscriptionsWhere=(db:ServiceDatabase,filter:string)=>db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&'+filter);
 /** A contact the person shared with the button: sign up, sign back in, or add the number to a linked account. */
@@ -225,8 +229,7 @@ async function handleContact(db:ServiceDatabase,message:NonNullable<TelegramUpda
   if(own.phone!==phone)return say(hint,taken);
   const relinked=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+own.user_id,{method:'PATCH',body:JSON.stringify({chat_id:chatId,linked_at:now.toISOString(),updated_at:now.toISOString()})});
   if(!relinked.ok)throw Error('Database request failed.');
-  const language=await ownerLanguage(db,own.user_id);
-  return {replies:[{chat_id:chatId,text:connectedText(language,await ownerName(db,own.user_id)),keyboard:mainMenu(language)}]};
+  return {replies:[await connectedReply(db,own.user_id,chatId)]};
  }
  if(byPhone.length)return say(hint,taken);
  if(!env.admin||!env.loginSecret)return say(hint,'Registration is not available yet. Please try again later.');
@@ -244,7 +247,10 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
   const chatId=update.callback_query.message?.chat.id;
   if(chatId===undefined)return {replies:[],callbackId:update.callback_query.id};
   const subscription=await subscriptionByChat(db,chatId),hint=fromHint(update.callback_query.from?.language_code);
-  if(!subscription)return {callbackId:update.callback_query.id,replies:[update.callback_query.data==='o:agree'?contactRequest(chatId,hint):welcome(chatId,hint,env)]};
+  if(!subscription){
+   const data=update.callback_query.data;
+   return {callbackId:update.callback_query.id,replies:[data==='o:agree'?contactRequest(chatId,hint):data==='o:signin'?await webSignIn(db,chatId,update.callback_query.from,hint,now,env):welcome(chatId,hint,env)]};
+  }
   return {callbackId:update.callback_query.id,replies:await converse(db,subscription,chatId,{callback:update.callback_query.data??''},clock,env)};
  }
  const message=update.message;
@@ -264,7 +270,7 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
   const draft=await loadDraft(db,subscription.user_id,now);
   // Mid-setup, Start means start over: the questions begin again from the language.
   if(isOnboardDraft(draft)){const restarted=startOnboarding(language,chatId);await storeDraft(db,subscription.user_id,restarted.draft,now);return {replies:restarted.reply?[restarted.reply]:[]};}
-  return {replies:[{chat_id:chatId,text:connectedText(language,await ownerName(db,subscription.user_id)),keyboard:mainMenu(language)}]};
+  return {replies:[await connectedReply(db,subscription.user_id,chatId)]};
  }
  return {replies:await converse(db,subscription,chatId,{text},clock,env)};
 }

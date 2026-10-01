@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Этот документ доступен на английском языке.",
   "Back to Hoggish": "Вернуться в Hoggish",
   "Legal": "Правовая информация",
-  "By creating an account, you agree to the terms of use and privacy policy.": "Создавая аккаунт, вы соглашаетесь с условиями использования и политикой конфиденциальности."
+  "By creating an account, you agree to the terms of use and privacy policy.": "Создавая аккаунт, вы соглашаетесь с условиями использования и политикой конфиденциальности.",
+  "I already have an account": "У меня уже есть аккаунт",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Войдите на сайте, чтобы подключить этот чат к своему аккаунту. Ссылка действует {minutes} минут.",
+  "Connect Telegram": "Подключить Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Войдите в аккаунт, который хотите использовать в Telegram. После этого вы вернётесь сюда.",
+  "Continue to sign in": "Перейти ко входу",
+  "Telegram": "Телеграм",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Подключайте, только если вы сами нажали «Войти» в боте Hoggish.",
+  "Connect": "Подключить",
+  "Use another account": "Другой аккаунт",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Ссылка устарела или уже использована. Откройте бота и снова нажмите «У меня уже есть аккаунт».",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram подключён. Вернитесь в чат, чтобы продолжить.",
+  "Nothing was connected.": "Ничего не подключено.",
+  "Open Telegram": "Открыть Telegram",
+  "Could not connect Telegram. Please try again.": "Не удалось подключить Telegram. Попробуйте ещё раз."
 }

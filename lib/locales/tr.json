@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Bu belge İngilizce olarak sunulmaktadır.",
   "Back to Hoggish": "Hoggish’e dön",
   "Legal": "Yasal bilgiler",
-  "By creating an account, you agree to the terms of use and privacy policy.": "Hesap oluşturarak kullanım koşullarını ve gizlilik politikasını kabul etmiş olursunuz."
+  "By creating an account, you agree to the terms of use and privacy policy.": "Hesap oluşturarak kullanım koşullarını ve gizlilik politikasını kabul etmiş olursunuz.",
+  "I already have an account": "Zaten bir hesabım var",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Bu sohbeti hesabınıza bağlamak için web’de giriş yapın. Bağlantı {minutes} dakika geçerlidir.",
+  "Connect Telegram": "Telegram’ı bağla",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Telegram’da kullanmak istediğiniz hesaba giriş yapın. Tamamlamak için buraya döneceksiniz.",
+  "Continue to sign in": "Girişe devam et",
+  "Telegram": "Telegram",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Yalnızca Hoggish botunda “Giriş yap” düğmesine kendiniz bastıysanız bağlayın.",
+  "Connect": "Bağla",
+  "Use another account": "Başka bir hesap kullan",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Bu bağlantının süresi dolmuş veya bağlantı zaten kullanılmış. Botu açın ve “Zaten bir hesabım var” düğmesine yeniden basın.",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram bağlandı. Devam etmek için sohbete dönün.",
+  "Nothing was connected.": "Hiçbir şey bağlanmadı.",
+  "Open Telegram": "Telegram’ı aç",
+  "Could not connect Telegram. Please try again.": "Telegram bağlanamadı. Lütfen tekrar deneyin."
 }

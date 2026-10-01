@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Цей документ доступний англійською мовою.",
   "Back to Hoggish": "Повернутися до Hoggish",
   "Legal": "Правова інформація",
-  "By creating an account, you agree to the terms of use and privacy policy.": "Створюючи обліковий запис, ви погоджуєтеся з умовами використання та політикою конфіденційності."
+  "By creating an account, you agree to the terms of use and privacy policy.": "Створюючи обліковий запис, ви погоджуєтеся з умовами використання та політикою конфіденційності.",
+  "I already have an account": "У мене вже є обліковий запис",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Увійдіть на сайті, щоб підключити цей чат до свого облікового запису. Посилання діє {minutes} хвилин.",
+  "Connect Telegram": "Підключити Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Увійдіть в обліковий запис, який хочете використовувати в Telegram. Потім ви повернетеся сюди.",
+  "Continue to sign in": "Перейти до входу",
+  "Telegram": "Телеграм",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Підключайте, лише якщо ви самі натиснули «Увійти» у боті Hoggish.",
+  "Connect": "Підключити",
+  "Use another account": "Інший обліковий запис",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Посилання застаріло або вже використане. Відкрийте бота й знову натисніть «У мене вже є обліковий запис».",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram підключено. Поверніться до чату, щоб продовжити.",
+  "Nothing was connected.": "Нічого не підключено.",
+  "Open Telegram": "Відкрити Telegram",
+  "Could not connect Telegram. Please try again.": "Не вдалося підключити Telegram. Спробуйте ще раз."
 }

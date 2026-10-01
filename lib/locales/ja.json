@@ -1847,5 +1847,19 @@
   "This document is available in English.": "この文書は英語で提供されています。",
   "Back to Hoggish": "Hoggish に戻る",
   "Legal": "法的情報",
-  "By creating an account, you agree to the terms of use and privacy policy.": "アカウントを作成すると、利用規約とプライバシーポリシーに同意したことになります。"
+  "By creating an account, you agree to the terms of use and privacy policy.": "アカウントを作成すると、利用規約とプライバシーポリシーに同意したことになります。",
+  "I already have an account": "すでにアカウントを持っています",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "ウェブでサインインして、このチャットをアカウントに接続してください。リンクの有効期限は {minutes} 分です。",
+  "Connect Telegram": "Telegram を接続",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Telegram で使うアカウントにサインインしてください。完了するためにこのページに戻ります。",
+  "Continue to sign in": "サインインへ進む",
+  "Telegram": "テレグラム",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Hoggish ボットでご自身が「サインイン」を押した場合にのみ接続してください。",
+  "Connect": "接続",
+  "Use another account": "別のアカウントを使う",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "このリンクは期限切れか、すでに使用されています。ボットを開いて、もう一度「すでにアカウントを持っています」を押してください。",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram を接続しました。チャットに戻って続けてください。",
+  "Nothing was connected.": "何も接続されませんでした。",
+  "Open Telegram": "Telegram を開く",
+  "Could not connect Telegram. Please try again.": "Telegram を接続できませんでした。もう一度お試しください。"
 }

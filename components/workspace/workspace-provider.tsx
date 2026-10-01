@@ -219,7 +219,8 @@ function useWorkspaceState() {
         user: null | {
             email: string;
         };
-    }>).then(async (d) => { setConfigured(d.configured); if (d.user) {
+        next?: string;
+    }>).then(async (d) => { setConfigured(d.configured); if (d.next) { window.location.replace(d.next); return; } if (d.user) {
         setUser(d.user.email);
 
     } }).catch(e => setError(e.message)).finally(() => setReady(true)); }, []);
@@ -242,9 +243,12 @@ function useWorkspaceState() {
             user: {
                 email: string;
             };
+            next?: string;
         };
         if (!r.ok)
             throw Error(d.error);
+        // A Telegram chat waiting to be connected takes over right after signing in.
+        if (d.next) { window.location.replace(d.next); return; }
         setUser(d.user.email);
 
     }

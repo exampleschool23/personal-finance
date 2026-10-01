@@ -24,7 +24,30 @@ needed.
    Supabase makes the code and calls our Send SMS hook, which delivers it to the
    Telegram chat linked to that account.
 
-Existing email accounts keep working. Send `/phone` to the bot from a linked chat
+## Connecting an existing account from the bot
+
+The welcome message also offers **I already have an account**. The bot answers
+with a **Sign in** button: a single-use link, valid for 15 minutes, tied to that
+chat and Telegram user (`lib/telegram-connect.ts`, table
+`telegram_connect_requests` from migration 084).
+
+1. The link (`/api/telegram/connect?c=…`) keeps the token in an httpOnly cookie
+   and opens `/connect/telegram`.
+2. A signed-out visitor is sent to the normal sign-in page. Any sign-in method
+   works: after signing in, `/api/auth` sees the cookie and returns them to the
+   confirmation page, so new methods (Google, Facebook, phone) need no extra work.
+3. The page shows the Telegram name and the account, warns to continue only if
+   they pressed **Sign in** in the bot themselves, and offers **Connect**,
+   **Use another account** and **Cancel**.
+4. **Connect** spends the request atomically, links the chat (an earlier owner
+   of the chat is signed out first), and the bot sends "Connected" with the menu.
+
+Nothing is linked without that confirmation, so a link someone else sends cannot
+silently attach a victim's account to the sender's chat. The link opens in a
+normal browser rather than the Mini App, because Google refuses sign-in inside
+embedded web views.
+
+Existing email accounts can also connect from Settings, and can send `/phone` to the bot from a linked chat
 to add a number to an email account. An account created with a phone number can
 add an email and password in Settings, which also unlocks changing the password
 and deleting the account.
@@ -43,7 +66,8 @@ app's Settings then shows Telegram as not connected.
 
 ## Setup
 
-1. Apply `migrations/081_telegram_accounts.sql` after 080.
+1. Apply `migrations/081_telegram_accounts.sql` after 080, and
+   `migrations/084_telegram_connect_requests.sql` after 083.
 2. In Supabase, open Authentication, then Sign In / Providers, and enable
    **Phone**. Keep phone confirmation on. No SMS provider is required because the
    hook below replaces SMS.
@@ -85,4 +109,5 @@ not available yet.
 | Hook answers 401 | `SEND_SMS_HOOK_SECRET` does not match the secret Supabase generated. |
 | "Phone sign-ups are disabled" | Phone provider is off in Supabase. |
 | Bot says registration is unavailable | `SUPABASE_SERVICE_ROLE_KEY` or `TELEGRAM_WEBHOOK_SECRET` missing on Vercel. |
+| "Could not connect Telegram" on the connect page | Migration 084 is not applied, or `SUPABASE_SERVICE_ROLE_KEY` is missing. |
 | Open app asks to sign in | The account was not created in Telegram, or its password was changed. |

@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Bu hujjat ingliz tilida mavjud.",
   "Back to Hoggish": "Hoggish’ga qaytish",
   "Legal": "Huquqiy ma’lumot",
-  "By creating an account, you agree to the terms of use and privacy policy.": "Hisob yaratish orqali siz foydalanish shartlari va maxfiylik siyosatiga rozilik bildirasiz."
+  "By creating an account, you agree to the terms of use and privacy policy.": "Hisob yaratish orqali siz foydalanish shartlari va maxfiylik siyosatiga rozilik bildirasiz.",
+  "I already have an account": "Menda akkaunt bor",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Bu chatni akkauntingizga ulash uchun veb-saytga kiring. Havola {minutes} daqiqa amal qiladi.",
+  "Connect Telegram": "Telegramni ulash",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Telegramda foydalanmoqchi bo‘lgan akkauntingizga kiring. Yakunlash uchun shu yerga qaytasiz.",
+  "Continue to sign in": "Kirishga o‘tish",
+  "Telegram": "Telegram",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Faqat Hoggish botida «Kirish» tugmasini o‘zingiz bosgan bo‘lsangiz ulang.",
+  "Connect": "Ulash",
+  "Use another account": "Boshqa akkaunt",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Havola muddati tugagan yoki allaqachon ishlatilgan. Botni oching va «Menda akkaunt bor» tugmasini qayta bosing.",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram ulandi. Davom etish uchun chatga qayting.",
+  "Nothing was connected.": "Hech narsa ulanmadi.",
+  "Open Telegram": "Telegramni ochish",
+  "Could not connect Telegram. Please try again.": "Telegramni ulab bo‘lmadi. Qaytadan urinib ko‘ring."
 }

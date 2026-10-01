@@ -1847,5 +1847,19 @@
   "This document is available in English.": "এই নথিটি ইংরেজিতে পাওয়া যায়।",
   "Back to Hoggish": "Hoggish-এ ফিরে যান",
   "Legal": "আইনি তথ্য",
-  "By creating an account, you agree to the terms of use and privacy policy.": "অ্যাকাউন্ট তৈরি করে আপনি ব্যবহারের শর্তাবলি ও গোপনীয়তা নীতিতে সম্মত হচ্ছেন।"
+  "By creating an account, you agree to the terms of use and privacy policy.": "অ্যাকাউন্ট তৈরি করে আপনি ব্যবহারের শর্তাবলি ও গোপনীয়তা নীতিতে সম্মত হচ্ছেন।",
+  "I already have an account": "আমার আগে থেকেই অ্যাকাউন্ট আছে",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "এই চ্যাটটি আপনার অ্যাকাউন্টের সঙ্গে যুক্ত করতে ওয়েবে সাইন ইন করুন। লিংকটি {minutes} মিনিট কাজ করবে।",
+  "Connect Telegram": "Telegram যুক্ত করুন",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "যে অ্যাকাউন্টটি Telegram-এ ব্যবহার করতে চান, সেটিতে সাইন ইন করুন। শেষ করতে আপনি এখানেই ফিরে আসবেন।",
+  "Continue to sign in": "সাইন ইনে যান",
+  "Telegram": "টেলিগ্রাম",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "কেবল তখনই যুক্ত করুন, যদি আপনি নিজে Hoggish বটে “সাইন ইন” চেপে থাকেন।",
+  "Connect": "যুক্ত করুন",
+  "Use another account": "অন্য অ্যাকাউন্ট ব্যবহার করুন",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "এই লিংকের মেয়াদ শেষ হয়েছে বা এটি আগেই ব্যবহার করা হয়েছে। বটটি খুলে আবার “আমার আগে থেকেই অ্যাকাউন্ট আছে” চাপুন।",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram যুক্ত হয়েছে। চালিয়ে যেতে চ্যাটে ফিরে যান।",
+  "Nothing was connected.": "কিছুই যুক্ত করা হয়নি।",
+  "Open Telegram": "Telegram খুলুন",
+  "Could not connect Telegram. Please try again.": "Telegram যুক্ত করা যায়নি। আবার চেষ্টা করুন।"
 }

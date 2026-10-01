@@ -1847,5 +1847,19 @@
   "This document is available in English.": "מסמך זה זמין באנגלית.",
   "Back to Hoggish": "חזרה ל-Hoggish",
   "Legal": "מידע משפטי",
-  "By creating an account, you agree to the terms of use and privacy policy.": "ביצירת חשבון אתם מסכימים לתנאי השימוש ולמדיניות הפרטיות."
+  "By creating an account, you agree to the terms of use and privacy policy.": "ביצירת חשבון אתם מסכימים לתנאי השימוש ולמדיניות הפרטיות.",
+  "I already have an account": "כבר יש לי חשבון",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "התחברו באתר כדי לקשר את הצ׳אט הזה לחשבון שלכם. הקישור תקף ל־{minutes} דקות.",
+  "Connect Telegram": "קישור טלגרם",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "התחברו לחשבון שבו תרצו להשתמש בטלגרם. בסוף תחזרו לכאן כדי לסיים.",
+  "Continue to sign in": "המשך להתחברות",
+  "Telegram": "טלגרם",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "קשרו רק אם לחצתם בעצמכם על „התחברות” בבוט של Hoggish.",
+  "Connect": "קישור",
+  "Use another account": "שימוש בחשבון אחר",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "תוקף הקישור פג או שכבר נעשה בו שימוש. פתחו את הבוט ולחצו שוב על „כבר יש לי חשבון”.",
+  "Telegram is connected. Go back to the chat to continue.": "טלגרם מקושר. חזרו לצ׳אט כדי להמשיך.",
+  "Nothing was connected.": "לא קושר דבר.",
+  "Open Telegram": "פתיחת טלגרם",
+  "Could not connect Telegram. Please try again.": "לא ניתן היה לקשר את טלגרם. נסו שוב."
 }

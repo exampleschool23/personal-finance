@@ -51,7 +51,8 @@ export async function createTelegramAccount(deps:{db:ServiceDatabase;admin:Admin
  }catch(error){await deps.admin.deleteUser(userId);throw error;}
  return {userId};
 }
-const hashToken=(token:string)=>createHash('sha256').update(token).digest('hex');
+/** Single-use tokens are stored only as this hash. */
+export const hashToken=(token:string)=>createHash('sha256').update(token).digest('hex');
 /** A single-use token for the "Open in browser" button. Only its hash is stored. */
 export async function createLoginToken(db:ServiceDatabase,userId:string,now:Date){
  const token=randomBytes(32).toString('hex');

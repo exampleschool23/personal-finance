@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Ten dokument jest dostępny w języku angielskim.",
   "Back to Hoggish": "Wróć do Hoggish",
   "Legal": "Informacje prawne",
-  "By creating an account, you agree to the terms of use and privacy policy.": "Tworząc konto, akceptujesz warunki korzystania i politykę prywatności."
+  "By creating an account, you agree to the terms of use and privacy policy.": "Tworząc konto, akceptujesz warunki korzystania i politykę prywatności.",
+  "I already have an account": "Mam już konto",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Zaloguj się w przeglądarce, aby połączyć ten czat ze swoim kontem. Link działa przez {minutes} minut.",
+  "Connect Telegram": "Połącz Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Zaloguj się na konto, którego chcesz używać w Telegramie. Potem wrócisz tutaj, aby dokończyć.",
+  "Continue to sign in": "Przejdź do logowania",
+  "Telegram": "Telegram",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Łącz tylko wtedy, gdy sam(a) nacisnąłeś(-ęłaś) „Zaloguj się” w bocie Hoggish.",
+  "Connect": "Połącz",
+  "Use another account": "Użyj innego konta",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Ten link wygasł lub został już użyty. Otwórz bota i ponownie naciśnij „Mam już konto”.",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram jest połączony. Wróć do czatu, aby kontynuować.",
+  "Nothing was connected.": "Nic nie zostało połączone.",
+  "Open Telegram": "Otwórz Telegram",
+  "Could not connect Telegram. Please try again.": "Nie udało się połączyć Telegrama. Spróbuj ponownie."
 }

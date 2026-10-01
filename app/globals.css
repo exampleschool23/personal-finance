@@ -157,6 +157,11 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
 .auth-page .panel form>[data-slot=button]+[data-slot=button]{margin-top:8px}
 .auth-page .panel>a{display:inline-block;margin-top:20px;font-size:var(--type-small);font-weight:500;color:var(--primary)}
 .auth-page .panel>a:hover{text-decoration:underline;text-underline-offset:3px}
+.connect-telegram>p{margin-top:12px;color:var(--muted-foreground);font-size:var(--type-small)}
+.connect-facts{display:grid;gap:8px;margin-top:16px;padding:12px 14px;border:1px solid var(--hairline);border-radius:var(--radius-control)}
+.connect-facts>div{display:flex;justify-content:space-between;gap:16px;font-size:var(--type-small)}
+.connect-facts dt{color:var(--muted-foreground)}
+.connect-facts dd{font-weight:600;text-align:end;overflow-wrap:anywhere}
 .auth-page>.legal-document{max-width:760px;margin-top:8px;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:20px}
 .legal-document h1{font-size:var(--type-page);font-weight:650;letter-spacing:-.02em;line-height:1.15}
 .legal-document>p.muted{margin-top:-12px;font-size:var(--type-small)}

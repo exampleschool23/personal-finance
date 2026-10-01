@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Ce document est disponible en anglais.",
   "Back to Hoggish": "Retour à Hoggish",
   "Legal": "Mentions légales",
-  "By creating an account, you agree to the terms of use and privacy policy.": "En créant un compte, vous acceptez les conditions d’utilisation et la politique de confidentialité."
+  "By creating an account, you agree to the terms of use and privacy policy.": "En créant un compte, vous acceptez les conditions d’utilisation et la politique de confidentialité.",
+  "I already have an account": "J’ai déjà un compte",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Connectez-vous sur le web pour relier ce chat à votre compte. Le lien est valable {minutes} minutes.",
+  "Connect Telegram": "Relier Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Connectez-vous au compte que vous voulez utiliser dans Telegram. Vous reviendrez ici pour terminer.",
+  "Continue to sign in": "Continuer vers la connexion",
+  "Telegram": "Telegram",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Ne reliez que si vous avez vous-même appuyé sur « Se connecter » dans le bot Hoggish.",
+  "Connect": "Relier",
+  "Use another account": "Utiliser un autre compte",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Ce lien a expiré ou a déjà été utilisé. Ouvrez le bot et appuyez de nouveau sur « J’ai déjà un compte ».",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram est relié. Retournez dans le chat pour continuer.",
+  "Nothing was connected.": "Rien n’a été relié.",
+  "Open Telegram": "Ouvrir Telegram",
+  "Could not connect Telegram. Please try again.": "Impossible de relier Telegram. Veuillez réessayer."
 }

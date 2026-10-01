@@ -1847,5 +1847,19 @@
   "This document is available in English.": "Dokumen ini tersedia dalam bahasa Inggeris.",
   "Back to Hoggish": "Kembali ke Hoggish",
   "Legal": "Maklumat undang-undang",
-  "By creating an account, you agree to the terms of use and privacy policy.": "Dengan membuat akaun, anda bersetuju dengan terma penggunaan dan dasar privasi."
+  "By creating an account, you agree to the terms of use and privacy policy.": "Dengan membuat akaun, anda bersetuju dengan terma penggunaan dan dasar privasi.",
+  "I already have an account": "Saya sudah ada akaun",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "Log masuk di web untuk menyambungkan sembang ini ke akaun anda. Pautan sah selama {minutes} minit.",
+  "Connect Telegram": "Sambungkan Telegram",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "Log masuk ke akaun yang anda mahu gunakan di Telegram. Anda akan kembali ke sini untuk menyelesaikannya.",
+  "Continue to sign in": "Teruskan ke log masuk",
+  "Telegram": "Telegram",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "Sambungkan hanya jika anda sendiri menekan “Log masuk” dalam bot Hoggish.",
+  "Connect": "Sambung",
+  "Use another account": "Guna akaun lain",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "Pautan ini telah tamat tempoh atau sudah digunakan. Buka bot dan tekan “Saya sudah ada akaun” sekali lagi.",
+  "Telegram is connected. Go back to the chat to continue.": "Telegram telah disambungkan. Kembali ke sembang untuk meneruskan.",
+  "Nothing was connected.": "Tiada apa-apa yang disambungkan.",
+  "Open Telegram": "Buka Telegram",
+  "Could not connect Telegram. Please try again.": "Tidak dapat menyambungkan Telegram. Sila cuba lagi."
 }

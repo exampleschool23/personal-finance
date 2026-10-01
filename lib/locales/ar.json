@@ -1847,5 +1847,19 @@
   "This document is available in English.": "هذه الوثيقة متاحة باللغة الإنجليزية.",
   "Back to Hoggish": "العودة إلى Hoggish",
   "Legal": "معلومات قانونية",
-  "By creating an account, you agree to the terms of use and privacy policy.": "بإنشاء حساب، فإنك توافق على شروط الاستخدام وسياسة الخصوصية."
+  "By creating an account, you agree to the terms of use and privacy policy.": "بإنشاء حساب، فإنك توافق على شروط الاستخدام وسياسة الخصوصية.",
+  "I already have an account": "لدي حساب بالفعل",
+  "Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.": "سجّل الدخول على الويب لربط هذه المحادثة بحسابك. الرابط صالح لمدة {minutes} دقيقة.",
+  "Connect Telegram": "ربط تيليجرام",
+  "Sign in to the account you want to use in Telegram. You will come back here to finish.": "سجّل الدخول إلى الحساب الذي تريد استخدامه في تيليجرام. ستعود إلى هنا لإكمال الخطوة.",
+  "Continue to sign in": "متابعة إلى تسجيل الدخول",
+  "Telegram": "تيليجرام",
+  "Only connect if you pressed Sign in in the Hoggish bot yourself.": "لا تربط إلا إذا ضغطت بنفسك على «تسجيل الدخول» في بوت Hoggish.",
+  "Connect": "ربط",
+  "Use another account": "استخدام حساب آخر",
+  "This link has expired or was already used. Open the bot and press I already have an account again.": "انتهت صلاحية هذا الرابط أو استُخدم من قبل. افتح البوت واضغط على «لدي حساب بالفعل» مرة أخرى.",
+  "Telegram is connected. Go back to the chat to continue.": "تم ربط تيليجرام. عُد إلى المحادثة للمتابعة.",
+  "Nothing was connected.": "لم يتم ربط أي شيء.",
+  "Open Telegram": "فتح تيليجرام",
+  "Could not connect Telegram. Please try again.": "تعذّر ربط تيليجرام. يُرجى المحاولة مرة أخرى."
 }
