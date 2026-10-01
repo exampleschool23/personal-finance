@@ -197,14 +197,23 @@ const welcome=(chatId:number,language:Language,env:BotEnv):TelegramMessage[]=>[
  {chat_id:chatId,text:t(language,'Welcome to Hoggish. Track your money here in Telegram and in the app.'),keyboard:{remove:true}},
  {chat_id:chatId,text:t(language,'By creating an account you agree to the terms of use and privacy policy of Hoggish.'),keyboard:{inline:[[{text:t(language,'Create an account'),callback_data:'o:agree'}],[{text:t(language,'I already have an account'),callback_data:'o:signin'}],...(env.appOrigin?[[{text:t(language,'Terms of use'),url:env.appOrigin+legalPaths.terms},{text:t(language,'Privacy policy'),url:env.appOrigin+legalPaths.privacy}]]:[])]}},
 ];
-const contactRequest=(chatId:number,language:Language):TelegramMessage=>({chat_id:chatId,text:t(language,'Share your phone number to create your account. It is also how you sign in on the web.'),keyboard:{contact:t(language,'Share my number')}});
+/** The number button, worded for signing up, signing back in, or adding a number to an account linked from the web. */
+const contactPrompts={signup:'Share your phone number to create your account. It is also how you sign in on the web.',return:'Share your phone number to sign in again.',add:'Share your phone number so you can also sign in on the web with it.'};
+const contactRequest=(chatId:number,language:Language,purpose:keyof typeof contactPrompts):TelegramMessage=>({chat_id:chatId,text:t(language,contactPrompts[purpose]),keyboard:{contact:t(language,'Share my number')}});
 const subscriptionsWhere=(db:ServiceDatabase,filter:string)=>db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&'+filter);
-/** A stranger chat. Someone who signed out of an account made here is only asked for the number that signs them back in, never to create an account again. */
-async function invite(db:ServiceDatabase,chatId:number,from:TelegramFrom|undefined,hint:Language,env:BotEnv):Promise<TelegramMessage[]>{
+/** Who an unlinked chat belongs to. Someone who signed out of an account made here returns to it, so they are spoken to in its language and never asked to create an account again. */
+async function stranger(db:ServiceDatabase,from:TelegramFrom|undefined,hint:Language):Promise<{returning:boolean;language:Language}>{
  const [own]=from?.id?await subscriptionsWhere(db,'telegram_user_id=eq.'+from.id):[];
- if(!own?.phone)return welcome(chatId,hint,env);
- const language=await ownerLanguage(db,own.user_id);
- return [{chat_id:chatId,text:t(language,'Welcome back! Share your phone number to sign in again.'),keyboard:{contact:t(language,'Share my number')}}];
+ return own?.phone?{returning:true,language:await ownerLanguage(db,own.user_id)}:{returning:false,language:hint};
+}
+/** The invitation an unlinked chat gets. A returning person chooses between their number and an account from the web, laid out like the welcome. */
+async function invite(db:ServiceDatabase,chatId:number,from:TelegramFrom|undefined,hint:Language,env:BotEnv):Promise<TelegramMessage[]>{
+ const {returning,language}=await stranger(db,from,hint);
+ if(!returning)return welcome(chatId,language,env);
+ return [
+  {chat_id:chatId,text:t(language,'Welcome back.'),keyboard:{remove:true}},
+  {chat_id:chatId,text:t(language,'Sign in with your number, or with an account you use on the web.'),keyboard:{inline:[[{text:t(language,'Sign in with my number'),callback_data:'o:agree'}],[{text:t(language,'Sign in on the web'),callback_data:'o:signin'}]]}},
+ ];
 }
 /** A contact the person shared with the button: sign up, sign back in, or add the number to a linked account. */
 async function handleContact(db:ServiceDatabase,message:NonNullable<TelegramUpdate['message']>,hint:Language,clock:BotClock,env:BotEnv):Promise<BotOutcome>{
@@ -258,8 +267,10 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
   if(chatId===undefined)return {replies:[],callbackId:update.callback_query.id};
   const subscription=await subscriptionByChat(db,chatId),hint=fromHint(update.callback_query.from?.language_code);
   if(!subscription){
-   const data=update.callback_query.data;
-   return {callbackId:update.callback_query.id,replies:data==='o:agree'?[contactRequest(chatId,hint)]:data==='o:signin'?[await webSignIn(db,chatId,update.callback_query.from,hint,now,env)]:await invite(db,chatId,update.callback_query.from,hint,env)};
+   const data=update.callback_query.data,from=update.callback_query.from;
+   if(data!=='o:agree'&&data!=='o:signin')return {callbackId:update.callback_query.id,replies:await invite(db,chatId,from,hint,env)};
+   const {returning,language}=await stranger(db,from,hint);
+   return {callbackId:update.callback_query.id,replies:[data==='o:agree'?contactRequest(chatId,language,returning?'return':'signup'):await webSignIn(db,chatId,from,language,now,env)]};
   }
   return {callbackId:update.callback_query.id,replies:await converse(db,subscription,chatId,{callback:update.callback_query.data??''},clock,env)};
  }
@@ -274,7 +285,7 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
  if(!subscription)return {replies:await invite(db,chatId,message.from,hint,env)};
  if(/^\/(?:stop|signout)(?:@\w+)?$/.test(text)||menuChoice(text)==='signout')return {replies:[await signOut(db,subscription,now)]};
  const language=await ownerLanguage(db,subscription.user_id);
- if(/^\/phone(?:@\w+)?$/.test(text))return {replies:[contactRequest(chatId,language)]};
+ if(/^\/phone(?:@\w+)?$/.test(text))return {replies:[contactRequest(chatId,language,'add')]};
  if(/^\/app(?:@\w+)?$/.test(text)){const open=await openAppReply(db,subscription,chatId,language,now,env);return {replies:open?[open]:[]};}
  if(/^\/start(?:@\w+)?$/.test(text)){
   const draft=await loadDraft(db,subscription.user_id,now);

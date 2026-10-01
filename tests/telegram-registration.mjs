@@ -85,13 +85,18 @@ test('a new chat is greeted in its Telegram language, any leftover number button
  assert.equal(context.db.writes.length,0);assert.equal(context.created.length,0);
 });
 
-test('someone who signed out of an account made in the bot is only asked for their number, in the account language',async()=>{
+test('someone who signed out of an account made in the bot chooses their number or the web, all in the account language, never sign-up',async()=>{
  const context=setup({seed:{telegram_subscriptions:[subscription({chat_id:null,telegram_user_id:777,phone:'+998901234567',consented_at:'x',linked_at:null})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]}});
  for(const update of [text('/start'),press('f:save')]){
-  const replies=(await run(update,context)).replies;
-  assert.deepEqual(replies,[{chat_id:777,text:t('en','Welcome back! Share your phone number to sign in again.'),keyboard:{contact:t('en','Share my number')}}]);
+  const [greeting,choice]=(await run(update,context)).replies;
+  assert.deepEqual(greeting,{chat_id:777,text:t('en','Welcome back.'),keyboard:{remove:true}});
+  assert.equal(choice.text,t('en','Sign in with your number, or with an account you use on the web.'));
+  assert.deepEqual(choice.keyboard.inline,[[{text:t('en','Sign in with my number'),callback_data:'o:agree'}],[{text:t('en','Sign in on the web'),callback_data:'o:signin'}]]);
  }
+ // The Telegram language here is Russian; the answers stay in the account language, and an old Create button never offers sign-up.
+ assert.deepEqual((await run(press('o:agree'),context)).replies,[{chat_id:777,text:t('en','Share your phone number to sign in again.'),keyboard:{contact:t('en','Share my number')}}]);
  assert.equal(context.db.writes.length,0);
+ assert.equal((await run(press('o:signin'),context)).replies[0].text,t('en','Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.',{minutes:15}));
 });
 
 test('sharing your own number creates a confirmed phone account, links the chat and starts the setup',async()=>{
@@ -199,7 +204,8 @@ test('someone who pressed stop signs back in with the same number, and with no o
 test('a linked email account can add its number from the chat, once and only if it is free',async()=>{
  const seed=()=>({telegram_subscriptions:[subscription({chat_id:777})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]});
  const context=setup({seed:seed()});
- assert.deepEqual((await run(text('/phone'),context)).replies[0].keyboard,{contact:t('en','Share my number')});
+ const asked=(await run(text('/phone'),context)).replies[0];
+ assert.deepEqual(asked,{chat_id:777,text:t('en','Share your phone number so you can also sign in on the web with it.'),keyboard:{contact:t('en','Share my number')}});
  const saved=await run(contact(),context);
  assert.deepEqual(context.phones,[[ownerId,'+998901234567']]);
  assert.equal(context.db.tables.telegram_subscriptions[0].phone,'+998901234567');assert.equal(context.db.tables.telegram_subscriptions[0].telegram_user_id,777);

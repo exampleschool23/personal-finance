@@ -11,7 +11,8 @@ needed.
    earlier visit) and offers **Create an account** or **I already have an
    account**, with the terms and privacy links below. Creating shows a
    **Share my number** button. Someone who signed out of an account made in
-   the bot is only asked for their number again. Only the person's own contact is accepted
+   the bot gets the same layout in that account's language: **Sign in with my
+   number** or **Sign in on the web**, never sign-up. Only the person's own contact is accepted
    (Telegram reports the contact's user, which must equal the sender).
 2. **Account.** The server creates a Supabase user with the phone already
    confirmed, a preferences row, and a linked Telegram chat. Its password is
