@@ -123,6 +123,13 @@ test('stale drafts are ignored, database refusals are relayed, and the loan flow
  await handleTelegramUpdate(press(500,'f:date:today'),refused,clock);
  const outcome=await handleTelegramUpdate(press(500,'f:save'),refused,clock);
  assert.equal(outcome.replies[0].text,'Could not save. Insufficient balance.');
+ // The refused draft is kept at the confirmation, with Back to correct it.
+ assert.deepEqual(outcome.replies[0].keyboard.inline.flat().map(button=>button.callback_data),['f:back','f:cancel']);
+ assert.deepEqual(refused.drafts.map(d=>d.step),['repayment:confirm']);
+ assert.equal((await handleTelegramUpdate(press(500,'f:back'),refused,clock)).replies[0].text,'Which day? Choose, or type a date like 2026-09-30');
+ // An overdrawn account fails a balance constraint, which the bot explains as the app does.
+ const overdrawn=fakeDb({...workspace(),rpcFailure:{code:'23514',message:'new row violates check constraint'},drafts:[{user_id:owner,step:'repayment:confirm',data:{id:id(50),target_id:id(10),account_id:id(2),amount:400,date:'2026-09-30'},updated_at:clock.now.toISOString()}]});
+ assert.equal((await handleTelegramUpdate(press(500,'f:save'),overdrawn,clock)).replies[0].text,'Could not save. Insufficient balance or invalid amount.');
  const rpc=refused.writes.find(write=>write.path==='/rest/v1/rpc/telegram_planning_action');
  assert.deepEqual(rpc.body,{p_owner:owner,p_action:'repayment',p_data:{id:clock.newId(),account_id:id(2),target_id:id(10),amount:400,received:0,fee:0,date:'2026-09-30',notes:''}});
 });

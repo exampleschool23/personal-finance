@@ -16,7 +16,7 @@ import {normalizePhone} from './phone';
 import {recordSchema} from './record-schema';
 import type {ServiceDatabase} from './service-role';
 import {adminAccounts,createLoginToken,createTelegramAccount,type AdminAccounts} from './telegram-account';
-import {advance,mainMenu,prompt,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
+import {advance,mainMenu,prompt,retryKeyboard,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
 import {linkExpired,startCode,type TelegramSubscription} from './telegram-link';
 import {advanceOnboarding,isOnboardDraft,onboardPrompt,startOnboarding,type OnboardDraft} from './telegram-onboarding';
 import type {TelegramMessage} from './telegram';
@@ -87,7 +87,7 @@ async function loadContext(db:ServiceDatabase,owner:string,language:Language,clo
   db.read<Category[]>(`/rest/v1/transaction_categories?select=id,name,direction&user_id=eq.${owner}`),
   db.read<Array<{currencies?:string[]}>>('/rest/v1/user_preferences?select=currencies&user_id=eq.'+owner),
  ]);
- return {language,currencies:preferences[0]?.currencies??[],today:clock.today,newId:clock.newId(),categories,records,accounts:records.filter(record=>record.kind==='Cash'),liabilities:records.filter(record=>['Loan','Debt','Mortgage'].includes(record.kind))};
+ return {language,currencies:preferences[0]?.currencies??[],today:clock.today,newId:clock.newId(),categories,records,accounts:records.filter(record=>record.kind==='Cash'),businesses:records.filter(record=>record.kind==='Business'),liabilities:records.filter(record=>['Loan','Debt','Mortgage'].includes(record.kind))};
 }
 function commitEvent(commit:Commit):ActionEvent{
  if(commit.type==='record')return {type:'record',created:true,kind:commit.record.kind,name:commit.record.name,amount:commit.record.amount,currency:commit.record.currency,date:commit.record.date||null,frequency:commit.record.frequency};
@@ -113,7 +113,9 @@ async function commitDraft(db:ServiceDatabase,owner:string,commit:Commit,ctx:Flo
  }
  if(!response.ok){
   const failure=await response.json().catch(()=>({})) as {code?:string;message?:string};
-  return failed(t(language,'Could not save. {reason}',{reason:failure.code==='P0001'&&failure.message?failure.message:t(language,'Please try again.')}));
+  // The same wording the app gives: named refusals are relayed, an overdrawn balance and a duplicate are explained.
+  const reason=failure.code==='P0001'&&failure.message?t(language,failure.message):failure.code==='23514'?t(language,'Insufficient balance or invalid amount.'):failure.code==='23505'?t(language,'This name or payment already exists.'):t(language,'Please try again.');
+  return failed(t(language,'Could not save. {reason}',{reason}));
  }
  const lookup:ActionLookup={records:Object.fromEntries(ctx.records.map(record=>[record.id,{name:record.name,kind:record.kind,currency:record.currency}])),goals:{},deleted:{}};
  return {text:`${t(language,'Saved.')}\n${actionMessage(commitEvent(commit),lookup,language)}`,saved:true};
@@ -172,6 +174,11 @@ async function converse(db:ServiceDatabase,subscription:TelegramSubscription,cha
    const fresh=await loadContext(db,owner,language,clock);
    await storeDraft(db,owner,resume,clock.now);
    return [{chat_id:chatId,text:outcome.text},prompt(resume,fresh,chatId)];
+  }
+  // A refused save keeps the answers, so Back can correct the one that was wrong.
+  if(!outcome.saved&&draft){
+   await storeDraft(db,owner,draft,clock.now);
+   return [{chat_id:chatId,text:outcome.text,keyboard:retryKeyboard(draft,ctx)}];
   }
   return [{chat_id:chatId,text:outcome.text,keyboard:mainMenu(language)}];
  }

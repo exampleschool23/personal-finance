@@ -255,3 +255,25 @@ test('the bot creates loans, debts and mortgages itself, and a loan payment with
  assert.equal(mortgage.draft.step,'lname');assert.equal(mortgage.draft.data.lkind,'Mortgage');
  assert.equal(advance(mortgage.draft,{callback:'f:back'},none,chat).draft.step,'lname','the kind question was never asked');
 });
+
+test('business income asks which business, and is offered only when one exists',()=>{
+ const none=advance(null,{text:'Income'},ctx(),chat);
+ assert.deepEqual(buttons(none.reply),['f:cat:'+id(21),'f:cat:Salary','f:cat:Rent income','f:cat:Other income','f:cancel']);
+ // A stale button cannot pick it either.
+ assert.equal(advance(none.draft,{callback:'f:cat:Business income'},ctx(),chat).draft.step,'category');
+ const withBusiness={...ctx(),businesses:[entry(40,'Cafe','Business',1000,'USD')]};
+ const start=advance(null,{text:'Income'},withBusiness,chat);
+ assert.ok(buttons(start.reply).includes('f:cat:Business income'));
+ const business=advance(start.draft,{callback:'f:cat:Business income'},withBusiness,chat);
+ assert.equal(business.draft.step,'business');assert.equal(business.reply.text,'Choose a business');assert.deepEqual(buttons(business.reply),['f:biz:'+id(40),'f:back','f:cancel']);
+ assert.equal(advance(business.draft,{callback:'f:biz:'+id(41)},withBusiness,chat).draft.step,'business','an unknown business is refused');
+ const account=advance(business.draft,{callback:'f:biz:'+id(40)},withBusiness,chat);
+ assert.equal(account.draft.step,'account');
+ assert.equal(advance(account.draft,{callback:'f:back'},withBusiness,chat).draft.step,'business');
+ const saved=run([{callback:'f:acc:'+id(2)},{text:'120'},{callback:'f:skip'},{callback:'f:date:today'},{callback:'f:save'}].reduce((steps,step)=>[...steps,step],[{text:'Income'},{callback:'f:cat:Business income'},{callback:'f:biz:'+id(40)}]),withBusiness);
+ assert.equal(saved.commit.record.kind,'Business income');assert.equal(saved.commit.record.business_id,id(40));
+ assert.equal(recordSchema.safeParse(saved.commit.record).success,true);
+ // Other income skips the business question, and Back from the account returns to the category.
+ const salary=advance(start.draft,{callback:'f:cat:Salary'},withBusiness,chat);
+ assert.equal(salary.draft.step,'account');assert.equal(advance(salary.draft,{callback:'f:back'},withBusiness,chat).draft.step,'category');
+});
