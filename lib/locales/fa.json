@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "حساب شما با شماره تلفن ساخته شده است. برای مدیریت حساب، تغییر گذرواژه یا حذف آن، ایمیل و گذرواژه اضافه کنید.",
   "or sign in with your phone": "یا با شماره تلفن وارد شوید",
   "Approximate monthly income (optional)": "درآمد ماهانه تقریبی (اختیاری)",
-  "A rough guess for your own reference. It is not added to forecasts.": "یک برآورد تقریبی برای مرجع شما. به پیش‌بینی‌ها افزوده نمی‌شود."
+  "A rough guess for your own reference. It is not added to forecasts.": "یک برآورد تقریبی برای مرجع شما. به پیش‌بینی‌ها افزوده نمی‌شود.",
+  "Terms of use": "شرایط استفاده",
+  "Privacy policy": "سیاست حریم خصوصی",
+  "Last updated: {date}": "آخرین به‌روزرسانی: {date}",
+  "This document is available in English.": "این سند به زبان انگلیسی در دسترس است.",
+  "Back to Hoggish": "بازگشت به Hoggish",
+  "Legal": "اطلاعات حقوقی",
+  "By creating an account, you agree to the terms of use and privacy policy.": "با ساختن حساب، شرایط استفاده و سیاست حریم خصوصی را می‌پذیرید."
 }

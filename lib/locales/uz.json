@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Akkauntingiz telefon raqami orqali yaratilgan. Uni boshqarish, parolni o‘zgartirish yoki o‘chirish uchun elektron pochta va parol qo‘shing.",
   "or sign in with your phone": "yoki telefon orqali kiring",
   "Approximate monthly income (optional)": "Taxminiy oylik daromad (ixtiyoriy)",
-  "A rough guess for your own reference. It is not added to forecasts.": "O‘zingiz uchun taxminiy qiymat. Prognozlarga qo‘shilmaydi."
+  "A rough guess for your own reference. It is not added to forecasts.": "O‘zingiz uchun taxminiy qiymat. Prognozlarga qo‘shilmaydi.",
+  "Terms of use": "Foydalanish shartlari",
+  "Privacy policy": "Maxfiylik siyosati",
+  "Last updated: {date}": "Oxirgi yangilanish: {date}",
+  "This document is available in English.": "Bu hujjat ingliz tilida mavjud.",
+  "Back to Hoggish": "Hoggish’ga qaytish",
+  "Legal": "Huquqiy ma’lumot",
+  "By creating an account, you agree to the terms of use and privacy policy.": "Hisob yaratish orqali siz foydalanish shartlari va maxfiylik siyosatiga rozilik bildirasiz."
 }

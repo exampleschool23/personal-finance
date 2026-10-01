@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Ginawa ang iyong account gamit ang numero ng telepono. Magdagdag ng email at password para ma-manage ito, mapalitan ang password, o ma-delete ito.",
   "or sign in with your phone": "o mag-sign in gamit ang iyong telepono",
   "Approximate monthly income (optional)": "Tinatayang buwanang kita (opsyonal)",
-  "A rough guess for your own reference. It is not added to forecasts.": "Magaspang na tantiya para sa sarili mong sanggunian. Hindi ito idinadagdag sa mga forecast."
+  "A rough guess for your own reference. It is not added to forecasts.": "Magaspang na tantiya para sa sarili mong sanggunian. Hindi ito idinadagdag sa mga forecast.",
+  "Terms of use": "Mga tuntunin ng paggamit",
+  "Privacy policy": "Patakaran sa privacy",
+  "Last updated: {date}": "Huling na-update: {date}",
+  "This document is available in English.": "Available ang dokumentong ito sa Ingles.",
+  "Back to Hoggish": "Bumalik sa Hoggish",
+  "Legal": "Legal na impormasyon",
+  "By creating an account, you agree to the terms of use and privacy policy.": "Sa paggawa ng account, sumasang-ayon ka sa mga tuntunin ng paggamit at patakaran sa privacy."
 }

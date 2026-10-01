@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "계정이 휴대폰 번호로 만들어졌습니다. 이메일과 비밀번호를 추가하면 계정을 관리하고, 비밀번호를 바꾸거나 계정을 삭제할 수 있습니다.",
   "or sign in with your phone": "또는 휴대폰 번호로 로그인",
   "Approximate monthly income (optional)": "월 예상 수입 (선택)",
-  "A rough guess for your own reference. It is not added to forecasts.": "참고용 대략적인 금액입니다. 예측에는 포함되지 않습니다."
+  "A rough guess for your own reference. It is not added to forecasts.": "참고용 대략적인 금액입니다. 예측에는 포함되지 않습니다.",
+  "Terms of use": "이용약관",
+  "Privacy policy": "개인정보 처리방침",
+  "Last updated: {date}": "최종 업데이트: {date}",
+  "This document is available in English.": "이 문서는 영어로 제공됩니다.",
+  "Back to Hoggish": "Hoggish로 돌아가기",
+  "Legal": "법적 고지",
+  "By creating an account, you agree to the terms of use and privacy policy.": "계정을 만들면 이용약관 및 개인정보 처리방침에 동의하게 됩니다."
 }

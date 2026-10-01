@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.",
   "or sign in with your phone": "or sign in with your phone",
   "Approximate monthly income (optional)": "Approximate monthly income (optional)",
-  "A rough guess for your own reference. It is not added to forecasts.": "A rough guess for your own reference. It is not added to forecasts."
+  "A rough guess for your own reference. It is not added to forecasts.": "A rough guess for your own reference. It is not added to forecasts.",
+  "Terms of use": "Terms of use",
+  "Privacy policy": "Privacy policy",
+  "Last updated: {date}": "Last updated: {date}",
+  "This document is available in English.": "This document is available in English.",
+  "Back to Hoggish": "Back to Hoggish",
+  "Legal": "Legal",
+  "By creating an account, you agree to the terms of use and privacy policy.": "By creating an account, you agree to the terms of use and privacy policy."
 }

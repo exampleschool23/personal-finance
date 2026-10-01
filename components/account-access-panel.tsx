@@ -3,6 +3,7 @@ import { showNotice } from '@/lib/feedback';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import {useEffect,useState} from 'react';
 import Link from 'next/link';
+import {legalPaths} from '@/lib/legal';
 import {MailCheck} from 'lucide-react';
 import {useRouter} from 'next/navigation';
 import {useLanguage} from '@/components/language-provider';
@@ -29,6 +30,6 @@ export function AccountAccessPanel({settings=false,tokenHash='',tokenType='email
  {mode==='verify'&&<p>{t('Continue to verify this email link. Links expire and can only be used once.')}</p>}
  </fieldset>{mode==='delete_account'&&!capabilities.deletion&&<p role="status">{t('Account deletion is awaiting server setup.')}</p>}<Button variant={mode==='delete_account'?'destructive':'default'} disabled={busy||(needsPassword&&password!==repeat)||(mode==='delete_account'&&(!capabilities.deletion||confirmation!=='DELETE'||!current))}>{t(busy?'Saving…':mode==='change_password'?'Change password':mode==='verify'?'Verify email link':mode==='delete_account'?'Permanently delete account':'Continue')}</Button>
  {mode==='delete_account'&&<Button type="button" variant="outline" disabled={busy} onClick={()=>{setMode('change_password');setCurrent('');setConfirmation('');setError('');}}>{t('Cancel')}</Button>}
- </form>{settings&&mode!=='delete_account'&&!capabilities.phoneOnly&&<div className="account-danger-zone mt-6 border-t border-destructive/30 pt-6"><h3 className="font-semibold text-destructive">{t('Permanently delete account')}</h3><p className="my-3 text-sm text-muted-foreground">{t('This permanently deletes your account and financial records. Download a backup first. This cannot be undone.')}</p><Button type="button" variant="destructive" disabled={busy} onClick={()=>{setMode('delete_account');setCurrent('');setPassword('');setRepeat('');setConfirmation('');setError('');}}>{t('Delete account')}</Button></div>}<ErrorPopup message={error}/>{!settings&&<Link href="/">{t('Back to sign in')}</Link>}
+ </form>{mode==='signup'&&<p className="legal-consent">{t('By creating an account, you agree to the terms of use and privacy policy.')} <Link href={legalPaths.terms}>{t('Terms of use')}</Link> · <Link href={legalPaths.privacy}>{t('Privacy policy')}</Link></p>}{settings&&mode!=='delete_account'&&!capabilities.phoneOnly&&<div className="account-danger-zone mt-6 border-t border-destructive/30 pt-6"><h3 className="font-semibold text-destructive">{t('Permanently delete account')}</h3><p className="my-3 text-sm text-muted-foreground">{t('This permanently deletes your account and financial records. Download a backup first. This cannot be undone.')}</p><Button type="button" variant="destructive" disabled={busy} onClick={()=>{setMode('delete_account');setCurrent('');setPassword('');setRepeat('');setConfirmation('');setError('');}}>{t('Delete account')}</Button></div>}<ErrorPopup message={error}/>{!settings&&<Link href="/">{t('Back to sign in')}</Link>}
  </section>;
 }

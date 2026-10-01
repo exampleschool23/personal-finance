@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Hesabınız bir telefon numarasıyla oluşturuldu. Hesabı yönetmek, şifrenizi değiştirmek veya silmek için e-posta ve şifre ekleyin.",
   "or sign in with your phone": "veya telefonunuzla giriş yapın",
   "Approximate monthly income (optional)": "Yaklaşık aylık gelir (isteğe bağlı)",
-  "A rough guess for your own reference. It is not added to forecasts.": "Kendi referansınız için kaba bir tahmin. Tahminlere eklenmez."
+  "A rough guess for your own reference. It is not added to forecasts.": "Kendi referansınız için kaba bir tahmin. Tahminlere eklenmez.",
+  "Terms of use": "Kullanım koşulları",
+  "Privacy policy": "Gizlilik politikası",
+  "Last updated: {date}": "Son güncelleme: {date}",
+  "This document is available in English.": "Bu belge İngilizce olarak sunulmaktadır.",
+  "Back to Hoggish": "Hoggish’e dön",
+  "Legal": "Yasal bilgiler",
+  "By creating an account, you agree to the terms of use and privacy policy.": "Hesap oluşturarak kullanım koşullarını ve gizlilik politikasını kabul etmiş olursunuz."
 }

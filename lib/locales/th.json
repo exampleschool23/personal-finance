@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "บัญชีของคุณสร้างด้วยหมายเลขโทรศัพท์ เพิ่มอีเมลและรหัสผ่านเพื่อจัดการบัญชี เปลี่ยนรหัสผ่าน หรือลบบัญชี",
   "or sign in with your phone": "หรือเข้าสู่ระบบด้วยโทรศัพท์",
   "Approximate monthly income (optional)": "รายได้รายเดือนโดยประมาณ (ไม่บังคับ)",
-  "A rough guess for your own reference. It is not added to forecasts.": "ค่าประมาณคร่าว ๆ ไว้อ้างอิงเท่านั้น ไม่นำไปรวมในการคาดการณ์"
+  "A rough guess for your own reference. It is not added to forecasts.": "ค่าประมาณคร่าว ๆ ไว้อ้างอิงเท่านั้น ไม่นำไปรวมในการคาดการณ์",
+  "Terms of use": "ข้อกำหนดการใช้งาน",
+  "Privacy policy": "นโยบายความเป็นส่วนตัว",
+  "Last updated: {date}": "อัปเดตล่าสุด: {date}",
+  "This document is available in English.": "เอกสารนี้มีให้บริการเป็นภาษาอังกฤษ",
+  "Back to Hoggish": "กลับไปที่ Hoggish",
+  "Legal": "ข้อมูลทางกฎหมาย",
+  "By creating an account, you agree to the terms of use and privacy policy.": "การสร้างบัญชีหมายความว่าคุณยอมรับข้อกำหนดการใช้งานและนโยบายความเป็นส่วนตัว"
 }

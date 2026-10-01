@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "আপনার অ্যাকাউন্ট ফোন নম্বর দিয়ে তৈরি হয়েছে। এটি পরিচালনা করতে, পাসওয়ার্ড বদলাতে বা মুছতে ইমেইল ও পাসওয়ার্ড যোগ করুন।",
   "or sign in with your phone": "অথবা ফোন নম্বর দিয়ে সাইন ইন করুন",
   "Approximate monthly income (optional)": "আনুমানিক মাসিক আয় (ঐচ্ছিক)",
-  "A rough guess for your own reference. It is not added to forecasts.": "আপনার নিজের রেফারেন্সের জন্য একটি মোটামুটি অনুমান। এটি পূর্বাভাসে যোগ করা হয় না।"
+  "A rough guess for your own reference. It is not added to forecasts.": "আপনার নিজের রেফারেন্সের জন্য একটি মোটামুটি অনুমান। এটি পূর্বাভাসে যোগ করা হয় না।",
+  "Terms of use": "ব্যবহারের শর্তাবলি",
+  "Privacy policy": "গোপনীয়তা নীতি",
+  "Last updated: {date}": "সর্বশেষ হালনাগাদ: {date}",
+  "This document is available in English.": "এই নথিটি ইংরেজিতে পাওয়া যায়।",
+  "Back to Hoggish": "Hoggish-এ ফিরে যান",
+  "Legal": "আইনি তথ্য",
+  "By creating an account, you agree to the terms of use and privacy policy.": "অ্যাকাউন্ট তৈরি করে আপনি ব্যবহারের শর্তাবলি ও গোপনীয়তা নীতিতে সম্মত হচ্ছেন।"
 }

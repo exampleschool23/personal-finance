@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "החשבון שלכם נוצר עם מספר טלפון. הוסיפו אימייל וסיסמה כדי לנהל אותו, לשנות את הסיסמה או למחוק אותו.",
   "or sign in with your phone": "או התחברו עם הטלפון שלכם",
   "Approximate monthly income (optional)": "הכנסה חודשית משוערת (אופציונלי)",
-  "A rough guess for your own reference. It is not added to forecasts.": "הערכה גסה לעיונך. אינה מתווספת לתחזיות."
+  "A rough guess for your own reference. It is not added to forecasts.": "הערכה גסה לעיונך. אינה מתווספת לתחזיות.",
+  "Terms of use": "תנאי שימוש",
+  "Privacy policy": "מדיניות פרטיות",
+  "Last updated: {date}": "עודכן לאחרונה: {date}",
+  "This document is available in English.": "מסמך זה זמין באנגלית.",
+  "Back to Hoggish": "חזרה ל-Hoggish",
+  "Legal": "מידע משפטי",
+  "By creating an account, you agree to the terms of use and privacy policy.": "ביצירת חשבון אתם מסכימים לתנאי השימוש ולמדיניות הפרטיות."
 }

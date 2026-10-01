@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "आपका खाता फ़ोन नंबर से बना था। इसे सँभालने, पासवर्ड बदलने या हटाने के लिए ईमेल और पासवर्ड जोड़ें।",
   "or sign in with your phone": "या फ़ोन नंबर से साइन इन करें",
   "Approximate monthly income (optional)": "अनुमानित मासिक आय (वैकल्पिक)",
-  "A rough guess for your own reference. It is not added to forecasts.": "आपके संदर्भ के लिए मोटा अनुमान। इसे पूर्वानुमानों में नहीं जोड़ा जाता।"
+  "A rough guess for your own reference. It is not added to forecasts.": "आपके संदर्भ के लिए मोटा अनुमान। इसे पूर्वानुमानों में नहीं जोड़ा जाता।",
+  "Terms of use": "उपयोग की शर्तें",
+  "Privacy policy": "गोपनीयता नीति",
+  "Last updated: {date}": "अंतिम अपडेट: {date}",
+  "This document is available in English.": "यह दस्तावेज़ अंग्रेज़ी में उपलब्ध है।",
+  "Back to Hoggish": "Hoggish पर वापस जाएँ",
+  "Legal": "कानूनी जानकारी",
+  "By creating an account, you agree to the terms of use and privacy policy.": "अकाउंट बनाकर आप उपयोग की शर्तों और गोपनीयता नीति से सहमत होते हैं।"
 }

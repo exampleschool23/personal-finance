@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Váš účet byl vytvořen pomocí telefonního čísla. Přidejte e-mail a heslo, abyste jej mohli spravovat, změnit heslo nebo jej smazat.",
   "or sign in with your phone": "nebo se přihlaste telefonem",
   "Approximate monthly income (optional)": "Přibližný měsíční příjem (volitelné)",
-  "A rough guess for your own reference. It is not added to forecasts.": "Hrubý odhad pro vaši orientaci. Do prognóz se nezapočítává."
+  "A rough guess for your own reference. It is not added to forecasts.": "Hrubý odhad pro vaši orientaci. Do prognóz se nezapočítává.",
+  "Terms of use": "Podmínky použití",
+  "Privacy policy": "Zásady ochrany osobních údajů",
+  "Last updated: {date}": "Naposledy aktualizováno: {date}",
+  "This document is available in English.": "Tento dokument je k dispozici v angličtině.",
+  "Back to Hoggish": "Zpět do Hoggish",
+  "Legal": "Právní informace",
+  "By creating an account, you agree to the terms of use and privacy policy.": "Vytvořením účtu souhlasíte s podmínkami použití a zásadami ochrany osobních údajů."
 }

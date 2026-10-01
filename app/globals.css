@@ -157,6 +157,17 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
 .auth-page .panel form>[data-slot=button]+[data-slot=button]{margin-top:8px}
 .auth-page .panel>a{display:inline-block;margin-top:20px;font-size:var(--type-small);font-weight:500;color:var(--primary)}
 .auth-page .panel>a:hover{text-decoration:underline;text-underline-offset:3px}
+.auth-page>.legal-document{max-width:760px;margin-top:8px;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:20px}
+.legal-document h1{font-size:var(--type-page);font-weight:650;letter-spacing:-.02em;line-height:1.15}
+.legal-document>p.muted{margin-top:-12px;font-size:var(--type-small)}
+.legal-language-note{padding:10px 14px;border-radius:var(--radius-control);background:var(--muted);font-size:var(--type-small)}
+.legal-document section{display:flex;flex-direction:column;gap:8px}
+.legal-document h2{font-size:var(--type-title);font-weight:600}
+.legal-document p,.legal-document li{font-size:var(--type-body);line-height:1.65;color:var(--foreground)}
+.legal-document ul{display:flex;flex-direction:column;gap:6px;padding-inline-start:20px;list-style:disc}
+.legal-links{display:flex;flex-wrap:wrap;gap:12px 24px;padding-top:16px;border-top:1px solid var(--hairline);font-size:var(--type-small);font-weight:500}
+.legal-consent{margin-top:16px;font-size:var(--type-caption);color:var(--muted-foreground);line-height:1.6}.legal-consent a{color:var(--primary)}
+.legal-links a{color:var(--primary)}.legal-links a:hover{text-decoration:underline;text-underline-offset:3px}
 @media(max-width:480px){.auth-page>.panel{margin-top:16px;padding:24px 20px}}
 
 /* Form fields. */

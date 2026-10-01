@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Tài khoản của bạn được tạo bằng số điện thoại. Hãy thêm email và mật khẩu để quản lý tài khoản, đổi mật khẩu hoặc xóa tài khoản.",
   "or sign in with your phone": "hoặc đăng nhập bằng số điện thoại",
   "Approximate monthly income (optional)": "Thu nhập hằng tháng ước tính (tùy chọn)",
-  "A rough guess for your own reference. It is not added to forecasts.": "Con số ước chừng để bạn tham khảo. Không được cộng vào dự báo."
+  "A rough guess for your own reference. It is not added to forecasts.": "Con số ước chừng để bạn tham khảo. Không được cộng vào dự báo.",
+  "Terms of use": "Điều khoản sử dụng",
+  "Privacy policy": "Chính sách quyền riêng tư",
+  "Last updated: {date}": "Cập nhật lần cuối: {date}",
+  "This document is available in English.": "Tài liệu này có bằng tiếng Anh.",
+  "Back to Hoggish": "Quay lại Hoggish",
+  "Legal": "Thông tin pháp lý",
+  "By creating an account, you agree to the terms of use and privacy policy.": "Khi tạo tài khoản, bạn đồng ý với điều khoản sử dụng và chính sách quyền riêng tư."
 }

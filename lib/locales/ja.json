@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "アカウントは電話番号で作成されました。メールアドレスとパスワードを追加すると、アカウントの管理、パスワードの変更、削除ができます。",
   "or sign in with your phone": "または電話番号でログイン",
   "Approximate monthly income (optional)": "月の概算収入（任意）",
-  "A rough guess for your own reference. It is not added to forecasts.": "ご自身の目安となる大まかな金額です。予測には加算されません。"
+  "A rough guess for your own reference. It is not added to forecasts.": "ご自身の目安となる大まかな金額です。予測には加算されません。",
+  "Terms of use": "利用規約",
+  "Privacy policy": "プライバシーポリシー",
+  "Last updated: {date}": "最終更新日：{date}",
+  "This document is available in English.": "この文書は英語で提供されています。",
+  "Back to Hoggish": "Hoggish に戻る",
+  "Legal": "法的情報",
+  "By creating an account, you agree to the terms of use and privacy policy.": "アカウントを作成すると、利用規約とプライバシーポリシーに同意したことになります。"
 }

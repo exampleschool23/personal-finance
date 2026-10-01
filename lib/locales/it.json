@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Il tuo account è stato creato con un numero di telefono. Aggiungi un'e-mail e una password per gestirlo, cambiare la password o eliminarlo.",
   "or sign in with your phone": "oppure accedi con il tuo telefono",
   "Approximate monthly income (optional)": "Reddito mensile approssimativo (facoltativo)",
-  "A rough guess for your own reference. It is not added to forecasts.": "Una stima approssimativa per tuo riferimento. Non viene aggiunta alle previsioni."
+  "A rough guess for your own reference. It is not added to forecasts.": "Una stima approssimativa per tuo riferimento. Non viene aggiunta alle previsioni.",
+  "Terms of use": "Termini di utilizzo",
+  "Privacy policy": "Informativa sulla privacy",
+  "Last updated: {date}": "Ultimo aggiornamento: {date}",
+  "This document is available in English.": "Questo documento è disponibile in inglese.",
+  "Back to Hoggish": "Torna a Hoggish",
+  "Legal": "Note legali",
+  "By creating an account, you agree to the terms of use and privacy policy.": "Creando un account, accetti i termini di utilizzo e l’informativa sulla privacy."
 }

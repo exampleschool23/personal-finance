@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney } from '@/lib/format';
+import { legalPaths } from '@/lib/legal';
 import { PhoneSignIn } from '@/components/phone-sign-in';
 import styles from './sign-in-screen.module.css';
 
@@ -63,6 +64,6 @@ export function SignInScreen({ brand, preferences, busy, configured, error, onLo
         <div className={styles.demo}><p>{t('Take a look around first.')}</p><Button type="button" variant="outline" onClick={onDemo} disabled={busy}>{t('Explore sample workspace')}<ArrowRight size={16}/></Button><small>{t('No account needed. Just sample data.')}</small></div>
       </section>
     </div>
-    <footer className={styles.footer}><span>{t('Personal finance, thoughtfully organized.')}</span><span><LockKeyhole size={13}/>{t('Your records are private to your account.')}</span></footer>
+    <footer className={styles.footer}><span>{t('Personal finance, thoughtfully organized.')}</span><nav className={styles.legal} aria-label={t('Legal')}><Link href={legalPaths.terms}>{t('Terms of use')}</Link><Link href={legalPaths.privacy}>{t('Privacy policy')}</Link></nav><span><LockKeyhole size={13}/>{t('Your records are private to your account.')}</span></footer>
   </main>;
 }

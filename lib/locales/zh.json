@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "您的账户是用手机号码创建的。添加邮箱和密码后,即可管理账户、更改密码或删除账户。",
   "or sign in with your phone": "或使用手机号码登录",
   "Approximate monthly income (optional)": "每月大致收入（可选）",
-  "A rough guess for your own reference. It is not added to forecasts.": "仅供您参考的粗略估计，不会计入预测。"
+  "A rough guess for your own reference. It is not added to forecasts.": "仅供您参考的粗略估计，不会计入预测。",
+  "Terms of use": "使用条款",
+  "Privacy policy": "隐私政策",
+  "Last updated: {date}": "最后更新：{date}",
+  "This document is available in English.": "本文件提供英文版本。",
+  "Back to Hoggish": "返回 Hoggish",
+  "Legal": "法律信息",
+  "By creating an account, you agree to the terms of use and privacy policy.": "创建账户即表示您同意使用条款和隐私政策。"
 }

@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Akaunti yako iliundwa kwa namba ya simu. Ongeza barua pepe na nenosiri ili kuisimamia, kubadilisha nenosiri lako au kuifuta.",
   "or sign in with your phone": "au ingia kwa simu yako",
   "Approximate monthly income (optional)": "Makadirio ya kipato cha kila mwezi (hiari)",
-  "A rough guess for your own reference. It is not added to forecasts.": "Makadirio ya jumla kwa rejea yako. Hayaongezwi kwenye utabiri."
+  "A rough guess for your own reference. It is not added to forecasts.": "Makadirio ya jumla kwa rejea yako. Hayaongezwi kwenye utabiri.",
+  "Terms of use": "Masharti ya matumizi",
+  "Privacy policy": "Sera ya faragha",
+  "Last updated: {date}": "Ilisasishwa mwisho: {date}",
+  "This document is available in English.": "Hati hii inapatikana kwa Kiingereza.",
+  "Back to Hoggish": "Rudi kwa Hoggish",
+  "Legal": "Taarifa za kisheria",
+  "By creating an account, you agree to the terms of use and privacy policy.": "Kwa kufungua akaunti, unakubali masharti ya matumizi na sera ya faragha."
 }

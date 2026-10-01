@@ -12,6 +12,7 @@ import type {Entry} from './finance';
 import {translate,isLanguage,detectLanguage,type Language} from './i18n';
 import {upcomingPayments,type Category,type Occurrence} from './planning';
 import {planningSchemas} from './planning-schemas';
+import {legalPaths} from './legal';
 import {normalizePhone} from './phone';
 import {recordSchema} from './record-schema';
 import type {ServiceDatabase} from './service-role';
@@ -185,7 +186,8 @@ async function converse(db:ServiceDatabase,subscription:TelegramSubscription,cha
  }
  return result.reply?[result.reply]:[];
 }
-const welcome=(chatId:number,language:Language):TelegramMessage=>({chat_id:chatId,text:`${t(language,'Welcome to Hoggish. Track your money here in Telegram and in the app.')}\n\n${t(language,'By continuing you agree to the terms of use and privacy policy of Hoggish.')}`,keyboard:{inline:[[{text:t(language,'I agree'),callback_data:'o:agree'}]]}});
+/** The first message a stranger sees. The terms and privacy policy open in the browser, so they can be read before agreeing. */
+const welcome=(chatId:number,language:Language,env:BotEnv):TelegramMessage=>({chat_id:chatId,text:`${t(language,'Welcome to Hoggish. Track your money here in Telegram and in the app.')}\n\n${t(language,'By continuing you agree to the terms of use and privacy policy of Hoggish.')}`,keyboard:{inline:[...(env.appOrigin?[[{text:t(language,'Terms of use'),url:env.appOrigin+legalPaths.terms},{text:t(language,'Privacy policy'),url:env.appOrigin+legalPaths.privacy}]]:[]),[{text:t(language,'I agree'),callback_data:'o:agree'}]]}});
 const contactRequest=(chatId:number,language:Language):TelegramMessage=>({chat_id:chatId,text:t(language,'Share your phone number to create your account. It is also how you sign in on the web.'),keyboard:{contact:t(language,'Share my number')}});
 const subscriptionsWhere=(db:ServiceDatabase,filter:string)=>db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&'+filter);
 /** A contact the person shared with the button: sign up, sign back in, or add the number to a linked account. */
@@ -240,7 +242,7 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
   const chatId=update.callback_query.message?.chat.id;
   if(chatId===undefined)return {replies:[],callbackId:update.callback_query.id};
   const subscription=await subscriptionByChat(db,chatId),hint=fromHint(update.callback_query.from?.language_code);
-  if(!subscription)return {callbackId:update.callback_query.id,replies:[update.callback_query.data==='o:agree'?contactRequest(chatId,hint):welcome(chatId,hint)]};
+  if(!subscription)return {callbackId:update.callback_query.id,replies:[update.callback_query.data==='o:agree'?contactRequest(chatId,hint):welcome(chatId,hint,env)]};
   return {callbackId:update.callback_query.id,replies:await converse(db,subscription,chatId,{callback:update.callback_query.data??''},clock,env)};
  }
  const message=update.message;
@@ -251,7 +253,7 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
  if(code)return {replies:[await connect(db,chatId,code,now,hint,message.from)]};
  const subscription=await subscriptionByChat(db,chatId);
  // A chat nobody has linked is invited to create an account.
- if(!subscription)return {replies:[welcome(chatId,hint)]};
+ if(!subscription)return {replies:[welcome(chatId,hint,env)]};
  if(/^\/(?:stop|signout)(?:@\w+)?$/.test(text)||menuChoice(text)==='signout')return {replies:[await signOut(db,subscription,now)]};
  const language=await ownerLanguage(db,subscription.user_id);
  if(/^\/phone(?:@\w+)?$/.test(text))return {replies:[contactRequest(chatId,language)]};

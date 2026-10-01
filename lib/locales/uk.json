@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Ваш обліковий запис створено за допомогою номера телефону. Додайте електронну пошту й пароль, щоб керувати ним, змінити пароль або видалити його.",
   "or sign in with your phone": "або увійдіть за допомогою телефону",
   "Approximate monthly income (optional)": "Приблизний дохід на місяць (необов’язково)",
-  "A rough guess for your own reference. It is not added to forecasts.": "Грубе наближення для вашого орієнтиру. У прогнози не додається."
+  "A rough guess for your own reference. It is not added to forecasts.": "Грубе наближення для вашого орієнтиру. У прогнози не додається.",
+  "Terms of use": "Умови використання",
+  "Privacy policy": "Політика конфіденційності",
+  "Last updated: {date}": "Оновлено: {date}",
+  "This document is available in English.": "Цей документ доступний англійською мовою.",
+  "Back to Hoggish": "Повернутися до Hoggish",
+  "Legal": "Правова інформація",
+  "By creating an account, you agree to the terms of use and privacy policy.": "Створюючи обліковий запис, ви погоджуєтеся з умовами використання та політикою конфіденційності."
 }

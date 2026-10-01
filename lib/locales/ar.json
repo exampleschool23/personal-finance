@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "تم إنشاء حسابك برقم هاتف. أضف بريدًا إلكترونيًا وكلمة مرور لإدارته أو تغيير كلمة المرور أو حذفه.",
   "or sign in with your phone": "أو سجّل الدخول برقم هاتفك",
   "Approximate monthly income (optional)": "الدخل الشهري التقريبي (اختياري)",
-  "A rough guess for your own reference. It is not added to forecasts.": "تقدير تقريبي للرجوع إليه فقط. لا يُضاف إلى التوقعات."
+  "A rough guess for your own reference. It is not added to forecasts.": "تقدير تقريبي للرجوع إليه فقط. لا يُضاف إلى التوقعات.",
+  "Terms of use": "شروط الاستخدام",
+  "Privacy policy": "سياسة الخصوصية",
+  "Last updated: {date}": "آخر تحديث: {date}",
+  "This document is available in English.": "هذه الوثيقة متاحة باللغة الإنجليزية.",
+  "Back to Hoggish": "العودة إلى Hoggish",
+  "Legal": "معلومات قانونية",
+  "By creating an account, you agree to the terms of use and privacy policy.": "بإنشاء حساب، فإنك توافق على شروط الاستخدام وسياسة الخصوصية."
 }

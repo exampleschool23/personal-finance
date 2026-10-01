@@ -1838,5 +1838,12 @@
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Ваш аккаунт создан по номеру телефона. Добавьте электронную почту и пароль, чтобы управлять аккаунтом, менять пароль или удалить его.",
   "or sign in with your phone": "или войдите с помощью телефона",
   "Approximate monthly income (optional)": "Примерный доход в месяц (необязательно)",
-  "A rough guess for your own reference. It is not added to forecasts.": "Грубая оценка для вашего ориентира. В прогнозы не включается."
+  "A rough guess for your own reference. It is not added to forecasts.": "Грубая оценка для вашего ориентира. В прогнозы не включается.",
+  "Terms of use": "Условия использования",
+  "Privacy policy": "Политика конфиденциальности",
+  "Last updated: {date}": "Обновлено: {date}",
+  "This document is available in English.": "Этот документ доступен на английском языке.",
+  "Back to Hoggish": "Вернуться в Hoggish",
+  "Legal": "Правовая информация",
+  "By creating an account, you agree to the terms of use and privacy policy.": "Создавая аккаунт, вы соглашаетесь с условиями использования и политикой конфиденциальности."
 }
