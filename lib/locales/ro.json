@@ -1795,5 +1795,7 @@
   "Verify": "Verifică",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "Trimitem un cod în chatul tău Telegram. Nu ai încă un cont? Deschide botul nostru pentru a crea unul.",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Contul tău a fost creat cu un număr de telefon. Adaugă un e-mail și o parolă pentru a-l gestiona, a-ți schimba parola sau a-l șterge.",
-  "or sign in with your phone": "sau autentifică-te cu telefonul"
+  "or sign in with your phone": "sau autentifică-te cu telefonul",
+  "Approximate monthly income (optional)": "Venit lunar aproximativ (opțional)",
+  "A rough guess for your own reference. It is not added to forecasts.": "O estimare aproximativă, pentru referința ta. Nu se adaugă la previziuni."
 }

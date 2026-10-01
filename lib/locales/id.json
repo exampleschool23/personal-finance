@@ -1795,5 +1795,7 @@
   "Verify": "Verifikasi",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "Kami mengirim kode ke obrolan Telegram Anda. Belum punya akun? Buka bot kami untuk membuatnya.",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Akun Anda dibuat dengan nomor telepon. Tambahkan email dan kata sandi untuk mengelolanya, mengganti kata sandi, atau menghapusnya.",
-  "or sign in with your phone": "atau masuk dengan nomor telepon Anda"
+  "or sign in with your phone": "atau masuk dengan nomor telepon Anda",
+  "Approximate monthly income (optional)": "Perkiraan penghasilan bulanan (opsional)",
+  "A rough guess for your own reference. It is not added to forecasts.": "Perkiraan kasar untuk referensi Anda. Tidak ditambahkan ke proyeksi."
 }

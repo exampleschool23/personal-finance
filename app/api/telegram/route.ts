@@ -34,7 +34,7 @@ export async function POST(req:Request){
   if(parsed.data.action==='link'){
    const code=generateLinkCode(max=>randomInt(max));
    const response=await supa(table+'?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({user_id:s.user.id,link_code:code,link_code_expires_at:linkExpiry(new Date()),updated_at:now})},s.token);
-   if(!response.ok)throw Error('Could not start the Telegram link. Try again.');
+   if(!response.ok){console.error('[telegram link]',response.status,await response.text());throw Error('Could not start the Telegram link. Try again.');}
    return Response.json({url:telegramLinkUrl(config.botUsername,code)});
   }
   const patch=parsed.data.action==='unlink'?{chat_id:null,linked_at:null,link_code:null,link_code_expires_at:null,updated_at:now}:{digest_enabled:parsed.data.digest_enabled,actions_enabled:parsed.data.actions_enabled,updated_at:now};

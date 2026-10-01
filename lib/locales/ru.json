@@ -1795,5 +1795,7 @@
   "Verify": "Подтвердить",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "Мы отправим код в ваш чат Telegram. Ещё нет аккаунта? Откройте нашего бота, чтобы создать его.",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Ваш аккаунт создан по номеру телефона. Добавьте электронную почту и пароль, чтобы управлять аккаунтом, менять пароль или удалить его.",
-  "or sign in with your phone": "или войдите с помощью телефона"
+  "or sign in with your phone": "или войдите с помощью телефона",
+  "Approximate monthly income (optional)": "Примерный доход в месяц (необязательно)",
+  "A rough guess for your own reference. It is not added to forecasts.": "Грубая оценка для вашего ориентира. В прогнозы не включается."
 }

@@ -16,7 +16,7 @@ export function useEarningSources(user:string|null,demo:boolean,revision:number,
   const controller=new AbortController();
   refreshRead('/api/income-sources',{signal:controller.signal}).then(async response=>{
    const body=await response.json() as EarningSource[] & {error:string};if(!response.ok)throw Error(body.error);
-   if(!controller.signal.aborted)setState({owner,sources:body.map((source:EarningSource)=>({...source,amount:source.amount===null?null:Number(source.amount)})),error:''});
+   if(!controller.signal.aborted)setState({owner,sources:body.map((source:EarningSource)=>({...source,amount:source.amount===null?null:Number(source.amount),approx_monthly:source.approx_monthly==null?null:Number(source.approx_monthly)})),error:''});
   }).catch(error=>{if(!controller.signal.aborted)setState({owner,sources:[],error:error.message});});
   return()=>controller.abort();
  },[owner,demo,revision,retry]);

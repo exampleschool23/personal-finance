@@ -1795,5 +1795,7 @@
   "Verify": "Doğrula",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "Telegram sohbetinize bir kod göndeririz. Henüz hesabınız yok mu? Hesap oluşturmak için botumuzu açın.",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Hesabınız bir telefon numarasıyla oluşturuldu. Hesabı yönetmek, şifrenizi değiştirmek veya silmek için e-posta ve şifre ekleyin.",
-  "or sign in with your phone": "veya telefonunuzla giriş yapın"
+  "or sign in with your phone": "veya telefonunuzla giriş yapın",
+  "Approximate monthly income (optional)": "Yaklaşık aylık gelir (isteğe bağlı)",
+  "A rough guess for your own reference. It is not added to forecasts.": "Kendi referansınız için kaba bir tahmin. Tahminlere eklenmez."
 }

@@ -102,3 +102,17 @@ test('picker paid status matches the exact schedule and period, excluding dismis
  assert.equal(status(source,'2019-12-10',[paid]),null);
  assert.equal(status({...source,end_date:'2020-02-29'},'2020-03-10',[paid]),null);
 });
+test('variable income may carry a rough monthly figure that never becomes a forecast',()=>{
+ const approx={...variable,approx_monthly:1500};
+ assert.ok(earningSourceSchema.safeParse(approx).success);
+ assert.ok(earningSourceSchema.safeParse({...variable,approx_monthly:null}).success);
+ assert.equal(earningSourceSchema.safeParse({...variable,approx_monthly:0}).success,false);
+ assert.equal(earningSourceSchema.safeParse({...fixed,approx_monthly:100}).success,false);
+ assert.equal(sourceSchedule(approx),null);
+});
+test('migration 082 adds the column, limits it to variable sources and is part of setup.sql',()=>{
+ const migration=fs.readFileSync('migrations/082_variable_income_estimate.sql','utf8');
+ assert.match(migration,/approx_monthly>0/);assert.match(migration,/mode='variable' OR approx_monthly IS NULL/);
+ assert.match(migration,/approx_monthly=EXCLUDED\.approx_monthly/);
+ assert.ok(fs.readFileSync('database/setup.sql','utf8').includes(migration.split('\n').slice(3).join('\n').trimEnd()));
+});

@@ -1795,5 +1795,7 @@
   "Verify": "تحقق",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "نرسل رمزًا إلى محادثتك على Telegram. ليس لديك حساب بعد؟ افتح البوت لإنشاء حساب.",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "تم إنشاء حسابك برقم هاتف. أضف بريدًا إلكترونيًا وكلمة مرور لإدارته أو تغيير كلمة المرور أو حذفه.",
-  "or sign in with your phone": "أو سجّل الدخول برقم هاتفك"
+  "or sign in with your phone": "أو سجّل الدخول برقم هاتفك",
+  "Approximate monthly income (optional)": "الدخل الشهري التقريبي (اختياري)",
+  "A rough guess for your own reference. It is not added to forecasts.": "تقدير تقريبي للرجوع إليه فقط. لا يُضاف إلى التوقعات."
 }

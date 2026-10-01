@@ -1795,5 +1795,7 @@
   "Verify": "Ověřit",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "Posíláme kód do vašeho chatu v Telegramu. Ještě nemáte účet? Otevřete našeho bota a vytvořte si ho.",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Váš účet byl vytvořen pomocí telefonního čísla. Přidejte e-mail a heslo, abyste jej mohli spravovat, změnit heslo nebo jej smazat.",
-  "or sign in with your phone": "nebo se přihlaste telefonem"
+  "or sign in with your phone": "nebo se přihlaste telefonem",
+  "Approximate monthly income (optional)": "Přibližný měsíční příjem (volitelné)",
+  "A rough guess for your own reference. It is not added to forecasts.": "Hrubý odhad pro vaši orientaci. Do prognóz se nezapočítává."
 }

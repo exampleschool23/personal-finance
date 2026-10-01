@@ -1795,5 +1795,7 @@
   "Verify": "सत्यापित करें",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "हम आपकी Telegram चैट में एक कोड भेजते हैं। अभी खाता नहीं है? बनाने के लिए हमारा बॉट खोलें।",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "आपका खाता फ़ोन नंबर से बना था। इसे सँभालने, पासवर्ड बदलने या हटाने के लिए ईमेल और पासवर्ड जोड़ें।",
-  "or sign in with your phone": "या फ़ोन नंबर से साइन इन करें"
+  "or sign in with your phone": "या फ़ोन नंबर से साइन इन करें",
+  "Approximate monthly income (optional)": "अनुमानित मासिक आय (वैकल्पिक)",
+  "A rough guess for your own reference. It is not added to forecasts.": "आपके संदर्भ के लिए मोटा अनुमान। इसे पूर्वानुमानों में नहीं जोड़ा जाता।"
 }

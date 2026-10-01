@@ -1795,5 +1795,7 @@
   "Verify": "Tasdiqlash",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "Kodni Telegram chatingizga yuboramiz. Akkauntingiz yo‘qmi? Yaratish uchun botimizni oching.",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Akkauntingiz telefon raqami orqali yaratilgan. Uni boshqarish, parolni o‘zgartirish yoki o‘chirish uchun elektron pochta va parol qo‘shing.",
-  "or sign in with your phone": "yoki telefon orqali kiring"
+  "or sign in with your phone": "yoki telefon orqali kiring",
+  "Approximate monthly income (optional)": "Taxminiy oylik daromad (ixtiyoriy)",
+  "A rough guess for your own reference. It is not added to forecasts.": "O‘zingiz uchun taxminiy qiymat. Prognozlarga qo‘shilmaydi."
 }

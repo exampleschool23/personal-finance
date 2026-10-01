@@ -1795,5 +1795,7 @@
   "Verify": "Підтвердити",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "Ми надсилаємо код у ваш чат Telegram. Ще немає облікового запису? Відкрийте нашого бота, щоб створити його.",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Ваш обліковий запис створено за допомогою номера телефону. Додайте електронну пошту й пароль, щоб керувати ним, змінити пароль або видалити його.",
-  "or sign in with your phone": "або увійдіть за допомогою телефону"
+  "or sign in with your phone": "або увійдіть за допомогою телефону",
+  "Approximate monthly income (optional)": "Приблизний дохід на місяць (необов’язково)",
+  "A rough guess for your own reference. It is not added to forecasts.": "Грубе наближення для вашого орієнтиру. У прогнози не додається."
 }

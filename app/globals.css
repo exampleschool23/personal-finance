@@ -1739,7 +1739,10 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .cashflow-tabs{align-self:flex-start}
 .cashflow-summary{display:grid;gap:10px}
 .cashflow-summary-note{font-size:var(--type-caption)}
-.cashflow-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.cashflow-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+.cashflow-preview-grid>.tools-panel{grid-column:1/-1}
+.cashflow-income-preview{display:flex;flex-direction:column}
+.cashflow-spending-preview>.panel{height:100%}
 .cashflow-preview-grid .panel-title{align-items:center;margin-bottom:12px}
 .cashflow-preview-grid .panel-title button{height:auto;min-height:0;padding:0;font-size:var(--type-caption);font-weight:500;color:var(--primary)}
 .cashflow-preview-grid table{min-width:0;white-space:normal}
@@ -1753,7 +1756,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .cashflow-source-name strong{display:block;font-size:var(--type-small);font-weight:600;overflow:hidden;text-overflow:ellipsis}
 .cashflow-source-name small{display:block;font-size:var(--type-caption)}
 .cashflow-source-icon{display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;border-radius:10px;background:color-mix(in srgb,var(--source-color) 14%,transparent);color:var(--source-color)}
-.cashflow-income-preview footer{margin-top:4px;padding-top:8px;border-top:1px solid var(--hairline)}
+.cashflow-income-preview footer{margin-top:auto;padding-top:8px;border-top:1px solid var(--hairline)}
 .cashflow-income-preview footer button{padding-left:0;font-size:var(--type-small);color:var(--primary)}
 .cashflow-spending-preview{display:grid;gap:16px;min-width:0}
 .cashflow-plan-note{margin:8px 0 0;font-size:var(--type-caption)}

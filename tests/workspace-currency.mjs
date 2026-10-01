@@ -201,13 +201,24 @@ test('reusable sources expose variable receipts and bonuses without scheduled da
  tree=render.tree({...props,editing});assert.equal(editing.payment_type,'bonus');assert.equal(editing.earning_source_id,'epam');assert.equal(editing.kind,'Other income');assert.equal(editing.earning_due_on,null);
  assert.equal(find(tree,node=>node.props?.min===fixed.start_date),undefined);
 });
-test('variable source editor omits amount and date requirements',()=>{
+test('variable source editor has an optional approximate amount but no schedule requirements',()=>{
  const initial={id:'new',name:'Interviews',kind:'Other income',currency:'USD',mode:'variable',amount:null,frequency:null,start_date:null,end_date:null,archived:false,linked_record_id:null};
  const render=component('components/income-sources-panel.tsx','IncomeSourceEditor');
  const tree=render.tree({initial,currencies:['USD'],records:[],save:async()=>{},close(){}});
- assert.equal(find(tree,node=>node.type?.name==='FormattedNumberInput'),undefined);
+ const estimate=find(tree,node=>node.type?.name==='FormattedNumberInput');
+ assert.equal(estimate.props.required,false);assert.equal(estimate.props.value,0);
  assert.equal(find(tree,node=>node.type?.name==='DatePicker'),undefined);
  assert.equal(find(tree,node=>node.props?.children==='Save income source').props.disabled,false);
+});
+test('a business or rental source is linked through an inline choice, not a browser validation bubble',()=>{
+ const initial={id:'new',name:'Shop',kind:'Business income',currency:'USD',mode:'variable',amount:null,frequency:null,start_date:null,end_date:null,archived:false,linked_record_id:null};
+ const render=component('components/income-sources-panel.tsx','IncomeSourceEditor');
+ const empty=render.tree({initial,currencies:['USD'],records:[],save:async()=>{},close(){}});
+ const select=find(empty,node=>node.props?.value===''&&typeof node.props?.onChange==='function');
+ assert.ok(select);assert.notEqual(select.props.required,true);assert.equal(select.props.disabled,true);
+ assert.equal(find(empty,node=>node.props?.children==='Save income source').props.disabled,true);
+ const linked=component('components/income-sources-panel.tsx','IncomeSourceEditor').tree({initial:{...initial,linked_record_id:'b1'},currencies:['USD'],records:[{id:'b1',kind:'Business',name:'Shop'}],save:async()=>{},close(){}});
+ assert.equal(find(linked,node=>node.props?.children==='Save income source').props.disabled,false);
 });
 
 test('income receipt has one source choice, hides category and linked selectors, and retries loading',()=>{

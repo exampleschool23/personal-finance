@@ -1795,5 +1795,7 @@
   "Verify": "Verify",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "We send a code to your Telegram chat. No account yet? Open our bot to create one.",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.",
-  "or sign in with your phone": "or sign in with your phone"
+  "or sign in with your phone": "or sign in with your phone",
+  "Approximate monthly income (optional)": "Approximate monthly income (optional)",
+  "A rough guess for your own reference. It is not added to forecasts.": "A rough guess for your own reference. It is not added to forecasts."
 }

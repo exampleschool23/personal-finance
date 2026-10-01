@@ -1795,5 +1795,7 @@
   "Verify": "Thibitisha",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "Tunatuma msimbo kwenye gumzo lako la Telegram. Huna akaunti bado? Fungua boti yetu ili kuunda.",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Akaunti yako iliundwa kwa namba ya simu. Ongeza barua pepe na nenosiri ili kuisimamia, kubadilisha nenosiri lako au kuifuta.",
-  "or sign in with your phone": "au ingia kwa simu yako"
+  "or sign in with your phone": "au ingia kwa simu yako",
+  "Approximate monthly income (optional)": "Makadirio ya kipato cha kila mwezi (hiari)",
+  "A rough guess for your own reference. It is not added to forecasts.": "Makadirio ya jumla kwa rejea yako. Hayaongezwi kwenye utabiri."
 }

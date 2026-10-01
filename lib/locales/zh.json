@@ -1795,5 +1795,7 @@
   "Verify": "验证",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "我们会将验证码发送到您的 Telegram 聊天。还没有账户?请打开我们的机器人来创建。",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "您的账户是用手机号码创建的。添加邮箱和密码后,即可管理账户、更改密码或删除账户。",
-  "or sign in with your phone": "或使用手机号码登录"
+  "or sign in with your phone": "或使用手机号码登录",
+  "Approximate monthly income (optional)": "每月大致收入（可选）",
+  "A rough guess for your own reference. It is not added to forecasts.": "仅供您参考的粗略估计，不会计入预测。"
 }

@@ -63,7 +63,7 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
    ...planning.data.categories.filter(category=>category.direction==='income').map(category=>({id:category.id,name:category.name,kind:category.id,categoryLabel:category.name})),
    ...(original&&!original.earning_source_id&&original.kind!=='Other income'?[{id:'saved',name:original.name,kind:original.kind}]:[]),
    ...(editing.earning_source_id&&!reusable?[{id:editing.earning_source_id,name:editing.name,kind:editing.kind,disabled:true}]:[]),
-   ...earningSources.sources.filter(item=>!item.archived||item.id===original?.earning_source_id).map(item=>({id:item.id,name:item.name,kind:item.kind,estimate:item.mode==='fixed'?item.amount:null,currency:item.currency,frequency:item.frequency,payment:planning.loading||planning.error?null:earningSourcePaymentStatus(item,editing.date,planning.data.occurrences)}))
+   ...earningSources.sources.filter(item=>!item.archived||item.id===original?.earning_source_id).map(item=>({id:item.id,name:item.name,kind:item.kind,estimate:item.mode==='fixed'?item.amount:item.approx_monthly??null,currency:item.currency,frequency:item.frequency??(item.approx_monthly!=null?'Monthly':null),payment:planning.loading||planning.error?null:earningSourcePaymentStatus(item,editing.date,planning.data.occurrences)}))
   ]} onChange={id=>{
    const item=earningSources.sources.find(source=>source.id===id);
    setSalaryPlan(false);

@@ -1795,5 +1795,7 @@
   "Verify": "Vérifier",
   "We send a code to your Telegram chat. No account yet? Open our bot to create one.": "Nous envoyons un code à votre chat Telegram. Pas encore de compte ? Ouvrez notre bot pour en créer un.",
   "Your account was created with a phone number. Add an email and password to manage it, change your password or delete it.": "Votre compte a été créé avec un numéro de téléphone. Ajoutez un e-mail et un mot de passe pour le gérer, changer votre mot de passe ou le supprimer.",
-  "or sign in with your phone": "ou connectez-vous avec votre téléphone"
+  "or sign in with your phone": "ou connectez-vous avec votre téléphone",
+  "Approximate monthly income (optional)": "Revenu mensuel approximatif (facultatif)",
+  "A rough guess for your own reference. It is not added to forecasts.": "Une estimation approximative, pour votre information. Elle n’est pas ajoutée aux prévisions."
 }

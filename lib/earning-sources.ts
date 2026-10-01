@@ -8,10 +8,12 @@ export const earningSourceSchema=z.object({
  currency:z.string().refine(isCurrency),mode:z.enum(['fixed','variable']),archived:z.boolean().default(false),
  amount:z.number().finite().nonnegative().max(1e15).nullable(),recurrence_days:z.number().int().min(1).max(366).nullable().optional(),frequency:z.enum(['Weekly','Fortnightly','Monthly','Yearly','Custom']).nullable(),start_date:date.nullable(),end_date:date.nullable(),
  linked_record_id:z.string().uuid().nullable().default(null),
+ approx_monthly:z.number().finite().positive().max(1e15).nullable().optional(),
 }).superRefine((source,ctx)=>{
  if((source.frequency==='Custom')!==(source.recurrence_days!=null))ctx.addIssue({code:'custom',message:'Check the schedule interval.'});
  if(source.mode==='fixed'&&(!source.amount||!source.frequency||!source.start_date||(source.end_date&&source.end_date<source.start_date)))ctx.addIssue({code:'custom',message:'Set an amount and schedule for fixed income.'});
  if(source.mode==='variable'&&[source.amount,source.frequency,source.start_date,source.end_date].some(value=>value!==null))ctx.addIssue({code:'custom',message:'Variable income has no fixed amount or schedule.'});
+ if(source.mode==='fixed'&&source.approx_monthly!=null)ctx.addIssue({code:'custom',message:'Only variable income has an approximate amount.'});
  if(['Business income','Rent income'].includes(source.kind)&&!source.linked_record_id)ctx.addIssue({code:'custom',message:'Choose a matching income source.'});
  if(!['Business income','Rent income'].includes(source.kind)&&source.linked_record_id)ctx.addIssue({code:'custom',message:'Choose a matching income source.'});
 });

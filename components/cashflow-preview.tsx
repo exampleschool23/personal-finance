@@ -29,6 +29,7 @@ export function CashflowPreview({entries,sources,plans,month,currency,loading,er
    <div className="table-scroll"><table><thead><tr><th>{t('Plan')}</th><th>{t('Spent / Planned')}</th><th>{t('Progress')}</th></tr></thead><tbody>{selectedPlans.map(plan=>{const totals=expensePlanTotals(plan,month);return <tr key={plan.id}><td>{plan.name}</td><td>{formatMoney(totals.spent,plan.currency,locale)} / {formatMoney(totals.planned,plan.currency,locale)}</td><td><ExpensePlanChart name={plan.name} category={plan.category} planned={totals.planned} spent={totals.spent}/></td></tr>;})}</tbody></table></div>
    {!selectedPlans.length&&<p className="muted">{t('No monthly plans yet. Add groceries, Mum’s allowance or another regular expense.')}</p>}
    <p className="cashflow-plan-note muted">{t('Selected {currency} plans.',{currency})}</p>{mortgages}
-  </section>{watchlists}</div>
+  </section></div>
+  {watchlists}
  </div>;
 }
