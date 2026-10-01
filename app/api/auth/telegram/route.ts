@@ -30,7 +30,12 @@ export async function POST(req: Request) {
     // Only accounts the bot created have the derived password; others sign in with their own email or code.
     if (!subscription?.telegram_user_id || !subscription.phone || !subscription.consented_at) return reply({ error: 'Sign in with your email or your phone number.' }, 403);
     const response = await supa('/auth/v1/token?grant_type=password', { method: 'POST', body: JSON.stringify({ phone: subscription.phone, password: derivedPassword(secret, subscription.telegram_user_id) }) });
-    if (!response.ok) return reply({ error: 'Sign in with your phone number and the code from the bot.' }, 401);
+    if (!response.ok) {
+      // Phone sign-in must be switched on in Supabase (Authentication, Providers, Phone); until then no account made in Telegram can sign in on the web.
+      const failure = await response.json().catch(() => ({})) as { error_code?: string };
+      if (failure.error_code === 'phone_provider_disabled') return reply({ error: 'Telegram sign-in is not available yet.' }, 503);
+      return reply({ error: 'Sign in with your phone number and the code from the bot.' }, 401);
+    }
     const session = authSession.safeParse(await response.json());
     if (!session.success) return reply({ error: 'Could not sign you in. Please try again.' }, 503);
     await saveSession(session.data);

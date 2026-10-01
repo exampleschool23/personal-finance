@@ -145,6 +145,10 @@ test('one-tap sign-in refuses accounts that were not made in Telegram, wrong pas
  // The person set their own password, so the derived one no longer works.
  const changed=botDb({telegram_subscriptions:[here()]});const secondToken=await createLoginToken(changed,ownerId,new Date());
  assert.equal((await telegramRoute(changed,async()=>Response.json({},{status:400})).POST(tgRequest({token:secondToken}))).status,401);
+ // With phone sign-in switched off in Supabase, the person is told it is not available yet, not sent to a code that cannot arrive.
+ const off=botDb({telegram_subscriptions:[here()]});const offToken=await createLoginToken(off,ownerId,new Date());
+ const disabled=await telegramRoute(off,async()=>Response.json({code:422,error_code:'phone_provider_disabled',msg:'Phone logins are disabled'},{status:422})).POST(tgRequest({token:offToken}));
+ assert.equal(disabled.status,503);assert.deepEqual(await disabled.json(),{error:'Telegram sign-in is not available yet.'});
  const route=telegramRoute(botDb({telegram_subscriptions:[here()]}),async()=>Response.json(session));
  for(const body of [{},{token:'a',initData:'b'},{token:'x'.repeat(300)},null,'text'])assert.equal((await route.POST(tgRequest(body))).status,400,JSON.stringify(body));
  assert.equal((await route.POST(new Request('https://app.local/api/auth/telegram',{method:'POST',headers:{origin:'https://evil.example'},body:'{}'}))).status,403);

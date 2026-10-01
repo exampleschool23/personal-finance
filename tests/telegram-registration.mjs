@@ -7,6 +7,7 @@ const {advanceOnboarding,startOnboarding,onboardPrompt}=loadTS('lib/telegram-onb
 const {derivedPassword,consumeLoginToken}=loadTS('lib/telegram-account.ts');
 const {translate,languageCatalogue}=loadTS('lib/i18n.ts');
 const {suggestedCurrencies}=loadTS('lib/onboarding.ts');
+const {fiatCurrencies}=loadTS('lib/currencies.ts');
 const now=new Date('2026-10-01T09:00:00Z');
 const clock={now,today:'2026-10-01',newId:()=>'99999999-9999-4999-8999-999999999999'};
 const t=(language,key,params)=>translate(language,key,params);
@@ -50,7 +51,7 @@ test('the onboarding walks language, currency and a first cash account, saving a
  assert.deepEqual(euro.effects,{currency:'EUR'});assert.equal(euro.draft.step,'account');assert.deepEqual(euro.draft.data,{currency:'EUR'});
  assert.equal(advanceOnboarding(picked.draft,{callback:'o:cur:ZZZ'},{language:'ja'},777).draft.step,'currency');
  const other=advanceOnboarding(picked.draft,{callback:'o:cur:other'},{language:'ja'},777);
- assert.equal(other.draft.step,'currency_other');assert.deepEqual(other.reply.keyboard,{reply:[['‹ '+t('ja','Back')]]});
+ assert.equal(other.draft.step,'currency_other');assert.equal(other.reply.keyboard.reply.flat().length,fiatCurrencies.length+1,'every currency, then Back');
  for(const bad of ['dollars','US','12','XXX','usd1'])assert.equal(advanceOnboarding(other.draft,{text:bad},{language:'en'},777).draft.step,'currency_other',bad);
  assert.deepEqual(advanceOnboarding(other.draft,{text:' chf '},{language:'en'},777).effects,{currency:'CHF'});
  const named=advanceOnboarding(euro.draft,{text:'  Savings jar '},{language:'en'},777);
@@ -296,4 +297,36 @@ test('setup questions survive late taps, offer Back, never expire, and Start beg
  const restarted=await run(text('/start'),context);
  assert.equal(restarted.replies[0].text,t('en','Choose your language'));
  assert.equal(context.db.tables.telegram_drafts[0].step,'onboard:language');assert.deepEqual(context.db.tables.telegram_drafts[0].data,{});
+});
+
+test('the other-currency question lists every currency like the languages, and typing searches it',()=>{
+ const step=(data={})=>({kind:'onboard',step:'currency_other',data});
+ const back='‹ '+t('en','Back');
+ const all=onboardPrompt(step(),'en',777);
+ assert.equal(all.text,t('en','Choose your currency, or type part of its name or code to search, such as peso or EUR.'));
+ const labels=all.keyboard.reply.flat();
+ assert.equal(labels.length,fiatCurrencies.length+1);assert.equal(labels.at(-1),back);
+ assert.ok(labels.includes('EUR · Euro'),'labels name the currency in the chat language');
+ assert.ok(all.keyboard.reply.slice(0,-1).every(row=>row.length<=2));
+ // Tapping a label, or typing a code in any case, chooses it.
+ assert.deepEqual(advanceOnboarding(step(),{text:'EUR · Euro'},{language:'en'},777).effects,{currency:'EUR'});
+ assert.deepEqual(advanceOnboarding(step(),{text:' uzs '},{language:'en'},777).effects,{currency:'UZS'});
+ // Anything else searches by code or name, in the chat language or English, ignoring accents and case.
+ const peso=advanceOnboarding(step(),{text:'peso'},{language:'en'},777);
+ assert.equal(peso.draft.step,'currency_other');assert.equal(peso.draft.data.search,'peso');assert.deepEqual(peso.effects,{});
+ assert.equal(peso.reply.text,t('en','Currencies matching “{query}”',{query:'peso'}));
+ const found=peso.reply.keyboard.reply.flat();
+ assert.ok(found.includes('ARS · Argentine Peso')&&found.includes('MXN · Mexican Peso'));assert.ok(!found.some(label=>label.startsWith('EUR')));assert.equal(found.at(-1),back);
+ assert.deepEqual(advanceOnboarding(peso.draft,{text:'MXN · Mexican Peso'},{language:'en'},777).draft.data,{currency:'MXN'},'choosing clears the search');
+ const russian=advanceOnboarding(step(),{text:'евро'},{language:'ru'},777).reply.keyboard.reply.flat();
+ assert.ok(russian.some(label=>label.startsWith('EUR ·')),'searches the localized name');
+ assert.ok(advanceOnboarding(step(),{text:'Złoty'},{language:'en'},777).reply.keyboard.reply.flat().some(label=>label.startsWith('PLN')),'accents are ignored');
+ assert.ok(advanceOnboarding(step(),{text:'cordoba'},{language:'en'},777).reply.keyboard.reply.flat().some(label=>label.startsWith('NIO')),'typed without accents');
+ const none=advanceOnboarding(step(),{text:'zzzz'},{language:'en'},777);
+ assert.equal(none.reply.text,t('en','No currency matches “{query}”. Try another word or a code such as USD.',{query:'zzzz'}));assert.deepEqual(none.reply.keyboard.reply,[[back]]);
+ // Back from a search returns to the main currency question and forgets it.
+ assert.deepEqual(advanceOnboarding(peso.draft,{text:back},{language:'en'},777).draft,{kind:'onboard',step:'currency',data:{}});
+ // A late tap on a full-list label after moving on changes the currency instead of naming the account.
+ const late=advanceOnboarding({kind:'onboard',step:'account',data:{currency:'USD'}},{text:'ARS · Argentine Peso'},{language:'en'},777);
+ assert.equal(late.draft.data.currency,'ARS');assert.equal(late.draft.step,'account');
 });
