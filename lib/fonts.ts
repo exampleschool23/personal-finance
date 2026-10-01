@@ -1,6 +1,6 @@
 // The interface typeface is an account default kept in `user_preferences.font`,
 // so the web app and the mobile app read the same choice. Every entry covers
-// Latin and Cyrillic, so English, Russian and Uzbek text look alike.
+// Latin and Cyrillic, so English and Russian text look alike.
 export const fonts = [
   { id: 'inter', name: 'Inter', family: '"Inter Variable"' },
   { id: 'onest', name: 'Onest', family: '"Onest Variable"' },

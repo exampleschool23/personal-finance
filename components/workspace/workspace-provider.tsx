@@ -26,6 +26,8 @@ import { useEarningSources } from '@/hooks/use-earning-sources';
 import { withAssetIncomePlans, legacyEarningSources, sourceSchedule, selectEarningSource, resolveEarningSource, type EarningSource } from '@/lib/earning-sources';
 import { resolveIncomeSource } from '@/lib/income-sources';
 import { defaultPreferences, type Preferences } from '@/lib/currencies';
+import { needsOnboarding } from '@/lib/onboarding';
+import { saveTrackingStartRequest } from '@/hooks/use-comparison-profile';
 import { applyFont, resolveFont } from '@/lib/fonts';
 import type { MortgagePayment } from '@/components/mortgage-payment-dialog';
 import { instrumentFor, instrumentKey, convertAmount, marketEntry } from '@/lib/market';
@@ -46,7 +48,7 @@ function useWorkspaceState() {
     const pathname = usePathname();
     const router = useRouter();
     const section = sectionFor(pathname);
-    const { t, locale, setDefaultLanguage, setLanguage } = useLanguage();
+    const { t, locale, language, setDefaultLanguage, setLanguage } = useLanguage();
     const [user, setUser] = useState<string | null>(null), [ready, setReady] = useState(false), [configured, setConfigured] = useState(true), [demo, setDemo] = useState(false), [rows, setRows] = useState<Entry[]>([]), [currency, setCurrency] = useState<string>('USD'), [editing, setEditing] = useState<Entry | null>(null), [deleting, setDeleting] = useState<Entry | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
     const [preferencesData, setPreferencesData] = useState<Preferences>(defaultPreferences);
     useEffect(() => {
@@ -57,7 +59,17 @@ function useWorkspaceState() {
     const [settingsRevision,setSettingsRevision]=useState(0);
     const retrySettings=()=>{setSettingsLoading(true);setSettingsError('');setSettingsRevision(n=>n+1);};
     function applyPreferences(next: Preferences) { setPreferencesData(next); if (demo) setLanguage(next.language); else setDefaultLanguage(next.language); applyFont(resolveFont(next.font), !demo); setCurrency(next.currencies[0]); }
-    const receivePreferences = useEffectEvent(applyPreferences);
+    // An account that has not finished the welcome setup has chosen no language yet, so the one already showing (saved earlier or matched to the browser) stays until it does.
+    const receivePreferences = useEffectEvent((loaded: Preferences) => applyPreferences(loaded.onboarded === false ? { ...loaded, language } : loaded));
+    /** Stores preferences without applying them, so the welcome setup can show its closing screen first. */
+    async function savePreferences(next: Preferences) {
+        const response = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) });
+        const data = await response.json() as Preferences & { error?: string };
+        if (!response.ok) throw Error(data.error);
+        return data;
+    }
+    const onboardingNeeded = needsOnboarding({ user, demo, loading: settingsLoading, error: settingsError, preferences: preferencesData });
+    const restartOnboarding = async () => applyPreferences(await savePreferences({ ...preferencesData, onboarded: false }));
     useEffect(() => {
         if (!user || demo) return;
         const controller = new AbortController();
@@ -415,7 +427,7 @@ function useWorkspaceState() {
         // Session
         ready, user, demo, pathname, section, sectionKey, cashFlowSection, busy, configured, error, login, logout, startDemo, clearLocalSession,
         // Preferences
-        currency, setCurrency, preferencesData, applyPreferences, settingsLoading, settingsError, retrySettings, workspacePreferences,
+        currency, setCurrency, preferencesData, applyPreferences, savePreferences, settingsLoading, settingsError, retrySettings, workspacePreferences, onboardingNeeded, restartOnboarding, saveTrackingStart: saveTrackingStartRequest,
         // Records and market data
         rows, summary, current, market, marketLoading, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, expensePlans, snapshots,
         reload, refreshRecords, budget, forecast, forecastReady, forecastMonth, setForecastMonth, excludedCurrencies, netWorth, totalDebt, monthlyIncomeEntries,

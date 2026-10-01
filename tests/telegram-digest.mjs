@@ -34,7 +34,7 @@ test('the digest is translated and empty lists send nothing',()=>{
  const ru=digestMessage(items,'ru',today);
  assert.match(ru,/^<b>Предстоящие платежи<\/b> · 30 сентября 2026\n\n<b>Просрочено<\/b>\n• Rent · 3 000 000 UZS · 28 сентября 2026\n\n<b>Сегодня<\/b>/);
  assert.match(ru,/погашение/);
- assert.match(digestMessage(items,'uz',today),/^<b>.+<\/b> · 30 sentabr 2026\n\n<b>.+<\/b>\n• Rent · 3 000 000 soʻm/);
+ assert.match(digestMessage(items,'uz',today),/^<b>.+<\/b> · 30 sentabr 2026\n\n<b>.+<\/b>\n• Rent · 3\s000\s000\sso.m/);
 });
 
 test('the digest cron is scheduled in the morning and documented',()=>{

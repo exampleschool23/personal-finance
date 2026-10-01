@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { loadMarket } from '@/lib/server-market';
+import { serviceKeyHeaders } from '@/lib/service-role';
 import { instrumentFor,type MarketData } from '@/lib/market';
 import { snapshotTotals } from '@/lib/portfolio-snapshots';
 import { depositToday } from '@/lib/deposit-interest';
@@ -11,7 +12,7 @@ export async function GET(req:Request){
  if(!secret||Buffer.byteLength(authorization)!==Buffer.byteLength(expected)||!timingSafeEqual(Buffer.from(authorization),Buffer.from(expected)))return new Response(null,{status:401});
  const key=process.env.SUPABASE_SERVICE_ROLE_KEY,url=process.env.SUPABASE_URL;
  if(!key||!url)return Response.json({error:'Background capture is not configured.'},{status:503});
- const headers={apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json'};
+ const headers={...serviceKeyHeaders(key),'Content-Type':'application/json'};
  async function read(path:string,init:RequestInit={}){const r=await fetch(url+path,{...init,headers:{...headers,...init.headers},cache:'no-store',signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('Snapshot database request failed.');return r;}
  try{
  const records:Array<Entry&{user_id:string}>=[];

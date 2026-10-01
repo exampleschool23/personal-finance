@@ -5,7 +5,7 @@ import { buildRangeCalendar, shiftCalendarMonth, calendarYearAnchor, openingCale
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
-import { formatDate, formatMonthYear, formatYear, parseCalendarDate, calendarIso } from '@/lib/format';
+import { formatDate, formatMonthYear, formatYear, parseCalendarDate, calendarIso, weekdayLabels } from '@/lib/format';
 
 type DatePickerProps = { value: string; onChange: (value: string) => void; min?: string; max?: string; required?: boolean; mode?: 'date' | 'month' };
 
@@ -69,7 +69,7 @@ function DayPicker({ value, onChange, min, max, required = true }: { value: stri
 // Radix only handles positioning/focus; no third-party calendar renderer is used.
 function MonthCalendar({ monthKey, draft, min, max, onSelect, onYearChange, previous, next }: { monthKey: string; draft: string; min?: string; max?: string; onSelect: (date: string) => void; onYearChange: (year: number) => void; previous?: () => void; next?: () => void }) {
   const { locale, t } = useLanguage();
-  const weekdays = locale.startsWith('ru') ? ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'] : locale.startsWith('uz') ? ['Du','Se','Ch','Pa','Ju','Sh','Ya'] : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const weekdays = weekdayLabels(locale);
   const today = calendarIso(new Date());
   const year = Number(monthKey.slice(0, 4));
   const [choosingYear, setChoosingYear] = useState(false);

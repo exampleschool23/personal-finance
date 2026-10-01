@@ -28,3 +28,13 @@ export function showError(message: string, options: { detail?: string; language?
     description: options.detail ? translate(language, options.detail) : undefined,
   });
 }
+
+/** Shows a neutral result that needs reading, such as "check your email", in the same popup. Messages are translation keys. */
+export function showNotice(message: string, options: { language?: Language } = {}) {
+  if (!message) return;
+  toast.success(translate(currentLanguage(options.language), message), {
+    id: 'notice-feedback',
+    duration: 8000,
+    className: 'app-feedback',
+  });
+}

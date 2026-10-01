@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {loadTS} from './helpers/load-ts.mjs';
 const id='a0000000-0000-4000-8000-000000000001';
 const verified={access_token:'verified-token',refresh_token:'refresh',expires_in:3600,user:{id}};
@@ -54,4 +55,21 @@ test('failed deletion preserves the session and never deletes an unverified acco
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   const unavailable=api();assert.equal((await unavailable.POST(request(body))).status,503);assert.equal(calls.length,1);assert.deepEqual(unavailable.deleted,[]);
  }finally{if(previous===undefined)delete process.env.SUPABASE_SERVICE_ROLE_KEY;else process.env.SUPABASE_SERVICE_ROLE_KEY=previous;}
+});
+
+test('passwords need at least six characters everywhere, and the messages say so in every language',async()=>{
+ const {accountAccessSchema}=loadTS('lib/account-access.ts');
+ const {minPasswordLength,maxPasswordLength}=loadTS('lib/password-policy.ts');
+ assert.equal(minPasswordLength,6);
+ const signup=password=>accountAccessSchema.safeParse({action:'signup',email:'new@example.com',password}).success;
+ assert.equal(signup('abcde'),false);
+ assert.equal(signup('abcdef'),true);
+ assert.equal(signup('x'.repeat(maxPasswordLength)),true);
+ assert.equal(signup('x'.repeat(maxPasswordLength+1)),false);
+ for(const action of ['reset'])assert.equal(accountAccessSchema.safeParse({action,password:'abcde'}).success,false);
+ assert.equal(accountAccessSchema.safeParse({action:'change_password',current_password:'old',password:'abcdef'}).success,true);
+ const hint='Use a unique password with at least 6 characters.',failure='Check the account fields. Passwords need at least 6 characters.';
+ assert.ok(fs.readFileSync('components/account-access-panel.tsx','utf8').includes(hint));
+ assert.ok(fs.readFileSync('app/api/account-access/route.ts','utf8').includes(failure));
+ for(const language of ['en','ru','uz']){const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));assert.ok(labels[hint],language);assert.ok(labels[failure],language);assert.ok(!/12/.test(labels[hint]+labels[failure]),language);}
 });

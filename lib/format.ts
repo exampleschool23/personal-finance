@@ -1,4 +1,4 @@
-import { formatLongDate, formatLongDateTime, formatMonthYear as posMonthYear } from './pos-date-format.js';
+import { formatLongDate, formatLongDateTime, formatMonthYear as posMonthYear, weekdayLabels as posWeekdayLabels } from './pos-date-format.js';
 // All user-facing numeric and date formatting belongs here.
 export function numberSymbols(locale: string) {
   const parts = new Intl.NumberFormat(locale).formatToParts(12345.6);
@@ -23,6 +23,10 @@ export function formatMoney(value: number, currency: string, locale: string, uni
 export function formatCompactMoney(value: number, currency: string, locale: string) {
   if (!Number.isFinite(value)) return '—';
   return new Intl.NumberFormat(locale, { style: 'currency', currency, notation: 'compact', maximumFractionDigits: 1 }).format(value);
+}
+/** Monday-first weekday labels for the calendar grid, in the locale's language. */
+export function weekdayLabels(locale: string): string[] {
+  return posWeekdayLabels(locale);
 }
 export function formatDate(value: string, locale: string) {
   if (!parseCalendarDate(value)) return '—';

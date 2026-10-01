@@ -1,7 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useState } from 'react';
-import { isLanguage, Language, locales, translate } from '@/lib/i18n';
+import { detectLanguage, directionOf, isLanguage, Language, languageCatalogue, locales, translate } from '@/lib/i18n';
 
 import { NativeSelect } from '@/components/ui/native-select';
 import { LanguageContext } from '@/components/language-context';
@@ -9,17 +9,22 @@ import { LanguageContext } from '@/components/language-context';
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, updateLanguage] = useState<Language>('en');
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('hoggish-default-language');
-      if (isLanguage(saved)) queueMicrotask(() => updateLanguage(saved));
-    } catch { /* Language selection also works when browser storage is blocked. */ }
+    let saved: string | null = null;
+    try { saved = localStorage.getItem('hoggish-default-language'); } catch { /* Language selection also works when browser storage is blocked. */ }
+    // Nothing chosen yet: follow the browser. Only an explicit choice is ever saved as the default.
+    const initial = isLanguage(saved) ? saved : detectLanguage(typeof navigator === 'undefined' ? [] : navigator.languages?.length ? navigator.languages : [navigator.language]);
+    if (initial !== 'en') queueMicrotask(() => updateLanguage(initial));
     const sync = (event: StorageEvent) => {
       if (event.key === 'hoggish-default-language' && isLanguage(event.newValue)) updateLanguage(event.newValue);
     };
     window.addEventListener('storage', sync);
     return () => window.removeEventListener('storage', sync);
   }, []);
-  useEffect(() => { document.documentElement.lang = language; }, [language]);
+  useEffect(() => {
+    document.documentElement.lang = language;
+    // Arabic and Urdu read right to left.
+    document.documentElement.dir = directionOf(language);
+  }, [language]);
   const setLanguage = (next: Language) => updateLanguage(next);
   const setDefaultLanguage = (next: Language) => {
     updateLanguage(next);
@@ -37,8 +42,6 @@ export function useLanguage() {
 export function LanguageSelector({ compact = false }: { compact?: boolean } = {}) {
   const { language, setLanguage, t } = useLanguage();
   return <NativeSelect className="language-selector" data-compact={compact} aria-label={t('Language')} title={t('Language')} value={language} onChange={event => { if (isLanguage(event.target.value)) setLanguage(event.target.value); }}>
-    <option value="en" lang="en">{compact ? 'EN' : 'EN · English'}</option>
-    <option value="ru" lang="ru">{compact ? 'RU' : 'RU · Русский'}</option>
-    <option value="uz" lang="uz">{compact ? 'UZ' : 'UZ · O‘zbekcha'}</option>
+    {languageCatalogue.map(item => <option key={item.code} value={item.code} lang={item.code}>{compact ? item.short : `${item.short} · ${item.native}`}</option>)}
   </NativeSelect>;
 }

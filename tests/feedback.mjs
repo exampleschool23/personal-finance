@@ -14,7 +14,7 @@ function feedback(language='en') {
  }};
  const source=readFileSync(new URL('../lib/feedback.ts',import.meta.url),'utf8');
  vm.runInNewContext(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,context);
- return {show:context.exports.showSaved,showError:context.exports.showError,calls,raw};
+ return {show:context.exports.showSaved,showError:context.exports.showError,showNotice:context.exports.showNotice,calls,raw};
 }
 test('save confirmation uses current language and contains no subtitle',()=>{
  for(const [language,label] of [['en','Saved'],['ru','Сохранено'],['uz','Saqlandi']]){
@@ -48,4 +48,16 @@ test('errors reuse the shared popup, translate known keys, and keep server messa
 });
 test('empty errors show nothing',()=>{
  const {showError,raw}=feedback('en');showError('');assert.equal(raw.length,0);
+});
+
+test('notices use their own longer-lived popup, translate known keys and ignore empty text',()=>{
+ for(const [language,label] of [['en','Check your email to verify your account.'],['ru',dictionaries.ru['Check your email to verify your account.']],['uz',dictionaries.uz['Check your email to verify your account.']]]){
+  const {showNotice,calls}=feedback(language);showNotice('Check your email to verify your account.');
+  assert.equal(calls[0][0],label);
+  assert.equal(calls[0][1].id,'notice-feedback');
+  assert.equal(calls[0][1].className,'app-feedback');
+  assert.equal(calls[0][1].duration,8000);
+ }
+ const {showNotice,calls}=feedback('en');showNotice('');assert.equal(calls.length,0);
+ showNotice('Account deleted.','ru'==='ru'?{language:'ru'}:{});assert.equal(calls[0][0],dictionaries.ru['Account deleted.']);
 });

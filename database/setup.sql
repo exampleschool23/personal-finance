@@ -4919,3 +4919,11 @@ ALTER TABLE public.user_preferences ADD COLUMN IF NOT EXISTS onboarded_at timest
 UPDATE public.user_preferences SET onboarded_at=now() WHERE onboarded_at IS NULL;
 NOTIFY pgrst,'reload schema';
 COMMIT;
+
+-- Sixteen interface languages (migration 079). Existing rows keep their language.
+BEGIN;
+ALTER TABLE public.user_preferences DROP CONSTRAINT IF EXISTS user_preferences_language_check;
+ALTER TABLE public.user_preferences ADD CONSTRAINT user_preferences_language_check
+ CHECK (language IN ('en','es','es-MX','pt','fr','ru','ar','ur','hi','bn','zh','ja','ko','th','vi','uz'));
+NOTIFY pgrst,'reload schema';
+COMMIT;

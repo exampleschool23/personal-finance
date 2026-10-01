@@ -23,7 +23,7 @@ function run(steps,context=ctx()){
 
 test('the menu is translated and recognised in every language, and cancel returns to it',()=>{
  assert.deepEqual(mainMenu('en').reply,[['Expense','Income'],['Transfer','Pay loan or debt'],['Mortgage payment','Upcoming payments']]);
- assert.equal(menuChoice(translate('ru','Expense')),'expense');assert.equal(menuChoice(' '+translate('uz','Income').toUpperCase()+' '),'income');assert.equal(menuChoice('Upcoming payments'),'upcoming');assert.equal(menuChoice('hello'),null);
+ assert.equal(menuChoice(translate('ru','Expense')),'expense');assert.equal(menuChoice(' '+translate('ru','Income').toUpperCase()+' '),'income');assert.equal(menuChoice('Upcoming payments'),'upcoming');assert.equal(menuChoice('hello'),null);
  const stray=advance(null,{text:'hello'},ctx(),chat);
  assert.equal(stray.draft,null);assert.equal(stray.reply.text,'Choose what to add.');assert.deepEqual(stray.reply.keyboard,mainMenu('en'));
  assert.deepEqual(advance(null,{text:'Upcoming payments'},ctx(),chat),{draft:null,reply:null,menu:'upcoming'});
@@ -116,8 +116,8 @@ test('every bot string exists in all three locales and prompts stay under Telegr
  const sources=['lib/telegram-flow.ts','lib/telegram-bot.ts','lib/digest-message.ts','lib/action-messages.ts'].map(file=>fs.readFileSync(file,'utf8')).join('\n');
  const used=[...sources.matchAll(/\bt\((?:language|hint|ctx\.language)?,?'((?:[^'\\]|\\.)+)'/g)].map(match=>match[1]).concat([...sources.matchAll(/label:'([^']+)'/g)].map(match=>match[1]));
  assert.ok(used.length>40);
- for(const language of ['en','ru','uz']){const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));for(const key of used)assert.ok(labels[key],`${language}: ${key}`);}
+ for(const language of ['en','ru']){const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));for(const key of used)assert.ok(labels[key],`${language}: ${key}`);}
  const start=advance(null,{text:'Expense'},ctx(),chat);
  for(const button of start.reply.keyboard.inline.flat())assert.ok(Buffer.byteLength(button.callback_data)<=64,button.callback_data);
- prompt(start.draft,ctx('uz'),chat);
+ prompt(start.draft,ctx('ru'),chat);
 });

@@ -112,3 +112,46 @@ test('a drawer tap highlights and shows its destination before the route arrives
  // Every plain tap closes the phone drawer, including one on the current page; modified clicks leave it.
  assert.deepEqual(sheet,[false,false]);
 });
+
+test('the logo in the drawer goes to the main page, closing the phone drawer and showing Overview at once',()=>{
+ const navigated=[],sheet=[];
+ const element=tag=>function Element(all){const props={...all};delete props.asChild;delete props.isActive;return React.createElement(tag,props);};
+ const {AppDrawer}=loadTS('components/workspace/app-drawer.tsx',{
+  'next/navigation':{usePathname:()=>'/goals'},
+  '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:text=>text})},
+  '@/components/presentation-foundation/drawer-link':{DrawerLink:element('a')},
+  '@/components/ui/button':{Button:element('button')},
+  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
+ },new Map());
+ const props={account:{initial:'H',title:'Personal account',detail:'owner@example.com'},overdueCount:0,signOutLabel:'Sign out',onSignOut:()=>{},onNavigate:path=>navigated.push(path)};
+ const html=renderToStaticMarkup(React.createElement(AppDrawer,props));
+ assert.match(html,/<a href="\/" class="brand">/);
+ const logos=[];
+ const walk=node=>{if(!node||typeof node!=='object')return;if(Array.isArray(node))return node.forEach(walk);if(typeof node.type==='function'&&node.type.name!=='Element'){walk(node.type(node.props));return;}if(node.props?.className==='brand')logos.push(node);walk(node.props?.children);};
+ walk(AppDrawer(props));
+ assert.equal(logos.length,1);
+ const tap=(extra={})=>logos[0].props.onClick({button:0,shiftKey:false,metaKey:false,ctrlKey:false,altKey:false,defaultPrevented:false,...extra});
+ tap();tap({metaKey:true});
+ assert.deepEqual(navigated,['/']);
+ assert.deepEqual(sheet,[false]);
+});
+
+test('sign-in pages follow the browser language instead of offering a selector',()=>{
+ for(const file of ['app/auth/access/page.tsx','app/auth/confirm/page.tsx'])assert.ok(!read(file).includes('LanguageSelector'),file);
+ const shell=read('components/workspace/workspace-shell.tsx');
+ assert.match(shell,/<SignInScreen .*preferences=\{<DisplayPreferences language=\{false\}\/>\}/);
+ // The signed-in top bar keeps its selector, which changes only the current visit.
+ assert.match(read('components/workspace/top-bar.tsx'),/<DisplayPreferences\/>/);
+ const {DisplayPreferences}=loadTS('components/workspace/top-bar.tsx',{
+  '@/components/language-provider':{LanguageSelector:()=>React.createElement('select',{className:'language-selector'}),useLanguage:()=>({t:text=>text,locale:'en-US'})},
+  '@/components/workspace/workspace-provider':{useWorkspace:()=>({})},
+  '@/components/theme-provider':{ThemeToggle:()=>React.createElement('button',{className:'theme'})},
+  'lucide-react':{ChevronDown:()=>null,Plus:()=>null,RefreshCw:()=>null},
+  '@/components/presentation-foundation/segmented':{Segmented:()=>null},
+  '@/components/ui/button':{Button:()=>null},
+  '@/components/ui/popover':{Popover:()=>null,PopoverContent:()=>null,PopoverTrigger:()=>null},
+  '@/components/ui/sidebar':{SidebarTrigger:()=>null},
+ });
+ assert.match(renderToStaticMarkup(React.createElement(DisplayPreferences,{language:false})),/^<div class="preferences"><button class="theme"><\/button><\/div>$/);
+ assert.match(renderToStaticMarkup(React.createElement(DisplayPreferences,{})),/language-selector/);
+});

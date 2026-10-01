@@ -9,9 +9,9 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { formatDate, formatNumber } from '@/lib/format';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
-/** Language and theme choices, shared by the top bar and the sign-in screen. */
-export function DisplayPreferences() {
- return <div className="preferences"><LanguageSelector compact/><ThemeToggle/></div>;
+/** Language and theme choices for the top bar. Sign-in pages pass `language={false}`: they follow the browser's language. */
+export function DisplayPreferences({ language = true }: { language?: boolean }) {
+ return <div className="preferences">{language && <LanguageSelector compact/>}<ThemeToggle/></div>;
 }
 
 /** The sticky bar above every screen: where you are, the display currency and the quick expense shortcut. */

@@ -56,7 +56,7 @@ test('asset card shows share with one decimal, a dash without a total, and clamp
 });
 
 test('redesigned pages translate every label and use the shared formatters',()=>{
- const files=['components/presentation-foundation/page-header.tsx','components/presentation-foundation/stat-tile.tsx','components/presentation-foundation/asset-card.tsx','components/presentation-foundation/brand.tsx','components/debt-summary.tsx','components/asset-dashboard.tsx','components/asset-accounts.tsx','components/recently-deleted.tsx','components/planning/upcoming-page.tsx','components/planning/accounts-page.tsx','components/planning/goals-page.tsx','components/settings-layout.tsx','components/telegram-panel.tsx','components/telegram-nudge.tsx','components/income-sources-panel.tsx','components/workspace/app-drawer.tsx','components/workspace/top-bar.tsx','components/workspace/workspace-shell.tsx','components/workspace/workspace-dialogs.tsx','components/workspace/records-table.tsx','components/workspace/screen-notices.tsx',...fs.readdirSync('components/workspace/screens').map(file=>'components/workspace/screens/'+file)];
+ const files=['components/presentation-foundation/page-header.tsx','components/presentation-foundation/stat-tile.tsx','components/presentation-foundation/asset-card.tsx','components/presentation-foundation/brand.tsx','components/debt-summary.tsx','components/asset-dashboard.tsx','components/asset-accounts.tsx','components/recently-deleted.tsx','components/planning/upcoming-page.tsx','components/planning/accounts-page.tsx','components/planning/goals-page.tsx','components/settings-layout.tsx','components/telegram-panel.tsx','components/telegram-nudge.tsx','components/onboarding-screen.tsx','components/settings-panel.tsx','components/income-sources-panel.tsx','components/workspace/app-drawer.tsx','components/workspace/top-bar.tsx','components/workspace/workspace-shell.tsx','components/workspace/workspace-dialogs.tsx','components/workspace/records-table.tsx','components/workspace/screen-notices.tsx',...fs.readdirSync('components/workspace/screens').map(file=>'components/workspace/screens/'+file)];
  const sources=files.map(file=>[file,fs.readFileSync(file,'utf8')]);
  for(const language of ['en','ru','uz']){
   const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));
@@ -74,4 +74,16 @@ test('shared surfaces are defined once and the stylesheet has no unterminated co
  const stripped=css.replace(/\/\*[\s\S]*?\*\//g,'');
  assert.ok(!stripped.includes('/*'));
  assert.equal((stripped.match(/\{/g)||[]).length,(stripped.match(/\}/g)||[]).length);
+});
+
+test('the logo links to the main page from every screen that shows it',()=>{
+ const element=tag=>function Element(all){const props={...all};return React.createElement(tag,props);};
+ const {Brand}=loadTS('components/presentation-foundation/brand.tsx',{...{'@/components/language-provider':language},'@/components/presentation-foundation/drawer-link':{DrawerLink:element('a')}});
+ const html=render(Brand,{});
+ assert.match(html,/^<a href="\/" class="brand"><span class="mark">h\.<\/span><span>HOGGISH<small class="block">PERSONAL FINANCE<\/small><\/span><\/a>$/);
+ // The drawer, sign-in, loading, setup and account pages all render the same mark.
+ for(const file of ['components/workspace/app-drawer.tsx','components/workspace/workspace-shell.tsx','app/auth/access/page.tsx','app/auth/confirm/page.tsx'])assert.match(fs.readFileSync(file,'utf8'),/<Brand/,file);
+ const css=fs.readFileSync('app/globals.css','utf8');
+ assert.equal(css.split('\n').filter(line=>line.startsWith('.brand{')).length,1);
+ assert.match(css,/\.brand\{[^}]*text-decoration:none/);
 });

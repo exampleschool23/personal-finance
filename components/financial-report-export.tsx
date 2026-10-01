@@ -5,6 +5,7 @@ import { useRef, useState } from 'react';
 import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
+import { pdfUnsupportedLanguages } from '@/lib/languages';
 
 export function FinancialReportExport({demo,market=null,currency}:{demo:boolean;market?:MarketData|null;currency?:string}){
  const {t,language}=useLanguage();const [busy,setBusy]=useState(false),[error,setError]=useState(''),[done,setDone]=useState(false);const downloading=useRef(false);
@@ -16,7 +17,7 @@ export function FinancialReportExport({demo,market=null,currency}:{demo:boolean;
    if(!response.ok)throw Error('Could not export all data. No incomplete backup was created.');
    if(!planResponse.ok)throw Error('Could not load monthly budgets. Please try again.');
    if(!fontResponse.ok)throw Error('Could not create the PDF. Please try again.');
-   const report=model.buildFinancialReport(await response.json(),language,'',market,{currency,plans:await planResponse.json()});
+   const report=model.buildFinancialReport(await response.json(),pdfUnsupportedLanguages.includes(language)?'en':language,'',market,{currency,plans:await planResponse.json()});
    const bytes=await pdf.renderFinancialReportPdf(report,new Uint8Array(await fontResponse.arrayBuffer()));
    const url=URL.createObjectURL(new Blob([new Uint8Array(bytes)],{type:'application/pdf'}));
    const link=document.createElement('a');link.href=url;link.download='personal-financial-report.pdf';document.body.appendChild(link);link.click();link.remove();

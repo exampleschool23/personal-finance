@@ -83,3 +83,18 @@ test('the webhook refuses to run without bot or database configuration',async()=
  const noDb=loadTS('app/api/telegram/webhook/route.ts',{'@/lib/telegram':{telegramConfig:()=>({token:'T',webhookSecret:'SECRET',botUsername:'b'}),sendTelegramMessage:async()=>true,answerCallback:async()=>true},'@/lib/service-role':{serviceDatabase:()=>null}});
  assert.equal((await noDb.POST(new Request('https://app.local/api/telegram/webhook',{method:'POST',headers:{'x-telegram-bot-api-secret-token':'SECRET'},body:'{}'}))).status,503);
 });
+
+test('the server key is sent as apikey alone when it is a new sb_secret key, and with Bearer when it is a legacy JWT',async()=>{
+ const {serviceKeyHeaders,serviceDatabase}=(await import('./helpers/load-ts.mjs')).loadTS('lib/service-role.ts');
+ assert.deepEqual(serviceKeyHeaders('sb_secret_abc123'),{apikey:'sb_secret_abc123'});
+ assert.deepEqual(serviceKeyHeaders('eyJhbGciOi.legacy.jwt'),{apikey:'eyJhbGciOi.legacy.jwt',Authorization:'Bearer eyJhbGciOi.legacy.jwt'});
+ for(const [key,bearer] of [['sb_secret_abc123',false],['eyJhbGciOi.legacy.jwt',true]]){
+  const seen=[];
+  const db=serviceDatabase({SUPABASE_SERVICE_ROLE_KEY:key,SUPABASE_URL:'https://project.supabase.co'},async(url,init)=>{seen.push(init.headers);return Response.json([]);});
+  await db.read('/rest/v1/x');
+  assert.equal(seen[0].apikey,key);
+  assert.equal('Authorization' in seen[0],bearer);
+ }
+ const fs=(await import('node:fs')).default;
+ for(const file of ['app/api/account-access/route.ts','app/api/backup/route.ts','app/api/cron/portfolio-snapshots/route.ts','lib/service-role.ts'])assert.ok(!/Authorization:'Bearer '\+(?:key|serviceKey)\b/.test(fs.readFileSync(file,'utf8').replace(/export const serviceKeyHeaders[^\n]*/,'')),file);
+});

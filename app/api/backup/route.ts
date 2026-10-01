@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { uuid } from '@/lib/api-validation';
 import { databaseUpdateMessage } from '@/lib/database-capabilities';
 import { session,supa,sameOrigin } from '@/lib/supabase';
+import { serviceKeyHeaders } from '@/lib/service-role';
 import { readOwnerRows } from '@/lib/server-records';
 import { exportCSV, FINANCE_RECORD_CSV_COLUMNS } from '@/lib/csv';
 export async function GET(req:Request){
@@ -50,7 +51,7 @@ export async function POST(req:Request){
    if(!serviceKey)return Response.json({error:'Portable backup recovery is awaiting server setup.'},{status:503});
    // This privileged call only certifies the already signed artifact for this
    // owner. Preview and restore still run with the owner's normal token.
-   const registration=await supa('/rest/v1/rpc/register_verified_finance_backup',{method:'POST',body:JSON.stringify({p_backup:backup,p_owner:auth.user.id})},serviceKey);
+   const registration=await supa('/rest/v1/rpc/register_verified_finance_backup',{method:'POST',body:JSON.stringify({p_backup:backup,p_owner:auth.user.id}),headers:serviceKeyHeaders(serviceKey)});
    if(!registration.ok)return Response.json({error:'The backup could not be verified for this account.'},{status:409});
   }
   const result=await supa('/rest/v1/rpc/'+(action==='preview'?'preview_finance_restore':'restore_finance_backup'),{method:'POST',body:JSON.stringify({p_backup:backup,...(action==='restore'?{p_expected_state:expected_state}:{})})},auth.token);

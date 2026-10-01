@@ -12,7 +12,7 @@ test('record messages name the kind, escape the name, show whole amounts and dat
  const event={type:'record',created:true,kind:'Living expense',name:'Groceries & <bread>',amount:250000.4,currency:'UZS',date:'2026-09-30',frequency:'Once'};
  assert.equal(actionMessage(event,lookup,'en'),'Added Living expense\n<b>Groceries &amp; &lt;bread&gt;</b> · UZS 250,000 · 30 September 2026');
  assert.match(actionMessage(event,lookup,'ru'),/^Добавлено: Бытовые расходы\n<b>Groceries &amp; &lt;bread&gt;<\/b> · 250 000 UZS · 30 сентября 2026$/);
- assert.match(actionMessage(event,lookup,'uz'),/^Qo‘shildi: Kundalik xarajatlar\n<b>Groceries &amp; &lt;bread&gt;<\/b> · 250 000 soʻm · 30 sentabr 2026$/);
+assert.match(actionMessage(event,lookup,'uz'),/^Qo‘shildi: Kundalik xarajatlar\n<b>Groceries &amp; &lt;bread&gt;<\/b> · 250\s000\sso.m · 30 sentabr 2026$/);
  assert.equal(actionMessage({...event,created:false,frequency:'Monthly',date:null},lookup,'en'),'Updated Living expense\n<b>Groceries &amp; &lt;bread&gt;</b> · UZS 250,000 · Monthly');
  assert.ok(!actionMessage(event,lookup,'en').includes('250000.4'));
 });

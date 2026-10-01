@@ -11,13 +11,14 @@ import { fonts, isFont, resolveFont } from '@/lib/fonts';
 import { formatMoney } from '@/lib/format';
 import { Plus, X } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
+import { languageCatalogue } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { currencyLabel, fiatCurrencies, maxPreferredCurrencies, replacePreferredCurrency, togglePreferredCurrency, type Preferences } from '@/lib/currencies';
-export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRetry }: { initial: Preferences; demo: boolean; onSaved: (p: Preferences) => void; loading: boolean; loadError: string; onRetry:()=>void }) {
+export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRetry, onRestartSetup }: { initial: Preferences; demo: boolean; onSaved: (p: Preferences) => void; loading: boolean; loadError: string; onRetry:()=>void; onRestartSetup?:()=>Promise<void> }) {
   const { t, locale } = useLanguage();
   const [draft, setDraft] = useState(initial);
   const [saved,setSaved]=useState(initial);
@@ -38,7 +39,7 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
     setBusy(true); setMessage('');
     try {
       let next = { ...draft, display_name: (draft.display_name ?? '').trim() };
-      if (!demo) { const response = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) }); if (!response.ok) { const data = await response.json() as { error: string }; throw Error(data.error); } next = await response.json() as typeof next; }
+      if (!demo) { const response = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...draft, onboarded: undefined }) }); if (!response.ok) { const data = await response.json() as { error: string }; throw Error(data.error); } next = await response.json() as typeof next; }
       onSaved(next); setDraft(next); setSaved(next); showSaved(next.language);
     } catch (error) { setMessage((error as Error).message); }
     finally { setBusy(false); }
@@ -51,13 +52,14 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
         <section className="panel preferences-card"><header><h3>{t('About you')}</h3><p className="muted">{t('Personal details for your profile.')}</p></header>
           <div className="preferences-profile-grid"><label htmlFor="profile-name">{t('Your name (optional)')}<Input id="profile-name" name="name" autoComplete="given-name" maxLength={80} placeholder={t('What should we call you?')} value={draft.display_name ?? ''} onChange={event => setDraft({ ...draft, display_name: event.target.value })}/></label>
           <label htmlFor="profile-country">{t('Country / region (optional)')}<NativeSelect id="profile-country" name="country" autoComplete="country" value={draft.country ?? ''} onChange={event => setDraft({ ...draft, country: event.target.value })}><option value="">{t('Select your country')}</option>{countryOptions(locale).map(country => <option key={country.code} value={country.code}>{country.name}</option>)}</NativeSelect></label></div>
+          {onRestartSetup && <p className="muted preferences-setup-again">{t('Want to go through the welcome setup again?')} <Button type="button" variant="outline" size="sm" disabled={busy||dirty} onClick={() => { setBusy(true); setMessage(''); onRestartSetup().catch(error => setMessage((error as Error).message)).finally(() => setBusy(false)); }}>{t('Run setup again')}</Button></p>}
         </section>
         <section className="panel preferences-card"><header><h3>{t('Language')}</h3><p className="muted">{t('Choose the language for the app.')}</p></header>
-          <label className="preferences-setting-row">{t('App language')}<NativeSelect value={draft.language} onChange={event => setDraft({ ...draft, language: event.target.value as Preferences['language'] })}><option value="en">English</option><option value="ru">Русский</option><option value="uz">O‘zbekcha</option></NativeSelect></label>
+          <label className="preferences-setting-row">{t('App language')}<NativeSelect value={draft.language} onChange={event => setDraft({ ...draft, language: event.target.value as Preferences['language'] })}>{languageCatalogue.map(item => <option key={item.code} value={item.code}>{item.native}</option>)}</NativeSelect></label>
         </section>
         <section className="panel preferences-card"><header><h3>{t('Appearance')}</h3><p className="muted">{t('Choose the font used across the app. It is saved to your account, so the web and mobile apps match.')}</p></header>
           <label className="preferences-setting-row">{t('Font')}<NativeSelect value={resolveFont(draft.font)} onChange={event => { if (isFont(event.target.value)) setDraft({ ...draft, font: event.target.value }); }}>{fonts.map(font => <option key={font.id} value={font.id}>{font.id === 'inter' ? t('{font} (current)', { font: font.name }) : font.name}</option>)}</NativeSelect></label>
-          <p className="font-preview" data-font={resolveFont(draft.font)} aria-hidden="true"><strong>{t('Net worth')} · Умумий · Jami</strong><span>{formatMoney(1234567, draft.currencies[0], locale)} · AaBbCc ÁáĞğ АаБбВв Oʻoʻ Gʻgʻ</span></p>
+          <p className="font-preview" data-font={resolveFont(draft.font)} aria-hidden="true"><strong>{t('Net worth')} · Итого</strong><span>{formatMoney(1234567, draft.currencies[0], locale)} · AaBbCc ÁáÉé АаБбВв</span></p>
         </section>
         <section className="panel preferences-card"><header><h3>{t('Currencies')}</h3><p className="muted">{t('Choose the currencies you use.')}</p></header>
           <label className="preferences-setting-row">{t('Primary currency')}<NativeSelect value={draft.currencies[0]} onChange={event => setDraft({ ...draft, currencies: [event.target.value, ...draft.currencies.filter(c => c !== event.target.value)] })}>{draft.currencies.map(code => <option key={code} value={code}>{currencyLabel(code, locale)}</option>)}</NativeSelect></label>

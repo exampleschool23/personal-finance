@@ -37,7 +37,7 @@ GitHub Actions runs the test suite, production build, type check and auth integr
 
 ## Runtime configuration
 
-`APP_ORIGIN` is required for auth email links; `PUBLIC_SIGNUP_ENABLED` defaults to disabled. Configure the Supabase token-hash email templates documented in [the setup notes](docs/roadmap-implementation.md#authentication-setup). Server-side account deletion also requires `SUPABASE_SERVICE_ROLE_KEY`.
+`APP_ORIGIN` is required for auth email links; `PUBLIC_SIGNUP_ENABLED` defaults to disabled. Configure the Supabase token-hash email templates and Resend SMTP sender described in [the email setup guide](docs/email-setup-resend.md). Server-side account deletion also requires `SUPABASE_SERVICE_ROLE_KEY`.
 
 `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` are required for account data. `TWELVE_DATA_API_KEY` enables stock prices and benchmark feeds. Market requests preserve saved values when prices are unavailable.
 

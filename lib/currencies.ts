@@ -1,6 +1,7 @@
 import catalogue from './currencies.json' with { type: 'json' };
 // Type-only so tests can load this module without a bundler; tests/font-preference.mjs keeps the default in step.
 import type { Font } from './fonts';
+import type { Language } from './languages';
 // Current ISO 4217 fiat currencies from SIX List One; excludes metals, funds,
 // accounting units, and testing codes. See docs/currencies.md for provenance.
 export const fiatCurrencies = catalogue;
@@ -10,7 +11,7 @@ export function currencyLabel(code: string, locale: string) {
   try { return `${code} · ${new Intl.DisplayNames([locale], { type: 'currency' }).of(code) || code}`; }
   catch { return `${code} · ${catalogue.find(c => c.code === code)?.name || code}`; }
 }
-export type Preferences = { display_name?: string; country?: string; language: 'en' | 'ru' | 'uz'; currencies: string[]; font?: Font };
+export type Preferences = { display_name?: string; country?: string; language: Language; currencies: string[]; font?: Font; onboarded?: boolean };
 // The top bar switches between these; the first is the primary currency.
 export const maxPreferredCurrencies = 2;
 /** Toggles `code` in the preferred list. Returns why the tap was refused instead of dropping it silently. */

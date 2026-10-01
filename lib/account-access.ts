@@ -1,5 +1,6 @@
 import {z} from 'zod';
-export const password=z.string().min(12).max(128);
+import {maxPasswordLength,minPasswordLength} from './password-policy';
+export const password=z.string().min(minPasswordLength).max(maxPasswordLength);
 const email=z.string().trim().email().max(254);
 export const accountAccessSchema=z.discriminatedUnion('action',[
  z.object({action:z.literal('signup'),email,password}),

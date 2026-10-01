@@ -11,10 +11,10 @@ import { PlanningError } from '@/components/workspace/screen-notices';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
 export function SettingsScreen() {
- const { user, demo, currency, market, reload, preferencesData, applyPreferences, settingsLoading, settingsError, retrySettings, planning, workspacePreferences, refreshRecords, clearLocalSession } = useWorkspace();
+ const { user, demo, currency, market, reload, preferencesData, applyPreferences, settingsLoading, settingsError, retrySettings, planning, workspacePreferences, refreshRecords, clearLocalSession, restartOnboarding } = useWorkspace();
  return <div data-page="Settings" className="content">
   <SettingsLayout
-   preferences={<><SettingsPanel key={String(user) + settingsLoading} initial={preferencesData} demo={demo} onSaved={applyPreferences} loading={!demo && settingsLoading} loadError={settingsError} onRetry={retrySettings}/><TelegramPanel demo={demo}/><PlanningError/></>}
+   preferences={<><SettingsPanel key={String(user) + settingsLoading} initial={preferencesData} demo={demo} onSaved={applyPreferences} loading={!demo && settingsLoading} loadError={settingsError} onRetry={retrySettings} onRestartSetup={demo?undefined:restartOnboarding}/><TelegramPanel demo={demo}/><PlanningError/></>}
    benchmarks={<InvestmentComparisonSettings demo={demo} currencies={preferencesData.currencies}/>}
    security={<AccountAccessPanel settings onSignedOut={clearLocalSession}/>}
    categories={<TransactionToolsPanel onDeleted={refreshRecords} categories={planning.data.categories} loading={planning.loading} error={planning.error} onRetry={refreshRecords} saveCategory={async (name,direction)=>{await planning.save('category',{id:crypto.randomUUID(),name,direction});}}/>}

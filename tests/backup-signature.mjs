@@ -22,12 +22,13 @@ test('API certifies only signed backups for the current owner and restores with 
  const oldKey=process.env.BACKUP_SIGNING_KEY,oldService=process.env.SUPABASE_SERVICE_ROLE_KEY;
  process.env.BACKUP_SIGNING_KEY=key;process.env.SUPABASE_SERVICE_ROLE_KEY='service-token';
  const calls=[];
- const api=loadTS('app/api/backup/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner-token',user:{id:owner}}),sameOrigin:()=>true,supa:async(path,init,token)=>{calls.push({path,data:JSON.parse(init.body),token});return Response.json({ok:true});}}});
+ const api=loadTS('app/api/backup/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner-token',user:{id:owner}}),sameOrigin:()=>true,supa:async(path,init,token)=>{calls.push({path,data:JSON.parse(init.body),token,headers:init.headers});return Response.json({ok:true});}}});
  const request=backup=>new Request('https://local/api/backup',{method:'POST',body:JSON.stringify({action:'preview',backup})});
  try{
   const signed=signBackup(raw);
   assert.equal((await api.POST(request(signed))).status,200);
-  assert.deepEqual(calls.map(c=>c.token),['service-token','owner-token']);assert.equal(calls[0].data.p_owner,owner);assert.equal(calls[0].data.p_backup,raw);assert.equal(calls[1].data.p_backup,raw);
+  // The certifying call carries the server key in its own headers; the restore itself uses the owner's ordinary token.
+  assert.deepEqual(calls.map(c=>c.token),[undefined,'owner-token']);assert.deepEqual(calls[0].headers,{apikey:'service-token',Authorization:'Bearer service-token'});assert.equal(calls[0].data.p_owner,owner);assert.equal(calls[0].data.p_backup,raw);assert.equal(calls[1].data.p_backup,raw);
   calls.length=0;const tampered=JSON.parse(signed);tampered.signature='0'.repeat(64);
   assert.equal((await api.POST(request(JSON.stringify(tampered)))).status,400);assert.equal(calls.length,0);
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;assert.equal((await api.POST(request(signed))).status,503);assert.equal(calls.length,0);

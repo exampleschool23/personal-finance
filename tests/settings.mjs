@@ -6,25 +6,27 @@ import { z } from 'zod';
 import { isCountry, countryCodes, countryOptions } from '../lib/countries.ts';
 import { defaultPreferences, isCurrency, maxPreferredCurrencies } from '../lib/currencies.ts';
 import { fontIds, resolveFont } from '../lib/fonts.ts';
+import { loadTS } from './helpers/load-ts.mjs';
+const { isLanguage, languageCodes } = loadTS('lib/i18n.ts');
 const source=fs.readFileSync(new URL('../app/api/settings/route.ts',import.meta.url),'utf8').replace(/^import .*;\n/gm,'').replace(/export async function/g,'async function');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let authenticated=true, calls=[], rows=[], databaseFailure=false;
-const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry','fontIds','resolveFont',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry,fontIds,resolveFont);
+const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry','fontIds','resolveFont','isLanguage','languageCodes',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry,fontIds,resolveFont,isLanguage,languageCodes);
 const request=body=>new Request('https://app.local/api/settings',{method:'PUT',headers:{origin:'https://app.local','Content-Type':'application/json'},body:JSON.stringify(body)});
 test('persists validated preferences for the authenticated owner',async()=>{
- calls=[];const response=await api.PUT(request({language:'uz',currencies:['EUR','INR']}));
- assert.equal(response.status,200);assert.deepEqual(JSON.parse(calls[0].init.body),{user_id:'owner',language:'uz',currencies:['EUR','INR'],font:'inter'});
+ calls=[];const response=await api.PUT(request({language:'ru',currencies:['EUR','INR']}));
+ assert.equal(response.status,200);assert.deepEqual(JSON.parse(calls[0].init.body),{user_id:'owner',language:'ru',currencies:['EUR','INR'],font:'inter'});
  calls=[];assert.equal((await api.PUT(request({language:'en',currencies:['USD']}))).status,200);assert.deepEqual(JSON.parse(calls[0].init.body).currencies,['USD']);
  assert.equal(calls[0].token,'owner-token');
 });
 test('rejects empty, duplicate, non-fiat, and more than two currencies',async()=>{
  for(const currencies of [[],['EUR','EUR'],['BTC'],['USD','INR','UZS']]) assert.equal((await api.PUT(request({language:'en',currencies}))).status,400);
- assert.equal((await api.PUT(request({language:'fr',currencies:['USD']}))).status,400);
+ assert.equal((await api.PUT(request({language:'xx',currencies:['USD']}))).status,400);
 });
 test('protects settings from anonymous and cross-origin writes',async()=>{
  authenticated=false;assert.equal((await api.GET()).status,401);assert.equal((await api.PUT(request(defaultPreferences))).status,401);authenticated=true;
  assert.equal((await api.PUT(new Request('https://app.local/api/settings',{method:'PUT',headers:{origin:'https://other.local'}}))).status,403);
- assert.deepEqual(await (await api.GET()).json(),defaultPreferences);
+ assert.deepEqual(await (await api.GET()).json(),{...defaultPreferences,onboarded:false});
 });
 
 test('optional name is trimmed, persisted for the owner, loaded, and clearable',async()=>{
@@ -35,7 +37,7 @@ test('optional name is trimmed, persisted for the owner, loaded, and clearable',
  assert.deepEqual(JSON.parse(calls[0].init.body),{...defaultPreferences,display_name:'Jasur',user_id:'owner'});
  rows=[{...defaultPreferences,display_name:'Jasur'}];
  assert.equal((await (await api.GET()).json()).display_name,'Jasur');
- assert.match(calls.at(-1).path,/display_name,country,font&user_id=eq.owner$/);
+ assert.match(calls.at(-1).path,/select=\*&user_id=eq.owner$/);
  rows=[];
  assert.equal((await (await api.PUT(request({...defaultPreferences,display_name:'   '}))).json()).display_name,'');
 });
@@ -110,7 +112,7 @@ test('font preference validates the catalogue, persists for the owner, loads and
  assert.deepEqual(JSON.parse(calls[0].init.body),{...defaultPreferences,font:'onest',user_id:'owner'});
  rows=[{...defaultPreferences,font:'onest'}];
  assert.equal((await (await api.GET()).json()).font,'onest');
- assert.match(calls.at(-1).path,/select=language,currencies,display_name,country,font&/);
+ assert.match(calls.at(-1).path,/select=\*&/);
  // Rows saved before the font column, and clients that omit it, keep the current font.
  for(const row of [{language:'en',currencies:['USD']},{...defaultPreferences,font:null}]){rows=[row];assert.equal((await (await api.GET()).json()).font,'inter');}
  rows=[];
@@ -118,4 +120,50 @@ test('font preference validates the catalogue, persists for the owner, loads and
  for(const font of ['Onest','comic-sans','',42,['onest']]){
   calls=[];assert.equal((await api.PUT(request({...defaultPreferences,font}))).status,400);assert.equal(calls.length,0);
  }
+});
+
+test('the welcome setup is recorded once, cleared on request, and left alone by ordinary saves',async()=>{
+ rows=[];
+ assert.equal((await (await api.GET()).json()).onboarded,false);
+ rows=[{...defaultPreferences,onboarded_at:'2026-09-30T10:00:00Z'}];
+ assert.equal((await (await api.GET()).json()).onboarded,true);
+ rows=[{...defaultPreferences,onboarded_at:null}];
+ assert.equal((await (await api.GET()).json()).onboarded,false);
+ // Before migration 078 the column is absent; existing owners are not asked.
+ rows=[{...defaultPreferences}];
+ assert.equal((await (await api.GET()).json()).onboarded,true);
+ calls=[];
+ const finished=await api.PUT(request({...defaultPreferences,onboarded:true}));
+ assert.equal(finished.status,200);
+ assert.equal((await finished.json()).onboarded,true);
+ let body=JSON.parse(calls[0].init.body);
+ assert.ok(!('onboarded' in body));
+ assert.match(body.onboarded_at,/^\d{4}-\d{2}-\d{2}T/);
+ calls=[];
+ await api.PUT(request({...defaultPreferences,onboarded:false}));
+ assert.equal(JSON.parse(calls[0].init.body).onboarded_at,null);
+ calls=[];
+ await api.PUT(request(defaultPreferences));
+ body=JSON.parse(calls[0].init.body);
+ assert.ok(!('onboarded_at' in body)&&!('onboarded' in body));
+ assert.equal((await api.PUT(request({...defaultPreferences,onboarded:'yes'}))).status,400);
+});
+
+test('every offered language can be saved, unknown ones are refused, and an unknown saved language loads as English',async()=>{
+ for(const language of languageCodes){
+  calls=[];
+  assert.equal((await api.PUT(request({...defaultPreferences,language}))).status,200,language);
+  assert.equal(JSON.parse(calls[0].init.body).language,language);
+ }
+ assert.equal(languageCodes.length,16);
+ calls=[];
+ for(const language of ['xx','EN','es_MX','',null,42])assert.equal((await api.PUT(request({...defaultPreferences,language}))).status,400,String(language));
+ assert.equal(calls.length,0);
+ rows=[{...defaultPreferences,language:'xx',currencies:['EUR'],onboarded_at:'2026-09-30T10:00:00Z'}];
+ const loaded=await (await api.GET()).json();
+ assert.equal(loaded.language,'en');
+ assert.deepEqual(loaded.currencies,['EUR']);
+ rows=[{...defaultPreferences,language:'ar',onboarded_at:'2026-09-30T10:00:00Z'}];
+ assert.equal((await (await api.GET()).json()).language,'ar');
+ rows=[];
 });

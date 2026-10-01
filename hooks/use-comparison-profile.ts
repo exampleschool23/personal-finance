@@ -4,6 +4,11 @@ import { refreshRead } from '@/lib/refresh-read';
 import { showSaved } from '@/lib/feedback';
 import type { ComparisonProfile } from '@/lib/comparison-profile';
 
+/** Stores the day portfolio tracking begins; null returns to the first investment activity. */
+export async function saveTrackingStartRequest(date:string|null){
+ const response=await fetch('/api/comparison-profile',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({tracking_start:date})});
+ if(!response.ok){const result=await response.json() as {error?:string};throw Error(result.error??'Could not save the tracking start date.');}
+}
 // The owner's benchmark choices and tracking start, shared by the Overview chart and its figures.
 // Sample workspaces cannot save, so their tracking start lasts for the visit.
 export function useComparisonProfile(demo:boolean){
@@ -17,8 +22,7 @@ export function useComparisonProfile(demo:boolean){
  useEffect(()=>{const refresh=()=>setRetry(value=>value+1);window.addEventListener('comparison-settings-saved',refresh);window.addEventListener('focus',refresh);return()=>{window.removeEventListener('comparison-settings-saved',refresh);window.removeEventListener('focus',refresh);};},[]);
  async function saveTrackingStart(date:string|null){
   if(demo){setDemoStart(date);return;}
-  const response=await fetch('/api/comparison-profile',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({tracking_start:date})});
-  if(!response.ok){const result=await response.json() as {error?:string};throw Error(result.error??'Could not save the tracking start date.');}
+  await saveTrackingStartRequest(date);
   setProfile(current=>current&&{...current,tracking_start:date});
   showSaved();
  }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatNumberInput, numberInputValue, formatMoney, formatCompactMoney, formatDate, formatDateTime, formatPercent } from '../lib/format.ts';
+import { formatNumberInput, numberInputValue, formatMoney, formatCompactMoney, formatDate, formatDateTime, formatMonthYear, formatPercent } from '../lib/format.ts';
 test('amount entry groups digits and round-trips supported locales',()=>{
  for(const locale of ['en-US','ru-RU','uz-UZ']) {
   const formatted=numberInputValue(9300.25,locale);
@@ -89,4 +89,41 @@ test('percentages use the locale digits, one decimal by default, and a dash for 
  assert.equal(formatPercent(-3.14159,'en-US',2),'-3.14%');
  assert.equal(formatPercent(NaN,'en-US'),'—');
  assert.equal(formatPercent(Infinity,'en-US'),'—');
+});
+
+const formatLocales = {
+  'es-ES': ['16 de septiembre de 2026', 'Septiembre de 2026'],
+  'es-MX': ['16 de septiembre de 2026', 'Septiembre de 2026'],
+  'pt-BR': ['16 de setembro de 2026', 'Setembro de 2026'],
+  'fr-FR': ['16 septembre 2026', 'Septembre 2026'],
+  'ar-AE': ['16 سبتمبر 2026', 'سبتمبر 2026'],
+  'ur-PK': ['16 ستمبر 2026', 'ستمبر 2026'],
+  'hi-IN': ['16 सितंबर 2026', 'सितंबर 2026'],
+  'bn-BD-u-nu-latn': ['16 সেপ্টেম্বর 2026', 'সেপ্টেম্বর 2026'],
+  'zh-CN': ['2026年9月16日', '2026年9月'],
+  'ja-JP': ['2026年9月16日', '2026年9月'],
+  'ko-KR': ['2026년 9월 16일', '2026년 9월'],
+  'th-TH-u-nu-latn-ca-gregory': ['16 กันยายน 2026', 'กันยายน 2026'],
+  'vi-VN': ['16 tháng 9 năm 2026', 'Tháng 9 năm 2026'],
+};
+test('dates read naturally in every offered language, stay on their calendar day and never depend on the timezone', () => {
+  for (const [locale, [day, month]] of Object.entries(formatLocales)) {
+    assert.equal(formatDate('2026-09-16', locale), day, locale);
+    assert.equal(formatMonthYear('2026-09', locale), month, locale);
+    assert.equal(formatDate('', locale), '—', locale);
+    assert.equal(formatDate('2026-02-30', locale), '—', locale);
+    // A late-evening UTC instant is already the next day in Asia/Tashkent, exactly as in English.
+    assert.equal(formatDateTime('2026-09-15T20:30:00Z', locale), day + ' 01:30', locale);
+  }
+});
+test('amounts keep whole numbers, grouping and Latin digits in every offered language', () => {
+  for (const locale of Object.keys(formatLocales)) {
+    const money = formatMoney(1234567.89, 'USD', locale);
+    // Whole amounts only; Hindi and Bengali group in lakhs (12,34,568), which is correct for their readers.
+    assert.equal(money.replace(/\D/g, ''), '1234568', locale);
+    assert.ok(!/۱|١|১|१/.test(money), locale);
+    assert.equal(formatNumberInput('1234', locale)?.value, 1234, locale);
+  }
+  assert.equal(formatNumberInput('1,5', 'fr-FR')?.value, 1.5);
+  assert.equal(formatNumberInput('1.5', 'es-MX')?.value, 1.5);
 });

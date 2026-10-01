@@ -7,7 +7,7 @@ import {actionMessage,type ActionEvent,type ActionLookup} from './action-message
 import {depositToday} from './deposit-interest';
 import {digestMessage} from './digest-message';
 import type {Entry} from './finance';
-import {translate,isLanguage,type Language} from './i18n';
+import {translate,isLanguage,detectLanguage,type Language} from './i18n';
 import {upcomingPayments,type Category,type Occurrence} from './planning';
 import {planningSchemas} from './planning-schemas';
 import {recordSchema} from './record-schema';
@@ -20,7 +20,7 @@ export type BotOutcome={replies:TelegramMessage[];callbackId?:string};
 export type BotClock={now:Date;today:string;newId:()=>string};
 const draftMinutes=30;
 const languageOf=(value:unknown):Language=>isLanguage(value)?value:'en';
-const fromHint=(code:string|undefined):Language=>{const short=(code??'').slice(0,2);return short==='ru'||short==='uz'?short:'en';};
+const fromHint=(code:string|undefined):Language=>detectLanguage(code?[code]:[]);
 const t=(language:Language,key:string,params?:Record<string,string|number>)=>translate(language,key,params);
 export async function ownerLanguage(db:ServiceDatabase,userId:string){
  const rows=await db.read<Array<{language?:string}>>('/rest/v1/user_preferences?select=language&user_id=eq.'+userId);

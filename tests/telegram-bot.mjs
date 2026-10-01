@@ -68,13 +68,13 @@ test('a chat that already served another owner is released before it is linked',
 });
 
 test('stop unlinks a connected chat, drops its draft and removes the keyboard; a bare start shows the menu again',async()=>{
- const db=fakeDb({subscriptions:[linked],languages:{[owner]:'uz'},drafts:[{user_id:owner,step:'expense:amount',data:{},updated_at:now.toISOString()}]});
+ const db=fakeDb({subscriptions:[linked],languages:{[owner]:'ru'},drafts:[{user_id:owner,step:'expense:amount',data:{},updated_at:now.toISOString()}]});
  const stopped=await handleTelegramUpdate(message(500,'/stop'),db,clock);
- assert.match(stopped.replies[0].text,/^Uzildi\./);assert.deepEqual(stopped.replies[0].keyboard,{remove:true});
+ assert.match(stopped.replies[0].text,/^Отключено\./);assert.deepEqual(stopped.replies[0].keyboard,{remove:true});
  assert.deepEqual(db.writes[0].body,{chat_id:null,linked_at:null,updated_at:now.toISOString()});
  assert.equal(db.writes[1].method,'DELETE');assert.equal(db.drafts.length,0);
  const again=await handleTelegramUpdate(message(500,'/start'),db,clock);
- assert.match(again.replies[0].text,/^Ulandi\./);assert.ok(again.replies[0].keyboard.reply);
+ assert.match(again.replies[0].text,/^Подключено\./);assert.ok(again.replies[0].keyboard.reply);
 });
 
 test('an unlinked chat only learns how to connect, whether it types or presses',async()=>{
