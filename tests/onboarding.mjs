@@ -123,7 +123,7 @@ test('an account that has not finished the setup keeps the language already show
 });
 
 test('the welcome setup and Settings list every language from one catalogue and suggest no local currency first',()=>{
- for(const file of ['components/onboarding-screen.tsx','components/settings-panel.tsx','components/language-provider.tsx']){
+ for(const file of ['components/onboarding-screen.tsx','components/settings-panel.tsx']){
   const source=fs.readFileSync(file,'utf8');
   assert.match(source,/languageCatalogue\.map/,file);
   assert.ok(!/value="uz"|\['uz'|O‘zbek/.test(source),file);

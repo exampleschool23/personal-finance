@@ -1,6 +1,6 @@
 "use client";
 import { ChevronDown, Plus, RefreshCw } from 'lucide-react';
-import { LanguageSelector, useLanguage } from '@/components/language-provider';
+import { useLanguage } from '@/components/language-provider';
 import { ThemeToggle } from '@/components/theme-provider';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,9 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { formatDate, formatNumber } from '@/lib/format';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
-/** Language and theme choices for the top bar. Sign-in pages pass `language={false}`: they follow the browser's language. */
-export function DisplayPreferences({ language = true }: { language?: boolean }) {
- return <div className="preferences">{language && <LanguageSelector compact/>}<ThemeToggle/></div>;
+/** Theme choice for the top bar. The language is chosen once, in onboarding or Settings. */
+export function DisplayPreferences() {
+ return <div className="preferences"><ThemeToggle/></div>;
 }
 
 /** The sticky bar above every screen: where you are, the display currency and the quick expense shortcut. */

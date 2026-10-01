@@ -136,14 +136,12 @@ test('the logo in the drawer goes to the main page, closing the phone drawer and
  assert.deepEqual(sheet,[false]);
 });
 
-test('sign-in pages follow the browser language instead of offering a selector',()=>{
- for(const file of ['app/auth/access/page.tsx','app/auth/confirm/page.tsx'])assert.ok(!read(file).includes('LanguageSelector'),file);
- const shell=read('components/workspace/workspace-shell.tsx');
- assert.match(shell,/<SignInScreen .*preferences=\{<DisplayPreferences language=\{false\}\/>\}/);
- // The signed-in top bar keeps its selector, which changes only the current visit.
+test('no screen offers a language selector: language is chosen in onboarding or Settings',()=>{
+ for(const file of ['app/auth/access/page.tsx','app/auth/confirm/page.tsx','components/workspace/top-bar.tsx','components/workspace/workspace-shell.tsx'])assert.ok(!read(file).includes('LanguageSelector'),file);
+ assert.ok(!read('components/language-provider.tsx').includes('LanguageSelector'));
  assert.match(read('components/workspace/top-bar.tsx'),/<DisplayPreferences\/>/);
  const {DisplayPreferences}=loadTS('components/workspace/top-bar.tsx',{
-  '@/components/language-provider':{LanguageSelector:()=>React.createElement('select',{className:'language-selector'}),useLanguage:()=>({t:text=>text,locale:'en-US'})},
+  '@/components/language-provider':{useLanguage:()=>({t:text=>text,locale:'en-US'})},
   '@/components/workspace/workspace-provider':{useWorkspace:()=>({})},
   '@/components/theme-provider':{ThemeToggle:()=>React.createElement('button',{className:'theme'})},
   'lucide-react':{ChevronDown:()=>null,Plus:()=>null,RefreshCw:()=>null},
@@ -152,6 +150,14 @@ test('sign-in pages follow the browser language instead of offering a selector',
   '@/components/ui/popover':{Popover:()=>null,PopoverContent:()=>null,PopoverTrigger:()=>null},
   '@/components/ui/sidebar':{SidebarTrigger:()=>null},
  });
- assert.match(renderToStaticMarkup(React.createElement(DisplayPreferences,{language:false})),/^<div class="preferences"><button class="theme"><\/button><\/div>$/);
- assert.match(renderToStaticMarkup(React.createElement(DisplayPreferences,{})),/language-selector/);
+ assert.match(renderToStaticMarkup(React.createElement(DisplayPreferences,{})),/^<div class="preferences"><button class="theme"><\/button><\/div>$/);
+});
+
+test('watchlist and goal forms let the user pick any preferred currency',()=>{
+ for(const file of ['components/spending-watchlists.tsx','components/planning/goals-page.tsx']){
+  const source=read(file);
+  assert.match(source,/<CurrencySelect /,file);
+  assert.ok(!source.includes('<CurrencyValue'),file);
+ }
+ assert.match(read('components/workspace/screens/cash-flow-screen.tsx'),/<SpendingWatchlists [^>]*currencies=\{preferencesData\.currencies\}/);
 });

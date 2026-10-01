@@ -34,7 +34,7 @@ function WorkspaceShell({ children }: { children: ReactNode }) {
  if (!ready || (!user && !demo && pathname !== '/') || awaitingSettings({ user, demo, loading: settingsLoading }))
   return <main className="session-loading" aria-busy="true"><Brand/><LoadingPlaceholder label={t("Loading your workspace…")} rows={3}/></main>;
  if (!user && !demo)
-  return <SignInScreen brand={<Brand/>} preferences={<DisplayPreferences language={false}/>} busy={busy} configured={configured} error={error} onLogin={login} onDemo={startDemo}/>;
+  return <SignInScreen brand={<Brand/>} preferences={<DisplayPreferences/>} busy={busy} configured={configured} error={error} onLogin={login} onDemo={startDemo}/>;
  // A first sign-in answers a few setup questions before the drawer and screens appear.
  if (onboardingNeeded)
   return <OnboardingScreen brand={<Brand/>} initial={preferencesData} telegram={<TelegramPanel demo={false}/>} savePreferences={savePreferences} applyPreferences={applyPreferences} saveGoal={goal => planning.save('goal', goal)} saveTrackingStart={saveTrackingStart}/>;

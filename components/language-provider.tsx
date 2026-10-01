@@ -1,9 +1,8 @@
 "use client";
 
 import { useContext, useEffect, useState } from 'react';
-import { detectLanguage, directionOf, isLanguage, Language, languageCatalogue, locales, translate } from '@/lib/i18n';
+import { detectLanguage, directionOf, isLanguage, Language, locales, translate } from '@/lib/i18n';
 
-import { NativeSelect } from '@/components/ui/native-select';
 import { LanguageContext } from '@/components/language-context';
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -37,11 +36,4 @@ export function useLanguage() {
   const context = useContext(LanguageContext);
   if (!context) throw new Error('useLanguage must be used within LanguageProvider');
   return { ...context, locale: locales[context.language], t: (key: string, params?: Record<string, string | number>) => translate(context.language, key, params) };
-}
-
-export function LanguageSelector({ compact = false }: { compact?: boolean } = {}) {
-  const { language, setLanguage, t } = useLanguage();
-  return <NativeSelect className="language-selector" data-compact={compact} aria-label={t('Language')} title={t('Language')} value={language} onChange={event => { if (isLanguage(event.target.value)) setLanguage(event.target.value); }}>
-    {languageCatalogue.map(item => <option key={item.code} value={item.code} lang={item.code}>{compact ? item.short : `${item.short} · ${item.native}`}</option>)}
-  </NativeSelect>;
 }

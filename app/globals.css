@@ -336,10 +336,6 @@ tbody tr:last-child td{border-bottom:0}
 }
 
 .preferences{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.language-selector{width:auto;min-width:max-content;max-width:none;padding:6px 36px 6px 12px;font-size:var(--type-body)}
-.language-selector[data-compact="true"]{width:calc(3ch + 48px)}
-.preferences [data-slot="native-select-wrapper"]{flex-shrink:0}
-.preferences .language-selector{min-height:38px!important;height:38px;font-size:var(--type-small);border-radius:var(--radius-control)}
 
 .record-name small { display:block; }
 

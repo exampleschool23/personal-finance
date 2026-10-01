@@ -29,7 +29,7 @@ export function CashFlowScreen() {
  const { user, demo, rows, currency, market, reload, preferencesData, planning, earningSources, expensePlans, transactionTools, workspacePreferences, snapshots, forecast, forecastReady, forecastMonth, setForecastMonth, monthlyIncomeEntries, workspaceLoading, refreshRecords,
   addCashFlow, editRecord, setPayingMortgage, recordFromSource, reviewRecurring, spendFromPlan, removePlan, showFirstPage } = useWorkspace();
  const mortgages = <MonthlyMortgagePayments records={demo?rows:planning.data.records} currency={currency} market={market} loading={planning.loading} error={planning.error} onPay={setPayingMortgage} onEdit={editRecord}/>;
- const watchlists = !transactionTools.loading&&!transactionTools.error ? <SpendingWatchlists data={planning.data} splits={transactionTools.data.splits} today={depositToday()} currency={currency} preferences={workspacePreferences}/> : null;
+ const watchlists = !transactionTools.loading&&!transactionTools.error ? <SpendingWatchlists data={planning.data} splits={transactionTools.data.splits} today={depositToday()} currency={currency} currencies={preferencesData.currencies} preferences={workspacePreferences}/> : null;
  return <>
   <div data-page="Income & expenses" className="content">
    <DemoBanner/>
