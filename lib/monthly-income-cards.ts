@@ -1,6 +1,6 @@
 import { depositToday } from './deposit-interest';
 import type { EarningSource } from './earning-sources';
-import { income, monthly, duplicatesAssetEstimate, type Entry } from './finance';
+import { income, interestKinds, monthly, duplicatesAssetEstimate, type Entry } from './finance';
 
 type IncomeCard = { entry: Entry; amount: number; asset: boolean; excluded: boolean; notes: string[]; received: boolean; receivedAmount: number };
 
@@ -14,7 +14,7 @@ function receiptKey(entry: Entry): string {
 
 // Requires individual dated records, never the all-time valuation summary.
 export function monthlyIncomeCards(entries: Entry[], month: string, sources: EarningSource[] = [], today = depositToday()): IncomeCard[] {
- const assets = entries.filter(entry => ['Business', 'Property', 'Deposit'].includes(entry.kind) && (entry.estimated_monthly_income ?? 0) > 0);
+ const assets = entries.filter(entry => ['Business', 'Property', ...interestKinds].includes(entry.kind) && (entry.estimated_monthly_income ?? 0) > 0);
  const businessIds = new Set(assets.filter(entry => entry.kind === 'Business').map(entry => entry.id));
  const propertyIds = new Set(assets.filter(entry => entry.kind === 'Property').map(entry => entry.id));
  const recurring = entries.filter(entry => income.includes(entry.kind) && !entry.source_paused);

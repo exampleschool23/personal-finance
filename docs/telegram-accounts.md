@@ -57,9 +57,17 @@ add an email and password in Settings. It can delete itself in Settings by
 typing DELETE (it never had a password to re-enter); a linked chat is then told
 the account was deleted and loses its menu, and `/start` offers sign-up again.
 
+## The menu
+
+The keyboard under the message box holds the two everyday entries, **Expense**
+and **Income**, and **More actions**. More actions sends one message with
+buttons for Transfer, Pay loan or debt, Mortgage payment, Upcoming payments,
+Add cash account, Add loan or debt and Sign out (callbacks `m:<kind>`). Typing
+any of these labels, in any interface language, works the same.
+
 ## Signing out
 
-The bot's menu has a **Sign out** button (`/signout` and `/stop` do the same). It
+**More actions** has a **Sign out** button (`/signout` and `/stop` do the same). It
 unlinks the chat, drops any half-finished entry and removes the keyboard, and the
 app's Settings then shows Telegram as not connected.
 

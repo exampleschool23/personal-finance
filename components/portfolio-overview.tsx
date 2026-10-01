@@ -24,7 +24,7 @@ import { type HistoryEvent } from '@/lib/investment-history';
 import { type MarketData } from '@/lib/market';
 
 type History = { movements?:BenchmarkMovement[]; records: Entry[]; events: HistoryEvent[]; cashflows?: Entry[]; incomeRecords?: Entry[] };
-export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecords, currency, market, demo, revision, children }: { children?: ReactNode; demoRecords?: Entry[]; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
+export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecords, currency, market, demo, revision, onAddIncome, children }: { children?: ReactNode; onAddIncome?: () => void; demoRecords?: Entry[]; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
  const { t, locale } = useLanguage();
  const [savedHistory, setHistory] = useState<History | null>(null);
  const [error, setError] = useState(false);
@@ -75,6 +75,6 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
    </>}
   </section>
   {children}
-  {!loading&&!error&&<IncomeHistoryChart records={history?.records??[]} events={history?.events??[]} incomeRecords={history?.incomeRecords??[]} currency={currency} rates={market?.rates??market?.fx?.rate} today={today}/>}
+  {!loading&&!error&&<IncomeHistoryChart records={history?.records??[]} events={history?.events??[]} incomeRecords={history?.incomeRecords??[]} currency={currency} rates={market?.rates??market?.fx?.rate} today={today} onAddIncome={onAddIncome}/>}
  </>;
 }

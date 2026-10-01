@@ -1,12 +1,13 @@
 import { shiftDay } from './benchmark-data';
 import { defaultComparisonPreferences, isInvestmentRecord } from './comparison-profile';
-import { value, type Entry } from './finance';
+import { interestKinds, value, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import type { MarketData } from './market';
 
 // Illustrative fixtures only: never represent these as historical market quotes.
 export const demoMarket: MarketData = { rates: { USD: 1, UZS: 12500 }, fx: null, quotes: {}, errors: {}, stocksConfigured: false };
-export const demoBenchmarkKeys = defaultComparisonPreferences.benchmarks;
+// The sample workspace also shows the Treasury bill benchmark, so the risk-free comparison can be explored.
+export const demoBenchmarkKeys = [...defaultComparisonPreferences.benchmarks, 'BIL'] as const;
 export function demoRecords(today: string): Entry[] {
  const record = (id: string, name: string, kind: Entry['kind'], amount: number, extra: Partial<Entry> = {}): Entry => ({
   id: 'demo-' + id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0,
@@ -19,6 +20,7 @@ export function demoRecords(today: string): Entry[] {
   record('btc', 'Bitcoin', 'Crypto', 60000, { quantity: .08, cost: 52000 }),
   record('deposit-usd', 'USD term deposit', 'Deposit', 5000, { rate: 8, deposit_compounding: 'none', estimated_monthly_income: 5000 * .08 / 12 }),
   record('deposit-uzs', 'UZS term deposit', 'Deposit', 50000000, { currency: 'UZS', rate: 21, deposit_compounding: 'none', estimated_monthly_income: 875000 }),
+  record('tbill', 'US Treasury bill', 'Treasury bill', 4000, { rate: 4.3, deposit_compounding: 'none', estimated_monthly_income: 4000 * .043 / 12, date: shiftDay(today, 75) }),
   record('business', 'Neighborhood café', 'Business', 12000, { estimated_monthly_income: 320 }),
   record('mortgage', 'Apartment mortgage', 'Mortgage', 18000, { estimated_monthly_payment: 350, date: shiftDay(today, 20) }),
   record('lent', 'Loan to a friend', 'Money lent', 1200, { lent_date: shiftDay(today, -60), date: shiftDay(today, 30) }),
@@ -45,10 +47,10 @@ export function demoHistory(records: Entry[], today: string) {
   for (let month = 1; month <= 12; month++) {
    const date = shiftDay(today, -365 + Math.floor(365 * month / 12));
    const progress = month / 12;
-   const balance = record.kind === 'Deposit' ? amount : opening + (amount - opening) * progress + Math.sin(month * 1.8) * amount * .025 * (1 - progress);
+   const balance = interestKinds.includes(record.kind) ? amount : opening + (amount - opening) * progress + Math.sin(month * 1.8) * amount * .025 * (1 - progress);
    add('value-' + month, date, 'valuation', 0, balance);
-   if (record.kind === 'Deposit' || record.kind === 'Business' || (record.kind === 'Stock' && month % 3 === 0)) {
-    const receipt = record.kind === 'Deposit' ? amount * original.rate / 100 / 12 : record.kind === 'Business' ? 250 + month * 6 : amount * .003;
+   if (interestKinds.includes(record.kind) || record.kind === 'Business' || (record.kind === 'Stock' && month % 3 === 0)) {
+    const receipt = interestKinds.includes(record.kind) ? amount * original.rate / 100 / 12 : record.kind === 'Business' ? 250 + month * 6 : amount * .003;
     add('income-' + month, date, 'income', receipt, null);
    }
    if (record.kind === 'Business') add('expense-' + month, date, 'expense', 45 + month * 2, null);

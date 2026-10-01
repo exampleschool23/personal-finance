@@ -1,7 +1,7 @@
 "use client";
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
-import { signTone } from '@/components/presentation-foundation/tone';
+import { liabilityTone, signTone } from '@/components/presentation-foundation/tone';
 import { ArrowDownLeft, ArrowUpRight, Building2, CalendarClock, ChartNoAxesCombined, HandCoins, Landmark, Wallet } from 'lucide-react';
 import { DrawerLink } from '@/components/presentation-foundation/drawer-link';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
@@ -33,7 +33,7 @@ export function OverviewSummary({ entries, currency, excludedCurrencies, forecas
  return <>
   <StatTiles>
    <StatTile label={t("Total assets")} icon={<Landmark aria-hidden="true"/>} value={money(totalAssets)}><p>{t('Cash available')}: {money(indicators.cash)} · {percent(indicators.cashShare)}</p><PartialTotal currencies={excludedCurrencies}/></StatTile>
-   <StatTile label={t("Outstanding debt")} icon={<HandCoins aria-hidden="true"/>} value={money(totalDebt)}><p>{t('Debt to assets')}: {percent(indicators.debtToAssets)}</p><PartialTotal currencies={excludedCurrencies}/></StatTile>
+   <StatTile label={t("Outstanding debt")} icon={<HandCoins aria-hidden="true"/>} value={money(totalDebt)} tone={liabilityTone(totalDebt)}><p>{t('Debt to assets')}: {percent(indicators.debtToAssets)}</p><PartialTotal currencies={excludedCurrencies}/></StatTile>
    <StatTile label={t("Estimated monthly cash flow")} icon={<Wallet aria-hidden="true"/>} value={forecastReady ? money(forecast.forecast) : '—'} tone={forecastReady ? signTone(forecast.forecast) : undefined}><p>{t("Income")}: {money(forecast.plannedIncome)} · {t("Expenses")}: {forecastReady ? money(committed) : '—'}</p></StatTile>
    <StatTile label={t('Stock & crypto gain / loss')} icon={<ChartNoAxesCombined aria-hidden="true"/>} value={indicators.investmentGain === null ? '—' : money(indicators.investmentGain)} tone={signTone(indicators.investmentGain)}><p>{indicators.investmentReturn === null ? t('Only holdings with a purchase price are included.') : t('Return on purchase cost: {percent}', { percent: percent(indicators.investmentReturn) })}</p></StatTile>
   </StatTiles>

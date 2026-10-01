@@ -22,7 +22,7 @@ import { historyCashDelta, historySeries, historyChartDate, historyEventLabel, h
 import { depositInterest, depositProjection, depositToday } from '@/lib/deposit-interest';
 import { AssetMovementDialog, type MovementDraft } from '@/components/planning/asset-movement-dialog';
 import type { AssetMovement } from '@/lib/asset-movements';
-import type { Entry } from '@/lib/finance';
+import { interestCompounding, interestKinds, type Entry } from '@/lib/finance';
 import { categoryColor } from '@/lib/category-colors';
 
 type Draft={exchange_rate?:number;account_id?:string;id:string;record_id:string;type:HistoryUpdateType;date:string;amount:number;balance:number|null;notes:string};
@@ -55,9 +55,9 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
  // Mirrors delete_tracker_update: asset value/cash updates, and lending additions or repayments.
  const deletableUpdate=(type:string)=>['Business','Property','Valuables'].includes(record.kind)?['valuation','contribution','withdrawal'].includes(type):['Money lent','Loan','Debt'].includes(record.kind)&&['contribution','withdrawal'].includes(type);
  const mortgage=record.kind==='Mortgage';
- const deposit=record.kind==='Deposit';
+ const deposit=interestKinds.includes(record.kind);
  const security=record.kind==='Stock'||record.kind==='Crypto';
- const projection=depositProjection(events,record.rate,undefined,record.deposit_compounding);
+ const projection=depositProjection(events,record.rate,undefined,interestCompounding(record));
  const movementRecords=accounts.some(account=>account.id===record.id)?accounts:[...accounts,record];
  async function saveMovement(payload:AssetMovement){
   const response=await fetch('/api/asset-movements',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
@@ -126,7 +126,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
   <DialogTitle>{record.name} · {t('Tracker')}</DialogTitle>
   <DialogDescription>{t(lending?'Track additions and repayments against the outstanding balance.':cash?'Track your cash balance and transfers between accounts.':'Dated values and actual cash movements. Estimates stay separate.')}</DialogDescription>
   {loading?<LoadingPlaceholder label={t('Loading history…')}/>:<>
-   {deposit&&<div className="ownership-summary"><p>{t('Estimated interest for {month}: {amount}', {month:formatMonthYear(depositToday().slice(0,7),locale),amount:money(depositInterest(events,record.rate,undefined,record.deposit_compounding))})}</p><p>{t('Estimated balance including interest')}: {money(projection.total)}</p><p className="muted">{t(({monthly:'Monthly compounding',daily:'Daily compounding',none:'No compounding'})[record.deposit_compounding??'monthly'])}. {t('Top-ups and withdrawals affect interest from their recorded date. Estimates use the current annual rate. A confirmed balance or interest credit replaces the projection.')}</p><p className="muted">{t('Estimates start at the first dated balance. Record confirmed capitalized interest to update the available balance. Projections are not spendable cash.')}</p></div>}
+   {deposit&&<div className="ownership-summary"><p>{t('Estimated interest for {month}: {amount}', {month:formatMonthYear(depositToday().slice(0,7),locale),amount:money(depositInterest(events,record.rate,undefined,interestCompounding(record)))})}</p><p>{t('Estimated balance including interest')}: {money(projection.total)}</p><p className="muted">{t(({monthly:'Monthly compounding',daily:'Daily compounding',none:'No compounding'})[record.deposit_compounding??'monthly'])}. {t('Top-ups and withdrawals affect interest from their recorded date. Estimates use the current annual rate. A confirmed balance or interest credit replaces the projection.')}</p><p className="muted">{t('Estimates start at the first dated balance. Record confirmed capitalized interest to update the available balance. Projections are not spendable cash.')}</p></div>}
    <div className="tracker-metrics">
     <div><small>{t(lending?(record.kind==='Money lent'?'Amount owed to you':'Outstanding balance'):cash||deposit?'Account balance':'Latest tracked value (your share)')}</small><strong>{stats.balance===null?'—':money(stats.balance)}</strong></div>
     {!cash&&<div><small>{t(mortgage?'Principal repaid':lending?'Repayments recorded':'Income received')}</small><strong>{money(mortgage?stats.principal:lending?stats.repayments:stats.receipts)}</strong></div>}

@@ -3,7 +3,7 @@ import type { Kind } from './finance';
 export type CategoryKind = Kind | 'Groceries' | 'Family support' | 'Household' | 'Other';
 export const categoryHues: Record<CategoryKind, number> = {
   Groceries: 48, 'Family support': 195, Household: 270, Other: 330,
-  Cash: 145, Stock: 215, Crypto: 32, Deposit: 180,
+  Cash: 145, Stock: 215, Crypto: 32, Deposit: 180, 'Treasury bill': 232,
   Property: 270, Business: 42, Valuables: 250, 'Money lent': 195,
   Mortgage: 350, Loan: 15, Debt: 0,
   Salary: 120, 'Rent income': 165, 'Business income': 42, 'Other income': 85,

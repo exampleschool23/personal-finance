@@ -1,7 +1,7 @@
 import { unwrapSignedBackup } from '@/lib/backup-envelope';
 import { projectGoal } from './goal-projection';
 import { convertAmount, instrumentFor, instrumentKey, type MarketData } from './market';
-import { assets, liabilities, income, expenses, value, normalizeEntry, monthly, type Entry } from './finance';
+import { assets, interestKinds, liabilities, income, expenses, value, normalizeEntry, monthly, type Entry } from './finance';
 import { formatDate, formatDateTime, formatMoney, formatNumber } from './format';
 import { isCurrency, currencyLabel } from './currencies';
 import { locales, translate, type Language } from './i18n';
@@ -148,7 +148,7 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
  add('heading',t('Debts and deposits'));
  for(const w of wealth.filter(w=>liabilities.includes(w.record.kind))){const r=w.record,o=byId.get(r.id)!;add('subheading',`${r.name} · ${t(r.kind)}`);table(['Outstanding principal','Annual interest rate','Scheduled payment','Due / remaining term'],[[money(w.amount,r.currency),percent(o.rate),money(Number(o.estimated_monthly_payment)>0?number(o.estimated_monthly_payment):null,r.currency),`${date(o.date)}\n${t('Remaining term')}: ${typeof o.end_date==='string'&&Number.isFinite(Date.parse(o.end_date))?formatNumber(Math.max(0,Math.ceil((Date.parse(o.end_date)-Date.parse(today))/86400000)),locale)+' '+t('days'):na}`]],[.25,.2,.25,.3],[0,1,2]);if(number(o.rate)===null||!(Number(o.estimated_monthly_payment)>0))issues.add(`${r.name}: ${t('Interest rate or scheduled payment not recorded')}`);}
  add('text',t('Debt dates are saved deadlines; scheduled payments are estimates. Missing loan terms are not inferred.'));
- table(['Deposit','Balance','Annual interest rate','Maturity date'],wealth.filter(w=>w.record.kind==='Deposit').map(w=>[w.record.name,money(w.amount,w.record.currency),percent(byId.get(w.record.id)?.rate),date(byId.get(w.record.id)?.date)]),[.3,.25,.2,.25],[1,2]);
+ table(['Deposit','Balance','Annual interest rate','Maturity date'],wealth.filter(w=>interestKinds.includes(w.record.kind)).map(w=>[w.record.kind==='Deposit'?w.record.name:`${w.record.name} · ${t(w.record.kind)}`,money(w.amount,w.record.currency),percent(byId.get(w.record.id)?.rate),date(byId.get(w.record.id)?.date)]),[.3,.25,.2,.25],[1,2]);
  add('heading',t('Income'));
  const savedSources=(tables.income_sources??[]) as EarningSource[];
  const sources=[...savedSources,...legacyEarningSources(records).filter(s=>!savedSources.some(x=>x.id===s.id||x.schedule_id===s.id))];

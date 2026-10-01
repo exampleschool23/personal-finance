@@ -1504,7 +1504,6 @@
   "Recent activity": "সাম্প্রতিক কার্যকলাপ",
   "Investments": "বিনিয়োগ",
   "Deposits": "আমানতসমূহ",
-  "Investment value and proceeds": "বিনিয়োগের মূল্য ও বিক্রয়লব্ধ অর্থ",
   "Investment history or exchange rates are incomplete for this comparison.": "এই তুলনার জন্য বিনিয়োগের ইতিহাস বা বিনিময় হার অসম্পূর্ণ।",
   "Investment activity on this date": "এই তারিখে বিনিয়োগের কার্যকলাপ",
   "Fresh investment funding": "নতুন বিনিয়োগ অর্থায়ন",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram যুক্ত হয়েছে। চালিয়ে যেতে চ্যাটে ফিরে যান।",
   "Nothing was connected.": "কিছুই যুক্ত করা হয়নি।",
   "Open Telegram": "Telegram খুলুন",
-  "Could not connect Telegram. Please try again.": "Telegram যুক্ত করা যায়নি। আবার চেষ্টা করুন।"
+  "Could not connect Telegram. Please try again.": "Telegram যুক্ত করা যায়নি। আবার চেষ্টা করুন।",
+  "Treasury bill": "ট্রেজারি বিল",
+  "Amount invested": "বিনিয়োগকৃত অর্থ",
+  "Purchase date": "কেনার তারিখ",
+  "Annual yield (%)": "বার্ষিক ফলন (%)",
+  "Redeem": "ভাঙান",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "মেয়াদ পর্যন্ত রাখা সরকারি বিলের জন্য ট্রেজারি বিল বেছে নিন। এর বার্ষিক ফলন লিখুন; এটি মেয়াদপূর্তির তারিখ পর্যন্ত চক্রবৃদ্ধি ছাড়াই জমা হয়।",
+  "Treasury bill maturity": "ট্রেজারি বিলের মেয়াদপূর্তি",
+  "US Treasury bills · BIL": "মার্কিন ট্রেজারি বিল · BIL",
+  "No income yet": "এখনো কোনো আয় নেই",
+  "Add your salary or another income to see your income month by month.": "মাসভিত্তিক আয় দেখতে আপনার বেতন বা অন্য কোনো আয় যোগ করুন।",
+  "More actions": "আরও কাজ",
+  "What else would you like to do?": "আর কী করতে চান?"
 }

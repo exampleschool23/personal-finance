@@ -1,4 +1,4 @@
-import { expenses, income, liabilities, type Entry } from './finance';
+import { expenses, income, interestKinds, liabilities, type Entry } from './finance';
 
 const unitPriced = (kind: string) => kind === 'Stock' || kind === 'Crypto';
 const cashFlow: readonly string[] = [...income, ...expenses];
@@ -12,12 +12,13 @@ export function changeRecordKind(entry: Entry, kind: Entry['kind'], today: strin
   amount: unitPriced(kind) || unitPriced(entry.kind) ? 0 : entry.amount,
   quantity: unitPriced(kind) ? entry.quantity : 1,
   cost: unitPriced(kind) ? entry.cost : 0,
-  rate: ['Deposit', 'Money lent', ...liabilities].includes(kind) ? entry.rate : 0,
+  rate: [...interestKinds, 'Money lent', ...liabilities].includes(kind) ? entry.rate : 0,
+  deposit_compounding: kind === 'Treasury bill' ? 'none' : entry.deposit_compounding,
   ownership_percentage: kind === 'Business' ? entry.ownership_percentage : 100,
   estimated_monthly_income: kind === 'Property' || kind === 'Business' ? entry.estimated_monthly_income : 0,
   estimated_monthly_payment: kind === 'Mortgage' ? entry.estimated_monthly_payment : 0,
   is_investment: kind === 'Cash' ? entry.is_investment : false,
-  opened_on: ['Cash', 'Deposit', 'Stock', 'Crypto', ...liabilities].includes(kind) ? entry.opened_on ?? today : null,
+  opened_on: ['Cash', ...interestKinds, 'Stock', 'Crypto', ...liabilities].includes(kind) ? entry.opened_on ?? today : null,
   holding_account_id: null,
   account_id: null,
   end_date: cashFlow.includes(kind) ? entry.end_date : null,

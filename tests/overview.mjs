@@ -58,3 +58,18 @@ test('income over time opens on the 12-month range',()=>{
  assert.match(source,/const \[months,setMonths\]=useState\(12\)/);
  assert.match(source,/\[3,6,12\]\.map/);
 });
+
+test('income over time invites the first income instead of drawing an empty chart',async()=>{
+ const React=(await import('react')).default,{renderToStaticMarkup}=await import('react-dom/server');
+ const language={useLanguage:()=>({locale:'en-US',t:(text,values={})=>text.replace(/\{(\w+)\}/g,(_,key)=>values[key]??key)})};
+ const {IncomeHistoryChart}=loadTS('components/income-history-chart.tsx',{'@/components/language-provider':language,'next/link':{__esModule:true,default:({children})=>React.createElement('a',null,children)}});
+ const render=props=>renderToStaticMarkup(React.createElement(IncomeHistoryChart,{events:[],currency:'USD',rates:{USD:1},today:'2026-10-01',onAddIncome:()=>{},...props}));
+ const empty=render({records:[entry('cash','Cash',500)],incomeRecords:[]});
+ assert.match(empty,/No income yet/);assert.match(empty,/Add income<\/button>/);
+ assert.doesNotMatch(empty,/Monthly estimate|Recorded income in this period|recharts/);
+ // Any recorded or planned income brings the chart back.
+ const salary=entry('salary','Salary',1200,{frequency:'Monthly'});
+ const filled=render({records:[salary],incomeRecords:[salary]});
+ assert.doesNotMatch(filled,/No income yet/);assert.match(filled,/Recorded income in this period/);
+ assert.doesNotMatch(render({records:[],incomeRecords:[],onAddIncome:undefined}),/<button/,'without an add action the guidance stands alone');
+});

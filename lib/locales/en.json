@@ -1504,7 +1504,6 @@
   "Recent activity": "Recent activity",
   "Investments": "Investments",
   "Deposits": "Deposits",
-  "Investment value and proceeds": "Investment value and proceeds",
   "Investment history or exchange rates are incomplete for this comparison.": "Investment history or exchange rates are incomplete for this comparison.",
   "Investment activity on this date": "Investment activity on this date",
   "Fresh investment funding": "Fresh investment funding",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram is connected. Go back to the chat to continue.",
   "Nothing was connected.": "Nothing was connected.",
   "Open Telegram": "Open Telegram",
-  "Could not connect Telegram. Please try again.": "Could not connect Telegram. Please try again."
+  "Could not connect Telegram. Please try again.": "Could not connect Telegram. Please try again.",
+  "Treasury bill": "Treasury bill",
+  "Amount invested": "Amount invested",
+  "Purchase date": "Purchase date",
+  "Annual yield (%)": "Annual yield (%)",
+  "Redeem": "Redeem",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.",
+  "Treasury bill maturity": "Treasury bill maturity",
+  "US Treasury bills · BIL": "US Treasury bills · BIL",
+  "No income yet": "No income yet",
+  "Add your salary or another income to see your income month by month.": "Add your salary or another income to see your income month by month.",
+  "More actions": "More actions",
+  "What else would you like to do?": "What else would you like to do?"
 }

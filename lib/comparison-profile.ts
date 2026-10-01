@@ -1,7 +1,7 @@
 import type { DiversifiedPortfolio } from './diversified-portfolio';
 import type { Entry } from './finance';
-export const investmentKinds = ['Cash','Stock','Crypto','Deposit','Property','Business','Valuables','Money lent'] as const;
-export const benchmarkKeys = ['BTC','SPY','HYG','depositUZS','depositUSD','CUSTOM','PORTFOLIO'] as const;
+export const investmentKinds = ['Cash','Stock','Crypto','Deposit','Treasury bill','Property','Business','Valuables','Money lent'] as const;
+export const benchmarkKeys = ['BTC','SPY','HYG','BIL','depositUZS','depositUSD','CUSTOM','PORTFOLIO'] as const;
 export type BenchmarkKey = typeof benchmarkKeys[number] | `STOCK:${string}`;
 export type ComparisonPreferences = { benchmarks: BenchmarkKey[]; custom_symbol: string; portfolio?: DiversifiedPortfolio | null };
 export type BaselineHolding = { id: string; kind: typeof investmentKinds[number]; currency: string; balance: number };

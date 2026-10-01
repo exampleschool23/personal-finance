@@ -1504,7 +1504,6 @@
   "Recent activity": "Nedávná aktivita",
   "Investments": "Investice",
   "Deposits": "Vklady",
-  "Investment value and proceeds": "Hodnota investic a výnosy",
   "Investment history or exchange rates are incomplete for this comparison.": "Investiční historie nebo směnné kurzy pro toto srovnání nejsou úplné.",
   "Investment activity on this date": "Investiční aktivita k tomuto datu",
   "Fresh investment funding": "Nové investiční financování",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram je propojen. Vraťte se do chatu a pokračujte.",
   "Nothing was connected.": "Nic nebylo propojeno.",
   "Open Telegram": "Otevřít Telegram",
-  "Could not connect Telegram. Please try again.": "Telegram se nepodařilo propojit. Zkuste to znovu."
+  "Could not connect Telegram. Please try again.": "Telegram se nepodařilo propojit. Zkuste to znovu.",
+  "Treasury bill": "Pokladniční poukázka",
+  "Amount invested": "Investovaná částka",
+  "Purchase date": "Datum nákupu",
+  "Annual yield (%)": "Roční výnos (%)",
+  "Redeem": "Splatit",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Pokladniční poukázku použijte pro státní cenný papír držený do splatnosti. Zadejte roční výnos; narůstá bez složeného úročení až do data splatnosti.",
+  "Treasury bill maturity": "splatnost pokladniční poukázky",
+  "US Treasury bills · BIL": "Americké pokladniční poukázky · BIL",
+  "No income yet": "Zatím žádný příjem",
+  "Add your salary or another income to see your income month by month.": "Přidejte mzdu nebo jiný příjem a uvidíte své příjmy měsíc po měsíci.",
+  "More actions": "Další akce",
+  "What else would you like to do?": "Co dalšího chcete udělat?"
 }

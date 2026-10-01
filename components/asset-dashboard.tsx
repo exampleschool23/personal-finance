@@ -15,7 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useLanguage } from '@/components/language-provider';
 import { categoryColor } from '@/lib/category-colors';
 import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
-import { assetRecordKinds, value, totalValue, type Entry, type estimatedCashFlow } from '@/lib/finance';
+import { assetRecordKinds, interestKinds, value, totalValue, type Entry, type estimatedCashFlow } from '@/lib/finance';
 import { sortAssetsByWorth } from '@/lib/asset-sort';
 import { marketEntry, type MarketData } from '@/lib/market';
 
@@ -53,7 +53,7 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
     const gain = hasQuote && record.cost > 0 ? (record.amount - record.cost) * record.quantity : null;
     const fact = gain !== null ? { label: t('Gain/loss'), value: money(gain, record.currency), tone: signTone(gain) }
      : (record.estimated_monthly_income ?? 0) > 0 ? { label: t('Estimated monthly income'), value: money(record.estimated_monthly_income!, record.currency) }
-     : record.kind === 'Deposit' && record.rate > 0 ? { label: t('Annual interest'), value: formatPercent(record.rate, locale, 8) }
+     : interestKinds.includes(record.kind) && record.rate > 0 ? { label: t('Annual interest'), value: formatPercent(record.rate, locale, 8) }
      : record.kind === 'Business' ? { label: t('Ownership'), value: formatPercent(record.ownership_percentage ?? 100, locale, 8) }
      : undefined;
     return <AssetCard key={original.id} record={original} label={t(record.kind)} worth={money(worth, record.currency)} fact={fact}

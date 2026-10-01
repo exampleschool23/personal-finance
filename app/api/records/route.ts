@@ -6,7 +6,7 @@ import { resolveIncomeSource } from '@/lib/income-sources';
 import { loadDatedExchangeRate } from '@/lib/dated-exchange-rate';
 import { depositForecasts } from '@/lib/deposit-forecasts';
 import { z } from 'zod';
-import { assetRecordKinds, type Entry } from '@/lib/finance';
+import { assetRecordKinds, interestKinds, type Entry } from '@/lib/finance';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { queueActionNotification } from '@/lib/notify-action';
 import type { ActionEvent } from '@/lib/action-messages';
@@ -66,7 +66,7 @@ if(method==='GET' && new URL(req.url).searchParams.get('section')==='assets'){
 }
 if(method==='GET' && data.summary){
  const deposits=await depositForecasts(s.token);
- data.summary=[...data.summary.filter((entry:{kind:string})=>entry.kind!=='Deposit'),...deposits];
+ data.summary=[...data.summary.filter((entry:{kind:string})=>!interestKinds.includes(entry.kind)),...deposits];
 }
 return Response.json(data);}catch{return Response.json({error:'Connection unavailable. Your changes have not been saved.'},{status:503});}}
 export const GET=(r:Request)=>handle(r,'GET');export const POST=(r:Request)=>handle(r,'POST');export const DELETE=(r:Request)=>handle(r,'DELETE');

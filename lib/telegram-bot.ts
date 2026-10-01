@@ -278,6 +278,7 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
    const {returning,language}=await stranger(db,from,hint);
    return {callbackId:update.callback_query.id,replies:[data==='o:agree'?contactRequest(chatId,language,returning?'return':'signup'):await webSignIn(db,chatId,from,language,now,env)]};
   }
+  if(update.callback_query.data==='m:signout')return {callbackId:update.callback_query.id,replies:[await signOut(db,subscription,now)]};
   return {callbackId:update.callback_query.id,replies:await converse(db,subscription,chatId,{callback:update.callback_query.data??''},clock,env)};
  }
  const message=update.message;

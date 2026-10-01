@@ -1504,7 +1504,6 @@
   "Recent activity": "Shughuli za hivi karibuni",
   "Investments": "Uwekezaji",
   "Deposits": "Amana",
-  "Investment value and proceeds": "Thamani ya uwekezaji na mapato",
   "Investment history or exchange rates are incomplete for this comparison.": "Historia ya uwekezaji au viwango vya ubadilishaji havijakamilika kwa ulinganisho huu.",
   "Investment activity on this date": "Shughuli za uwekezaji tarehe hii",
   "Fresh investment funding": "Ufadhili mpya wa uwekezaji",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram imeunganishwa. Rudi kwenye gumzo ili kuendelea.",
   "Nothing was connected.": "Hakuna kilichounganishwa.",
   "Open Telegram": "Fungua Telegram",
-  "Could not connect Telegram. Please try again.": "Imeshindikana kuunganisha Telegram. Tafadhali jaribu tena."
+  "Could not connect Telegram. Please try again.": "Imeshindikana kuunganisha Telegram. Tafadhali jaribu tena.",
+  "Treasury bill": "Hati fungani ya Hazina",
+  "Amount invested": "Kiasi kilichowekezwa",
+  "Purchase date": "Tarehe ya kununua",
+  "Annual yield (%)": "Mavuno ya mwaka (%)",
+  "Redeem": "Komboa",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Tumia Hati fungani ya Hazina kwa hati ya serikali unayoshikilia hadi kuiva. Weka mavuno yake ya mwaka; yanaongezeka bila riba juu ya riba hadi tarehe ya kuiva.",
+  "Treasury bill maturity": "kuiva kwa hati fungani ya Hazina",
+  "US Treasury bills · BIL": "Hati fungani za Hazina ya Marekani · BIL",
+  "No income yet": "Bado hakuna mapato",
+  "Add your salary or another income to see your income month by month.": "Ongeza mshahara au mapato mengine ili uone mapato yako kila mwezi.",
+  "More actions": "Vitendo zaidi",
+  "What else would you like to do?": "Ungependa kufanya nini kingine?"
 }

@@ -12,7 +12,7 @@ function assetSymbol(record: Pick<Entry, 'kind' | 'name'>): AssetSymbol {
   return 'business';
  }
  if (record.kind === 'Valuables') return /watch|rolex|omega|час|soat|соат/u.test(name) ? 'watch' : 'gem';
- return ({ Cash: 'cash', Stock: 'stock', Crypto: 'crypto', Deposit: 'deposit' } as const)[record.kind as 'Cash' | 'Stock' | 'Crypto' | 'Deposit'] ?? 'business';
+ return ({ Cash: 'cash', Stock: 'stock', Crypto: 'crypto', Deposit: 'deposit', 'Treasury bill': 'deposit' } as const)[record.kind as 'Cash' | 'Stock' | 'Crypto' | 'Deposit' | 'Treasury bill'] ?? 'business';
 }
 
 // A small, consistent duotone set. Names refine business/property symbols only;

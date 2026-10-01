@@ -1,4 +1,4 @@
-export const trackedKinds: readonly string[] = ['Cash','Stock','Crypto','Deposit','Property','Business','Valuables','Money lent','Mortgage','Loan','Debt'];
+export const trackedKinds: readonly string[] = ['Cash','Stock','Crypto','Deposit','Treasury bill','Property','Business','Valuables','Money lent','Mortgage','Loan','Debt'];
 export type HistoryEvent = {
  id:string; record_id:string; event_type:'baseline'|'valuation'|'contribution'|'withdrawal'|'income'|'expense'|'mortgage_payment';
  occurred_on:string; amount:number; balance:number|null; ownership_percentage:number; principal:number; interest:number; notes:string; created_at:string;
@@ -19,7 +19,7 @@ export function historyUpdateTypes(kind:string):HistoryUpdateType[] {
  if(kind==='Mortgage')return ['contribution'];
  if(isLendingKind(kind))return ['contribution','withdrawal'];
  if(kind==='Cash')return ['valuation'];
- if(['Deposit','Stock','Crypto'].includes(kind))return ['valuation','income','expense'];
+ if(['Deposit','Treasury bill','Stock','Crypto'].includes(kind))return ['valuation','income','expense'];
  if(['Property','Business','Valuables'].includes(kind))return ['valuation','contribution','withdrawal','income','expense'];
  return [];
 }
@@ -30,10 +30,10 @@ export function historyEventLabel(kind:string,type:HistoryEvent['event_type']):s
   if(type==='contribution')return kind==='Money lent'?'Lend more':kind==='Debt'?'Add to debt':'Additional borrowing';
   if(type==='withdrawal')return kind==='Money lent'?'Repayment received':'Repayment made';
  }
- if(type==='valuation'&&['Cash','Deposit'].includes(kind))return 'Balance update';
- if(type==='income')return kind==='Deposit'||kind==='Money lent'?'Interest received':kind==='Stock'?'Dividends / income':kind==='Property'?'Rent income':historyLabels[type];
- if(type==='contribution')return kind==='Deposit'||kind==='Cash'?'Top-up':kind==='Stock'||kind==='Crypto'?'Buy':historyLabels[type];
- if(type==='withdrawal')return kind==='Deposit'||kind==='Cash'?'Withdraw':kind==='Stock'||kind==='Crypto'?'Sell / convert':historyLabels[type];
+ if(type==='valuation'&&['Cash','Deposit','Treasury bill'].includes(kind))return 'Balance update';
+ if(type==='income')return kind==='Deposit'||kind==='Treasury bill'||kind==='Money lent'?'Interest received':kind==='Stock'?'Dividends / income':kind==='Property'?'Rent income':historyLabels[type];
+ if(type==='contribution')return kind==='Deposit'||kind==='Cash'?'Top-up':kind==='Stock'||kind==='Crypto'||kind==='Treasury bill'?'Buy':historyLabels[type];
+ if(type==='withdrawal')return kind==='Treasury bill'?'Redeem':kind==='Deposit'||kind==='Cash'?'Withdraw':kind==='Stock'||kind==='Crypto'?'Sell / convert':historyLabels[type];
  return historyLabels[type];
 }
 export function historySeries(events:HistoryEvent[]) {

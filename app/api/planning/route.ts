@@ -1,7 +1,7 @@
 import { planningReadFilters,currentReviewMonth } from '@/lib/planning-reads';
 import { loadDatedExchangeRate } from '@/lib/dated-exchange-rate';
 import { depositForecasts } from '@/lib/deposit-forecasts';
-import type { Entry } from '@/lib/finance';
+import { interestKinds, type Entry } from '@/lib/finance';
 import { isoDate } from '@/lib/api-validation';
 import { planningSchemas } from '@/lib/planning-schemas';
 import { session,supa,sameOrigin } from '@/lib/supabase';
@@ -19,7 +19,7 @@ export async function GET(req?:Request){
  const results=await Promise.all(Object.entries(tables).filter(([key])=>scope==='insights'?key==='records':scope==='full'||(key!=='movements'&&(scope==='review'||!['activity','investmentLinks'].includes(key)))).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,filters[key as keyof typeof filters]??{})]));
  const data={records:[],categories:[],goals:[],occurrences:[],activity:[],movements:[],investmentLinks:[],...Object.fromEntries(results)} as Record<string,unknown>;
  const estimates=new Map((scope==='insights'?[]:await depositForecasts(auth.token)).map(record=>[record.id,record.estimated_monthly_income]));
- data.records=(data.records as Entry[]).map(record=>record.kind==='Deposit'?{...record,estimated_monthly_income:estimates.get(record.id)??0}:record);
+ data.records=(data.records as Entry[]).map(record=>interestKinds.includes(record.kind)?{...record,estimated_monthly_income:estimates.get(record.id)??0}:record);
  return Response.json(data,{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Could not load planning data. Check that the latest migrations are installed.'},{status:503});}
 }

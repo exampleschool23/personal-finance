@@ -1504,7 +1504,6 @@
   "Recent activity": "Activitate recentă",
   "Investments": "Investiții",
   "Deposits": "Depozite",
-  "Investment value and proceeds": "Valoarea investițiilor și încasări",
   "Investment history or exchange rates are incomplete for this comparison.": "Istoricul investițiilor sau cursurile de schimb sunt incomplete pentru această comparație.",
   "Investment activity on this date": "Activitate de investiții la această dată",
   "Fresh investment funding": "Finanțare nouă a investițiilor",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram este legat. Revino în chat pentru a continua.",
   "Nothing was connected.": "Nu a fost legat nimic.",
   "Open Telegram": "Deschide Telegram",
-  "Could not connect Telegram. Please try again.": "Telegram nu a putut fi legat. Încearcă din nou."
+  "Could not connect Telegram. Please try again.": "Telegram nu a putut fi legat. Încearcă din nou.",
+  "Treasury bill": "Certificat de trezorerie",
+  "Amount invested": "Sumă investită",
+  "Purchase date": "Data cumpărării",
+  "Annual yield (%)": "Randament anual (%)",
+  "Redeem": "Răscumpără",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Folosește Certificat de trezorerie pentru un titlu de stat păstrat până la scadență. Introdu randamentul anual; se acumulează fără capitalizare până la data scadenței.",
+  "Treasury bill maturity": "scadența certificatului de trezorerie",
+  "US Treasury bills · BIL": "Certificate de trezorerie SUA · BIL",
+  "No income yet": "Încă nu există venituri",
+  "Add your salary or another income to see your income month by month.": "Adaugă salariul sau alt venit ca să vezi veniturile lună de lună.",
+  "More actions": "Mai multe acțiuni",
+  "What else would you like to do?": "Ce altceva vrei să faci?"
 }

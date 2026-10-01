@@ -1504,7 +1504,6 @@
   "Recent activity": "กิจกรรมล่าสุด",
   "Investments": "การลงทุน",
   "Deposits": "เงินฝาก",
-  "Investment value and proceeds": "มูลค่าการลงทุนและรายได้จากการขาย",
   "Investment history or exchange rates are incomplete for this comparison.": "ประวัติการลงทุนหรืออัตราแลกเปลี่ยนไม่ครบถ้วนสำหรับการเปรียบเทียบนี้",
   "Investment activity on this date": "กิจกรรมการลงทุน ณ วันที่นี้",
   "Fresh investment funding": "เงินทุนลงทุนใหม่",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "เชื่อมต่อ Telegram แล้ว กลับไปที่แชตเพื่อดำเนินการต่อ",
   "Nothing was connected.": "ไม่ได้เชื่อมต่ออะไร",
   "Open Telegram": "เปิด Telegram",
-  "Could not connect Telegram. Please try again.": "ไม่สามารถเชื่อมต่อ Telegram ได้ โปรดลองอีกครั้ง"
+  "Could not connect Telegram. Please try again.": "ไม่สามารถเชื่อมต่อ Telegram ได้ โปรดลองอีกครั้ง",
+  "Treasury bill": "ตั๋วเงินคลัง",
+  "Amount invested": "จำนวนเงินที่ลงทุน",
+  "Purchase date": "วันที่ซื้อ",
+  "Annual yield (%)": "ผลตอบแทนต่อปี (%)",
+  "Redeem": "ไถ่ถอน",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "ใช้ตั๋วเงินคลังสำหรับตราสารรัฐบาลที่ถือจนครบกำหนด ใส่ผลตอบแทนต่อปี ซึ่งจะสะสมแบบไม่ทบต้นจนถึงวันครบกำหนด",
+  "Treasury bill maturity": "ตั๋วเงินคลังครบกำหนด",
+  "US Treasury bills · BIL": "ตั๋วเงินคลังสหรัฐฯ · BIL",
+  "No income yet": "ยังไม่มีรายได้",
+  "Add your salary or another income to see your income month by month.": "เพิ่มเงินเดือนหรือรายได้อื่นเพื่อดูรายได้รายเดือน",
+  "More actions": "การทำงานอื่น",
+  "What else would you like to do?": "ต้องการทำอะไรอีก"
 }

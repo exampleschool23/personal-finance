@@ -28,12 +28,12 @@ test('stat tiles keep the value text intact and colour it only for a stated tone
  assert.doesNotMatch(render(StatTiles,{},null),/role=|aria-label=/);
 });
 
-test('debt summary totals stay whole amounts and only a net shortfall is marked negative',()=>{
+test('debt summary totals stay whole amounts, money you owe and a net shortfall are marked negative',()=>{
  const {DebtSummary}=loadTS('components/debt-summary.tsx',{'@/components/language-provider':language});
  const entry=(id,kind,amount)=>({id,name:id,kind,amount,quantity:1,cost:0,rate:0,currency:'USD',frequency:'Once',date:'2026-09-01'});
  const owing=render(DebtSummary,{currency:'USD',entries:[entry('lent','Money lent',1200.75),entry('loan','Loan',5000.4)]});
  assert.match(owing,/<strong>\$1,201<\/strong>/);
- assert.match(owing,/<strong>\$5,000<\/strong>/);
+ assert.match(owing,/<strong class="negative">\$5,000<\/strong>/);
  assert.match(owing,/<strong class="negative">-\$3,800<\/strong>/);
  assert.doesNotMatch(owing,/\.\d/);
  const ahead=render(DebtSummary,{currency:'USD',entries:[entry('lent','Money lent',900)]});

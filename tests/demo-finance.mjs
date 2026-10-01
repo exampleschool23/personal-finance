@@ -11,7 +11,7 @@ const today = '2026-09-24';
 const benchmarkFixture = day => {
  const start=shiftDay(day,-365);
  const series=(opening,gain)=>Array.from({length:366},(_,index)=>({date:shiftDay(start,index),close:opening+gain*index/365}));
- return {start,end:day,prices:{BTC:series(52000,8000),SPY:series(480,80)},fx:[{date:start,rates:demoMarket.rates}],errors:{}};
+ return {start,end:day,prices:{BTC:series(52000,8000),SPY:series(480,80),BIL:series(88,3.8)},fx:[{date:start,rates:demoMarket.rates}],errors:{}};
 };
 const records = demoRecords(today);
 const history = demoHistory(records, today);

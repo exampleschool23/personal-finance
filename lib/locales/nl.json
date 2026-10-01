@@ -1504,7 +1504,6 @@
   "Recent activity": "Recente activiteit",
   "Investments": "Beleggingen",
   "Deposits": "Deposito’s",
-  "Investment value and proceeds": "Beleggingswaarde en opbrengsten",
   "Investment history or exchange rates are incomplete for this comparison.": "Beleggingsgeschiedenis of wisselkoersen zijn onvolledig voor deze vergelijking.",
   "Investment activity on this date": "Beleggingsactiviteit op deze datum",
   "Fresh investment funding": "Nieuwe beleggingsfinanciering",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram is gekoppeld. Ga terug naar de chat om verder te gaan.",
   "Nothing was connected.": "Er is niets gekoppeld.",
   "Open Telegram": "Telegram openen",
-  "Could not connect Telegram. Please try again.": "Telegram kon niet worden gekoppeld. Probeer het opnieuw."
+  "Could not connect Telegram. Please try again.": "Telegram kon niet worden gekoppeld. Probeer het opnieuw.",
+  "Treasury bill": "Schatkistpapier",
+  "Amount invested": "Belegd bedrag",
+  "Purchase date": "Aankoopdatum",
+  "Annual yield (%)": "Jaarrendement (%)",
+  "Redeem": "Aflossen",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Kies Schatkistpapier voor staatspapier dat je tot de vervaldatum aanhoudt. Vul het jaarrendement in; het groeit zonder samengestelde rente tot de vervaldatum.",
+  "Treasury bill maturity": "vervaldatum schatkistpapier",
+  "US Treasury bills · BIL": "Amerikaans schatkistpapier · BIL",
+  "No income yet": "Nog geen inkomen",
+  "Add your salary or another income to see your income month by month.": "Voeg je salaris of ander inkomen toe om je inkomen per maand te zien.",
+  "More actions": "Meer acties",
+  "What else would you like to do?": "Wat wil je nog meer doen?"
 }

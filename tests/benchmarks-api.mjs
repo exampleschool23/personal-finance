@@ -206,8 +206,8 @@ test('anonymous demo uses fixed real-feed queries, shares concurrent work and ig
    calls++;const url=new URL(raw);
    if(url.hostname==='api.twelvedata.com'){
     const symbol=url.searchParams.get('symbol');symbols.push(symbol);
-    assert.equal(symbol,'SPY');
-    return Response.json({meta:{symbol,currency:'USD'},values:[{datetime:'2025-09-17',close:'500'},{datetime:'2026-09-17',close:'550'}]});
+    assert.ok(['SPY','BIL'].includes(symbol),symbol);
+    return Response.json({meta:{symbol,currency:'USD'},values:symbol==='BIL'?[{datetime:'2025-09-17',close:'91.4'},{datetime:'2026-09-17',close:'91.6'}]:[{datetime:'2025-09-17',close:'500'},{datetime:'2026-09-17',close:'550'}]});
    }
    if(url.hostname==='api.exchange.coinbase.com'){
     const start=url.searchParams.get('start').slice(0,10),end=url.searchParams.get('end').slice(0,10),rows=[];
@@ -221,7 +221,9 @@ test('anonymous demo uses fixed real-feed queries, shares concurrent work and ig
   const a=await responses[0].json(),b=await responses[1].json();
   assert.deepEqual(a,b);assert.equal(a.start,'2025-09-17');assert.equal(a.end,'2026-09-17');
   assert.equal(a.prices.SPY[0].close,500);assert.equal(a.prices.BTC[0].close,65000);
-  assert.deepEqual(symbols,['SPY']);assert.deepEqual(a.errors,{});
+  // The Treasury bill benchmark is part of the fixed demo request.
+  assert.equal(a.prices.BIL[0].close,91.4);
+  assert.deepEqual(symbols.sort(),['BIL','SPY']);assert.deepEqual(a.errors,{});
   const previous=calls;await GET(request('demo=1'));assert.equal(calls,previous);
   assert.equal((await GET(request())).status,401,'Normal benchmark queries still require authentication');
  }finally{auth=true;globalThis.fetch=original;if(key===undefined)delete process.env.TWELVE_DATA_API_KEY;else process.env.TWELVE_DATA_API_KEY=key;}

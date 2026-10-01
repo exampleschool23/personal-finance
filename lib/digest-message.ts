@@ -20,7 +20,7 @@ export function paymentsSection(items:DueItem[],language:Language,today:string):
  const locale=locales[language],t=(key:string,params?:Record<string,string|number>)=>translate(language,key,params);
  const line=(item:DueItem)=>{
   const amount=formatMoney(item.record.amount,item.record.currency,locale);
-  const kind=item.type==='repayment'?t('repayment'):item.type==='maturity'?t('deposit maturity'):income.includes(item.record.kind)?t('income'):null;
+  const kind=item.type==='repayment'?t('repayment'):item.type==='maturity'?t(item.record.kind==='Treasury bill'?'Treasury bill maturity':'deposit maturity'):income.includes(item.record.kind)?t('income'):null;
   return `• ${escapeHtml(item.record.name)} · ${income.includes(item.record.kind)?'+':''}${amount}${kind?' · '+kind:''}`;
  };
  const sections:string[]=[];

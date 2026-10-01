@@ -21,15 +21,27 @@ export type FlowResult={draft:Draft|null;reply:TelegramMessage|null;commit?:Comm
 const menuItems:Array<{kind:FlowKind|'upcoming'|'signout';label:string}>=[{kind:'expense',label:'Expense'},{kind:'income',label:'Income'},{kind:'transfer',label:'Transfer'},{kind:'repayment',label:'Pay loan or debt'},{kind:'mortgage',label:'Mortgage payment'},{kind:'upcoming',label:'Upcoming payments'},{kind:'account',label:'Add cash account'},{kind:'liability',label:'Add loan or debt'},{kind:'signout',label:'Sign out'}];
 const pageSize=8;
 const t=(language:Language,key:string,params?:Record<string,string|number>)=>translate(language,key,params);
-/** The persistent keyboard under the text box. */
+/** The persistent keyboard under the text box: the two everyday entries, and everything else one tap away. */
 export function mainMenu(language:Language):TelegramKeyboard{
  const label=(kind:string)=>t(language,menuItems.find(item=>item.kind===kind)!.label);
- return {reply:[[label('expense'),label('income')],[label('transfer'),label('repayment')],[label('mortgage'),label('upcoming')],[label('account'),label('liability')],[label('signout')]]};
+ return {reply:[[label('expense'),label('income')],[t(language,'More actions')]]};
 }
-/** Which menu item a typed label means, in any of the app languages. */
-export function menuChoice(text:string):FlowKind|'upcoming'|'signout'|null{
+type MenuKind=FlowKind|'upcoming'|'signout';
+const moreKinds:MenuKind[]=['transfer','repayment','mortgage','upcoming','account','liability','signout'];
+/** The actions behind More actions, as buttons in the chat. Each sends m:<kind>, which works like typing its label. */
+export function moreMenu(language:Language,chat:number):TelegramMessage{
+ const button=(kind:MenuKind):TelegramButton=>({text:t(language,menuItems.find(item=>item.kind===kind)!.label),callback_data:'m:'+kind});
+ const rows:TelegramButton[][]=[];
+ for(let index=0;index<moreKinds.length;index+=2)rows.push(moreKinds.slice(index,index+2).map(button));
+ return {chat_id:chat,text:t(language,'What else would you like to do?'),keyboard:{inline:rows}};
+}
+/** Which menu item a typed label or a More actions button means, in any of the app languages. */
+export function menuChoice(text:string):MenuKind|'more'|null{
+ const pressed=/^m:(.+)$/.exec(text)?.[1];
+ if(pressed)return moreKinds.find(kind=>kind===pressed)??null;
  const wanted=text.trim().toLowerCase();
  for(const item of menuItems)for(const language of Object.keys(dictionaries) as Language[])if(t(language,item.label).toLowerCase()===wanted)return item.kind;
+ for(const language of Object.keys(dictionaries) as Language[])if(t(language,'More actions').toLowerCase()===wanted)return 'more';
  return null;
 }
 const cancelButton=(language:Language):TelegramButton=>({text:t(language,'Cancel'),callback_data:'f:cancel'});
@@ -187,15 +199,18 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
  const language=ctx.language;
  const cancel=():FlowResult=>({draft:null,reply:{chat_id:chat,text:t(language,'Cancelled.'),keyboard:mainMenu(language)}});
  if(input.callback==='f:cancel'||/^\/cancel/.test(input.text??''))return cancel();
+ // A More actions button starts its action from anywhere, like typing a menu label.
+ const menuInput=input.callback?.startsWith('m:')?input.callback:input.text;
  if(!draft){
-  const choice=input.text?menuChoice(input.text):null;
+  const choice=menuInput?menuChoice(menuInput):null;
+  if(choice==='more')return {draft:null,reply:moreMenu(language,chat)};
   if(choice==='upcoming')return {draft:null,reply:null,menu:'upcoming'};
   // Sign out is handled by the bot before the flow; here it is just not something to add.
   if(!choice||choice==='signout')return {draft:null,reply:{chat_id:chat,text:t(language,'Choose what to add.'),keyboard:mainMenu(language)}};
   const started:Draft={kind:choice,step:firstStep(choice),data:{}};
   return {draft:started,reply:prompt(started,ctx,chat)};
  }
- if(input.text&&menuChoice(input.text))return advance(null,input,ctx,chat);
+ if(menuInput&&menuChoice(menuInput))return advance(null,input,ctx,chat);
  const callback=input.callback??'';
  // Back returns to the question before this one. At the first question, or from an old message, the current question is asked again.
  if(callback==='f:back'){

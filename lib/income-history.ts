@@ -1,4 +1,4 @@
-import { monthly, income, duplicatesAssetEstimate, type Entry } from './finance';
+import { monthly, income, interestKinds, interestCompounding, duplicatesAssetEstimate, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import { convertAmount } from './market';
 import { depositInterest } from './deposit-interest';
@@ -12,7 +12,7 @@ function group(entry:Entry,investment=false):IncomeGroup {
  if(investment&&entry.kind==='Stock')return 'dividends';
  if(entry.kind==='Rent income'||entry.kind==='Property')return 'rent';
  if(entry.kind==='Business'||entry.kind==='Business income'||entry.business_id)return 'business';
- if(entry.kind==='Deposit'||entry.kind==='Money lent')return 'interest';
+ if(interestKinds.includes(entry.kind)||entry.kind==='Money lent')return 'interest';
  return 'other';
 }
 // Receipts are personal cash amounts. Do not apply ownership a second time or
@@ -52,7 +52,7 @@ export function incomeHistory(records:Entry[],events:HistoryEvent[],incomeRecord
  const estimateForMonth=(month:string)=>{
   let estimateMissing=0;
   const expected=blank();
-  const estimates=records.filter(record=>['Business','Property','Deposit'].includes(record.kind)).map(record=>({record,amount:record.kind==='Deposit'?depositInterest(events.filter(event=>event.record_id===record.id),Number(record.rate),month,record.deposit_compounding):Number(record.estimated_monthly_income??0)}));
+  const estimates=records.filter(record=>['Business','Property',...interestKinds].includes(record.kind)).map(record=>({record,amount:interestKinds.includes(record.kind)?depositInterest(events.filter(event=>event.record_id===record.id),Number(record.rate),month,interestCompounding(record)):Number(record.estimated_monthly_income??0)}));
   const businessIds=new Set(estimates.filter(({record,amount})=>record.kind==='Business'&&amount>0).map(({record})=>record.id));
   const propertyIds=new Set(estimates.filter(({record,amount})=>record.kind==='Property'&&amount>0).map(({record})=>record.id));
   const addEstimate=(entry:Entry,amount:number)=>{

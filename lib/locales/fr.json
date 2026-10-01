@@ -1504,7 +1504,6 @@
   "Recent activity": "Activité récente",
   "Investments": "Investissements",
   "Deposits": "Dépôts",
-  "Investment value and proceeds": "Valeur des investissements et produits",
   "Investment history or exchange rates are incomplete for this comparison.": "L’historique des investissements ou les taux de change sont incomplets pour cette comparaison.",
   "Investment activity on this date": "Activité d’investissement à cette date",
   "Fresh investment funding": "Nouveaux fonds investis",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram est relié. Retournez dans le chat pour continuer.",
   "Nothing was connected.": "Rien n’a été relié.",
   "Open Telegram": "Ouvrir Telegram",
-  "Could not connect Telegram. Please try again.": "Impossible de relier Telegram. Veuillez réessayer."
+  "Could not connect Telegram. Please try again.": "Impossible de relier Telegram. Veuillez réessayer.",
+  "Treasury bill": "Bon du Trésor",
+  "Amount invested": "Montant investi",
+  "Purchase date": "Date d’achat",
+  "Annual yield (%)": "Rendement annuel (%)",
+  "Redeem": "Rembourser",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Utilisez Bon du Trésor pour un titre d’État conservé jusqu’à l’échéance. Indiquez son rendement annuel ; il s’accumule sans capitalisation jusqu’à l’échéance.",
+  "Treasury bill maturity": "échéance de bon du Trésor",
+  "US Treasury bills · BIL": "Bons du Trésor américain · BIL",
+  "No income yet": "Aucun revenu pour l’instant",
+  "Add your salary or another income to see your income month by month.": "Ajoutez votre salaire ou un autre revenu pour suivre vos revenus mois par mois.",
+  "More actions": "Plus d’actions",
+  "What else would you like to do?": "Que voulez-vous faire d’autre ?"
 }

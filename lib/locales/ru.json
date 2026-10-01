@@ -1504,7 +1504,6 @@
   "Recent activity": "Последние операции",
   "Investments": "Инвестиции",
   "Deposits": "Вклады",
-  "Investment value and proceeds": "Стоимость инвестиций и полученные средства",
   "Investment history or exchange rates are incomplete for this comparison.": "Для сравнения не хватает истории инвестиций или курсов валют.",
   "Investment activity on this date": "Инвестиционные операции в эту дату",
   "Fresh investment funding": "Новые вложения",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram подключён. Вернитесь в чат, чтобы продолжить.",
   "Nothing was connected.": "Ничего не подключено.",
   "Open Telegram": "Открыть Telegram",
-  "Could not connect Telegram. Please try again.": "Не удалось подключить Telegram. Попробуйте ещё раз."
+  "Could not connect Telegram. Please try again.": "Не удалось подключить Telegram. Попробуйте ещё раз.",
+  "Treasury bill": "Казначейский вексель",
+  "Amount invested": "Вложенная сумма",
+  "Purchase date": "Дата покупки",
+  "Annual yield (%)": "Годовая доходность (%)",
+  "Redeem": "Погасить",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Выберите «Казначейский вексель» для государственной бумаги, которую держите до погашения. Укажите годовую доходность: она начисляется без капитализации до даты погашения.",
+  "Treasury bill maturity": "погашение казначейского векселя",
+  "US Treasury bills · BIL": "Казначейские векселя США · BIL",
+  "No income yet": "Доходов пока нет",
+  "Add your salary or another income to see your income month by month.": "Добавьте зарплату или другой доход, чтобы видеть доходы по месяцам.",
+  "More actions": "Другие действия",
+  "What else would you like to do?": "Что ещё хотите сделать?"
 }

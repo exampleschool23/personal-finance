@@ -1504,7 +1504,6 @@
   "Recent activity": "Kamakailang aktibidad",
   "Investments": "Mga pamumuhunan",
   "Deposits": "Mga deposito",
-  "Investment value and proceeds": "Halaga ng pamumuhunan at kita",
   "Investment history or exchange rates are incomplete for this comparison.": "Hindi kumpleto ang kasaysayan ng pamumuhunan o exchange rate para sa paghahambing na ito.",
   "Investment activity on this date": "Aktibidad sa pamumuhunan sa petsang ito",
   "Fresh investment funding": "Bagong pondo sa pamumuhunan",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Nakakonekta na ang Telegram. Bumalik sa chat para magpatuloy.",
   "Nothing was connected.": "Walang naikonekta.",
   "Open Telegram": "Buksan ang Telegram",
-  "Could not connect Telegram. Please try again.": "Hindi maikonekta ang Telegram. Pakisubukang muli."
+  "Could not connect Telegram. Please try again.": "Hindi maikonekta ang Telegram. Pakisubukang muli.",
+  "Treasury bill": "Treasury bill",
+  "Amount invested": "Halagang ipinuhunan",
+  "Purchase date": "Petsa ng pagbili",
+  "Annual yield (%)": "Taunang yield (%)",
+  "Redeem": "I-redeem",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Gamitin ang Treasury bill para sa bill ng gobyerno na hawak hanggang sa maturity. Ilagay ang taunang yield nito; nadaragdag ito nang walang compounding hanggang sa petsa ng maturity.",
+  "Treasury bill maturity": "maturity ng Treasury bill",
+  "US Treasury bills · BIL": "US Treasury bills · BIL",
+  "No income yet": "Wala pang kita",
+  "Add your salary or another income to see your income month by month.": "Idagdag ang iyong sahod o ibang kita para makita ang kita mo bawat buwan.",
+  "More actions": "Iba pang aksyon",
+  "What else would you like to do?": "Ano pa ang gusto mong gawin?"
 }

@@ -22,7 +22,7 @@ Transfers between the user's own accounts are never expense records and never fu
 
 A watch or similar item bought as an investment belongs in the **Valuables** asset category (migration 070). Valuables track a value like Property: valuations, cash-linked contributions and withdrawals, deletable corrections and optional income/expense updates, without estimated monthly income or trading. They count as investments in both scopes and in net worth. Bought as ordinary spending, the same item is an expense and funds benchmarks only under Including expenses.
 
-The actual line is **Investment value and proceeds**: remaining holdings plus cumulative sale/distribution payouts and retained repaid principal. Once paid out to ordinary cash, proceeds remain historical payouts in this total; unrelated later cash-funded purchases add both new capital and holdings. Cash balances themselves are excluded, including cash marked "Include in investments" and cash held in a cash investment account: a cash balance moves with salary and spending, which would appear as gains and losses. This is not net worth; net worth remains in the Overview summary.
+The actual line is labelled **Net worth**. It is remaining holdings plus cumulative sale/distribution payouts and retained repaid principal. Once paid out to ordinary cash, proceeds remain historical payouts in this total; unrelated later cash-funded purchases add both new capital and holdings. Cash balances themselves are excluded, including cash marked "Include in investments" and cash held in a cash investment account: a cash balance moves with salary and spending, which would appear as gains and losses. This is not net worth; net worth remains in the Overview summary.
 
 ## Summary figures
 

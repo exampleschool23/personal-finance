@@ -1504,7 +1504,6 @@
   "Recent activity": "Ostatnia aktywność",
   "Investments": "Inwestycje",
   "Deposits": "Lokaty",
-  "Investment value and proceeds": "Wartość inwestycji i wpływy",
   "Investment history or exchange rates are incomplete for this comparison.": "Historia inwestycji lub kursy wymiany są niepełne dla tego porównania.",
   "Investment activity on this date": "Aktywność inwestycyjna w tym dniu",
   "Fresh investment funding": "Nowe finansowanie inwestycji",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram jest połączony. Wróć do czatu, aby kontynuować.",
   "Nothing was connected.": "Nic nie zostało połączone.",
   "Open Telegram": "Otwórz Telegram",
-  "Could not connect Telegram. Please try again.": "Nie udało się połączyć Telegrama. Spróbuj ponownie."
+  "Could not connect Telegram. Please try again.": "Nie udało się połączyć Telegrama. Spróbuj ponownie.",
+  "Treasury bill": "Bon skarbowy",
+  "Amount invested": "Zainwestowana kwota",
+  "Purchase date": "Data zakupu",
+  "Annual yield (%)": "Roczna rentowność (%)",
+  "Redeem": "Wykup",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Wybierz Bon skarbowy dla papieru skarbowego trzymanego do wykupu. Podaj roczną rentowność; nalicza się bez kapitalizacji do dnia wykupu.",
+  "Treasury bill maturity": "wykup bonu skarbowego",
+  "US Treasury bills · BIL": "Amerykańskie bony skarbowe · BIL",
+  "No income yet": "Brak dochodów",
+  "Add your salary or another income to see your income month by month.": "Dodaj pensję lub inny dochód, aby widzieć dochody miesiąc po miesiącu.",
+  "More actions": "Więcej działań",
+  "What else would you like to do?": "Co jeszcze chcesz zrobić?"
 }

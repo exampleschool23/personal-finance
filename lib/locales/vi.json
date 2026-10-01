@@ -1504,7 +1504,6 @@
   "Recent activity": "Hoạt động gần đây",
   "Investments": "Đầu tư",
   "Deposits": "Tiền gửi",
-  "Investment value and proceeds": "Giá trị đầu tư và tiền thu về",
   "Investment history or exchange rates are incomplete for this comparison.": "Lịch sử đầu tư hoặc tỷ giá chưa đầy đủ cho phép so sánh này.",
   "Investment activity on this date": "Hoạt động đầu tư vào ngày này",
   "Fresh investment funding": "Vốn đầu tư mới",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Đã kết nối Telegram. Quay lại cuộc trò chuyện để tiếp tục.",
   "Nothing was connected.": "Chưa kết nối gì.",
   "Open Telegram": "Mở Telegram",
-  "Could not connect Telegram. Please try again.": "Không thể kết nối Telegram. Vui lòng thử lại."
+  "Could not connect Telegram. Please try again.": "Không thể kết nối Telegram. Vui lòng thử lại.",
+  "Treasury bill": "Tín phiếu kho bạc",
+  "Amount invested": "Số tiền đầu tư",
+  "Purchase date": "Ngày mua",
+  "Annual yield (%)": "Lợi suất hằng năm (%)",
+  "Redeem": "Đáo hạn",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Dùng Tín phiếu kho bạc cho giấy tờ có giá của chính phủ nắm giữ đến đáo hạn. Nhập lợi suất hằng năm; lãi cộng dồn không ghép lãi đến ngày đáo hạn.",
+  "Treasury bill maturity": "đáo hạn tín phiếu kho bạc",
+  "US Treasury bills · BIL": "Tín phiếu kho bạc Mỹ · BIL",
+  "No income yet": "Chưa có thu nhập",
+  "Add your salary or another income to see your income month by month.": "Thêm lương hoặc khoản thu nhập khác để xem thu nhập theo từng tháng.",
+  "More actions": "Thao tác khác",
+  "What else would you like to do?": "Bạn muốn làm gì nữa?"
 }

@@ -2,6 +2,9 @@
 import { useMemo,useState } from 'react';
 import Link from 'next/link';
 import { Bar,BarChart,CartesianGrid,ResponsiveContainer,Tooltip,XAxis,YAxis } from 'recharts';
+import { HandCoins, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { useLanguage } from '@/components/language-provider';
@@ -11,8 +14,8 @@ import { incomeGroups,incomeHistory,type IncomeGroup } from '@/lib/income-histor
 import type { Entry } from '@/lib/finance';
 import type { HistoryEvent } from '@/lib/investment-history';
 
-type Props={records:Entry[];events:HistoryEvent[];incomeRecords:Entry[];currency:string;rates:number|Record<string,number>|undefined;today:string};
-export function IncomeHistoryChart({records,events,incomeRecords,currency,rates,today}:Props){
+type Props={records:Entry[];events:HistoryEvent[];incomeRecords:Entry[];currency:string;rates:number|Record<string,number>|undefined;today:string;onAddIncome?:()=>void};
+export function IncomeHistoryChart({records,events,incomeRecords,currency,rates,today,onAddIncome}:Props){
  const {t,locale}=useLanguage();
  const [months,setMonths]=useState(12),[hidden,setHidden]=useState<string[]>([]);
  const result=useMemo(()=>incomeHistory(records,events,incomeRecords,currency,rates,today,months),[records,events,incomeRecords,currency,rates,today,months]);
@@ -20,6 +23,11 @@ export function IncomeHistoryChart({records,events,incomeRecords,currency,rates,
  const definitions:Array<{key:IncomeGroup;label:string;kind:string}>=[{key:'salary',label:t('Salary'),kind:'Salary'},{key:'dividends',label:t('Dividends'),kind:'Stock'},{key:'rent',label:t('Rent income'),kind:'Property'},{key:'business',label:t('Business income'),kind:'Business'},{key:'interest',label:t('Interest income'),kind:'Deposit'},{key:'other',label:t('Other income'),kind:'Other income'}];
  const names=Object.fromEntries([...definitions.map(item=>[item.key,item.label]),['estimate',t('Estimated monthly income')]]);
  const active=definitions.filter(item=>result.received[item.key]>0||result.expected[item.key]>0);
+ // With no income recorded or expected, an empty chart says nothing: invite the first income instead.
+ if(!active.length&&!result.totalReceived&&!result.missing&&!result.estimateMissing&&!result.forecastMissing)return <section className="panel income-history-chart">
+  <PanelTitle title={t('Income over time')}/>
+  <EmptyState icon={<HandCoins aria-hidden="true"/>} title={t('No income yet')} description={t('Add your salary or another income to see your income month by month.')}>{onAddIncome&&<Button onClick={onAddIncome}><Plus aria-hidden="true"/>{t('Add income')}</Button>}</EmptyState>
+ </section>;
  return <section className="panel income-history-chart">
   <PanelTitle title={t('Income over time')} description={t('Salary, dividends, rent, business income, interest and other income.')}><Segmented label={t('History period')} options={[3,6,12].map(value=>({value,label:t('{count} months',{count:formatNumber(value,locale,0)})}))} value={months} onChange={setMonths}/></PanelTitle>
   <div className="portfolio-headline"><div><span>{t('Recorded income in this period')}</span><strong>{result.missing?'—':money(result.totalReceived)}</strong></div><div><span>{t('Monthly estimate · {month}',{month:formatMonthYear(today.slice(0,7),locale)})}</span><strong>{result.estimateMissing?'—':money(result.estimatedTotal)}</strong></div><div><span>{t('Dividends received')}</span><strong>{result.missing?'—':money(result.received.dividends)}</strong></div></div>

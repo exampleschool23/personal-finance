@@ -1504,7 +1504,6 @@
   "Recent activity": "हाल की गतिविधि",
   "Investments": "निवेश",
   "Deposits": "डिपॉज़िट",
-  "Investment value and proceeds": "निवेश का मूल्य और आय",
   "Investment history or exchange rates are incomplete for this comparison.": "इस तुलना के लिए निवेश इतिहास या विनिमय दरें अधूरी हैं।",
   "Investment activity on this date": "इस तारीख की निवेश गतिविधि",
   "Fresh investment funding": "नई निवेश फ़ंडिंग",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram जुड़ गया है। जारी रखने के लिए चैट पर लौटें।",
   "Nothing was connected.": "कुछ भी नहीं जोड़ा गया।",
   "Open Telegram": "Telegram खोलें",
-  "Could not connect Telegram. Please try again.": "Telegram नहीं जोड़ा जा सका। कृपया फिर से कोशिश करें।"
+  "Could not connect Telegram. Please try again.": "Telegram नहीं जोड़ा जा सका। कृपया फिर से कोशिश करें।",
+  "Treasury bill": "ट्रेज़री बिल",
+  "Amount invested": "निवेश की गई राशि",
+  "Purchase date": "खरीद की तारीख",
+  "Annual yield (%)": "वार्षिक प्रतिफल (%)",
+  "Redeem": "भुनाएँ",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "परिपक्वता तक रखे जाने वाले सरकारी बिल के लिए ट्रेज़री बिल चुनें। उसका वार्षिक प्रतिफल दर्ज करें; यह परिपक्वता तिथि तक बिना चक्रवृद्धि के जुड़ता है।",
+  "Treasury bill maturity": "ट्रेज़री बिल की परिपक्वता",
+  "US Treasury bills · BIL": "अमेरिकी ट्रेज़री बिल · BIL",
+  "No income yet": "अभी कोई आय नहीं",
+  "Add your salary or another income to see your income month by month.": "महीने-दर-महीने अपनी आय देखने के लिए अपना वेतन या कोई अन्य आय जोड़ें।",
+  "More actions": "और कार्य",
+  "What else would you like to do?": "आप और क्या करना चाहेंगे?"
 }

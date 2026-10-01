@@ -1504,7 +1504,6 @@
   "Recent activity": "פעילות אחרונה",
   "Investments": "השקעות",
   "Deposits": "פיקדונות",
-  "Investment value and proceeds": "שווי השקעות ותמורות",
   "Investment history or exchange rates are incomplete for this comparison.": "היסטוריית ההשקעות או שערי החליפין אינם שלמים להשוואה זו.",
   "Investment activity on this date": "פעילות השקעות בתאריך זה",
   "Fresh investment funding": "מימון השקעות חדש",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "טלגרם מקושר. חזרו לצ׳אט כדי להמשיך.",
   "Nothing was connected.": "לא קושר דבר.",
   "Open Telegram": "פתיחת טלגרם",
-  "Could not connect Telegram. Please try again.": "לא ניתן היה לקשר את טלגרם. נסו שוב."
+  "Could not connect Telegram. Please try again.": "לא ניתן היה לקשר את טלגרם. נסו שוב.",
+  "Treasury bill": "אגרת חוב קצרת מועד",
+  "Amount invested": "סכום שהושקע",
+  "Purchase date": "תאריך רכישה",
+  "Annual yield (%)": "תשואה שנתית (%)",
+  "Redeem": "פדיון",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "בחרו אגרת חוב קצרת מועד עבור נייר ממשלתי שמוחזק עד הפדיון. הזינו את התשואה השנתית; היא נצברת ללא ריבית דריבית עד מועד הפדיון.",
+  "Treasury bill maturity": "פדיון אגרת חוב קצרת מועד",
+  "US Treasury bills · BIL": "שטרי אוצר אמריקאיים · BIL",
+  "No income yet": "עדיין אין הכנסות",
+  "Add your salary or another income to see your income month by month.": "הוסיפו משכורת או הכנסה אחרת כדי לראות את ההכנסות חודש אחר חודש.",
+  "More actions": "פעולות נוספות",
+  "What else would you like to do?": "מה עוד תרצו לעשות?"
 }

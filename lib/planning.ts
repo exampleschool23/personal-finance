@@ -1,4 +1,4 @@
-import { scheduleDates, income, expenses, type Entry } from './finance';
+import { scheduleDates, income, expenses, interestKinds, type Entry } from './finance';
 import type { AssetMovement } from './asset-movements';
 import type { HoldingAccount } from './holding-accounts';
 import { depositToday } from './deposit-interest';
@@ -23,7 +23,7 @@ export function upcomingPayments(records:Entry[],occurrences:Occurrence[],today=
   const add=(date:string,type:DueItem['type'])=>{const key=record.id+':'+date;if(date>=start&&date<=end&&!settled.has(key))result.push({key,record,date,type,overdue:date<today});};
   if(recurring){
    for(const date of scheduleDates(record,start,end))add(date,'scheduled');
-  }else if(record.amount>0&&['Loan','Debt','Mortgage','Money lent','Deposit'].includes(record.kind))add(record.date,record.kind==='Deposit'?'maturity':'repayment');
+  }else if(record.amount>0&&['Loan','Debt','Mortgage','Money lent',...interestKinds].includes(record.kind))add(record.date,interestKinds.includes(record.kind)?'maturity':'repayment');
  }
  return result.sort((a,b)=>a.date.localeCompare(b.date)||a.record.name.localeCompare(b.record.name));
 }

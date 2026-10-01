@@ -64,7 +64,7 @@ test('the onboarding walks language, currency and a first cash account, saving a
  for(const bad of ['abc','-5','','1e99'])assert.equal(advanceOnboarding(named.draft,{text:bad},{language:'en'},777).draft.step,'balance',bad);
  const finished=advanceOnboarding(named.draft,{text:'1 500,50'},{language:'ru'},777);
  assert.equal(finished.draft,null);assert.deepEqual(finished.effects,{account:{name:'Savings jar',amount:1500.5,currency:'EUR'},finished:true});
- assert.deepEqual(finished.reply.keyboard.reply.flat(),[t('ru','Expense'),t('ru','Income'),t('ru','Transfer'),t('ru','Pay loan or debt'),t('ru','Mortgage payment'),t('ru','Upcoming payments'),t('ru','Add cash account'),t('ru','Add loan or debt'),t('ru','Sign out')]);
+ assert.deepEqual(finished.reply.keyboard.reply.flat(),[t('ru','Expense'),t('ru','Income'),t('ru','More actions')]);
  assert.equal(advanceOnboarding(named.draft,{text:'0'},{language:'en'},777).effects.account.amount,0,'an empty account is allowed');
 });
 
@@ -381,3 +381,13 @@ test('deleting an account on the web tells its linked chat in the account langua
  assert.equal(await deletionNotice(setup().db,ownerId),null);
 });
 
+test('the More actions buttons reach every action from a linked chat, including signing out',async()=>{
+ const seed={telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]};
+ const context=setup({seed:structuredClone(seed)});
+ const [more]=(await run(text('More actions'),context)).replies;
+ assert.equal(more.text,t('en','What else would you like to do?'));assert.ok(callbacks(more).includes('m:signout'));
+ const upcoming=await run(press('m:upcoming'),context);
+ assert.equal(upcoming.callbackId,'cb-m:upcoming');assert.equal(upcoming.replies[0].text,t('en','No payments due in the next 31 days.'));
+ const out=await run(press('m:signout'),context);
+ assert.match(out.replies[0].text,/^You are signed out\./);assert.equal(context.db.tables.telegram_subscriptions[0].chat_id,null);
+});

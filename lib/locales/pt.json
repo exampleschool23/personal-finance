@@ -1504,7 +1504,6 @@
   "Recent activity": "Atividade recente",
   "Investments": "Investimentos",
   "Deposits": "Depósitos",
-  "Investment value and proceeds": "Valor do investimento e resgates",
   "Investment history or exchange rates are incomplete for this comparison.": "O histórico de investimentos ou as taxas de câmbio estão incompletos para esta comparação.",
   "Investment activity on this date": "Atividade de investimento nesta data",
   "Fresh investment funding": "Novos recursos investidos",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "O Telegram está conectado. Volte ao chat para continuar.",
   "Nothing was connected.": "Nada foi conectado.",
   "Open Telegram": "Abrir o Telegram",
-  "Could not connect Telegram. Please try again.": "Não foi possível conectar o Telegram. Tente novamente."
+  "Could not connect Telegram. Please try again.": "Não foi possível conectar o Telegram. Tente novamente.",
+  "Treasury bill": "Título do Tesouro",
+  "Amount invested": "Valor investido",
+  "Purchase date": "Data de compra",
+  "Annual yield (%)": "Rendimento anual (%)",
+  "Redeem": "Resgatar",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Use Título do Tesouro para um título público mantido até o vencimento. Informe o rendimento anual; ele rende sem capitalização até a data de vencimento.",
+  "Treasury bill maturity": "vencimento de título do Tesouro",
+  "US Treasury bills · BIL": "Títulos do Tesouro dos EUA · BIL",
+  "No income yet": "Ainda sem renda",
+  "Add your salary or another income to see your income month by month.": "Adicione seu salário ou outra renda para ver sua renda mês a mês.",
+  "More actions": "Mais ações",
+  "What else would you like to do?": "O que mais você quer fazer?"
 }

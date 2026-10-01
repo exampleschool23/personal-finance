@@ -1504,7 +1504,6 @@
   "Recent activity": "最近のアクティビティ",
   "Investments": "投資",
   "Deposits": "預金",
-  "Investment value and proceeds": "投資の価値と売却代金",
   "Investment history or exchange rates are incomplete for this comparison.": "この比較に必要な、投資履歴または為替レートが不足しています。",
   "Investment activity on this date": "この日の投資アクティビティ",
   "Fresh investment funding": "新規の投資資金",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram を接続しました。チャットに戻って続けてください。",
   "Nothing was connected.": "何も接続されませんでした。",
   "Open Telegram": "Telegram を開く",
-  "Could not connect Telegram. Please try again.": "Telegram を接続できませんでした。もう一度お試しください。"
+  "Could not connect Telegram. Please try again.": "Telegram を接続できませんでした。もう一度お試しください。",
+  "Treasury bill": "短期国債",
+  "Amount invested": "投資額",
+  "Purchase date": "購入日",
+  "Annual yield (%)": "年利回り (%)",
+  "Redeem": "償還",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "満期まで保有する国債には「短期国債」を選んでください。年利回りを入力すると、満期日まで複利なしで積み上がります。",
+  "Treasury bill maturity": "短期国債の満期",
+  "US Treasury bills · BIL": "米国短期国債 · BIL",
+  "No income yet": "まだ収入がありません",
+  "Add your salary or another income to see your income month by month.": "給与やその他の収入を追加すると、月ごとの収入を確認できます。",
+  "More actions": "その他の操作",
+  "What else would you like to do?": "ほかに何をしますか？"
 }

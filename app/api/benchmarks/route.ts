@@ -128,7 +128,7 @@ async function loadBenchmarks(req: Request) {
    if(!histories.has(id))histories.set(id,kind==='crypto'?cryptoHistory(start,end,symbol):stockHistory(symbol,start,end,key!));
    return histories.get(id)!;
   }
-  const symbols = [...portfolioRows.filter(asset=>asset.kind==='stock').map(asset=>({id:portfolioAssetKey(asset,portfolio!),symbol:asset.symbol})),...stockBenchmarks(selected),{id:'SPY',symbol:'SPY'},{id:'HYG',symbol:'HYG'},...(custom ? [{id:'CUSTOM',symbol:custom}] : []),...(selected.includes('PORTFOLIO')&&portfolioStock?[{id:'portfolioStock',symbol:portfolioStock}]:[])];
+  const symbols = [...portfolioRows.filter(asset=>asset.kind==='stock').map(asset=>({id:portfolioAssetKey(asset,portfolio!),symbol:asset.symbol})),...stockBenchmarks(selected),{id:'SPY',symbol:'SPY'},{id:'HYG',symbol:'HYG'},{id:'BIL',symbol:'BIL'},...(custom ? [{id:'CUSTOM',symbol:custom}] : []),...(selected.includes('PORTFOLIO')&&portfolioStock?[{id:'portfolioStock',symbol:portfolioStock}]:[])];
   const jobs: (() => Promise<void>)[] = symbols.filter(item=>(selected.includes(item.id)||item.id==='portfolioStock'||portfolioRows.some(asset=>portfolioAssetKey(asset,portfolio!)===item.id))).map(({id,symbol}) => async () => {
    if (!key) { data.errors[id] = 'Stock comparisons need a market-data connection.'; return; }
    try { data.prices[id] = await history('stock',symbol); }
@@ -161,7 +161,7 @@ export async function GET(req: Request) {
   try {
    const day = depositToday();
    if (!demoCache || demoCache.day !== day || demoCache.expires <= Date.now()) {
-    const params = new URLSearchParams({ start: shiftDay(day, -365), end: day, benchmarks: 'BTC,SPY,depositUSD,depositUZS' });
+    const params = new URLSearchParams({ start: shiftDay(day, -365), end: day, benchmarks: 'BTC,SPY,BIL,depositUSD,depositUZS' });
     // A load abandoned with its request may never settle; let a later visitor replace it.
     const entry = { day, expires: Date.now() + 60000, result: Promise.resolve(demoFailure()) };
     entry.result = loadBenchmarks(new Request('https://local/api/benchmarks?' + params)).then(async response => {

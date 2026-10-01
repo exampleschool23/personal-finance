@@ -109,3 +109,12 @@ test('sign tone colours losses, treats surpluses as positive unless told otherwi
  assert.equal(signTone(null),undefined);
  assert.equal(signTone(NaN),undefined);
 });
+
+test('liability tone marks any amount owed as negative and leaves no debt and unknowns uncoloured',()=>{
+ const {liabilityTone}=load('tone.ts');
+ assert.equal(liabilityTone(92035),'negative');
+ assert.equal(liabilityTone(0),undefined);
+ assert.equal(liabilityTone(null),undefined);
+ assert.equal(liabilityTone(undefined),undefined);
+ assert.equal(liabilityTone(NaN),undefined);
+});

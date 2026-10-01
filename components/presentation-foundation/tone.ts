@@ -10,3 +10,6 @@ export function signTone(value: number | null | undefined, negativeOnly = false)
  if (value < 0) return 'negative';
  return negativeOnly ? undefined : 'positive';
 }
+
+/** The tone of an amount owed, stored as a positive number: negative while anything is owed, none at zero. */
+export const liabilityTone = (owed: number | null | undefined): StatTone | undefined => signTone(owed === null || owed === undefined ? owed : -owed, true);

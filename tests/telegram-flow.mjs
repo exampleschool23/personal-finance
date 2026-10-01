@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {loadTS} from './helpers/load-ts.mjs';
-const {advance,mainMenu,menuChoice,parseDay,prompt}=loadTS('lib/telegram-flow.ts');
+const {advance,mainMenu,moreMenu,menuChoice,parseDay,prompt}=loadTS('lib/telegram-flow.ts');
 const {recordSchema}=loadTS('lib/record-schema.ts');
 const {planningSchemas}=loadTS('lib/planning-schemas.ts');
 const {translate}=loadTS('lib/i18n.ts');
@@ -22,7 +22,20 @@ function run(steps,context=ctx()){
 }
 
 test('the menu is translated and recognised in every language, and cancel returns to it',()=>{
- assert.deepEqual(mainMenu('en').reply,[['Expense','Income'],['Transfer','Pay loan or debt'],['Mortgage payment','Upcoming payments'],['Add cash account','Add loan or debt'],['Sign out']]);
+ // Two everyday entries; everything else sits behind More actions as buttons in the chat.
+ assert.deepEqual(mainMenu('en').reply,[['Expense','Income'],['More actions']]);
+ assert.deepEqual(mainMenu('ru').reply,[[translate('ru','Expense'),translate('ru','Income')],[translate('ru','More actions')]]);
+ const more=advance(null,{text:translate('ru','More actions')},ctx(),chat);
+ assert.equal(more.draft,null);assert.deepEqual(more.reply,moreMenu('en',chat));
+ assert.equal(more.reply.text,'What else would you like to do?');
+ assert.deepEqual(more.reply.keyboard.inline.flat().map(button=>[button.text,button.callback_data]),[['Transfer','m:transfer'],['Pay loan or debt','m:repayment'],['Mortgage payment','m:mortgage'],['Upcoming payments','m:upcoming'],['Add cash account','m:account'],['Add loan or debt','m:liability'],['Sign out','m:signout']]);
+ assert.ok(more.reply.keyboard.inline.every(row=>row.length<=2));
+ // Each button works like typing its label, also in the middle of another entry; unknown buttons do nothing.
+ assert.equal(advance(null,{callback:'m:transfer'},ctx(),chat).draft.kind,'transfer');
+ assert.equal(advance({kind:'expense',step:'amount',data:{}},{callback:'m:account'},ctx(),chat).draft.kind,'account');
+ assert.deepEqual(advance(null,{callback:'m:upcoming'},ctx(),chat),{draft:null,reply:null,menu:'upcoming'});
+ assert.equal(advance(null,{callback:'m:signout'},ctx(),chat).draft,null);assert.equal(menuChoice('m:expensex'),null);
+ assert.equal(menuChoice('More actions'),'more');
  assert.equal(menuChoice(translate('ru','Sign out')),'signout');assert.equal(advance(null,{text:'Sign out'},ctx(),chat).draft,null,'signing out never starts an entry');
  assert.equal(menuChoice(translate('ru','Expense')),'expense');assert.equal(menuChoice(' '+translate('ru','Income').toUpperCase()+' '),'income');assert.equal(menuChoice('Upcoming payments'),'upcoming');assert.equal(menuChoice('hello'),null);
  const stray=advance(null,{text:'hello'},ctx(),chat);

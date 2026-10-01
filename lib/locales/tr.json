@@ -1504,7 +1504,6 @@
   "Recent activity": "Son hareketler",
   "Investments": "Yatırımlar",
   "Deposits": "Mevduatlar",
-  "Investment value and proceeds": "Yatırım değeri ve gelirler",
   "Investment history or exchange rates are incomplete for this comparison.": "Bu karşılaştırma için yatırım geçmişi veya döviz kurları eksik.",
   "Investment activity on this date": "Bu tarihteki yatırım etkinliği",
   "Fresh investment funding": "Yeni yatırım fonlaması",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram bağlandı. Devam etmek için sohbete dönün.",
   "Nothing was connected.": "Hiçbir şey bağlanmadı.",
   "Open Telegram": "Telegram’ı aç",
-  "Could not connect Telegram. Please try again.": "Telegram bağlanamadı. Lütfen tekrar deneyin."
+  "Could not connect Telegram. Please try again.": "Telegram bağlanamadı. Lütfen tekrar deneyin.",
+  "Treasury bill": "Hazine bonosu",
+  "Amount invested": "Yatırılan tutar",
+  "Purchase date": "Alış tarihi",
+  "Annual yield (%)": "Yıllık getiri (%)",
+  "Redeem": "İtfa et",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "Vadeye kadar tutulan bir devlet kâğıdı için Hazine bonosunu seçin. Yıllık getirisini girin; vade tarihine kadar bileşik olmadan işler.",
+  "Treasury bill maturity": "hazine bonosu vadesi",
+  "US Treasury bills · BIL": "ABD Hazine bonoları · BIL",
+  "No income yet": "Henüz gelir yok",
+  "Add your salary or another income to see your income month by month.": "Gelirinizi ay ay görmek için maaşınızı veya başka bir geliri ekleyin.",
+  "More actions": "Diğer işlemler",
+  "What else would you like to do?": "Başka ne yapmak istersiniz?"
 }

@@ -1504,7 +1504,6 @@
   "Recent activity": "近期活动",
   "Investments": "投资",
   "Deposits": "存款",
-  "Investment value and proceeds": "投资价值和所得",
   "Investment history or exchange rates are incomplete for this comparison.": "此对比的投资历史或汇率不完整。",
   "Investment activity on this date": "此日期的投资活动",
   "Fresh investment funding": "新增投资资金",
@@ -1865,5 +1864,17 @@
   "Telegram is connected. Go back to the chat to continue.": "Telegram 已连接。返回聊天继续。",
   "Nothing was connected.": "未连接任何内容。",
   "Open Telegram": "打开 Telegram",
-  "Could not connect Telegram. Please try again.": "无法连接 Telegram。请重试。"
+  "Could not connect Telegram. Please try again.": "无法连接 Telegram。请重试。",
+  "Treasury bill": "国库券",
+  "Amount invested": "投资金额",
+  "Purchase date": "购买日期",
+  "Annual yield (%)": "年化收益率 (%)",
+  "Redeem": "兑付",
+  "Use Treasury bill for a government bill held to maturity. Enter its annual yield; it accrues without compounding until the maturity date.": "持有至到期的政府票据请选择国库券。输入年化收益率；收益不复利累计至到期日。",
+  "Treasury bill maturity": "国库券到期",
+  "US Treasury bills · BIL": "美国国库券 · BIL",
+  "No income yet": "还没有收入",
+  "Add your salary or another income to see your income month by month.": "添加您的工资或其他收入，按月查看收入。",
+  "More actions": "更多操作",
+  "What else would you like to do?": "您还想做什么？"
 }
