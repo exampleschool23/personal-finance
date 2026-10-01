@@ -22,7 +22,7 @@ function run(steps,context=ctx()){
 }
 
 test('the menu is translated and recognised in every language, and cancel returns to it',()=>{
- assert.deepEqual(mainMenu('en').reply,[['Expense','Income'],['Transfer','Pay loan or debt'],['Mortgage payment','Upcoming payments'],['Add cash account']]);
+ assert.deepEqual(mainMenu('en').reply,[['Expense','Income'],['Transfer','Pay loan or debt'],['Mortgage payment','Upcoming payments'],['Add cash account','Add loan or debt']]);
  assert.equal(menuChoice(translate('ru','Expense')),'expense');assert.equal(menuChoice(' '+translate('ru','Income').toUpperCase()+' '),'income');assert.equal(menuChoice('Upcoming payments'),'upcoming');assert.equal(menuChoice('hello'),null);
  const stray=advance(null,{text:'hello'},ctx(),chat);
  assert.equal(stray.draft,null);assert.equal(stray.reply.text,'Choose what to add.');assert.deepEqual(stray.reply.keyboard,mainMenu('en'));
@@ -220,4 +220,38 @@ test('an account added while paying a loan uses the loan currency without asking
  const one=ctx();one.accounts=[entry(1,'Wallet','Cash',900000)];
  const second=run([{text:'Transfer'},{callback:'f:acc:'+id(1)}],one);
  assert.equal(second.reply.text,'Add a second cash account to continue.');assert.ok(buttons(second.reply).includes('f:newacc'));
+});
+
+test('the bot creates loans, debts and mortgages itself, and a loan payment with no open loan offers to add one',()=>{
+ const context={...ctx(),currencies:['UZS','USD']};
+ const kind=advance(null,{text:'Add loan or debt'},context,chat);
+ assert.equal(kind.reply.text,'Is it a loan, a debt or a mortgage?');assert.deepEqual(buttons(kind.reply),['f:lkind:Loan','f:lkind:Debt','f:lkind:Mortgage','f:cancel']);
+ const name=advance(kind.draft,{callback:'f:lkind:Loan'},context,chat);assert.equal(name.reply.text,'Name it, for example Car loan.');
+ const currency=advance(name.draft,{text:'QA Car loan'},context,chat);assert.equal(currency.reply.text,'Which currency is it in?');
+ const amount=advance(currency.draft,{callback:'f:cur:USD'},context,chat);assert.equal(amount.reply.text,'Type the outstanding amount in USD');
+ const due=advance(amount.draft,{text:'5000'},context,chat);assert.equal(due.draft.step,'duedate');
+ assert.equal(advance(due.draft,{text:'yesterday'},context,chat).draft.step,'duedate');
+ // Due dates may be in the future, unlike record dates.
+ const rate=advance(due.draft,{text:'31.03.2027'},context,chat);assert.equal(rate.draft.data.date,'2027-03-31');assert.equal(rate.reply.text,'Type the yearly interest rate in percent, or 0');
+ const payment=advance(rate.draft,{text:'12.5'},context,chat);assert.equal(payment.reply.text,'Type the monthly payment in USD, or 0');
+ const confirm=advance(payment.draft,{text:'250'},context,chat);
+ assert.equal(confirm.draft.step,'confirm');assert.match(confirm.reply.text,/Loan · <b>QA Car loan<\/b>\n\$5,000 · Due: 31 March 2027\nInterest rate 12.5% · Monthly payment \$250/);
+ const saved=advance(confirm.draft,{callback:'f:save'},context,chat);
+ assert.equal(recordSchema.safeParse(saved.commit.record).success,true);
+ const r=saved.commit.record;
+ assert.deepEqual({kind:r.kind,name:r.name,currency:r.currency,amount:r.amount,date:r.date,rate:r.rate,payment:r.estimated_monthly_payment},{kind:'Loan',name:'QA Car loan',currency:'USD',amount:5000,date:'2027-03-31',rate:12.5,payment:250});
+ // Back walks the questions in order, and the 0 buttons skip rate and payment.
+ assert.equal(advance(payment.draft,{callback:'f:back'},context,chat).draft.step,'rate');
+ const zero=advance(advance(rate.draft,{callback:'f:zero'},context,chat).draft,{callback:'f:zero'},context,chat);
+ assert.equal(zero.draft.step,'confirm');assert.equal(zero.draft.data.rate,0);assert.equal(zero.draft.data.payment,0);
+ // No open loan: the dead end offers the button, and the saved loan returns to the loan choice.
+ const none={...context,liabilities:[]};
+ const stuck=advance(null,{text:'Pay loan or debt'},none,chat);
+ assert.equal(stuck.reply.text,'No open loan or debt found.');assert.ok(buttons(stuck.reply).includes('f:newliab'));
+ const inside=advance(stuck.draft,{callback:'f:newliab'},none,chat);
+ assert.equal(inside.draft.kind,'liability');assert.equal(inside.draft.step,'lkind');assert.equal(inside.draft.data.resume.kind,'repayment');
+ // From a mortgage payment the kind is already known.
+ const mortgage=advance(advance(null,{text:'Mortgage payment'},none,chat).draft,{callback:'f:newliab'},none,chat);
+ assert.equal(mortgage.draft.step,'lname');assert.equal(mortgage.draft.data.lkind,'Mortgage');
+ assert.equal(advance(mortgage.draft,{callback:'f:back'},none,chat).draft.step,'lname','the kind question was never asked');
 });

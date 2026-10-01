@@ -60,7 +60,7 @@ test('the onboarding walks language, currency and a first cash account, saving a
  for(const bad of ['abc','-5','','1e99'])assert.equal(advanceOnboarding(named.draft,{text:bad},{language:'en'},777).draft.step,'balance',bad);
  const finished=advanceOnboarding(named.draft,{text:'1 500,50'},{language:'ru'},777);
  assert.equal(finished.draft,null);assert.deepEqual(finished.effects,{account:{name:'Savings jar',amount:1500.5,currency:'EUR'},finished:true});
- assert.deepEqual(finished.reply.keyboard.reply.flat(),[t('ru','Expense'),t('ru','Income'),t('ru','Transfer'),t('ru','Pay loan or debt'),t('ru','Mortgage payment'),t('ru','Upcoming payments'),t('ru','Add cash account')]);
+ assert.deepEqual(finished.reply.keyboard.reply.flat(),[t('ru','Expense'),t('ru','Income'),t('ru','Transfer'),t('ru','Pay loan or debt'),t('ru','Mortgage payment'),t('ru','Upcoming payments'),t('ru','Add cash account'),t('ru','Add loan or debt')]);
  assert.equal(advanceOnboarding(named.draft,{text:'0'},{language:'en'},777).effects.account.amount,0,'an empty account is allowed');
 });
 

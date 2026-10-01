@@ -3,26 +3,28 @@
 // at the end, what to save. The bot handler owns storage and the database.
 import {isoDate} from './api-validation';
 import {income,expenses,type Entry} from './finance';
-import {formatDate,formatMoney,formatNumberInput} from './format';
+import {formatDate,formatMoney,formatNumberInput,formatPercent} from './format';
 import {dictionaries,locales,translate,type Language} from './i18n';
 import type {Category} from './planning';
 import type {RecordInput} from './record-schema';
 import {escapeHtml,type TelegramButton,type TelegramKeyboard,type TelegramMessage} from './telegram';
-export type FlowKind='expense'|'income'|'transfer'|'repayment'|'mortgage'|'account';
-export type Step='category'|'account'|'target'|'amount'|'received'|'interest'|'name'|'date'|'confirm'|'accname'|'currency'|'balance';
-export type DraftData={id?:string;category?:string;custom_category_id?:string|null;category_name?:string;account_id?:string;target_id?:string;amount?:number;received?:number;interest?:number;name?:string;date?:string;account_name?:string;currency?:string;resume?:Draft};
+export type FlowKind='expense'|'income'|'transfer'|'repayment'|'mortgage'|'account'|'liability';
+export type Step='category'|'account'|'target'|'amount'|'received'|'interest'|'name'|'date'|'confirm'|'accname'|'currency'|'balance'|'lkind'|'lname'|'duedate'|'rate'|'payment';
+export type DraftData={id?:string;category?:string;custom_category_id?:string|null;category_name?:string;account_id?:string;target_id?:string;amount?:number;received?:number;interest?:number;name?:string;date?:string;account_name?:string;currency?:string;lkind?:LiabilityKind;rate?:number;payment?:number;resume?:Draft};
+export type LiabilityKind='Loan'|'Debt'|'Mortgage';
+const liabilityKinds:LiabilityKind[]=['Loan','Debt','Mortgage'];
 export type Draft={kind:FlowKind;step:Step;data:DraftData};
 export type FlowContext={language:Language;today:string;newId:string;categories:Category[];accounts:Entry[];liabilities:Entry[];currencies?:string[]};
 export type FlowInput={text?:string;callback?:string};
 export type Commit={type:'record';record:RecordInput;resume?:Draft}|{type:'planning';action:'transfer'|'repayment'|'mortgage';data:{id:string;account_id:string;target_id:string;amount:number;received:number;fee:number;date:string;notes:string}};
 export type FlowResult={draft:Draft|null;reply:TelegramMessage|null;commit?:Commit;menu?:'upcoming'};
-const menuItems:Array<{kind:FlowKind|'upcoming';label:string}>=[{kind:'expense',label:'Expense'},{kind:'income',label:'Income'},{kind:'transfer',label:'Transfer'},{kind:'repayment',label:'Pay loan or debt'},{kind:'mortgage',label:'Mortgage payment'},{kind:'upcoming',label:'Upcoming payments'},{kind:'account',label:'Add cash account'}];
+const menuItems:Array<{kind:FlowKind|'upcoming';label:string}>=[{kind:'expense',label:'Expense'},{kind:'income',label:'Income'},{kind:'transfer',label:'Transfer'},{kind:'repayment',label:'Pay loan or debt'},{kind:'mortgage',label:'Mortgage payment'},{kind:'upcoming',label:'Upcoming payments'},{kind:'account',label:'Add cash account'},{kind:'liability',label:'Add loan or debt'}];
 const pageSize=8;
 const t=(language:Language,key:string,params?:Record<string,string|number>)=>translate(language,key,params);
 /** The persistent keyboard under the text box. */
 export function mainMenu(language:Language):TelegramKeyboard{
  const label=(kind:string)=>t(language,menuItems.find(item=>item.kind===kind)!.label);
- return {reply:[[label('expense'),label('income')],[label('transfer'),label('repayment')],[label('mortgage'),label('upcoming')],[label('account')]]};
+ return {reply:[[label('expense'),label('income')],[label('transfer'),label('repayment')],[label('mortgage'),label('upcoming')],[label('account'),label('liability')]]};
 }
 /** Which menu item a typed label means, in any of the app languages. */
 export function menuChoice(text:string):FlowKind|'upcoming'|null{
@@ -32,6 +34,7 @@ export function menuChoice(text:string):FlowKind|'upcoming'|null{
 }
 const cancelButton=(language:Language):TelegramButton=>({text:t(language,'Cancel'),callback_data:'f:cancel'});
 const newAccountButton=(language:Language):TelegramButton=>({text:'+ '+t(language,'Add cash account'),callback_data:'f:newacc'});
+const newLiabilityButton=(language:Language):TelegramButton=>({text:'+ '+t(language,'Add loan or debt'),callback_data:'f:newliab'});
 const backButton=(language:Language):TelegramButton=>({text:'‹ '+t(language,'Back'),callback_data:'f:back'});
 /** The bottom row of every prompt: Back to the previous question when there is one, and Cancel. */
 const controls=(language:Language,canGoBack:boolean):TelegramButton[]=>canGoBack?[backButton(language),cancelButton(language)]:[cancelButton(language)];
@@ -43,15 +46,18 @@ const stepOrder:Record<FlowKind,Step[]>={
  repayment:['target','account','amount','date','confirm'],
  mortgage:['target','account','amount','interest','date','confirm'],
  account:['accname','currency','balance'],
+ liability:['lkind','lname','currency','amount','duedate','rate','payment','confirm'],
 };
 // What each question stores, so going back can forget it and everything asked after it.
-const stepFields:Record<Step,Array<keyof DraftData>>={category:['category','custom_category_id','category_name'],account:['account_id'],target:['target_id'],amount:['amount'],received:['received'],interest:['interest'],name:['name'],date:['date'],confirm:[],accname:['account_name'],currency:['currency'],balance:[]};
+const stepFields:Record<Step,Array<keyof DraftData>>={category:['category','custom_category_id','category_name'],account:['account_id'],target:['target_id'],amount:['amount'],received:['received'],interest:['interest'],name:['name'],date:['date'],confirm:[],accname:['account_name'],currency:['currency'],balance:[],lkind:['lkind'],lname:['name'],duedate:['date'],rate:['rate'],payment:['payment']};
 const find=(list:Entry[],id?:string)=>list.find(item=>item.id===id);
 /** A new account started from a loan or mortgage payment must use that loan's currency, so the question is not asked. */
-const presetCurrency=(draft:Draft,ctx:Pick<FlowContext,'liabilities'>)=>{const from=draft.data.resume;return from&&(from.kind==='repayment'||from.kind==='mortgage')?find(ctx.liabilities,from.data.target_id)?.currency:undefined;};
+const presetCurrency=(draft:Draft,ctx:Pick<FlowContext,'liabilities'>)=>{const from=draft.data.resume;return draft.kind==='account'&&from&&(from.kind==='repayment'||from.kind==='mortgage')?find(ctx.liabilities,from.data.target_id)?.currency:undefined;};
+/** A new liability started from the mortgage payment dead end is a mortgage, so its kind is not asked. */
+const presetLiabilityKind=(draft:Draft):LiabilityKind|undefined=>draft.kind==='liability'&&draft.data.resume?.kind==='mortgage'?'Mortgage':undefined;
 /** The question asked before the current one, or null at the first question. */
 export function backStep(draft:Draft,ctx:Pick<FlowContext,'accounts'|'liabilities'>):Step|null{
- const order=stepOrder[draft.kind].filter(step=>step==='currency'?!presetCurrency(draft,ctx):step!=='received'||(()=>{const from=find(ctx.accounts,draft.data.account_id),to=find(ctx.accounts,draft.data.target_id);return !!from&&!!to&&from.currency!==to.currency;})());
+ const order=stepOrder[draft.kind].filter(step=>step==='currency'?!presetCurrency(draft,ctx):step==='lkind'?!presetLiabilityKind(draft):step!=='received'||(()=>{const from=find(ctx.accounts,draft.data.account_id),to=find(ctx.accounts,draft.data.target_id);return !!from&&!!to&&from.currency!==to.currency;})());
  const index=order.indexOf(draft.step);
  return index>0?order[index-1]:null;
 }
@@ -99,18 +105,23 @@ export function prompt(draft:Draft,ctx:FlowContext,chat:number,page=0):TelegramM
     return options.length?choicePage(language,chat,t(language,'To which account?'),options,page,'page',backStep(draft,ctx)!==null):{chat_id:chat,text:t(language,'Add a second cash account to continue.'),keyboard:{inline:[[newAccountButton(language)],controlRow]}};
    }
    const options=liabilityOptions(ctx,draft.kind==='mortgage'?['Mortgage']:['Loan','Debt']);
-   return options.length?choicePage(language,chat,t(language,draft.kind==='mortgage'?'Which mortgage?':'Which loan or debt?'),options,page,'page',backStep(draft,ctx)!==null):{chat_id:chat,text:t(language,draft.kind==='mortgage'?'No open mortgage found.':'No open loan or debt found.'),keyboard:{inline:[controlRow]}};
+   return options.length?choicePage(language,chat,t(language,draft.kind==='mortgage'?'Which mortgage?':'Which loan or debt?'),options,page,'page',backStep(draft,ctx)!==null):{chat_id:chat,text:t(language,draft.kind==='mortgage'?'No open mortgage found.':'No open loan or debt found.'),keyboard:{inline:[[newLiabilityButton(language)],controlRow]}};
   }
   case 'amount':{
-   const currency=(draft.kind==='repayment'||draft.kind==='mortgage'?target?.currency:account?.currency)??'';
-   return {chat_id:chat,text:t(language,draft.kind==='mortgage'?'Type the principal amount in {currency}':'Type the amount in {currency}',{currency}),keyboard:{inline:[controlRow]}};
+   const currency=(draft.kind==='liability'?draft.data.currency:draft.kind==='repayment'||draft.kind==='mortgage'?target?.currency:account?.currency)??'';
+   return {chat_id:chat,text:t(language,draft.kind==='liability'?'Type the outstanding amount in {currency}':draft.kind==='mortgage'?'Type the principal amount in {currency}':'Type the amount in {currency}',{currency}),keyboard:{inline:[controlRow]}};
   }
   case 'received':return {chat_id:chat,text:t(language,'Type the amount received in {currency}',{currency:find(ctx.accounts,draft.data.target_id)?.currency??''}),keyboard:{inline:[controlRow]}};
   case 'interest':return {chat_id:chat,text:t(language,'Type the interest amount in {currency}, or 0',{currency:target?.currency??''}),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
   case 'name':return {chat_id:chat,text:t(language,'Type a name for this record, or skip to use the category'),keyboard:{inline:[[{text:t(language,'Skip'),callback_data:'f:skip'}],controlRow]}};
   case 'date':return {chat_id:chat,text:t(language,'Which day? Choose, or type a date like 2026-09-30'),keyboard:{inline:[[{text:t(language,'Today'),callback_data:'f:date:today'},{text:t(language,'Yesterday'),callback_data:'f:date:yesterday'}],controlRow]}};
   case 'accname':return {chat_id:chat,text:t(language,'Name the cash account, for example Wallet.'),keyboard:{inline:[[{text:t(language,'Cash'),callback_data:'f:accname:cash'}],controlRow]}};
-  case 'currency':return {chat_id:chat,text:t(language,'Which currency is this account in?'),keyboard:{inline:[currencyList(ctx).map(code=>({text:code,callback_data:'f:cur:'+code})),controlRow]}};
+  case 'lkind':return {chat_id:chat,text:t(language,'Is it a loan, a debt or a mortgage?'),keyboard:{inline:[liabilityKinds.map(kind=>({text:t(language,kind),callback_data:'f:lkind:'+kind})),controlRow]}};
+  case 'lname':return {chat_id:chat,text:t(language,'Name it, for example Car loan.'),keyboard:{inline:[controlRow]}};
+  case 'duedate':return {chat_id:chat,text:t(language,'When is it due? Type a date like 2027-03-31'),keyboard:{inline:[controlRow]}};
+  case 'rate':return {chat_id:chat,text:t(language,'Type the yearly interest rate in percent, or 0'),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
+  case 'payment':return {chat_id:chat,text:t(language,'Type the monthly payment in {currency}, or 0',{currency:draft.data.currency??''}),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
+  case 'currency':return {chat_id:chat,text:t(language,draft.kind==='liability'?'Which currency is it in?':'Which currency is this account in?'),keyboard:{inline:[currencyList(ctx).map(code=>({text:code,callback_data:'f:cur:'+code})),controlRow]}};
   case 'balance':return {chat_id:chat,text:t(language,'How much is in it? Type 0 if it is empty.'),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
   case 'confirm':return {chat_id:chat,text:summary(draft,ctx),keyboard:{inline:[[{text:t(language,'Save'),callback_data:'f:save'}],controlRow]}};
  }
@@ -125,6 +136,7 @@ export function summary(draft:Draft,ctx:FlowContext):string{
   case 'expense':case 'income':lines.push(`${t(language,draft.kind==='expense'?'Expense':'Income')} · ${escapeHtml(d.category_name??'')}`,`${name(d.name||d.category_name)} · ${money(d.amount??0,account?.currency??'',language)} · ${day}`,t(language,draft.kind==='income'?'into {account}':'from {account}',{account:escapeHtml(account?.name??'')}));break;
   case 'transfer':lines.push(`${t(language,'Transfer')} · ${name(account?.name)} → ${name(to?.name)}`,`${money(d.amount??0,account?.currency??'',language)}${to&&account&&to.currency!==account.currency?' → '+money(d.received??0,to.currency,language):''} · ${day}`);break;
   case 'repayment':lines.push(`${t(language,'Repayment')} · ${name(target?.name)}`,`${money(d.amount??0,target?.currency??'',language)} · ${day}`,t(language,'from {account}',{account:escapeHtml(account?.name??'')}));break;
+  case 'liability':lines.push(`${t(language,d.lkind??'Loan')} · ${name(d.name)}`,`${money(d.amount??0,d.currency??'',language)} · ${t(language,'Due: {date}',{date:day})}`,`${t(language,'Interest rate')} ${formatPercent(d.rate??0,locales[language])} · ${t(language,'Monthly payment')} ${money(d.payment??0,d.currency??'',language)}`);break;
   case 'mortgage':lines.push(`${t(language,'Mortgage payment')} · ${name(target?.name)}`,`${t(language,'principal {amount}',{amount:money(d.amount??0,target?.currency??'',language)})} · ${t(language,'interest {amount}',{amount:money(d.interest??0,target?.currency??'',language)})} · ${day}`,t(language,'from {account}',{account:escapeHtml(account?.name??'')}));break;
  }
  return lines.join('\n');
@@ -134,18 +146,22 @@ function parseAmount(text:string,language:Language){
  const value=parsed?.value??null;
  return value!==null&&value>0&&value<=1e15?value:null;
 }
-export function parseDay(text:string,today:string):string|null{
+export function parseDay(text:string,today:string,future=false):string|null{
  const trimmed=text.trim();
  const european=/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/.exec(trimmed);
  const candidate=european?`${european[3]}-${european[2].padStart(2,'0')}-${european[1].padStart(2,'0')}`:trimmed;
- return isoDate.safeParse(candidate).success&&candidate<=today?candidate:null;
+ return isoDate.safeParse(candidate).success&&(future||candidate<=today)?candidate:null;
 }
 const next=(draft:Draft,step:Step,data:Partial<DraftData>={}):Draft=>({...draft,step,data:{...draft.data,...data}});
-function firstStep(kind:FlowKind):Step{return kind==='account'?'accname':kind==='expense'||kind==='income'?'category':kind==='transfer'?'account':'target';}
+function firstStep(kind:FlowKind):Step{return kind==='liability'?'lkind':kind==='account'?'accname':kind==='expense'||kind==='income'?'category':kind==='transfer'?'account':'target';}
 function commitFor(draft:Draft,ctx:FlowContext):Commit{
  const d=draft.data;
  if(draft.kind==='account'){
   const record:RecordInput={id:d.id??ctx.newId,name:d.account_name??'',kind:'Cash',currency:d.currency??'',amount:d.amount??0,quantity:1,cost:0,rate:0,date:ctx.today,frequency:'Once',notes:'',business_id:null,ownership_percentage:100,estimated_monthly_income:0,estimated_monthly_payment:0};
+  return {type:'record',record,resume:d.resume};
+ }
+ if(draft.kind==='liability'){
+  const record:RecordInput={id:d.id??ctx.newId,name:d.name??'',kind:d.lkind??'Loan',currency:d.currency??'',amount:d.amount??0,quantity:0,cost:0,rate:d.rate??0,date:d.date??ctx.today,frequency:'Once',notes:'',business_id:null,ownership_percentage:100,estimated_monthly_income:0,estimated_monthly_payment:d.payment??0};
   return {type:'record',record,resume:d.resume};
  }
  const account=find(ctx.accounts,d.account_id)!;
@@ -182,6 +198,11 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
  // From a dead end the owner can create the missing account here; saving it returns to the interrupted question.
  if(callback==='f:newacc'&&draft.kind!=='account'){
   const started:Draft={kind:'account',step:'accname',data:{id:ctx.newId,resume:draft,currency:presetCurrency({kind:'account',step:'accname',data:{resume:draft}},ctx)}};
+  return {draft:started,reply:prompt(started,ctx,chat)};
+ }
+ if(callback==='f:newliab'&&draft.kind!=='liability'){
+  const preset=presetLiabilityKind({kind:'liability',step:'lkind',data:{resume:draft}});
+  const started:Draft={kind:'liability',step:preset?'lname':'lkind',data:{id:ctx.newId,resume:draft,...(preset?{lkind:preset}:{})}};
   return {draft:started,reply:prompt(started,ctx,chat)};
  }
  const page=/^f:page:(\d+)$/.exec(callback);
@@ -223,7 +244,7 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
    if(draft.kind==='repayment'&&target&&amount>target.amount)return invalid(t(language,'Repayment cannot exceed the outstanding balance.'));
    if(draft.kind==='mortgage'&&target&&amount>target.amount)return invalid(t(language,'Principal exceeds the outstanding balance.'));
    const from=find(ctx.accounts,draft.data.account_id),to=find(ctx.accounts,draft.data.target_id);
-   const step:Step=draft.kind==='transfer'&&from&&to&&from.currency!==to.currency?'received':draft.kind==='mortgage'?'interest':draft.kind==='expense'||draft.kind==='income'?'name':'date';
+   const step:Step=draft.kind==='liability'?'duedate':draft.kind==='transfer'&&from&&to&&from.currency!==to.currency?'received':draft.kind==='mortgage'?'interest':draft.kind==='expense'||draft.kind==='income'?'name':'date';
    const moved=next(draft,step,{amount});return {draft:moved,reply:prompt(moved,ctx,chat)};
   }
   case 'received':{
@@ -259,7 +280,33 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
   case 'currency':{
    const code=value('f:cur:');
    if(!code||!currencyList(ctx).includes(code))return {draft,reply:prompt(draft,ctx,chat)};
-   const moved=next(draft,'balance',{currency:code});return {draft:moved,reply:prompt(moved,ctx,chat)};
+   const moved=next(draft,draft.kind==='liability'?'amount':'balance',{currency:code});return {draft:moved,reply:prompt(moved,ctx,chat)};
+  }
+  case 'lkind':{
+   const chosen=value('f:lkind:') as LiabilityKind|null;
+   if(!chosen||!liabilityKinds.includes(chosen))return {draft,reply:prompt(draft,ctx,chat)};
+   const moved=next(draft,'lname',{lkind:chosen,id:draft.data.id??ctx.newId});return {draft:moved,reply:prompt(moved,ctx,chat)};
+  }
+  case 'lname':{
+   const name=(input.text??'').trim();
+   if(!name)return {draft,reply:prompt(draft,ctx,chat)};
+   if(name.length>120)return invalid(t(language,'Keep the name under 120 characters.'));
+   const moved=next(draft,'currency',{name,id:draft.data.id??ctx.newId});return {draft:moved,reply:prompt(moved,ctx,chat)};
+  }
+  case 'duedate':{
+   const date=input.text?parseDay(input.text,ctx.today,true):null;
+   if(!date)return invalid(t(language,'Type a date like 2027-03-31 or 31.03.2027'));
+   const moved=next(draft,'rate',{date});return {draft:moved,reply:prompt(moved,ctx,chat)};
+  }
+  case 'rate':{
+   const rate=callback==='f:zero'?0:input.text?(parseAmount(input.text,language)??(input.text.trim()==='0'?0:null)):null;
+   if(rate===null||rate>1000)return invalid(t(language,'Type the yearly interest rate in percent, or 0'));
+   const moved=next(draft,'payment',{rate});return {draft:moved,reply:prompt(moved,ctx,chat)};
+  }
+  case 'payment':{
+   const payment=callback==='f:zero'?0:input.text?(parseAmount(input.text,language)??(input.text.trim()==='0'?0:null)):null;
+   if(payment===null)return invalid(t(language,'Type the monthly payment in {currency}, or 0',{currency:draft.data.currency??''}));
+   const moved=next(draft,'confirm',{payment});return {draft:moved,reply:prompt(moved,ctx,chat)};
   }
   case 'balance':{
    const amount=callback==='f:zero'?0:input.text?(parseAmount(input.text,language)??(input.text.trim()==='0'?0:null)):null;

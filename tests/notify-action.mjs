@@ -74,7 +74,7 @@ test('a new language replaces the bot keyboard in the linked chat, with no new t
  const {message,used}=h.sent[0];
  assert.equal(message.chat_id,77);
  assert.equal(message.text,'Выберите, что добавить.');
- assert.deepEqual(message.keyboard,{reply:[['Расход','Доходы'],['Перевод','Погасить кредит или долг'],['Ипотечный платёж','Предстоящие платежи'],['Добавить счёт']]});
+ assert.deepEqual(message.keyboard,{reply:[['Расход','Доходы'],['Перевод','Погасить кредит или долг'],['Ипотечный платёж','Предстоящие платежи'],['Добавить счёт','Добавить кредит или долг']]});
  assert.equal(used,config);
  // Only the owner's own token reads the chat, and the message is sent even when action messages are off.
  assert.deepEqual(h.reads.map(read=>read.token),['owner-token']);
