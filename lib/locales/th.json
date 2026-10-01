@@ -1876,5 +1876,8 @@
   "No income yet": "ยังไม่มีรายได้",
   "Add your salary or another income to see your income month by month.": "เพิ่มเงินเดือนหรือรายได้อื่นเพื่อดูรายได้รายเดือน",
   "More actions": "การทำงานอื่น",
-  "What else would you like to do?": "ต้องการทำอะไรอีก"
+  "What else would you like to do?": "ต้องการทำอะไรอีก",
+  "No investments yet": "ยังไม่มีการลงทุน",
+  "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "เพิ่มหุ้น คริปโต เงินฝาก ตั๋วเงินคลัง หรือการลงทุนอื่น เพื่อติดตามมูลค่าและเทียบกับตลาด",
+  "Type an amount, such as 250000, or 0 if it is empty.": "พิมพ์จำนวนเงิน เช่น 250000 หรือ 0 ถ้าว่าง"
 }

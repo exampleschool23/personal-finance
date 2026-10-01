@@ -73,3 +73,15 @@ test('income over time invites the first income instead of drawing an empty char
  assert.doesNotMatch(filled,/No income yet/);assert.match(filled,/Recorded income in this period/);
  assert.doesNotMatch(render({records:[],incomeRecords:[],onAddIncome:undefined}),/<button/,'without an add action the guidance stands alone');
 });
+
+test('portfolio over time invites the first investment instead of a flat line at zero',async()=>{
+ const React=(await import('react')).default,{renderToStaticMarkup}=await import('react-dom/server');
+ const language={useLanguage:()=>({locale:'en-US',t:(text,values={})=>text.replace(/\{(\w+)\}/g,(_,key)=>values[key]??key)})};
+ const {InvestmentComparison}=loadTS('components/investment-comparison.tsx',{'@/components/language-provider':language,'next/link':{__esModule:true,default:({children,href})=>React.createElement('a',{href},children)}});
+ const render=records=>renderToStaticMarkup(React.createElement(InvestmentComparison,{history:{records,events:[]},today:'2026-10-01',currency:'UZS',market:null,demo:false,windowStart:'2026-09-01',points:[],profile:null,profileError:'',trackingStart:null,onTrackingStartChange:()=>{},summary:React.createElement('p',null,'summary')}));
+ const empty=render([entry('wallet','Cash',1165000,{currency:'UZS'})]);
+ assert.match(empty,/No investments yet/);assert.match(empty,/href="\/assets"/);assert.match(empty,/summary/);
+ assert.doesNotMatch(empty,/Tracking since|comparison-legend/);
+ assert.doesNotMatch(render([entry('btc','Crypto',60000,{quantity:.1})]),/No investments yet/);
+ assert.doesNotMatch(render([entry('cash','Cash',500,{is_investment:true})]),/No investments yet/,'an investment cash account counts');
+});

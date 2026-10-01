@@ -1876,5 +1876,8 @@
   "No income yet": "まだ収入がありません",
   "Add your salary or another income to see your income month by month.": "給与やその他の収入を追加すると、月ごとの収入を確認できます。",
   "More actions": "その他の操作",
-  "What else would you like to do?": "ほかに何をしますか？"
+  "What else would you like to do?": "ほかに何をしますか？",
+  "No investments yet": "まだ投資がありません",
+  "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "株式、暗号資産、預金、短期国債などの投資を追加すると、価値を追跡して市場と比較できます。",
+  "Type an amount, such as 250000, or 0 if it is empty.": "金額を入力してください（例: 250000）。空の場合は 0 を入力します。"
 }

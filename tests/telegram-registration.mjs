@@ -307,7 +307,7 @@ test('setup questions survive late taps, offer Back, never expire, and Start beg
  // In the chat: a setup left for hours still continues, and /start starts it over from the language.
  const stale={user_id:ownerId,step:'onboard:balance',data:{currency:'USD',account_name:'Other currency'},updated_at:'2026-09-30T09:00:00Z'};
  const context=setup({seed:{telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}],telegram_drafts:[stale]}});
- assert.equal((await run(text('abc'),context)).replies[0].text,t('en','Type a positive number, such as 250000 or 12.50'));
+ assert.equal((await run(text('abc'),context)).replies[0].text,t('en','Type an amount, such as 250000, or 0 if it is empty.'));
  const restarted=await run(text('/start'),context);
  assert.equal(restarted.replies[0].text,t('en','Choose your language'));
  assert.equal(context.db.tables.telegram_drafts[0].step,'onboard:language');assert.deepEqual(context.db.tables.telegram_drafts[0].data,{});

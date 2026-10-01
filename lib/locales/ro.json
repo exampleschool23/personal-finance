@@ -1876,5 +1876,8 @@
   "No income yet": "Încă nu există venituri",
   "Add your salary or another income to see your income month by month.": "Adaugă salariul sau alt venit ca să vezi veniturile lună de lună.",
   "More actions": "Mai multe acțiuni",
-  "What else would you like to do?": "Ce altceva vrei să faci?"
+  "What else would you like to do?": "Ce altceva vrei să faci?",
+  "No investments yet": "Încă nu există investiții",
+  "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "Adaugă o acțiune, cripto, depozit, certificat de trezorerie sau altă investiție ca să-i urmărești valoarea și s-o compari cu piața.",
+  "Type an amount, such as 250000, or 0 if it is empty.": "Scrie o sumă, de exemplu 250000, sau 0 dacă este gol."
 }

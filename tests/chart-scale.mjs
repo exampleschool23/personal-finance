@@ -21,3 +21,10 @@ test('values that differ only by floating-point noise still produce a short, usa
   for(const value of values)assert.ok(value>=domain[0]&&value<=domain[1],JSON.stringify(values));
  }
 });
+test('money axes never step by fractions, even for an empty or tiny range',()=>{
+ assert.deepEqual(niceAxis([0,0]).ticks,[0,1]);
+ for(const values of [[],[0],[0.4,0.7],[12.5,13.2],[3.3,3.3]]){
+  const {ticks}=niceAxis(values);
+  assert.ok(ticks.every(Number.isInteger),JSON.stringify(values)+' '+JSON.stringify(ticks));
+ }
+});

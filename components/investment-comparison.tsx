@@ -21,7 +21,11 @@ import { type Entry } from '@/lib/finance';
 import { type MarketData } from '@/lib/market';
 import { type HistoryEvent } from '@/lib/investment-history';
 import { type BenchmarkData } from '@/lib/benchmark-data';
-import { defaultComparisonPreferences,type ComparisonProfile } from '@/lib/comparison-profile';
+import { defaultComparisonPreferences,isInvestmentRecord,type ComparisonProfile } from '@/lib/comparison-profile';
+import Link from 'next/link';
+import { ChartNoAxesCombined } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/presentation-foundation/empty-state';
 
 type History={movements?:BenchmarkMovement[];records:Entry[];events:HistoryEvent[];cashflows?:Entry[]};
 export function InvestmentComparison({history,today,currency,market,demo,windowStart,points,summary,profile,profileError,trackingStart,onTrackingStartChange}:{windowStart:string;points:{date:string;net:number}[];summary?:ReactNode;history:History;today:string;currency:string;market:MarketData|null;demo:boolean;profile:ComparisonProfile|null;profileError:string;trackingStart:string|null;onTrackingStartChange:(date:string|null)=>Promise<void>}){
@@ -96,6 +100,12 @@ export function InvestmentComparison({history,today,currency,market,demo,windowS
  const chartPoints=(overviewResult?.points??[]).filter(point=>point.date>=windowStart);
  const chartSeries=visibleSeries;
  const detailPoint=chartPoints.find(point=>point.date===detailDate);
+ // Without any investment there is nothing to compare: invite the first one instead of drawing a flat line at zero.
+ if(scope==='investments'&&!history.records.some(isInvestmentRecord))return <>
+  <div className="overview-chart-heading"><div className="overview-chart-title"><h3>{t('Portfolio over time')}</h3></div></div>
+  <EmptyState icon={<ChartNoAxesCombined aria-hidden="true"/>} title={t('No investments yet')} description={t('Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.')}><Button asChild><Link href="/assets">{t('Add asset')}</Link></Button></EmptyState>
+  {summary}
+ </>;
  return <>
   <div className="overview-chart-heading"><div className="overview-chart-title"><h3>{t('Portfolio over time')}</h3><div className="tracking-start" aria-busy={savingStart}><span>{t('Tracking since')}</span><DatePicker value={trackingStart??''} required={false} min={benchmarkHistoryStart} max={today} onChange={date=>{if(!savingStart)void chooseTrackingStart(date||null);}}/></div></div><div className="comparison-legend" aria-busy={comparisonsLoading}>{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div></div>
   {ready&&!decision&&<p className="comparison-notice">{t('Investment history or exchange rates are incomplete for this comparison.')}</p>}

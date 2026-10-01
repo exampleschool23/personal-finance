@@ -1876,5 +1876,8 @@
   "No income yet": "Ainda sem renda",
   "Add your salary or another income to see your income month by month.": "Adicione seu salário ou outra renda para ver sua renda mês a mês.",
   "More actions": "Mais ações",
-  "What else would you like to do?": "O que mais você quer fazer?"
+  "What else would you like to do?": "O que mais você quer fazer?",
+  "No investments yet": "Ainda sem investimentos",
+  "Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.": "Adicione uma ação, cripto, depósito, título do Tesouro ou outro investimento para acompanhar o valor e comparar com o mercado.",
+  "Type an amount, such as 250000, or 0 if it is empty.": "Digite um valor, como 250000, ou 0 se estiver vazia."
 }
