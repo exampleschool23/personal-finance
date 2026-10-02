@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "タグのいずれかを選択してください。",
   "Choose up to 500 transactions.": "取引は500件まで選択できます。",
   "Choose up to 500 transactions and 20 tags.": "取引は500件、タグは20個まで選択できます。",
-  "Rule not found.": "ルールが見つかりません。"
+  "Rule not found.": "ルールが見つかりません。",
+  "Rolled over": "繰り越し",
+  "Start month": "開始月",
+  "Starting balance": "開始残高",
+  "Carry overspending into next month": "超過分を翌月に繰り越す",
+  "When off, an overspent month starts the next one at zero.": "オフの場合、超過した月の翌月はゼロから始まります。",
+  "Age of Money": "お金の年齢",
+  "{count} days": "{count} 日",
+  "1 day": "1 日",
+  "{change} vs 30 days ago": "30 日前と比べて {change}",
+  "No change vs 30 days ago": "30 日前から変化なし",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "お金を使うまでにどれだけ寝かせているか：直近 10 件の支出に使われたお金の平均年齢です。収入は、すべての現金口座で入ってきた順に支出と照合されます。数字が大きいほど余裕があります。",
+  "Records without an exchange rate to {currency} are left out: {count}.": "{currency} への為替レートがない記録は除外されています：{count}。"
 }

@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "태그 중 하나를 선택하세요.",
   "Choose up to 500 transactions.": "거래는 최대 500개까지 선택하세요.",
   "Choose up to 500 transactions and 20 tags.": "거래는 최대 500개, 태그는 최대 20개까지 선택하세요.",
-  "Rule not found.": "규칙을 찾을 수 없어요."
+  "Rule not found.": "규칙을 찾을 수 없어요.",
+  "Rolled over": "이월됨",
+  "Start month": "시작 월",
+  "Starting balance": "시작 잔액",
+  "Carry overspending into next month": "초과 지출을 다음 달로 이월",
+  "When off, an overspent month starts the next one at zero.": "끄면 초과 지출한 달의 다음 달은 0에서 시작합니다.",
+  "Age of Money": "돈의 나이",
+  "{count} days": "{count}일",
+  "1 day": "1일",
+  "{change} vs 30 days ago": "30일 전 대비 {change}",
+  "No change vs 30 days ago": "30일 전과 변동 없음",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "돈을 쓰기 전까지 얼마나 머무는지: 최근 지출 10건에 쓰인 돈의 평균 나이입니다. 수입은 모든 현금 계좌에서 들어온 순서대로 지출과 맞춰집니다. 숫자가 클수록 여유가 많습니다.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "{currency} 환율이 없는 기록은 제외됩니다: {count}."
 }

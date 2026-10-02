@@ -1,21 +1,23 @@
 "use client";
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
-import { BudgetGroupCard, BudgetProgress, BudgetSectionHeader, BudgetSettingsDialog, BudgetTotalRow, CategorySettingsDialog, ContributionRows, LeftToBudgetCard, PlannedInput, useCategoryName } from '@/components/budget-page';
+import { BudgetGroupCard, BudgetProgress, BudgetSectionHeader, BudgetSettingsDialog, BudgetTotalRow, CategorySettingsDialog, ContributionRows, LeftToBudgetCard, PlannedInput, useCategoryName, type BudgetFigures } from '@/components/budget-page';
 import { useLanguage } from '@/components/language-provider';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { PanelSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
+import { StatTile } from '@/components/presentation-foundation/stat-tile';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 import { useBudget } from '@/hooks/use-budget';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
-import { budgetCategories, budgetHistory, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, flexBucketKey, goalContribution, groupRows, leftToBudget, monthActuals, monthsBetween, shiftMonth, suggestedBudget, type BudgetAmount, type BudgetCategory, type BudgetRow, type MonthActuals } from '@/lib/budget';
+import { ageOfMoneyTrend } from '@/lib/age-of-money';
+import { budgetCategories, budgetHistory, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, flexBucketCategory, flexBucketKey, flexBucketRollover, goalContribution, groupRows, leftToBudget, monthActuals, monthsBetween, shiftMonth, suggestedBudget, type BudgetAmount, type BudgetCategory, type BudgetRow, type MonthActuals } from '@/lib/budget';
 import { depositToday } from '@/lib/deposit-interest';
 import { expensePlanMonth } from '@/lib/expense-plans';
-import { normalizeEntry } from '@/lib/finance';
-import { formatMoney, formatMonthShort, formatMonthYear, formatYear } from '@/lib/format';
+import { normalizeEntry, type Entry } from '@/lib/finance';
+import { formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatYear } from '@/lib/format';
 import { convertAmount } from '@/lib/market';
 import { emptyPlanning } from '@/lib/planning';
 
@@ -29,13 +31,13 @@ export function BudgetScreen() {
  const [view, setView] = useState<'month' | 'year'>('month');
  const [closed, setClosed] = useState<Set<string>>(new Set());
  const [unbudgeted, setUnbudgeted] = useState<Set<string>>(new Set());
- const [editing, setEditing] = useState<BudgetCategory | null>(null);
+ const [editing, setEditing] = useState<{ category: BudgetCategory; figures?: BudgetFigures } | null>(null);
  const [settingsOpen, setSettingsOpen] = useState(false);
  const rates = market?.rates ?? market?.fx?.rate;
  const live = !!user && !demo;
 
  const settingsOnly = budgetCategories(planning.data.categories, budget.state.categories);
- const range = budgetReadRange(month, view, settingsOnly);
+ const range = budgetReadRange(month, view, [...settingsOnly, flexBucketCategory(budget.state.categories)]);
  const remote = useOwnerResource(`/api/planning?scope=budget&month=${range.to}&from=${range.from}`, user, live, reload, emptyPlanning);
  const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : planning.data, [live, remote.data, planning.data]);
  const splits = transactionTools.data.splits;
@@ -44,6 +46,8 @@ export function BudgetScreen() {
  const flex = budget.state.mode === 'flex';
  const categoryRows = budgetRows(categories, budget.state.amounts, history, month, currency, rates);
  const flexBudget = flex ? flexBucketBudget(budget.state.amounts, categoryRows, month, currency, rates) : null;
+ const bucket = flexBucketCategory(budget.state.categories);
+ const bucketRollover = flex ? flexBucketRollover(bucket, categories, budget.state.amounts, history, month, currency, rates) : 0;
  const rows = budgetRowsForMode(categoryRows, budget.state.mode);
  const groups = groupRows(rows, flex);
  const goals = data.goals.filter(goal => goalContribution(goal) > 0);
@@ -70,17 +74,19 @@ export function BudgetScreen() {
  const toggle = (set: Set<string>, update: (next: Set<string>) => void, id: string) => { const next = new Set(set); if (next.has(id)) next.delete(id); else next.add(id); update(next); };
  const card = (group: (typeof groups)[number]) => {
   const id = group.direction + ':' + group.name;
-  const bucket = flex && group.type === 'flexible';
-  const bucketRow = bucket ? { budget: flexBudget ?? 0, actual: group.actual, remaining: (flexBudget ?? 0) - group.actual } : null;
+  const isBucket = flex && group.type === 'flexible';
+  const bucketRow = isBucket ? { budget: flexBudget ?? 0, rolloverIn: bucketRollover, actual: group.actual, remaining: (flexBudget ?? 0) + bucketRollover - group.actual } : null;
   return <BudgetGroupCard key={id} group={bucketRow ? { ...group, budget: bucketRow.budget, remaining: bucketRow.remaining } : group} currency={currency}
    open={!closed.has(id)} onToggle={() => toggle(closed, setClosed, id)} showUnbudgeted={unbudgeted.has(id)} onShowUnbudgeted={() => toggle(unbudgeted, setUnbudgeted, id)}
-   renderPlanned={planned} onSettings={setEditing}
+   renderPlanned={planned} onSettings={row => setEditing({ category: row, figures: row.direction === 'expense' ? row : undefined })}
+   rolloverIn={bucketRow?.rolloverIn} onGroupSettings={bucketRow ? () => setEditing({ category: bucket, figures: bucketRow }) : undefined}
    header={bucketRow ? <PlannedInput key={'flex' + month + (flexBudget ?? 0)} label={t('Planned for {name}', { name: t('Flexible') })} value={flexBudget ?? 0} history={historyOf(flexBucketKey)} direction="expense" currency={currency} defaultForward={budget.state.applyForward} onSave={save(flexBucketKey)}/> : undefined}/>;
  };
  const income = groups.filter(group => group.direction === 'income');
  const spending = groups.filter(group => group.direction === 'expense');
  const sum = (list: typeof groups, key: 'budget' | 'actual') => list.reduce((total, group) => total + group[key], 0);
- const spendingPlanned = flex ? left.expenses : sum(spending, 'budget');
+ // Like each group's Planned figure, the total includes money rolled over; in flex mode that is the bucket's and the other funds'.
+ const spendingPlanned = flex ? left.expenses + bucketRollover + rows.filter(row => row.direction === 'expense' && !row.excluded).reduce((total, row) => total + row.rolloverIn, 0) : sum(spending, 'budget');
  const loading = workspaceLoading || budget.loading || (live ? remote.initialLoading : planning.loading);
  const error = budget.error || (live ? remote.error : planning.error);
 
@@ -108,11 +114,26 @@ export function BudgetScreen() {
      <BudgetTotalRow label={t('Total contributions')} planned={contributions} actual={0} remaining={contributions} direction="income" currency={currency}/>
     </>}
    </div>
-   <LeftToBudgetCard left={left} rows={rows} mode={budget.state.mode} currency={currency}/>
+   <div className="budget-side">
+    <LeftToBudgetCard left={left} rows={rows} mode={budget.state.mode} currency={currency}/>
+    <AgeOfMoneyTile records={data.records} currency={currency} today={today} rates={rates}/>
+   </div>
   </div>}
-  {editing && <CategorySettingsDialog category={editing} groups={customGroups} month={month} onSave={budget.saveCategory} onClose={() => setEditing(null)}/>}
+  {editing && <CategorySettingsDialog category={editing.category} figures={editing.figures} groups={customGroups} month={month} currency={currency} onSave={budget.saveCategory} onClose={() => setEditing(null)}/>}
   {settingsOpen && <BudgetSettingsDialog mode={budget.state.mode} applyForward={budget.state.applyForward} onSave={budget.saveSettings} onRecalculate={recalculate} onClose={() => setSettingsOpen(false)}/>}
  </div>;
+}
+
+/** Age of Money: how many days money sits in cash accounts before it is spent, and its change over 30 days. */
+function AgeOfMoneyTile({ records, currency, today, rates }: { records: Entry[]; currency: string; today: string; rates?: number | Record<string, number> }) {
+ const { t, locale } = useLanguage();
+ const age = useMemo(() => ageOfMoneyTrend(records, currency, today, rates, new Set(records.filter(record => record.kind === 'Cash').map(record => record.id))), [records, currency, today, rates]);
+ const days = (count: number) => count === 1 ? t('1 day') : t('{count} days', { count: formatNumber(count, locale, 0) });
+ const change = age.change === null ? null : age.change === 0 ? t('No change vs 30 days ago') : t('{change} vs 30 days ago', { change: (age.change > 0 ? '+' : '\u2212') + days(Math.abs(age.change)) });
+ return <StatTile label={t('Age of Money')} value={age.days === null ? '—' : days(Math.round(age.days))} hint={<>
+  {t('How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.')}
+  {age.skipped > 0 && <> {t('Records without an exchange rate to {currency} are left out: {count}.', { currency, count: formatNumber(age.skipped, locale, 0) })}</>}
+ </>}>{change && <p>{change}</p>}</StatTile>;
 }
 
 /** The Year view: every month of the year side by side. Past and current months show what happened; later months show the plan. */

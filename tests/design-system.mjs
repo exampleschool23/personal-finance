@@ -28,6 +28,9 @@ test('stat tiles keep the value text intact and colour it only for a stated tone
  assert.match(html,/<h3>Money you owe<\/h3><strong>\$92,726<\/strong><\/article>/);
  assert.match(html,/<strong class="negative">-\$80,507<\/strong><p>Shortfall<\/p>/);
  assert.doesNotMatch(render(StatTiles,{},null),/role=|aria-label=/);
+ // An explanation sits behind the ⓘ in the heading, never as a sentence under the figure.
+ const hinted=loadTS('components/presentation-foundation/stat-tile.tsx',{'@/components/presentation-foundation/info-hint':{InfoHint:({children})=>React.createElement('i',{className:'info-hint'},children)}});
+ assert.equal(render(hinted.StatTile,{label:'Age of Money',value:'12 days',hint:'How long money waits.'},React.createElement('p',null,'+3 days vs 30 days ago')),'<article class="stat-tile"><h3>Age of Money<i class="info-hint">How long money waits.</i></h3><strong>12 days</strong><p>+3 days vs 30 days ago</p></article>');
 });
 
 test('debt summary totals stay whole amounts, money you owe and a net shortfall are marked negative',()=>{

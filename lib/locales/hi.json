@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "अपने टैग में से एक चुनें।",
   "Choose up to 500 transactions.": "अधिकतम 500 लेन-देन चुनें।",
   "Choose up to 500 transactions and 20 tags.": "अधिकतम 500 लेन-देन और 20 टैग चुनें।",
-  "Rule not found.": "नियम नहीं मिला।"
+  "Rule not found.": "नियम नहीं मिला।",
+  "Rolled over": "आगे ले जाया गया",
+  "Start month": "शुरुआती महीना",
+  "Starting balance": "प्रारंभिक शेष",
+  "Carry overspending into next month": "अधिक खर्च को अगले महीने में ले जाएँ",
+  "When off, an overspent month starts the next one at zero.": "बंद होने पर, अधिक खर्च वाले महीने के बाद अगला महीना शून्य से शुरू होता है।",
+  "Age of Money": "पैसे की उम्र",
+  "{count} days": "{count} दिन",
+  "1 day": "1 दिन",
+  "{change} vs 30 days ago": "30 दिन पहले की तुलना में {change}",
+  "No change vs 30 days ago": "30 दिन पहले की तुलना में कोई बदलाव नहीं",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "खर्च करने से पहले पैसा कितने समय तक रुकता है: आपके पिछले 10 खर्चों के पीछे के पैसे की औसत उम्र। आय को आपके सभी नकद खातों में आने के क्रम में खर्च से मिलाया जाता है। बड़ी संख्या का मतलब ज़्यादा गुंजाइश है।",
+  "Records without an exchange rate to {currency} are left out: {count}.": "{currency} में विनिमय दर के बिना रिकॉर्ड शामिल नहीं हैं: {count}।"
 }

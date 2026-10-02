@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "请选择您的一个标签。",
   "Choose up to 500 transactions.": "最多选择 500 笔交易。",
   "Choose up to 500 transactions and 20 tags.": "最多选择 500 笔交易和 20 个标签。",
-  "Rule not found.": "未找到该规则。"
+  "Rule not found.": "未找到该规则。",
+  "Rolled over": "已结转",
+  "Start month": "开始月份",
+  "Starting balance": "初始余额",
+  "Carry overspending into next month": "将超支结转到下个月",
+  "When off, an overspent month starts the next one at zero.": "关闭时，超支月份之后的下个月从零开始。",
+  "Age of Money": "资金年龄",
+  "{count} days": "{count} 天",
+  "1 day": "1 天",
+  "{change} vs 30 days ago": "与 30 天前相比 {change}",
+  "No change vs 30 days ago": "与 30 天前相比无变化",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "资金在被花掉之前平均停留多久：您最近 10 笔支出所用资金的平均年龄。收入按到账顺序与所有现金账户中的支出匹配。数字越大，缓冲越充足。",
+  "Records without an exchange rate to {currency} are left out: {count}.": "没有兑换为 {currency} 汇率的记录未计入：{count}。"
 }

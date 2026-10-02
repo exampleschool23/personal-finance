@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "Teglaringizdan birini tanlang.",
   "Choose up to 500 transactions.": "Ko‘pi bilan 500 ta operatsiya tanlang.",
   "Choose up to 500 transactions and 20 tags.": "Ko‘pi bilan 500 ta operatsiya va 20 ta teg tanlang.",
-  "Rule not found.": "Qoida topilmadi."
+  "Rule not found.": "Qoida topilmadi.",
+  "Rolled over": "O‘tkazilgan",
+  "Start month": "Boshlanish oyi",
+  "Starting balance": "Boshlang‘ich qoldiq",
+  "Carry overspending into next month": "Ortiqcha xarajatni keyingi oyga o‘tkazish",
+  "When off, an overspent month starts the next one at zero.": "O‘chirilganda, ortiqcha xarajat qilingan oydan keyingi oy noldan boshlanadi.",
+  "Age of Money": "Pul yoshi",
+  "{count} days": "{count} kun",
+  "1 day": "1 kun",
+  "{change} vs 30 days ago": "30 kun oldingiga nisbatan {change}",
+  "No change vs 30 days ago": "30 kun oldingiga nisbatan o‘zgarish yo‘q",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Pul sarflanishidan oldin qancha turadi: oxirgi 10 ta xarajatingiz ortidagi pulning o‘rtacha yoshi. Daromadlar barcha naqd hisoblaringiz bo‘yicha kelgan tartibida xarajatlarga moslanadi. Katta raqam ko‘proq zaxira degani.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "{currency} ga ayirboshlash kursi bo‘lmagan yozuvlar hisobga olinmadi: {count}."
 }

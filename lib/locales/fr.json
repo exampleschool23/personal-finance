@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "Choisissez l’une de vos étiquettes.",
   "Choose up to 500 transactions.": "Choisissez jusqu’à 500 transactions.",
   "Choose up to 500 transactions and 20 tags.": "Choisissez jusqu’à 500 transactions et 20 étiquettes.",
-  "Rule not found.": "Règle introuvable."
+  "Rule not found.": "Règle introuvable.",
+  "Rolled over": "Reporté",
+  "Start month": "Mois de début",
+  "Starting balance": "Solde initial",
+  "Carry overspending into next month": "Reporter le dépassement sur le mois suivant",
+  "When off, an overspent month starts the next one at zero.": "Désactivé, un mois en dépassement fait repartir le suivant à zéro.",
+  "Age of Money": "Âge de l’argent",
+  "{count} days": "{count} jours",
+  "1 day": "1 jour",
+  "{change} vs 30 days ago": "{change} par rapport à il y a 30 jours",
+  "No change vs 30 days ago": "Aucun changement par rapport à il y a 30 jours",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Combien de temps l’argent attend avant d’être dépensé : l’âge moyen de l’argent derrière vos 10 dernières dépenses. Les revenus sont associés aux dépenses dans leur ordre d’arrivée, sur tous vos comptes d’espèces. Un chiffre plus élevé signifie une plus grande marge.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "Les enregistrements sans taux de change vers {currency} sont exclus : {count}."
 }

@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "Alege una dintre etichetele tale.",
   "Choose up to 500 transactions.": "Alege cel mult 500 de tranzacții.",
   "Choose up to 500 transactions and 20 tags.": "Alege cel mult 500 de tranzacții și 20 de etichete.",
-  "Rule not found.": "Regula nu a fost găsită."
+  "Rule not found.": "Regula nu a fost găsită.",
+  "Rolled over": "Reportat",
+  "Start month": "Luna de început",
+  "Starting balance": "Sold inițial",
+  "Carry overspending into next month": "Reportează depășirea în luna următoare",
+  "When off, an overspent month starts the next one at zero.": "Când este dezactivat, luna de după o depășire începe de la zero.",
+  "Age of Money": "Vârsta banilor",
+  "{count} days": "{count} zile",
+  "1 day": "1 zi",
+  "{change} vs 30 days ago": "{change} față de acum 30 de zile",
+  "No change vs 30 days ago": "Nicio schimbare față de acum 30 de zile",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Cât timp așteaptă banii înainte să-i cheltuiești: vârsta medie a banilor din spatele ultimelor 10 cheltuieli. Veniturile sunt potrivite cu cheltuielile în ordinea în care au sosit, în toate conturile de numerar. Un număr mai mare înseamnă o rezervă mai mare.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "Înregistrările fără curs de schimb către {currency} sunt excluse: {count}."
 }

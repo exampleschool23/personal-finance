@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "Chagua mojawapo ya lebo zako.",
   "Choose up to 500 transactions.": "Chagua hadi miamala 500.",
   "Choose up to 500 transactions and 20 tags.": "Chagua hadi miamala 500 na lebo 20.",
-  "Rule not found.": "Kanuni haijapatikana."
+  "Rule not found.": "Kanuni haijapatikana.",
+  "Rolled over": "Imehamishwa",
+  "Start month": "Mwezi wa kuanza",
+  "Starting balance": "Salio la kuanzia",
+  "Carry overspending into next month": "Hamisha matumizi ya ziada hadi mwezi ujao",
+  "When off, an overspent month starts the next one at zero.": "Ikizimwa, mwezi unaofuata mwezi wa matumizi ya ziada huanza kwa sifuri.",
+  "Age of Money": "Umri wa Pesa",
+  "{count} days": "Siku {count}",
+  "1 day": "Siku 1",
+  "{change} vs 30 days ago": "{change} ikilinganishwa na siku 30 zilizopita",
+  "No change vs 30 days ago": "Hakuna mabadiliko ikilinganishwa na siku 30 zilizopita",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Pesa hukaa muda gani kabla hujaitumia: wastani wa umri wa pesa iliyotumika katika matumizi yako 10 ya mwisho. Mapato yanalinganishwa na matumizi kwa mpangilio yalivyoingia, katika akaunti zako zote za pesa taslimu. Nambari kubwa inamaanisha akiba zaidi.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "Rekodi zisizo na kiwango cha ubadilishaji kwenda {currency} zimeachwa: {count}."
 }

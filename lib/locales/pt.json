@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "Escolha uma das suas tags.",
   "Choose up to 500 transactions.": "Escolha até 500 transações.",
   "Choose up to 500 transactions and 20 tags.": "Escolha até 500 transações e 20 tags.",
-  "Rule not found.": "Regra não encontrada."
+  "Rule not found.": "Regra não encontrada.",
+  "Rolled over": "Transportado",
+  "Start month": "Mês de início",
+  "Starting balance": "Saldo inicial",
+  "Carry overspending into next month": "Transportar o gasto excedente para o mês seguinte",
+  "When off, an overspent month starts the next one at zero.": "Se desativado, um mês com gasto excedente começa o seguinte em zero.",
+  "Age of Money": "Idade do dinheiro",
+  "{count} days": "{count} dias",
+  "1 day": "1 dia",
+  "{change} vs 30 days ago": "{change} em relação a 30 dias atrás",
+  "No change vs 30 days ago": "Sem alteração em relação a 30 dias atrás",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Quanto tempo o dinheiro espera antes de você gastá-lo: a idade média do dinheiro por trás das suas últimas 10 despesas. As receitas são associadas aos gastos na ordem em que chegaram, em todas as suas contas de dinheiro. Um número maior significa mais folga.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "Registros sem taxa de câmbio para {currency} ficam de fora: {count}."
 }

@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "Выберите один из своих тегов.",
   "Choose up to 500 transactions.": "Выберите не более 500 операций.",
   "Choose up to 500 transactions and 20 tags.": "Выберите не более 500 операций и 20 тегов.",
-  "Rule not found.": "Правило не найдено."
+  "Rule not found.": "Правило не найдено.",
+  "Rolled over": "Перенесено",
+  "Start month": "Месяц начала",
+  "Starting balance": "Начальный остаток",
+  "Carry overspending into next month": "Переносить перерасход на следующий месяц",
+  "When off, an overspent month starts the next one at zero.": "Если выключено, после месяца с перерасходом следующий начинается с нуля.",
+  "Age of Money": "Возраст денег",
+  "{count} days": "{count} дн.",
+  "1 day": "1 день",
+  "{change} vs 30 days ago": "{change} по сравнению с 30 днями ранее",
+  "No change vs 30 days ago": "Без изменений за 30 дней",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Сколько денег лежит до того, как вы их потратите: средний возраст денег, из которых оплачены ваши последние 10 расходов. Доходы сопоставляются с расходами в порядке поступления по всем денежным счетам. Чем больше число, тем больше запас.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "Записи без курса обмена к {currency} не учитываются: {count}."
 }

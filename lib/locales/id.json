@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "Pilih salah satu tag Anda.",
   "Choose up to 500 transactions.": "Pilih hingga 500 transaksi.",
   "Choose up to 500 transactions and 20 tags.": "Pilih hingga 500 transaksi dan 20 tag.",
-  "Rule not found.": "Aturan tidak ditemukan."
+  "Rule not found.": "Aturan tidak ditemukan.",
+  "Rolled over": "Dibawa ke bulan ini",
+  "Start month": "Bulan mulai",
+  "Starting balance": "Saldo awal",
+  "Carry overspending into next month": "Bawa kelebihan belanja ke bulan berikutnya",
+  "When off, an overspent month starts the next one at zero.": "Jika nonaktif, bulan setelah kelebihan belanja dimulai dari nol.",
+  "Age of Money": "Usia Uang",
+  "{count} days": "{count} hari",
+  "1 day": "1 hari",
+  "{change} vs 30 days ago": "{change} dibanding 30 hari lalu",
+  "No change vs 30 days ago": "Tidak berubah dibanding 30 hari lalu",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Berapa lama uang menunggu sebelum Anda belanjakan: usia rata-rata uang di balik 10 pengeluaran terakhir Anda. Pemasukan dicocokkan dengan pengeluaran sesuai urutan masuknya, di semua akun kas Anda. Angka yang lebih tinggi berarti penyangga lebih besar.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "Catatan tanpa kurs ke {currency} tidak dihitung: {count}."
 }

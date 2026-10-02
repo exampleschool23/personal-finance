@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "اپنے ٹیگز میں سے ایک منتخب کریں۔",
   "Choose up to 500 transactions.": "زیادہ سے زیادہ 500 لین دین منتخب کریں۔",
   "Choose up to 500 transactions and 20 tags.": "زیادہ سے زیادہ 500 لین دین اور 20 ٹیگز منتخب کریں۔",
-  "Rule not found.": "اصول نہیں ملا۔"
+  "Rule not found.": "اصول نہیں ملا۔",
+  "Rolled over": "آگے منتقل",
+  "Start month": "آغاز کا مہینہ",
+  "Starting balance": "ابتدائی بیلنس",
+  "Carry overspending into next month": "زائد خرچ اگلے مہینے میں منتقل کریں",
+  "When off, an overspent month starts the next one at zero.": "بند ہونے پر، زائد خرچ والے مہینے کے بعد اگلا مہینہ صفر سے شروع ہوتا ہے۔",
+  "Age of Money": "رقم کی عمر",
+  "{count} days": "{count} دن",
+  "1 day": "1 دن",
+  "{change} vs 30 days ago": "30 دن پہلے کے مقابلے میں {change}",
+  "No change vs 30 days ago": "30 دن پہلے کے مقابلے میں کوئی تبدیلی نہیں",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "خرچ کرنے سے پہلے رقم کتنی دیر رکی رہتی ہے: آپ کے آخری 10 اخراجات کے پیچھے رقم کی اوسط عمر۔ آمدنی کو آپ کے تمام نقد کھاتوں میں آمد کی ترتیب سے خرچ سے ملایا جاتا ہے۔ زیادہ عدد کا مطلب زیادہ گنجائش ہے۔",
+  "Records without an exchange rate to {currency} are left out: {count}.": "{currency} کی شرحِ تبادلہ کے بغیر ریکارڈ شامل نہیں: {count}۔"
 }

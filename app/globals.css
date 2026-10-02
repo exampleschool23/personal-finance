@@ -1836,6 +1836,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .budget-group-row{font-weight:600}
 .budget-group-row .budget-cell{font-weight:600;font-size:var(--type-compact)}
 .budget-group[data-open] .budget-group-row{border-bottom:1px solid var(--hairline)}
+.budget-group-name{display:inline-flex;align-items:center;gap:4px;min-width:0}
 .budget-group-toggle{display:inline-flex;align-items:center;gap:8px;min-width:0;font-size:var(--type-compact);font-weight:600;text-align:start}
 .budget-group-toggle:focus-visible,.budget-category-name:focus-visible,.budget-unbudgeted:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:6px}
 .budget-category-row+.budget-category-row{border-top:1px solid var(--hairline)}
@@ -1873,7 +1874,8 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-history-bars[data-direction=income]>li>span{background:var(--positive)}
 .budget-history-bars small{padding-bottom:6px;color:var(--muted-foreground);font-size:var(--type-micro);text-transform:uppercase}
 .budget-history-forward{display:flex;align-items:center;gap:8px;font-size:var(--type-caption)}
-.budget-left{position:sticky;top:16px;display:flex;flex-direction:column;gap:14px;padding:16px}
+.budget-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.budget-left{display:flex;flex-direction:column;gap:14px;padding:16px}
 .budget-left-figure{display:flex;flex-direction:column;align-items:center;gap:4px;padding:20px 12px;border-radius:var(--radius-control);background:var(--muted);text-align:center}
 .budget-left-figure strong{font-size:var(--type-stat);font-weight:500;font-variant-numeric:tabular-nums}
 .budget-left-figure span{display:inline-flex;align-items:center;gap:4px;color:var(--muted-foreground);font-size:var(--type-small)}
@@ -1899,6 +1901,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-dialog{max-width:520px}
 .budget-dialog-title{display:flex;align-items:center;gap:10px}
 .budget-dialog-fields{display:flex;flex-direction:column;gap:16px;margin-bottom:16px}
+.budget-rollover-fields{display:flex;flex-direction:column;gap:12px;padding-inline-start:12px;border-inline-start:2px solid var(--hairline)}
 .budget-dialog-label{display:flex;flex-direction:column;gap:6px;margin:0;font-size:var(--type-small);font-weight:500}
 .budget-choice-list{display:flex;flex-direction:column;gap:0}
 .budget-choice-list>.budget-dialog-label{margin-bottom:6px}
@@ -1927,7 +1930,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-year td[data-future]{color:var(--muted-foreground)}
 .budget-year td .budget-progress{margin-top:4px}
 .budget-year>.budget-left-empty{padding:24px}
-@container content (max-width:980px){.budget-layout{grid-template-columns:minmax(0,1fr)}.budget-left{position:static;order:-1}}
+@container content (max-width:980px){.budget-layout{grid-template-columns:minmax(0,1fr)}.budget-side{position:static;order:-1}}
 @container content (max-width:600px){.budget-row{grid-template-columns:minmax(0,1fr) minmax(84px,auto) minmax(72px,auto);padding-inline:12px}.budget-row>.budget-cell:nth-child(3){display:none}.budget-category-row .budget-progress{inset-inline:12px}.budget-pill{min-width:0}}
 
 /* Transactions: the day-grouped list with an inline category picker and a summary beside it. */

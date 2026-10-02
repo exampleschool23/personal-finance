@@ -2416,5 +2416,17 @@
   "Choose one of your tags.": "یکی از برچسب‌های خود را انتخاب کنید.",
   "Choose up to 500 transactions.": "حداکثر 500 تراکنش انتخاب کنید.",
   "Choose up to 500 transactions and 20 tags.": "حداکثر 500 تراکنش و 20 برچسب انتخاب کنید.",
-  "Rule not found.": "قاعده پیدا نشد."
+  "Rule not found.": "قاعده پیدا نشد.",
+  "Rolled over": "منتقل‌شده",
+  "Start month": "ماه شروع",
+  "Starting balance": "موجودی آغازین",
+  "Carry overspending into next month": "انتقال هزینهٔ اضافه به ماه بعد",
+  "When off, an overspent month starts the next one at zero.": "وقتی خاموش است، ماهِ پس از هزینهٔ اضافه از صفر شروع می‌شود.",
+  "Age of Money": "سن پول",
+  "{count} days": "{count} روز",
+  "1 day": "1 روز",
+  "{change} vs 30 days ago": "{change} نسبت به 30 روز پیش",
+  "No change vs 30 days ago": "بدون تغییر نسبت به 30 روز پیش",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "پول پیش از خرج شدن چقدر می‌ماند: میانگین سن پولی که پشت 10 هزینهٔ آخر شماست. درآمدها به ترتیب رسیدن، در همهٔ حساب‌های نقدی شما با هزینه‌ها تطبیق داده می‌شوند. عدد بالاتر یعنی پشتوانهٔ بیشتر.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "سوابق بدون نرخ تبدیل به {currency} کنار گذاشته شده‌اند: {count}."
 }
