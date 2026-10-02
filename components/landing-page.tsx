@@ -40,7 +40,7 @@ const steps = [
   { title: 'See the whole picture', text: 'Your dashboard, budget and goals update as you record income and spending.' },
 ] as const;
 const promises: { icon: LucideIcon; title: string; text: string }[] = [
-  { icon: LockKeyhole, title: 'Private to your account', text: 'Only you can see your records. Every account is kept separate from the others.' },
+  { icon: LockKeyhole, title: 'Private to your account', text: 'Only you and the people you invite can see your records. Every account is kept separate from the others.' },
   { icon: EyeOff, title: 'No ads, no selling data', text: 'We do not sell your data, show advertising or run tracking scripts in the app.' },
   { icon: Download, title: 'Leave whenever you like', text: 'Download a backup of your data or delete your account at any time.' },
 ];

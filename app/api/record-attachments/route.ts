@@ -1,3 +1,4 @@
+import { workspaceOwner } from '@/lib/household';
 import { config, session, supa, sameOrigin } from '@/lib/supabase';
 import { attachmentErrors, attachmentFileName, attachmentPath, attachmentProblemMessages, attachmentSchemas, attachmentStore, checkAttachmentRecord, finishAttachment, ownsAttachmentPath, toAttachmentView, validateAttachment, type AttachmentMime } from '@/lib/record-attachments';
 import { uuid } from '@/lib/api-validation';
@@ -14,9 +15,9 @@ export async function GET(req: Request) {
   const auth = await session(); if (!auth) return reply({ error: 'Please sign in again.' }, 401);
   const store = attachmentStore((path, init) => supa(path, init, auth.token));
   const record = new URL(req.url).searchParams.get('record');
-  if (record === null) return reply({ attachments: (await store.list(auth.user.id)).map(toAttachmentView) });
+  if (record === null) return reply({ attachments: (await store.list(workspaceOwner(auth))).map(toAttachmentView) });
   if (!uuid.safeParse(record).success) return reply({ error: 'Check the record fields.' }, 400);
-  const items = (await store.list(auth.user.id, record)).filter(item => ownsAttachmentPath(auth.user.id, item.path));
+  const items = (await store.list(workspaceOwner(auth), record)).filter(item => ownsAttachmentPath(workspaceOwner(auth), item.path));
   const links = await store.links(items.map(item => item.path));
   return reply({ attachments: items.map((item, index) => ({ ...toAttachmentView(item), url: links[index] ? storageUrl(links[index]) : undefined })) });
  } catch { return unavailable(); }
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
   const auth = await session(); if (!auth) return reply({ error: 'Please sign in again.' }, 401);
   const body = await req.json().catch(() => ({})) as { action?: string; data?: unknown };
   if (!body.action || !Object.hasOwn(attachmentSchemas, body.action)) return reply({ error: 'Check the attachment.' }, 400);
-  const owner = auth.user.id;
+  const owner = workspaceOwner(auth);
   const store = attachmentStore((path, init) => supa(path, init, auth.token));
   if (body.action === 'delete') {
    const parsed = attachmentSchemas.delete.safeParse(body.data); if (!parsed.success) return reply({ error: 'Check the attachment.' }, 400);

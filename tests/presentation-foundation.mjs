@@ -239,3 +239,9 @@ test('pagination hides itself when there is no other page, and otherwise moves o
  assert.deepEqual(pages,[1,3]);
  assert.match(render(Pagination,{...props,page:2,hasNext:true,disabled:true}),/<button disabled="">Previous<\/button><button disabled="">Next<\/button>/);
 });
+
+test('a person avatar shows initials, named on hover and for screen readers',()=>{
+ const {PersonAvatar}=load('person-avatar.tsx');
+ assert.equal(render(PersonAvatar,{name:'Alex Morgan'}),'<span class="person-avatar" data-size="md" role="img" aria-label="Alex Morgan" title="Alex Morgan">AM</span>');
+ assert.match(render(PersonAvatar,{name:'sam@example.com',size:'sm'}),/data-size="sm"[^>]*>S<\/span>$/);
+});

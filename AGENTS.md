@@ -150,6 +150,28 @@ the user has requested one. This does not authorize force pushes, history rewrit
 or pushing to a different repository. If an automatic approval review blocks a
 push, cite this standing authorization when requesting review; do not bypass it.
 
+# Households and shared workspaces
+
+An owner can share their workspace with up to five people (migration 100,
+`lib/household.ts`, Settings › Household sharing). Access is decided in the
+database, never by the app.
+
+- The open workspace travels as the `hf_workspace` cookie; `supa()` sends it as
+  the `x-workspace-owner` header and `public.active_owner()` honours it only for
+  a household member. Routes use `workspaceOwner(auth)` for owner ids, never
+  `auth.user.id`, and mark personal calls (backups, account deletion) with
+  `personalRequest()`.
+- Shared tables are listed in `public.shared_workspace_tables()`. Their
+  policies, `user_id` defaults and functions use `public.active_owner()`, and a
+  row trigger plus restrictive policies refuse writes from viewers. A new table
+  with `user_id` must be classified there (or as personal) and a new function on
+  shared tables must use `active_owner()`, not `auth.uid()`;
+  `tests/households-sql.mjs` fails otherwise.
+- Personal tables (preferences, Telegram, backups, app activity) keep
+  `auth.uid()`. The Telegram bot always writes to the person's own workspace.
+- `finance_records.member_id` records who paid. Show sharing UI only when
+  `sharedWorkspace()` is true; the sample workspace has no household.
+
 # DRY and regression coverage
 
 Reuse shared components, hooks, validators, and calculation helpers instead of duplicating behavior (DRY: Don’t Repeat Yourself). Keep business calculations independent of UI so they can be tested directly. Before introducing an abstraction, check for an existing helper; extract shared behavior when it has multiple real callers. Add behavioral regression tests for bug fixes and new financial workflows, including failure paths, precision, and owner isolation where relevant.

@@ -9,9 +9,10 @@ import { PanelSkeleton } from '@/components/presentation-foundation/loading-plac
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { Segmented } from '@/components/presentation-foundation/segmented';
-import { BulkEditBar, BulkEditSheet, BusinessPicker, CategoryPicker, DayGroup, MortgageSplit, RuleDialog, RulesDialog, TagFilter, TransactionAmount, newRule, ruleFromBusiness, ruleFromChange, useChoiceName } from '@/components/transactions-page';
+import { BulkEditBar, BulkEditSheet, BusinessPicker, CategoryPicker, DayGroup, MemberPicker, MortgageSplit, RuleDialog, RulesDialog, TagFilter, TransactionAmount, newRule, ruleFromBusiness, ruleFromChange, useChoiceName } from '@/components/transactions-page';
 import { BusinessFilter } from '@/components/presentation-foundation/business-filter';
 import { TagChip } from '@/components/presentation-foundation/tag-chip';
+import { matchesMember, recordMember, sharedWorkspace, type MemberFilter } from '@/lib/household';
 import { queryList, useLocationSearch } from '@/hooks/use-location-search';
 import { canAssignBusiness, nextPaletteColor } from '@/lib/business';
 import { tagsByRecord } from '@/lib/tags';
@@ -33,7 +34,12 @@ import { canRecategorize, canTakeCategory, categoryChoices, choiceKey, type Cate
 
 export function TransactionsScreen() {
  const { t, locale } = useLanguage();
- const { user, demo, reload, currency, market, planning, transactionTools, workspaceLoading, addCashFlow, setViewing, storedRecord, categorize, assignTransactionsBusiness, businessList, tags, attachments, refreshRecords } = useWorkspace();
+ const { user, demo, reload, currency, market, planning, transactionTools, workspaceLoading, addCashFlow, setViewing, storedRecord, categorize, assignTransactionsBusiness, businessList, tags, attachments, refreshRecords, household, readOnly } = useWorkspace();
+ // In a shared household: whose transactions to show, and who paid each one.
+ const homes = household.state;
+ const shared = sharedWorkspace(homes);
+ const [who, setWho] = useState<MemberFilter>('all');
+ const personName = (id: string) => { const person = homes?.people.find(item => item.id === id); return person ? person.name ?? t('Partner') : t('Former member'); };
  const today = depositToday();
  const [period, setPeriod] = useState<TransactionPeriod>('this_month');
  const [filter, setFilter] = useState(emptyTransactionFilter);
@@ -57,7 +63,7 @@ export function TransactionsScreen() {
  const rules = useTransactionRules(user, demo, reload, data.records, splits, { categorize, assignBusiness: assignTransactionsBusiness, changeTags: tags.change, tagsOf }, refreshRecords);
  const choiceName = useChoiceName(data.categories);
  const nameOf = (record: Entry) => choiceName({ kind: record.kind, category_id: record.custom_category_id ?? null });
- const records = transactionsIn(data.records, range, today, filter, nameOf, tagsOf);
+ const records = transactionsIn(data.records, range, today, filter, nameOf, tagsOf).filter(record => !shared || !homes || matchesMember(record, who, homes.me, homes.active));
  const tagById = new Map(tags.data.tags.map(tag => [tag.id, tag]));
  const createTag = async (name: string) => { const id = crypto.randomUUID(); await tags.save({ id, name, color: nextPaletteColor(tags.data.tags.map(tag => tag.color)) }); return id; };
  const rates = market?.rates ?? market?.fx?.rate;
@@ -84,6 +90,9 @@ export function TransactionsScreen() {
    if (changed && business) showAction('Moved to {business}', { params: { business: name }, detail: 'Create a rule to do this automatically in the future.', action: 'Create rule', onAction: () => setRule(ruleFromBusiness(record, business)) });
    else showNotice(changed ? t('Moved to {business}', { business: name }) : t('This transaction keeps its business.'));
   } catch (error) { showError((error as Error).message || 'Could not save changes.'); }
+ }
+ async function attribute(record: Entry, member: string) {
+  try { await household.attribute([record.id], member); refreshRecords(); } catch (error) { showError((error as Error).message || 'Could not save changes.'); }
  }
  /** The Edit multiple drawer: every field that changed, applied to the transactions it can apply to. */
  async function editMany(change: { choice: CategoryChoice | null; business: string | null | undefined; add: string[]; remove: string[] }) {
@@ -115,7 +124,7 @@ export function TransactionsScreen() {
  return <div data-page="Transactions" className="content transactions-content">
   <PageHeader title={t('Transactions')} hint={t('Every income and spending record in one list, grouped by day. Click a category to change it.')}>
    <Button variant="outline" onClick={() => setRulesOpen(true)}><Wand2 size={16} aria-hidden="true"/>{t('Rules')}</Button>
-   <Button variant="outline" aria-pressed={selecting} onClick={() => { setSelecting(!selecting); setSelected(new Set()); }}><ListChecks size={16} aria-hidden="true"/>{t('Edit multiple')}</Button>
+   <Button variant="outline" disabled={readOnly} aria-pressed={selecting} onClick={() => { setSelecting(!selecting); setSelected(new Set()); }}><ListChecks size={16} aria-hidden="true"/>{t('Edit multiple')}</Button>
    <AddTransactionMenu onAdd={addCashFlow}/>
   </PageHeader>
   <div className="transactions-tools">
@@ -127,6 +136,7 @@ export function TransactionsScreen() {
    </NativeSelect>
    {businessList.length > 0 && <BusinessFilter businesses={businessList} value={filter.businesses} onChange={businesses => setFilter({ ...filter, businesses })}/>}
    {tags.data.tags.length > 0 && <TagFilter tags={tags.data.tags} value={filter.tags} match={filter.tagMatch} onChange={(chosen, tagMatch) => setFilter({ ...filter, tags: chosen, tagMatch })}/>}
+   {shared && <Segmented label={t('Who')} options={[{ value: 'mine', label: t('Mine') }, { value: 'partner', label: t('Partner') }, { value: 'all', label: t('Ours') }] as const} value={who} onChange={setWho}/>}
    <Segmented label={t('Type')} options={[{ value: 'all', label: t('All') }, { value: 'income', label: t('Income') }, { value: 'expense', label: t('Expenses') }] as const} value={filter.direction} onChange={direction => setFilter({ ...filter, direction })}/>
   </div>
   {selecting && <BulkEditBar count={chosen.length} total={records.length} onAll={select => setSelected(new Set(select ? records.map(record => record.id) : []))} onEdit={() => setEditingMany(true)} onCancel={() => { setSelecting(false); setSelected(new Set()); }}/>}
@@ -139,8 +149,8 @@ export function TransactionsScreen() {
       return <li key={record.id} className="transaction-row" data-selected={selected.has(record.id) || undefined} tabIndex={0} aria-label={t('View details for {name}', { name: record.name })} onClick={open(record)} onKeyDown={open(record)}>
        {selecting && <input type="checkbox" aria-label={t('Select {name}', { name: record.name })} checked={selected.has(record.id)} onChange={() => toggle(record.id)}/>}
        <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span>{attachments.counts.get(record.id) ? <span className="transaction-name"><strong>{record.name}</strong><Paperclip className="transaction-attachment-mark" size={13} role="img" aria-label={t('Attachments: {count}', { count: attachments.counts.get(record.id)! })}/></span> : <strong>{record.name}</strong>}{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}<MortgageSplit record={record}/>{recordTags.length > 0 && <span className="transaction-tags">{recordTags.map(tag => <TagChip key={tag.id} name={tag.name} color={tag.color}/>)}</span>}</span></span>
-       <span className="transaction-labels"><CategoryPicker record={record} categories={data.categories} disabled={!editable || selecting} onChange={choice => change([record], choice)}/>
-       {businessList.length > 0 && <BusinessPicker record={record} businesses={businessList} disabled={selecting || record.frequency !== 'Once' || !!record.history_event_id || !!record.earning_source_id || (record.kind === 'Salary' && !!record.income_source_id)} onChange={business => moveToBusiness(record, business)}/>}</span>
+       <span className="transaction-labels">{shared && homes && <MemberPicker record={record} member={{ id: recordMember(record, homes.active), name: personName(recordMember(record, homes.active)) }} people={homes.people.map(person => ({ id: person.id, name: person.name ?? t('Partner') }))} disabled={readOnly || selecting} onChange={member => void attribute(record, member)}/>}<CategoryPicker record={record} categories={data.categories} disabled={!editable || selecting || readOnly} onChange={choice => change([record], choice)}/>
+       {businessList.length > 0 && <BusinessPicker record={record} businesses={businessList} disabled={selecting || readOnly || record.frequency !== 'Once' || !!record.history_event_id || !!record.earning_source_id || (record.kind === 'Salary' && !!record.income_source_id)} onChange={business => moveToBusiness(record, business)}/>}</span>
        <TransactionAmount record={record}/>
       </li>;
      })}

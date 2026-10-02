@@ -12,6 +12,7 @@ import { SplitTransactionDialog } from '@/components/transaction-tools-panel';
 import { income } from '@/lib/finance';
 import { nextPaletteColor } from '@/lib/business';
 import { BusinessSetupFlow } from '@/components/business-setup-flow';
+import { JoinHouseholdDialog } from '@/components/household-panel';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
 /** Dialogs any screen can open: record editing, trackers, payments, splitting and deletion. */
@@ -19,7 +20,7 @@ export function WorkspaceDialogs() {
  const { t } = useLanguage();
  const { viewing, setViewing, splitting, setSplitting, editingIncomeSource, setEditingIncomeSource, editing, setEditing, debtPayment, setDebtPayment, tracking, setTracking, payingMortgage, setPayingMortgage, deleting, stopping, setStopping,
   planning, availableBusinesses, businessList, tags, attachments, assignTransactionsBusiness, setAccountBusiness, saveBusiness, newBusiness, settingUpBusinesses, setSettingUpBusinesses, transactionTools, preferencesData, earningSources, expensePlans, rows, summary, section, demo, busy, error,
-  editRecord, addAccountRecord, storedRecord, closeEditing, closeDeleting, navigate, refreshRecords, recordMortgagePayment, save, remove, stopRecord, field, money, editingCashFlow, recordKinds, linkedExpensePlan, fetchingPrice, fetchPrice, priceMessage } = useWorkspace();
+  household, pendingInvite, dismissInvite, editRecord, addAccountRecord, storedRecord, closeEditing, closeDeleting, navigate, refreshRecords, recordMortgagePayment, save, remove, stopRecord, field, money, editingCashFlow, recordKinds, linkedExpensePlan, fetchingPrice, fetchPrice, priceMessage } = useWorkspace();
  return <>
  {viewing&&<TransactionDetailsDialog key={viewing.id} record={viewing} incoming={income.includes(viewing.kind)} categoryName={planning.data.categories.find(c=>c.id===viewing.custom_category_id)?.name} businesses={businessList} onBusiness={business=>assignTransactionsBusiness([viewing.id],business)} tagging={{tags:tags.data.tags,tagIds:tags.data.links.filter(link=>link.record_id===viewing.id).map(link=>link.tag_id),onTags:(add,remove)=>tags.change([viewing.id],add,remove),onCreateTag:async name=>{const id=crypto.randomUUID();await tags.save({id,name,color:nextPaletteColor(tags.data.tags.map(tag=>tag.color))});return id;}}} accountName={viewing.account_id?planning.data.records.find(a=>a.id===viewing.account_id)?.name:undefined} attachments={<RecordAttachments recordId={viewing.id} available={attachments.available} onChange={attachments.refresh}/>} editable={!viewing.movement_id&&!viewing.operation_id&&!viewing.mortgage_payment_id&&!viewing.history_event_id} onEdit={()=>{const r=viewing;setViewing(null);editRecord(r);}} onClose={()=>setViewing(null)}/>}
  {settingUpBusinesses&&<BusinessSetupFlow businesses={businessList} records={planning.data.records} newBusiness={newBusiness} saveBusiness={saveBusiness} setAccountBusiness={setAccountBusiness} guideOnly={settingUpBusinesses==='guide'} hasTags={tags.data.tags.length>0} onAddAccount={()=>addAccountRecord('Cash')} onClose={()=>setSettingUpBusinesses(false)}/>}
@@ -30,6 +31,7 @@ export function WorkspaceDialogs() {
  {tracking && <InvestmentTracker key={tracking.id} record={tracking} accounts={planning.data.records} accountsReady={!planning.loading&&!planning.refreshing&&!planning.error} onClose={() => setTracking(null)} onSaved={refreshRecords} onPayment={() => { setPayingMortgage(storedRecord(tracking)); setTracking(null); }}/>}
  {payingMortgage && <MortgagePaymentDialog key={payingMortgage.id} mortgage={payingMortgage} accounts={planning.data.records} onClose={() => setPayingMortgage(null)} onSave={recordMortgagePayment}/>}
  <ConfirmDialog open={!!deleting} onClose={closeDeleting} busy={busy} error={error} title={t("Delete this record?")} description={<>{t('Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.',{name:deleting?.name||''})}{deleting?.frequency!=='Once'&&<span className="block">{t('To keep past planning and only end future repeats, choose Stop instead.')}</span>}</>} cancelLabel={t("Keep record")} confirmLabel={t("Delete record")} onConfirm={() => void remove()}/>
+ {pendingInvite&&!demo&&<JoinHouseholdDialog token={pendingInvite} household={household} onClose={dismissInvite}/>}
  {stopping&&<StopScheduleDialog name={stopping.name} start={stopping.date} onSave={stopRecord} onClose={()=>setStopping(null)}/>}
  </>;
 }

@@ -232,7 +232,7 @@ input,select,textarea{min-height:44px!important;background:var(--field)!importan
 .topbar-location>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topbar-actions{display:flex;align-items:center;gap:8px}
 .topbar-actions [data-slot=button]{height:38px;min-height:38px}
-@media(max-width:640px){.topbar{gap:8px}.topbar-location>span{display:none}.topbar-actions{gap:6px}.quick-expense{width:38px;padding:0}@media(pointer:coarse){.quick-expense{width:44px}}.quick-expense>span{display:none}}
+@media(max-width:640px){.topbar{gap:8px}.topbar-location>span:not(.topbar-household){display:none}.topbar-actions{gap:6px}.quick-expense{width:38px;padding:0}@media(pointer:coarse){.quick-expense{width:44px}}.quick-expense>span{display:none}}
 .content{padding:32px 36px;max-width:1640px;margin:auto}
 .workspace .content{container:content/inline-size;display:flex;flex-direction:column;gap:var(--space-page);width:100%;max-width:1440px;margin-inline:auto;padding:28px 36px 0}
 .workspace .content>*{flex-shrink:0;margin-block:0}
@@ -2440,3 +2440,21 @@ summary.tax-line-heading>svg{flex-shrink:0;color:var(--muted-foreground);transit
 .rule-more>summary{display:flex;align-items:center;gap:8px;font-size:var(--type-small);font-weight:500;cursor:pointer}
 .rule-more[open]>summary{margin-block-end:12px}
 .rule-more>*+*{margin-block-start:12px}
+/* Household sharing: people as initials, the drawer's workspace switch, Settings › Household sharing. */
+.person-avatar{display:inline-grid;place-items:center;flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--muted);color:var(--foreground);font-size:var(--type-caption);font-weight:600;line-height:1}
+.person-avatar[data-size=sm]{width:24px;height:24px;font-size:var(--type-micro)}
+.transaction-member-button{display:inline-flex;border-radius:50%}
+.transaction-member-button:hover .person-avatar{background:var(--accent)}
+.transaction-member-button:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
+.segmented.workspace-switch{display:flex;flex-direction:column;align-items:stretch;width:100%;margin-block-end:6px}
+.segmented.workspace-switch>button{height:32px;overflow:hidden;text-overflow:ellipsis;text-align:start}
+.household-people{display:flex;flex-direction:column}
+.household-people>li{display:flex;align-items:center;gap:12px;min-height:52px;padding-block:8px;font-size:var(--type-small)}
+.household-people>li+li{border-top:1px solid var(--hairline)}
+.household-people>li>strong{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.household-people>li>small{color:var(--muted-foreground);font-size:var(--type-caption)}
+.household-people select{width:auto}
+.household-heading{margin-block-start:16px;font-size:var(--type-compact);font-weight:600}
+.household-link{display:flex;gap:8px}
+.household-link>input{flex:1;min-width:0}
+@container content (max-width:520px){.household-people>li{flex-wrap:wrap}.household-people>li>small{flex-basis:100%;padding-inline-start:44px}}

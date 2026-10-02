@@ -1,3 +1,4 @@
+import { workspaceOwner } from '@/lib/household';
 import { readOwnerRows } from '@/lib/server-records';
 import { session, supa, sameOrigin } from '@/lib/supabase';
 import { subscriptionSchemas, type SubscriptionDecision } from '@/lib/recurring-insights';
@@ -22,13 +23,13 @@ export async function POST(req: Request) {
   if (body.action === 'decide') {
    const parsed = subscriptionSchemas.decide.safeParse(body.data);
    if (!parsed.success) return invalid();
-   const response = await supa('/rest/v1/subscription_decisions?on_conflict=user_id,merchant,currency', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ ...parsed.data, user_id: auth.user.id }) }, auth.token);
+   const response = await supa('/rest/v1/subscription_decisions?on_conflict=user_id,merchant,currency', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ ...parsed.data, user_id: workspaceOwner(auth) }) }, auth.token);
    return response.ok ? Response.json({ ok: true }) : unavailable();
   }
   if (body.action === 'restore') {
    const parsed = subscriptionSchemas.restore.safeParse(body.data);
    if (!parsed.success) return invalid();
-   const filter = new URLSearchParams({ user_id: 'eq.' + auth.user.id, merchant: 'eq.' + parsed.data.merchant, currency: 'eq.' + parsed.data.currency });
+   const filter = new URLSearchParams({ user_id: 'eq.' + workspaceOwner(auth), merchant: 'eq.' + parsed.data.merchant, currency: 'eq.' + parsed.data.currency });
    const response = await supa('/rest/v1/subscription_decisions?' + filter, { method: 'DELETE' }, auth.token);
    return response.ok ? Response.json({ ok: true }) : unavailable();
   }

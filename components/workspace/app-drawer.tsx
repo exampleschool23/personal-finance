@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { Brand } from '@/components/presentation-foundation/brand';
 import { DrawerLink } from '@/components/presentation-foundation/drawer-link';
+import { Segmented } from '@/components/presentation-foundation/segmented';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
@@ -24,10 +25,15 @@ type Props = {
  onNavigate?: (path: string) => void;
  /** A short label beside the logo, such as Demo for the sample workspace. */
  badge?: string;
+ /** Workspaces this person can open (their own and shared households), already labelled; shown when there is a choice. */
+ workspaces?: ReadonlyArray<{ id: string; label: string }>;
+ /** The open workspace's id. */
+ workspace?: string;
+ onWorkspace?: (id: string) => void;
 };
 
 /** The navigation drawer. It knows the routes and the signed-in account, and nothing about any screen. */
-export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pendingPath, onNavigate, badge }: Props) {
+export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pendingPath, onNavigate, badge, workspaces = [], workspace, onWorkspace }: Props) {
  const { t, locale, language } = useLanguage();
  const pathname = usePathname();
  const { setOpenMobile } = useSidebar();
@@ -54,6 +60,7 @@ export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pend
   </nav></SidebarContent>
   <SidebarFooter className="sidebar-account">
    <nav aria-label={t('Manage')}><SidebarMenu>{sections.filter(section => section.group === 'Manage').map(item)}</SidebarMenu></nav>
+   {workspaces.length > 1 && workspace && onWorkspace && <Segmented className="workspace-switch" label={t('Workspace')} options={workspaces.map(item => ({ value: item.id, label: item.label }))} value={workspace} onChange={onWorkspace}/>}
    {/* The account opens Settings; sign out stays beside it. */}
    <div className="user-line">
     <DrawerLink href={settings.path} className="user-link" data-active={active === settings.name} aria-current={active === settings.name ? 'page' : undefined} aria-label={`${account.title}, ${t(settings.label)}`} title={t(settings.label)} onClick={follow(settings.path)}>

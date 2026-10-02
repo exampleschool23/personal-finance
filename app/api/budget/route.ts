@@ -1,3 +1,4 @@
+import { workspaceOwner } from '@/lib/household';
 import type { z } from 'zod';
 import type { BudgetState } from '@/lib/budget';
 import { budgetSchemas } from '@/lib/budget-schemas';
@@ -40,9 +41,9 @@ export async function POST(req: Request) {
    const { rollover_balance, rollover_currency, rollover_negative, ...data } = parsed.data as z.infer<typeof budgetSchemas.category>;
    // Rollover details are saved only with a rollover fund (migration 098); other settings never depend on them.
    const fund = data.rollover ? { rollover_balance: rollover_balance ?? 0, rollover_currency: rollover_balance ? rollover_currency : null, rollover_negative: rollover_negative ?? true } : {};
-   response = await supa('/rest/v1/budget_categories?on_conflict=user_id,category_key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ ...data, ...fund, rollover_start: data.rollover_start ? data.rollover_start + '-01' : null, user_id: auth.user.id, updated_at: new Date().toISOString() }) }, auth.token);
+   response = await supa('/rest/v1/budget_categories?on_conflict=user_id,category_key', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ ...data, ...fund, rollover_start: data.rollover_start ? data.rollover_start + '-01' : null, user_id: workspaceOwner(auth), updated_at: new Date().toISOString() }) }, auth.token);
   } else {
-   response = await supa('/rest/v1/budget_settings?on_conflict=user_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ ...parsed.data, user_id: auth.user.id, updated_at: new Date().toISOString() }) }, auth.token);
+   response = await supa('/rest/v1/budget_settings?on_conflict=user_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ ...parsed.data, user_id: workspaceOwner(auth), updated_at: new Date().toISOString() }) }, auth.token);
   }
   if (!response.ok) return failure();
   return Response.json({ ok: true });

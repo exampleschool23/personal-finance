@@ -1,3 +1,4 @@
+import { workspaceOwner } from '@/lib/household';
 import { diversifiedPortfolioSchema } from '@/lib/diversified-portfolio';
 import { z } from 'zod';
 import { session, supa, sameOrigin } from '@/lib/supabase';
@@ -19,7 +20,7 @@ export async function GET() {
   const rows=await saved.json() as Array<Record<string,unknown>>,baselines=await capital.json() as unknown[];
   // Every column is read so the profile still loads before migration 073 adds tracking_start.
   const row=rows[0],preferences=row?{benchmarks:row.benchmarks,custom_symbol:row.custom_symbol,...(row.portfolio===undefined?{}:{portfolio:row.portfolio})}:defaultComparisonPreferences;
-  return Response.json({owner_id:auth.user.id,activity:await activity.json(),preferences,baseline:baselines[0]??null,tracking_start:typeof row?.tracking_start==='string'?row.tracking_start:null},{headers:{'Cache-Control':'no-store'}});
+  return Response.json({owner_id:workspaceOwner(auth),activity:await activity.json(),preferences,baseline:baselines[0]??null,tracking_start:typeof row?.tracking_start==='string'?row.tracking_start:null},{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Investment comparisons are not set up for this account yet.'},{status:503});}
 }
 async function write(req:Request,capture:boolean){
@@ -29,7 +30,7 @@ async function write(req:Request,capture:boolean){
   const parsed=(capture?baseline:preferences).safeParse(await req.json());
   if(!parsed.success)return Response.json({error:'Check the comparison settings.'},{status:400});
   const table=capture?'investment_comparison_baselines':'investment_comparison_preferences';
-  const response=await supa('/rest/v1/'+table+'?on_conflict=user_id',{method:'POST',headers:{Prefer:capture?'resolution=ignore-duplicates':'resolution=merge-duplicates'},body:JSON.stringify({...parsed.data,user_id:auth.user.id})},auth.token);
+  const response=await supa('/rest/v1/'+table+'?on_conflict=user_id',{method:'POST',headers:{Prefer:capture?'resolution=ignore-duplicates':'resolution=merge-duplicates'},body:JSON.stringify({...parsed.data,user_id:workspaceOwner(auth)})},auth.token);
   if(!response.ok)throw Error();
   return Response.json({ok:true});
  }catch{return Response.json({error:'Could not save comparison settings.'},{status:503});}
@@ -41,10 +42,10 @@ export async function PATCH(req:Request){
   const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
   const parsed=tracking.safeParse(await req.json());
   if(!parsed.success)return Response.json({error:'Choose a valid tracking start date.'},{status:400});
-  const updated=await supa('/rest/v1/investment_comparison_preferences?user_id=eq.'+auth.user.id,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(parsed.data)},auth.token);
+  const updated=await supa('/rest/v1/investment_comparison_preferences?user_id=eq.'+workspaceOwner(auth),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(parsed.data)},auth.token);
   if(!updated.ok)throw Error();
   if(!(await updated.json() as unknown[]).length){
-   const created=await supa('/rest/v1/investment_comparison_preferences?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({...defaultComparisonPreferences,...parsed.data,user_id:auth.user.id})},auth.token);
+   const created=await supa('/rest/v1/investment_comparison_preferences?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({...defaultComparisonPreferences,...parsed.data,user_id:workspaceOwner(auth)})},auth.token);
    if(!created.ok)throw Error();
   }
   return Response.json({ok:true});

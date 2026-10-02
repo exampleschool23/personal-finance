@@ -26,6 +26,7 @@ export { CategoryIcon } from './category-icon';
 export { BusinessMark } from './business-mark';
 export { BusinessFilter, type BusinessOption } from './business-filter';
 export { TagChip } from './tag-chip';
+export { PersonAvatar } from './person-avatar';
 export { Brand } from './brand';
 export { DrawerLink } from './drawer-link';
 export { PartialTotal } from './partial-total';
