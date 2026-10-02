@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "Choose one of your tags.",
   "Choose up to 500 transactions.": "Choose up to 500 transactions.",
   "Choose up to 500 transactions and 20 tags.": "Choose up to 500 transactions and 20 tags.",
-  "Rule not found.": "Rule not found."
+  "Rule not found.": "Rule not found.",
+  "In {currency}": "In {currency}",
+  "No business": "No business",
+  "Which currency was it?": "Which currency was it?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?",
+  "Type the rate instead": "Type the rate instead",
+  "Type the rate: how many {to} is 1 {from}?": "Type the rate: how many {to} is 1 {from}?",
+  "Type the amount instead": "Type the amount instead",
+  "Change account": "Change account",
+  "Change business": "Change business",
+  "Make it an expense": "Make it an expense",
+  "Make it income": "Make it income",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Choose what to add, or type it, like coffee 4.5 or +1500 salary.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.",
+  "Time zone": "Time zone",
+  "Select your time zone": "Select your time zone"
 }

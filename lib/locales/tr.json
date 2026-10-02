@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "Etiketlerinizden birini seçin.",
   "Choose up to 500 transactions.": "En fazla 500 işlem seçin.",
   "Choose up to 500 transactions and 20 tags.": "En fazla 500 işlem ve 20 etiket seçin.",
-  "Rule not found.": "Kural bulunamadı."
+  "Rule not found.": "Kural bulunamadı.",
+  "In {currency}": "{currency} olarak",
+  "No business": "İşletme yok",
+  "Which currency was it?": "Hangi para birimiydi?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "{date} için {from} → {to} döviz kuru yok. Bu, {account} hesabının para birimi olan {to} cinsinden ne kadar?",
+  "Type the rate instead": "Bunun yerine kuru yaz",
+  "Type the rate: how many {to} is 1 {from}?": "Kuru yazın: 1 {from} kaç {to}?",
+  "Type the amount instead": "Bunun yerine tutarı yaz",
+  "Change account": "Hesabı değiştir",
+  "Change business": "İşletmeyi değiştir",
+  "Make it an expense": "Gider yap",
+  "Make it income": "Gelir yap",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Ne ekleyeceğinizi seçin ya da yazın, örneğin kahve 4,5 veya +1500 maaş.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} para birimleriniz arasında değil. Tutarı {own} olarak yazın veya Ayarlar’dan {currency} ekleyin.",
+  "Time zone": "Saat dilimi",
+  "Select your time zone": "Saat diliminizi seçin"
 }

@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "Hãy chọn một thẻ của bạn.",
   "Choose up to 500 transactions.": "Chọn tối đa 500 giao dịch.",
   "Choose up to 500 transactions and 20 tags.": "Chọn tối đa 500 giao dịch và 20 thẻ.",
-  "Rule not found.": "Không tìm thấy quy tắc."
+  "Rule not found.": "Không tìm thấy quy tắc.",
+  "In {currency}": "Bằng {currency}",
+  "No business": "Không thuộc doanh nghiệp",
+  "Which currency was it?": "Đó là loại tiền nào?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Không có tỷ giá {from} sang {to} cho ngày {date}. Khoản này là bao nhiêu {to}, đơn vị tiền của {account}?",
+  "Type the rate instead": "Nhập tỷ giá thay thế",
+  "Type the rate: how many {to} is 1 {from}?": "Nhập tỷ giá: 1 {from} bằng bao nhiêu {to}?",
+  "Type the amount instead": "Nhập số tiền thay thế",
+  "Change account": "Đổi tài khoản",
+  "Change business": "Đổi doanh nghiệp",
+  "Make it an expense": "Chuyển thành chi tiêu",
+  "Make it income": "Chuyển thành thu nhập",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Chọn mục cần thêm hoặc nhập, ví dụ cà phê 4,5 hoặc +1500 lương.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} không thuộc các loại tiền của bạn. Nhập số tiền bằng {own}, hoặc thêm {currency} trong Cài đặt.",
+  "Time zone": "Múi giờ",
+  "Select your time zone": "Chọn múi giờ của bạn"
 }

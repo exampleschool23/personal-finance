@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "اپنے ٹیگز میں سے ایک منتخب کریں۔",
   "Choose up to 500 transactions.": "زیادہ سے زیادہ 500 لین دین منتخب کریں۔",
   "Choose up to 500 transactions and 20 tags.": "زیادہ سے زیادہ 500 لین دین اور 20 ٹیگز منتخب کریں۔",
-  "Rule not found.": "اصول نہیں ملا۔"
+  "Rule not found.": "اصول نہیں ملا۔",
+  "In {currency}": "{currency} میں",
+  "No business": "کوئی کاروبار نہیں",
+  "Which currency was it?": "یہ کس کرنسی میں تھا؟",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "{date} کے لیے {from} سے {to} کی شرح تبادلہ دستیاب نہیں۔ یہ {to} میں کتنا ہے، جو {account} کی کرنسی ہے؟",
+  "Type the rate instead": "اس کے بجائے شرح لکھیں",
+  "Type the rate: how many {to} is 1 {from}?": "شرح لکھیں: 1 {from} کتنے {to} کا ہے؟",
+  "Type the amount instead": "اس کے بجائے رقم لکھیں",
+  "Change account": "اکاؤنٹ تبدیل کریں",
+  "Change business": "کاروبار تبدیل کریں",
+  "Make it an expense": "اسے خرچ بنائیں",
+  "Make it income": "اسے آمدنی بنائیں",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "منتخب کریں کہ کیا شامل کرنا ہے، یا لکھیں، جیسے کافی 4.5 یا ‎+1500 تنخواہ۔",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} آپ کی کرنسیوں میں شامل نہیں۔ رقم {own} میں لکھیں، یا ترتیبات میں {currency} شامل کریں۔",
+  "Time zone": "ٹائم زون",
+  "Select your time zone": "اپنا ٹائم زون منتخب کریں"
 }

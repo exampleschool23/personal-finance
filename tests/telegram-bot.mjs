@@ -7,16 +7,18 @@ const clock={now,today:'2026-09-30',newId:()=>'99999999-9999-4999-8999-999999999
 const owner='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222';
 const id=n=>`77000000-0000-4000-8000-0000000000${String(n).padStart(2,'0')}`;
 const entry=(n,name,kind,amount,currency='UZS')=>({id:id(n),user_id:owner,name,kind,amount,currency,quantity:0,cost:0,rate:0,date:'2026-01-01',frequency:'Once',notes:''});
-function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurrences=[],activity=[],mortgagePayments=[],drafts=[],failWrites=false,rpcFailure=null}={}){
- const writes=[];
- return {writes,drafts,
+function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurrences=[],activity=[],mortgagePayments=[],drafts=[],failWrites=false,rpcFailure=null,rules=null,currencies}={}){
+ const writes=[],reads=[];
+ return {writes,drafts,reads,
   async read(path){
+   reads.push(path);
    const owner=/user_id=eq\.([\w-]+)/.exec(path)?.[1];
+   if(rules&&path.startsWith('/rest/v1/transaction_rules'))return rules.filter(rule=>rule.user_id===owner);
    if(path.startsWith('/rest/v1/telegram_subscriptions')){
     const chat=/chat_id=eq\.(\d+)/.exec(path),code=/link_code=eq\.(\w+)/.exec(path);
     return subscriptions.filter(s=>chat?s.chat_id===Number(chat[1]):code?s.link_code===code[1]:true);
    }
-   if(path.startsWith('/rest/v1/user_preferences'))return owner in languages?[{language:languages[owner]}]:[];
+   if(path.startsWith('/rest/v1/user_preferences'))return owner in languages?[{language:languages[owner],...(currencies?{currencies}:{})}]:[];
    if(path.startsWith('/rest/v1/finance_records'))return records.filter(r=>r.user_id===owner);
    if(path.startsWith('/rest/v1/transaction_categories'))return categories;
    if(path.startsWith('/rest/v1/payment_occurrences'))return occurrences;
@@ -92,7 +94,7 @@ test('an unlinked chat is only invited to create an account or sign in, whether 
 test('a linked chat walks the expense flow across updates, keeps the draft in the database and saves through the owner wrapper',async()=>{
  const db=fakeDb(workspace());
  const menu=await handleTelegramUpdate(message(500,'hi'),db,clock);
- assert.equal(menu.replies[0].text,'Choose what to add.');
+ assert.equal(menu.replies[0].text,'Choose what to add, or type it, like coffee 4.5 or +1500 salary.');
  assert.equal((await handleTelegramUpdate(message(500,'Expense'),db,clock)).replies[0].text,'Choose an expense category');
  assert.deepEqual(db.drafts.map(d=>d.step),['expense:category']);
  const account=await handleTelegramUpdate(press(500,'f:cat:'+id(20)),db,clock);
@@ -117,7 +119,10 @@ test('a linked chat walks the expense flow across updates, keeps the draft in th
 
 test('stale drafts are ignored, database refusals are relayed, and the loan flow goes through the planning wrapper',async()=>{
  const stale=fakeDb({...workspace(),drafts:[{user_id:owner,step:'expense:amount',data:{account_id:id(1)},updated_at:'2026-09-30T08:00:00Z'}]});
- assert.equal((await handleTelegramUpdate(message(500,'250000'),stale,clock)).replies[0].text,'Choose what to add.');
+ // The old question is gone, so the number is read as a new typed entry and only proposed, never saved.
+ const fresh=await handleTelegramUpdate(message(500,'250000'),stale,clock);
+ assert.match(fresh.replies[0].text,/^<b>Save this\?<\/b>\nExpense · Other expense\n<b>Other expense<\/b> · UZS\s250,000/);
+ assert.ok(!stale.writes.some(write=>write.path.startsWith('/rest/v1/rpc/')));
  const refused=fakeDb({...workspace(),rpcFailure:{code:'P0001',message:'Insufficient balance.'}});
  await handleTelegramUpdate(message(500,'Pay loan or debt'),refused,clock);
  await handleTelegramUpdate(press(500,'f:tgt:'+id(10)),refused,clock);
@@ -194,4 +199,60 @@ test('pressing Back in the chat returns to the previous question, stores the sho
  await handleTelegramUpdate(message(500,'Expense'),db,clock);
  const first=await handleTelegramUpdate(press(500,'f:back'),db,clock);
  assert.equal(first.replies[0].text,'Choose an expense category');assert.deepEqual(db.drafts.map(d=>d.step),['expense:category']);
+});
+
+const env=(rates)=>({appOrigin:null,loginSecret:null,admin:null,rates});
+const both=()=>({...workspace(),currencies:['UZS','USD']});
+test('a typed message becomes a card read with the owner\'s own rules, and only Save writes the record',async()=>{
+ const rule={user_id:owner,id:'r1',pattern:'bazaar',match:'contains',direction:'expense',account_id:null,match_business_id:null,match_kind:null,match_category_id:null,amount_min:null,amount_max:null,kind:'Other expense',category_id:id(20),business_id:null,tag_ids:[],created_at:'2026-01-01'};
+ const foreign={...rule,user_id:other,id:'r2',category_id:id(21)};
+ const db=fakeDb({...both(),rules:[rule,foreign]});
+ const card=await handleTelegramUpdate(message(500,'Bazaar 120 000'),db,clock,env());
+ assert.match(card.replies[0].text,/^<b>Save this\?<\/b>\nExpense · Groceries\n<b>Bazaar<\/b> · UZS\s120,000/);
+ assert.ok(db.reads.some(path=>path==='/rest/v1/transaction_rules?select=*&user_id=eq.'+owner+'&order=created_at.desc'),'rules are read for this owner only');
+ assert.ok(!db.writes.some(write=>write.path.startsWith('/rest/v1/rpc/')),'nothing saved before Save');
+ assert.equal(db.drafts[0].step,'expense:confirm');assert.equal(db.drafts[0].data.typed,true);
+ const saved=await handleTelegramUpdate(press(500,'f:save'),db,clock,env());
+ const rpc=db.writes.find(write=>write.path==='/rest/v1/rpc/telegram_save_finance_record');
+ assert.equal(rpc.body.p_record.custom_category_id,id(20));assert.equal(rpc.body.p_record.amount,120000);assert.equal(rpc.body.p_record.name,'Bazaar');
+ assert.match(saved.replies[0].text,/^Saved\./);
+ // Without the rules table (an older database) typed entries still work.
+ assert.match((await handleTelegramUpdate(message(500,'coffee 4500'),fakeDb(both()),clock,env())).replies[0].text,/^<b>Save this\?<\/b>\nExpense · Living expense/);
+});
+
+test('a typed entry in another currency fetches the dated rate and saves it with the rate day; without one it asks',async()=>{
+ const asked=[];
+ const db=fakeDb(both());
+ const card=await handleTelegramUpdate(message(500,'lunch 12 usd wallet yesterday'),db,clock,env(async(from,to,date)=>{asked.push([from,to,date]);return {rate:0.00008,effective_date:'2026-09-28'};}));
+ assert.deepEqual(asked,[['UZS','USD','2026-09-29']]);
+ assert.match(card.replies[0].text,/from Wallet · ≈ UZS\s150,000\n1 USD = 12,500 UZS/);
+ await handleTelegramUpdate(press(500,'f:save'),db,clock,env(async()=>{throw Error('not asked again');}));
+ const rpc=db.writes.find(write=>write.path==='/rest/v1/rpc/telegram_save_finance_record');
+ assert.deepEqual({currency:rpc.body.p_record.currency,amount:rpc.body.p_record.amount,rate:rpc.body.p_record.account_exchange_rate,day:rpc.body.p_record.account_rate_date,account:rpc.body.p_record.account_currency},{currency:'USD',amount:12,rate:0.00008,day:'2026-09-28',account:'UZS'});
+ // The rate service is down: the owner is asked, and their figure is used.
+ const offline=fakeDb(both());
+ const question=await handleTelegramUpdate(message(500,'lunch 12 usd wallet'),offline,clock,env(async()=>{throw Error('Historical exchange rates are unavailable.');}));
+ assert.equal(question.replies[0].text,'There is no USD to UZS exchange rate for 30 September 2026. How much is this in UZS, the currency of Wallet?');
+ assert.equal(offline.drafts[0].step,'expense:fxamount');
+ const confirm=await handleTelegramUpdate(message(500,'151200'),offline,clock,env(async()=>{throw Error('no');}));
+ assert.match(confirm.replies[0].text,/≈ UZS\s151,200/);
+ assert.ok(!offline.writes.some(write=>write.path.startsWith('/rest/v1/rpc/')));
+});
+
+test('a loan paid from an account in another currency goes through the dated-rate wrapper; an overdraft is explained in the account currency',async()=>{
+ const db=fakeDb(both());
+ const rates=env(async()=>({rate:0.00008,effective_date:'2026-09-30'}));
+ await handleTelegramUpdate(message(500,'Pay loan or debt'),db,clock,rates);
+ await handleTelegramUpdate(press(500,'f:tgt:'+id(10)),db,clock,rates);
+ await handleTelegramUpdate(press(500,'f:acc:'+id(1)),db,clock,rates);
+ await handleTelegramUpdate(message(500,'40'),db,clock,rates);
+ const confirm=await handleTelegramUpdate(press(500,'f:date:today'),db,clock,rates);
+ assert.match(confirm.replies[0].text,/\$40 · 30 September 2026\nfrom Wallet · ≈ UZS\s500,000/);
+ await handleTelegramUpdate(press(500,'f:save'),db,clock,rates);
+ const rpc=db.writes.find(write=>write.path==='/rest/v1/rpc/telegram_payment_with_fx');
+ assert.deepEqual(rpc.body,{p_owner:owner,p_action:'repayment',p_data:{id:clock.newId(),account_id:id(1),target_id:id(10),amount:40,received:0,fee:0,date:'2026-09-30',notes:''},p_rate:0.00008,p_rate_date:'2026-09-30',p_account_currency:'UZS',p_record_currency:'USD'});
+ const short=fakeDb({...both(),rpcFailure:{code:'P0001',message:'Insufficient balance.'}});
+ for(const step of [message(500,'Pay loan or debt'),press(500,'f:tgt:'+id(10)),press(500,'f:acc:'+id(1)),message(500,'100'),press(500,'f:date:today')])await handleTelegramUpdate(step,short,clock,rates);
+ const refused=await handleTelegramUpdate(press(500,'f:save'),short,clock,rates);
+ assert.match(refused.replies[0].text,/Insufficient balance: Wallet has UZS\s900,000\./);
 });

@@ -6,6 +6,7 @@
 import {accountOrigin} from './account-access';
 import {ownerProfile} from './telegram-owner';
 import {actionMessage,type ActionEvent,type ActionLookup} from './action-messages';
+import {loadDatedExchangeRate} from './dated-exchange-rate';
 import {depositToday} from './deposit-interest';
 import {paymentsSection} from './digest-message';
 import {expenses,type Entry} from './finance';
@@ -18,16 +19,19 @@ import {normalizePhone} from './phone';
 import {recordSchema} from './record-schema';
 import type {ServiceDatabase} from './service-role';
 import {adminAccounts,createLoginToken,createTelegramAccount,type AdminAccounts} from './telegram-account';
-import {advance,mainMenu,menuChoice,prompt,retryKeyboard,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
+import {advance,mainMenu,menuChoice,needsRate,prompt,retryKeyboard,withRate,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
+import type {TransactionRule} from './transaction-rules';
 import {connectMinutes,connectStartPath,createConnectRequest,linkChat} from './telegram-connect';
 import {linkExpired,startCode,type TelegramSubscription} from './telegram-link';
 import {advanceOnboarding,isOnboardDraft,startOnboarding,type OnboardDraft} from './telegram-onboarding';
 import {escapeHtml,type TelegramMessage} from './telegram';
 type TelegramFrom={id?:number;first_name?:string;language_code?:string};
 export type TelegramUpdate={update_id?:number;message?:{message_id?:number;chat:{id:number};text?:string;from?:TelegramFrom;contact?:{phone_number?:string;user_id?:number;first_name?:string}};callback_query?:{id:string;data?:string;message?:{chat:{id:number}};from?:TelegramFrom}};
-/** What the bot needs beyond the database to create accounts and sign people in. Missing pieces switch those features off. */
-export type BotEnv={appOrigin:string|null;loginSecret:string|null;admin:AdminAccounts|null};
-export const botEnvFromProcess=():BotEnv=>({appOrigin:accountOrigin(),loginSecret:process.env.TELEGRAM_WEBHOOK_SECRET??null,admin:adminAccounts()});
+/** What the bot needs beyond the database to create accounts and sign people in, and the app's dated exchange rates
+ * (ECB, with the Central Bank of Uzbekistan as fallback) for entries in another currency than their account. Missing pieces switch those features off. */
+export type RateLookup=(from:string,to:string,date:string)=>Promise<{rate:number;effective_date:string}>;
+export type BotEnv={appOrigin:string|null;loginSecret:string|null;admin:AdminAccounts|null;rates?:RateLookup};
+export const botEnvFromProcess=():BotEnv=>({appOrigin:accountOrigin(),loginSecret:process.env.TELEGRAM_WEBHOOK_SECRET??null,admin:adminAccounts(),rates:loadDatedExchangeRate});
 export type BotOutcome={replies:TelegramMessage[];callbackId?:string};
 export type BotClock={now:Date;today:string;newId:()=>string};
 const draftMinutes=30;
@@ -96,13 +100,15 @@ async function storeDraft(db:ServiceDatabase,owner:string,draft:AnyDraft|null,no
   :await db.write('/rest/v1/telegram_drafts?user_id=eq.'+owner,{method:'DELETE'});
  if(!response.ok)throw Error('Database request failed.');
 }
-async function loadContext(db:ServiceDatabase,owner:string,language:Language,clock:BotClock):Promise<FlowContext&{records:Entry[]}>{
- const [records,categories,preferences]=await Promise.all([
+async function loadContext(db:ServiceDatabase,owner:string,language:Language,clock:BotClock,typed=false):Promise<FlowContext&{records:Entry[]}>{
+ const [records,categories,preferences,rules]=await Promise.all([
   db.read<Entry[]>(`/rest/v1/finance_records?select=*&user_id=eq.${owner}&order=name.asc`),
   db.read<Category[]>(`/rest/v1/transaction_categories?select=id,name,direction&user_id=eq.${owner}`),
   db.read<Array<{currencies?:string[]}>>('/rest/v1/user_preferences?select=currencies&user_id=eq.'+owner),
+  // Typed text may be an entry, which the owner's rules help categorise. Without the rules table it is guessed from history alone.
+  typed?db.read<TransactionRule[]>(`/rest/v1/transaction_rules?select=*&user_id=eq.${owner}&order=created_at.desc`).catch(()=>[]):Promise.resolve([] as TransactionRule[]),
  ]);
- return {language,currencies:preferences[0]?.currencies??[],today:clock.today,newId:clock.newId(),categories,records,accounts:records.filter(record=>record.kind==='Cash'),businesses:records.filter(record=>record.kind==='Business'),liabilities:records.filter(record=>['Loan','Debt','Mortgage'].includes(record.kind))};
+ return {language,currencies:preferences[0]?.currencies??[],today:clock.today,newId:clock.newId(),categories,records,rules,accounts:records.filter(record=>record.kind==='Cash'),businesses:records.filter(record=>record.kind==='Business'),liabilities:records.filter(record=>['Loan','Debt','Mortgage'].includes(record.kind))};
 }
 function commitEvent(commit:Commit):ActionEvent{
  if(commit.type==='record')return {type:'record',created:true,kind:commit.record.kind,name:commit.record.name,amount:commit.record.amount,currency:commit.record.currency,date:commit.record.date||null,frequency:commit.record.frequency,category_id:commit.record.custom_category_id??null};
@@ -111,9 +117,9 @@ function commitEvent(commit:Commit):ActionEvent{
  if(commit.action==='repayment')return {type:'repayment',account_id:d.account_id,target_id:d.target_id,amount:d.amount,date:d.date};
  return {type:'mortgage',account_id:d.account_id,target_id:d.target_id,principal:d.amount,interest:d.fee,date:d.date};
 }
-/** The cash account a save would overdraw, when the amount it takes is more than the account holds. */
+/** The cash account a save would overdraw, when the amount it takes (in the account's currency) is more than the account holds. */
 function overdrawn(commit:Commit,accounts:Entry[]):Entry|undefined{
- const [accountId,debit]=commit.type==='record'?[commit.record.account_id,expenses.includes(commit.record.kind)?commit.record.amount:0]:[commit.data.account_id,commit.action==='mortgage'?commit.data.amount+commit.data.fee:commit.data.amount];
+ const [accountId,debit]=commit.type==='record'?[commit.record.account_id,expenses.includes(commit.record.kind)?commit.record.amount/(commit.record.account_exchange_rate??1):0]:[commit.data.account_id,(commit.action==='mortgage'?commit.data.amount+commit.data.fee:commit.data.amount)/(commit.type==='fxpayment'?commit.rate:1)];
  const account=accounts.find(item=>item.id===accountId);
  return account&&debit>Number(account.amount)?account:undefined;
 }
@@ -126,7 +132,12 @@ async function commitDraft(db:ServiceDatabase,owner:string,commit:Commit,ctx:Flo
  if(commit.type==='record'){
   const parsed=recordSchema.safeParse(commit.record);
   if(!parsed.success)return invalid();
-  response=await db.write('/rest/v1/rpc/telegram_save_finance_record',{method:'POST',body:JSON.stringify({p_owner:owner,p_record:parsed.data})});
+  // A converted record carries the rate's day and the account currency beside the rate, as the app's records route adds them.
+  response=await db.write('/rest/v1/rpc/telegram_save_finance_record',{method:'POST',body:JSON.stringify({p_owner:owner,p_record:{...parsed.data,...commit.fx}})});
+ }else if(commit.type==='fxpayment'){
+  const parsed=planningSchemas[commit.action].safeParse(commit.data);
+  if(!parsed.success||!(commit.rate>0))return invalid();
+  response=await db.write('/rest/v1/rpc/telegram_payment_with_fx',{method:'POST',body:JSON.stringify({p_owner:owner,p_action:commit.action,p_data:parsed.data,p_rate:commit.rate,p_rate_date:commit.rate_date,p_account_currency:commit.account_currency,p_record_currency:commit.record_currency})});
  }else{
   const parsed=planningSchemas[commit.action].safeParse(commit.data);
   if(!parsed.success)return invalid();
@@ -187,8 +198,14 @@ async function converse(db:ServiceDatabase,subscription:TelegramSubscription,cha
  const draft=await loadDraft(db,owner,clock.now);
  // Until the setup questions are answered, the chat only continues them.
  if(isOnboardDraft(draft))return onboard(db,subscription,chatId,draft,input,language,clock,env);
- const ctx=await loadContext(db,owner,language,clock);
+ const ctx=await loadContext(db,owner,language,clock,!!input.text);
  const result=advance(draft,input,ctx,chatId);
+ // An entry in another currency than its account waits for the day's rate; without one the owner is asked for the converted amount.
+ const pair=result.draft?needsRate(result.draft,ctx):null;
+ if(result.draft&&pair){
+  const quote=env.rates?await env.rates(pair.from,pair.to,pair.date).catch(()=>null):null;
+  result.draft=withRate(result.draft,quote);result.reply=prompt(result.draft,ctx,chatId);
+ }
  if(result.menu==='upcoming')return [{chat_id:chatId,text:await upcomingReply(db,owner,language,clock.today),keyboard:mainMenu(language)}];
  if(result.draft!==draft)await storeDraft(db,owner,result.draft,clock.now);
  if(result.commit){

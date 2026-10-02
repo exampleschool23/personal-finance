@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "Виберіть один зі своїх тегів.",
   "Choose up to 500 transactions.": "Виберіть не більше 500 транзакцій.",
   "Choose up to 500 transactions and 20 tags.": "Виберіть не більше 500 транзакцій і 20 тегів.",
-  "Rule not found.": "Правило не знайдено."
+  "Rule not found.": "Правило не знайдено.",
+  "In {currency}": "У {currency}",
+  "No business": "Без бізнесу",
+  "Which currency was it?": "У якій валюті?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Немає курсу {from} до {to} на {date}. Скільки це в {to}, валюті рахунку {account}?",
+  "Type the rate instead": "Ввести курс",
+  "Type the rate: how many {to} is 1 {from}?": "Введіть курс: скільки {to} коштує 1 {from}?",
+  "Type the amount instead": "Ввести суму",
+  "Change account": "Змінити рахунок",
+  "Change business": "Змінити бізнес",
+  "Make it an expense": "Зробити витратою",
+  "Make it income": "Зробити доходом",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Виберіть, що додати, або напишіть, наприклад: кава 4,5 або +1500 зарплата.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} немає серед ваших валют. Введіть суму в {own} або додайте {currency} у Налаштуваннях.",
+  "Time zone": "Часовий пояс",
+  "Select your time zone": "Виберіть часовий пояс"
 }

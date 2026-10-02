@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "Scegli uno dei tuoi tag.",
   "Choose up to 500 transactions.": "Scegli fino a 500 transazioni.",
   "Choose up to 500 transactions and 20 tags.": "Scegli fino a 500 transazioni e 20 tag.",
-  "Rule not found.": "Regola non trovata."
+  "Rule not found.": "Regola non trovata.",
+  "In {currency}": "In {currency}",
+  "No business": "Nessuna attività",
+  "Which currency was it?": "In quale valuta?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Non c’è un tasso di cambio da {from} a {to} per il {date}. Quanto vale in {to}, la valuta di {account}?",
+  "Type the rate instead": "Inserisci il tasso",
+  "Type the rate: how many {to} is 1 {from}?": "Inserisci il tasso: quanti {to} vale 1 {from}?",
+  "Type the amount instead": "Inserisci l’importo",
+  "Change account": "Cambia conto",
+  "Change business": "Cambia attività",
+  "Make it an expense": "Rendila una spesa",
+  "Make it income": "Rendila un’entrata",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Scegli cosa aggiungere o scrivilo, ad esempio caffè 4,5 o +1500 stipendio.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} non è tra le tue valute. Inserisci l’importo in {own} o aggiungi {currency} nelle Impostazioni.",
+  "Time zone": "Fuso orario",
+  "Select your time zone": "Seleziona il tuo fuso orario"
 }

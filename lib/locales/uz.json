@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "Teglaringizdan birini tanlang.",
   "Choose up to 500 transactions.": "Ko‘pi bilan 500 ta operatsiya tanlang.",
   "Choose up to 500 transactions and 20 tags.": "Ko‘pi bilan 500 ta operatsiya va 20 ta teg tanlang.",
-  "Rule not found.": "Qoida topilmadi."
+  "Rule not found.": "Qoida topilmadi.",
+  "In {currency}": "{currency} da",
+  "No business": "Biznessiz",
+  "Which currency was it?": "Qaysi valyutada edi?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "{date} uchun {from} dan {to} ga kurs yo‘q. Bu {account} valyutasi bo‘lgan {to} da qancha?",
+  "Type the rate instead": "Kursni kiritish",
+  "Type the rate: how many {to} is 1 {from}?": "Kursni kiriting: 1 {from} necha {to}?",
+  "Type the amount instead": "Summani kiritish",
+  "Change account": "Hisobni o‘zgartirish",
+  "Change business": "Biznesni o‘zgartirish",
+  "Make it an expense": "Xarajat qilish",
+  "Make it income": "Daromad qilish",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Nima qo‘shishni tanlang yoki yozing, masalan: qahva 4,5 yoki +1500 maosh.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} sizning valyutalaringiz orasida yo‘q. Summani {own} da kiriting yoki Sozlamalarda {currency} qo‘shing.",
+  "Time zone": "Vaqt mintaqasi",
+  "Select your time zone": "Vaqt mintaqangizni tanlang"
 }

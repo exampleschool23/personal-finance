@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "Alege una dintre etichetele tale.",
   "Choose up to 500 transactions.": "Alege cel mult 500 de tranzacții.",
   "Choose up to 500 transactions and 20 tags.": "Alege cel mult 500 de tranzacții și 20 de etichete.",
-  "Rule not found.": "Regula nu a fost găsită."
+  "Rule not found.": "Regula nu a fost găsită.",
+  "In {currency}": "În {currency}",
+  "No business": "Fără afacere",
+  "Which currency was it?": "În ce monedă a fost?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Nu există curs de schimb din {from} în {to} pentru {date}. Cât înseamnă asta în {to}, moneda contului {account}?",
+  "Type the rate instead": "Introdu cursul",
+  "Type the rate: how many {to} is 1 {from}?": "Introdu cursul: câți {to} valorează 1 {from}?",
+  "Type the amount instead": "Introdu suma",
+  "Change account": "Schimbă contul",
+  "Change business": "Schimbă afacerea",
+  "Make it an expense": "Fă-o cheltuială",
+  "Make it income": "Fă-o venit",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Alege ce adaugi sau scrie, de exemplu cafea 4,5 sau +1500 salariu.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} nu este printre monedele tale. Introdu suma în {own} sau adaugă {currency} în Setări.",
+  "Time zone": "Fus orar",
+  "Select your time zone": "Alege fusul orar"
 }

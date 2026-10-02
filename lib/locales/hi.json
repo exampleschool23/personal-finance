@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "अपने टैग में से एक चुनें।",
   "Choose up to 500 transactions.": "अधिकतम 500 लेन-देन चुनें।",
   "Choose up to 500 transactions and 20 tags.": "अधिकतम 500 लेन-देन और 20 टैग चुनें।",
-  "Rule not found.": "नियम नहीं मिला।"
+  "Rule not found.": "नियम नहीं मिला।",
+  "In {currency}": "{currency} में",
+  "No business": "कोई व्यवसाय नहीं",
+  "Which currency was it?": "यह किस मुद्रा में था?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "{date} के लिए {from} से {to} की विनिमय दर उपलब्ध नहीं है। यह {to} में कितना है, जो {account} की मुद्रा है?",
+  "Type the rate instead": "इसके बजाय दर लिखें",
+  "Type the rate: how many {to} is 1 {from}?": "दर लिखें: 1 {from} कितने {to} के बराबर है?",
+  "Type the amount instead": "इसके बजाय राशि लिखें",
+  "Change account": "खाता बदलें",
+  "Change business": "व्यवसाय बदलें",
+  "Make it an expense": "इसे खर्च बनाएँ",
+  "Make it income": "इसे आय बनाएँ",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "चुनें कि क्या जोड़ना है, या लिखें, जैसे कॉफ़ी 4.5 या +1500 वेतन।",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} आपकी मुद्राओं में नहीं है। राशि {own} में लिखें, या सेटिंग्स में {currency} जोड़ें।",
+  "Time zone": "समय क्षेत्र",
+  "Select your time zone": "अपना समय क्षेत्र चुनें"
 }

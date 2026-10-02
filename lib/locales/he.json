@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "בחרו אחת מהתגיות שלכם.",
   "Choose up to 500 transactions.": "בחרו עד 500 עסקאות.",
   "Choose up to 500 transactions and 20 tags.": "בחרו עד 500 עסקאות ו-20 תגיות.",
-  "Rule not found.": "הכלל לא נמצא."
+  "Rule not found.": "הכלל לא נמצא.",
+  "In {currency}": "ב־{currency}",
+  "No business": "ללא עסק",
+  "Which currency was it?": "באיזה מטבע זה היה?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "אין שער חליפין מ־{from} ל־{to} לתאריך {date}. כמה זה ב־{to}, המטבע של {account}?",
+  "Type the rate instead": "הקלדת שער במקום",
+  "Type the rate: how many {to} is 1 {from}?": "הקלידו את השער: כמה {to} שווה 1 {from}?",
+  "Type the amount instead": "הקלדת סכום במקום",
+  "Change account": "שינוי חשבון",
+  "Change business": "שינוי עסק",
+  "Make it an expense": "להפוך להוצאה",
+  "Make it income": "להפוך להכנסה",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "בחרו מה להוסיף, או הקלידו, למשל קפה 4.5 או ‎+1500 משכורת.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} אינו אחד מהמטבעות שלכם. הקלידו את הסכום ב־{own}, או הוסיפו את {currency} בהגדרות.",
+  "Time zone": "אזור זמן",
+  "Select your time zone": "בחרו אזור זמן"
 }

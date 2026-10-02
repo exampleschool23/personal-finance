@@ -3,10 +3,11 @@ import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { showError, showSaved } from '@/lib/feedback';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { countryOptions } from '@/lib/countries';
 import { fonts, isFont, resolveFont } from '@/lib/fonts';
+import { browserTimezone, isTimezone, timezoneOptions } from '@/lib/timezones';
 import { formatMoney } from '@/lib/format';
 import { Plus, X } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
@@ -19,7 +20,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { currencyLabel, fiatCurrencies, maxPreferredCurrencies, replacePreferredCurrency, togglePreferredCurrency, type Preferences } from '@/lib/currencies';
 export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRetry, onRestartSetup }: { initial: Preferences; demo: boolean; onSaved: (p: Preferences) => void; loading: boolean; loadError: string; onRetry:()=>void; onRestartSetup?:()=>Promise<void> }) {
   const { t, locale } = useLanguage();
-  const [draft, setDraft] = useState(initial);
+  // A time zone not saved yet is filled from the browser and saved like any change, so the Telegram digest arrives in the owner's morning.
+  const [draft, setDraft] = useState(() => loading || loadError || initial.timezone ? initial : { ...initial, timezone: browserTimezone() ?? undefined });
   const [saved,setSaved]=useState(initial);
   const serialized=JSON.stringify(draft);
   const dirty=serialized!==JSON.stringify(saved);
@@ -36,6 +38,7 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
     if ('blocked' in result) setCurrencyNotice({ code, reason: result.blocked });
     else setDraft({ ...draft, currencies: result.currencies });
   }
+  const zones = useMemo(() => timezoneOptions(new Date(), draft.timezone), [draft.timezone]);
   const currencies = fiatCurrencies.filter(c => currencyLabel(c.code, locale).toLowerCase().includes(query.trim().toLowerCase()));
   async function save(snapshot: Preferences) {
     setBusy(true);
@@ -59,7 +62,8 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
       <fieldset disabled={!!loadError} className="preferences-fields">
         <section className="panel preferences-card"><header><h3>{t('About you')}<InfoHint>{t('Personal details for your profile.')}</InfoHint></h3></header>
           <div className="preferences-profile-grid"><label htmlFor="profile-name">{t('Your name (optional)')}<Input id="profile-name" name="name" autoComplete="given-name" maxLength={80} placeholder={t('What should we call you?')} value={draft.display_name ?? ''} onChange={event => setDraft({ ...draft, display_name: event.target.value })} onBlur={() => setCommitted(serialized)}/></label>
-          <label htmlFor="profile-country">{t('Country / region (optional)')}<NativeSelect id="profile-country" name="country" autoComplete="country" value={draft.country ?? ''} onChange={event => setDraft({ ...draft, country: event.target.value })}><option value="">{t('Select your country')}</option>{countryOptions(locale).map(country => <option key={country.code} value={country.code}>{country.name}</option>)}</NativeSelect></label></div>
+          <label htmlFor="profile-country">{t('Country / region (optional)')}<NativeSelect id="profile-country" name="country" autoComplete="country" value={draft.country ?? ''} onChange={event => setDraft({ ...draft, country: event.target.value })}><option value="">{t('Select your country')}</option>{countryOptions(locale).map(country => <option key={country.code} value={country.code}>{country.name}</option>)}</NativeSelect></label>
+          <label htmlFor="profile-timezone">{t('Time zone')}<NativeSelect id="profile-timezone" name="timezone" value={draft.timezone ?? ''} onChange={event => { if (isTimezone(event.target.value)) setDraft({ ...draft, timezone: event.target.value }); }}>{!draft.timezone && <option value="">{t('Select your time zone')}</option>}{zones.map(zone => <option key={zone.value} value={zone.value}>{zone.label}</option>)}</NativeSelect></label></div>
           {onRestartSetup && <p className="muted preferences-setup-again">{t('Want to go through the welcome setup again?')} <Button type="button" variant="outline" size="sm" disabled={busy||dirty} onClick={() => { setBusy(true); onRestartSetup().catch(error => showError((error as Error).message)).finally(() => setBusy(false)); }}>{t('Run setup again')}</Button></p>}
         </section>
         <section className="panel preferences-card"><header><h3>{t('Language')}<InfoHint>{t('Choose the language for the app.')}</InfoHint></h3></header>

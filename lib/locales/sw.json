@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "Chagua mojawapo ya lebo zako.",
   "Choose up to 500 transactions.": "Chagua hadi miamala 500.",
   "Choose up to 500 transactions and 20 tags.": "Chagua hadi miamala 500 na lebo 20.",
-  "Rule not found.": "Kanuni haijapatikana."
+  "Rule not found.": "Kanuni haijapatikana.",
+  "In {currency}": "Kwa {currency}",
+  "No business": "Hakuna biashara",
+  "Which currency was it?": "Ilikuwa sarafu gani?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Hakuna kiwango cha ubadilishaji kutoka {from} kwenda {to} kwa {date}. Hii ni kiasi gani kwa {to}, sarafu ya {account}?",
+  "Type the rate instead": "Andika kiwango badala yake",
+  "Type the rate: how many {to} is 1 {from}?": "Andika kiwango: 1 {from} ni {to} ngapi?",
+  "Type the amount instead": "Andika kiasi badala yake",
+  "Change account": "Badilisha akaunti",
+  "Change business": "Badilisha biashara",
+  "Make it an expense": "Ifanye matumizi",
+  "Make it income": "Ifanye mapato",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Chagua cha kuongeza, au kiandike, kama kahawa 4.5 au +1500 mshahara.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} si mojawapo ya sarafu zako. Andika kiasi kwa {own}, au ongeza {currency} kwenye Mipangilio.",
+  "Time zone": "Saa za eneo",
+  "Select your time zone": "Chagua saa za eneo lako"
 }

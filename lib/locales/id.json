@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "Pilih salah satu tag Anda.",
   "Choose up to 500 transactions.": "Pilih hingga 500 transaksi.",
   "Choose up to 500 transactions and 20 tags.": "Pilih hingga 500 transaksi dan 20 tag.",
-  "Rule not found.": "Aturan tidak ditemukan."
+  "Rule not found.": "Aturan tidak ditemukan.",
+  "In {currency}": "Dalam {currency}",
+  "No business": "Tanpa bisnis",
+  "Which currency was it?": "Mata uang apa?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Tidak ada kurs {from} ke {to} untuk {date}. Berapa nilainya dalam {to}, mata uang {account}?",
+  "Type the rate instead": "Ketik kurs saja",
+  "Type the rate: how many {to} is 1 {from}?": "Ketik kurs: 1 {from} sama dengan berapa {to}?",
+  "Type the amount instead": "Ketik jumlah saja",
+  "Change account": "Ganti akun",
+  "Change business": "Ganti bisnis",
+  "Make it an expense": "Jadikan pengeluaran",
+  "Make it income": "Jadikan pemasukan",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Pilih yang ingin ditambahkan, atau ketik, misalnya kopi 4,5 atau +1500 gaji.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} bukan salah satu mata uang Anda. Ketik jumlah dalam {own}, atau tambahkan {currency} di Pengaturan.",
+  "Time zone": "Zona waktu",
+  "Select your time zone": "Pilih zona waktu Anda"
 }

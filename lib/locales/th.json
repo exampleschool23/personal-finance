@@ -2416,5 +2416,20 @@
   "Choose one of your tags.": "เลือกแท็กของคุณหนึ่งรายการ",
   "Choose up to 500 transactions.": "เลือกธุรกรรมได้สูงสุด 500 รายการ",
   "Choose up to 500 transactions and 20 tags.": "เลือกธุรกรรมได้สูงสุด 500 รายการและแท็ก 20 รายการ",
-  "Rule not found.": "ไม่พบกฎ"
+  "Rule not found.": "ไม่พบกฎ",
+  "In {currency}": "เป็น {currency}",
+  "No business": "ไม่มีธุรกิจ",
+  "Which currency was it?": "เป็นสกุลเงินใด?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "ไม่มีอัตราแลกเปลี่ยน {from} เป็น {to} สำหรับวันที่ {date} รายการนี้เป็นเงินเท่าไรใน {to} ซึ่งเป็นสกุลเงินของ {account}?",
+  "Type the rate instead": "พิมพ์อัตราแทน",
+  "Type the rate: how many {to} is 1 {from}?": "พิมพ์อัตรา: 1 {from} เท่ากับกี่ {to}?",
+  "Type the amount instead": "พิมพ์จำนวนเงินแทน",
+  "Change account": "เปลี่ยนบัญชี",
+  "Change business": "เปลี่ยนธุรกิจ",
+  "Make it an expense": "เปลี่ยนเป็นรายจ่าย",
+  "Make it income": "เปลี่ยนเป็นรายได้",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "เลือกสิ่งที่จะเพิ่ม หรือพิมพ์ เช่น กาแฟ 4.5 หรือ +1500 เงินเดือน",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} ไม่ใช่สกุลเงินของคุณ พิมพ์จำนวนเงินเป็น {own} หรือเพิ่ม {currency} ในการตั้งค่า",
+  "Time zone": "เขตเวลา",
+  "Select your time zone": "เลือกเขตเวลาของคุณ"
 }
