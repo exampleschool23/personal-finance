@@ -146,7 +146,13 @@
  .footerBrand{grid-column:1/-1}
 }
 @media(max-width:720px){
- .pillarGrid,.feature{grid-template-columns:minmax(0,1fr)}
+ .feature{grid-template-columns:minmax(0,1fr)}
+ /* One column: the selected tab's card opens directly under that tab rather than below the whole list. */
+ .pillarGrid{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+ .pillarList{display:contents}
+ .pillarList button,.pillarSample{order:var(--pillar-order)}
+ .pillarSample{margin-bottom:8px}
+ .footer{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 24px}
  .featureText[data-flip]{order:0}
  .board{grid-template-columns:minmax(0,1fr)}
  .board>:nth-child(n+3){display:none}

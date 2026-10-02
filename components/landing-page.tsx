@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ArrowLeftRight, CalendarClock, ChartNoAxesCombined, ChartPie, Download, EyeOff, Globe, LayoutDashboard, LockKeyhole, Send, Target, Wallet, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -217,10 +217,10 @@ export function LandingPage({ brand, preferences, busy, error, onDemo }: Props) 
       <section id="features" className={styles.pillars} aria-labelledby="pillars-heading">
         <Reveal className={styles.sectionHeading}><h2 id="pillars-heading">{t('Everything you need, in one app')}</h2><p>{t('Add your accounts once, then track, budget, plan and invest from the same place.')}</p></Reveal>
         <Reveal className={styles.pillarGrid}>
-          <div className={styles.pillarList}>{pillars.map(item => <button key={item.key} type="button" aria-pressed={item.key === pillar} onClick={() => setPillar(item.key)}>
+          <div className={styles.pillarList}>{pillars.map((item, index) => <button key={item.key} type="button" aria-pressed={item.key === pillar} onClick={() => setPillar(item.key)} style={{ '--pillar-order': index * 2 } as CSSProperties}>
             <span className={styles.eyebrow}><item.icon size={15} aria-hidden="true"/>{t(item.label)}</span><strong>{t(item.title)}</strong><span>{t(item.text)}</span>
           </button>)}</div>
-          <div className={styles.pillarSample} key={active.key}>{pillarSamples[active.key]}</div>
+          <div className={styles.pillarSample} key={active.key} style={{ '--pillar-order': pillars.indexOf(active) * 2 + 1 } as CSSProperties}>{pillarSamples[active.key]}</div>
         </Reveal>
       </section>
 
