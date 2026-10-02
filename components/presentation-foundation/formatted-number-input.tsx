@@ -6,7 +6,7 @@ import { formatNumber, formatNumberInput, numberInputValue, numberSymbols } from
 
 /** A blank field reads as zero. `requireEntry` is for fields where zero must be typed, never assumed; `onValueChange` reports whether the field is blank.
  * Typing more than `max` fills in `max` and says so below the field (`maxMessage`, or a generic limit), rather than ignoring the keystroke. */
-export function FormattedNumberInput({ value, onValueChange, max = 1e15, maxMessage, required = true, requireEntry = false, displayFractionDigits = 20, placeholder = '0' }: { value: number; onValueChange: (value: number, blank: boolean) => void; max?: number; maxMessage?: string; required?: boolean; requireEntry?: boolean; displayFractionDigits?: number; placeholder?: string }) {
+export function FormattedNumberInput({ value, onValueChange, max = 1e15, maxMessage, required = true, requireEntry = false, displayFractionDigits = 20, placeholder = '0', ariaLabel }: { value: number; onValueChange: (value: number, blank: boolean) => void; max?: number; maxMessage?: string; required?: boolean; requireEntry?: boolean; displayFractionDigits?: number; placeholder?: string; ariaLabel?: string }) {
   const { locale, t } = useLanguage();
   const [text, setText] = useState(() => value === 0 ? '' : numberInputValue(value, locale, displayFractionDigits));
   const [exceeded, setExceeded] = useState(false);
@@ -17,7 +17,7 @@ export function FormattedNumberInput({ value, onValueChange, max = 1e15, maxMess
     if (value !== lastEmitted.current || locale !== previousLocale.current || displayFractionDigits !== previousDisplayFractionDigits.current) setText(value === 0 ? '' : numberInputValue(value, locale, displayFractionDigits));
     lastEmitted.current = value; previousLocale.current = locale; previousDisplayFractionDigits.current = displayFractionDigits;
   }, [value, locale, displayFractionDigits]);
-  return <><Input type="text" inputMode="decimal" autoComplete="off" placeholder={placeholder} value={text} required={requireEntry || (required && value !== 0)} onChange={event => {
+  return <><Input type="text" inputMode="decimal" autoComplete="off" aria-label={ariaLabel} placeholder={placeholder} value={text} required={requireEntry || (required && value !== 0)} onChange={event => {
     const input = event.currentTarget;
     const raw = input.value, cursor = input.selectionStart ?? raw.length;
     const typed = formatNumberInput(raw, locale);

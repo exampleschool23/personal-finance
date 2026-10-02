@@ -32,7 +32,14 @@ test('balances display whole amounts across languages without changing input pre
   assert.equal(formatNumberInput(numberInputValue(3173.82,locale),locale).value,3173.82);
  }
  assert.equal(formatMoney(310894.33,'USD','en-US'),'$310,894');
- assert.equal(formatMoney(-3173.82,'USD','en-US'),'-$3,174');
+ assert.equal(formatMoney(-3173.82,'USD','en-US'),'\u2212$3,174');
+ // Negatives use the true minus sign everywhere, matching formatSignedMoney, in every language.
+ for (const locale of ['en-US','ru-RU','uz-UZ']) assert.ok(!formatMoney(-1250,'USD',locale).includes('-') && formatMoney(-1250,'USD',locale).includes('\u2212'), locale);
+ assert.equal(formatCompactMoney(-1500,'USD','en-US'),'\u2212$1.5K');
+ // Allocation columns keep one decimal, so whole shares line up with fractional ones.
+ assert.equal(formatPercent(2,'en-US',1,1),'2.0%');
+ assert.equal(formatPercent(12.24,'en-US',1,1),'12.2%');
+ assert.equal(formatPercent(2,'en-US'),'2%');
  assert.equal(formatMoney(-.2,'USD','en-US'),'$0');
  assert.equal(formatMoney(Infinity,'USD','en-US'),'—');
 });

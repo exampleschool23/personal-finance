@@ -108,7 +108,7 @@ export function TransactionsScreen() {
     <PanelTitle title={t('Summary')}/>
     <dl className="budget-left-summary">
      <div><dt>{t('Transactions')}</dt><dd>{formatNumber(summary.count, locale, 0)}</dd></div>
-     <div><dt>{t('Income')}</dt><dd className="positive">{money(summary.received)}</dd></div>
+     <div><dt>{t('Income')}</dt><dd className={summary.received > 0 ? 'positive' : undefined}>{money(summary.received)}</dd></div>
      <div><dt>{t('Spending')}</dt><dd>{money(summary.spent)}</dd></div>
      {summary.largest && <div><dt>{t('Largest expense')}</dt><dd>{money(summary.largest.amount)}</dd></div>}
      <div className="budget-left-total"><dt>{t('Net')}</dt><dd className={summary.received - summary.spent > 0 ? 'positive' : undefined}>{money(summary.received - summary.spent)}</dd></div>

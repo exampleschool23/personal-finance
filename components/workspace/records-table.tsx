@@ -5,12 +5,13 @@ import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { Pagination } from '@/components/presentation-foundation/pagination';
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode } from 'react';
-import { Pencil, Plus, Trash2, Wallet } from 'lucide-react';
+import { Plus, Wallet } from 'lucide-react';
 import { CategoryBadge } from '@/components/presentation-foundation/category-badge';
 import { useLanguage } from '@/components/language-provider';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { RecordFilters, emptyRecordFilters } from '@/components/record-filters';
 import { RecordIcon } from '@/components/presentation-foundation/record-icon';
+import { RowMenu } from '@/components/presentation-foundation/row-menu';
 import { Button } from '@/components/ui/button';
 import { expenses, income, kinds, lendingRecordKinds, liabilities, value } from '@/lib/finance';
 import { formatDate, formatNumber, formatSignedMoney } from '@/lib/format';
@@ -60,9 +61,18 @@ export function RecordsTable({ title, transactions = false, limit, pagination = 
     <td><CategoryBadge kind={r.kind} label={t(r.payment_type==='bonus'?'Bonus':r.kind)}/>{r.custom_category_id&&<CategoryBadge kind={r.custom_category_id} label={planning.data.categories.find(c=>c.id===r.custom_category_id)?.name??t('Custom category')}/>}</td>
     <td className="muted">{r.kind === 'Money lent' ? <><div>{t("Lent: {date}", { date: date(r.lent_date || '') })}</div><small>{r.date ? t("Due: {date}", { date: date(r.date) }) : t("No due date")}</small></> : liabilities.includes(r.kind)?<><div>{t('Started: {date}',{date:date(r.opened_on||'')})}</div><small>{t('Due: {date}',{date:date(r.date)})}</small></>:date(r.date)}</td>
     <td className={transactions&&income.includes(r.kind)?'amount positive':'amount'}>{transactions?formatSignedMoney(signedAmount(r),r.currency,locale):money(value(r), r.currency)}</td>
-    <td><div className="row-actions">{[...income,...expenses].includes(r.kind)&&r.frequency!=='Once'&&!r.end_date&&<Button size="sm" variant="outline" onClick={()=>setStopping(storedRecord(r))}>{t("Stop")}</Button>}{!demo && trackedKinds.includes(r.kind) && <Button size="sm" variant="outline" onClick={() => setTracking(storedRecord(r))}>{t("Tracker")}</Button>}{r.kind === 'Mortgage' && <Button size="sm" variant="outline" onClick={() => setPayingMortgage(storedRecord(r))}>{t("Record payment")}</Button>}{!demo && (r.kind === 'Loan' || r.kind === 'Debt') && <Button size="sm" variant="outline" onClick={() => setDebtPayment(storedRecord(r))}>{t("Record payment")}</Button>}{!r.movement_id && !r.operation_id && !r.mortgage_payment_id && !r.history_event_id && <>{isTransactionHistory(r)&&<Button variant="outline" size="sm" disabled={transactionTools.loading||!!transactionTools.error} onClick={()=>setSplitting(storedRecord(r))}>{t('Split')}</Button>}<Button size="icon" variant="ghost" aria-label={t('Edit {name}', { name: r.name })} onClick={() => editRecord(r)}><Pencil size={15}/></Button><Button size="icon" variant="ghost" aria-label={t('Delete {name}', { name: r.name })} onClick={() => requestDelete(r)}><Trash2 size={15}/></Button></>}</div></td>
+    <td><div className="row-actions">{!demo && trackedKinds.includes(r.kind) && <Button size="sm" variant="outline" onClick={() => setTracking(storedRecord(r))}>{t("Tracker")}</Button>}{r.kind === 'Mortgage' && <Button size="sm" variant="outline" onClick={() => setPayingMortgage(storedRecord(r))}>{t("Record payment")}</Button>}{(r.kind === 'Loan' || r.kind === 'Debt') && <Button size="sm" variant="outline" aria-disabled={demo || undefined} title={demo ? t('Available after you sign in.') : undefined} onClick={() => { if (!demo) setDebtPayment(storedRecord(r)); }}>{t("Record payment")}</Button>}
+     {/* Everything else is rare: it waits behind the row's ⋯ menu. */}
+     <RowMenu label={t('Actions for {name}', { name: r.name })} items={[
+      [...income, ...expenses].includes(r.kind) && r.frequency !== 'Once' && !r.end_date && { label: t('Stop'), onSelect: () => setStopping(storedRecord(r)) },
+      ...(!r.movement_id && !r.operation_id && !r.mortgage_payment_id && !r.history_event_id ? [
+       isTransactionHistory(r) && { label: t('Split'), disabled: transactionTools.loading || !!transactionTools.error, onSelect: () => setSplitting(storedRecord(r)) },
+       { label: t('Edit'), onSelect: () => editRecord(r) },
+       { label: t('Delete'), destructive: true, onSelect: () => requestDelete(r) },
+      ] : []),
+     ]}/></div></td>
    </tr>)}</tbody>
-  </table></div> : <EmptyState icon={<Wallet />} title={t(filtersActive?'No matching records.':'A fresh start.')} description={t(filtersActive?'Try another search or clear the filters.':'Add a record in {currency} to start building your overview.', { currency })}>{filtersActive&&<Button variant="outline" onClick={()=>setFilters(emptyRecordFilters)}>{t('Clear filters')}</Button>}<Button variant="outline" onClick={addRecord}><Plus />{transactions ? t("Add your first expense") : t("Add your first record")}</Button></EmptyState>}
+  </table></div> : <EmptyState icon={<Wallet />} title={t(filtersActive?'No matching records':'A fresh start')} description={t(filtersActive?'Try another search or clear the filters.':'Add a record in {currency} to start building your overview.', { currency })}>{filtersActive&&<Button variant="outline" onClick={()=>setFilters(emptyRecordFilters)}>{t('Clear filters')}</Button>}<Button variant="outline" onClick={addRecord}><Plus />{transactions ? t("Add your first expense") : t("Add your first record")}</Button></EmptyState>}
   {children}
   {!tableLoading && pagination && <Pagination label={t('Record pages')} summary={t('Page {page} of {pages} · {count} records', { page: formatNumber(tablePage, locale, 0), pages: formatNumber(pageCount, locale, 0), count: formatNumber(totalRecords, locale, 0) })} page={tablePage} hasNext={tablePage < pageCount} disabled={recordsLoading || busy} onPage={showPage}/>}
  </section>;

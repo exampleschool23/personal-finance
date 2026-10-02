@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from 'react';
 import { ChevronDown, Plus, RefreshCw } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { ThemeToggle } from '@/components/theme-provider';
@@ -22,6 +23,9 @@ export function TopBar({ pendingSection }: { pendingSection?: string | null }) {
  const { section: current, currency, setCurrency, preferencesData, demo, market, marketLoading, refresh, quickExpense } = useWorkspace();
  const section = pendingSection ?? current;
  const date = (value: string) => formatDate(value, locale);
+ const currentLabel = t(sectionLabel(current));
+ // Each screen names its browser tab, so history and tab switchers tell the pages apart.
+ useEffect(() => { document.title = `${currentLabel} · Hoggish Finance`; }, [currentLabel]);
  const rateStatus = demo ? t('Illustrative sample prices and exchange rates.')
   : market?.ratesDate && currency !== 'UZS' ? t('Updated {date}', { date: date(market.ratesDate) })
   : market?.fx ? t('1 USD = {rate} UZS · CBU · {date}', { rate: formatNumber(market.fx.rate, locale), date: date(market.fx.date) })
@@ -44,7 +48,7 @@ export function TopBar({ pendingSection }: { pendingSection?: string | null }) {
      </section>
     </PopoverContent>
    </Popover>
-   <Button size="sm" className="quick-expense" aria-label={t('Quick expense')} onClick={quickExpense}><Plus size={16} aria-hidden="true"/><span>{t('Quick expense')}</span></Button>
+   <Button size="sm" className="quick-expense" aria-label={t('Add expense')} onClick={quickExpense}><Plus size={16} aria-hidden="true"/><span>{t('Add expense')}</span></Button>
    <DisplayPreferences/>
   </div>
  </header>;

@@ -32,8 +32,8 @@ test('the module index lists every piece exactly once',()=>{
 
 test('empty state renders the icon, heading, guidance and actions in order',()=>{
  const {EmptyState}=load('empty-state.tsx');
- const html=render(EmptyState,{icon:React.createElement('svg'),title:'A fresh start.',description:'Add a record to begin.'},React.createElement('button',null,'Add'));
- assert.equal(html,'<div class="empty"><svg></svg><h3>A fresh start.</h3><p>Add a record to begin.</p><button>Add</button></div>');
+ const html=render(EmptyState,{icon:React.createElement('svg'),title:'A fresh start',description:'Add a record to begin.'},React.createElement('button',null,'Add'));
+ assert.equal(html,'<div class="empty"><svg></svg><h3>A fresh start</h3><p>Add a record to begin.</p><button>Add</button></div>');
  assert.equal(render(EmptyState,{icon:null,description:'Nothing due.',as:'section',className:'panel'}),'<section class="empty panel"><p>Nothing due.</p></section>');
 });
 
@@ -65,6 +65,16 @@ test('loading skeletons keep the shape of the content they replace, so the page 
  assert.equal(preview.match(/class="panel"/g).length,2);
  const cashflow=render(WorkspaceSkeleton,{label:'Loading',section:'Income & expenses'});
  assert.ok(cashflow.indexOf('stat-tiles')<cashflow.indexOf('cashflow-preview-grid')&&cashflow.indexOf('cashflow-preview-grid')<cashflow.indexOf('panel records'));
+});
+
+test('row menu keeps rare actions behind one labelled ⋯ button and disappears when there are none',()=>{
+ const passthrough=tag=>function Part({children,...props}){delete props.asChild;delete props.align;delete props.onSelect;delete props.variant;return React.createElement(tag,props,children);};
+ const menu={DropdownMenu:({children})=>React.createElement(React.Fragment,null,children),DropdownMenuTrigger:passthrough('span'),DropdownMenuContent:passthrough('div'),DropdownMenuItem:passthrough('button')};
+ const {RowMenu}=load('row-menu.tsx',{'@/components/ui/dropdown-menu':menu});
+ const html=render(RowMenu,{label:'Actions for Rent',items:[false,{label:'Edit',onSelect:()=>{}},null,{label:'Delete',destructive:true,onSelect:()=>{}}]});
+ assert.match(html,/aria-label="Actions for Rent"/);
+ assert.deepEqual([...html.matchAll(/<button[^>]*>(Edit|Delete)<\/button>/g)].map(match=>match[1]),['Edit','Delete']);
+ assert.equal(render(RowMenu,{label:'Actions',items:[false,null]}),'');
 });
 
 test('segmented control presses exactly the current option and reports the chosen value',()=>{
@@ -101,6 +111,9 @@ test('every category has its own emoji and colour, and badges never repeat an em
  const {categoryHues}=loadTS('lib/category-colors.ts');
  const {kinds}=loadTS('lib/finance.ts');
  assert.deepEqual(Object.keys(categoryEmojis).sort(),Object.keys(categoryHues).sort());
+ // Asset kinds sit side by side in the allocation bar: their hues stay at least 30° apart on the colour wheel.
+ const assetKinds=['Cash','Stock','Crypto','Deposit','Treasury bill','Property','Business','Valuables','Money lent'];
+ for(const [i,a] of assetKinds.entries())for(const b of assetKinds.slice(i+1)){const gap=Math.abs(categoryHues[a]-categoryHues[b]);assert.ok(Math.min(gap,360-gap)>=30,`${a} and ${b} hues are too close`);}
  for(const kind of kinds)assert.ok(categoryEmoji(kind),kind);
  // Lending and borrowing stay visually distinct.
  assert.equal(new Set(['Money lent','Mortgage','Loan','Debt'].map(categoryEmoji)).size,4);

@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Eye, EyeOff, LockKeyhole } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, LockKeyhole } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/components/language-provider';
@@ -40,9 +40,9 @@ export function SignInScreen({ brand, preferences, busy, configured, error, onLo
         <div className={styles.password}><Input id="signin-password" name="password" type={showPassword ? 'text' : 'password'} placeholder={t('Enter your password')} required autoComplete="current-password"/><Button type="button" variant="ghost" size="icon" aria-label={t(showPassword ? 'Hide password' : 'Show password')} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</Button></div>
         {error && <p className={styles.error} role="alert">{t(error)}</p>}
         {!configured && <p className={styles.notice} role="status">{t('Account connection is awaiting setup. You can explore the sample workspace below.')}</p>}
-        <Button type="submit" className={styles.submit} disabled={busy || !configured}>{t(busy ? 'Signing in…' : 'Sign in')}<ArrowRight size={18}/></Button>
+        <Button type="submit" className={styles.submit} disabled={busy || !configured}>{t(busy ? 'Signing in…' : 'Sign in')}</Button>
       </form>}
-      <p className={styles.register}>{t('New to Hoggish?')} <Link href="/auth/access?mode=signup">{t('Create an account')}<ArrowUpRight size={14}/></Link></p>
+      <p className={styles.register}>{t('New to Hoggish?')} <Link href="/auth/access?mode=signup">{t('Create an account')}</Link></p>
       <div className={styles.demo}><p>{t('Take a look around first.')}</p><Button type="button" variant="outline" onClick={onDemo} disabled={busy}>{t('Explore sample workspace')}<ArrowRight size={16}/></Button><small>{t('No account needed. Just sample data.')}</small></div>
     </section>
     <footer className={styles.footer}><span>{t('Personal finance, thoughtfully organized.')}</span><nav className={styles.legal} aria-label={t('Legal')}><Link href={legalPaths.terms}>{t('Terms of use')}</Link><Link href={legalPaths.privacy}>{t('Privacy policy')}</Link></nav><span><LockKeyhole size={13}/>{t('Your records are private to your account.')}</span></footer>

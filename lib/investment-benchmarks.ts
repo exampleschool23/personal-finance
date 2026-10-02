@@ -144,11 +144,42 @@ export function purchaseComparisonStart(input:Pick<DecisionInput,'records'|'even
  return [holding,funded,spent].filter((date):date is string=>!!date).sort()[0]??input.today;
 }
 
+// A holding valued before any purchase was recorded holds capital that was already invested:
+// its first recorded value counts as invested on the day it was recorded, so it is never a gain.
+// The chart funds benchmarks with it and the period summary counts it as money invested.
+export function openingFunding(records:Records,events:InvestmentPortfolioInput['events'],today:string){
+ const byId=new Map(records.map(row=>[row.id,row]));
+ const rows=events.filter(e=>e.occurred_on<=today).sort((a,b)=>a.occurred_on.localeCompare(b.occurred_on)||a.created_at.localeCompare(b.created_at)||a.id.localeCompare(b.id));
+ const purchases=new Map<string,string>(),valued=new Set<string>(),openings=new Map<string,FundingDetail&{recordId:string}>();
+ for(const e of rows)if(e.event_type==='contribution'&&!purchases.has(e.record_id))purchases.set(e.record_id,e.occurred_on);
+ for(const e of rows){
+  const r=byId.get(e.record_id);
+  if(!r||!benchmarkInvestment(r)||e.balance===null||!(Number(e.balance)>0)||valued.has(r.id))continue;
+  valued.add(r.id);
+  if((purchases.get(r.id)??'9999')>e.occurred_on)openings.set(e.id,{id:'opening:'+e.id,date:e.occurred_on,recordId:r.id,name:r.name,amount:Number(e.balance)*Number(e.ownership_percentage)/100,currency:r.currency,reused:0,source:'opening'});
+ }
+ return openings;
+}
+
 /** The day benchmark comparisons start from. They cannot precede the first recorded investment: there is no value to compare from that day.
  * A start saved earlier than that compares from the first investment day (the saved day itself is kept and shown); a future one is ignored. */
 export function effectiveTrackingStart(trackingStart:string|null,firstInvestment:string,today:string){
  if(!trackingStart||trackingStart>today)return null;
  return trackingStart<firstInvestment?firstInvestment:trackingStart;
+}
+
+/** How benchmarks are compared for a saved tracking start. A start on or before the first investment day compares
+ * from original purchases on that day: nothing was invested earlier, so opening holdings and that day's principal
+ * repayments fund benchmarks exactly as the period summary counts them. A later start compares from the value that day. */
+export function comparisonMethod(trackingStart:string|null,purchaseStart:string,today:string,scope:FundingScope){
+ // Market history is limited. Earlier purchases compare from recorded values on its first day.
+ const earliestStart=purchaseStart<benchmarkHistoryStart?benchmarkHistoryStart:purchaseStart;
+ const trackingFrom=effectiveTrackingStart(trackingStart,earliestStart,today);
+ const beforeMarketHistory=!trackingFrom&&purchaseStart<benchmarkHistoryStart;
+ const method:ComparisonMethod=trackingFrom&&trackingFrom>purchaseStart?{mode:'date',date:trackingFrom,scope}:beforeMarketHistory?{mode:'date',date:earliestStart,scope}:{mode:'purchases',date:purchaseStart,scope};
+ // The saved day is earlier than the day comparisons can start: the settings say so instead of contradicting the picker.
+ const chosenEarlier=method.mode==='purchases'&&!!trackingStart&&trackingStart<method.date;
+ return {method,trackingFrom,earliestStart,beforeMarketHistory,chosenEarlier};
 }
 
 export function investmentDecisionComparison(input:DecisionInput,data:BenchmarkData,portfolio?:DiversifiedPortfolio|null){
@@ -161,22 +192,23 @@ export function investmentDecisionComparison(input:DecisionInput,data:BenchmarkD
  const spending=scope==='expenses'?benchmarkExpenseFunding(input.cashflows,input.today):[];
  const start=dated?input.method.date:purchaseComparisonStart(input,scope);
  if(!validDay(start)||start>input.today||start<data.start)return null;
- const counted=(date:string)=>date>start||(!dated&&date===start);
+ // From a dated start, that day's holdings are in the starting value; a principal repayment that day is not, so it funds benchmarks.
+ const counted=(date:string,repayment=false)=>date>start||((!dated||repayment)&&date===start);
  const balances=new Map<string,number>(),cost=new Map<string,number>();
  const flows:CashFlow[]=[],details:FundingDetail[]=[],points:WealthPoint[]=[];
- const observed=new Set<string>(),valued=new Set<string>();let principal=0,payouts=0,cursor=0,next=0,spent=0,seeded=false;
+ const observed=new Set<string>();let principal=0,payouts=0,cursor=0,next=0,spent=0,seeded=false;
  const usd=(amount:number,currency:string,date:string)=>{const converted=convertHistorical(amount,currency,'USD',date,data.fx);if(converted===null||!Number.isFinite(converted)){missing=true;return 0;}return converted;};
  const fund=(id:string,date:string,name:string,amount:number,currency:string,reused=0,principalPaid?:number,expenseKind?:string,opening=false)=>{
-  if(!counted(date))return;
+  if(!counted(date,principalPaid!==undefined))return;
   const converted=usd(Math.max(0,amount-reused),currency,date);
   if(converted>0)flows.push({date,amount:converted});
   if(amount>0)details.push({id,date,name,amount:Math.max(0,amount-reused),currency,reused,...(principalPaid===undefined?{}:{principal:principalPaid}),...(expenseKind===undefined?{}:{source:'expense' as const,kind:expenseKind}),...(opening?{source:'opening' as const}:{})});
  };
- const purchases=new Map<string,string>(),opening=new Map<string,HistoryEvent>(),firstBalance=new Map<string,HistoryEvent>();
+ const openings=openingFunding(input.records,input.events,input.today);
+ const opening=new Map<string,HistoryEvent>(),firstBalance=new Map<string,HistoryEvent>();
  for(const e of events){
   if(!opening.has(e.record_id))opening.set(e.record_id,e);
   if(e.balance!==null&&!firstBalance.has(e.record_id))firstBalance.set(e.record_id,e);
-  if(e.event_type==='contribution'&&!purchases.has(e.record_id))purchases.set(e.record_id,e.occurred_on);
  }
  // A holding joins the comparison on the day its history begins. Earlier days do not include it:
  // nothing is known about it then, and one new record must not erase every other holding's history.
@@ -192,12 +224,9 @@ export function investmentDecisionComparison(input:DecisionInput,data:BenchmarkD
    const e=events[cursor++];
    if(e.balance!==null){
     const balance=Number(e.balance)*Number(e.ownership_percentage)/100;
-    if(Number(e.balance)>0&&!valued.has(e.record_id)){
-     valued.add(e.record_id);
-     // Value recorded without a purchase is capital that was already invested: benchmarks receive
-     // the same amount on the same day, so it is never shown as a gain.
-     if((purchases.get(e.record_id)??'9999')>e.occurred_on){observed.add(e.record_id);const r=byId.get(e.record_id)!;fund('opening:'+e.id,e.occurred_on,r.name,balance,r.currency,0,undefined,undefined,true);}
-    }
+    // Value recorded without a purchase: benchmarks receive the same amount on the same day.
+    const first=openings.get(e.id);
+    if(first){observed.add(e.record_id);fund(first.id,first.date,first.name,first.amount,first.currency,0,undefined,undefined,true);}
     balances.set(e.record_id,balance);
    }else if(!balances.has(e.record_id)&&['contribution','withdrawal'].includes(e.event_type)){
     // Bought but not yet valued: carry the money put in until the first recorded value.
@@ -206,7 +235,7 @@ export function investmentDecisionComparison(input:DecisionInput,data:BenchmarkD
   }
   while(next<items.length&&items[next].date<=date){
    const item=items[next++];
-   if(!counted(item.date))continue;
+   if(!counted(item.date,item.principal!==undefined))continue;
    if(item.payout){payouts+=usd(item.amount,item.currency,item.date);continue;}
    if(item.principal!==undefined)principal+=usd(item.principal,item.currency,item.date);
    fund(item.id,item.date,item.name,item.amount,item.currency,item.reused,item.principal);
@@ -220,7 +249,6 @@ export function investmentDecisionComparison(input:DecisionInput,data:BenchmarkD
    total+=usd(live?value(live):balance,r.currency,date);
   }
   if(dated&&!seeded){
-   payouts=0;principal=0;
    flows.push({date,amount:total});details.push({id:'opening',date,name:'Starting investment value',amount:total,currency:'USD',reused:0});seeded=true;
   }
   points.push({date,amount:total+principal+payouts});

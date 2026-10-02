@@ -74,7 +74,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
  const archivedCount=order.goals.filter(goal=>goal.archived).length;
  // Monarch's goals page: one list in the person's own order (drag the six dots), with what is free for goals beside it.
  return <>
-  <PageHeader title={t('Savings goals')}><Button onClick={()=>setSetup(true)}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></PageHeader>
+  <PageHeader title={t('Goals')}><Button onClick={()=>setSetup(true)}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></PageHeader>
   <ErrorPopup message={order.error}/>
   {preferences.error&&!demo&&<InlineError message={t('Load saved preferences before making changes.')} onRetry={preferences.retry}/>}
   <div className="goals-layout">
@@ -94,7 +94,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
       <button type="button" className="goal-row-main" aria-controls={plannerId} aria-current={active?.id===goal.id||undefined} onClick={()=>{setSelected(goal.id);setPlannerVisit(visit=>visit+1);}}>
        <GoalSummaryRow emoji={goalEmoji(goal,investment&&holdingItems.every(item=>item.target.asset_kind==='Crypto'))} name={goal.name} status={status} percent={percent} amount={investment?(percent===null?'—':formatPercent(percent,locale,0)):current===null?'—':money(current)} meta={<>{goal.target_date?formatDate(goal.target_date,locale):t('No target date')}{account&&<> · {account.name}</>}</>} detail={investment?`${t('Holdings')} · ${formatNumber(holdingItems.length,locale,0)}`:t('{percent} of {amount}',{percent:percent===null?'—':formatPercent(percent,locale,0),amount:money(goal.target)})} alert={overAllocated&&t('Your goal allocations exceed the current account balance. Update the allocations.')}/>
       </button>
-      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="goal-row-menu" aria-label={t('Actions for {name}',{name:goal.name})}><MoreHorizontal size={18} aria-hidden="true"/></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={()=>open(goal)}>{t('Edit goal')}</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="goal-row-menu" aria-label={t('Actions for {name}',{name:goal.name})}><MoreHorizontal size={18} aria-hidden="true"/></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={()=>{setSelected(goal.id);setPlannerVisit(visit=>visit+1);}}>{t('Goal planner')}</DropdownMenuItem><DropdownMenuItem onSelect={()=>open(goal)}>{t('Edit goal')}</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
      </SortableItem>;
     })}</ul></SortableList>}
    </section>

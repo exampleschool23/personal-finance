@@ -1,13 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
-const {allocationDrift}=loadTS('lib/portfolio-performance.ts');
+const {allocationDrift,currentAllocationWeights}=loadTS('lib/portfolio-performance.ts');
 const {debtPayoff}=loadTS('lib/debt-payoff.ts');
 const {watchlistSpending}=loadTS('lib/spending-watchlists.ts');
 const near=(actual,expected,tolerance=1e-8)=>assert.ok(Math.abs(actual-expected)<tolerance,`${actual} != ${expected}`);
 test('allocation cash contributions preserve total and never sell; incomplete values fail closed',()=>{
  const plan=allocationDrift({Stock:800,Cash:200},{Stock:50,Cash:50},200);assert.equal(plan.total,1000);assert.equal(plan.rows.find(r=>r.key==='Stock').contribution,0);assert.equal(plan.rows.find(r=>r.key==='Cash').contribution,200);near(plan.rows.reduce((n,r)=>n+r.delta,0),200);
  assert.equal(allocationDrift({Stock:null},{Stock:100}),null);assert.equal(allocationDrift({Stock:100},{Stock:99}),null);assert.equal(allocationDrift({Stock:100},{Stock:100},-1),null);
+ // A first target starts from today's mix: whole weights that always total 100, and nothing for unknown values.
+ { const weights=currentAllocationWeights({Property:993000,Stock:179560,Crypto:124250,Cash:72200,'Treasury bill':40000,Business:30000,Deposit:20000,Valuables:14000,'Money lent':3000}); assert.equal(Object.values(weights).reduce((a,b)=>a+b,0),100); assert.equal(weights.Property,67); assert.ok(allocationDrift({Stock:1,Cash:3},currentAllocationWeights({Stock:1,Cash:3}))); assert.equal(currentAllocationWeights({Stock:null}),null); assert.equal(currentAllocationWeights({}),null); }
 });
 test('payoff rolls freed payments forward, handles zero interest, and shows non-amortizing debt',()=>{
  const result=debtPayoff([{id:'a',balance:100,annualRate:0,minimum:50},{id:'b',balance:500,annualRate:0,minimum:50}],0,'snowball');assert.equal(result.months,6);assert.equal(result.interest,0);assert.equal(result.debts[0].paidOn,2);assert.equal(result.budget,100);

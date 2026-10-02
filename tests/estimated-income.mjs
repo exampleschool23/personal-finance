@@ -11,7 +11,7 @@ test('estimates convert with records and do not become asset value',()=>{
  const record={id:'p',name:'Rental',kind:'Property',amount:10000,cost:0,currency:'USD',estimated_monthly_income:500};
  const converted=marketEntry(record,'UZS',{fx:{rate:12000},quotes:{}});
  assert.equal(converted.estimated_monthly_income,6000000);assert.equal(value(converted),120000000);
- assert.deepEqual(estimatedCashFlow([]),{estimatedAssets:[],otherIncome:0,plannedIncome:0,monthlyExpenses:0,mortgagePayments:0,estimatedIncome:0,forecast:0});
+ assert.deepEqual(estimatedCashFlow([]),{estimatedAssets:[],otherIncome:0,plannedIncome:0,monthlyExpenses:0,mortgagePayments:0,loanPayments:0,estimatedIncome:0,forecast:0});
 });
 
 test('mortgage estimates reduce forecasts once, ignore paid-off debt and actual one-time payments',()=>{
@@ -38,4 +38,8 @@ test('salary from an owned business is added independently of the business incom
 test('foreign-currency salary is converted before adding it to the monthly forecast',()=>{
  const salary=marketEntry({kind:'Salary',currency:'UZS',amount:12000000,cost:0,frequency:'Monthly',date:'2026-09-01',business_id:'b'},'USD',{fx:{rate:12000},quotes:{}});
  assert.equal(estimatedCashFlow([{id:'b',kind:'Business',estimated_monthly_income:500},salary],0,'2026-09').plannedIncome,1500);
+});
+test('monthly commitments count loan and debt payments alongside mortgages',()=>{
+ const result=estimatedCashFlow([{kind:'Mortgage',amount:119300,estimated_monthly_payment:900},{kind:'Loan',amount:7650,estimated_monthly_payment:350},{kind:'Debt',amount:500,estimated_monthly_payment:50},{kind:'Loan',amount:0,estimated_monthly_payment:200},{kind:'Living expense',amount:40,frequency:'Monthly'}]);
+ assert.equal(result.mortgagePayments,900);assert.equal(result.loanPayments,400,'repaid loans no longer count');assert.equal(result.forecast,-1340);
 });

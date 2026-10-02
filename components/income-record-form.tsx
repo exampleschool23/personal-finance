@@ -76,7 +76,7 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
    {earningSources.loading&&<p className="muted" role="status">{t('Loading income sources…')}</p>}
    {earningSources.error&&<div className="error" role="alert">{t(earningSources.error)} <Button type="button" variant="outline" disabled={busy} onClick={earningSources.retry}>{t('Retry')}</Button></div>}
   </div>}
-  <Link className="muted" href="/settings#categories">{t('Manage categories in Settings')}</Link>
+  <Link className="panel-link" href="/settings#categories">{t('Manage categories in Settings')}</Link>
   {reusable&&<label>{t('Payment type')}<NativeSelect value={editing.payment_type??'regular'} disabled={busy} onChange={event=>update(selectEarningSource(editing,reusable,event.target.value==='bonus'))}><option value="regular">{t('Regular income')}</option><option value="bonus">{t('Bonus')}</option></NativeSelect></label>}
   {reusable&&editing.payment_type!=='bonus'&&reusable.mode==='fixed'&&<ScheduledPaymentSummary label={t('Scheduled payment date')} date={editing.earning_due_on??''}/>}
   {salaryPlan&&<p className="muted">{t('Set up the recurring salary plan you will select when recording payments.')}</p>}

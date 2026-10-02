@@ -61,3 +61,36 @@ test('summary figures equal the chart funding in both funding scopes',()=>{
   assert.ok(Math.abs(including.chart-including.invested-including.expenses)<1e-9,name+': including expenses');
  }
 });
+
+// Live QA, 2 October 2026: a new account records two holdings without a purchase and repays two debts the same day,
+// with a tracking start chosen on 1 January 2026. The summary and the chart tooltip must report the same money invested.
+test('opening holdings without a purchase and same-day principal repayments are invested once in both the summary and the chart',()=>{
+ const {comparisonMethod,purchaseComparisonStart}=loadTS('lib/investment-benchmarks.ts');
+ const day='2026-10-02';
+ const scenario={
+  records:[holding('cash','Cash',{amount:5000}),holding('AAPL','Stock',{amount:165}),holding('QA Friend','Money lent',{amount:150}),holding('QA Car loan','Loan',{amount:4650}),holding('QA Flat','Mortgage',{amount:59300})],
+  events:[dated('aapl','AAPL',day,'baseline',0,165),dated('lent','QA Friend',day,'baseline',0,150),dated('car','QA Car loan',day,'withdrawal',350,4650),dated('flat','QA Flat',day,'mortgage_payment',900,59300,{principal:700,interest:200})],
+  cashflows:[],movements:[],today:day,currency:'USD',market:{quotes:{},rates:{USD:1}},
+ };
+ const plan=comparisonMethod('2026-01-01',purchaseComparisonStart(scenario,'investments'),day,'investments');
+ // Nothing was invested before the first investment day, so comparisons start there from original purchases.
+ assert.deepEqual(plan.method,{mode:'purchases',date:day,scope:'investments'});
+ assert.equal(plan.chosenEarlier,true);
+ const market={start:day,end:day,fx:[],prices:{BTC:[{date:day,close:100}]},errors:{}};
+ const chart=investmentDecisionComparison({...scenario,method:plan.method},market);
+ const point=chart.result.points.at(-1);
+ const details={income:[],expenses:[],invested:[]};
+ const totals=investmentPeriodTotals(scenario,'2026-01-01',details);
+ // $165 + $150 recorded without a purchase, plus $350 + $700 principal repaid.
+ assert.equal(totals.invested,1365);assert.equal(point.contributed,1365);
+ assert.equal(point.actual,1365,'neither the opening values nor the repayments appear as a gain');
+ assert.equal(totals.expenses,200,'mortgage interest is an expense, not an investment');
+ assert.deepEqual(details.invested.map(row=>[row.name,row.amount]).sort(),[['AAPL',165],['QA Car loan',350],['QA Flat',700],['QA Friend',150]]);
+ assert.deepEqual(chart.details.map(row=>[row.name,row.principal??row.amount,row.source??'']).sort(),[['AAPL',165,'opening'],['QA Car loan',350,''],['QA Flat',700,''],['QA Friend',150,'opening']]);
+ // A dated start on that day keeps the holdings in the starting value and still funds that day's repayments.
+ const fromDay=investmentDecisionComparison({...scenario,method:{mode:'date',date:day,scope:'investments'}},market).result.points.at(-1);
+ assert.equal(fromDay.contributed,1365);assert.equal(fromDay.actual,1365);
+ // A later chosen day is the comparison start; an earlier one is explained rather than shown as the start.
+ assert.equal(comparisonMethod(day,day,day,'investments').chosenEarlier,false);
+ assert.equal(comparisonMethod(null,day,day,'investments').chosenEarlier,false);
+});

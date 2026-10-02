@@ -55,7 +55,13 @@ function DayPicker({ value, onChange, min, max, required = true, presets = defau
     onChange(date);
     setOpen(false);
   };
-  return <Popover open={open} onOpenChange={next => { if (next) { setMonth(parseCalendarDate(openingCalendarDay(parseCalendarDate(value) ? value : '', calendarIso(new Date()), min, max)) || new Date()); } setOpen(next); }}>
+  // With two months side by side, a field capped at today shows the month before and this one, never a fully disabled next month.
+  const openingMonth = () => {
+    const opening = openingCalendarDay(parseCalendarDate(value) ? value : '', calendarIso(new Date()), min, max).slice(0, 7);
+    const shown = !compact && max && shiftCalendarMonth(opening, 1) + '-01' > max && !(min && shiftCalendarMonth(opening, -1) < min.slice(0, 7)) ? shiftCalendarMonth(opening, -1) : opening;
+    return parseCalendarDate(shown + '-01') || new Date();
+  };
+  return <Popover open={open} onOpenChange={next => { if (next) setMonth(openingMonth()); setOpen(next); }}>
     <PopoverTrigger asChild><button type="button" className="date-picker-trigger" aria-label={value ? formatDate(value, locale) : t('Select date')}><span>{value ? formatDate(value, locale) : t('Select date')}</span><CalendarDays size={17}/></button></PopoverTrigger>
     <PopoverContent className="finance-date-picker" align="start" collisionPadding={12} aria-label={t('Select date')}>
       <div className="date-picker-body"><MonthCalendar monthKey={calendarIso(month).slice(0, 7)} draft={value} min={min} max={max} onSelect={selectDate} onYearChange={year => setMonth(parseCalendarDate(calendarYearAnchor(calendarIso(month).slice(0, 7), year, 0) + '-01')!)} previous={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), -1) + '-01')!)} next={compact ? () => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!) : undefined}/>{!compact && <MonthCalendar monthKey={shiftCalendarMonth(calendarIso(month).slice(0, 7), 1)} draft={value} min={min} max={max} onSelect={selectDate} onYearChange={year => setMonth(parseCalendarDate(calendarYearAnchor(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1), year, 1) + '-01')!)} next={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!)}/>}
@@ -80,7 +86,7 @@ function MonthCalendar({ monthKey, draft, min, max, onSelect, onYearChange, prev
     {choosingYear ? <button type="button" disabled={yearStart + 23 > 9999} onClick={() => setYearStart(yearStart + 12)} aria-label={t('Next years')}><ChevronRight size={17}/></button> : next ? <button type="button" onClick={next} aria-label={t('Next month')}><ChevronRight size={17}/></button> : <span/>}
   </div>{choosingYear ? <div className="pos-year-grid">{Array.from({ length: 12 }, (_, index) => yearStart + index).map(option => <button type="button" key={option} aria-pressed={option === year} onClick={() => { onYearChange(option); setChoosingYear(false); yearTrigger.current?.focus(); }}>{formatYear(option, locale)}</button>)}</div> : <div className="pos-month-grid" aria-label={formatMonthYear(monthKey, locale)}>
     {weekdays.map(day => <span className="pos-weekday" key={day}>{day}</span>)}
-    {buildRangeCalendar(monthKey).map(day => <button key={day.date} type="button" disabled={!day.inMonth || (!!min && day.date < min) || (!!max && day.date > max)} aria-label={formatDate(day.date, locale)} aria-current={day.date === today ? 'date' : undefined} aria-pressed={day.date === draft} className={'pos-day' + (day.date === draft ? ' pos-selected' : day.date === today ? ' pos-today' : '')} onClick={() => onSelect(day.date)} onKeyDown={event => {
+    {buildRangeCalendar(monthKey).map(day => <button key={day.date} type="button" disabled={!day.inMonth || (!!min && day.date < min) || (!!max && day.date > max)} aria-label={formatDate(day.date, locale)} aria-current={day.date === today ? 'date' : undefined} aria-pressed={day.date === draft} data-outside={!day.inMonth || undefined} className={'pos-day' + (day.date === draft ? ' pos-selected' : day.date === today ? ' pos-today' : '')} onClick={() => onSelect(day.date)} onKeyDown={event => {
       const offset = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[event.key];
       if (offset === undefined) return;
       event.preventDefault();

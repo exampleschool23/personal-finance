@@ -1,11 +1,11 @@
-import { benchmarkExpenseFunding, benchmarkInvestment, investmentActivity, type BenchmarkMovement } from './investment-benchmarks';
+import { benchmarkExpenseFunding, benchmarkInvestment, investmentActivity, openingFunding, type BenchmarkMovement } from './investment-benchmarks';
 import { income, liabilities } from './finance';
 import { convertAmount } from './market';
 import type { InvestmentPortfolioInput } from './investment-portfolio';
 
 export type PeriodRow={name:string;date:string;category:string;amount:number|null};
 // The three figures follow the chart's funding rules: money invested is what funds benchmarks
-// when expenses are excluded, and expenses paid is what "Including expenses" adds to it.
+// when expenses are excluded (purchases, principal repayments and values recorded without a purchase), and expenses paid is what "Including expenses" adds to it.
 export function investmentPeriodTotals(input:InvestmentPortfolioInput&{movements?:BenchmarkMovement[]},start:string,details?:Record<'income'|'invested'|'expenses',PeriodRow[]>){
  const totals={income:0,invested:0,expenses:0};
  const missing=new Set<string>();
@@ -25,6 +25,12 @@ export function investmentPeriodTotals(input:InvestmentPortfolioInput&{movements
   context={name:item.name,date:item.date,category:kind==='Property'?'Rental improvements':kind==='Valuables'?'Valuables purchase':kind==='Business'?'Business investment':kind};
   // Money moved from another investment is the same capital, not a new investment.
   add('invested',item.amount-item.reused,item.currency);
+ }
+ // A holding valued without a recorded purchase counts its first value as invested that day, as in the chart.
+ for(const item of openingFunding(input.records,input.events,input.today).values()){
+  if(!inPeriod(item.date))continue;
+  context={name:item.name,date:item.date,category:'Recorded value · purchase not recorded'};
+  add('invested',item.amount,item.currency);
  }
  const eventIds=new Set(activity.events.map(event=>event.id));
  const copied=new Set((input.cashflows??[]).map(row=>row.history_event_id).filter(Boolean));

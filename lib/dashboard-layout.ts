@@ -11,7 +11,7 @@ export const dashboardCardIds: readonly DashboardCard[] = [...dashboardCards.lef
 export const retiredDashboardCards = ['recap'] as const;
 export const dashboardCardLabels: Record<DashboardCard, string> = {
  net_worth: 'Net worth', spending: 'Spending', budget: 'Budget', commitments: 'Monthly commitments', allocation: 'Asset allocation',
- goals: 'Goals', transactions: 'Transactions', upcoming: 'Recurring', income: 'Income over time',
+ goals: 'Goals', transactions: 'Transactions', upcoming: 'Upcoming payments', income: 'Income over time',
 };
 export type DashboardLayout = { columns: Record<DashboardColumn, DashboardCard[]>; hidden: DashboardCard[] };
 export const defaultDashboardLayout: DashboardLayout = { columns: { left: [...dashboardCards.left], right: [...dashboardCards.right] }, hidden: [] };

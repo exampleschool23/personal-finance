@@ -9,15 +9,20 @@ export function formatNumber(value: number, locale: string, maximumFractionDigit
 }
 
 /** A share or rate as a percentage, using the locale digits and one decimal by default. Unknown values show an em dash. */
-export function formatPercent(value: number, locale: string, maximumFractionDigits = 1) {
-  return Number.isFinite(value) ? formatNumber(value, locale, maximumFractionDigits) + "%" : "\u2014";
+/** Pass `minimumFractionDigits` when percentages sit in a column, so "2.0%" lines up under "12.2%". */
+export function formatPercent(value: number, locale: string, maximumFractionDigits = 1, minimumFractionDigits = 0) {
+  return Number.isFinite(value) ? new Intl.NumberFormat(locale, { minimumFractionDigits, maximumFractionDigits }).format(value) + "%" : "\u2014";
 }
 export function formatMoney(value: number, currency: string, locale: string, unitPrice = false) {
   if (!Number.isFinite(value)) return '—';
   // Round balances for display only. Unit quotes retain small crypto prices,
   // while neither mode pads whole amounts with unnecessary decimal zeros.
   const displayed = !unitPrice && Math.abs(value) < 0.5 ? 0 : value;
-  return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: unitPrice ? 8 : 0 }).format(displayed);
+  return trueMinus(new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: unitPrice ? 8 : 0 }).format(displayed));
+}
+/** Negative amounts always carry a true minus sign (U+2212), never a hyphen, so "−$5" reads the same on every screen. */
+function trueMinus(formatted: string) {
+  return formatted.replace(/-/g, '\u2212');
 }
 /** A cash account in a picker: "Wallet · $2,918". The balance tells apart accounts that share a name. */
 export function formatAccountOption(account: { name: string; amount: number | string; currency: string }, locale: string) {
@@ -33,7 +38,7 @@ export function formatSignedMoney(value: number, currency: string, locale: strin
 export function formatCompactMoney(value: number, currency: string, locale: string) {
   if (!Number.isFinite(value)) return '—';
   // Below a thousand nothing is abbreviated, so the amount stays whole ("$13", never "$12.8").
-  return Math.abs(value) < 999.5 ? formatMoney(value, currency, locale) : new Intl.NumberFormat(locale, { style: 'currency', currency, notation: 'compact', maximumFractionDigits: 1 }).format(value);
+  return Math.abs(value) < 999.5 ? formatMoney(value, currency, locale) : trueMinus(new Intl.NumberFormat(locale, { style: 'currency', currency, notation: 'compact', maximumFractionDigits: 1 }).format(value));
 }
 /** Monday-first weekday labels for the calendar grid, in the locale's language. */
 export function weekdayLabels(locale: string): string[] {

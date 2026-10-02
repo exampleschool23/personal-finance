@@ -2,7 +2,7 @@
 import { ChartPie, Goal as GoalIcon, ReceiptText } from 'lucide-react';
 import { BudgetProgress } from '@/components/budget-page';
 import { useBudget } from '@/hooks/use-budget';
-import { budgetCategories, budgetReadRange, budgetRows, flexBucketBudget, leftToBudget, monthActuals, monthsBetween, remainingTone } from '@/lib/budget';
+import { budgetCategories, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, leftToBudget, monthActuals, monthsBetween, remainingTone } from '@/lib/budget';
 import { expensePlanMonth } from '@/lib/expense-plans';
 import type { MarketData } from '@/lib/market';
 import { signedAmount } from '@/lib/transaction-list';
@@ -36,7 +36,7 @@ export function RecentTransactionsCard({ owner = null, demo = false, revision = 
  const records = owner && !demo ? remote.data.records.map(normalizeEntry) : provided.records;
  const recent = recentTransactions(records, today);
  return <section className="panel overview-panel dashboard-transactions">
-  <PanelTitle title={<>{t('Transactions')} <span className="panel-figure">{t('Most recent')}</span></>}><DrawerLink href="/transactions">{t('View all')}</DrawerLink></PanelTitle>
+  <PanelTitle title={t('Transactions')}><DrawerLink href="/transactions">{t('View all')}</DrawerLink></PanelTitle>
   {owner && !demo && remote.loading ? <LoadingPlaceholder label={t('Loading records…')} rows={4}/> : recent.length ? <ul className="overview-list overview-due">{recent.map(record => {
    const incoming = income.includes(record.kind);
    return <li key={record.id}><CategoryIcon kind={record.kind}/><span>{record.name}<small>{t(record.kind)} · {formatDate(record.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{formatMoney(Math.abs(signedAmount(record)), record.currency, locale)}</strong></li>;
@@ -54,7 +54,7 @@ export function GoalsCard({ goals, order, data, currency, netWorth }: { goals: G
  const { t, locale } = useLanguage();
  const top = topGoals(goals, order);
  return <section className="panel overview-panel dashboard-goals">
-  <PanelTitle title={<>{t('Goals')} <span className="panel-figure">{t('Your top priorities')}</span></>}><DrawerLink href="/goals">{t('View all')}</DrawerLink></PanelTitle>
+  <PanelTitle title={t('Goals')}><DrawerLink href="/goals">{t('View all')}</DrawerLink></PanelTitle>
   {top.length ? <ul className="dashboard-goal-list">{top.map(goal => {
    const unit = goalCurrency(goal, data, currency), investment = goal.kind === 'investment';
    const value = investment ? null : goalCurrentValue(goal, netWorth(unit));
@@ -82,7 +82,8 @@ export function BudgetCard({ owner = null, demo = false, revision = 0, data: pro
  const rows = budgetRows(budgetCategories(data.categories, budget.state.categories), budget.state.amounts, history, month, currency, rates).filter(row => row.direction === 'expense' && !row.excluded);
  const flexible = budget.state.mode === 'flex' ? flexBucketBudget(budget.state.amounts, rows, month, currency, rates) ?? 0 : null;
  const planned = leftToBudget(rows, budget.state.mode, flexible, 0).expenses, spent = rows.reduce((sum, row) => sum + row.actual, 0);
- const watched = rows.filter(row => row.budget).sort((a, b) => b.progress - a.progress).slice(0, 3);
+ // In flex mode flexible categories share one bucket, so only fixed categories keep a budget of their own here, as on the Budget page.
+ const watched = budgetRowsForMode(rows, budget.state.mode).filter(row => row.budget).sort((a, b) => b.progress - a.progress).slice(0, 3);
  const money = (amount: number) => formatMoney(amount, currency, locale);
  const loading = (owner && !demo && remote.loading) || budget.loading;
  return <section className="panel overview-panel dashboard-budget" aria-label={t('Budget')}>

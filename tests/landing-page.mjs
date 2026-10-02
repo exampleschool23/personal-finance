@@ -32,7 +32,7 @@ test('the landing page leads to sign-in, sign-up, the sample workspace and the l
 
 test('sample figures are whole amounts through the shared formatters, and every label is translated',()=>{
  const html=render({bot:'hoggish_bot'});
- assert.ok(html.includes('$84,250'));assert.ok(html.includes('+2.4%'));assert.ok(html.includes('-$96,000'));
+ assert.ok(html.includes('$84,250'));assert.ok(html.includes('+2.4%'));assert.ok(html.includes('\u2212$96,000'));
  assert.ok(!/\$\d[\d,]*\.\d/.test(html),'no decimal remainders');
  assert.ok(html.includes('Sample data'));
  const source=fs.readFileSync('components/landing-page.tsx','utf8');

@@ -8,6 +8,8 @@ import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip,
 import { ArrowUpRight, Check, ChevronDown, CircleHelp, RotateCcw, Save, SlidersHorizontal, Target, TrendingUp, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
+import { niceAxis } from '@/lib/chart-scale';
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { useLanguage } from '@/components/language-provider';
 import { formatDate, formatMoney, formatMonthYear, formatNumber, formatPercent } from '@/lib/format';
@@ -42,6 +44,8 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
  [goal.kind, snapshots, currency, today]);
  const points = useMemo(() => [...history, ...(result?.points ?? []).map((point, i) => ({ ...point, actual: i === 0 ? starting : null }))]
   .map(point => ({ ...point, time: Date.parse(point.date + 'T00:00:00Z') })), [history, result, starting]);
+ // Round ticks ($20K, $30K…) instead of the even splits the chart picks on its own.
+ const axis = useMemo(() => niceAxis(points.flatMap(point => (['actual', 'projected', 'required', 'target'] as const).map(key => (point as Record<string, unknown>)[key]).filter((value): value is number => typeof value === 'number'))), [points]);
  const lines = [
   { key: 'actual', label: goal.kind === 'net_worth' ? (history.length ? 'Actual net worth' : 'Actual net worth today') : 'Allocated amount', color: 'var(--foreground)' },
   { key: 'projected', label: 'Your projected path', color: 'var(--primary)' },
@@ -73,8 +77,7 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
 
   <div className="goal-planner-layout">
    <aside className="goal-scenario" aria-labelledby={`${id}-scenario`}>
-    <div className="goal-section-heading"><SlidersHorizontal size={18} aria-hidden="true" /><h3 id={`${id}-scenario`}>{t('Shape your plan')}</h3><span className="goal-live-badge">{t('Live')}</span></div>
-    <p className="goal-help">{t('Adjust the numbers to explore your future.')}</p>
+    <div className="goal-section-heading"><SlidersHorizontal size={18} aria-hidden="true" /><h3 id={`${id}-scenario`}>{t('Shape your plan')}</h3><InfoHint><p>{t('Adjust the numbers to explore your future.')}</p><p>{t('Applies to new monthly investments. Returns are assumptions, not guarantees.')}</p></InfoHint><span className="goal-live-badge">{t('Live')}</span></div>
     <fieldset className="goal-scenario-fields" disabled={busy || goal.archived}>
      <div className="goal-control">
       <label className="goal-input-label">{t('Monthly investment')}<span className="goal-amount-input"><FormattedNumberInput value={contribution ?? 0} displayFractionDigits={monthly === null ? 0 : undefined} required={false} onValueChange={setMonthly} /><span>{currency}</span></span></label>
@@ -86,8 +89,7 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
      <div className="goal-control">
       <label className="goal-input-label">{t('Assumed annual return')}<span className="goal-amount-input"><FormattedNumberInput value={rate} max={100} required={false} onValueChange={setRate} /><span>%</span></span></label>
       <input className="goal-range" type="range" min={0} max={100} step={0.5} value={rate} style={rangeStyle(rate, 100)} aria-label={t('Assumed annual return')} aria-valuetext={formatPercent(rate, locale, 2)} onChange={event => setRate(Number(event.target.value))} />
-      <div className="goal-rate-presets" role="group" aria-label={t('Return presets')}>{[0, 5, 8, 12].map(preset => <button type="button" key={preset} aria-pressed={rate === preset} onClick={() => setRate(preset)}>{formatPercent(preset, locale, 2)}</button>)}</div>
-      <p className="goal-help">{t('Applies to new monthly investments. Returns are assumptions, not guarantees.')}</p>
+      <Segmented className="goal-rate-presets" label={t('Return presets')} options={[0, 5, 8, 12].map(preset => ({ value: preset, label: formatPercent(preset, locale, 2) }))} value={rate} onChange={setRate}/>
      </div>
     </fieldset>
 
@@ -126,24 +128,23 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
   </div>
 
   {result && <section className="goal-chart-section" aria-labelledby={`${id}-chart-title`}>
-   <div className="goal-chart-heading"><h3 id={`${id}-chart-title`}>{t('Your path to the goal')}</h3><Segmented label={t('Projection view')} options={[{ value: 'chart', label: t('Chart') }, { value: 'table', label: t('Monthly milestones') }]} value={view} onChange={setView}/></div>
-   {compact&&<p className="goal-help">{t('Tap the chart for exact amounts, or open Monthly milestones.')}</p>}{view === 'chart' ? <>
+   <div className="goal-chart-heading"><h3 id={`${id}-chart-title`}>{t('Your path to the goal')}<InfoHint><p>{t('Both future paths start from today’s value. They overlap when your planned monthly investment matches the contribution needed to reach the goal.')}</p>{compact&&<p>{t('Tap the chart for exact amounts, or open Monthly milestones.')}</p>}</InfoHint></h3><Segmented label={t('Projection view')} options={[{ value: 'chart', label: t('Chart') }, { value: 'table', label: t('Monthly milestones') }]} value={view} onChange={setView}/></div>
+   {view === 'chart' ? <>
     <div className="comparison-legend goal-chart-legend">{lines.map(line => <button key={line.key} type="button" aria-pressed={!hidden.includes(line.key)} onClick={() => setHidden(previous => previous.includes(line.key) ? previous.filter(key => key !== line.key) : [...previous, line.key])}><svg width="24" height="12" viewBox="0 0 24 12" aria-hidden="true">{line.key === 'actual' ? <circle cx="12" cy="6" r="4" fill={line.color} /> : <line x1="0" y1="6" x2="24" y2="6" stroke={line.color} strokeWidth="2" strokeDasharray={line.dash} />}</svg>{t(line.label)}</button>)}</div>
     {goal.kind === 'net_worth' && <p className="goal-help">{t('Actual net worth today: {amount}. Actual values stop at today; future values are forecasts.', { amount: starting === null ? '—' : money(starting) })}</p>}
     <div className="goal-projection-chart" role="region" aria-label={t('Your path to the goal')} tabIndex={0}><div className="goal-chart-canvas"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={points} accessibilityLayer margin={{ top: 24, right: compact?8:24, left: compact?0:8, bottom: 12 }}>
      <defs><linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity={0.18} /><stop offset="100%" stopColor="var(--primary)" stopOpacity={0.01} /></linearGradient></defs>
      <CartesianGrid stroke="var(--border)" strokeDasharray="3 5" vertical={false} />
      <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={time => formatMonthYear(isoDate(Number(time)), locale)} minTickGap={compact?40:80} tickCount={compact?2:5} height={64} tickLine={false} axisLine={false} tickMargin={16} tick={{ fill: 'var(--muted-foreground)', fontSize: 13 }} />
-     <YAxis hide={compact} width="auto" tickMargin={12} tickFormatter={money} domain={['auto', 'auto']} tickCount={5} tickLine={false} axisLine={false} tick={{ fill: 'var(--muted-foreground)', fontSize: 13 }} />
+     <YAxis hide={compact} width="auto" tickMargin={12} tickFormatter={money} domain={axis.domain} ticks={axis.ticks} tickLine={false} axisLine={false} tick={{ fill: 'var(--muted-foreground)', fontSize: 13 }} />
      <Tooltip labelFormatter={time => formatDate(isoDate(Number(time)), locale)} formatter={(amount, name) => [money(Number(amount)), t(lines.find(line => line.key === name)?.label ?? String(name))]} contentStyle={{ background: 'var(--popover)', color: 'var(--popover-foreground)', borderColor: 'var(--border)', borderRadius: 14, boxShadow: '0 8px 32px #00000014', fontSize: 16, lineHeight: 1.7, padding: 16 }} />
-     <ReferenceLine x={Date.parse(today + 'T00:00:00Z')} stroke="var(--muted-foreground)" strokeDasharray="4 4" label={{ value: t('Today'), position: 'insideTopLeft', offset: 8, fill: 'var(--muted-foreground)', fontSize: 13 }} />
+     <ReferenceLine x={Date.parse(today + 'T00:00:00Z')} stroke="var(--muted-foreground)" strokeDasharray="4 4" label={{ value: t('Today'), position: 'insideBottomLeft', offset: 8, fill: 'var(--muted-foreground)', fontSize: 13 }} />
      {!hidden.includes('projected') && <Area dataKey="projected" stroke="var(--primary)" strokeWidth={3} fill={`url(#${id}-fill)`} isAnimationActive={false} />}
      {lines.filter(line => line.key !== 'projected' && line.key !== 'actual' && !hidden.includes(line.key)).map(line => <Line key={line.key} dataKey={line.key} stroke={line.color} strokeDasharray={line.dash} strokeWidth={line.key === 'target' ? 1.5 : 2} dot={false} connectNulls={false} isAnimationActive={false} />)}
      {!hidden.includes('actual') && <Line dataKey="actual" stroke="var(--foreground)" strokeWidth={2} dot={{ r: 5, stroke: 'var(--card)', strokeWidth: 2, fill: 'var(--foreground)' }} connectNulls={false} isAnimationActive={false} />}
     </ComposedChart></ResponsiveContainer></div></div>
     {goal.kind === 'net_worth' && historyError && <p className="goal-help">{t(historyError)}</p>}
     {goal.kind === 'net_worth' && !history.length && <p className="goal-help">{t('Your net-worth history starts with today’s value. Saved snapshots will extend the actual line.')}</p>}
-    <p className="goal-help">{t('Both future paths start from today’s value. They overlap when your planned monthly investment matches the contribution needed to reach the goal.')}</p>
    </> : <div className="table-scroll goal-milestones" role="region" aria-label={t('Monthly milestones')} tabIndex={0}><table><thead><tr><th scope="col">{t('Date')}</th><th scope="col">{t('Monthly investment')}</th><th scope="col">{t('Your projected path')}</th><th scope="col">{t('Monthly contribution needed')}</th><th scope="col">{t('Path to your goal')}</th></tr></thead><tbody>{result.points.map((point, index) => <tr key={point.date}><td>{index === 0 ? t('Today') : point.contributes ? formatMonthYear(point.date, locale) : formatDate(point.date, locale)}</td><td>{point.contributes && contribution !== null ? money(contribution) : '—'}</td><td>{money(point.projected)}</td><td>{point.contributes && requiredContribution !== null ? money(requiredContribution) : '—'}</td><td>{point.required === null ? '—' : money(point.required)}</td></tr>)}</tbody></table></div>}
   </section>}
 

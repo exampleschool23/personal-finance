@@ -110,7 +110,7 @@ test('the dashboard Goals card follows the goal order and shows a net-worth goal
   {id:'fund',name:'QA Emergency fund',kind:'savings',currency:'USD',account_id:'cash',target:10000,allocated:2500,target_date:null,archived:false}];
  const html=renderToStaticMarkup(React.createElement(GoalsCard,{goals,order:['fund','worth'],data:{records:[{id:'cash',currency:'USD'}]},currency:'USD',netWorth:code=>code==='USD'?-123054.4:null}));
  assert.ok(html.indexOf('QA Emergency fund')<html.indexOf('Net worth target'),'user order');
- assert.match(html,/-\$123,054/);assert.doesNotMatch(html,/\$0</);
+ assert.match(html,/\u2212\$123,054/);assert.doesNotMatch(html,/\$0</);
  assert.match(html,/\$2,500/);assert.match(html,/\$10,000 target</);
  assert.match(html,/width:0%/,'a negative net worth shows no progress');
 });

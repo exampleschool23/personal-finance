@@ -23,4 +23,4 @@ export function togglePreferredCurrency(list: string[], code: string): { currenc
 }
 /** Swaps `next` in for `old`, keeping its position so the primary stays first. */
 export const replacePreferredCurrency = (list: string[], old: string, next: string) => list.map(c => c === old ? next : c);
-export const defaultPreferences: Preferences = { language: 'en', currencies: ['USD', 'UZS'], font: 'inter' };
+export const defaultPreferences: Preferences = { language: 'en', currencies: ['USD'], font: 'inter' };

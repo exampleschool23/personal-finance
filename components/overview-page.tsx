@@ -29,7 +29,7 @@ type Props = { entries: Entry[]; currency: string; excludedCurrencies: string[];
 export function useOverviewCards({ entries, currency, excludedCurrencies, forecast, forecastReady, planning }: Props) {
  const { t, locale } = useLanguage();
  const money = (amount: number, unit = currency) => formatMoney(amount, unit, locale);
- const percent = (value: number | null) => formatPercent(value ?? NaN, locale);
+ const percent = (value: number | null) => formatPercent(value ?? NaN, locale, 1, 1);
  const { totalAssets, totalDebt } = financialTotals(entries);
  const allocation = assetAllocation(entries);
  const due = planning ? nextPayments(upcomingPayments(planning.records, planning.occurrences, undefined, undefined, planning.debtPayments)) : [];
@@ -44,6 +44,7 @@ export function useOverviewCards({ entries, currency, excludedCurrencies, foreca
    <li><CategoryIcon kind="Salary"/><span>{t("Income")}</span><strong className="positive">{money(forecast.plannedIncome)}</strong></li>
    <li><CategoryIcon kind="Living expense"/><span>{t("Expenses")}</span><strong>{forecastReady ? money(forecast.monthlyExpenses) : '—'}</strong></li>
    <li><CategoryIcon kind="Mortgage"/><span>{t("Estimated mortgage payments")}</span><strong>{money(forecast.mortgagePayments)}</strong></li>
+   {forecast.loanPayments > 0 && <li><CategoryIcon kind="Loan"/><span>{t("Estimated loan payments")}</span><strong>{money(forecast.loanPayments)}</strong></li>}
   </ul>
   <div className="cash-footer"><span>{t("Left after expenses")}</span><strong className={forecastReady ? signTone(forecast.forecast, true) : undefined}>{forecastReady ? money(forecast.forecast) : '—'}</strong></div>
  </section>;
@@ -59,7 +60,7 @@ export function useOverviewCards({ entries, currency, excludedCurrencies, foreca
   <PanelTitle title={<>{t('Upcoming payments')} {due.length > 0 && figure(t('{count} due soon', { count: due.length }))}</>}><DrawerLink href="/upcoming">{t('View all')}</DrawerLink></PanelTitle>
   {due.length ? <ul className="overview-list overview-due">{due.map(item => {
    const incoming = income.includes(item.record.kind);
-   return <li key={item.key}><CategoryIcon kind={item.record.kind}/><span>{item.record.name}<small className={item.overdue ? 'negative' : undefined}>{item.overdue ? t('Overdue') + ' · ' : ''}{formatDate(item.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{money(item.record.amount, item.record.currency)}</strong></li>;
+   return <li key={item.key}><CategoryIcon kind={item.record.kind}/><span>{item.record.name}<small className={item.overdue ? 'negative' : undefined}>{item.overdue ? t('Overdue') + ' · ' : ''}{formatDate(item.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{money(item.amount, item.record.currency)}</strong></li>;
   })}</ul> : planning ? <EmptyState icon={<CalendarClock/>} description={t('Nothing is due in the next 31 days.')}/> : <LoadingPlaceholder label={t('Loading records…')} rows={3}/>}
  </section>;
  return { commitments, allocation: allocationCard, upcoming };

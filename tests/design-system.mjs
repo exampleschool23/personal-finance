@@ -36,7 +36,7 @@ test('debt summary totals stay whole amounts, money you owe and a net shortfall 
  const owing=render(DebtSummary,{currency:'USD',entries:[entry('lent','Money lent',1200.75),entry('loan','Loan',5000.4)]});
  assert.match(owing,/<strong>\$1,201<\/strong>/);
  assert.match(owing,/<strong class="negative">\$5,000<\/strong>/);
- assert.match(owing,/<strong class="negative">-\$3,800<\/strong>/);
+ assert.match(owing,/<strong class="negative">\u2212\$3,800<\/strong>/);
  assert.doesNotMatch(owing,/\.\d/);
  const ahead=render(DebtSummary,{currency:'USD',entries:[entry('lent','Money lent',900)]});
  assert.doesNotMatch(ahead,/class="(?:positive|negative)"/);

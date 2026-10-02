@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { budgetTypeLabels, budgetTypes, defaultGroups, isUnbudgeted, remainingTone, type BudgetCategory, type BudgetCategorySetting, type BudgetGroup, type BudgetHistory, type BudgetMode, type BudgetRow, type BudgetType, type LeftToBudget } from '@/lib/budget';
 import { showError } from '@/lib/feedback';
-import { formatMoney, formatMonthShort } from '@/lib/format';
+import { formatMoney, formatMonthShort, formatSignedMoney } from '@/lib/format';
 import { goalEmoji } from '@/lib/goal-emoji';
 import type { Goal } from '@/lib/planning';
 
@@ -74,8 +74,8 @@ export function PlannedInput({ label, value, history, direction, currency, defau
  }
  return <Popover open={open} onOpenChange={next => { if (!next) commit(); }}>
   <PopoverAnchor asChild>
-   <span ref={anchor} className="budget-input" role="group" aria-label={label} onFocus={() => setOpen(true)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); commit(); (event.target as HTMLElement).blur(); } }}>
-    <FormattedNumberInput value={draft} onValueChange={next => setDraft(next)} required={false} displayFractionDigits={0}/>
+   <span ref={anchor} className="budget-input" onFocus={() => setOpen(true)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); commit(); (event.target as HTMLElement).blur(); } }}>
+    <FormattedNumberInput ariaLabel={label} value={draft} onValueChange={next => setDraft(next)} required={false} displayFractionDigits={0}/>
    </span>
   </PopoverAnchor>
   <PopoverContent className="budget-history-popover" align="end" onOpenAutoFocus={event => event.preventDefault()} onInteractOutside={event => { if (anchor.current?.contains(event.target as Node)) event.preventDefault(); }}>
@@ -102,7 +102,7 @@ export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgete
   {open && <>
    {visible.map(row => <div className="budget-row budget-category-row" key={row.key}>
     <button type="button" className="budget-category-name" onClick={() => onSettings(row)} aria-label={t('Category settings: {name}', { name: name(row) })}>
-     <CategoryIcon kind={row.custom ? row.name : row.key} size="sm"/><span>{name(row)}</span>{row.rollover && <RefreshCw size={13} aria-label={t('Rollover')}/>}
+     <CategoryIcon kind={row.custom ? row.name : row.key} size="sm"/><span>{name(row)}{row.rolloverIn !== 0 && <small className="budget-rollover">{t('{amount} rolled over', { amount: formatSignedMoney(row.rolloverIn, currency, locale) })}</small>}</span>{row.rollover && <RefreshCw size={13} aria-label={t('Rollover')}/>}
     </button>
     <span className="budget-cell">{renderPlanned(row)}</span>
     <span className="budget-cell">{formatMoney(row.actual, currency, locale)}</span>
@@ -135,11 +135,11 @@ export function ContributionRows({ goals, currency, amountOf }: { goals: Goal[];
    return <div className="budget-row budget-category-row" key={goal.id}>
     <span className="budget-category-name"><span className="category-icon" data-size="sm" aria-hidden="true">{goalEmoji(goal)}</span><span>{goal.name}</span></span>
     <span className="budget-cell">{amount === null ? '—' : formatMoney(amount, currency, locale)}</span>
-    <span className="budget-cell"/>
-    <span className="budget-cell"/>
+    <span className="budget-cell budget-empty-cell">—</span>
+    <span className="budget-cell budget-empty-cell">—</span>
    </div>;
   })}
-  <div className="budget-row budget-contributions-link"><DrawerLink href="/goals">{t('Edit contributions in Goals')}</DrawerLink></div>
+  <div className="budget-row budget-contributions-link"><DrawerLink className="panel-link" href="/goals">{t('Edit contributions in Goals')}</DrawerLink></div>
  </section>;
 }
 

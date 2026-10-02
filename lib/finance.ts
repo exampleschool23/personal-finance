@@ -70,8 +70,11 @@ export function estimatedCashFlow(entries: Entry[], expensePlanProjection = 0, m
  const estimatedIncome = estimatedAssets.reduce((sum,e) => sum + (e.estimated_monthly_income ?? 0), 0);
  const otherIncome = entries.filter(e => income.includes(e.kind) && !duplicatesAssetEstimate(e, businessIds, propertyIds)).reduce((sum,e) => sum + monthly(e, month), 0);
  const monthlyExpenses = entries.filter(e => expenses.includes(e.kind) && !e.expense_plan_id).reduce((sum,e) => sum + monthly(e, month), expensePlanProjection);
- const mortgagePayments = entries.filter(e => e.kind === 'Mortgage' && e.amount > 0).reduce((sum,e) => sum + (e.estimated_monthly_payment ?? 0), 0);
- return { estimatedAssets, otherIncome, plannedIncome: estimatedIncome + otherIncome, monthlyExpenses, mortgagePayments, estimatedIncome, forecast: estimatedIncome + otherIncome - monthlyExpenses - mortgagePayments };
+ const monthlyPayment = (kinds: string[]) => entries.filter(e => kinds.includes(e.kind) && e.amount > 0).reduce((sum,e) => sum + (e.estimated_monthly_payment ?? 0), 0);
+ const mortgagePayments = monthlyPayment(['Mortgage']);
+ // Loans and debts with a monthly payment are due every month too (see hasMonthlyInstallment in planning).
+ const loanPayments = monthlyPayment(['Loan','Debt']);
+ return { estimatedAssets, otherIncome, plannedIncome: estimatedIncome + otherIncome, monthlyExpenses, mortgagePayments, loanPayments, estimatedIncome, forecast: estimatedIncome + otherIncome - monthlyExpenses - mortgagePayments - loanPayments };
 }
 
 /** Entries must already be expressed in the same currency. Never round stored totals. */

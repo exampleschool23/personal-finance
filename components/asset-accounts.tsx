@@ -18,7 +18,7 @@ export function AssetAccounts({accounts,records,market,loading,error,onRetry,onA
 }) {
  const {t,locale}=useLanguage();
  return <section className="asset-account-section">
-  <div className="asset-holdings-heading"><h2>{t('Accounts')}<Count value={accounts.length+accountCount}/></h2><Link href="/accounts">{t('Manage accounts')}</Link></div>
+  <div className="asset-holdings-heading"><h2>{t('Accounts')}<Count value={accounts.length+accountCount}/></h2><Link className="panel-link" href="/accounts">{t('Manage accounts')}</Link></div>
   {error ? <InlineError message={t(error)} onRetry={onRetry}/> : loading ? <LoadingPlaceholder label={t('Loading records…')}/> : !accounts.length&&!accountCount ? <p className="muted">{t('No accounts yet.')}</p> : <div className="asset-card-grid">{children}{accounts.map(account=>{
    const {holdings,total}=holdingAccountValue(account,records,market);
    const converted=total===null?null:convertAmount(total,account.currency,currency,market?.rates??market?.fx?.rate);

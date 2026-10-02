@@ -43,10 +43,10 @@ test('screens contain only their own page and leave the drawer, top bar and dial
 });
 
 test('every destination has a unique path and unknown paths open Overview',()=>{
- const {sections,sectionFor,sectionLabel,navigationGroups}=loadTS('components/workspace/navigation.ts');
+ const {sections,sectionFor,sectionLabel}=loadTS('components/workspace/navigation.ts');
  assert.equal(new Set(sections.map(section=>section.path)).size,sections.length);
  assert.equal(new Set(sections.map(section=>section.name)).size,sections.length);
- assert.deepEqual(navigationGroups,['WORKSPACE','Manage']);
+ assert.deepEqual([...new Set(sections.map(section=>section.group))],['WORKSPACE','Manage','Account']);
  // Monarch's drawer: short words in its order; the section names stay as identifiers.
  assert.deepEqual(sections.map(section=>section.label),['Dashboard','Accounts','Transactions','Cash flow','Budget','Recurring','Investments','Loans & debts','Goals','Assistant','Recently deleted','Settings']);
  assert.equal(sectionLabel('Upcoming payments'),'Recurring');assert.equal(sectionLabel('Unknown'),'Unknown');
@@ -74,6 +74,11 @@ test('the drawer marks the current route, shows overdue payments and signs out t
  assert.match(html,/href="\/upcoming" aria-current="page"[^>]*>.*?Recurring<\/span><span class="count">1,234<\/span>/);
  assert.match(html,/owner@example\.com/);
  assert.match(html,/aria-label="Sign out"/);
+ // Recently deleted sits at the foot just above the account, and the account opens Settings.
+ assert.match(html,/<footer[^>]*>.*href="\/recently-deleted".*href="\/settings"[^>]*>.*owner@example\.com.*aria-label="Sign out"/s);
+ assert.ok(!/<span>Settings<\/span>/.test(html));
+ path='/settings';
+ assert.match(renderToStaticMarkup(React.createElement(AppDrawer,props)),/href="\/settings" class="user-link" data-active="true" aria-current="page"/);
  path='/';
  const calm=renderToStaticMarkup(React.createElement(AppDrawer,{...props,overdueCount:0}));
  assert.match(calm,/href="\/" aria-current="page"/);

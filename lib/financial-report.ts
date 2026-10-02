@@ -37,7 +37,8 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
  const blocks:ReportBlock[]=[],issues=new Set<string>();
  const add=(kind:'title'|'heading'|'subheading'|'text'|'pageBreak',text:string)=>blocks.push({kind,text});
  const table=(headers:string[],rows:string[][],widths:number[],numeric:number[]=[])=>{if(rows.length)blocks.push({kind:'table',text:'',headers:headers.map(t),rows,widths,numeric});};
- const money=(n:number|null,c:string)=>n===null||!Number.isFinite(n)||!isCurrency(c)?na:formatMoney(n,c,locale);
+ // The bundled PDF font has no true minus sign (U+2212), so the report prints negatives with a hyphen.
+ const money=(n:number|null,c:string)=>n===null||!Number.isFinite(n)||!isCurrency(c)?na:formatMoney(n,c,locale).replace(/\u2212/g,'-');
  const date=(v:unknown)=>{const input=typeof v==='string'?v:'';const result=input.includes('T')?formatDateTime(input,locale):formatDate(input,locale);return result==='—'?na:result;};
  const percent=(n:unknown)=>number(n)===null?na:`${formatNumber(Number(n),locale,2)}%`;
  const label=(r:ReportRow)=>typeof r.name==='string'&&r.name.trim()?r.name:na;

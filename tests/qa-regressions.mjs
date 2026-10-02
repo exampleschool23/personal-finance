@@ -165,3 +165,14 @@ test('QA 2026-10-02: dialogs explain limits, prefill scheduled amounts and offer
  assert.match(table,/<Pagination /);assert.match(read('components/recently-deleted.tsx'),/<Pagination /);
  assert.match(read('components/debt-summary.tsx'),/lentCount===1\?'1 lending record'/);
 });
+test('dashboard payments show each instalment, and the comparison line is labelled as investments',()=>{
+ const read=path=>fs.readFileSync(path,'utf8');
+ const overview=read('components/overview-page.tsx');
+ assert.match(overview,/money\(item\.amount, item\.record\.currency\)/,'a loan shows its monthly payment, not the outstanding balance');
+ assert.doesNotMatch(overview,/money\(item\.record\.amount, item\.record\.currency\)/);
+ assert.match(overview,/upcomingPayments\(planning\.records, planning\.occurrences, undefined, undefined, planning\.debtPayments\)/);
+ const comparison=read('components/investment-comparison.tsx');
+ assert.match(comparison,/key:'actual',label:t\('Investments'\)/);
+ assert.match(read('components/dashboard-cards.tsx'),/budgetRowsForMode\(rows, budget\.state\.mode\)\.filter\(row => row\.budget\)/,'flex mode hides per-category budgets on the dashboard too');
+ assert.match(read('lib/dashboard-layout.ts'),/upcoming: 'Upcoming payments'/);assert.doesNotMatch(comparison,/label=\{t\('Net worth'\)\}/);
+});

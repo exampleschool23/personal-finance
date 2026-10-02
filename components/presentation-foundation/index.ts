@@ -17,6 +17,7 @@ export { InlineError } from './inline-error';
 export { ResourceState } from './resource-state';
 export { LoadingPlaceholder, PageSkeleton, WorkspaceSkeleton, ChartSkeleton, StatTilesSkeleton, PanelSkeleton, CashflowPreviewSkeleton } from './loading-placeholder';
 export { Segmented, type SegmentedOption } from './segmented';
+export { RowMenu, type RowMenuItem } from './row-menu';
 export { AssetCard } from './asset-card';
 export { AssetIcon } from './asset-icon';
 export { RecordIcon } from './record-icon';

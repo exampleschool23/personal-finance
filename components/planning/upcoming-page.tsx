@@ -1,4 +1,5 @@
 "use client";
+import { RowMenu } from '@/components/presentation-foundation/row-menu';
 import { Fragment, useState } from 'react';
 import { CalendarCheck, ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
@@ -83,11 +84,11 @@ export function UpcomingPage({ data, save, currency, rates }: Props) {
      <strong className={income.includes(item.record.kind) ? 'transaction-amount positive' : 'transaction-amount'}>{formatMoney(item.amount, item.record.currency, locale)}</strong>
      <div className="row-actions">{(item.status === 'due' || item.status === 'overdue') && <>
       <Button size="sm" variant="outline" disabled={busy || (!item.installment && item.date > today)} onClick={() => pay(item)}>{t('Record payment')}</Button>
-      {!item.installment && <Button size="sm" variant="ghost" disabled={busy} onClick={() => skip(item)} aria-label={t('Skip this occurrence') + ': ' + item.record.name}>{t('Skip')}</Button>}
+      {!item.installment && <RowMenu label={t('Actions for {name}', { name: item.record.name })} items={[{ label: t('Skip this occurrence'), disabled: busy, onSelect: () => skip(item) }]}/>}
      </>}</div>
     </li>
    </Fragment>)}</ul> : <EmptyState icon={<Repeat aria-hidden="true"/>} description={t('Nothing is scheduled this month. Add a monthly or weekly income or expense to see it here.')}/>}
-  </section> : <RecurringCalendar month={month} items={items} today={today}/>}
+  </section> : <RecurringCalendar month={month} items={items} reminders={reminders} today={today}/>}
   <section className="panel upcoming-section" aria-labelledby="upcoming-reminders">
    <header className="upcoming-section-heading"><h2 id="upcoming-reminders">{t('Debt repayments and deposit maturities')}<Count value={reminders.length}/></h2></header>
    {reminders.length > 0 ? <div className="table-scroll"><table><thead><tr><th>{t('Name')}</th><th>{t('Date')}</th><th>{t('Amount')}</th><th>{t('Actions')}</th></tr></thead><tbody>{reminders.map(item => <tr key={item.key}>
@@ -105,16 +106,20 @@ export function UpcomingPage({ data, save, currency, rates }: Props) {
 }
 
 /** The month as a Monday-first grid, each day holding its scheduled items as chips. */
-function RecurringCalendar({ month, items, today }: { month: string; items: RecurringItem[]; today: string }) {
+function RecurringCalendar({ month, items, reminders, today }: { month: string; items: RecurringItem[]; reminders: ReturnType<typeof upcomingPayments>; today: string }) {
  const { t, locale } = useLanguage();
  const byDay = new Map<string, RecurringItem[]>();
  for (const item of items) byDay.set(item.date, [...(byDay.get(item.date) ?? []), item]);
+ // Debt repayments and maturities sit on the calendar too, so it agrees with the list below it.
+ const dueByDay = new Map<string, typeof reminders>();
+ for (const item of reminders) dueByDay.set(item.date, [...(dueByDay.get(item.date) ?? []), item]);
  return <section className="panel recurring-calendar" aria-label={t('Calendar')}>
   <div className="recurring-calendar-grid" role="grid">
    <div role="row" className="recurring-calendar-week">{weekdayLabels(locale).map(day => <span role="columnheader" key={day}>{day}</span>)}</div>
    {calendarWeeks(month).map((week, index) => <div role="row" className="recurring-calendar-week" key={index}>{week.map((day, position) => <div role="gridcell" key={day ?? 'empty' + position} className="recurring-calendar-day" data-empty={!day || undefined} data-today={day === today || undefined}>
     {day && <><span className="recurring-calendar-date">{formatNumber(Number(day.slice(8)), locale, 0)}</span>
-     {(byDay.get(day) ?? []).map(item => <span key={item.key} className="recurring-chip" data-direction={item.direction} data-status={item.status} title={`${item.record.name} · ${formatMoney(item.amount, item.record.currency, locale)}`}><span>{item.record.name}</span><strong>{formatMoney(item.amount, item.record.currency, locale)}</strong></span>)}</>}
+     {(byDay.get(day) ?? []).map(item => <span key={item.key} className="recurring-chip" data-direction={item.direction} data-status={item.status} title={`${item.record.name} · ${formatMoney(item.amount, item.record.currency, locale)}`}><span>{item.record.name}</span><strong>{formatMoney(item.amount, item.record.currency, locale)}</strong></span>)}
+     {(dueByDay.get(day) ?? []).map(item => <span key={item.key} className="recurring-chip" data-direction={item.type === 'maturity' || item.record.kind === 'Money lent' ? 'income' : 'expense'} data-status={item.overdue ? 'overdue' : 'due'} title={`${item.record.name} · ${t(item.record.kind)} · ${formatMoney(item.amount, item.record.currency, locale)}`}><span>{item.record.name}</span><strong>{formatMoney(item.amount, item.record.currency, locale)}</strong></span>)}</>}
    </div>)}</div>)}
   </div>
  </section>;
