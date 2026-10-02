@@ -2505,5 +2505,22 @@
   "Filter by tag": "Filtrer par étiquette",
   "Match tags": "Correspondance des étiquettes",
   "Any tag": "N’importe quelle étiquette",
-  "Every tag": "Chaque étiquette"
+  "Every tag": "Chaque étiquette",
+  "CSV file": "Fichier CSV",
+  "Tag": "Étiquette",
+  "In {currency}": "En {currency}",
+  "No business": "Aucune entreprise",
+  "Which currency was it?": "Dans quelle devise ?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Aucun taux de change de {from} vers {to} pour le {date}. Combien cela fait-il en {to}, la devise de {account} ?",
+  "Type the rate instead": "Saisir le taux",
+  "Type the rate: how many {to} is 1 {from}?": "Saisissez le taux : combien de {to} vaut 1 {from} ?",
+  "Type the amount instead": "Saisir le montant",
+  "Change account": "Changer de compte",
+  "Change business": "Changer d’entreprise",
+  "Make it an expense": "En faire une dépense",
+  "Make it income": "En faire un revenu",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Choisissez quoi ajouter ou tapez-le, par exemple café 4,5 ou +1500 salaire.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} ne fait pas partie de vos devises. Saisissez le montant en {own} ou ajoutez {currency} dans les Paramètres.",
+  "Time zone": "Fuseau horaire",
+  "Select your time zone": "Choisissez votre fuseau horaire"
 }

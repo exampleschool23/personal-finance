@@ -2505,5 +2505,22 @@
   "Filter by tag": "Фильтр по тегу",
   "Match tags": "Совпадение тегов",
   "Any tag": "Любой тег",
-  "Every tag": "Каждый тег"
+  "Every tag": "Каждый тег",
+  "CSV file": "CSV-файл",
+  "Tag": "Тег",
+  "In {currency}": "В {currency}",
+  "No business": "Без бизнеса",
+  "Which currency was it?": "В какой валюте?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Нет курса {from} к {to} на {date}. Сколько это в {to}, валюте счёта {account}?",
+  "Type the rate instead": "Ввести курс",
+  "Type the rate: how many {to} is 1 {from}?": "Введите курс: сколько {to} стоит 1 {from}?",
+  "Type the amount instead": "Ввести сумму",
+  "Change account": "Сменить счёт",
+  "Change business": "Сменить бизнес",
+  "Make it an expense": "Сделать расходом",
+  "Make it income": "Сделать доходом",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Выберите, что добавить, или напишите, например: кофе 4,5 или +1500 зарплата.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} нет среди ваших валют. Введите сумму в {own} или добавьте {currency} в Настройках.",
+  "Time zone": "Часовой пояс",
+  "Select your time zone": "Выберите часовой пояс"
 }

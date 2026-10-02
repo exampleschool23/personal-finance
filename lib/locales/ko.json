@@ -2505,5 +2505,22 @@
   "Filter by tag": "태그별 필터",
   "Match tags": "태그 일치 방식",
   "Any tag": "아무 태그",
-  "Every tag": "모든 태그 포함"
+  "Every tag": "모든 태그 포함",
+  "CSV file": "CSV 파일",
+  "Tag": "태그",
+  "In {currency}": "{currency}(으)로",
+  "No business": "사업 없음",
+  "Which currency was it?": "어떤 통화였나요?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "{date}의 {from}→{to} 환율이 없습니다. {account}의 통화인 {to}로는 얼마인가요?",
+  "Type the rate instead": "대신 환율 입력",
+  "Type the rate: how many {to} is 1 {from}?": "환율을 입력하세요: 1 {from}은(는) 몇 {to}인가요?",
+  "Type the amount instead": "대신 금액 입력",
+  "Change account": "계좌 변경",
+  "Change business": "사업 변경",
+  "Make it an expense": "지출로 바꾸기",
+  "Make it income": "수입으로 바꾸기",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "추가할 항목을 고르거나 입력하세요. 예: 커피 4.5 또는 +1500 월급.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency}은(는) 내 통화가 아닙니다. {own}(으)로 금액을 입력하거나 설정에서 {currency}을(를) 추가하세요.",
+  "Time zone": "시간대",
+  "Select your time zone": "시간대 선택"
 }

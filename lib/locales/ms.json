@@ -2505,5 +2505,22 @@
   "Filter by tag": "Tapis mengikut tag",
   "Match tags": "Padanan tag",
   "Any tag": "Mana-mana tag",
-  "Every tag": "Setiap tag"
+  "Every tag": "Setiap tag",
+  "CSV file": "Fail CSV",
+  "Tag": "Tag",
+  "In {currency}": "Dalam {currency}",
+  "No business": "Tiada perniagaan",
+  "Which currency was it?": "Mata wang apa?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Tiada kadar pertukaran {from} kepada {to} untuk {date}. Berapakah nilainya dalam {to}, mata wang {account}?",
+  "Type the rate instead": "Taip kadar sahaja",
+  "Type the rate: how many {to} is 1 {from}?": "Taip kadar: 1 {from} bersamaan berapa {to}?",
+  "Type the amount instead": "Taip jumlah sahaja",
+  "Change account": "Tukar akaun",
+  "Change business": "Tukar perniagaan",
+  "Make it an expense": "Jadikan perbelanjaan",
+  "Make it income": "Jadikan pendapatan",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Pilih apa yang hendak ditambah, atau taip, contohnya kopi 4.5 atau +1500 gaji.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} bukan salah satu mata wang anda. Taip jumlah dalam {own}, atau tambah {currency} dalam Tetapan.",
+  "Time zone": "Zon waktu",
+  "Select your time zone": "Pilih zon waktu anda"
 }

@@ -2505,5 +2505,22 @@
   "Filter by tag": "タグで絞り込む",
   "Match tags": "タグの一致条件",
   "Any tag": "いずれかのタグ",
-  "Every tag": "すべてのタグ"
+  "Every tag": "すべてのタグ",
+  "CSV file": "CSVファイル",
+  "Tag": "タグ",
+  "In {currency}": "{currency}で",
+  "No business": "事業なし",
+  "Which currency was it?": "どの通貨でしたか？",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "{date}の{from}から{to}への為替レートがありません。{account}の通貨である{to}ではいくらですか？",
+  "Type the rate instead": "レートを入力する",
+  "Type the rate: how many {to} is 1 {from}?": "レートを入力してください：1 {from}は何{to}ですか？",
+  "Type the amount instead": "金額を入力する",
+  "Change account": "口座を変更",
+  "Change business": "事業を変更",
+  "Make it an expense": "支出にする",
+  "Make it income": "収入にする",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "追加する項目を選ぶか、入力してください。例：コーヒー 4.5、+1500 給料。",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency}はあなたの通貨ではありません。{own}で金額を入力するか、設定で{currency}を追加してください。",
+  "Time zone": "タイムゾーン",
+  "Select your time zone": "タイムゾーンを選択"
 }

@@ -2505,5 +2505,22 @@
   "Filter by tag": "Filtrovat podle štítku",
   "Match tags": "Shoda štítků",
   "Any tag": "Kterýkoli štítek",
-  "Every tag": "Každý štítek"
+  "Every tag": "Každý štítek",
+  "CSV file": "Soubor CSV",
+  "Tag": "Štítek",
+  "In {currency}": "V {currency}",
+  "No business": "Bez firmy",
+  "Which currency was it?": "V jaké měně?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Pro {date} není k dispozici kurz {from} na {to}. Kolik to je v {to}, měně účtu {account}?",
+  "Type the rate instead": "Zadat kurz",
+  "Type the rate: how many {to} is 1 {from}?": "Zadejte kurz: kolik {to} stojí 1 {from}?",
+  "Type the amount instead": "Zadat částku",
+  "Change account": "Změnit účet",
+  "Change business": "Změnit firmu",
+  "Make it an expense": "Udělat z toho výdaj",
+  "Make it income": "Udělat z toho příjem",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Vyberte, co přidat, nebo to napište, např. káva 4,5 nebo +1500 výplata.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} nepatří mezi vaše měny. Zadejte částku v {own}, nebo přidejte {currency} v Nastavení.",
+  "Time zone": "Časové pásmo",
+  "Select your time zone": "Vyberte časové pásmo"
 }

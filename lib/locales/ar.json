@@ -2505,5 +2505,22 @@
   "Filter by tag": "التصفية حسب الوسم",
   "Match tags": "مطابقة الوسوم",
   "Any tag": "أي وسم",
-  "Every tag": "كل وسم"
+  "Every tag": "كل وسم",
+  "CSV file": "ملف CSV",
+  "Tag": "وسم",
+  "In {currency}": "بعملة {currency}",
+  "No business": "بدون عمل تجاري",
+  "Which currency was it?": "بأي عملة كان؟",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "لا يوجد سعر صرف من {from} إلى {to} بتاريخ {date}. كم يساوي هذا بعملة {to}، عملة {account}؟",
+  "Type the rate instead": "إدخال السعر بدلاً من ذلك",
+  "Type the rate: how many {to} is 1 {from}?": "أدخل السعر: كم {to} يساوي 1 {from}؟",
+  "Type the amount instead": "إدخال المبلغ بدلاً من ذلك",
+  "Change account": "تغيير الحساب",
+  "Change business": "تغيير العمل التجاري",
+  "Make it an expense": "اجعله مصروفاً",
+  "Make it income": "اجعله دخلاً",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "اختر ما تريد إضافته أو اكتبه، مثل قهوة 4.5 أو ‎+1500 راتب.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} ليست من عملاتك. أدخل المبلغ بعملة {own}، أو أضف {currency} في الإعدادات.",
+  "Time zone": "المنطقة الزمنية",
+  "Select your time zone": "اختر منطقتك الزمنية"
 }

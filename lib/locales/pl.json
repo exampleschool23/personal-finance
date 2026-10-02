@@ -2505,5 +2505,22 @@
   "Filter by tag": "Filtruj według tagu",
   "Match tags": "Dopasowanie tagów",
   "Any tag": "Dowolny tag",
-  "Every tag": "Każdy tag"
+  "Every tag": "Każdy tag",
+  "CSV file": "Plik CSV",
+  "Tag": "Tag",
+  "In {currency}": "W {currency}",
+  "No business": "Bez firmy",
+  "Which currency was it?": "W jakiej walucie?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Brak kursu {from} na {to} z dnia {date}. Ile to jest w {to}, walucie konta {account}?",
+  "Type the rate instead": "Wpisz kurs",
+  "Type the rate: how many {to} is 1 {from}?": "Wpisz kurs: ile {to} kosztuje 1 {from}?",
+  "Type the amount instead": "Wpisz kwotę",
+  "Change account": "Zmień konto",
+  "Change business": "Zmień firmę",
+  "Make it an expense": "Zmień na wydatek",
+  "Make it income": "Zmień na przychód",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Wybierz, co dodać, albo wpisz, np. kawa 4,5 lub +1500 pensja.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} nie należy do Twoich walut. Wpisz kwotę w {own} albo dodaj {currency} w Ustawieniach.",
+  "Time zone": "Strefa czasowa",
+  "Select your time zone": "Wybierz strefę czasową"
 }

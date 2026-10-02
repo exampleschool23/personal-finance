@@ -2505,5 +2505,22 @@
   "Filter by tag": "Filteren op label",
   "Match tags": "Labels matchen",
   "Any tag": "Elk label",
-  "Every tag": "Alle gekozen labels"
+  "Every tag": "Alle gekozen labels",
+  "CSV file": "CSV-bestand",
+  "Tag": "Label",
+  "In {currency}": "In {currency}",
+  "No business": "Geen bedrijf",
+  "Which currency was it?": "In welke valuta?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Er is geen wisselkoers van {from} naar {to} voor {date}. Hoeveel is dit in {to}, de valuta van {account}?",
+  "Type the rate instead": "Typ de koers",
+  "Type the rate: how many {to} is 1 {from}?": "Typ de koers: hoeveel {to} is 1 {from}?",
+  "Type the amount instead": "Typ het bedrag",
+  "Change account": "Rekening wijzigen",
+  "Change business": "Bedrijf wijzigen",
+  "Make it an expense": "Maak er een uitgave van",
+  "Make it income": "Maak er inkomsten van",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Kies wat je wilt toevoegen of typ het, bijvoorbeeld koffie 4,5 of +1500 salaris.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} hoort niet bij je valuta's. Typ het bedrag in {own} of voeg {currency} toe in Instellingen.",
+  "Time zone": "Tijdzone",
+  "Select your time zone": "Kies je tijdzone"
 }

@@ -2505,5 +2505,22 @@
   "Filter by tag": "I-filter ayon sa tag",
   "Match tags": "Pagtutugma ng tag",
   "Any tag": "Alinmang tag",
-  "Every tag": "Bawat tag"
+  "Every tag": "Bawat tag",
+  "CSV file": "CSV file",
+  "Tag": "Tag",
+  "In {currency}": "Sa {currency}",
+  "No business": "Walang negosyo",
+  "Which currency was it?": "Anong currency ito?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "Walang exchange rate mula {from} papuntang {to} para sa {date}. Magkano ito sa {to}, ang currency ng {account}?",
+  "Type the rate instead": "I-type na lang ang rate",
+  "Type the rate: how many {to} is 1 {from}?": "I-type ang rate: ilang {to} ang 1 {from}?",
+  "Type the amount instead": "I-type na lang ang halaga",
+  "Change account": "Palitan ang account",
+  "Change business": "Palitan ang negosyo",
+  "Make it an expense": "Gawing gastos",
+  "Make it income": "Gawing kita",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "Piliin ang idaragdag, o i-type ito, gaya ng kape 4.5 o +1500 sahod.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "Ang {currency} ay hindi isa sa iyong mga currency. I-type ang halaga sa {own}, o idagdag ang {currency} sa Settings.",
+  "Time zone": "Time zone",
+  "Select your time zone": "Piliin ang iyong time zone"
 }

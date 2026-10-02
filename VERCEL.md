@@ -155,14 +155,23 @@ Disconnect in Settings unlinks it. Chat links are not part of backups. Without
 the three variables, the Settings panel reports that Telegram is awaiting server
 setup and nothing is sent.
 
-The morning digest runs from `vercel.json` at 04:00 UTC (09:00 in Tashkent)
-through `/api/cron/telegram-digest`, protected by the same `CRON_SECRET`. It
+The morning digest arrives at each owner's local morning. `vercel.json` runs
+`/api/cron/telegram-digest` every hour, protected by the same `CRON_SECRET`;
+each run sends to owners whose local time is between 08:00 and 12:00 and who
+have not had today's digest. The local day is claimed in
+`telegram_subscriptions.digest_sent_on` before sending (migration 095), so
+nobody gets two digests a day and a failed send is retried the next hour. The
+time zone is `user_preferences.timezone`, set in **Settings → About you**
+(filled from the browser the first time Settings opens); without one it is
+derived from the country, then from a language spoken mainly in one country,
+then UTC. Hourly cron jobs need a Vercel plan that allows them (Hobby runs cron
+jobs at most once a day). The digest
 opens with a greeting by the name saved in Settings and one line of
 encouragement, then lists what is overdue or due in each owner's reminder window
 (snoozes from the Upcoming page apply), yesterday's net-worth change and the
 last seven days' spending against the seven before. It is sent every morning,
 and answers 503 when any owner could not be reached so monitoring notices.
-`/api/cron/telegram-recap` sends a weekly recap on Sundays at 15:00 UTC: money
+`/api/cron/telegram-recap` (also hourly) sends a weekly recap on Sunday between 18:00 and 22:00 local time, once per Sunday (`recap_sent_on`): money
 saved, the top spending category and the goals that received contributions, with
 a share button that carries no amounts. Celebrations (first record, a savings
 goal passing 25/50/75/100 percent, a new net-worth high found by the daily
@@ -173,12 +182,25 @@ the write routes themselves, after the response, and never delays or fails a
 save.
 
 Once linked, the bot's keyboard adds records with buttons: Expense, Income,
-Transfer, Pay loan or debt, Mortgage payment and Upcoming payments. Only the
-amount, an optional name and a typed date are ever entered as text. Expenses
-and income take the chosen cash account's currency; repayments and mortgage
-payments offer only accounts in the liability's currency; transfers across
+Transfer, Pay loan or debt, Mortgage payment and Upcoming payments. An entry
+can also be typed as one message, read by fixed rules in
+`lib/telegram-entry.ts` (no AI): "coffee 4.5", "taxi 25 000 uzs", "+1500
+salary", "lunch 12 eur yesterday", "groceries 30 card". The amount, an optional
+currency from the owner's preferred currencies, a sign for income, today or
+yesterday (in any app language) or a typed date, and a cash account's name are
+recognised; the category comes from the owner's transaction rules, then their
+last record with the same name, then a keyword table. The bot shows a
+confirmation card with Save, Change category, Change account (and Change
+business) and Cancel; nothing is saved before Save. Text it cannot read gets the
+menu and an example. When the owner has businesses, expenses and income may name
+one (business income must). Expenses and income may be entered in another
+preferred currency than their account, and loans and mortgages may be paid from
+an account in another currency: the bot converts with the app's dated rates
+(ECB, then the Central Bank of Uzbekistan) and, when no rate exists for the day,
+asks for the converted amount or the rate instead of guessing. Transfers across
 currencies ask for the amount received. Saving goes through
-`telegram_save_finance_record` and `telegram_planning_action`, which run the
+`telegram_save_finance_record`, `telegram_planning_action` and
+`telegram_payment_with_fx` (migration 095), which run the
 app's own save functions as the linked owner and are callable only by the
 service role, so validation, revisions, undo and Recently deleted behave as in
 the app. A half-finished entry lives in `telegram_drafts` for thirty minutes.

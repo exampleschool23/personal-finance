@@ -2505,5 +2505,22 @@
   "Filter by tag": "فیلتر بر اساس برچسب",
   "Match tags": "تطبیق برچسب‌ها",
   "Any tag": "هر برچسبی",
-  "Every tag": "همه برچسب‌های انتخابی"
+  "Every tag": "همه برچسب‌های انتخابی",
+  "CSV file": "فایل CSV",
+  "Tag": "برچسب",
+  "In {currency}": "به {currency}",
+  "No business": "بدون کسب‌وکار",
+  "Which currency was it?": "به چه ارزی بود؟",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "نرخ تبدیل {from} به {to} برای {date} موجود نیست. این مبلغ به {to}، ارز {account}، چقدر است؟",
+  "Type the rate instead": "به‌جای آن نرخ را وارد کنید",
+  "Type the rate: how many {to} is 1 {from}?": "نرخ را وارد کنید: 1 {from} چند {to} است؟",
+  "Type the amount instead": "به‌جای آن مبلغ را وارد کنید",
+  "Change account": "تغییر حساب",
+  "Change business": "تغییر کسب‌وکار",
+  "Make it an expense": "آن را هزینه کنید",
+  "Make it income": "آن را درآمد کنید",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "انتخاب کنید چه چیزی اضافه شود، یا بنویسید، مثلاً قهوه 4.5 یا ‎+1500 حقوق.",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} جزو ارزهای شما نیست. مبلغ را به {own} وارد کنید یا {currency} را در تنظیمات اضافه کنید.",
+  "Time zone": "منطقه زمانی",
+  "Select your time zone": "منطقه زمانی خود را انتخاب کنید"
 }

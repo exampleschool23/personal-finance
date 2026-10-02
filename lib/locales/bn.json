@@ -2505,5 +2505,22 @@
   "Filter by tag": "ট্যাগ অনুযায়ী ফিল্টার করুন",
   "Match tags": "ট্যাগ মেলানো",
   "Any tag": "যেকোনো ট্যাগ",
-  "Every tag": "প্রতিটি ট্যাগ"
+  "Every tag": "প্রতিটি ট্যাগ",
+  "CSV file": "CSV ফাইল",
+  "Tag": "ট্যাগ",
+  "In {currency}": "{currency}-এ",
+  "No business": "কোনো ব্যবসা নয়",
+  "Which currency was it?": "এটি কোন মুদ্রায় ছিল?",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "{date} তারিখের জন্য {from} থেকে {to} বিনিময় হার নেই। এটি {to}-এ কত, যা {account}-এর মুদ্রা?",
+  "Type the rate instead": "এর বদলে হার লিখুন",
+  "Type the rate: how many {to} is 1 {from}?": "হার লিখুন: 1 {from} কত {to}?",
+  "Type the amount instead": "এর বদলে পরিমাণ লিখুন",
+  "Change account": "অ্যাকাউন্ট বদলান",
+  "Change business": "ব্যবসা বদলান",
+  "Make it an expense": "এটিকে খরচ করুন",
+  "Make it income": "এটিকে আয় করুন",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "কী যোগ করবেন বেছে নিন, অথবা লিখুন, যেমন কফি 4.5 বা +1500 বেতন।",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} আপনার মুদ্রাগুলোর মধ্যে নেই। পরিমাণ {own}-এ লিখুন, অথবা সেটিংসে {currency} যোগ করুন।",
+  "Time zone": "সময় অঞ্চল",
+  "Select your time zone": "আপনার সময় অঞ্চল বেছে নিন"
 }

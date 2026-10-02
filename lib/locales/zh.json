@@ -2505,5 +2505,22 @@
   "Filter by tag": "按标签筛选",
   "Match tags": "标签匹配方式",
   "Any tag": "任一标签",
-  "Every tag": "每个标签"
+  "Every tag": "每个标签",
+  "CSV file": "CSV 文件",
+  "Tag": "标签",
+  "In {currency}": "以 {currency} 计",
+  "No business": "不关联业务",
+  "Which currency was it?": "是哪种货币？",
+  "There is no {from} to {to} exchange rate for {date}. How much is this in {to}, the currency of {account}?": "{date} 没有 {from} 兑 {to} 的汇率。这笔金额折合多少 {to}（{account} 的货币）？",
+  "Type the rate instead": "改为输入汇率",
+  "Type the rate: how many {to} is 1 {from}?": "输入汇率：1 {from} 等于多少 {to}？",
+  "Type the amount instead": "改为输入金额",
+  "Change account": "更改账户",
+  "Change business": "更改业务",
+  "Make it an expense": "改为支出",
+  "Make it income": "改为收入",
+  "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "选择要添加的内容，或直接输入，例如 咖啡 4.5 或 +1500 工资。",
+  "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} 不是你的货币之一。请以 {own} 输入金额，或在设置中添加 {currency}。",
+  "Time zone": "时区",
+  "Select your time zone": "选择你的时区"
 }
