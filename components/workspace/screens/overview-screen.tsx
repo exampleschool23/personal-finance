@@ -6,6 +6,7 @@ import { useState, type ReactNode } from 'react';
 import { LayoutGrid } from 'lucide-react';
 import { CustomizeDashboardDialog, DashboardBoard } from '@/components/dashboard-board';
 import { BudgetCard, GoalsCard, RecentTransactionsCard } from '@/components/dashboard-cards';
+import { BusinessCard } from '@/components/business-card';
 import { Button } from '@/components/ui/button';
 import { useDashboardLayout } from '@/hooks/use-dashboard-layout';
 import type { DashboardCard } from '@/lib/dashboard-layout';
@@ -21,7 +22,7 @@ import { useWorkspace } from '@/components/workspace/workspace-provider';
 
 export function OverviewScreen() {
  const { t } = useLanguage();
- const { user, demo, rows, addCashFlow, current, currency, market, reload, preferencesData, excludedCurrencies, snapshots, forecast, forecastReady, planning, transactionTools, expensePlans, workspacePreferences, workspaceLoading } = useWorkspace();
+ const { user, demo, rows, addCashFlow, current, currency, market, reload, preferencesData, excludedCurrencies, snapshots, forecast, forecastReady, planning, transactionTools, expensePlans, workspacePreferences, workspaceLoading, businessList, setSettingUpBusinesses } = useWorkspace();
  const planningReady = demo || (!planning.loading && !planning.error);
  const cards = useOverviewCards({ entries: current, currency, excludedCurrencies, forecast, forecastReady, planning: planningReady ? planning.data : null });
  const { layout, change } = useDashboardLayout(workspacePreferences, demo);
@@ -30,6 +31,7 @@ export function OverviewScreen() {
   net_worth: netWorth,
   spending: planningReady && <SpendingPaceCard owner={user} demo={demo} revision={reload} data={planning.data} splits={transactionTools.data.splits} snapshots={snapshots.snapshots} currency={currency} market={market}/>,
   budget: planningReady && <BudgetCard owner={user} demo={demo} revision={reload} data={planning.data} currency={currency} market={market} splits={transactionTools.data.splits}/>,
+  business: planningReady && <BusinessCard owner={user} demo={demo} revision={reload} data={planning.data} splits={transactionTools.data.splits} businesses={businessList} currency={currency} market={market} onSetup={() => setSettingUpBusinesses(true)}/>,
   commitments: cards.commitments,
   allocation: cards.allocation,
   goals: planningReady && <GoalsCard goals={planning.data.goals} order={savedGoalOrder(workspacePreferences.data.preferences)} data={planning.data} currency={currency} netWorth={code => goalFinancials(planning.data.records, [], depositToday().slice(0, 7), code, market, false).netWorth}/>,

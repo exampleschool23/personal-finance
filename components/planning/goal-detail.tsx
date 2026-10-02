@@ -6,7 +6,7 @@ import { goalEmoji } from '@/lib/goal-emoji';
 import { goalStatus, goalStatusLabels, goalSummary } from '@/lib/goal-projection';
 import type { Goal } from '@/lib/planning';
 
-/** The head of a goal's page, as in Monarch: its mark, name and status, saved of target with progress, then left to save, monthly saving and target date. */
+/** The head of a goal's page: its mark, name and status, saved of target with progress, then left to save, monthly saving and target date. */
 export function GoalDetail({ goal, current, currency, today }: { goal: Goal; current: number | null; currency: string; today: string }) {
  const { t, locale } = useLanguage();
  const money = (amount: number) => formatMoney(amount, currency, locale);

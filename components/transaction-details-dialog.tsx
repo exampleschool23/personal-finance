@@ -1,6 +1,11 @@
 "use client";
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import type { BusinessOption } from '@/components/presentation-foundation/business-filter';
+import { BusinessPicker, TagSelector } from '@/components/transactions-page';
+import { showError } from '@/lib/feedback';
+import { canAssignBusiness } from '@/lib/business';
+import { canTag, type Tag } from '@/lib/tags';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { CategoryBadge } from '@/components/presentation-foundation/category-badge';
@@ -8,8 +13,14 @@ import { useLanguage } from '@/components/language-provider';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import type { Entry } from '@/lib/finance';
 
-export function TransactionDetailsDialog({record,incoming,categoryName,businessName,accountName,editable,onEdit,onClose}:{record:Entry;incoming:boolean;categoryName?:string;businessName?:string;accountName?:string;editable:boolean;onEdit:()=>void;onClose:()=>void}) {
+type TagProps={tags:readonly Tag[];tagIds:readonly string[];onTags:(add:string[],remove:string[])=>Promise<unknown>;onCreateTag:(name:string)=>Promise<string>};
+/** A transaction at a glance. Its business and tags change right here, as on the transaction drawer. */
+export function TransactionDetailsDialog({record:initial,incoming,categoryName,businesses,onBusiness,tagging,accountName,editable,onEdit,onClose}:{record:Entry;incoming:boolean;categoryName?:string;businesses:readonly BusinessOption[];onBusiness:(business:string|null)=>Promise<number>;tagging:TagProps;accountName?:string;editable:boolean;onEdit:()=>void;onClose:()=>void}) {
  const {t,locale}=useLanguage();
+ const [record,setRecord]=useState(initial),[tagIds,setTagIds]=useState<readonly string[]>(tagging.tagIds);
+ const business=businesses.find(item=>item.id===record.business_id);
+ async function changeBusiness(next:string|null){try{if(await onBusiness(next))setRecord({...record,business_id:next});}catch(reason){showError((reason as Error).message||'Could not save changes.');}}
+ async function toggleTag(id:string){const has=tagIds.includes(id);try{await tagging.onTags(has?[]:[id],has?[id]:[]);setTagIds(has?tagIds.filter(item=>item!==id):[...tagIds,id]);}catch(reason){showError((reason as Error).message||'Could not save changes.');}}
  const money=(value:number)=>formatMoney(value,record.currency,locale);
  const rows:[string,ReactNode][]=[
   [t('Amount'),<strong key="a" className={incoming?'positive':'negative'}>{`${incoming?'+':'−'}${money(record.amount)}`}</strong>],
@@ -19,7 +30,10 @@ export function TransactionDetailsDialog({record,incoming,categoryName,businessN
  ];
  if(record.end_date)rows.push([t('Last active date'),formatDate(record.end_date,locale)]);
  if(record.mortgage_payment_id)rows.push([t('Principal'),money(Number(record.payment_principal))],[t('Interest'),money(Number(record.payment_interest))]);
- if(businessName)rows.push([t('Business'),businessName]);
+ const businessEditable=businesses.length>0&&(canAssignBusiness(record,null)||businesses.some(item=>canAssignBusiness(record,item.id)));
+ if(businessEditable)rows.push([t('Business'),<BusinessPicker key="b" record={record} businesses={businesses} onChange={next=>void changeBusiness(next)}/>]);
+ else if(business)rows.push([t('Business'),business.name]);
+ if(canTag(record))rows.push([t('Tags'),<TagSelector key="t" tags={tagging.tags} selected={tagIds} onToggle={id=>void toggleTag(id)} onCreate={tagging.onCreateTag}/>]);
  if(accountName)rows.push([t('Account'),accountName]);
  if(record.account_currency&&record.account_currency!==record.currency&&record.account_exchange_rate)rows.push([t('Exchange rate'),`1 ${record.account_currency} = ${formatNumber(record.account_exchange_rate,locale)} ${record.currency}`]);
  if(record.notes)rows.push([t('Notes'),<span key="n" className="whitespace-pre-wrap break-words">{record.notes}</span>]);

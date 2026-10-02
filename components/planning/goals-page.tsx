@@ -72,7 +72,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
  const totals=new Map([...new Set([...currencies,...data.goals.map(goalCurrency)])].map(currency=>[currency,goalFinancials(data.records,plans,today.slice(0,7),currency,market,plansReady)]));
  const financials=active?totals.get(goalCurrency(active)):null;
  const archivedCount=order.goals.filter(goal=>goal.archived).length;
- // Monarch's goals page: one list in the person's own order (drag the six dots), with what is free for goals beside it.
+ // Goals page: one list in the person's own order (drag the six dots), with what is free for goals beside it.
  return <>
   <PageHeader title={t('Goals')}><Button onClick={()=>setSetup(true)}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></PageHeader>
   <ErrorPopup message={order.error}/>

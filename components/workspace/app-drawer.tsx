@@ -54,7 +54,7 @@ export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pend
   </nav></SidebarContent>
   <SidebarFooter className="sidebar-account">
    <nav aria-label={t('Manage')}><SidebarMenu>{sections.filter(section => section.group === 'Manage').map(item)}</SidebarMenu></nav>
-   {/* The account opens Settings, Monarch-style; sign out stays beside it. */}
+   {/* The account opens Settings; sign out stays beside it. */}
    <div className="user-line">
     <DrawerLink href={settings.path} className="user-link" data-active={active === settings.name} aria-current={active === settings.name ? 'page' : undefined} aria-label={`${account.title}, ${t(settings.label)}`} title={t(settings.label)} onClick={follow(settings.path)}>
      <span className="avatar">{account.initial}</span>

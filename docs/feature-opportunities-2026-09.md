@@ -67,7 +67,7 @@ Do not count investment/property wealth as immediately spendable. Keep currencie
 
 Use one shared recurrence engine for forecasts, suggestions, calendars and reminder scheduling. Define anchor dates, month-end behavior, leap years, stop dates, skipped occurrences and “this occurrence” versus “future occurrences” edits. Do not approximate weekly events as a fixed monthly amount for due-date calculations.
 
-Start with in-app upcoming/overdue review. Optional email or push needs explicit opt-in, timezone handling, delivery deduplication, retry behavior and suppression after payment. A reminder must never create a payment. [Monarch's recurring view](https://www.monarch.com/features/tracking) documents bill/subscription calendars and reminders as a comparable workflow.
+Start with in-app upcoming/overdue review. Optional email or push needs explicit opt-in, timezone handling, delivery deduplication, retry behavior and suppression after payment. A reminder must never create a payment. The reference app's recurring view documents bill/subscription calendars and reminders as a comparable workflow.
 
 ### Investment events
 

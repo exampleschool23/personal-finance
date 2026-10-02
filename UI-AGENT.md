@@ -4,12 +4,13 @@ How to design and change screens in this app. `AGENTS.md` holds the design
 system (tokens, shared pieces, formatting); this file is the working method and
 the interaction rules that sit on top of it. Read both before UI work.
 
-## Reference first: Monarch Money
+## Reference first
 
-The product follows Monarch Money. Before redesigning a screen, look at how
-Monarch does that screen, and copy the structure, not the colours:
+Our design draws ideas from a leading budgeting app, called "the reference app"
+here. Before redesigning a screen, look at how the reference app does that
+screen, and borrow the structure, not the colours or branding:
 
-- Reference video: "The ONLY Monarch Money Tutorial You Need 2026"
+- Reference video: the full tutorial
   (youtube.com/watch?v=LAm5bJ9_gco). Chapters: categories 4:20, transactions
   13:29, budget 15:52, rollovers 22:45, goals 24:25, cash flow 30:14, reports
   32:15, recurring 35:12, investments 37:43, advice 38:40, AI assistant 40:03,
@@ -19,7 +20,7 @@ Monarch does that screen, and copy the structure, not the colours:
 - Then compare with our screen side by side in the sample workspace and list the
   differences before changing code.
 
-Patterns already taken from Monarch:
+Patterns already adopted:
 
 - Dashboard: two columns of cards; Customize is a two-column list of handle,
   name and switch; cards drag between columns (`components/dashboard-board.tsx`).

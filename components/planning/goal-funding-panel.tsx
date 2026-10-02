@@ -50,7 +50,7 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
  }
 
  if (!activeGoals.length && !savingsGoals.length) return null;
- // Monarch's goals sidebar: what is free for goals this month, the plan that uses it, and the money moved in and out of goals.
+ // Goals sidebar: what is free for goals this month, the plan that uses it, and the money moved in and out of goals.
  return <>
   {activeGoals.length > 0 && <section className="panel goal-funding-panel" aria-labelledby={`${activityId}-funding`}>
    <PanelTitle title={<span id={`${activityId}-funding`}>{t('Available for goals')}</span>} hint={t('Plan how to divide your monthly surplus between goals. Money stays in your accounts until you move it.')}/>

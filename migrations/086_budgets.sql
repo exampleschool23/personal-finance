@@ -1,4 +1,4 @@
--- Budgets: a monthly amount per category, Monarch-style category settings
+-- Budgets: a monthly amount per category, with category settings
 -- (Fixed / Flexible / Non-monthly, group, rollover, excluded), the budget
 -- style (category or flex) and whether an edited amount also covers later months. `category_key` is a built-in kind such as
 -- 'Rent expense', a custom category id, or 'flex:flexible' for the single

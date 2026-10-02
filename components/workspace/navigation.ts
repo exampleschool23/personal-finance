@@ -1,6 +1,6 @@
-import { ArrowLeftRight, CalendarClock, ChartColumn, ChartPie, ChartNoAxesCombined, HandCoins, LayoutDashboard, Settings, Sparkles, Target, Trash2, Wallet } from 'lucide-react';
+import { ArrowLeftRight, CalendarClock, ChartBarBig, ChartColumn, ChartPie, ChartNoAxesCombined, HandCoins, LayoutDashboard, Settings, Sparkles, Target, Trash2, Wallet } from 'lucide-react';
 
-/** Every workspace destination, in drawer order (Monarch's: dashboard first, then money in, out and owned).
+/** Every workspace destination, in drawer order (dashboard first, then money in, out and owned).
  * `name` identifies the section; `label` is the short drawer word. `group` places it: WORKSPACE in the main list,
  * Manage at the drawer foot above the account, and Account behind the account button itself. */
 export const sections = [
@@ -8,6 +8,7 @@ export const sections = [
  { name: 'Accounts', label: 'Accounts', icon: Wallet, path: '/accounts', group: 'WORKSPACE' },
  { name: 'Transactions', label: 'Transactions', icon: ArrowLeftRight, path: '/transactions', group: 'WORKSPACE' },
  { name: 'Income & expenses', label: 'Cash flow', icon: ChartColumn, path: '/income-expenses', group: 'WORKSPACE' },
+ { name: 'Reports', label: 'Reports', icon: ChartBarBig, path: '/reports', group: 'WORKSPACE' },
  { name: 'Budget', label: 'Budget', icon: ChartPie, path: '/budget', group: 'WORKSPACE' },
  { name: 'Upcoming payments', label: 'Recurring', icon: CalendarClock, path: '/upcoming', group: 'WORKSPACE' },
  { name: 'Assets & investments', label: 'Investments', icon: ChartNoAxesCombined, path: '/assets', group: 'WORKSPACE' },

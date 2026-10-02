@@ -23,7 +23,7 @@ const stepLabels = { select: 'Select', targets: 'Targets', contribution: 'Contri
 
 type Props = { goals: Goal[]; accounts: Entry[]; currency: string; currencies: string[]; netWorth: (currency: string) => number | null; today: string; maxDate: string; save: (action: string, data: unknown) => Promise<void>; onClose: () => void; onCreated: (ids: string[]) => void; onInvestment: () => void };
 
-/** Monarch's add-goal flow: pick goals from tiles, set targets, add what is already saved, then plan the monthly amount.
+/** Add-goal flow: pick goals from tiles, set targets, add what is already saved, then plan the monthly amount.
  * `currency` is the primary currency every new goal starts in. */
 export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth, today, maxDate, save, onClose, onCreated, onInvestment }: Props) {
  const { t, locale } = useLanguage();

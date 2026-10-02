@@ -9,7 +9,12 @@ import { PanelSkeleton } from '@/components/presentation-foundation/loading-plac
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { Segmented } from '@/components/presentation-foundation/segmented';
-import { BulkCategoryBar, CategoryPicker, DayGroup, MortgageSplit, RuleDialog, RulesDialog, TransactionAmount, ruleFromChange, useChoiceName } from '@/components/transactions-page';
+import { BulkEditBar, BulkEditSheet, BusinessPicker, CategoryPicker, DayGroup, MortgageSplit, RuleDialog, RulesDialog, TransactionAmount, newRule, ruleFromBusiness, ruleFromChange, useChoiceName } from '@/components/transactions-page';
+import { BusinessFilter } from '@/components/presentation-foundation/business-filter';
+import { TagChip } from '@/components/presentation-foundation/tag-chip';
+import { queryList, useLocationSearch } from '@/hooks/use-location-search';
+import { canAssignBusiness, nextPaletteColor } from '@/lib/business';
+import { tagsByRecord } from '@/lib/tags';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -19,19 +24,24 @@ import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { useTransactionRules } from '@/hooks/use-transaction-rules';
 import { depositToday } from '@/lib/deposit-interest';
 import { showAction, showError, showNotice } from '@/lib/feedback';
-import { expenses, income, normalizeEntry, type Entry } from '@/lib/finance';
+import { normalizeEntry, type Entry } from '@/lib/finance';
 import { formatMoney, formatNumber } from '@/lib/format';
 import { convertAmount } from '@/lib/market';
-import { emptyPlanning, type Category } from '@/lib/planning';
-import { emptyTransactionFilter, groupByDay, periodRange, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
-import { canRecategorize, categoryChoices, choiceKey, directionOf, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
+import { emptyPlanning } from '@/lib/planning';
+import { emptyTransactionFilter, filtersTransactions, groupByDay, periodRange, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
+import { canRecategorize, canTakeCategory, categoryChoices, choiceKey, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
 
 export function TransactionsScreen() {
  const { t, locale } = useLanguage();
- const { user, demo, reload, currency, market, planning, transactionTools, workspaceLoading, addCashFlow, setViewing, storedRecord, categorize, refreshRecords } = useWorkspace();
+ const { user, demo, reload, currency, market, planning, transactionTools, workspaceLoading, addCashFlow, setViewing, storedRecord, categorize, assignTransactionsBusiness, businessList, tags, refreshRecords } = useWorkspace();
  const today = depositToday();
  const [period, setPeriod] = useState<TransactionPeriod>('this_month');
  const [filter, setFilter] = useState(emptyTransactionFilter);
+ // Links such as /transactions?tag=… or ?business=… open the list already filtered.
+ const search = useLocationSearch();
+ const [appliedSearch, setAppliedSearch] = useState('');
+ if (search !== appliedSearch) { setAppliedSearch(search); if (search) setFilter({ ...emptyTransactionFilter, businesses: queryList(search, 'business'), tag: queryList(search, 'tag')[0] ?? 'all' }); }
+ const [editingMany, setEditingMany] = useState(false);
  const [selecting, setSelecting] = useState(false);
  const [selected, setSelected] = useState<Set<string>>(new Set());
  const [rule, setRule] = useState<TransactionRule | null>(null);
@@ -41,10 +51,14 @@ export function TransactionsScreen() {
  const remote = useOwnerResource(`/api/planning?scope=budget&month=${range.to}&from=${range.from}`, user, live, reload, emptyPlanning);
  const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : planning.data, [live, remote.data, planning.data]);
  const splits = transactionTools.data.splits;
- const rules = useTransactionRules(user, demo, reload, data.records, splits, categorize, refreshRecords);
+ const tagMap = useMemo(() => tagsByRecord(tags.data.links), [tags.data.links]);
+ const tagsOf = (id: string) => tagMap.get(id) ?? [];
+ const rules = useTransactionRules(user, demo, reload, data.records, splits, { categorize, assignBusiness: assignTransactionsBusiness, changeTags: tags.change, tagsOf }, refreshRecords);
  const choiceName = useChoiceName(data.categories);
  const nameOf = (record: Entry) => choiceName({ kind: record.kind, category_id: record.custom_category_id ?? null });
- const records = transactionsIn(data.records, range, today, filter, nameOf);
+ const records = transactionsIn(data.records, range, today, filter, nameOf, tagsOf);
+ const tagById = new Map(tags.data.tags.map(tag => [tag.id, tag]));
+ const createTag = async (name: string) => { const id = crypto.randomUUID(); await tags.save({ id, name, color: nextPaletteColor(tags.data.tags.map(tag => tag.color)) }); return id; };
  const rates = market?.rates ?? market?.fx?.rate;
  const convert = (amount: number, unit: string) => convertAmount(amount, unit, currency, rates);
  const days = groupByDay(records, convert);
@@ -52,8 +66,6 @@ export function TransactionsScreen() {
  const accounts = new Map(data.records.filter(record => record.kind === 'Cash').map(record => [record.id, record.name]));
  const money = (amount: number) => formatMoney(amount, currency, locale);
  const chosen = records.filter(record => selected.has(record.id));
- const directions = new Set(chosen.map(record => directionOf(record.kind)));
- const bulkDirection = directions.size > 1 ? 'mixed' : chosen.length ? [...directions][0] : null;
  const categoryOptions = [...categoryChoices(data.categories, 'income'), ...categoryChoices(data.categories, 'expense')];
 
  async function change(targets: Entry[], choice: CategoryChoice) {
@@ -63,6 +75,29 @@ export function TransactionsScreen() {
    if (targets.length === 1 && changed === 1) showAction('Updated to {category}', { params: { category: choiceName(choice) }, detail: 'Create a rule to do this automatically in the future.', action: 'Create rule', onAction: () => setRule(ruleFromChange(targets[0], choice)) });
    else showNotice(skipped ? t('{changed} updated; {skipped} could not change category here.', { changed, skipped }) : t('{changed} updated', { changed }));
   } catch (error) { showError((error as Error).message || 'Could not save changes.'); }
+ }
+ async function moveToBusiness(record: Entry, business: string | null) {
+  try {
+   const changed = await assignTransactionsBusiness([record.id], business);
+   const name = business ? businessList.find(item => item.id === business)?.name ?? '' : t('Household');
+   if (changed && business) showAction('Moved to {business}', { params: { business: name }, detail: 'Create a rule to do this automatically in the future.', action: 'Create rule', onAction: () => setRule(ruleFromBusiness(record, business)) });
+   else showNotice(changed ? t('Moved to {business}', { business: name }) : t('This transaction keeps its business.'));
+  } catch (error) { showError((error as Error).message || 'Could not save changes.'); }
+ }
+ /** The Edit multiple drawer: every field that changed, applied to the transactions it can apply to. */
+ async function editMany(change: { choice: CategoryChoice | null; business: string | null | undefined; add: string[]; remove: string[] }) {
+  const ids = chosen.map(record => record.id);
+  let changed = 0, kept = 0;
+  if (change.choice) changed = Math.max(changed, await categorize(chosen.filter(record => canTakeCategory(record, change.choice!, splits)).map(record => record.id), change.choice));
+  if (change.business !== undefined) {
+   // Planned spending, business income and salary from a source keep their business; say how many stayed.
+   const business = change.business;
+   kept = chosen.filter(record => (record.business_id ?? null) !== business && !canAssignBusiness(record, business)).length;
+   changed = Math.max(changed, await assignTransactionsBusiness(ids, business));
+  }
+  if (change.add.length || change.remove.length) changed = Math.max(changed, await tags.change(ids, change.add, change.remove));
+  showNotice(kept ? t('{changed} updated; {skipped} could not change business here.', { changed, skipped: kept }) : t('{changed} updated', { changed }));
+  setSelected(new Set());
  }
  const toggle = (id: string) => setSelected(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; });
  const open = (record: Entry) => (event: MouseEvent | KeyboardEvent) => {
@@ -87,22 +122,29 @@ export function TransactionsScreen() {
     <option value="all">{t('All categories')}</option>
     {categoryOptions.map(choice => <option key={choiceKey(choice)} value={choiceKey(choice)}>{choice.custom ? choice.name : t(choice.name)}</option>)}
    </NativeSelect>
+   {businessList.length > 0 && <BusinessFilter businesses={businessList} value={filter.businesses} onChange={businesses => setFilter({ ...filter, businesses })}/>}
+   {tags.data.tags.length > 0 && <NativeSelect aria-label={t('Tag')} value={filter.tag} onChange={event => setFilter({ ...filter, tag: event.currentTarget.value })}>
+    <option value="all">{t('All tags')}</option>
+    {tags.data.tags.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
+   </NativeSelect>}
    <Segmented label={t('Type')} options={[{ value: 'all', label: t('All') }, { value: 'income', label: t('Income') }, { value: 'expense', label: t('Expenses') }] as const} value={filter.direction} onChange={direction => setFilter({ ...filter, direction })}/>
   </div>
-  {selecting && <BulkCategoryBar count={chosen.length} direction={bulkDirection as Category['direction'] | 'mixed' | null} categories={data.categories} onChange={choice => change(chosen.filter(record => canRecategorize(record, splits)), choice).then(() => setSelected(new Set()))} onCancel={() => { setSelecting(false); setSelected(new Set()); }}/>}
+  {selecting && <BulkEditBar count={chosen.length} onEdit={() => setEditingMany(true)} onCancel={() => { setSelecting(false); setSelected(new Set()); }}/>}
   {error ? <InlineError message={t(error)} onRetry={live ? remote.retry : refreshRecords}/> : loading ? <PanelSkeleton label={t('Loading records…')} rows={6}/> : <div className="transactions-layout">
    <section className="panel transactions-list" aria-label={t('Transactions')}>
     {days.length ? days.map(day => <DayGroup key={day.date} date={day.date} total={day.total} currency={currency} today={today}>
      {day.records.map(record => {
       const editable = canRecategorize(record, splits);
+      const recordTags = tagsOf(record.id).map(id => tagById.get(id)).filter(tag => !!tag);
       return <li key={record.id} className="transaction-row" data-selected={selected.has(record.id) || undefined} tabIndex={0} aria-label={t('View details for {name}', { name: record.name })} onClick={open(record)} onKeyDown={open(record)}>
        {selecting && <input type="checkbox" aria-label={t('Select {name}', { name: record.name })} checked={selected.has(record.id)} onChange={() => toggle(record.id)}/>}
-       <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span><strong>{record.name}</strong>{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}<MortgageSplit record={record}/></span></span>
-       <CategoryPicker record={record} categories={data.categories} disabled={!editable || selecting} onChange={choice => change([record], choice)}/>
+       <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span><strong>{record.name}</strong>{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}<MortgageSplit record={record}/>{recordTags.length > 0 && <span className="transaction-tags">{recordTags.map(tag => <TagChip key={tag.id} name={tag.name} color={tag.color}/>)}</span>}</span></span>
+       <span className="transaction-labels"><CategoryPicker record={record} categories={data.categories} disabled={!editable || selecting} onChange={choice => change([record], choice)}/>
+       {businessList.length > 0 && <BusinessPicker record={record} businesses={businessList} disabled={selecting || record.frequency !== 'Once' || !!record.history_event_id || !!record.earning_source_id || (record.kind === 'Salary' && !!record.income_source_id)} onChange={business => moveToBusiness(record, business)}/>}</span>
        <TransactionAmount record={record}/>
       </li>;
      })}
-    </DayGroup>) : <EmptyState icon={<ReceiptText/>} title={t('No transactions')} description={t(filter.query || filter.category !== 'all' || filter.direction !== 'all' ? 'Nothing matches these filters in this period.' : 'Income and spending you record appear here, grouped by day.')}><AddTransactionMenu onAdd={addCashFlow}/></EmptyState>}
+    </DayGroup>) : <EmptyState icon={<ReceiptText/>} title={t('No transactions')} description={t(filtersTransactions(filter) ? 'Nothing matches these filters in this period.' : 'Income and spending you record appear here, grouped by day.')}><AddTransactionMenu onAdd={addCashFlow}/></EmptyState>}
    </section>
    <aside className="panel transactions-summary" aria-label={t('Summary')}>
     <PanelTitle title={t('Summary')}/>
@@ -115,8 +157,9 @@ export function TransactionsScreen() {
     </dl>
    </aside>
   </div>}
-  {rule && <RuleDialog key={rule.id} rule={rule} records={data.records} categories={data.categories} splits={splits} onSave={async (next, apply) => { const changed = await rules.save(next, apply); if (apply) showNotice(t('{changed} updated', { changed })); return changed; }} onClose={() => setRule(null)}/>}
-  {rulesOpen && !rule && <RulesDialog rules={rules.rules} categories={data.categories} onEdit={setRule} onAdd={direction => setRule({ id: crypto.randomUUID(), pattern: '', direction, kind: (direction === 'income' ? income : expenses)[3] as Entry['kind'], category_id: null })} onRemove={item => rules.remove(item.id)} onClose={() => setRulesOpen(false)}/>}
+  {editingMany && <BulkEditSheet records={chosen} categories={data.categories} businesses={businessList} tags={tags.data.tags} tagsOf={tagsOf} onCreateTag={createTag} onSave={editMany} onClose={() => setEditingMany(false)}/>}
+  {rule && <RuleDialog key={rule.id} rule={rule} records={data.records} categories={data.categories} businesses={businessList} tags={tags.data.tags} tagsOf={tagsOf} onCreateTag={createTag} splits={splits} onSave={async (next, apply) => { const changed = await rules.save(next, apply); if (apply) showNotice(t('{changed} updated', { changed })); return changed; }} onClose={() => setRule(null)}/>}
+  {rulesOpen && !rule && <RulesDialog rules={rules.rules} categories={data.categories} businesses={businessList} tags={tags.data.tags} onEdit={setRule} onAdd={() => setRule(newRule())} onRemove={item => rules.remove(item.id)} onClose={() => setRulesOpen(false)}/>}
  </div>;
 }
 

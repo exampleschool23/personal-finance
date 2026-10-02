@@ -4,7 +4,7 @@ import { orderedGoals as orderById, reorderGoal as reorderIds } from '@/lib/goal
 import type { WorkspacePreference } from '@/lib/workspace-preferences';
 import type { PreferenceResource } from './use-workspace-preferences';
 
-type OrderKey = 'account_order' | 'category_order';
+type OrderKey = 'account_order' | 'category_order' | 'business_order' | 'tag_order';
 type OrderPreference = Extract<WorkspacePreference, { key: OrderKey }>;
 
 /** A list the person puts in their own order, saved as one workspace preference (ids only).

@@ -3,7 +3,7 @@ import { convertAmount } from './market';
 import type { Category, Goal, PlanningData } from './planning';
 import { monthlyReview, type TransactionSplit } from './transaction-tools';
 
-/** Monarch's three spending buckets. Fixed: the same every month (rent, loans). Flexible: day-to-day spending.
+/** Three spending buckets. Fixed: the same every month (rent, loans). Flexible: day-to-day spending.
  * Non-monthly: yearly or irregular costs that are saved for ahead. */
 export const budgetTypes = ['fixed', 'flexible', 'non_monthly'] as const;
 export type BudgetType = typeof budgetTypes[number];
@@ -114,7 +114,7 @@ export function rolloverBalance(category: BudgetCategory, amounts: readonly Budg
 }
 
 export type BudgetHistory = { months: Array<{ month: string; amount: number }>; lastMonth: number; average: number };
-/** The six months before `month`: Monarch's History popover. */
+/** The six months before `month`: the History popover. */
 export function budgetHistory(key: string, month: string, history: ReadonlyMap<string, MonthActuals>): BudgetHistory {
  const months = monthsBetween(shiftMonth(month, -historyMonths), shiftMonth(month, -1)).map(past => ({ month: past, amount: history.get(past)?.byCategory.get(key) ?? 0 }));
  return { months, lastMonth: months.at(-1)?.amount ?? 0, average: months.reduce((sum, item) => sum + item.amount, 0) / months.length };

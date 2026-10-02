@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {dashboardCardIds,retiredDashboardCards} from './dashboard-layout';
 import {uuid,nonnegativeAmount,fiatCurrency,isoDate} from './api-validation';
+import {taxLineIds,taxTemplates} from './business-tax';
 const weights=z.record(z.string().max(80),z.number().finite().min(0).max(100)).refine(value=>Object.keys(value).length<=50&&Math.abs(Object.values(value).reduce((sum,n)=>sum+n,0)-100)<1e-8);
 // Dashboard layouts saved before cards could change column keep one `order` list; both shapes load, as do ids of removed cards.
 const dashboardCardList=z.array(z.enum([...dashboardCardIds,...retiredDashboardCards] as string[] as [string,...string[]])).max(20);
@@ -11,6 +12,10 @@ export const workspacePreferenceSchema=z.discriminatedUnion('key',[
  z.object({key:z.literal('goal_order'),data:z.object({ids:z.array(uuid).max(1000).refine(ids=>new Set(ids).size===ids.length)})}),
  // Display order only: accounts (record and investment-account ids) and categories (added category ids and built-in category names).
  z.object({key:z.literal('account_order'),data:z.object({ids:z.array(uuid).max(1000).refine(ids=>new Set(ids).size===ids.length)})}),
+ z.object({key:z.literal('business_order'),data:z.object({ids:z.array(uuid).max(1000).refine(ids=>new Set(ids).size===ids.length)})}),
+ z.object({key:z.literal('tag_order'),data:z.object({ids:z.array(uuid).max(1000).refine(ids=>new Set(ids).size===ids.length)})}),
+ // Tax prep: the line template and categories moved to another line (or to none) by hand.
+ z.object({key:z.literal('tax_lines'),data:z.object({template:z.enum(taxTemplates),lines:z.record(z.string().trim().min(1).max(80),z.enum(taxLineIds as [string,...string[]]).nullable()).refine(value=>Object.keys(value).length<=500)})}),
  z.object({key:z.literal('category_order'),data:z.object({ids:z.array(z.string().trim().min(1).max(80)).max(1000).refine(ids=>new Set(ids).size===ids.length)})}),
  z.object({key:z.literal('allocation'),data:z.object({weights,target_net_worth:z.object({amount:nonnegativeAmount.positive(),currency:fiatCurrency,date:isoDate.nullable().optional()}).nullable().optional()})}),
  z.object({key:z.literal('watchlists'),data:z.object({items:z.array(z.object({id:uuid,name:z.string().trim().min(1).max(80),query:z.string().trim().max(120),category:z.string().max(80),currency:fiatCurrency,target:nonnegativeAmount.positive()})).max(30)})}),
@@ -21,3 +26,6 @@ export const workspacePreferenceSchema=z.discriminatedUnion('key',[
 ]);
 export type WorkspacePreference=z.infer<typeof workspacePreferenceSchema>;
 export type Watchlist=Extract<WorkspacePreference,{key:'watchlists'}>['data']['items'][number];
+
+/** The ids of a saved display order, or none. */
+export const savedOrder=(preferences:readonly WorkspacePreference[],key:'account_order'|'business_order'|'tag_order'|'goal_order')=>(preferences.find(item=>item.key===key)?.data as {ids?:string[]}|undefined)?.ids??[];

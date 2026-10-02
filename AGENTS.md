@@ -34,7 +34,7 @@ The drawer, the shell and the screens are separate. Keep them that way.
   filter) stays inside that screen.
 - `tests/workspace-structure.mjs` enforces these boundaries.
 - Signed-out visitors see `LandingPage` (`components/landing-page.tsx`) at `/`: the
-  public product tour, built after Monarch's site (floating nav, hero over a
+  public product tour (floating nav, hero over a
   product window, feature rows, closing band). Sign-in is its own page at
   `signInPath` (`lib/sign-in-path.ts`), a single centred card. The shell picks
   between them; link to `signInPath`, never to `/`, when someone needs to sign in.
@@ -64,7 +64,7 @@ it instead of styling a page on its own.
   piece at a time. Put a new piece there once it has more than one real caller,
   and cover it in `tests/presentation-foundation.mjs`, which also enforces the
   purity boundary.
-- The look follows Monarch Money: warm grey page and rail (`#f6f5f3`), white
+- The look: warm grey page and rail (`#f6f5f3`), white
   cards with a hairline border and 12px radius, medium-weight figures.
 - Headings are one line. Never put a grey sentence under a page, panel or tile
   heading. Explanations go behind the ⓘ: pass them as `hint` to `PageHeader` or
@@ -89,7 +89,7 @@ it instead of styling a page on its own.
 - Every list whose order the person chooses (goals, accounts, categories, cards,
   templates and the like) is reorderable by drag and drop with `SortableList` /
   `SortableItem` from `presentation-foundation/sortable.tsx`; chronological or
-  sorted lists are not. `UI-AGENT.md` has the full rules and the Monarch
+  sorted lists are not. `UI-AGENT.md` has the full rules and the reference
   reference workflow; read it before UI work.
 - Surfaces are `.panel`; their heading row is `PanelTitle` (title, `Count` pill,
   description, and an aside or action as children). Secondary tools sit in

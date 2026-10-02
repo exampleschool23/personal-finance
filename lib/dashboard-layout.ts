@@ -1,6 +1,6 @@
-/** Dashboard cards and where they start: Monarch's two columns. Any card can be dragged to either column or hidden. */
+/** Dashboard cards and where they start: two columns. Any card can be dragged to either column or hidden. */
 export const dashboardCards = {
- left: ['net_worth', 'spending', 'budget', 'commitments', 'allocation'],
+ left: ['net_worth', 'spending', 'budget', 'commitments', 'allocation', 'business'],
  right: ['goals', 'transactions', 'upcoming', 'income'],
 } as const;
 export type DashboardCard = (typeof dashboardCards)[keyof typeof dashboardCards][number];
@@ -10,7 +10,7 @@ export const dashboardCardIds: readonly DashboardCard[] = [...dashboardCards.lef
 /** Cards that were removed. Saved layouts may still name them; they load and are dropped. */
 export const retiredDashboardCards = ['recap'] as const;
 export const dashboardCardLabels: Record<DashboardCard, string> = {
- net_worth: 'Net worth', spending: 'Spending', budget: 'Budget', commitments: 'Monthly commitments', allocation: 'Asset allocation',
+ net_worth: 'Net worth', spending: 'Spending', budget: 'Budget', business: 'Business tracking', commitments: 'Monthly commitments', allocation: 'Asset allocation',
  goals: 'Goals', transactions: 'Transactions', upcoming: 'Upcoming payments', income: 'Income over time',
 };
 export type DashboardLayout = { columns: Record<DashboardColumn, DashboardCard[]>; hidden: DashboardCard[] };

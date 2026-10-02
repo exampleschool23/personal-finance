@@ -1,7 +1,7 @@
-# Monarch Money research (2026-10-02)
+# Reference app research (2026-10-02)
 
-Reference material for making Vestnu's UI/UX follow Monarch Money. Layout and
-interaction patterns are borrowed; Monarch's logo, orange brand colour and
+Reference material for making Vestnu's UI/UX follow the reference app. Layout and
+interaction patterns are borrowed; the reference app's logo, orange brand colour and
 illustrations are not. Vestnu's accent is teal (`#0f766e`); see the
 "Interface design system" section of AGENTS.md.
 
@@ -9,9 +9,9 @@ illustrations are not. Vestnu's accent is teal (`#0f766e`); see the
 
 | Video | Length | Status |
 |---|---|---|
-| [Getting Started with Monarch](https://www.youtube.com/watch?v=WGR8B6vBVqM) (Monarch, official) | 2:28 | Frames every ~7 s, done |
-| [How to Create a Budget with Monarch Money (Full Tutorial)](https://www.youtube.com/watch?v=QC-L5T_glEs) (Marriage Kids and Money) | 11:03 | **Full narration + ~40 frames, done** |
-| [How To Use Monarch Money (Budget App)](https://www.youtube.com/watch?v=31FINPdHH68) (Feasible Creative) | 9:45 | **Full narration + frames of every app screen, done** |
+| [Getting Started with the reference app](https://www.youtube.com/watch?v=WGR8B6vBVqM) (The reference app, official) | 2:28 | Frames every ~7 s, done |
+| [How to Create a Budget with the reference app (Full Tutorial)](https://www.youtube.com/watch?v=QC-L5T_glEs) (Marriage Kids and Money) | 11:03 | **Full narration + ~40 frames, done** |
+| [How To Use the reference app (Budget App)](https://www.youtube.com/watch?v=31FINPdHH68) (Feasible Creative) | 9:45 | **Full narration + frames of every app screen, done** |
 
 ### How to study a video in the built-in browser
 
@@ -32,7 +32,7 @@ illustrations are not. Vestnu's accent is teal (`#0f766e`); see the
   (`components/spending-pace-card.tsx`, `lib/spending-pace.ts`); Goals (top 2) and
   Transactions (most recent) cards (`components/dashboard-cards.tsx`); headline
   figures in card titles; KPI tiles removed.
-- Sidebar: flat list with Monarch's order and short labels (Dashboard, Accounts,
+- Sidebar: flat list with the reference app's order and short labels (Dashboard, Accounts,
   Transactions, Recurring, Investments, Loans & debts, Goals; Recently deleted and
   Settings below) via `label` in `components/workspace/navigation.ts`.
 - Earlier (other session, also uncommitted): emoji per category, ⓘ hints instead of
@@ -118,7 +118,7 @@ migration (next number after `085_treasury_bills.sql`).
   chip with a summary card (count, largest, average, total).
 - **Loading feel**: brand-coloured stroke drawing the logo, no spinners.
 
-## Findings from "How To Use Monarch Money" (full study, 2026-10-02)
+## Findings from "How To Use the reference app" (full study, 2026-10-02)
 
 Narration recorded in full (0:00–9:45); frames at every app screen.
 
@@ -169,7 +169,7 @@ Narration recorded in full (0:00–9:45); frames at every app screen.
 - **Recurring (7:24–7:50)**: tabs Monthly / All recurring; Filters, Manage recurring;
   month arrows, Today, **List / Calendar**; summary "Income $0.00 received ·
   $7,287.02 remaining", "Expenses $0.00 paid · $1,693.40 remaining" with bars;
-  calendar cells hold chips (red expenses, blue income) with amounts. Monarch detects
+  calendar cells hold chips (red expenses, blue income) with amounts. The reference app detects
   recurring items on sync; the user confirms them.
 - **Goals (7:50–8:06)**: save up (house, emergency fund, vacation) or pay down
   (student debt); allocate funds from an account.

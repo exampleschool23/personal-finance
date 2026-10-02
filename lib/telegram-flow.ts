@@ -197,7 +197,7 @@ function commitFor(draft:Draft,ctx:FlowContext):Commit{
  const account=find(ctx.accounts,d.account_id)!;
  if(draft.kind==='expense'||draft.kind==='income'){
   const custom=!!d.custom_category_id;
-  const record:RecordInput={id:d.id??ctx.newId,name:(d.name||d.category_name||'').trim(),kind:(custom?(draft.kind==='income'?'Other income':'Other expense'):d.category) as RecordInput['kind'],custom_category_id:d.custom_category_id??null,currency:account.currency,amount:d.amount??0,quantity:0,cost:0,rate:0,date:d.date??ctx.today,frequency:'Once',notes:'',account_id:account.id,...(d.business_id?{business_id:d.business_id}:{}),payment_type:'regular',estimated_monthly_payment:0,estimated_monthly_income:0,ownership_percentage:100};
+  const record:RecordInput={id:d.id??ctx.newId,name:(d.name||d.category_name||'').trim(),kind:(custom?(draft.kind==='income'?'Other income':'Other expense'):d.category) as RecordInput['kind'],custom_category_id:d.custom_category_id??null,currency:account.currency,amount:d.amount??0,quantity:0,cost:0,rate:0,date:d.date??ctx.today,frequency:'Once',notes:'',account_id:account.id,...(d.business_id?{business_id:d.business_id}:account.business_id?{business_id:account.business_id}:{}),payment_type:'regular',estimated_monthly_payment:0,estimated_monthly_income:0,ownership_percentage:100};
   return {type:'record',record};
  }
  const base={id:d.id??ctx.newId,account_id:account.id,target_id:d.target_id!,date:d.date??ctx.today,notes:''};

@@ -36,7 +36,7 @@ test('"this month only" keeps later months, "all future months" replaces them', 
  assert.equal(budgetAmountFor(setBudgetAmount([], 'X', '2026-01', 13782.113487716848, 'USD', false), 'X', '2026-01').amount, 13782.113487716848);
 });
 
-test('categories cover built-in kinds and custom categories, with Monarch default types; repayments are not categories', () => {
+test('categories cover built-in kinds and custom categories, with default types; repayments are not categories', () => {
  const list = budgetCategories([{ id: 'c1', name: 'Pets', direction: 'expense' }, { id: 'c2', name: 'Tips', direction: 'income' }], [{ category_key: 'Living expense', budget_type: 'non_monthly', group_name: 'Home', rollover: true, rollover_start: '2026-01', excluded: false }]);
  const by = key => list.find(item => item.key === key);
  assert.equal(by('Salary').direction, 'income');

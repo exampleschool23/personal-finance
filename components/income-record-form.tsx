@@ -23,6 +23,7 @@ import { income, type Entry } from '@/lib/finance';
 import { incomeSources, selectIncomeSource, changeIncomeKind, salaryDueDate } from '@/lib/income-sources';
 import { formatMoney, formatDate, formatNumber } from '@/lib/format';
 import type { RecordDialogProps } from '@/components/record-dialog';
+import { withAccount } from '@/lib/business';
 
 function ScheduledPaymentSummary({date,label}:{date:string;label:string}){
  const {t,locale}=useLanguage();
@@ -90,7 +91,7 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
   <div className="form-grid"><label>{t(editing.frequency==='Once'?'Record date':'Start date')}<DatePicker value={editing.date} min={editing.kind==='Salary'&&source?source.date:undefined} max={latestDate} onChange={changeDate}/></label>
   {!simple&&!reusable&&(editing.kind!=='Salary'||salaryPlan)&&<ScheduleFields frequency={editing.frequency} days={editing.recurrence_days} disabled={busy} once={!salaryPlan} onChange={(frequency,recurrence_days)=>update({frequency,recurrence_days,account_id:null,end_date:frequency==='Once'?null:editing.end_date})}/>}</div>
   {editing.frequency!=='Once'&&<><label>{t('End date (optional)')}<DatePicker value={editing.end_date??''} required={false} min={editing.date} onChange={date=>update({end_date:date||null})}/></label><p className="muted">{t('{amount} {frequency} from {date}. This is a recurring plan; it does not automatically create transactions or change account balances.',{amount:formatMoney(editing.amount,editing.currency,locale),frequency:t(frequencyLabels[editing.frequency]),date:formatDate(editing.date,locale)})}</p></>}
-  {!salaryPlan&&<CashAccountField entry={editing} records={planning.data.records} loading={planning.loading} error={planning.error} busy={busy} onChange={account_id=>update({account_id})}/>}
+  {!salaryPlan&&<CashAccountField entry={editing} records={planning.data.records} loading={planning.loading} error={planning.error} busy={busy} onChange={account_id=>setEditing(withAccount(editing,account_id,planning.data.records))}/>}
   {planning.error&&<InlineError message={t(planning.error)}/>}
   <label>{t('Notes (optional)')}<textarea value={editing.notes} maxLength={2000} rows={2} onChange={event=>update({notes:event.target.value})}/></label>
   <ErrorPopup message={error}/>

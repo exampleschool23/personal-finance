@@ -64,7 +64,7 @@ export function goalSummary(goal: { target: number; target_date: string | null; 
 export type GoalStatus = 'completed' | 'on_track' | 'at_risk';
 /** Translation keys for the status pill. */
 export const goalStatusLabels: Record<GoalStatus, string> = { completed: 'Completed', on_track: 'On track', at_risk: 'At risk' };
-/** Monarch's status pill: reached, on pace (the planned monthly amount covers what is still needed by the target date), or at risk.
+/** Status pill: reached, on pace (the planned monthly amount covers what is still needed by the target date), or at risk.
  * Without a target date or a known current value there is no pace to judge, so there is no status. */
 export function goalStatus(summary: Pick<ReturnType<typeof goalSummary>, 'left' | 'needed' | 'monthly' | 'monthsLeft'>): GoalStatus | null {
  if (summary.left === 0) return 'completed';

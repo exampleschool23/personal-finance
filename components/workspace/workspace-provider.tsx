@@ -39,6 +39,11 @@ import { type Entry, normalizeEntry, kinds, assets, liabilities, assetRecordKind
 import { sectionFor } from '@/components/workspace/navigation';
 import { signInPath } from '@/lib/sign-in-path';
 import { recategorize, type CategoryChoice } from '@/lib/transaction-rules';
+import { assignBusiness, businessesIn, isBusinessAccount, moveAccountToBusiness } from '@/lib/business';
+import { orderedGoals as orderById } from '@/lib/goal-order';
+import { savedOrder } from '@/lib/workspace-preferences';
+import { useTags } from '@/hooks/use-tags';
+import { emptyTags, type TagData } from '@/lib/tags';
 
 const today = depositToday;
 const fresh = (): Entry => ({ id: crypto.randomUUID(), name: '', kind: 'Cash', currency: 'USD', amount: 0, quantity: 1, cost: 0, rate: 0, date: today(), lent_date: today(), frequency: 'Once', notes: '', business_id: null, ownership_percentage: 100, estimated_monthly_income: 0, estimated_monthly_payment: 0 });
@@ -119,7 +124,8 @@ function useWorkspaceState() {
     const [businesses, setBusinesses] = useState<Array<{ id: string; name: string }>>([]);
     const [summary, setSummary] = useState<Entry[]>([]);
     const [demoHoldingAccounts,setDemoHoldingAccounts]=useState<HoldingAccount[]>([]);
-    const [demoPlanning,setDemoPlanning]=useState<Pick<DemoWorkspace,'goals'|'occurrences'>>({goals:[],occurrences:[]});
+    const [demoPlanning,setDemoPlanning]=useState<Pick<DemoWorkspace,'goals'|'occurrences'|'categories'>>({goals:[],occurrences:[],categories:[]});
+    const [demoTags,setDemoTags]=useState<TagData>(emptyTags);
     const [recordTotal, setRecordTotal] = useState(0);
     const [pageState, setPageState] = useState({ key: '', page: 1 });
     const [recordsLoading, setRecordsLoading] = useState(false);
@@ -188,6 +194,12 @@ function useWorkspaceState() {
     const planning={...basePlanning,data:{...basePlanning.data,occurrences:demo?[...basePlanning.data.occurrences,...rows.filter(row=>row.earning_source_id&&row.earning_due_on).flatMap(row=>{const source=earningSources.sources.find(source=>source.id===row.earning_source_id);return source?.schedule_id?[{id:row.id,record_id:source.schedule_id,due_on:row.earning_due_on!,status:'paid' as const}]:[];})]:basePlanning.data.occurrences}};
     const transactionTools=useTransactionTools(user,demo,reload,refreshRecords);
     const workspacePreferences=useWorkspacePreferences(user,demo,reload);
+    const tagResource=useTags(user,demo,reload,planning.data.records,demoTags);
+    // Tags in the person's own order (Settings), wherever they are listed.
+    const tags={...tagResource,data:{...tagResource.data,tags:orderById(tagResource.data.tags,savedOrder(workspacePreferences.data.preferences,'tag_order'))}};
+    // Businesses in the person's own order (Settings), shared by filters, reports and the dashboard.
+    const businessList=orderById(businessesIn(planning.data.records),savedOrder(workspacePreferences.data.preferences,'business_order'));
+    const [settingUpBusinesses,setSettingUpBusinesses]=useState(false);
     const overdueCount = upcomingPayments(planning.data.records, planning.data.occurrences, undefined, undefined, planning.data.debtPayments).filter(item => item.overdue).length;
     const lastLoadedKey = useEffectEvent(() => loadedKey);
     const receiveServerPage=useEffectEvent((next:number)=>{if(!useFilteredRecords&&next!==page)setPageState({key:paginationKey,page:next});});
@@ -282,6 +294,10 @@ function useWorkspaceState() {
         if(demo&&editing.kind==='Salary'&&editing.income_source_id&&rows.some(row=>row.id!==editing.id&&row.income_source_id===editing.income_source_id&&row.income_due_on===incomeSourcePatch.income_due_on))throw Error('This salary payment is already recorded.');
         const savedRecord={...editing,name:expenses.includes(editing.kind)&&!editing.name.trim()?(editing.notes.trim().slice(0,120)||planning.data.categories.find(category=>category.id===editing.custom_category_id)?.name||t(editing.kind)):editing.name,account_exchange_rate:editing.account_id&&cashAccount?.currency!==editing.currency?previewRate:undefined,...(liabilities.includes(editing.kind)&&!rows.some(row=>row.id===editing.id)?{opened_on:editing.opened_on??today()}:{})};
         Object.assign(savedRecord,incomeSourcePatch,earningPatch);
+        // An account that changes business takes its transactions along, so the business moves through set_account_business after the save.
+        const previousAccount=isBusinessAccount(editing)?(planning.data.records.find(record=>record.id===editing.id)??rows.find(record=>record.id===editing.id)):undefined;
+        const movesBusiness=!!previousAccount&&(previousAccount.business_id??null)!==(editing.business_id??null);
+        if(movesBusiness)savedRecord.business_id=previousAccount!.business_id??null;
         if(liabilities.includes(savedRecord.kind)&&savedRecord.opened_on&&(savedRecord.opened_on>today()||savedRecord.date<savedRecord.opened_on))throw Error('Check the start and due dates.');
         if (!demo) {
             const r = await fetch('/api/records', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(savedRecord) });
@@ -295,6 +311,7 @@ function useWorkspaceState() {
             setRows(withAssetIncomePlans(applyRecordChange(rows,original,savedRecord),earningSources.sources));
         }
         else refreshRecords();
+        if(movesBusiness)await setAccountBusiness(editing.id,editing.business_id??null);
         setEditing(null);
         showSaved();
     }
@@ -328,7 +345,7 @@ function useWorkspaceState() {
     finally {
         setBusy(false);
     } }
-    function clearLocalSession() { setEditing(null); setDeleting(null); setStopping(null); setSplitting(null); setViewing(null); setTracking(null); setPayingMortgage(null); setSettingsError(''); setPageState({key:'',page:1}); setRecordKinds(kinds); setPriceResult({key:'',message:''}); setLoadedKey(''); setSettingsLoading(true); setUser(null); setDemo(false); setDemoHoldingAccounts([]); setDemoPlanning({goals:[],occurrences:[]}); setDeletedItems([]); setRows([]); setSummary([]); setBusinesses([]); setRecordTotal(0); setPreferencesData(defaultPreferences); setCurrency('USD'); setSummaryLoaded(false); summaryCache.current = {loaded:false,revision:-1}; setError(''); }
+    function clearLocalSession() { setEditing(null); setDeleting(null); setStopping(null); setSplitting(null); setViewing(null); setTracking(null); setPayingMortgage(null); setSettingsError(''); setPageState({key:'',page:1}); setRecordKinds(kinds); setPriceResult({key:'',message:''}); setLoadedKey(''); setSettingsLoading(true); setUser(null); setDemo(false); setDemoHoldingAccounts([]); setDemoPlanning({goals:[],occurrences:[],categories:[]}); setDemoTags(emptyTags); setSettingUpBusinesses(false); setDeletedItems([]); setRows([]); setSummary([]); setBusinesses([]); setRecordTotal(0); setPreferencesData(defaultPreferences); setCurrency('USD'); setSummaryLoaded(false); summaryCache.current = {loaded:false,revision:-1}; setError(''); }
     async function logout() { if (!demo) {
         const r = await fetch('/api/auth', { method: 'DELETE' });
         if (!r.ok) {
@@ -429,7 +446,7 @@ function useWorkspaceState() {
             const response = await fetch('/api/demo', { cache: 'no-store' });
             if (!response.ok) throw Error();
             const sample = await response.json() as DemoWorkspace;
-            setRows(withAssetIncomePlans(sample.records.map(normalizeEntry))); setDemoHoldingAccounts(sample.holdingAccounts); setDemoPlanning({goals:sample.goals,occurrences:sample.occurrences}); expensePlans.seedDemo(sample.expensePlans); setDemo(true);
+            setRows(withAssetIncomePlans(sample.records.map(normalizeEntry))); setDemoHoldingAccounts(sample.holdingAccounts); setDemoPlanning({goals:sample.goals,occurrences:sample.occurrences,categories:sample.categories}); setDemoTags(sample.tags); expensePlans.seedDemo(sample.expensePlans); setDemo(true);
         } catch { setError('Connection unavailable. Please try again.'); }
         finally { setBusy(false); }
     }
@@ -453,6 +470,44 @@ function useWorkspaceState() {
         refreshRecords();
         return result.changed ?? 0;
     }
+    /** Moves transactions to a business, or to the household with null. Resolves to how many changed. */
+    async function assignTransactionsBusiness(ids: string[], business: string | null) {
+        if (demo) {
+            const names = new Map(rows.filter(row => row.kind === 'Business').map(row => [row.id, row.name]));
+            const changed = assignBusiness(rows, ids, business, names).changed;
+            setRows(previous => assignBusiness(previous, ids, business, names).records);
+            return changed;
+        }
+        const response = await fetch('/api/transaction-rules', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'business', data: { ids, business_id: business } }) });
+        const result = await response.json() as { changed?: number; error?: string };
+        if (!response.ok) throw Error(result.error);
+        refreshRecords();
+        return result.changed ?? 0;
+    }
+    /** Puts an account in a business (or the household); its transactions that followed it move too. Resolves to how many transactions moved. */
+    async function setAccountBusiness(accountId: string, business: string | null) {
+        if (demo) {
+            const changed = moveAccountToBusiness(rows, accountId, business).changed;
+            setRows(previous => moveAccountToBusiness(previous, accountId, business).records);
+            return changed;
+        }
+        const response = await fetch('/api/transaction-rules', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'account_business', data: { account_id: accountId, business_id: business } }) });
+        const result = await response.json() as { changed?: number; error?: string };
+        if (!response.ok) throw Error(result.error);
+        refreshRecords();
+        return result.changed ?? 0;
+    }
+    /** Saves a business profile (a Business record) outside the record dialog: business setup and Settings. */
+    async function saveBusiness(entry: Entry) {
+        const record = normalizeEntry(entry);
+        if (demo) setRows(previous => applyRecordChange(previous, previous.find(row => row.id === record.id), record));
+        else {
+            const response = await fetch('/api/records', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(record) });
+            if (!response.ok) throw Error((await response.json() as { error: string }).error);
+            refreshRecords();
+        }
+    }
+    const newBusiness = (name = ''): Entry => ({ ...fresh(), name, kind: 'Business', currency, amount: 0 });
     return {
         // Session
         ready, user, demo, pathname, section, sectionKey, cashFlowSection, busy, configured, error, login, logout, startDemo, clearLocalSession,
@@ -461,15 +516,16 @@ function useWorkspaceState() {
         // Records and market data
         rows, summary, current, market, marketLoading, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, expensePlans, snapshots,
         reload, refreshRecords, budget, forecast, forecastReady, forecastMonth, setForecastMonth, excludedCurrencies, netWorth, totalDebt, monthlyIncomeEntries,
-        availableBusinesses, overdueCount, workspaceLoading, deletedItems, restoreDemoItem, discardDeletedItem,
+        availableBusinesses, businessList, tags, overdueCount, workspaceLoading, deletedItems, restoreDemoItem, discardDeletedItem,
         // Record table
         filters, setFilters, filtersActive, historyOnly, useFilteredRecords, remoteHistory, historyPage, visible, totalRecords, pageCount, tablePage, tableLoading,
         recordsLoading, showFirstPage, showPage,
         // Actions
         addRecord, addCashFlow, addAccountRecord, editRecord, storedRecord, closeEditing, closeDeleting, navigate, quickExpense, recordFromSource, reviewRecurring, requestDelete, spendFromPlan, removePlan,
-        saveHoldingAccount, assignHolding, recordMortgagePayment, save, remove, stopRecord, categorize, field, fetchPrice, fetchingPrice, priceMessage,
+        saveHoldingAccount, assignHolding, recordMortgagePayment, save, remove, stopRecord, categorize, assignTransactionsBusiness, setAccountBusiness, saveBusiness, newBusiness, field, fetchPrice, fetchingPrice, priceMessage,
         // Open dialogs
         editing, setEditing, editingCashFlow, recordKinds, linkedExpensePlan, deleting, setDeleting, stopping, setStopping, splitting, setSplitting,
+        settingUpBusinesses, setSettingUpBusinesses,
         viewing, setViewing, tracking, setTracking, payingMortgage, setPayingMortgage, debtPayment, setDebtPayment, editingIncomeSource, setEditingIncomeSource,
     };
 }

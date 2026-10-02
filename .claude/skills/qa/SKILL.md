@@ -1,6 +1,6 @@
 ---
 name: qa
-description: Precise functional QA of the Hoggish web app and the Telegram bot, run live in the built-in browser against the regression catalog. Use for "/qa", "test the app", "full QA", "retest", or checking a deploy. Arguments - empty or "full" (whole catalog), an area code (AUTH, ONB, SHELL, DASH, ACC, TX, CF, BUD, REC, INV, LOAN, GOAL, AST, DEL, SET, I18N, BOT, XAPP), "smoke" (P0 cases only), or "retest" (cases touched by commits since the last QA run).
+description: Precise functional QA of the Hoggish web app and the Telegram bot, run live in the built-in browser against the regression catalog. Use for "/qa", "test the app", "full QA", "retest", or checking a deploy. Arguments - empty or "full" (whole catalog), an area code (AUTH, ONB, SHELL, DASH, ACC, TX, CF, REP, BUD, REC, INV, LOAN, GOAL, AST, DEL, SET, I18N, BOT, XAPP), "smoke" (P0 cases only), or "retest" (cases touched by commits since the last QA run).
 ---
 
 # /qa — precise QA
@@ -26,6 +26,31 @@ keep `references/cases.md` (the regression catalog) open: it is the plan.
 - **Commits:** QA never commits. If you fix something, stage only your files by path
   (other sessions work in the same tree; see memory `concurrent-sessions`).
 
+## 1a. Routes and areas
+
+Every page the app serves belongs to an area; `tests/qa-design-catalogs.mjs` fails
+when a route is missing here or its area has no cases.
+
+| Area | Routes |
+|---|---|
+| AUTH | `/` (signed out), `/sign-in`, `/terms`, `/privacy`, `/auth/access`, `/auth/confirm`, `/auth/telegram`, `/connect/telegram`, `/benchmarks` |
+| ONB | `/` (first sign-in) |
+| DASH | `/` |
+| ACC | `/accounts` |
+| TX | `/transactions` |
+| CF | `/income-expenses` |
+| REP | `/reports` |
+| BUD | `/budget` |
+| REC | `/upcoming` |
+| INV | `/assets` |
+| LOAN | `/loans-debts` |
+| GOAL | `/goals` |
+| AST | `/assistant` |
+| DEL | `/recently-deleted` |
+| SET | `/settings` |
+
+SHELL, I18N and XAPP span every route; BOT is the Telegram chat.
+
 ## 1. Environment check (do this first, write the results down)
 
 1. Version under test: `git log -1 --oneline origin/main`. Confirm it is deployed:
@@ -33,7 +58,8 @@ keep `references/cases.md` (the regression catalog) open: it is the plan.
    must show `Vercel success`. Probe a route that only exists in the new code if the
    change added one. Never test a deploy that is still pending.
 2. Production URL: `https://personal-finance-eta-nine.vercel.app`. Local dev (sample
-   workspace only): `http://localhost:5000` via launch config `finance-dev`.
+   workspace only): `http://localhost:5000` via launch config `finance-dev` when a dev
+   server already runs, otherwise `finance-dev-start`.
 3. Browser pane: call `tabs_context`. If it says hidden, call `preview_start` with the
    production URL; that brings the pane back. Real clicks, typing, drags and
    Telegram sending all fail while the pane is hidden.
@@ -80,8 +106,9 @@ in Telegram. The page's own t.me pop-up is blocked by the pane; that is expected
 ## 3. Method
 
 1. **Plan.** Pick cases from `references/cases.md` for the requested scope. For
-   "retest", map each commit since the last run to case IDs (and add cases for any
-   new behaviour first).
+   "retest", take the top commit of the catalog's **Run log**, map each commit since
+   it (`git log <sha>..origin/main`) to case IDs through the §1a routes and the
+   files it touches, and add cases for any new behaviour first.
 2. **Arrange.** Note starting balances of every account you will touch.
 3. **Execute each case exactly as written.** Record: case ID, PASS / FAIL / BLOCKED
    / N/A, the exact text you saw (quote it), and the evidence (text dump, network
@@ -119,5 +146,6 @@ in Telegram. The page's own t.me pop-up is blocked by the pane; that is expected
 
 For every FAIL, add (or sharpen) a case in `references/cases.md` with exact steps and
 the expected result, so the bug stays covered after it is fixed. When behaviour
-changes on purpose, update the case in the same change. Update memory
-`telegram-live-qa` with the run date and anything a future run must know.
+changes on purpose, update the case in the same change. Add a row to the catalog's
+**Run log** (date, commit tested, scope, what was not run) at the end of every run.
+Update memory `telegram-live-qa` with anything a future run must know.

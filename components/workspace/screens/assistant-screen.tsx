@@ -10,7 +10,7 @@ import { assistantSuggestions, assistantUnavailable } from '@/lib/assistant';
 
 type Turn = { role: 'user' | 'assistant'; content: string };
 
-/** Monarch's AI assistant: ask about your own money in plain words. Questions and a summary of your records go to the model. */
+/** AI assistant: ask about your own money in plain words. Questions and a summary of your records go to the model. */
 export function AssistantScreen() {
  const { t, language } = useLanguage();
  const { user, demo, currency, market } = useWorkspace();

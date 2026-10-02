@@ -23,7 +23,7 @@ import { goalCurrency, goalCurrentValue } from '@/lib/goal-projection';
 import { investmentGoalCompletion } from '@/lib/investment-goals';
 import { emptyPlanning, type Goal, type PlanningData } from '@/lib/planning';
 
-/** The most recent income and spending, newest first: Monarch's "Transactions · Most recent" card. */
+/** The most recent income and spending, newest first: the "Transactions · Most recent" card. */
 export function recentTransactions(records: Entry[], today: string, limit = 5) {
  return records.filter(record => record.frequency === 'Once' && record.date <= today && (income.includes(record.kind) || expenses.includes(record.kind)))
   .sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)).slice(0, limit);
@@ -44,7 +44,7 @@ export function RecentTransactionsCard({ owner = null, demo = false, revision = 
  </section>;
 }
 
-/** Open goals in the person's own order (the order on the Goals page): Monarch's "Goals · Your top priorities" card. */
+/** Open goals in the person's own order (the order on the Goals page): the "Goals · Your top priorities" card. */
 export function topGoals(goals: Goal[], order: readonly string[] = [], limit = 2) {
  return orderedGoals(goals.filter(goal => !goal.archived && !goal.completed_on), order).slice(0, limit);
 }
@@ -67,7 +67,7 @@ export function GoalsCard({ goals, order, data, currency, netWorth }: { goals: G
  </section>;
 }
 
-/** Monarch's weekly recap: last week's money in and out against the week before, where most went, and what is due this week. */
+/** Weekly recap: last week's money in and out against the week before, where most went, and what is due this week. */
 /** This month's budget at a glance: planned spending against what is spent, and the categories closest to their limit. */
 export function BudgetCard({ owner = null, demo = false, revision = 0, data: provided, currency, market, splits }: { owner?: string | null; demo?: boolean; revision?: number; data: PlanningData; currency: string; market: MarketData | null; splits: TransactionSplit[] }) {
  const { t, locale } = useLanguage();

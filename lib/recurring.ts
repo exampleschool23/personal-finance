@@ -32,7 +32,7 @@ export function monthOccurrences(records: Entry[], occurrences: Occurrence[], mo
  return items.sort((a, b) => a.date.localeCompare(b.date) || a.record.name.localeCompare(b.record.name));
 }
 
-/** Monarch's summary bars: how much came in or went out, and how much is still to come. Skipped items count as neither. */
+/** Summary bars: how much came in or went out, and how much is still to come. Skipped items count as neither. */
 export function recurringSummary(items: RecurringItem[], convert: (amount: number, currency: string) => number | null) {
  const totals = { income: { done: 0, remaining: 0 }, expense: { done: 0, remaining: 0 }, missing: 0 };
  for (const item of items) {

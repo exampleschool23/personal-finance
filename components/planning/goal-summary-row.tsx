@@ -5,7 +5,7 @@ import { goalStatusLabels, type GoalStatus } from '@/lib/goal-projection';
 
 type Props = { emoji: string; name: string; status: GoalStatus | null; meta: ReactNode; amount: ReactNode; detail: ReactNode; percent: number | null; alert?: ReactNode };
 
-/** The content of a goal row, as in Monarch: cover, name and amount, status pill with date and "% of target", and progress.
+/** The content of a goal row: cover, name and amount, status pill with date and "% of target", and progress.
  * The goals list wraps it in a button; the add-goal flow shows it as a preview. */
 export function GoalSummaryRow({ emoji, name, status, meta, amount, detail, percent, alert }: Props) {
  const { t } = useLanguage();

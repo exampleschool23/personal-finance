@@ -6,7 +6,8 @@ import type { ExpensePlan } from './expense-plans';
 import type { HoldingAccount } from './holding-accounts';
 import type { HistoryEvent } from './investment-history';
 import type { MarketData } from './market';
-import type { Goal, Occurrence } from './planning';
+import type { Category, Goal, Occurrence } from './planning';
+import type { TagData } from './tags';
 
 // Illustrative fixtures only: never represent these as historical market quotes.
 export const demoMarket: MarketData = { rates: { USD: 1, UZS: 12500 }, fx: null, quotes: {}, errors: {}, stocksConfigured: false };
@@ -47,10 +48,15 @@ export function demoRecords(today: string): Entry[] {
   record('deposit-usd', '12-month CD', 'Deposit', 20000, { rate: 4.6, deposit_compounding: 'none', estimated_monthly_income: 20000 * .046 / 12, date: shiftDay(today, 160) }),
   // Real estate: the home and the condo appreciate, the studio dipped slightly.
   record('home', 'Family home', 'Property', 540000, { date: shiftDay(today, -2400) }),
-  record('condo', 'Lakeside rental condo', 'Property', 285000, { estimated_monthly_income: 2100, date: shiftDay(today, -1500) }),
-  record('studio', 'Downtown studio', 'Property', 168000, { estimated_monthly_income: 1250, date: shiftDay(today, -700) }),
+  record('condo', 'Lakeside rental condo', 'Property', 285000, { estimated_monthly_income: 2100, date: shiftDay(today, -1500), business_id: 'demo-biz-rentals' }),
+  record('studio', 'Downtown studio', 'Property', 168000, { estimated_monthly_income: 1250, date: shiftDay(today, -700), business_id: 'demo-biz-rentals' }),
   // Other assets
-  record('business', 'Neighborhood café', 'Business', 120000, { ownership_percentage: 25, estimated_monthly_income: 900 }),
+  record('business', 'Neighborhood café', 'Business', 120000, { ownership_percentage: 25, estimated_monthly_income: 900, business_structure: 'partnership', business_color: 'amber' }),
+  // Businesses tracked beside the household: a side business and the rentals.
+  record('biz-candles', 'Coastal Candle Co.', 'Business', 0, { business_structure: 'llc', business_color: 'teal', notes: 'Hand-poured candles sold online and at markets.' }),
+  record('biz-rentals', 'Lakeside Rentals LLC', 'Business', 0, { business_structure: 'rental_property', business_color: 'violet' }),
+  record('candle-checking', 'Candle Co. checking', 'Cash', 3200, { business_id: 'demo-biz-candles' }),
+  record('rental-checking', 'Rentals operating account', 'Cash', 9800, { business_id: 'demo-biz-rentals' }),
   record('watches', 'Watch collection', 'Valuables', 14000),
   record('lent', 'Loan to a friend', 'Money lent', 3000, { lent_date: shiftDay(today, -60), date: shiftDay(today, 30) }),
   // Debts
@@ -74,6 +80,7 @@ export function demoRecords(today: string): Entry[] {
   record('property-tax', 'Property tax', 'Other expense', 6800, { frequency: 'Yearly', date: shiftDay(today, -300) }),
   monthly('charity', 'Monthly donation', 'Charity', 300),
   ...demoSpending(today, record),
+  ...demoBusinessActivity(today, record),
  ];
 }
 
@@ -102,11 +109,58 @@ export function demoOccurrences(records: Entry[], today: string): Occurrence[] {
   .flatMap(record => scheduleDates(record, record.date, yesterday).map(date => ({ id: `${record.id}:${date}`, record_id: record.id, due_on: date, status: 'paid' as const })));
 }
 
+/** Categories the sample businesses use, beside the built-in ones. */
+export const demoCategories: Category[] = [
+ { id: 'demo-cat-sales', name: 'Product sales', direction: 'income' },
+ { id: 'demo-cat-supplies', name: 'Supplies', direction: 'expense' },
+ { id: 'demo-cat-shipping', name: 'Shipping', direction: 'expense' },
+ { id: 'demo-cat-fees', name: 'Platform fees', direction: 'expense' },
+ { id: 'demo-cat-ads', name: 'Advertising', direction: 'expense' },
+ { id: 'demo-cat-cleaning', name: 'Cleaning', direction: 'expense' },
+ { id: 'demo-cat-repairs', name: 'Repairs & maintenance', direction: 'expense' },
+ { id: 'demo-cat-management', name: 'Property management', direction: 'expense' },
+];
+
+/** Six months of trading for the side business (a small loss) and the rentals (a profit), paid through their own
+ * accounts, plus one supply order paid from personal checking. */
+function demoBusinessActivity(today: string, record: (id: string, name: string, kind: Entry['kind'], amount: number, extra?: Partial<Entry>) => Entry): Entry[] {
+ const candles = { business_id: 'demo-biz-candles', account_id: 'demo-candle-checking' }, rentals = { business_id: 'demo-biz-rentals', account_id: 'demo-rental-checking' };
+ const lines: Array<[string, Entry['kind'], number, string | null, Partial<Entry>, number]> = [
+  ['Etsy payout', 'Other income', 1150, 'demo-cat-sales', candles, 3], ['Farmers market sales', 'Other income', 250, 'demo-cat-sales', candles, 14],
+  ['CandleScience', 'Other expense', 900, 'demo-cat-supplies', candles, 5], ['Etsy fees', 'Other expense', 140, 'demo-cat-fees', candles, 4],
+  ['Shipping labels', 'Other expense', 220, 'demo-cat-shipping', candles, 9], ['Instagram ads', 'Other expense', 300, 'demo-cat-ads', candles, 12],
+  ['Airbnb payout', 'Rent income', 2600, null, rentals, 2], ['Cleaning service', 'Other expense', 380, 'demo-cat-cleaning', rentals, 6],
+  ['Property management', 'Other expense', 260, 'demo-cat-management', rentals, 7],
+ ];
+ const month = today.slice(0, 7), todayDay = Number(today.slice(8, 10));
+ const result: Entry[] = [];
+ for (let back = 6; back >= 0; back--) {
+  const current = previousMonth(month, back), factor = [.92, .97, 1.04, 1, 1.08, .95, 1.03][6 - back];
+  lines.forEach(([name, kind, amount, category, extra, day]) => {
+   if (back === 0 && day > todayDay) return;
+   result.push(record(`biz-${back}-${name.toLowerCase().replace(/\W+/g, '-')}`, name, kind, Math.round(amount * factor), { ...extra, custom_category_id: category, date: `${current}-${String(day).padStart(2, '0')}` }));
+  });
+  if (back % 2 === 0 && back > 0) result.push(record(`biz-${back}-repairs`, 'Handyman repairs', 'Other expense', 450, { ...rentals, custom_category_id: 'demo-cat-repairs', date: `${current}-20` }));
+ }
+ result.push(record('biz-personal-wax', 'CandleScience', 'Other expense', 185, { business_id: 'demo-biz-candles', account_id: 'demo-checking', custom_category_id: 'demo-cat-supplies', date: `${previousMonth(month, 1)}-22` }));
+ return result;
+}
+
+/** Tags in the sample workspace: business purchases to keep for taxes, and one trip. */
+export function demoTags(records: Entry[]): TagData {
+ const tags: TagData['tags'] = [{ id: 'demo-tag-receipts', name: 'Keep receipt', color: 'green' }, { id: 'demo-tag-trip', name: 'Summer trip', color: 'blue' }];
+ const links = [
+  ...records.filter(item => item.business_id && expenses.includes(item.kind) && item.frequency === 'Once' && item.custom_category_id === 'demo-cat-supplies').map(item => ({ record_id: item.id, tag_id: 'demo-tag-receipts' })),
+  ...records.filter(item => item.id === 'demo-spend-trip').map(item => ({ record_id: item.id, tag_id: 'demo-tag-trip' })),
+ ];
+ return { tags, links };
+}
+
 /** Everything the sample workspace starts with, as served by /api/demo. */
 export function demoWorkspace(today: string) {
  // Rent and café income schedules exist up front, so their past payments are settled too.
  const records = withAssetIncomePlans(demoRecords(today)).map(record => record.id.startsWith('demo-') ? record : { ...record, id: 'demo-income-' + (record.income_source_id ?? record.business_id), date: shiftDay(today, -365) });
- return { today, records, goals: demoGoals(today), occurrences: demoOccurrences(records, today), holdingAccounts: demoHoldingAccounts, expensePlans: demoExpensePlans(today) };
+ return { today, records, goals: demoGoals(today), occurrences: demoOccurrences(records, today), holdingAccounts: demoHoldingAccounts, expensePlans: demoExpensePlans(today), categories: demoCategories, tags: demoTags(records) };
 }
 export type DemoWorkspace = ReturnType<typeof demoWorkspace>;
 

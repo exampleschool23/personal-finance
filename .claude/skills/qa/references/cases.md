@@ -3,7 +3,15 @@
 Priority: **P0** core money / data / security (the `smoke` set), **P1** main behaviour,
 **P2** edges and copy. "Expect" is the pass condition; anything else is a FAIL.
 IDs are stable: never renumber; append new cases at the end of their area.
-Cases marked `[bug 2026-10-02]` reproduce a defect found in the 2 October QA pass.
+Cases marked `[bug 2026-10-02]` reproduce a defect found in the 2 October QA pass;
+`[dr 2026-10-02]` marks a behaviour defect found in that day's design review.
+
+## Run log (newest first; `/qa retest` starts from the top sha)
+
+| Date | Commit tested | Scope | Notes |
+|---|---|---|---|
+| 2026-10-02 | 6eb533f | Retest of every 2 October finding, live | Dashboard fixes and design-review fixes in 9c08db8 not yet retested live; ACC-010 not run live |
+| 2026-10-02 | 2c91d67…4f27bdb | Full app + bot on user1@gmail.com | Deposits, T-bills, crypto, Business income, watchlists, Monthly review, downloads and crons not tested |
 
 Conventions: amounts typed as shown; "USD/EUR" = the test account's two preferred
 currencies (USD primary). Compute every expected figure yourself first.
@@ -22,6 +30,11 @@ currencies (USD primary). Compute every expected figure yourself first.
 | AUTH-008 | P1 | Wrong password | User types a wrong password (user does it) | Clear error, no account details leaked |
 | AUTH-009 | P1 | `/benchmarks` | Open | Redirects to `/` |
 | AUTH-010 | P1 | Sign out | Drawer → Sign out | Back to signed-out page; Back button does not reveal data |
+| AUTH-011 | P1 | Create account page | From `/sign-in` → "Create an account" (`/auth/access?mode=signup`) | Sign-up form only, never the recovery form; 8-character minimum stated; Brand header; Back to sign-in link |
+| AUTH-012 | P1 | Password recovery page | "Forgot password?" (`/auth/access`) | Recovery form; submitting an unknown email gives the same neutral message as a known one (no account enumeration) |
+| AUTH-013 | P1 | Email confirmation link | Open `/auth/confirm` with no or a bad `token_hash` | Clear "link is invalid or expired" state with a way back to sign-in; no crash, no blank page |
+| AUTH-014 | P1 | Connect Telegram from the web | From the bot's web sign-in button, open `/connect/telegram` signed out, then signed in | Signed out → sign-in card; signed in → confirm screen naming the Telegram account; Cancel → "cancelled"; Confirm → "connected" and the bot says so; reused link → "expired" |
+| AUTH-015 | P1 | Telegram web sign-in | Open `/auth/telegram` with a bad or missing token | Error state with a link to `/sign-in`; with a fresh token from the bot (`/app` → Open in browser) the account opens signed in |
 
 ## ONB — welcome setup (new account, user signs up)
 
@@ -105,6 +118,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | ACC-013 | P1 | Holdings without account | Assign AAPL to an investment account | Moves under that account |
 | ACC-014 | P2 | Activity order | Same-day activities | Newest first; balance-after consistent with order |
 | ACC-015 | P1 | Reconcile statement | Enter statement balance | Correction recorded; balance equals statement |
+| ACC-016 | P1 | Delete a never-used account live | Create "QA Temp", ⋯ → Delete → confirm | Gone from Accounts and every picker; listed in Recently deleted; Restore brings it back with its balance |
 
 ## TX — transactions
 
@@ -144,6 +158,28 @@ currencies (USD primary). Compute every expected figure yourself first.
 | CF-012 | P1 | Spending watchlist | Add, save, remove | Works |
 | CF-013 | P1 | Monthly review | Open dialog | Figures equal KPIs |
 | CF-014 | P2 | Monthly estimate | Spending estimate | Expenses + mortgage + loan payments (cash-out forecast) |
+| CF-015 | P1 | Split an income record | Split a $300 income into two built-in income categories | Built-in income categories offered (the list was empty); saves; totals unchanged `[bug 2026-10-02]` |
+| CF-016 | P1 | No repeated figures | Read the month view | Income / spending / net shown once; no second Income / Expenses / Total savings row `[dr 2026-10-02]` |
+
+## REP — reports and business tracking
+
+| ID | P | Case | Steps | Expect |
+|---|---|---|---|---|
+| REP-001 | P0 | Cash flow P&L | Reports › Cash flow › Profit & loss, this year | Total income = household income + each business's net income; net cash flow = total income − household expenses; equals the Net income tile |
+| REP-002 | P1 | Business Sankey | Sankey with all businesses | A profitable business flows into household income; a loss leaves the household as "{name} net loss"; labels show whole amounts |
+| REP-003 | P1 | Drill-down | Click a Sankey flow, a P&L row's receipt icon, a breakdown bar | Transactions below narrow to it with a removable chip; counts match |
+| REP-004 | P1 | Business filter | Pick one business, then Household | Tiles, charts and P&L show only that selection |
+| REP-005 | P1 | Trends | Trends › Grouped/Stacked, Monthly/Quarterly/Yearly; click a legend entry | Bars per interval; the series hides and returns |
+| REP-006 | P1 | Spending / Income by business | Spending › Group by Business, Bars and Donut | One entry per business plus Household; totals equal the tab total |
+| REP-007 | P0 | Tax prep | Business tax prep for a business, full year and Q3 | Categories sit on lines; net profit = mapped income − mapped expenses; manual lines say "Work out by hand"; disclaimer shown |
+| REP-008 | P1 | Move a category | Move a category to another line, reload | Stays on the new line; "Not on the sheet" removes it from the export |
+| REP-009 | P1 | Export | Preview export › CSV and PDF at each detail level | Ask the user before downloading; files list the lines; amounts unrounded in CSV, whole in PDF |
+| REP-010 | P1 | Business setup | Dashboard › Business tracking › Set up; add "QA Shop" (LLC, colour, logo), assign a QA account | Business saved with its profile; the account and its transactions move to it; guidance matches the first answer |
+| REP-011 | P1 | Account business | Accounts › Edit businesses; move a QA account back to Household | Toast names the transactions moved; those set by hand stay |
+| REP-012 | P1 | Transaction business | Transactions › change a row's business; Create rule from the toast | Row updates; the rule (Both directions) applies to matching rows |
+| REP-013 | P1 | Edit multiple | Select rows › Edit › category, business, add tag | Every field applies; mixed income/expense keeps category disabled |
+| REP-014 | P1 | Tags | Settings › Tags add "QA Trip", tag a transaction, click the count | Transactions open filtered by the tag; delete removes it from rules too |
+| REP-015 | P1 | Dashboard widget | Net income / Net assets, each link | Rows open Reports filtered to the business, the thumbnail opens Trends, View P&L opens the table, Net assets opens Accounts filtered |
 
 ## BUD — budget
 
@@ -157,6 +193,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | BUD-006 | P1 | Recalculate | Settings → Recalculate | Plans from averages, whole amounts rounded up |
 | BUD-007 | P1 | Contributions | With a goal monthly contribution | Listed; Left to budget subtracts it |
 | BUD-008 | P2 | Prev / next / Today | Navigate months | Header and data follow |
+| BUD-009 | P1 | Rollover is explained | A category with leftover from last month | "+$N rolled over" shown; remaining = plan + rollover − actual; group plan = sum of its rows `[dr 2026-10-02]` |
 
 ## REC — recurring
 
@@ -172,6 +209,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | REC-008 | P0 | Loan instalments | Loan with monthly payment | Appears monthly on its start day with its payment amount; Record payment opens repayment form `[bug 2026-10-02]` |
 | REC-009 | P1 | Instalment paid | Repay in the month | Shows Paid |
 | REC-010 | P1 | Reminders | Snooze until tomorrow / Dismiss | Hidden until tomorrow / gone |
+| REC-011 | P1 | Calendar equals list | Calendar view for this month | Every list item, including debt repayments and loan instalments, is on its day `[dr 2026-10-02]` |
 
 ## INV — investments
 
@@ -186,6 +224,9 @@ currencies (USD primary). Compute every expected figure yourself first.
 | INV-007 | P1 | Target allocation | 60 + 50 | "must add up to 100%", Save disabled; 60 + 40 saves |
 | INV-008 | P1 | Category filter / view | Filter, card / compact | Works |
 | INV-009 | P1 | Deposit / T-bill | Add each | Interest estimates appear |
+| INV-010 | P0 | Crypto buy and sell | Add BTC → Fetch price → qty 0.015; sell 0.005 into a cash account | Price up to 8 decimals; value = qty × price (whole display); holding 0.01; cash rises by the entered proceeds |
+| INV-011 | P2 | Stablecoin note | Sell crypto | The USDT/USDC note appears for crypto (and only there, see INV-005) |
+| INV-012 | P1 | Target allocation default | Open Target allocation with holdings, no saved plan | Starts from the current mix, never 100% cash suggesting selling everything else `[dr 2026-10-02]` |
 
 ## LOAN — loans and debts
 
@@ -244,6 +285,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | SET-009 | P1 | Benchmarks | Add stock, diversified portfolio | Total allocation validated; saved |
 | SET-010 | P2 | Security | Change password form | 8-char minimum; never actually change it |
 | SET-011 | P1 | Import & backup | With user OK only | PDF, backup, CSV download; CSV import mapping; Undo import |
+| SET-012 | P0 | Delete a Telegram-made account | Only on a throwaway account the user creates in the bot, with user OK; Settings → Security → Delete | Confirm dialog naming the account; data gone; the chat is told and offered sign-up again; the real account untouched |
 
 ## I18N — languages, formats
 
@@ -263,6 +305,8 @@ currencies (USD primary). Compute every expected figure yourself first.
 | BOT-003 | P1 | Menu | Open keyboard | Expense / Income / More actions |
 | BOT-004 | P1 | Unknown text | "hello bot" | "Choose what to add." |
 | BOT-005 | P1 | Localised labels | "Расход" | Opens the expense flow |
+| BOT-006 | P1 | Sign up inside Telegram | New Telegram user (the user taps I agree and Share my number) | Welcome flow in the chat's language; currency list with search; first cash account created in the bot; never "do it in the app" |
+| BOT-007 | P1 | Returning user by phone | Signed-out chat whose account has a phone (user shares the number) | Clear choice "number or web"; after sharing, the same account and balances return |
 | BOT-010 | P0 | Expense happy path | Expense → category → account → 12.75 → name → Yesterday → Save | Saved; balance −12.75; app shows it |
 | BOT-011 | P1 | Custom category | Expense → QA Coffee … Save | "Added QA Coffee" `[bug 2026-10-02]` |
 | BOT-012 | P1 | Skip name | Skip | Name = category |
@@ -273,6 +317,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | BOT-017 | P1 | Back from confirm | ‹ Back ×n | Each step returns in order; values kept |
 | BOT-018 | P1 | Cancel | Cancel mid-flow, `/cancel` | "Cancelled.", menu back |
 | BOT-020 | P0 | Income | Income → Salary → 2500 → Today → Save | Saved; Business income hidden without a business |
+| BOT-021 | P1 | Business income | With a business set up: Income → Business income → pick business → 400 → Save | Asks for the business, saves, app shows it under that business (this flow always failed before 2026-10-01) |
 | BOT-030 | P0 | Transfer one account | Transfer with one account | "Add a second cash account to continue." |
 | BOT-031 | P0 | Cross-currency transfer | $500 → €460 | Asks received amount; saved |
 | BOT-040 | P0 | Pay loan none | Pay loan or debt with none | "+ Add loan or debt" → flow resumes after adding |

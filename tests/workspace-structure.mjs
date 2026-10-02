@@ -8,7 +8,7 @@ import {loadTS} from './helpers/load-ts.mjs';
 const read=file=>fs.readFileSync(file,'utf8');
 const imports=source=>[...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].map(match=>match[1]);
 const screens=fs.readdirSync('components/workspace/screens').map(file=>'components/workspace/screens/'+file);
-const routes={'page.tsx':'OverviewScreen','assets/page.tsx':'AssetsScreen','income-expenses/page.tsx':'CashFlowScreen','loans-debts/page.tsx':'LoansDebtsScreen','accounts/page.tsx':'AccountsScreen','upcoming/page.tsx':'UpcomingScreen','goals/page.tsx':'GoalsScreen','budget/page.tsx':'BudgetScreen','transactions/page.tsx':'TransactionsScreen','assistant/page.tsx':'AssistantScreen','recently-deleted/page.tsx':'RecentlyDeletedScreen','settings/page.tsx':'SettingsScreen'};
+const routes={'page.tsx':'OverviewScreen','assets/page.tsx':'AssetsScreen','income-expenses/page.tsx':'CashFlowScreen','reports/page.tsx':'ReportsScreen','loans-debts/page.tsx':'LoansDebtsScreen','accounts/page.tsx':'AccountsScreen','upcoming/page.tsx':'UpcomingScreen','goals/page.tsx':'GoalsScreen','budget/page.tsx':'BudgetScreen','transactions/page.tsx':'TransactionsScreen','assistant/page.tsx':'AssistantScreen','recently-deleted/page.tsx':'RecentlyDeletedScreen','settings/page.tsx':'SettingsScreen'};
 
 test('the drawer depends on routes and its own props, never on a screen or the workspace state',()=>{
  const drawer=imports(read('components/workspace/app-drawer.tsx'));
@@ -47,8 +47,8 @@ test('every destination has a unique path and unknown paths open Overview',()=>{
  assert.equal(new Set(sections.map(section=>section.path)).size,sections.length);
  assert.equal(new Set(sections.map(section=>section.name)).size,sections.length);
  assert.deepEqual([...new Set(sections.map(section=>section.group))],['WORKSPACE','Manage','Account']);
- // Monarch's drawer: short words in its order; the section names stay as identifiers.
- assert.deepEqual(sections.map(section=>section.label),['Dashboard','Accounts','Transactions','Cash flow','Budget','Recurring','Investments','Loans & debts','Goals','Assistant','Recently deleted','Settings']);
+ // Drawer: short words in its order; the section names stay as identifiers.
+ assert.deepEqual(sections.map(section=>section.label),['Dashboard','Accounts','Transactions','Cash flow','Reports','Budget','Recurring','Investments','Loans & debts','Goals','Assistant','Recently deleted','Settings']);
  assert.equal(sectionLabel('Upcoming payments'),'Recurring');assert.equal(sectionLabel('Unknown'),'Unknown');
  assert.equal(sectionFor('/goals'),'Savings goals');
  assert.equal(sectionFor('/income-expenses'),'Income & expenses');

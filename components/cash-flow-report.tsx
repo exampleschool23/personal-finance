@@ -21,18 +21,22 @@ import type { TransactionSplit } from '@/lib/transaction-tools';
 const periodLabels: Record<ReportPeriod, string> = { month: 'Month', quarter: 'Quarter', year: 'Year' };
 type Props = { owner: string | null; demo: boolean; revision: number; data: PlanningData; splits: TransactionSplit[]; month: string; currency: string; market: MarketData | null };
 
-/** One side of the breakdown: proportional bars with amount and share, Monarch's Income / Expenses panels. */
-function ShareBars({ items, label, colorKey, currency }: { items: Share[]; label: (key: string) => string; colorKey: (key: string) => string; currency: string }) {
+/** One side of the breakdown: proportional bars with amount and share, the Income / Expenses panels.
+ * With `onSelect`, each bar is a button that narrows the transactions below to it. */
+export function ShareBars({ items, label, colorKey, currency, limit = 12, onSelect }: { items: Share[]; label: (key: string) => string; colorKey: (key: string) => string; currency: string; limit?: number; onSelect?: (key: string) => void }) {
  const { t, locale } = useLanguage();
  if (!items.length) return <p className="budget-left-empty">{t('Nothing recorded in this period.')}</p>;
  const peak = items[0].amount;
- return <ul className="share-bars">{items.slice(0, 12).map(item => <li key={item.key} title={`${label(item.key)} · ${formatMoney(item.amount, currency, locale)}`}>
-  <span className="share-bar" style={{ width: `${Math.max(2, item.amount / peak * 100)}%`, background: `color-mix(in srgb, ${colorKey(item.key)} 22%, transparent)` }}><span>{label(item.key)}</span></span>
-  <strong>{formatMoney(item.amount, currency, locale)}</strong><small>{formatPercent(item.share * 100, locale)}</small>
- </li>)}</ul>;
+ return <ul className="share-bars">{items.slice(0, limit).map(item => {
+  const bar = <span className="share-bar" style={{ width: `${Math.max(2, item.amount / peak * 100)}%`, background: `color-mix(in srgb, ${colorKey(item.key)} 22%, transparent)` }}><span>{label(item.key)}</span></span>;
+  return <li key={item.key} title={`${label(item.key)} · ${formatMoney(item.amount, currency, locale)}`}>
+   {onSelect ? <button type="button" className="share-bar-button" onClick={() => onSelect(item.key)} aria-label={t('Show transactions for {name}', { name: label(item.key) })}>{bar}</button> : bar}
+   <strong>{formatMoney(item.amount, currency, locale)}</strong><small>{formatPercent(item.share * 100, locale)}</small>
+  </li>;
+ })}</ul>;
 }
 
-/** Monarch's Cash flow: figures for the period, monthly bars, and where money came from and went, as bars or a Sankey diagram. */
+/** Cash flow: figures for the period, monthly bars, and where money came from and went, as bars or a Sankey diagram. */
 export function CashFlowReport({ owner, demo, revision, data: provided, splits, month, currency, market }: Props) {
  const { t, locale } = useLanguage();
  const today = depositToday();

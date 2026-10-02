@@ -25,7 +25,7 @@ export function OverviewHeading({ name, firstVisit = false, children }: { name?:
 }
 
 type Props = { entries: Entry[]; currency: string; excludedCurrencies: string[]; forecast: ReturnType<typeof estimatedCashFlow>; forecastReady: boolean; planning: PlanningData | null };
-/** Monarch-style dashboard cards: each card carries its headline figure in its title, so it reads at a glance. */
+/** Dashboard cards: each card carries its headline figure in its title, so it reads at a glance. */
 export function useOverviewCards({ entries, currency, excludedCurrencies, forecast, forecastReady, planning }: Props) {
  const { t, locale } = useLanguage();
  const money = (amount: number, unit = currency) => formatMoney(amount, unit, locale);

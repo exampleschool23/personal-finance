@@ -11,7 +11,7 @@ import { columnOf, dashboardCardLabels, dashboardColumnIds, dashboardColumns, de
 
 const sameLayout = (a: DashboardLayout, b: DashboardLayout) => JSON.stringify(a.columns) === JSON.stringify(b.columns);
 
-/** Monarch's drag and drop: a card follows the pointer (or the arrow keys), the others make room, and the layout is saved once on drop. */
+/** Drag and drop: a card follows the pointer (or the arrow keys), the others make room, and the layout is saved once on drop. */
 function useCardDrag(layout: DashboardLayout, onChange: (layout: DashboardLayout) => void) {
  const { t } = useLanguage();
  const [preview, setPreview] = useState<DashboardLayout | null>(null);

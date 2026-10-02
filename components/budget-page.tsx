@@ -42,7 +42,7 @@ export function BudgetProgress({ row }: { row: Pick<BudgetRow, 'progress' | 'dir
  return <div className="budget-progress" data-over={over || undefined} aria-hidden="true"><div style={{ width: `${Math.min(100, Math.max(0, row.progress * 100))}%` }}/></div>;
 }
 
-/** Monarch's History popover: last month, the monthly average and six monthly bars. */
+/** History popover: last month, the monthly average and six monthly bars. */
 function HistoryPanel({ history, direction, currency, amount, forward, onForward }: { history: BudgetHistory; direction: BudgetRow['direction']; currency: string; amount: number; forward: boolean; onForward: (value: boolean) => void }) {
  const { t, locale } = useLanguage();
  const peak = Math.max(...history.months.map(item => item.amount), 1);
@@ -115,7 +115,7 @@ export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgete
  </section>;
 }
 
-/** A grey band naming a section and its columns: Monarch's Income / Expenses / Contributions headers. */
+/** A grey band naming a section and its columns: the Income / Expenses / Contributions headers. */
 export function BudgetSectionHeader({ title }: { title: string }) {
  const { t } = useLanguage();
  return <div className="budget-row budget-section-header"><span>{title}</span><span className="budget-cell">{t('Planned')}</span><span className="budget-cell">{t('Actual')}</span><span className="budget-cell">{t('Remaining')}</span></div>;
