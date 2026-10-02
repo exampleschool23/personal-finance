@@ -2484,5 +2484,16 @@
   "Hidden subscriptions": "Gizlenen abonelikler",
   "No subscriptions found yet. They appear once the same charge repeats a few times.": "Henüz abonelik bulunamadı. Aynı ödeme birkaç kez tekrarlandığında görünürler.",
   "Could not load subscriptions. Check that the latest migrations are installed.": "Abonelikler yüklenemedi. En son geçişlerin yüklü olduğunu kontrol edin.",
-  "Check the subscription fields.": "Abonelik alanlarını kontrol edin."
+  "Check the subscription fields.": "Abonelik alanlarını kontrol edin.",
+  "Rolled over": "Devredilen",
+  "Start month": "Başlangıç ayı",
+  "Starting balance": "Başlangıç bakiyesi",
+  "Carry overspending into next month": "Fazla harcamayı sonraki aya devret",
+  "When off, an overspent month starts the next one at zero.": "Kapalıyken, fazla harcama yapılan aydan sonraki ay sıfırdan başlar.",
+  "Age of Money": "Paranın yaşı",
+  "1 day": "1 gün",
+  "{change} vs 30 days ago": "30 gün öncesine göre {change}",
+  "No change vs 30 days ago": "30 gün öncesine göre değişiklik yok",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Para harcanmadan önce ne kadar bekliyor: son 10 harcamanızın arkasındaki paranın ortalama yaşı. Gelirler tüm nakit hesaplarınızda geliş sırasına göre harcamalarla eşleştirilir. Daha yüksek bir sayı daha fazla tampon demektir.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "{currency} için döviz kuru olmayan kayıtlar hariç tutuldu: {count}."
 }

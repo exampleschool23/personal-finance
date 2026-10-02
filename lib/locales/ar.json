@@ -2484,5 +2484,16 @@
   "Hidden subscriptions": "الاشتراكات المخفية",
   "No subscriptions found yet. They appear once the same charge repeats a few times.": "لم يُعثر على اشتراكات بعد. تظهر عندما يتكرر الخصم نفسه بضع مرات.",
   "Could not load subscriptions. Check that the latest migrations are installed.": "تعذّر تحميل الاشتراكات. تأكد من تثبيت أحدث عمليات الترحيل.",
-  "Check the subscription fields.": "تحقق من حقول الاشتراك."
+  "Check the subscription fields.": "تحقق من حقول الاشتراك.",
+  "Rolled over": "مُرحَّل",
+  "Start month": "شهر البدء",
+  "Starting balance": "الرصيد الافتتاحي",
+  "Carry overspending into next month": "ترحيل الإنفاق الزائد إلى الشهر التالي",
+  "When off, an overspent month starts the next one at zero.": "عند الإيقاف، يبدأ الشهر التالي لشهر الإنفاق الزائد من الصفر.",
+  "Age of Money": "عمر المال",
+  "1 day": "يوم واحد",
+  "{change} vs 30 days ago": "{change} مقارنة بما قبل 30 يومًا",
+  "No change vs 30 days ago": "لا تغيير مقارنة بما قبل 30 يومًا",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "المدة التي ينتظرها المال قبل أن تنفقه: متوسط عمر المال وراء آخر 10 مصروفات لك. تُطابَق الدخول مع الإنفاق بترتيب وصولها عبر حساباتك النقدية. الرقم الأعلى يعني هامش أمان أكبر.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "السجلات التي ليس لها سعر صرف إلى {currency} مستبعدة: {count}."
 }

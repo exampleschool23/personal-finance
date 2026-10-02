@@ -3,6 +3,7 @@ import { useRef, useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronRight, Eye, EyeOff, RefreshCw, Settings2 } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
+import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { DrawerLink } from '@/components/presentation-foundation/drawer-link';
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
@@ -11,7 +12,7 @@ import { Segmented } from '@/components/presentation-foundation/segmented';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
-import { budgetTypeLabels, budgetTypes, defaultGroups, isUnbudgeted, remainingTone, type BudgetCategory, type BudgetCategorySetting, type BudgetGroup, type BudgetHistory, type BudgetMode, type BudgetRow, type BudgetType, type LeftToBudget } from '@/lib/budget';
+import { budgetTypeLabels, budgetTypes, defaultGroups, flexBucketKey, isUnbudgeted, remainingTone, type BudgetCategory, type BudgetCategorySetting, type BudgetGroup, type BudgetHistory, type BudgetMode, type BudgetRow, type BudgetType, type LeftToBudget } from '@/lib/budget';
 import { showError } from '@/lib/feedback';
 import { formatMoney, formatMonthShort, formatSignedMoney } from '@/lib/format';
 import { goalEmoji } from '@/lib/goal-emoji';
@@ -84,17 +85,22 @@ export function PlannedInput({ label, value, history, direction, currency, defau
  </Popover>;
 }
 
-type GroupProps = { group: BudgetGroup; currency: string; open: boolean; onToggle: () => void; showUnbudgeted: boolean; onShowUnbudgeted: () => void; renderPlanned: (row: BudgetRow) => ReactNode; onSettings: (row: BudgetRow) => void; header?: ReactNode; footer?: ReactNode };
+type GroupProps = { group: BudgetGroup; currency: string; open: boolean; onToggle: () => void; showUnbudgeted: boolean; onShowUnbudgeted: () => void; renderPlanned: (row: BudgetRow) => ReactNode; onSettings: (row: BudgetRow) => void; header?: ReactNode; footer?: ReactNode;
+ /** Money the group itself carries in (the Flexible bucket in flex mode), and its settings. */
+ rolloverIn?: number; onGroupSettings?: () => void };
 
 /** One collapsible group card: its total in the heading row, its categories below, unbudgeted ones behind a toggle. */
-export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgeted, onShowUnbudgeted, renderPlanned, onSettings, header, footer }: GroupProps) {
+export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgeted, onShowUnbudgeted, renderPlanned, onSettings, header, footer, rolloverIn = 0, onGroupSettings }: GroupProps) {
  const { t, locale } = useLanguage();
  const name = useCategoryName();
  const hidden = group.rows.filter(isUnbudgeted);
  const visible = showUnbudgeted ? group.rows : group.rows.filter(row => !isUnbudgeted(row));
  return <section className="budget-group" data-open={open || undefined}>
   <div className="budget-row budget-group-row">
-   <button type="button" className="budget-group-toggle" aria-expanded={open} onClick={onToggle}>{open ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}<span>{t(group.name)}</span></button>
+   <span className="budget-group-name">
+    <button type="button" className="budget-group-toggle" aria-expanded={open} onClick={onToggle}>{open ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}<span>{t(group.name)}{rolloverIn !== 0 && <RolledOver amount={rolloverIn} currency={currency}/>}</span></button>
+    {onGroupSettings && <Button type="button" variant="ghost" size="icon-xs" aria-label={t('Category settings: {name}', { name: t(group.name) })} onClick={onGroupSettings}><Settings2/></Button>}
+   </span>
    <span className="budget-cell">{header ?? formatMoney(group.budget, currency, locale)}</span>
    <span className="budget-cell">{formatMoney(group.actual, currency, locale)}</span>
    <span className="budget-cell"><RemainingPill value={group.remaining} direction={group.direction} currency={currency}/></span>
@@ -102,7 +108,7 @@ export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgete
   {open && <>
    {visible.map(row => <div className="budget-row budget-category-row" key={row.key}>
     <button type="button" className="budget-category-name" onClick={() => onSettings(row)} aria-label={t('Category settings: {name}', { name: name(row) })}>
-     <CategoryIcon kind={row.custom ? row.name : row.key} size="sm"/><span>{name(row)}{row.rolloverIn !== 0 && <small className="budget-rollover">{t('{amount} rolled over', { amount: formatSignedMoney(row.rolloverIn, currency, locale) })}</small>}</span>{row.rollover && <RefreshCw size={13} aria-label={t('Rollover')}/>}
+     <CategoryIcon kind={row.custom ? row.name : row.key} size="sm"/><span>{name(row)}{row.rolloverIn !== 0 && <RolledOver amount={row.rolloverIn} currency={currency}/>}</span>{row.rollover && <RefreshCw size={13} aria-label={t('Rollover')}/>}
     </button>
     <span className="budget-cell">{renderPlanned(row)}</span>
     <span className="budget-cell">{formatMoney(row.actual, currency, locale)}</span>
@@ -113,6 +119,12 @@ export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgete
    {hidden.length > 0 && <button type="button" className="budget-unbudgeted" onClick={onShowUnbudgeted}>{showUnbudgeted ? <EyeOff size={14}/> : <Eye size={14}/>}{t(showUnbudgeted ? 'Collapse {count} unbudgeted' : 'Show {count} unbudgeted', { count: hidden.length })}</button>}
   </>}
  </section>;
+}
+
+/** "+$40 rolled over" under a name: money a rollover fund brings into this month. */
+function RolledOver({ amount, currency }: { amount: number; currency: string }) {
+ const { t, locale } = useLanguage();
+ return <small className="budget-rollover">{t('{amount} rolled over', { amount: formatSignedMoney(amount, currency, locale) })}</small>;
 }
 
 /** A grey band naming a section and its columns: the Income / Expenses / Contributions headers. */
@@ -172,18 +184,28 @@ export function LeftToBudgetCard({ left, rows, mode, currency }: { left: LeftToB
  </aside>;
 }
 
-/** Category settings: type, group, rollover and whether the category counts in the budget. */
-export function CategorySettingsDialog({ category, groups, month, onSave, onClose }: { category: BudgetCategory; groups: string[]; month: string; onSave: (setting: BudgetCategorySetting) => Promise<void>; onClose: () => void }) {
- const { t } = useLanguage();
+export type BudgetFigures = Pick<BudgetRow, 'budget' | 'rolloverIn' | 'actual' | 'remaining'>;
+/** Category settings: type, group, rollover and whether the category counts in the budget.
+ * The Flexible bucket (flex mode) has only its rollover. `figures` is this month's line: planned, rolled over, spent and available. */
+export function CategorySettingsDialog({ category, groups, month, currency, figures, onSave, onClose }: { category: BudgetCategory; groups: string[]; month: string; currency: string; figures?: BudgetFigures; onSave: (setting: BudgetCategorySetting) => Promise<void>; onClose: () => void }) {
+ const { t, locale } = useLanguage();
  const name = useCategoryName();
  const [type, setType] = useState(category.type);
  const typeGroup = (value: BudgetType) => defaultGroups[value];
  const [group, setGroup] = useState(category.group);
  const [newGroup, setNewGroup] = useState('');
  const [rollover, setRollover] = useState(category.rollover);
+ const [start, setStart] = useState(category.rolloverStart ?? month);
+ const [balance, setBalance] = useState(category.rolloverBalance);
+ // A starting balance keeps the currency it was saved in until it is changed.
+ const [balanceCurrency, setBalanceCurrency] = useState(category.rolloverCurrency ?? currency);
+ const [negative, setNegative] = useState(category.rolloverNegative);
  const [excluded, setExcluded] = useState(category.excluded);
  const [busy, setBusy] = useState(false);
- const expense = category.direction === 'expense';
+ const bucket = category.key === flexBucketKey;
+ const expense = category.direction === 'expense' && !bucket;
+ const fund = category.direction === 'expense';
+ const money = (value: number) => formatMoney(value, currency, locale);
  const choices = [...new Set([...budgetTypes.map(typeGroup), ...groups])].filter(item => item !== defaultGroups.income);
  async function submit() {
   setBusy(true);
@@ -191,14 +213,22 @@ export function CategorySettingsDialog({ category, groups, month, onSave, onClos
   // A group that only follows the type is not stored, so changing the type moves the category along.
   const custom = expense && chosen && chosen !== typeGroup(type) ? chosen : null;
   try {
-   await onSave({ category_key: category.key, budget_type: expense ? type : 'fixed', group_name: custom, rollover: expense && rollover, rollover_start: expense && rollover ? category.rolloverStart ?? month : null, excluded });
+   const on = fund && rollover;
+   await onSave({ category_key: category.key, budget_type: bucket ? 'flexible' : expense ? type : 'fixed', group_name: custom, rollover: on, rollover_start: on ? start : null, excluded: !bucket && excluded,
+    rollover_balance: on ? balance : 0, rollover_currency: on && balance ? balanceCurrency : null, rollover_negative: negative });
    onClose();
   } catch (error) { showError(t((error as Error).message)); }
   finally { setBusy(false); }
  }
  return <Dialog open onOpenChange={open => { if (!open && !busy) onClose(); }}>
   <DialogContent className="budget-dialog">
-   <DialogTitle className="budget-dialog-title"><CategoryIcon kind={category.custom ? category.name : category.key}/>{name(category)}</DialogTitle>
+   <DialogTitle className="budget-dialog-title">{bucket ? <Settings2 size={18}/> : <CategoryIcon kind={category.custom ? category.name : category.key}/>}{bucket ? t('Flexible') : name(category)}</DialogTitle>
+   {fund && figures && <dl className="budget-left-summary">
+    <div><dt>{t('Planned')}</dt><dd>{figures.budget === null ? '—' : money(figures.budget)}</dd></div>
+    <div><dt>{t('Rolled over')}</dt><dd>{formatSignedMoney(figures.rolloverIn, currency, locale)}</dd></div>
+    <div><dt>{t('Spent')}</dt><dd>{money(figures.actual)}</dd></div>
+    <div className="budget-left-total"><dt>{t('Available')}</dt><dd data-tone={remainingTone(figures.remaining)}>{figures.remaining === null ? '—' : money(figures.remaining)}</dd></div>
+   </dl>}
    <form onSubmit={event => { event.preventDefault(); submit(); }}>
     <fieldset disabled={busy} className="budget-dialog-fields">
      {expense && <div className="budget-choice-list" role="radiogroup" aria-label={t('Budget type')}>
@@ -212,8 +242,13 @@ export function CategorySettingsDialog({ category, groups, month, onSave, onClos
       </select>
       {group === '__new' && <input className="budget-text" value={newGroup} maxLength={60} placeholder={t('Group name')} onChange={event => setNewGroup(event.currentTarget.value)} required/>}
      </label>}
-     {expense && <label className="budget-check"><input type="checkbox" checked={rollover} onChange={event => setRollover(event.currentTarget.checked)}/><span><strong>{t('Make this category a rollover fund')}</strong><small>{t('Money left at the end of a month carries into the next one, and overspending is taken from it. Best for non-monthly costs.')}</small></span></label>}
-     <label className="budget-check"><input type="checkbox" checked={excluded} onChange={event => setExcluded(event.currentTarget.checked)}/><span><strong>{t('Exclude this category from the budget')}</strong><small>{t('Its transactions stay recorded, but it is left out of budget totals.')}</small></span></label>
+     {fund && <label className="budget-check"><input type="checkbox" checked={rollover} onChange={event => setRollover(event.currentTarget.checked)}/><span><strong>{t('Make this category a rollover fund')}</strong><small>{t('Money left at the end of a month carries into the next one, and overspending is taken from it. Best for non-monthly costs.')}</small></span></label>}
+     {fund && rollover && <div className="budget-rollover-fields">
+      <label className="budget-dialog-label">{t('Start month')}<DatePicker mode="month" value={start} onChange={setStart}/></label>
+      <label className="budget-dialog-label">{t('Starting balance')} ({balanceCurrency})<FormattedNumberInput ariaLabel={t('Starting balance')} value={balance} required={false} displayFractionDigits={0} onValueChange={value => { setBalance(value); setBalanceCurrency(currency); }}/></label>
+      <label className="budget-check"><input type="checkbox" checked={negative} onChange={event => setNegative(event.currentTarget.checked)}/><span><strong>{t('Carry overspending into next month')}</strong><small>{t('When off, an overspent month starts the next one at zero.')}</small></span></label>
+     </div>}
+     {!bucket && <label className="budget-check"><input type="checkbox" checked={excluded} onChange={event => setExcluded(event.currentTarget.checked)}/><span><strong>{t('Exclude this category from the budget')}</strong><small>{t('Its transactions stay recorded, but it is left out of budget totals.')}</small></span></label>}
     </fieldset>
     <FormFooter busy={busy} onCancel={onClose}><Button disabled={busy || (group === '__new' && !newGroup.trim())}>{t(busy ? 'Saving…' : 'Save')}</Button></FormFooter>
    </form>

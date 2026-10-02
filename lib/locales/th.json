@@ -2484,5 +2484,16 @@
   "Hidden subscriptions": "การสมัครสมาชิกที่ซ่อนไว้",
   "No subscriptions found yet. They appear once the same charge repeats a few times.": "ยังไม่พบการสมัครสมาชิก จะแสดงเมื่อรายการเรียกเก็บเดียวกันเกิดซ้ำสองสามครั้ง",
   "Could not load subscriptions. Check that the latest migrations are installed.": "โหลดการสมัครสมาชิกไม่ได้ ตรวจสอบว่าได้ติดตั้งการย้ายข้อมูลล่าสุดแล้ว",
-  "Check the subscription fields.": "ตรวจสอบช่องข้อมูลการสมัครสมาชิก"
+  "Check the subscription fields.": "ตรวจสอบช่องข้อมูลการสมัครสมาชิก",
+  "Rolled over": "ยกยอดมา",
+  "Start month": "เดือนที่เริ่ม",
+  "Starting balance": "ยอดเริ่มต้น",
+  "Carry overspending into next month": "ยกยอดใช้จ่ายเกินไปเดือนถัดไป",
+  "When off, an overspent month starts the next one at zero.": "เมื่อปิด เดือนถัดจากเดือนที่ใช้จ่ายเกินจะเริ่มที่ศูนย์",
+  "Age of Money": "อายุของเงิน",
+  "1 day": "1 วัน",
+  "{change} vs 30 days ago": "{change} เทียบกับ 30 วันก่อน",
+  "No change vs 30 days ago": "ไม่เปลี่ยนแปลงเทียบกับ 30 วันก่อน",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "เงินรออยู่นานแค่ไหนก่อนที่คุณจะใช้: อายุเฉลี่ยของเงินที่ใช้จ่ายใน 10 รายการล่าสุด รายรับจะจับคู่กับรายจ่ายตามลำดับที่เข้ามาในทุกบัญชีเงินสด ตัวเลขที่สูงขึ้นหมายถึงมีเงินสำรองมากขึ้น",
+  "Records without an exchange rate to {currency} are left out: {count}.": "ไม่นับรายการที่ไม่มีอัตราแลกเปลี่ยนเป็น {currency}: {count}"
 }

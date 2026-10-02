@@ -2484,5 +2484,16 @@
   "Hidden subscriptions": "Langganan tersembunyi",
   "No subscriptions found yet. They appear once the same charge repeats a few times.": "Belum ada langganan ditemui. Ia muncul apabila caj yang sama berulang beberapa kali.",
   "Could not load subscriptions. Check that the latest migrations are installed.": "Tidak dapat memuatkan langganan. Pastikan migrasi terkini telah dipasang.",
-  "Check the subscription fields.": "Semak medan langganan."
+  "Check the subscription fields.": "Semak medan langganan.",
+  "Rolled over": "Dibawa ke hadapan",
+  "Start month": "Bulan mula",
+  "Starting balance": "Baki permulaan",
+  "Carry overspending into next month": "Bawa lebihan perbelanjaan ke bulan seterusnya",
+  "When off, an overspent month starts the next one at zero.": "Apabila dimatikan, bulan selepas perbelanjaan berlebihan bermula pada sifar.",
+  "Age of Money": "Umur Wang",
+  "1 day": "1 hari",
+  "{change} vs 30 days ago": "{change} berbanding 30 hari lalu",
+  "No change vs 30 days ago": "Tiada perubahan berbanding 30 hari lalu",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Berapa lama wang menunggu sebelum anda membelanjakannya: purata umur wang di sebalik 10 perbelanjaan terakhir anda. Pendapatan dipadankan dengan perbelanjaan mengikut susunan ia diterima, merentas semua akaun tunai anda. Nombor yang lebih tinggi bermaksud lebih banyak penampan.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "Rekod tanpa kadar pertukaran kepada {currency} dikecualikan: {count}."
 }

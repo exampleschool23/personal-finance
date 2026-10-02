@@ -2484,5 +2484,16 @@
   "Hidden subscriptions": "Mga nakatagong subscription",
   "No subscriptions found yet. They appear once the same charge repeats a few times.": "Wala pang nahanap na subscription. Lumalabas ang mga ito kapag ilang beses nang umulit ang parehong singil.",
   "Could not load subscriptions. Check that the latest migrations are installed.": "Hindi ma-load ang mga subscription. Tiyaking naka-install ang pinakabagong mga migration.",
-  "Check the subscription fields.": "Suriin ang mga field ng subscription."
+  "Check the subscription fields.": "Suriin ang mga field ng subscription.",
+  "Rolled over": "Nailipat",
+  "Start month": "Buwan ng simula",
+  "Starting balance": "Panimulang balanse",
+  "Carry overspending into next month": "Ilipat ang sobrang gastos sa susunod na buwan",
+  "When off, an overspent month starts the next one at zero.": "Kapag naka-off, nagsisimula sa zero ang buwan pagkatapos ng sobrang paggastos.",
+  "Age of Money": "Edad ng Pera",
+  "1 day": "1 araw",
+  "{change} vs 30 days ago": "{change} kumpara sa 30 araw na nakalipas",
+  "No change vs 30 days ago": "Walang pagbabago kumpara sa 30 araw na nakalipas",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Gaano katagal naghihintay ang pera bago mo gastusin: ang karaniwang edad ng perang ginamit sa huli mong 10 gastos. Itinutugma ang kita sa gastos ayon sa pagkakasunod ng pagdating, sa lahat ng cash account mo. Mas mataas na numero, mas malaking palugit.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "Hindi isinama ang mga record na walang exchange rate sa {currency}: {count}."
 }

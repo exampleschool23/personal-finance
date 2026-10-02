@@ -2484,5 +2484,16 @@
   "Hidden subscriptions": "Abbonamenti nascosti",
   "No subscriptions found yet. They appear once the same charge repeats a few times.": "Nessun abbonamento trovato per ora. Compaiono quando lo stesso addebito si ripete alcune volte.",
   "Could not load subscriptions. Check that the latest migrations are installed.": "Impossibile caricare gli abbonamenti. Verifica che le migrazioni più recenti siano installate.",
-  "Check the subscription fields.": "Controlla i campi dell’abbonamento."
+  "Check the subscription fields.": "Controlla i campi dell’abbonamento.",
+  "Rolled over": "Riportato",
+  "Start month": "Mese di inizio",
+  "Starting balance": "Saldo iniziale",
+  "Carry overspending into next month": "Riporta lo sforamento al mese successivo",
+  "When off, an overspent month starts the next one at zero.": "Se disattivato, il mese dopo uno sforamento riparte da zero.",
+  "Age of Money": "Età del denaro",
+  "1 day": "1 giorno",
+  "{change} vs 30 days ago": "{change} rispetto a 30 giorni fa",
+  "No change vs 30 days ago": "Nessuna variazione rispetto a 30 giorni fa",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Quanto tempo il denaro resta fermo prima che tu lo spenda: l’età media del denaro dietro le tue ultime 10 spese. Le entrate vengono abbinate alle spese nell’ordine in cui sono arrivate, su tutti i conti di liquidità. Un numero più alto significa più margine.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "I movimenti senza tasso di cambio verso {currency} sono esclusi: {count}."
 }

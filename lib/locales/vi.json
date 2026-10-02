@@ -2484,5 +2484,16 @@
   "Hidden subscriptions": "Gói đăng ký đã ẩn",
   "No subscriptions found yet. They appear once the same charge repeats a few times.": "Chưa tìm thấy gói đăng ký nào. Chúng sẽ xuất hiện khi cùng một khoản phí lặp lại vài lần.",
   "Could not load subscriptions. Check that the latest migrations are installed.": "Không thể tải gói đăng ký. Hãy kiểm tra đã cài các bản migration mới nhất.",
-  "Check the subscription fields.": "Hãy kiểm tra các trường của gói đăng ký."
+  "Check the subscription fields.": "Hãy kiểm tra các trường của gói đăng ký.",
+  "Rolled over": "Đã chuyển sang",
+  "Start month": "Tháng bắt đầu",
+  "Starting balance": "Số dư ban đầu",
+  "Carry overspending into next month": "Chuyển khoản chi vượt sang tháng sau",
+  "When off, an overspent month starts the next one at zero.": "Khi tắt, tháng sau một tháng chi vượt sẽ bắt đầu từ 0.",
+  "Age of Money": "Tuổi của tiền",
+  "1 day": "1 ngày",
+  "{change} vs 30 days ago": "{change} so với 30 ngày trước",
+  "No change vs 30 days ago": "Không đổi so với 30 ngày trước",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Tiền nằm chờ bao lâu trước khi bạn tiêu: tuổi trung bình của số tiền dùng cho 10 khoản chi gần nhất. Thu nhập được khớp với chi tiêu theo thứ tự đến, trên mọi tài khoản tiền mặt. Con số càng cao thì khoản đệm càng lớn.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "Các bản ghi không có tỷ giá sang {currency} bị loại ra: {count}."
 }

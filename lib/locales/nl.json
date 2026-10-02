@@ -2484,5 +2484,16 @@
   "Hidden subscriptions": "Verborgen abonnementen",
   "No subscriptions found yet. They appear once the same charge repeats a few times.": "Nog geen abonnementen gevonden. Ze verschijnen zodra dezelfde afschrijving een paar keer terugkomt.",
   "Could not load subscriptions. Check that the latest migrations are installed.": "Kan abonnementen niet laden. Controleer of de nieuwste migraties zijn geïnstalleerd.",
-  "Check the subscription fields.": "Controleer de velden van het abonnement."
+  "Check the subscription fields.": "Controleer de velden van het abonnement.",
+  "Rolled over": "Overgedragen",
+  "Start month": "Startmaand",
+  "Starting balance": "Beginsaldo",
+  "Carry overspending into next month": "Overschrijding meenemen naar volgende maand",
+  "When off, an overspent month starts the next one at zero.": "Als dit uit staat, begint de maand na een overschrijding weer bij nul.",
+  "Age of Money": "Leeftijd van geld",
+  "1 day": "1 dag",
+  "{change} vs 30 days ago": "{change} vergeleken met 30 dagen geleden",
+  "No change vs 30 days ago": "Geen verandering vergeleken met 30 dagen geleden",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Hoe lang geld wacht voordat je het uitgeeft: de gemiddelde leeftijd van het geld achter je laatste 10 uitgaven. Inkomsten worden in volgorde van binnenkomst aan uitgaven gekoppeld, over al je kasrekeningen. Een hoger getal betekent meer buffer.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "Records zonder wisselkoers naar {currency} worden weggelaten: {count}."
 }

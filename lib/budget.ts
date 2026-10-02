@@ -11,7 +11,11 @@ export type BudgetMode = 'category' | 'flex';
 export type BudgetDirection = 'income' | 'expense';
 
 /** Per-category settings. `category_key` is a built-in kind ("Rent expense") or a custom category id. */
-export type BudgetCategorySetting = { category_key: string; budget_type: BudgetType; group_name: string | null; rollover: boolean; rollover_start: string | null; excluded: boolean };
+export type BudgetCategorySetting = { category_key: string; budget_type: BudgetType; group_name: string | null; rollover: boolean; rollover_start: string | null; excluded: boolean;
+ /** The fund's balance going into its start month, in `rollover_currency`. */
+ rollover_balance?: number; rollover_currency?: string | null;
+ /** Whether overspending carries into the next month as a negative amount; off resets an overspent fund to zero. */
+ rollover_negative?: boolean };
 /** A budgeted amount from `month` (YYYY-MM). A forward amount also covers every later month until the next saved amount. */
 export type BudgetAmount = { category_key: string; month: string; amount: number; currency: string; applies_forward: boolean };
 export type BudgetState = { mode: BudgetMode; applyForward: boolean; categories: BudgetCategorySetting[]; amounts: BudgetAmount[] };
@@ -25,7 +29,8 @@ export const defaultGroups: Record<BudgetDirection | BudgetType, string> = { inc
 export const budgetTypeLabels: Record<BudgetType, string> = { fixed: 'Fixed', flexible: 'Flexible', non_monthly: 'Non-monthly' };
 export const historyMonths = 6;
 
-export type BudgetCategory = { key: string; name: string; custom: boolean; direction: BudgetDirection; type: BudgetType; group: string; rollover: boolean; rolloverStart: string | null; excluded: boolean };
+export type RolloverFund = { rollover: boolean; rolloverStart: string | null; rolloverBalance: number; rolloverCurrency: string | null; rolloverNegative: boolean };
+export type BudgetCategory = RolloverFund & { key: string; name: string; custom: boolean; direction: BudgetDirection; type: BudgetType; group: string; excluded: boolean };
 
 export function shiftMonth(month: string, by: number) {
  const date = new Date(month + '-01T00:00:00Z'); date.setUTCMonth(date.getUTCMonth() + by);
@@ -37,13 +42,24 @@ export function monthsBetween(from: string, to: string) {
  return months;
 }
 
+/** A saved setting's rollover fields. Overspending carries as a negative amount unless the person turned that off. */
+export function rolloverFund(setting: BudgetCategorySetting | undefined): RolloverFund {
+ const rollover = !!setting?.rollover;
+ return { rollover, rolloverStart: rollover ? setting?.rollover_start?.slice(0, 7) ?? null : null, rolloverBalance: rollover ? Math.max(0, Number(setting?.rollover_balance ?? 0)) || 0 : 0, rolloverCurrency: rollover ? setting?.rollover_currency ?? null : null, rolloverNegative: setting?.rollover_negative ?? true };
+}
+
+/** The Flexible bucket as a budget line of its own: in flex mode its rollover is set on the bucket, not its categories. */
+export function flexBucketCategory(settings: readonly BudgetCategorySetting[]): BudgetCategory {
+ return { key: flexBucketKey, name: 'Flexible', custom: false, direction: 'expense', type: 'flexible', group: defaultGroups.flexible, excluded: false, ...rolloverFund(settings.find(item => item.category_key === flexBucketKey)) };
+}
+
 /** Every category that can carry a budget: built-in kinds and custom categories. */
 export function budgetCategories(categories: readonly Category[], settings: readonly BudgetCategorySetting[]): BudgetCategory[] {
  const byKey = new Map(settings.map(setting => [setting.category_key, setting]));
  const build = (key: string, name: string, custom: boolean, direction: BudgetDirection): BudgetCategory => {
   const setting = byKey.get(key);
   const type: BudgetType = direction === 'income' ? 'fixed' : setting?.budget_type ?? (fixedKinds.includes(key) ? 'fixed' : 'flexible');
-  return { key, name, custom, direction, type, group: setting?.group_name?.trim() || (direction === 'income' ? defaultGroups.income : defaultGroups[type]), rollover: direction === 'expense' && !!setting?.rollover, rolloverStart: setting?.rollover_start?.slice(0, 7) ?? null, excluded: !!setting?.excluded };
+  return { key, name, custom, direction, type, group: setting?.group_name?.trim() || (direction === 'income' ? defaultGroups.income : defaultGroups[type]), ...rolloverFund(direction === 'expense' ? setting : undefined), excluded: !!setting?.excluded };
  };
  return [
   ...income.map(kind => build(kind, kind, false, 'income')),
@@ -103,14 +119,42 @@ export function budgetedIn(amounts: readonly BudgetAmount[], key: string, month:
  return convertAmount(Number(saved.amount), saved.currency, currency, rates);
 }
 
-/** Unspent (or overspent) money carried into `month` from earlier months of a rollover category. */
-export function rolloverBalance(category: BudgetCategory, amounts: readonly BudgetAmount[], history: ReadonlyMap<string, MonthActuals>, month: string, currency: string, rates: Rates) {
- if (!category.rollover || !category.rolloverStart || category.rolloverStart >= month) return 0;
- let balance = 0;
- for (const past of monthsBetween(category.rolloverStart, shiftMonth(month, -1))) {
-  balance += (budgetedIn(amounts, category.key, past, currency, rates) ?? 0) - (history.get(past)?.byCategory.get(category.key) ?? 0);
+/** The fund's starting balance in `currency`; zero when it has none or its currency cannot be converted. */
+export function startingBalanceIn(fund: RolloverFund, currency: string, rates: Rates) {
+ if (!fund.rolloverBalance) return 0;
+ return convertAmount(fund.rolloverBalance, fund.rolloverCurrency ?? currency, currency, rates) ?? 0;
+}
+
+/** Money carried into `month`: the starting balance, then each earlier month's budget minus what was spent.
+ * Overspending is taken from the fund and can make it negative; with negative carry off an overspent month resets it to zero.
+ * Nothing carries before the start month or when rollover is off. Pure, so every chain can be tested month by month. */
+export function rolloverCarry(fund: RolloverFund, month: string, starting: number, budgetOf: (month: string) => number, actualOf: (month: string) => number) {
+ if (!fund.rollover || !fund.rolloverStart || fund.rolloverStart > month) return 0;
+ let balance = starting;
+ for (const past of monthsBetween(fund.rolloverStart, shiftMonth(month, -1))) {
+  balance += budgetOf(past) - actualOf(past);
+  if (!fund.rolloverNegative && balance < 0) balance = 0;
  }
  return balance;
+}
+
+/** Unspent (or overspent) money carried into `month` from earlier months of a rollover category. */
+export function rolloverBalance(category: BudgetCategory, amounts: readonly BudgetAmount[], history: ReadonlyMap<string, MonthActuals>, month: string, currency: string, rates: Rates) {
+ return rolloverCarry(category, month, startingBalanceIn(category, currency, rates), past => budgetedIn(amounts, category.key, past, currency, rates) ?? 0, past => history.get(past)?.byCategory.get(category.key) ?? 0);
+}
+
+const isFlexibleCategory = (category: BudgetCategory) => category.direction === 'expense' && category.type === 'flexible' && !category.excluded;
+
+/** The Flexible bucket's plan for one month without any rollover: its saved amount, or the sum of its categories' budgets. */
+export function flexBucketPlan(amounts: readonly BudgetAmount[], categories: readonly BudgetCategory[], month: string, currency: string, rates: Rates) {
+ if (budgetAmountFor(amounts, flexBucketKey, month)) return budgetedIn(amounts, flexBucketKey, month, currency, rates) ?? 0;
+ return categories.filter(isFlexibleCategory).reduce((sum, category) => sum + (budgetedIn(amounts, category.key, month, currency, rates) ?? 0), 0);
+}
+
+/** Money the Flexible bucket carries into `month` in flex mode: its plan minus everything spent in flexible categories. */
+export function flexBucketRollover(bucket: BudgetCategory, categories: readonly BudgetCategory[], amounts: readonly BudgetAmount[], history: ReadonlyMap<string, MonthActuals>, month: string, currency: string, rates: Rates) {
+ const flexible = categories.filter(isFlexibleCategory);
+ return rolloverCarry(bucket, month, startingBalanceIn(bucket, currency, rates), past => flexBucketPlan(amounts, categories, past, currency, rates), past => flexible.reduce((sum, category) => sum + (history.get(past)?.byCategory.get(category.key) ?? 0), 0));
 }
 
 export type BudgetHistory = { months: Array<{ month: string; amount: number }>; lastMonth: number; average: number };
@@ -195,7 +239,7 @@ export function remainingTone(remaining: number | null, direction: BudgetDirecti
 }
 
 /** Months of actuals a view needs: the year, or the History window, extended back to the earliest rollover start. */
-export function budgetReadRange(month: string, view: 'month' | 'year', categories: readonly BudgetCategory[]) {
+export function budgetReadRange(month: string, view: 'month' | 'year', categories: readonly Pick<BudgetCategory, 'rollover' | 'rolloverStart'>[]) {
  let from = view === 'year' ? month.slice(0, 4) + '-01' : shiftMonth(month, -historyMonths);
  const to = view === 'year' ? month.slice(0, 4) + '-12' : month;
  for (const category of categories) if (category.rollover && category.rolloverStart && category.rolloverStart < from) from = category.rolloverStart;

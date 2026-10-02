@@ -2484,5 +2484,16 @@
   "Hidden subscriptions": "Ausgeblendete Abonnements",
   "No subscriptions found yet. They appear once the same charge repeats a few times.": "Noch keine Abonnements gefunden. Sie erscheinen, sobald sich dieselbe Abbuchung einige Male wiederholt.",
   "Could not load subscriptions. Check that the latest migrations are installed.": "Abonnements konnten nicht geladen werden. Prüfen Sie, ob die neuesten Migrationen installiert sind.",
-  "Check the subscription fields.": "Prüfen Sie die Angaben zum Abonnement."
+  "Check the subscription fields.": "Prüfen Sie die Angaben zum Abonnement.",
+  "Rolled over": "Übertragen",
+  "Start month": "Startmonat",
+  "Starting balance": "Anfangssaldo",
+  "Carry overspending into next month": "Mehrausgaben in den nächsten Monat übertragen",
+  "When off, an overspent month starts the next one at zero.": "Wenn aus, beginnt der Monat nach einer Überschreitung wieder bei null.",
+  "Age of Money": "Alter des Geldes",
+  "1 day": "1 Tag",
+  "{change} vs 30 days ago": "{change} gegenüber vor 30 Tagen",
+  "No change vs 30 days ago": "Keine Änderung gegenüber vor 30 Tagen",
+  "How long money waits before you spend it: the average age of the money behind your last 10 expenses. Income is matched to spending in the order it arrived, across your cash accounts. A higher number means more of a buffer.": "Wie lange Geld liegt, bevor du es ausgibst: das durchschnittliche Alter des Geldes hinter deinen letzten 10 Ausgaben. Einnahmen werden über alle Bargeldkonten in der Reihenfolge ihres Eingangs den Ausgaben zugeordnet. Eine höhere Zahl bedeutet mehr Puffer.",
+  "Records without an exchange rate to {currency} are left out: {count}.": "Einträge ohne Wechselkurs zu {currency} werden nicht berücksichtigt: {count}."
 }
