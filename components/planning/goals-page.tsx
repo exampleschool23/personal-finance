@@ -31,7 +31,9 @@ import { formatDate,formatMoney,formatNumber,formatPercent,calendarIso,parseCale
 import { type Goal,type PlanningData } from '@/lib/planning';
 import { investmentGoalItems, investmentGoalTargets, investmentGoalCompletion } from '@/lib/investment-goals';
 import { InvestmentGoalPlan } from './investment-goal-plan';
-import { goalFinancials, goalStatus, goalStatusLabels, goalSummary } from '@/lib/goal-projection';
+import { goalFinancials, goalStatus, goalSummary } from '@/lib/goal-projection';
+import { GoalSummaryRow } from './goal-summary-row';
+import { GoalSetupFlow } from './goal-setup-flow';
 import { depositToday } from '@/lib/deposit-interest';
 import type { ExpensePlan } from '@/lib/expense-plans';
 import type { MarketData } from '@/lib/market';
@@ -52,6 +54,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
   plannerRef.current.focus({preventScroll:true});
   plannerRef.current.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});
  },[plannerVisit]);
+ const [setup,setSetup]=useState(false);
  const [draft,setDraft]=useState<Goal|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[archived,setArchived]=useState(false),[selected,setSelected]=useState(''),[deleting,setDeleting]=useState(false);
  const guard=useDraftDialog(draft,()=>setDraft(null),busy);
  const investmentAccounts=(data.holdingAccounts??[]).filter(isInstrumentAccount);
@@ -59,6 +62,8 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
  const maxDate=calendarIso(new Date(parseCalendarDate(today)!.getFullYear()+100,parseCalendarDate(today)!.getMonth(),parseCalendarDate(today)!.getDate()));
  const goalCurrency=(goal:Goal)=>goal.kind==='investment'?investmentAccounts.find(account=>account.id===goal.holding_account_id)?.currency??goal.currency??currency:goal.kind==='net_worth'?goal.currency??currency:accounts.find(account=>account.id===goal.account_id)?.currency??goal.currency??currency;
  const open=(goal?:Goal)=>{setError('');setDraft(goal?{...goal,kind:goal.kind??'savings',currency:goalCurrency(goal),investment_targets:investmentGoalTargets(goal)}:{id:crypto.randomUUID(),name:'',kind:'net_worth',currency:currency,account_id:null,target:0,allocated:0,target_date:null,archived:false,monthly_contribution:null,annual_return:0});};
+ // A new stock or crypto goal skips the add-goal flow and opens the holdings editor directly.
+ const openInvestment=()=>{const account=investmentAccounts[0];setSetup(false);setError('');setDraft({id:crypto.randomUUID(),name:'',kind:'investment',currency:account?.currency??currency,account_id:null,target:0,allocated:0,target_date:null,archived:false,monthly_contribution:null,annual_return:0,holding_account_id:account?.id??null,asset_kind:account?.kind??null,asset_symbol:null,investment_targets:account?[{holding_account_id:account.id,asset_kind:account.kind,asset_symbol:'',target:0,monthly_contribution:null}]:[]});};
  const order=useGoalOrder(data.goals,preferences,owner,demo);
  const visible=order.goals.filter(goal=>!!goal.archived===archived),active=visible.find(goal=>goal.id===selected)??visible[0];
  const totals=new Map([...new Set([...currencies,...data.goals.map(goalCurrency)])].map(currency=>[currency,goalFinancials(data.records,plans,today.slice(0,7),currency,market,plansReady)]));
@@ -66,7 +71,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
  const archivedCount=order.goals.filter(goal=>goal.archived).length;
  // Monarch's goals page: one list in the person's own order (drag the six dots), with what is free for goals beside it.
  return <>
-  <PageHeader title={t('Savings goals')}><Button onClick={()=>open()}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></PageHeader>
+  <PageHeader title={t('Savings goals')}><Button onClick={()=>setSetup(true)}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></PageHeader>
   <ErrorPopup message={order.error}/>
   {preferences.error&&!demo&&<InlineError message={t('Load saved preferences before making changes.')} onRetry={preferences.retry}/>}
   <div className="goals-layout">
@@ -74,7 +79,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
     <PanelTitle title={t(archived?'Archived':'Goals')} count={<Count value={visible.length}/>} hint={accounts.length?undefined:<>{t('Net-worth and investment goals do not need a cash account. Cash savings goals reserve money in a cash account.')} <Link href="/accounts">{t('Accounts')}</Link></>}>
      {(archivedCount>0||archived)&&<Segmented label={t('Show archived goals')} options={[{value:'active',label:t('Active')},{value:'archived',label:t('Archived')}]} value={archived?'archived':'active'} onChange={value=>{setArchived(value==='archived');setSelected('');}}/>}
     </PanelTitle>
-    {!visible.length?<EmptyState icon={<Target aria-hidden="true"/>} title={t('What are you working toward?')} description={t('Set a target amount and date, then explore how monthly investments can get you there.')}><Button onClick={()=>open()}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></EmptyState>
+    {!visible.length?<EmptyState icon={<Target aria-hidden="true"/>} title={t('What are you working toward?')} description={t('Set a target amount and date, then explore how monthly investments can get you there.')}><Button onClick={()=>setSetup(true)}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></EmptyState>
     :<SortableList id="goal-order" items={visible.map(goal=>goal.id)} disabled={order.disabled} nameOf={id=>visible.find(goal=>goal.id===id)?.name??''} onMove={(id,target)=>{setSelected(active?.id??'');void order.reorder(id,target,visible.map(goal=>goal.id));}}><ul className="goal-rows">{visible.map(goal=>{
      const investment=goal.kind==='investment',holdingItems=investmentGoalItems(goal,data);
      const currency=goalCurrency(goal),account=accounts.find(account=>account.id===goal.account_id),current=goal.kind==='net_worth'?totals.get(currency)?.netWorth??null:Number(goal.allocated),money=(n:number)=>formatMoney(n,currency,locale);
@@ -84,13 +89,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
      const overAllocated=!!account&&reserved>account.amount&&!goal.archived;
      return <SortableItem key={goal.id} id={goal.id} label={goal.name} as="li" className={'goal-row'+(active?.id===goal.id?' is-selected':'')}>
       <button type="button" className="goal-row-main" aria-controls={plannerId} aria-current={active?.id===goal.id||undefined} onClick={()=>{setSelected(goal.id);setPlannerVisit(visit=>visit+1);}}>
-       <span className="goal-row-cover" aria-hidden="true">{goalEmoji(goal,investment&&holdingItems.every(item=>item.target.asset_kind==='Crypto'))}</span>
-       <span className="goal-row-body">
-        <span className="goal-row-line"><strong>{goal.name}</strong><strong className="goal-row-amount">{investment?(percent===null?'—':formatPercent(percent,locale,0)):current===null?'—':money(current)}</strong></span>
-        <span className="goal-row-line goal-row-meta"><span>{status&&<span className={'status-badge goal-status is-'+status}>{t(goalStatusLabels[status])}</span>}<span>{goal.target_date?formatDate(goal.target_date,locale):t('No target date')}{account&&<> · {account.name}</>}</span></span><span>{investment?`${t('Holdings')} · ${formatNumber(holdingItems.length,locale,0)}`:t('{percent} of {amount}',{percent:percent===null?'—':formatPercent(percent,locale,0),amount:money(goal.target)})}</span></span>
-        <span className="progress-track" data-status={status??undefined}><span style={{width:`${percent??0}%`}}/></span>
-        {overAllocated&&<span role="alert" className="goal-row-alert">{t('Your goal allocations exceed the current account balance. Update the allocations.')}</span>}
-       </span>
+       <GoalSummaryRow emoji={goalEmoji(goal,investment&&holdingItems.every(item=>item.target.asset_kind==='Crypto'))} name={goal.name} status={status} percent={percent} amount={investment?(percent===null?'—':formatPercent(percent,locale,0)):current===null?'—':money(current)} meta={<>{goal.target_date?formatDate(goal.target_date,locale):t('No target date')}{account&&<> · {account.name}</>}</>} detail={investment?`${t('Holdings')} · ${formatNumber(holdingItems.length,locale,0)}`:t('{percent} of {amount}',{percent:percent===null?'—':formatPercent(percent,locale,0),amount:money(goal.target)})} alert={overAllocated&&t('Your goal allocations exceed the current account balance. Update the allocations.')}/>
       </button>
       <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="goal-row-menu" aria-label={t('Actions for {name}',{name:goal.name})}><MoreHorizontal size={18} aria-hidden="true"/></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={()=>open(goal)}>{t('Edit goal')}</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
      </SortableItem>;
@@ -100,6 +99,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
   </div>
   {active&&<div id={plannerId} ref={plannerRef} className="goal-planner-destination" tabIndex={-1} role="region" aria-label={t('Goal planner')}>{active.kind!=='investment'&&<GoalDetail goal={active} current={active.kind==='net_worth'?financials?.netWorth??null:Number(active.allocated)} currency={goalCurrency(active)} today={today}/>}{active.kind==='investment'?<InvestmentGoalPlan currency={currency} market={market} key={JSON.stringify(active)} goal={active} data={data} today={today} save={save} onEdit={()=>open(active)}/>:<GoalForecast key={JSON.stringify([active,goalCurrency(active)])} goal={active} starting={active.kind==='net_worth'?financials?.netWorth??null:active.allocated} surplus={fundingRoom(data.goals,active,financials?.surplus??null,goalCurrency(active),today,market?.rates)} currency={goalCurrency(active)} today={today} snapshots={snapshots} historyError={historyError} save={save} onEdit={()=>open(active)}/>}</div>}
   {active&&active.kind!=='investment'&&<GoalScenarios key={active.id} goal={active} starting={active.kind==='net_worth'?financials?.netWorth??null:Number(active.allocated)} currency={goalCurrency(active)} today={today} preferences={preferences}/>}
+  {setup&&<GoalSetupFlow goals={data.goals} accounts={accounts} currency={currency} currencies={currencies} netWorth={code=>totals.get(code)?.netWorth??null} today={today} maxDate={maxDate} save={save} onClose={()=>setSetup(false)} onInvestment={openInvestment} onCreated={id=>{setSetup(false);setArchived(false);setSelected(id);setPlannerVisit(visit=>visit+1);}}/>}
   <Dialog open={!!draft} onOpenChange={next=>{if(!next&&!busy)guard.close();}}><DialogContent className="record-dialog goal-dialog" showCloseButton={!busy}><DialogTitle>{t('Goal')}</DialogTitle><DialogDescription>{t('Set a net-worth target, reserve cash, or accumulate coins and shares.')}</DialogDescription>{draft&&<form className="record-form" onSubmit={async event=>{event.preventDefault();setBusy(true);setError('');try{await save('goal',draft);setSelected(draft.id);setDraft(null);}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}><div className="goal-dialog-scroll"><fieldset className="tracker-fields" disabled={busy}>
    <label>{t('Goal type')}<NativeSelect value={draft.kind} onChange={event=>{const kind=event.target.value as Goal['kind'];const investmentAccount=investmentAccounts[0];setDraft({...draft,kind,account_id:kind==='savings'?accounts[0]?.id??null:null,allocated:0,target:0,monthly_contribution:null,annual_return:0,holding_account_id:kind==='investment'?investmentAccount?.id??null:null,asset_kind:kind==='investment'?investmentAccount?.kind??null:null,asset_symbol:null,investment_targets:kind==='investment'&&investmentAccount?[{holding_account_id:investmentAccount.id,asset_kind:investmentAccount.kind,asset_symbol:'',target:0,monthly_contribution:null}]:[],currency:kind==='investment'?investmentAccount?.currency??currency:kind==='savings'?accounts[0]?.currency??currency:currency});}}><option value="net_worth">{t('Net-worth goal')}</option><option value="savings" disabled={!accounts.length}>{t('Savings goal')}</option><option value="investment">{t('Stock / crypto accumulation')}</option></NativeSelect></label>
    <label>{t('Name')}<Input required maxLength={120} value={draft.name} onChange={event=>setDraft({...draft,name:event.target.value})}/></label>

@@ -26,6 +26,10 @@ Patterns already taken from Monarch:
 - Savings goals: one ordered list of goal rows (cover, name, status pill, date,
   amount, "% of target", progress bar) beside an "Available for goals" panel;
   setup and rarely used tools open in dialogs (`components/planning/goals-page.tsx`).
+- Add goal: a full-screen stepper (Select tiles with counts, Targets,
+  Contribution, Budget) with a live preview of the new goals beside the form
+  (`components/planning/goal-setup-flow.tsx`, logic in `lib/goal-setup.ts`).
+  Multi-step creation flows follow this shape.
 
 ## Reordering: always, wherever order is the person's choice
 
