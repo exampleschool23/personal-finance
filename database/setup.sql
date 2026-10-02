@@ -5824,6 +5824,10 @@ BEGIN
  CREATE POLICY "Owners remove their attachments" ON storage.objects FOR DELETE TO authenticated
   USING (bucket_id='attachments' AND (storage.foldername(name))[1]=auth.uid()::text);
 END $storage$;
+
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
 -- Subscriptions: what the owner decided about a subscription detected from their charges.
 -- * Detection itself runs on recorded transactions; only the decision is stored.
 -- * One row per merchant (as normalised by the app) and currency.
@@ -5845,6 +5849,10 @@ ALTER TABLE public.subscription_decisions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Owners manage subscription decisions" ON public.subscription_decisions FOR ALL TO authenticated USING (user_id=auth.uid()) WITH CHECK (user_id=auth.uid());
 REVOKE ALL ON public.subscription_decisions FROM PUBLIC, anon;
 GRANT SELECT,INSERT,UPDATE,DELETE ON public.subscription_decisions TO authenticated;
+
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
 -- Budget rollover funds: a starting balance (in its own currency) carried
 -- into the fund's start month, and whether overspending carries into the
 -- next month as a negative amount (on by default, as before) or resets the
