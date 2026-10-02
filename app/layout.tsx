@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   title: "Hoggish Finance",
   manifest: "/manifest.webmanifest",
   appleWebApp: {capable:true,title:"Hoggish Finance"},
-  description: "Your personal finance workspace.",
+  description: "Accounts, spending, budgets, goals and investments in one clear view. Thirty languages, your currencies, no ads.",
+  openGraph: { type: "website", siteName: "Hoggish Finance", title: "Hoggish Finance", description: "Accounts, spending, budgets, goals and investments in one clear view." },
   other: {
     "codex-preview": "development",
   },

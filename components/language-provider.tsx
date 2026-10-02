@@ -5,20 +5,21 @@ import { detectLanguage, directionOf, isLanguage, Language, locales, translate }
 
 import { LanguageContext } from '@/components/language-context';
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, updateLanguage] = useState<Language>('en');
+/** `initial` is the language the server rendered in; a saved choice or the browser's own list still takes over after loading. */
+export function LanguageProvider({ children, initial = 'en' }: { children: React.ReactNode; initial?: Language }) {
+  const [language, updateLanguage] = useState<Language>(initial);
   useEffect(() => {
     let saved: string | null = null;
     try { saved = localStorage.getItem('hoggish-default-language'); } catch { /* Language selection also works when browser storage is blocked. */ }
     // Nothing chosen yet: follow the browser. Only an explicit choice is ever saved as the default.
-    const initial = isLanguage(saved) ? saved : detectLanguage(typeof navigator === 'undefined' ? [] : navigator.languages?.length ? navigator.languages : [navigator.language]);
-    if (initial !== 'en') queueMicrotask(() => updateLanguage(initial));
+    const chosen = isLanguage(saved) ? saved : detectLanguage(typeof navigator === 'undefined' ? [] : navigator.languages?.length ? navigator.languages : [navigator.language]);
+    if (chosen !== initial) queueMicrotask(() => updateLanguage(chosen));
     const sync = (event: StorageEvent) => {
       if (event.key === 'hoggish-default-language' && isLanguage(event.newValue)) updateLanguage(event.newValue);
     };
     window.addEventListener('storage', sync);
     return () => window.removeEventListener('storage', sync);
-  }, []);
+  }, [initial]);
   useEffect(() => {
     document.documentElement.lang = language;
     // Arabic and Urdu read right to left.

@@ -41,7 +41,7 @@ test('a failure is shown as a translated alert',()=>{
 });
 test('the sign-in page shows phone sign-in only when the server reports it, and the Telegram landing page signs in once',()=>{
  const screen=fs.readFileSync('components/sign-in-screen.tsx','utf8');
- assert.match(screen,/fetch\('\/api\/auth\/phone'/);assert.match(screen,/\{phone\.enabled && !byPhone &&/);
+ assert.match(screen,/const phone = usePhoneSignIn\(\);/);assert.match(fs.readFileSync('hooks/use-phone-sign-in.ts','utf8'),/fetch\('\/api\/auth\/phone'/);assert.match(screen,/\{phone\.enabled && !byPhone &&/);
  assert.match(screen,/byPhone \? <PhoneSignIn botUsername=\{phone\.botUsername\} onUseEmail=/);
  const page=fs.readFileSync('app/auth/telegram/page.tsx','utf8');
  assert.match(page,/fetch\('\/api\/auth\/telegram'/);assert.match(page,/https:\/\/telegram\.org\/js\/telegram-web-app\.js/);

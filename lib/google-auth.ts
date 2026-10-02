@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
+import { signInPath } from './sign-in-path';
 
 export const GOOGLE_VERIFIER_COOKIE = 'hf_google_verifier';
 export const GOOGLE_CALLBACK_PATH = '/auth/callback';
@@ -24,7 +25,8 @@ export function googleAuthorization(supabaseUrl: string, origin: string) {
 }
 
 export function loginRedirect(origin: string, error?: string) {
-  const url = new URL('/', origin);
+  // A failed attempt returns to the sign-in page, where its message is shown.
+  const url = new URL(error ? signInPath : '/', origin);
   if (error) url.searchParams.set('auth_error', error);
   return new Response(null, {
     status: 303,

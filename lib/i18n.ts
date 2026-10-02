@@ -51,6 +51,14 @@ export function detectLanguage(preferred: readonly string[] | undefined): Langua
   }
   return 'en';
 }
+/** The language tags of an Accept-Language header, most preferred first. */
+export function acceptedLanguages(header: string | null | undefined): string[] {
+  return (header ?? '').split(',').map((part, index) => {
+    const [tag, ...params] = part.trim().split(';');
+    const quality = Number(params.find(param => param.trim().startsWith('q='))?.split('=')[1] ?? 1);
+    return { tag: tag.trim(), quality: Number.isFinite(quality) ? quality : 0, index };
+  }).filter(item => item.tag && item.tag !== '*' && item.quality > 0).sort((a, b) => b.quality - a.quality || a.index - b.index).map(item => item.tag);
+}
 export function translate(language: Language, key: string, params: Record<string, string | number> = {}) {
   const text = Object.hasOwn(dictionaries[language], key) ? dictionaries[language][key] : key;
   return text.replace(/\{(\w+)\}/g, (match, name: string) => params[name] === undefined ? match : String(params[name]));

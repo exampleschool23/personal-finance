@@ -6,6 +6,7 @@ import { LanguageProvider, useLanguage } from '@/components/language-provider';
 import { Brand } from '@/components/presentation-foundation/brand';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { Button } from '@/components/ui/button';
+import { signInPath } from '@/lib/sign-in-path';
 type Result = { state: 'sign_in' | 'confirm' | 'expired' | 'cancelled' | 'connected'; telegram?: string | null; account?: string; bot?: string };
 type View = { state: 'loading' } | { state: 'error'; message: string } | Result;
 async function request(action: 'preview' | 'confirm' | 'cancel'): Promise<Result> {
@@ -41,7 +42,7 @@ function ConnectTelegram() {
     </>}
     {view.state === 'sign_in' && <>
       <p>{t('Sign in to the account you want to use in Telegram. You will come back here to finish.')}</p>
-      <div className="entry-actions"><Button onClick={() => router.push('/')}>{t('Continue to sign in')}</Button><Button variant="outline" disabled={busy} onClick={() => void run('cancel')}>{t('Cancel')}</Button></div>
+      <div className="entry-actions"><Button onClick={() => router.push(signInPath)}>{t('Continue to sign in')}</Button><Button variant="outline" disabled={busy} onClick={() => void run('cancel')}>{t('Cancel')}</Button></div>
     </>}
     {view.state === 'confirm' && <>
       <dl className="connect-facts">

@@ -37,6 +37,7 @@ import { compareRecordDates } from '@/lib/record-dates';
 import { sortAssetsByWorth } from '@/lib/asset-sort';
 import { type Entry, normalizeEntry, kinds, assets, liabilities, assetRecordKinds, lendingRecordKinds, income, expenses, financialTotals, estimatedCashFlow } from '@/lib/finance';
 import { sectionFor } from '@/components/workspace/navigation';
+import { signInPath } from '@/lib/sign-in-path';
 import { recategorize, type CategoryChoice } from '@/lib/transaction-rules';
 
 const today = depositToday;
@@ -52,7 +53,8 @@ function useWorkspaceState() {
     const [user, setUser] = useState<string | null>(null), [ready, setReady] = useState(false), [configured, setConfigured] = useState(true), [demo, setDemo] = useState(false), [rows, setRows] = useState<Entry[]>([]), [currency, setCurrency] = useState<string>('USD'), [editing, setEditing] = useState<Entry | null>(null), [deleting, setDeleting] = useState<Entry | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
     const [preferencesData, setPreferencesData] = useState<Preferences>(defaultPreferences);
     useEffect(() => {
-        if (ready && !user && !demo && pathname !== '/') router.replace('/');
+        // Signed out, only the product tour and the sign-in page are open; signed in, the sign-in page has nothing to show.
+        if (ready && (user || demo ? pathname === signInPath : pathname !== '/' && pathname !== signInPath)) router.replace('/');
     }, [ready, user, demo, pathname, router]);
     const [settingsLoading, setSettingsLoading] = useState(true);
     const [settingsError, setSettingsError] = useState('');

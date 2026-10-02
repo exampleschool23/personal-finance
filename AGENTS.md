@@ -33,6 +33,17 @@ The drawer, the shell and the screens are separate. Keep them that way.
   `useWorkspace()`. State that only one screen needs (a selected tab, a local
   filter) stays inside that screen.
 - `tests/workspace-structure.mjs` enforces these boundaries.
+- Signed-out visitors see `LandingPage` (`components/landing-page.tsx`) at `/`: the
+  public product tour, built after Monarch's site (floating nav, hero over a
+  product window, feature rows, closing band). Sign-in is its own page at
+  `signInPath` (`lib/sign-in-path.ts`), a single centred card. The shell picks
+  between them; link to `signInPath`, never to `/`, when someone needs to sign in.
+  Landing figures are sample data through the shared formatters, and every claim
+  on it must match the privacy policy and a feature that exists.
+  Both are rendered on the server for visitors without session cookies
+  (`VisitorHint` in the workspace layout), in the language of the request's
+  `Accept-Language`; keep them free of browser-only code during render.
+  `tests/landing-page.mjs` covers all of this.
 
 # Interface design system
 

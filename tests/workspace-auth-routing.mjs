@@ -16,7 +16,8 @@ function visit(node) {
 }
 visit(tree);
 assert.ok(callback, 'Workspace must install its session routing effect');
-const run = new Function('ready', 'user', 'demo', 'pathname', 'router', `return (${callback})();`);
+const effect = new Function('ready', 'user', 'demo', 'pathname', 'router', 'signInPath', `return (${callback})();`);
+const run = (...args) => effect(...args, '/sign-in');
 
 test('signed-out workspace URLs return to login using history replacement', () => {
   for (const path of ['/goals', '/settings', '/assets', '/accounts']) {
@@ -38,4 +39,14 @@ test('login, signed-in users and demo navigation do not redirect; logout does', 
   assert.deepEqual(destinations, []);
   run(true, null, false, '/goals', router);
   assert.deepEqual(destinations, ['/']);
+});
+
+test('the sign-in page stays open while signed out and forwards to the dashboard once signed in', () => {
+  const destinations = [];
+  const router = { replace: destination => destinations.push(destination) };
+  run(true, null, false, '/sign-in', router);
+  assert.deepEqual(destinations, []);
+  run(true, 'owner@example.com', false, '/sign-in', router);
+  run(true, null, true, '/sign-in', router);
+  assert.deepEqual(destinations, ['/', '/']);
 });

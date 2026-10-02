@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { LanguageProvider, useLanguage } from '@/components/language-provider';
 import { Brand } from '@/components/presentation-foundation/brand';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
+import { signInPath } from '@/lib/sign-in-path';
 type WebApp = { initData?: string; ready?: () => void; expand?: () => void };
 async function signIn(body: { token?: string; initData?: string }) {
   const response = await fetch('/api/auth/telegram', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -35,7 +36,7 @@ function TelegramSignIn() {
   }, [query]);
   return <section className="panel tools-panel">
     <h2>{t(error ? 'Sign in' : 'Signing you in…')}</h2>
-    {error ? <><p role="alert">{t(error)}</p><Link href="/">{t('Back to sign in')}</Link></> : <LoadingPlaceholder label={t('Signing you in…')} rows={1}/>}
+    {error ? <><p role="alert">{t(error)}</p><Link href={signInPath}>{t('Back to sign in')}</Link></> : <LoadingPlaceholder label={t('Signing you in…')} rows={1}/>}
   </section>;
 }
 export default function TelegramPage() {
