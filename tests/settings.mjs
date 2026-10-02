@@ -8,11 +8,13 @@ import { defaultPreferences, isCurrency, maxPreferredCurrencies } from '../lib/c
 import { fontIds, resolveFont } from '../lib/fonts.ts';
 import { loadTS } from './helpers/load-ts.mjs';
 const { isLanguage, languageCodes } = loadTS('lib/i18n.ts');
+const { onboardedOn } = loadTS('lib/onboarding.ts');
+const { depositToday } = loadTS('lib/deposit-interest.ts');
 const source=fs.readFileSync(new URL('../app/api/settings/route.ts',import.meta.url),'utf8').replace(/^import .*;\n/gm,'').replace(/export async function/g,'async function');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let authenticated=true, calls=[], rows=[], databaseFailure=false;
 const menuCalls=[];
-const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry','fontIds','resolveFont','isLanguage','languageCodes','queueLanguageMenu',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry,fontIds,resolveFont,isLanguage,languageCodes,(auth,language)=>menuCalls.push({auth,language}));
+const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry','fontIds','resolveFont','isLanguage','languageCodes','queueLanguageMenu','onboardedOn',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry,fontIds,resolveFont,isLanguage,languageCodes,(auth,language)=>menuCalls.push({auth,language}),onboardedOn);
 const request=body=>new Request('https://app.local/api/settings',{method:'PUT',headers:{origin:'https://app.local','Content-Type':'application/json'},body:JSON.stringify(body)});
 test('persists validated preferences for the authenticated owner',async()=>{
  calls=[];const response=await api.PUT(request({language:'ru',currencies:['EUR','INR']}));
@@ -148,6 +150,23 @@ test('the welcome setup is recorded once, cleared on request, and left alone by 
  body=JSON.parse(calls.at(-1).init.body);
  assert.ok(!('onboarded_at' in body)&&!('onboarded' in body));
  assert.equal((await api.PUT(request({...defaultPreferences,onboarded:'yes'}))).status,400);
+});
+
+test('settings report the Tashkent calendar day the welcome setup was finished, for the first-visit greeting',async()=>{
+ rows=[{...defaultPreferences,onboarded_at:'2026-09-30T20:00:00Z'}];
+ assert.equal((await (await api.GET()).json()).onboarded_on,'2026-10-01','20:00 UTC is already the next day in Tashkent');
+ rows=[{...defaultPreferences,onboarded_at:null}];
+ assert.equal((await (await api.GET()).json()).onboarded_on,undefined);
+ rows=[];
+ assert.equal((await (await api.PUT(request({...defaultPreferences,onboarded:true}))).json()).onboarded_on,depositToday());
+ // An ordinary Settings save keeps the day the setup was finished.
+ rows=[{...defaultPreferences,onboarded_at:'2026-09-30T10:00:00Z'}];
+ assert.equal((await (await api.PUT(request(defaultPreferences))).json()).onboarded_on,'2026-09-30');
+ assert.equal((await (await api.PUT(request({...defaultPreferences,onboarded:false}))).json()).onboarded_on,undefined);
+ // The day is read-only: a client cannot write it.
+ rows=[];calls=[];
+ await api.PUT(request({...defaultPreferences,onboarded_on:'2020-01-01'}));
+ assert.ok(!('onboarded_on' in JSON.parse(calls.at(-1).init.body)));
 });
 
 test('every offered language can be saved, unknown ones are refused, and an unknown saved language loads as English',async()=>{

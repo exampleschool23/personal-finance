@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
@@ -57,6 +58,8 @@ test('preferred currencies stop at two: the trigger adds below the limit and cha
  const one=render(['USD']),two=render(['USD','INR']);
  assert.match(one,/Add currency/);assert.doesNotMatch(one,/Change currencies/);
  assert.match(two,/Change currencies/);assert.doesNotMatch(two,/Add currency/);
- assert.match(two,/Choose one or two\./);
+ // The explanation sits behind the heading's ⓘ, not as a grey sentence under it.
+ assert.doesNotMatch(two,/Choose one or two\./);
+ assert.match(fs.readFileSync('components/settings-panel.tsx','utf8'),/<h4>\{t\('Preferred currencies'\)\}<InfoHint>\{t\('Shown in the top bar and whenever you choose a currency\. Choose one or two\.'\)\}<\/InfoHint><\/h4>/);
  assert.match(two,/aria-label="Remove INR"/);assert.doesNotMatch(two,/aria-label="Remove USD"/);
 });

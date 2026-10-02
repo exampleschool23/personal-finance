@@ -188,7 +188,7 @@ function useWorkspaceState() {
     const planning={...basePlanning,data:{...basePlanning.data,occurrences:demo?[...basePlanning.data.occurrences,...rows.filter(row=>row.earning_source_id&&row.earning_due_on).flatMap(row=>{const source=earningSources.sources.find(source=>source.id===row.earning_source_id);return source?.schedule_id?[{id:row.id,record_id:source.schedule_id,due_on:row.earning_due_on!,status:'paid' as const}]:[];})]:basePlanning.data.occurrences}};
     const transactionTools=useTransactionTools(user,demo,reload,refreshRecords);
     const workspacePreferences=useWorkspacePreferences(user,demo,reload);
-    const overdueCount = upcomingPayments(planning.data.records, planning.data.occurrences).filter(item => item.overdue).length;
+    const overdueCount = upcomingPayments(planning.data.records, planning.data.occurrences, undefined, undefined, planning.data.debtPayments).filter(item => item.overdue).length;
     const lastLoadedKey = useEffectEvent(() => loadedKey);
     const receiveServerPage=useEffectEvent((next:number)=>{if(!useFilteredRecords&&next!==page)setPageState({key:paginationKey,page:next});});
     // The month picker belongs to Cash flow. Every other screen plans for the current month.

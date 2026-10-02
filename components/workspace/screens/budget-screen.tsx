@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 import { useBudget } from '@/hooks/use-budget';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
-import { budgetCategories, budgetHistory, budgetReadRange, budgetRows, budgetedIn, flexBucketKey, goalContribution, groupRows, leftToBudget, monthActuals, monthsBetween, shiftMonth, suggestedBudget, type BudgetAmount, type BudgetCategory, type BudgetRow, type MonthActuals } from '@/lib/budget';
+import { budgetCategories, budgetHistory, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, flexBucketKey, goalContribution, groupRows, leftToBudget, monthActuals, monthsBetween, shiftMonth, suggestedBudget, type BudgetAmount, type BudgetCategory, type BudgetRow, type MonthActuals } from '@/lib/budget';
 import { depositToday } from '@/lib/deposit-interest';
 import { expensePlanMonth } from '@/lib/expense-plans';
 import { normalizeEntry } from '@/lib/finance';
@@ -40,12 +40,12 @@ export function BudgetScreen() {
  const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : planning.data, [live, remote.data, planning.data]);
  const splits = transactionTools.data.splits;
  const history = useMemo(() => new Map(monthsBetween(range.from, range.to).map(item => [item, monthActuals(data, splits, item, currency, today, rates)])), [range.from, range.to, data, splits, currency, today, rates]);
- const seen = [...new Set([...history.values()].flatMap(item => [...item.byCategory.keys()]))];
- const categories = budgetCategories(data.categories, budget.state.categories, seen);
- const rows = budgetRows(categories, budget.state.amounts, history, month, currency, rates);
+ const categories = budgetCategories(data.categories, budget.state.categories);
  const flex = budget.state.mode === 'flex';
+ const categoryRows = budgetRows(categories, budget.state.amounts, history, month, currency, rates);
+ const flexBudget = flex ? flexBucketBudget(budget.state.amounts, categoryRows, month, currency, rates) : null;
+ const rows = budgetRowsForMode(categoryRows, budget.state.mode);
  const groups = groupRows(rows, flex);
- const flexBudget = flex ? budgetedIn(budget.state.amounts, flexBucketKey, month, currency, rates) : null;
  const goals = data.goals.filter(goal => goalContribution(goal) > 0);
  const contributionOf = (goal: (typeof goals)[number]) => convertAmount(goalContribution(goal), goal.currency ?? currency, currency, rates);
  const contributions = goals.reduce((sum, goal) => sum + (contributionOf(goal) ?? 0), 0);
@@ -60,7 +60,8 @@ export function BudgetScreen() {
   const months = (parts[0]?.months ?? budgetHistory(key, month, history).months).map((item, index) => ({ month: item.month, amount: parts.reduce((sum, part) => sum + part.months[index].amount, 0) }));
   return { months, lastMonth: months.at(-1)?.amount ?? 0, average: months.reduce((sum, item) => sum + item.amount, 0) / months.length };
  };
- const planned = (row: BudgetRow) => <PlannedInput key={row.key + month + (row.budget ?? 0)} label={t('Planned for {name}', { name: name(row) })} value={row.budget ?? 0} history={historyOf(row.key)} direction={row.direction} currency={currency} defaultForward={budget.state.applyForward} onSave={save(row.key)}/>;
+ // In flex mode a flexible category has no plan of its own; the bucket above it holds the amount.
+ const planned = (row: BudgetRow) => flex && row.direction === 'expense' && row.type === 'flexible' ? <span className="budget-pill">—</span> : <PlannedInput key={row.key + month + (row.budget ?? 0)} label={t('Planned for {name}', { name: name(row) })} value={row.budget ?? 0} history={historyOf(row.key)} direction={row.direction} currency={currency} defaultForward={budget.state.applyForward} onSave={save(row.key)}/>;
  async function recalculate() {
   const targets = rows.filter(row => !row.excluded).map(row => ({ key: row.key, amount: suggestedBudget(budgetHistory(row.key, month, history).average) })).filter(item => item.amount > 0);
   if (flex) targets.push({ key: flexBucketKey, amount: suggestedBudget(historyOf(flexBucketKey).average) });
@@ -71,12 +72,10 @@ export function BudgetScreen() {
   const id = group.direction + ':' + group.name;
   const bucket = flex && group.type === 'flexible';
   const bucketRow = bucket ? { budget: flexBudget ?? 0, actual: group.actual, remaining: (flexBudget ?? 0) - group.actual } : null;
-  const limits = group.rows.reduce((sum, row) => sum + (row.budget ?? 0), 0);
   return <BudgetGroupCard key={id} group={bucketRow ? { ...group, budget: bucketRow.budget, remaining: bucketRow.remaining } : group} currency={currency}
    open={!closed.has(id)} onToggle={() => toggle(closed, setClosed, id)} showUnbudgeted={unbudgeted.has(id)} onShowUnbudgeted={() => toggle(unbudgeted, setUnbudgeted, id)}
    renderPlanned={planned} onSettings={setEditing}
-   header={bucketRow ? <PlannedInput key={'flex' + month + (flexBudget ?? 0)} label={t('Planned for {name}', { name: t('Flexible') })} value={flexBudget ?? 0} history={historyOf(flexBucketKey)} direction="expense" currency={currency} defaultForward={budget.state.applyForward} onSave={save(flexBucketKey)}/> : undefined}
-   footer={bucketRow ? <div className="budget-row budget-unallocated"><span>{t('Unallocated flexible budget')}</span><span className="budget-cell">{formatMoney((flexBudget ?? 0) - limits, currency, locale)}</span><span className="budget-cell"/><span className="budget-cell"/></div> : undefined}/>;
+   header={bucketRow ? <PlannedInput key={'flex' + month + (flexBudget ?? 0)} label={t('Planned for {name}', { name: t('Flexible') })} value={flexBudget ?? 0} history={historyOf(flexBucketKey)} direction="expense" currency={currency} defaultForward={budget.state.applyForward} onSave={save(flexBucketKey)}/> : undefined}/>;
  };
  const income = groups.filter(group => group.direction === 'income');
  const spending = groups.filter(group => group.direction === 'expense');

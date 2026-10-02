@@ -33,6 +33,7 @@ export { AmountCurrencyFields } from './amount-currency-fields';
 export { ScheduleFields } from './schedule-fields';
 export { ExchangeRatePreview } from './exchange-rate-preview';
 export { FormFooter } from './form-footer';
+export { Pagination } from './pagination';
 export { ConfirmDialog } from './confirm-dialog';
 export { ErrorPopup } from './error-popup';
 export { SortableList, SortableItem, sortableAccessibility, useSortableSensors } from './sortable';

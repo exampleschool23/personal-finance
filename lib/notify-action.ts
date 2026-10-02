@@ -22,6 +22,7 @@ export async function sendActionNotification(auth:ActionAuth,event:ActionEvent,{
  const lookup:ActionLookup={records:{},goals:{},deleted:{}};
  if(ids.records.length)for(const row of await rows<NamedRecord&{id:string}>(read,`/rest/v1/finance_records?select=id,name,kind,currency&id=in.(${[...new Set(ids.records)].join(',')})`,auth.token))lookup.records[row.id]=row;
  if(ids.goals.length)for(const row of await rows<NamedGoal&{id:string}>(read,`/rest/v1/savings_goals?select=id,name,currency&id=in.(${[...new Set(ids.goals)].join(',')})`,auth.token))lookup.goals[row.id]=row;
+ if(event.type==='record'&&event.category_id){const [category]=await rows<{id:string;name:string}>(read,`/rest/v1/transaction_categories?select=id,name&id=eq.${event.category_id}`,auth.token);if(category)lookup.categories={[category.id]:category.name};}
  for(const id of ids.deleted){const [item]=await rows<{data:NamedRecord&{amount:number}}>(read,`/rest/v1/deleted_items?select=data&source=eq.finance_records&data->>id=eq.${id}&order=deleted_at.desc&limit=1`,auth.token);if(item)lookup.deleted[id]=item.data;}
  return send({chat_id:subscription.chat_id,text:actionMessage(event,lookup,language)},config);
 }

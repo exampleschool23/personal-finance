@@ -1,5 +1,6 @@
 import { shiftMonth } from './budget';
 import { income, type Entry } from './finance';
+import { spendingAmount } from './spending';
 import { isTransactionHistory } from './transaction-history';
 
 export const transactionPeriods = ['this_month', 'last_month', 'three_months', 'this_year', 'twelve_months'] as const;
@@ -29,7 +30,9 @@ export function transactionsIn(records: readonly Entry[], range: { from: string;
 
 type Convert = (amount: number, currency: string) => number | null;
 /** Income counts up and spending down; the day's total is null when a currency cannot be converted. */
-export const signedAmount = (record: Pick<Entry, 'kind' | 'amount'>) => income.includes(record.kind) ? Number(record.amount) : -Number(record.amount);
+type Row = Pick<Entry, 'kind' | 'amount'> & Partial<Pick<Entry, 'mortgage_payment_id' | 'payment_principal' | 'payment_interest'>>;
+/** Spending follows `lib/spending.ts`: a mortgage payment counts only its interest; its principal is a transfer. */
+export const signedAmount = (record: Row) => income.includes(record.kind) ? Number(record.amount) : -spendingAmount(record);
 
 export function groupByDay(records: readonly Entry[], convert: Convert) {
  const days: Array<{ date: string; records: Entry[]; total: number | null }> = [];
@@ -48,7 +51,7 @@ export function summarizeTransactions(records: readonly Entry[], convert: Conver
  let received = 0, spent = 0, missing = 0;
  let largest: { name: string; amount: number } | null = null;
  for (const record of records) {
-  const value = convert(Number(record.amount), record.currency);
+  const value = convert(Math.abs(signedAmount(record)), record.currency);
   if (value === null) { missing++; continue; }
   if (income.includes(record.kind)) received += value;
   else { spent += value; if (!largest || value > largest.amount) largest = { name: record.name, amount: value }; }

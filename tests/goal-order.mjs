@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {loadTS} from './helpers/load-ts.mjs';
 import {harness} from './helpers/hooks.mjs';
-const {orderedGoals,moveGoal,reorderGoal}=loadTS('lib/goal-order.ts');
+const {orderedGoals,moveGoal,reorderGoal,appendGoals,savedGoalOrder}=loadTS('lib/goal-order.ts');
 const id=n=>`a0000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 test('saved order is stable, appends new goals, and ignores deleted goals without mutating input',()=>{
  const goals=[{id:'a'},{id:'b'},{id:'c'}];assert.deepEqual(orderedGoals(goals,['deleted','b','a']).map(g=>g.id),['b','a','c']);assert.deepEqual(goals.map(g=>g.id),['a','b','c']);
@@ -11,7 +11,7 @@ test('saved order is stable, appends new goals, and ignores deleted goals withou
  assert.deepEqual(moveGoal(['a','b'],'a',-1),['a','b']);assert.deepEqual(moveGoal(['a','b'],'missing',1),['a','b']);
 });
 test('goal order survives a remount, blocks racing saves, rolls back failures and isolates owners',async()=>{
- const make=()=>harness('hooks/use-goal-order.ts','useGoalOrder',{orderedGoals,moveGoal,reorderGoal});
+ const make=()=>harness('hooks/use-goal-order.ts','useGoalOrder',{orderedGoals,moveGoal,reorderGoal,appendGoals,savedGoalOrder});
  const goals=[{id:id(1)},{id:id(2)}];let saved,finish;
  const preferences={data:{preferences:[]},loading:false,error:'',save:async p=>{saved=p;await new Promise(resolve=>finish=resolve);}};
  const render=make();const pending=render(goals,preferences,'one',false).move(id(2),-1);
@@ -46,4 +46,18 @@ test('dragging inserts at the destination and preserves hidden cards',()=>{
  assert.deepEqual(reorderGoal(['a','hidden','b','c'],'a','c',['a','b','c']),['b','hidden','c','a']);
  assert.deepEqual(reorderGoal(['a','b','c'],'c','a'),['c','a','b']);
  assert.deepEqual(reorderGoal(['a','b'],'a','missing'),['a','b']);
+});
+
+test('goals created together join the end of the saved order in creation order',async()=>{
+ // QA: Emergency fund and Vacation added beside an existing Net worth target came back as Vacation, Net worth, Emergency.
+ assert.deepEqual(appendGoals(['worth'],['emergency','vacation']),['worth','emergency','vacation']);
+ assert.deepEqual(appendGoals(['vacation','worth','emergency'],['emergency','vacation']),['worth','emergency','vacation'],'a refreshed list that already placed them is corrected');
+ assert.deepEqual(savedGoalOrder([{key:'dashboard_layout',data:{}},{key:'goal_order',data:{ids:['b','a',3]}}]),['b','a']);
+ assert.deepEqual(savedGoalOrder([]),[]);
+ const make=harness('hooks/use-goal-order.ts','useGoalOrder',{orderedGoals,moveGoal,reorderGoal,appendGoals,savedGoalOrder});
+ let saved;const preferences={data:{preferences:[]},loading:false,error:'',save:async p=>{saved=p;}};
+ // The database returns goals in no particular order; the new ones are already in the refreshed list.
+ const goals=[{id:id(3)},{id:id(1)},{id:id(2)}];
+ await make(goals,preferences,'one',false).append([id(2),id(3)]);
+ assert.deepEqual(saved.data.ids,[id(1),id(2),id(3)]);
 });

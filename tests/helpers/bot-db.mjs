@@ -1,7 +1,7 @@
 // A small in-memory stand-in for the REST tables the Telegram bot touches. It
 // understands the filters the bot uses (eq, is.null, gt, lt) and upserts by user.
 export function botDb(seed = {}) {
-  const tables = { telegram_subscriptions: [], user_preferences: [], telegram_drafts: [], telegram_login_tokens: [], telegram_connect_requests: [], finance_records: [], transaction_categories: [], payment_occurrences: [], ...structuredClone(seed) };
+  const tables = { telegram_subscriptions: [], user_preferences: [], telegram_drafts: [], telegram_login_tokens: [], telegram_connect_requests: [], finance_records: [], transaction_categories: [], payment_occurrences: [], account_activity: [], mortgage_payments: [], ...structuredClone(seed) };
   const writes = [], rpcs = [];
   const failures = new Set(seed.__fail ?? []);
   const filters = path => [...new URLSearchParams(path.split('?')[1] ?? '').entries()].filter(([key]) => !['select', 'on_conflict', 'order'].includes(key));
@@ -9,6 +9,7 @@ export function botDb(seed = {}) {
   const matches = (row, [key, value]) => {
     if (value.startsWith('eq.')) return String(row[key] ?? '') === decodeURIComponent(value.slice(3));
     if (value === 'is.null') return row[key] === null || row[key] === undefined;
+    if (value.startsWith('in.(')) return value.slice(4, -1).split(',').includes(String(row[key] ?? ''));
     if (value.startsWith('gt.')) return Date.parse(row[key]) > Date.parse(decodeURIComponent(value.slice(3)));
     if (value.startsWith('lt.')) return Date.parse(row[key]) < Date.parse(decodeURIComponent(value.slice(3)));
     throw Error('unexpected filter ' + key + '=' + value);

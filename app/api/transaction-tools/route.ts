@@ -1,15 +1,17 @@
 import { z } from 'zod';
 import { sameOrigin, session, supa } from '@/lib/supabase';
 import { readOwnerRows } from '@/lib/server-records';
+import { income, expenses } from '@/lib/finance';
+import { normalizeSplits } from '@/lib/transaction-tools';
 const id=z.string().uuid();
 const schema=z.discriminatedUnion('action',[
- z.object({action:z.literal('split'),data:z.object({record_id:id,splits:z.array(z.object({category_id:id,amount:z.number().finite().positive().max(1e15)})).max(50).refine(rows=>rows.length!==1)})}),
+ z.object({action:z.literal('split'),data:z.object({record_id:id,splits:z.array(z.object({category_id:z.union([id,z.enum([...income,...expenses] as [string,...string[]])]),amount:z.number().finite().positive().max(1e15)})).max(50).refine(rows=>rows.length!==1)})}),
  z.object({action:z.literal('forecast'),data:z.object({record_id:id,account_id:id.nullable(),exchange_rate:z.number().finite().positive().max(1e15).optional(),from_currency:z.string().optional(),to_currency:z.string().optional()})})
 ]);
 export async function GET(){
  try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
  const [splits,assignments]=await Promise.all(['transaction_splits','forecast_assignments'].map(table=>readOwnerRows(table,auth.token,{order:table==='transaction_splits'?'record_id.asc,position.asc':'record_id.asc'})));
- return Response.json({splits,assignments},{headers:{'Cache-Control':'no-store'}});
+ return Response.json({splits:normalizeSplits(splits as Parameters<typeof normalizeSplits>[0]),assignments},{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Could not load transaction tools. Check that the latest migrations are installed.'},{status:503});}
 }
 export async function POST(req:Request){

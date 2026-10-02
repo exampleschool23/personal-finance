@@ -4,8 +4,11 @@ import { depositForecasts } from '@/lib/deposit-forecasts';
 import { interestKinds, type Entry } from '@/lib/finance';
 import { isoDate } from '@/lib/api-validation';
 import { planningSchemas } from '@/lib/planning-schemas';
+import { debtPaymentsFrom } from '@/lib/planning';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { readOwnerRows } from '@/lib/server-records';
+import { categoryNameTaken, duplicateCategoryMessage } from '@/lib/category-names';
+import type { Category } from '@/lib/planning';
 import { queueActionNotification } from '@/lib/notify-action';
 import type { ActionEvent } from '@/lib/action-messages';
 export async function GET(req?:Request){
@@ -21,6 +24,8 @@ export async function GET(req?:Request){
  const tables={movements:'asset_movements',holdingAccounts:'holding_accounts',records:'finance_records',categories:'transaction_categories',goals:'savings_goals',occurrences:'payment_occurrences',activity:'account_activity',investmentLinks:'investment_account_links'};
  const results=await Promise.all(Object.entries(tables).filter(([key])=>scope==='insights'?key==='records':scope==='full'||(key!=='movements'&&(scope==='review'||scope==='budget'||!['activity','investmentLinks'].includes(key)))).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,filters[key as keyof typeof filters]??{})]));
  const data={records:[],categories:[],goals:[],occurrences:[],activity:[],movements:[],investmentLinks:[],...Object.fromEntries(results)} as Record<string,unknown>;
+ // Loan repayments and mortgage payments settle a loan's monthly payment on Recurring and Upcoming payments.
+ if(scope==='full'||scope==='workspace'){const [repayments,mortgagePayments]=await Promise.all([readOwnerRows<{action:string;target_id:string|null;occurred_on:string}>('account_activity',auth.token,{select:'action,target_id,occurred_on',action:'in.(repayment,mortgage)'}),readOwnerRows<{mortgage_id:string;paid_on:string}>('mortgage_payments',auth.token,{select:'id,mortgage_id,paid_on'})]);data.debtPayments=debtPaymentsFrom(repayments,mortgagePayments);}
  const estimates=new Map((scope==='insights'?[]:await depositForecasts(auth.token)).map(record=>[record.id,record.estimated_monthly_income]));
  data.records=(data.records as Entry[]).map(record=>interestKinds.includes(record.kind)?{...record,estimated_monthly_income:estimates.get(record.id)??0}:record);
  return Response.json(data,{headers:{'Cache-Control':'no-store'}});
@@ -44,6 +49,12 @@ export async function POST(req:Request){
   if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='P0001'?error.message:'Could not update the scheduled occurrence.'},{status:409});}
   queueActionNotification(auth,{type:'exception',target_id:parsed.data.target_id,date:parsed.data.date,skip:parsed.data.skip});
   return Response.json({ok:true});
+ }
+ if(body.action==='category'){
+  // Letter case alone does not make a new category; the database repeats this check for every writer.
+  const category=parsed.data as {id:string;name:string;direction:Category['direction']};
+  const existing=await readOwnerRows<Category>('transaction_categories',auth.token);
+  if(categoryNameTaken(category.name,category.direction,existing,[],category.id))return Response.json({error:duplicateCategoryMessage},{status:409});
  }
  let paymentData=parsed.data;
  if(['occurrence','repayment','mortgage'].includes(body.action)&&'account_id' in parsed.data&&'target_id' in parsed.data){

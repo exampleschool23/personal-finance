@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {loadTS} from './helpers/load-ts.mjs';
 const config={token:'T',webhookSecret:'S',botUsername:'b'};
-function harness({subscription=[{chat_id:77,actions_enabled:true}],language='en',records=[],goals=[],deleted=[],fail=''}={}){
+function harness({subscription=[{chat_id:77,actions_enabled:true}],language='en',records=[],goals=[],deleted=[],categories=[],fail=''}={}){
  const reads=[],sent=[];
  const read=async(path,init,token)=>{
   reads.push({path,token});
@@ -13,6 +13,7 @@ function harness({subscription=[{chat_id:77,actions_enabled:true}],language='en'
   if(path.startsWith('/rest/v1/finance_records'))return Response.json(records);
   if(path.startsWith('/rest/v1/savings_goals'))return Response.json(goals);
   if(path.startsWith('/rest/v1/deleted_items'))return Response.json(deleted);
+  if(path.startsWith('/rest/v1/transaction_categories'))return Response.json(categories);
   throw Error('unexpected '+path);
  };
  const send=async(message,used)=>{sent.push({message,used});return true;};
@@ -28,6 +29,13 @@ test('sends the resolved message to the linked chat using only the owner token',
  assert.match(h.sent[0].message.text,/^Платёж записан\n<b>Rent<\/b> · 3 000 000 UZS/);
  assert.ok(h.reads.every(read=>read.token==='owner-token'));
  assert.match(h.reads.find(read=>read.path.includes('finance_records')).path,/id=in\.\(a,r\)$/);
+});
+
+test('a record saved in a custom category is announced with the category name',async()=>{
+ const h=harness({categories:[{id:'c1',name:'QA Coffee'}]});
+ await sendActionNotification(auth,{type:'record',created:true,kind:'Other expense',name:'Latte',amount:5,currency:'USD',date:'2026-10-01',frequency:'Once',category_id:'c1'},h.deps);
+ assert.equal(h.sent[0].message.text,'Added QA Coffee\n<b>Latte</b> · $5 · 1 October 2026');
+ assert.match(h.reads.find(read=>read.path.includes('transaction_categories')).path,/id=eq\.c1$/);
 });
 
 test('deleted records are named from the recycle bin copy',async()=>{

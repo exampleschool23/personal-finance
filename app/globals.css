@@ -1825,7 +1825,6 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-input input{height:32px;padding-inline:10px;text-align:end;font-variant-numeric:tabular-nums}
 .budget-unbudgeted{display:flex;align-items:center;gap:6px;width:100%;padding:10px 16px;border-top:1px solid var(--hairline);color:var(--muted-foreground);font-size:var(--type-caption)}
 .budget-unbudgeted:hover{color:var(--foreground)}
-.budget-unallocated{border-top:1px solid var(--hairline);color:var(--muted-foreground);font-style:italic;font-size:var(--type-small)}
 .budget-total-row{border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card);font-weight:600;font-size:var(--type-compact)}
 .budget-total-row .budget-cell{font-weight:600}
 .budget-contributions-link{border-top:1px solid var(--hairline);font-size:var(--type-small)}
@@ -2075,6 +2074,17 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .goal-rows{display:flex;flex-direction:column;margin:4px 0 0;padding:0;list-style:none}
 .goal-row{display:flex;align-items:center;gap:4px;margin-inline:-12px;padding-inline:4px;border-radius:var(--radius-control);background:var(--card)}
 .goal-row+.goal-row{border-top:1px solid var(--hairline)}
+/* Accounts: the drag handle sits at the leading edge of each account row. */
+.account-sortable-row{display:flex;align-items:center;border-top:1px solid var(--hairline);background:var(--card)}
+.account-sortable-row>.drag-handle{flex-shrink:0;margin-inline-start:8px;opacity:0;transition:opacity .15s}
+.account-sortable-row:hover>.drag-handle,.account-sortable-row>.drag-handle:focus-visible,.account-sortable-row[data-dragging]>.drag-handle{opacity:1}
+@media (hover:none){.account-sortable-row>.drag-handle{opacity:1}}
+.account-sortable-row[data-dragging]{box-shadow:var(--shadow-card)}
+.account-sortable-row>.account-list-row{border-top:0;padding-inline-start:6px}
+/* Categories: the handle sits before each badge. */
+.category-settings .category-badges .sortable-item{display:inline-flex;align-items:center;gap:2px}
+.category-settings .category-badges .sortable-item>.drag-handle{opacity:.55}
+.category-settings .category-badges .sortable-item:hover>.drag-handle,.category-settings .category-badges .sortable-item>.drag-handle:focus-visible{opacity:1}
 .goal-row>.drag-handle{flex-shrink:0;opacity:0;transition:opacity .15s}
 .goal-row:hover>.drag-handle,.goal-row>.drag-handle:focus-visible,.goal-row[data-dragging]>.drag-handle{opacity:1}
 @media (hover:none){.goal-row>.drag-handle{opacity:1}}

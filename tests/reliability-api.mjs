@@ -38,8 +38,9 @@ test('large owner reads traverse every batch and keep owner authorization on eve
 });
 test('workspace planning omits unused history while review retains financial activity',async()=>{
  let tables=[];
- const {GET}=loadTS('app/api/planning/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner'})},'@/lib/server-records':{readOwnerRows:async(table,token)=>{assert.equal(token,'owner');tables.push(table);return [];}},'@/lib/deposit-forecasts':{depositForecasts:async()=>[]}});
- assert.equal((await GET(new Request('https://local?scope=workspace'))).status,200);assert.ok(!tables.includes('account_activity'));assert.ok(!tables.includes('asset_movements'));assert.ok(!tables.includes('investment_account_links'));
+ const {GET}=loadTS('app/api/planning/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner'})},'@/lib/server-records':{readOwnerRows:async(table,token,extra={})=>{assert.equal(token,'owner');tables.push(extra.action?table+':'+extra.action:table);return [];}},'@/lib/deposit-forecasts':{depositForecasts:async()=>[]}});
+ // Workspace reads only loan repayments from account activity, which settle monthly loan payments on Recurring.
+ assert.equal((await GET(new Request('https://local?scope=workspace'))).status,200);assert.ok(!tables.includes('account_activity'));assert.ok(tables.includes('account_activity:in.(repayment,mortgage)'));assert.ok(tables.includes('mortgage_payments'));assert.ok(!tables.includes('asset_movements'));assert.ok(!tables.includes('investment_account_links'));
  tables=[];await GET(new Request('https://local?scope=review'));assert.ok(tables.includes('account_activity'));assert.ok(tables.includes('investment_account_links'));assert.ok(!tables.includes('asset_movements'));
  tables=[];assert.equal((await GET(new Request('https://local?scope=invalid'))).status,400);assert.deepEqual(tables,[]);
 });

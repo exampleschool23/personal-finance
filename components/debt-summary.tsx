@@ -9,9 +9,9 @@ export function DebtSummary({entries,currency}:{entries:Entry[];currency:string}
  const {t,locale}=useLanguage();
  const lent=entries.filter(entry=>entry.kind==='Money lent');
  const {receivable,totalDebt:payable,netLending}=financialTotals(entries);
- const count=(records:Entry[])=>formatNumber(records.reduce((sum,entry)=>sum+(entry.record_count??1),0),locale,0);
+ const lentCount=lent.reduce((sum,entry)=>sum+(entry.record_count??1),0);
  return <StatTiles columns={3}>
-  <StatTile label={t('Money owed to you')} value={formatMoney(receivable,currency,locale)}><p>{t('{count} lending records',{count:count(lent)})}</p></StatTile>
+  <StatTile label={t('Money owed to you')} value={formatMoney(receivable,currency,locale)}><p>{t(lentCount===1?'1 lending record':'{count} lending records',{count:formatNumber(lentCount,locale,0)})}</p></StatTile>
   <StatTile label={t('Money you owe')} value={formatMoney(payable,currency,locale)} tone={liabilityTone(payable)}></StatTile>
   {/* A net borrowing position is not a success state, so only a shortfall is coloured. */}
   <StatTile label={t('Net lending position')} value={formatMoney(netLending,currency,locale)} tone={signTone(netLending,true)}></StatTile>

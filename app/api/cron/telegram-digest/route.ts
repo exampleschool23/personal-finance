@@ -3,7 +3,7 @@ import { dueReminders, type ReminderSettings } from '@/lib/daily-finance';
 import { depositToday } from '@/lib/deposit-interest';
 import { digestMessage } from '@/lib/digest-message';
 import type { Entry } from '@/lib/finance';
-import type { Occurrence } from '@/lib/planning';
+import { debtPaymentsFrom, type Occurrence } from '@/lib/planning';
 import { ownerRows } from '@/lib/owner-rows';
 import { periodTotals, shiftDay } from '@/lib/period-summary';
 import { snapshotPoints } from '@/lib/portfolio-snapshots';
@@ -23,12 +23,14 @@ export async function GET(req:Request){
   const subscriptions=await db.read<Array<{user_id:string;chat_id:number}>>('/rest/v1/telegram_subscriptions?select=user_id,chat_id&chat_id=not.is.null&digest_enabled=is.true');
   for(const {user_id,chat_id} of subscriptions){
    try{
-    const [records,occurrences,profile,snapshots,reminders]=await Promise.all([
+    const [records,occurrences,profile,snapshots,reminders,activity,mortgagePayments]=await Promise.all([
      ownerRows<Entry>(db,'finance_records',user_id),
      ownerRows<Occurrence>(db,'payment_occurrences',user_id,'id,record_id,due_on,status'),
      ownerProfile(db,user_id),
      recentSnapshots(db,user_id,2),
      db.read<Array<{data:ReminderSettings}>>('/rest/v1/workspace_preferences?select=data&key=eq.reminders&user_id=eq.'+user_id),
+     ownerRows<{action:string;target_id:string|null;occurred_on:string}>(db,'account_activity',user_id,'action,target_id,occurred_on'),
+     ownerRows<{mortgage_id:string;paid_on:string}>(db,'mortgage_payments',user_id,'mortgage_id,paid_on'),
     ]);
     // The digest has its own switch, so the in-app reminder toggle only lends its window and snoozes.
     const settings={...defaultReminders,...reminders[0]?.data,enabled:true};
@@ -37,7 +39,7 @@ export async function GET(req:Request){
     const netWorth=latest&&latest.date>=shiftDay(today,-3)?{amount:latest.net,change:points.length>1?latest.net-points[points.length-2].net:null}:undefined;
     const rates={...snapshots[snapshots.length-1]?.rates};
     const spending={current:periodTotals(records,shiftDay(today,-6),today,profile.currency,rates).spending,previous:periodTotals(records,shiftDay(today,-13),shiftDay(today,-7),profile.currency,rates).spending};
-    const text=digestMessage(dueReminders({records,occurrences,categories:[],goals:[],activity:[]},settings,today),profile.language,today,{name:profile.name,currency:profile.currency,netWorth,spending});
+    const text=digestMessage(dueReminders({records,occurrences,categories:[],goals:[],activity:[],debtPayments:debtPaymentsFrom(activity,mortgagePayments)},settings,today),profile.language,today,{name:profile.name,currency:profile.currency,netWorth,spending});
     if(await sendTelegramMessage({chat_id,text},config))sent++;else failed++;
    }catch{failed++;}
   }

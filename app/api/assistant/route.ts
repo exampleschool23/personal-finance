@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { assistantContext, assistantInstructions, assistantRequestSchema } from '@/lib/assistant';
+import { assistantContext, assistantInstructions, assistantRequestSchema, assistantUnavailable } from '@/lib/assistant';
 import { shiftMonth } from '@/lib/budget';
 import { depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry, type Entry } from '@/lib/finance';
@@ -8,11 +8,18 @@ import type { PlanningData } from '@/lib/planning';
 import { readOwnerRows } from '@/lib/server-records';
 import { session, sameOrigin } from '@/lib/supabase';
 
+/** Whether the assistant can answer at all, so the screen can say so before anyone types. Reveals nothing but a yes or no. */
+export const dynamic = 'force-dynamic';
+export function GET() {
+ return Response.json({ available: assistantAvailable() }, { headers: { 'Cache-Control': 'no-store' } });
+}
+const assistantAvailable = () => !!process.env.ANTHROPIC_API_KEY;
+
 /** Answers a question about the signed-in user's money with Claude. The request carries the conversation;
  * the server adds a snapshot built from the user's own records, read with their token. */
 export async function POST(req: Request) {
  if (!sameOrigin(req)) return new Response(null, { status: 403 });
- if (!process.env.ANTHROPIC_API_KEY) return Response.json({ error: 'The assistant is not set up yet.' }, { status: 503 });
+ if (!assistantAvailable()) return Response.json({ error: assistantUnavailable }, { status: 503 });
  const auth = await session(); if (!auth) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
  const parsed = assistantRequestSchema.safeParse(await req.json().catch(() => null));
  if (!parsed.success) return Response.json({ error: 'Check your question and try again.' }, { status: 400 });
@@ -44,7 +51,7 @@ export async function POST(req: Request) {
   return Response.json({ answer: text || 'No answer was returned. Please try again.' }, { headers: { 'Cache-Control': 'no-store' } });
  } catch (error) {
   if (error instanceof Anthropic.RateLimitError) return Response.json({ error: 'The assistant is busy. Please try again in a minute.' }, { status: 429 });
-  if (error instanceof Anthropic.AuthenticationError) return Response.json({ error: 'The assistant is not set up yet.' }, { status: 503 });
+  if (error instanceof Anthropic.AuthenticationError) return Response.json({ error: assistantUnavailable }, { status: 503 });
   return Response.json({ error: 'The assistant could not answer. Please try again.' }, { status: 502 });
  }
 }

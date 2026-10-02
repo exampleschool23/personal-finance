@@ -19,7 +19,7 @@ export function accountOrigin(){try{const url=new URL(process.env.APP_ORIGIN??''
 /** What a refused sign-up tells the person: the reasons they can act on, and a plain retry otherwise. */
 export function signupError(status:number,code:string){
  if(status===429||code==='over_email_send_rate_limit'||code==='over_request_rate_limit')return 'Too many attempts. Please try again later.';
- if(code==='weak_password')return 'Choose a stronger password. Use at least 6 characters, mixing letters and numbers.';
+ if(code==='weak_password')return 'Choose a stronger password. Use at least 8 characters, mixing letters and numbers.';
  if(code==='email_address_invalid')return 'Check the email address.';
  if(code==='user_already_exists'||code==='email_exists')return 'This email already has an account. Sign in or reset your password.';
  if(code==='signup_disabled'||code==='email_provider_disabled'||code==='email_address_not_authorized')return 'Registration by email is not available right now.';

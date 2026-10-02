@@ -15,7 +15,7 @@ export async function GET(){
 export async function POST(req:Request){
  if(!sameOrigin(req)||req.headers.get('sec-fetch-site')==='cross-site')return reply({error:'Request rejected.'},403);
  try{
- const parsed=accountAccessSchema.safeParse(await req.json().catch(()=>null));if(!parsed.success)return reply({error:'Check the account fields. Passwords need at least 6 characters.'},400);
+ const parsed=accountAccessSchema.safeParse(await req.json().catch(()=>null));if(!parsed.success)return reply({error:'Check the account fields. Passwords need at least 8 characters.'},400);
  const data=parsed.data;const origin=accountOrigin();
  if((data.action==='signup'||data.action==='recover')&&!origin)return reply({error:'Account service is unavailable. Please try again.'},503);
  if(data.action==='signup'){

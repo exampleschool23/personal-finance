@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { Send } from 'lucide-react';
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { useLanguage } from '@/components/language-provider';
 import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
@@ -14,7 +15,7 @@ export function TelegramPanel({demo}:{demo:boolean}){
  const link=useTelegramLink(demo);
  const {status,loadError,error,busy,waiting}=link;
  const [confirmUnlink,setConfirmUnlink]=useState(false);
- return <section className="panel preferences-card telegram-panel"><header><h3>{t('Telegram notifications')}</h3><p className="muted">{t('Get a morning digest of upcoming payments and a message after every saved action, and add records from Telegram with buttons.')}</p></header>
+ return <section className="panel preferences-card telegram-panel"><header><h3>{t('Telegram notifications')}<InfoHint>{t('Get a morning digest of upcoming payments and a message after every saved action, and add records from Telegram with buttons.')}</InfoHint></h3></header>
   {loadError&&<InlineError message={t(loadError)}><Button type="button" variant="outline" onClick={link.retry}>{t('Retry')}</Button></InlineError>}
   {!loadError&&!status&&<LoadingPlaceholder label={t('Loading Telegram settings…')}/>}
   {status&&!status.configured&&<p className="muted">{t(demo?'Sign in to connect Telegram to your own workspace.':'Telegram notifications are awaiting server setup.')}</p>}

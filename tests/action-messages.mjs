@@ -15,6 +15,11 @@ test('record messages name the kind, escape the name, show whole amounts and dat
 assert.match(actionMessage(event,lookup,'uz'),/^Qo‘shildi: Kundalik xarajatlar\n<b>Groceries &amp; &lt;bread&gt;<\/b> · 250\s000\sso.m · 30 sentabr 2026$/);
  assert.equal(actionMessage({...event,created:false,frequency:'Monthly',date:null},lookup,'en'),'Updated Living expense\n<b>Groceries &amp; &lt;bread&gt;</b> · UZS 250,000 · Monthly');
  assert.ok(!actionMessage(event,lookup,'en').includes('250000.4'));
+
+ // A record in a custom category is named by the category, escaped, rather than its stored Other expense kind; an unknown category falls back to the kind.
+ const custom={...event,kind:'Other expense',name:'Latte',category_id:'coffee'};
+ assert.match(actionMessage(custom,{...lookup,categories:{coffee:'QA <Coffee>'}},'en'),/^Added QA &lt;Coffee&gt;\n<b>Latte<\/b>/);
+ assert.match(actionMessage(custom,lookup,'en'),/^Added Other expense\n/);
 });
 
 test('deleted records are described from the recycle bin copy, or generically when it is missing',()=>{

@@ -1,7 +1,9 @@
 "use client";
 import { useMemo } from 'react';
+import { ReceiptText } from 'lucide-react';
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useLanguage } from '@/components/language-provider';
+import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { ChartSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
@@ -35,6 +37,7 @@ export function SpendingPaceCard({ owner = null, demo = false, revision = 0, dat
  return <section className="panel overview-panel spending-pace" aria-label={t('Spending')}>
   <PanelTitle title={<>{t('Spending')} <span className="panel-figure">{pace.missing ? '—' : t('{amount} this month', { amount: money(pace.spent) })}</span></>}/>
   {loading ? <ChartSkeleton label={t('Loading records…')}/> : remote.error && owner && !demo ? <InlineError message={t(remote.error)} onRetry={remote.retry}/> : <>
+   {pace.empty ? <EmptyState icon={<ReceiptText/>} description={t('No spending recorded this month or last.')}/> : <>
    {!pace.missing && pace.previousToDate + pace.spent > 0 && <p className="spending-pace-delta">{difference > 0 ? t('{amount} more than last month by this day', { amount: money(difference) }) : difference < 0 ? t('{amount} less than last month by this day', { amount: money(-difference) }) : t('Same as last month by this day')}</p>}
    <div className="spending-pace-chart"><ResponsiveContainer width="100%" height={220}>
     <ComposedChart data={pace.points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} accessibilityLayer>
@@ -48,6 +51,7 @@ export function SpendingPaceCard({ owner = null, demo = false, revision = 0, dat
     </ComposedChart>
    </ResponsiveContainer></div>
    <ul className="spending-pace-legend"><li><i className="current"/>{t('This month')}</li><li><i className="previous"/>{t('Last month')}</li></ul>
+   </>}
   </>}
  </section>;
 }

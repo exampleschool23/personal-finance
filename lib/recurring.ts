@@ -1,14 +1,15 @@
 import { scheduleDates, income, type Entry } from './finance';
-import { isRecurringCashFlow, scheduleAssets, scheduleStart, settledOccurrences, type Occurrence } from './planning';
+import { installmentDates, installmentsFrom, isRecurringCashFlow, paidInstallmentMonths, scheduleAssets, scheduleStart, settledOccurrences, type DebtPayment, type Occurrence } from './planning';
 
 export type RecurringStatus = 'paid' | 'skipped' | 'due' | 'overdue';
-export type RecurringItem = { key: string; record: Entry; date: string; status: RecurringStatus; direction: 'income' | 'expense' };
+/** `installment` is a loan's monthly payment; it is paid by a repayment or mortgage payment in its month. */
+export type RecurringItem = { key: string; record: Entry; date: string; status: RecurringStatus; direction: 'income' | 'expense'; amount: number; installment?: boolean };
 
 const monthEnd = (month: string) => new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).toISOString().slice(0, 10);
 
-/** Every scheduled income and expense in a month, with whether it was paid, skipped, is still due or is overdue. */
-export function monthOccurrences(records: Entry[], occurrences: Occurrence[], month: string, today: string): RecurringItem[] {
- const settled = settledOccurrences(records, occurrences);
+/** Every scheduled income and expense in a month and, when the loan payments are known, each loan's monthly payment, with whether it was paid, skipped, is still due or is overdue. */
+export function monthOccurrences(records: Entry[], occurrences: Occurrence[], month: string, today: string, debtPayments?: DebtPayment[]): RecurringItem[] {
+ const settled = settledOccurrences(records, occurrences), paid = debtPayments && paidInstallmentMonths(debtPayments);
  const status = new Map(occurrences.map(item => [item.record_id + ':' + item.due_on, item.status]));
  const assets = scheduleAssets(records);
  const items: RecurringItem[] = [];
@@ -18,7 +19,14 @@ export function monthOccurrences(records: Entry[], occurrences: Occurrence[], mo
   for (const date of scheduleDates(record, start > from ? start : from, monthEnd(month))) {
    const key = record.id + ':' + date;
    const done = status.get(key) === 'dismissed' ? 'skipped' : settled.has(key) ? 'paid' : null;
-   items.push({ key, record, date, status: done ?? (date < today ? 'overdue' : 'due'), direction: income.includes(record.kind) ? 'income' : 'expense' });
+   items.push({ key, record, date, status: done ?? (date < today ? 'overdue' : 'due'), direction: income.includes(record.kind) ? 'income' : 'expense', amount: Number(record.amount) });
+  }
+ }
+ if (paid) for (const record of records) {
+  const from = installmentsFrom(record), first = month + '-01';
+  for (const date of installmentDates(record, from > first ? from : first, monthEnd(month))) {
+   if (date === record.date) continue;
+   items.push({ key: record.id + ':installment:' + date, record, date, status: paid.has(record.id + ':' + month) ? 'paid' : date < today ? 'overdue' : 'due', direction: 'expense', amount: Number(record.estimated_monthly_payment), installment: true });
   }
  }
  return items.sort((a, b) => a.date.localeCompare(b.date) || a.record.name.localeCompare(b.record.name));
@@ -29,7 +37,7 @@ export function recurringSummary(items: RecurringItem[], convert: (amount: numbe
  const totals = { income: { done: 0, remaining: 0 }, expense: { done: 0, remaining: 0 }, missing: 0 };
  for (const item of items) {
   if (item.status === 'skipped') continue;
-  const value = convert(Number(item.record.amount), item.record.currency);
+  const value = convert(item.amount, item.record.currency);
   if (value === null) { totals.missing++; continue; }
   totals[item.direction][item.status === 'paid' ? 'done' : 'remaining'] += value;
  }

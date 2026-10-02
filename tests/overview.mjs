@@ -84,6 +84,10 @@ test('portfolio over time invites the first investment instead of a flat line at
  assert.doesNotMatch(empty,/Tracking since|comparison-legend/);
  assert.doesNotMatch(render([entry('btc','Crypto',60000,{quantity:.1})]),/No investments yet/);
  assert.doesNotMatch(render([entry('cash','Cash',500,{is_investment:true})]),/No investments yet/,'an investment cash account counts');
+ // QA: "Start of this year" was saved but the chart said "Tracking since" the first investment day.
+ const chosen=renderToStaticMarkup(React.createElement(InvestmentComparison,{history:{records:[entry('btc','Crypto',60000,{quantity:.1,date:'2026-09-20'})],events:[]},today:'2026-10-01',currency:'USD',market:null,demo:false,windowStart:'2026-01-01',points:[],profile:null,profileError:'',trackingStart:'2026-01-01',onTrackingStartChange:()=>{}}));
+ assert.match(chosen,/Tracking since.*1 January 2026/,'the chosen start is shown, not moved to the first investment');
+ assert.match(fs.readFileSync(new URL('../components/investment-comparison.tsx',import.meta.url),'utf8'),/min=\{benchmarkHistoryStart\} max=\{today\} presets=\{pastDatePresets\}/,'any past day can be chosen, with past presets');
 });
 
 test('the dashboard lists the newest real transactions and the top open goals',()=>{
@@ -93,5 +97,20 @@ test('the dashboard lists the newest real transactions and the top open goals',(
  assert.deepEqual(recentTransactions(rows,'2026-10-02').map(row=>row.id),['b','a','c'],'newest first; no future, planned or balance records');
  assert.equal(recentTransactions(rows,'2026-10-02',1).length,1);
  const goal=(id,extra={})=>({id,name:id,account_id:null,target:100,allocated:10,target_date:null,archived:false,...extra});
- assert.deepEqual(topGoals([goal('low',{funding_priority:3}),goal('done',{completed_on:'2026-09-01'}),goal('old',{archived:true}),goal('top',{funding_priority:1}),goal('mid',{funding_priority:2})]).map(item=>item.id),['top','mid']);
+ const goals=[goal('low',{funding_priority:3}),goal('done',{completed_on:'2026-09-01'}),goal('old',{archived:true}),goal('top',{funding_priority:1}),goal('mid',{funding_priority:2})];
+ assert.deepEqual(topGoals(goals,['mid','done','low','top']).map(item=>item.id),['mid','low'],'the person\'s own goal order, not funding priority');
+ assert.deepEqual(topGoals(goals).map(item=>item.id),['low','top'],'without a saved order, the list order');
+});
+
+test('the dashboard Goals card follows the goal order and shows a net-worth goal at the current net worth',async()=>{
+ const React=(await import('react')).default,{renderToStaticMarkup}=await import('react-dom/server');
+ // QA: "Net worth target $0" while net worth was -$123,054, and the first goal (no target date) was left out.
+ const {GoalsCard}=loadTS('components/dashboard-cards.tsx',{'@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:(text,values={})=>text.replace(/\{(\w+)\}/g,(_,key)=>values[key])})},'next/link':{__esModule:true,default:({children,href})=>React.createElement('a',{href},children)}});
+ const goals=[{id:'worth',name:'Net worth target',kind:'net_worth',currency:'USD',account_id:null,target:500000,allocated:0,target_date:'2030-01-01',archived:false},
+  {id:'fund',name:'QA Emergency fund',kind:'savings',currency:'USD',account_id:'cash',target:10000,allocated:2500,target_date:null,archived:false}];
+ const html=renderToStaticMarkup(React.createElement(GoalsCard,{goals,order:['fund','worth'],data:{records:[{id:'cash',currency:'USD'}]},currency:'USD',netWorth:code=>code==='USD'?-123054.4:null}));
+ assert.ok(html.indexOf('QA Emergency fund')<html.indexOf('Net worth target'),'user order');
+ assert.match(html,/-\$123,054/);assert.doesNotMatch(html,/\$0</);
+ assert.match(html,/\$2,500/);assert.match(html,/\$10,000 target</);
+ assert.match(html,/width:0%/,'a negative net worth shows no progress');
 });

@@ -199,7 +199,11 @@ test('the Back button is translated and shown with a chevron in every language',
 test('the bot creates a cash account itself, from the menu or from a dead end, and returns to the interrupted question',()=>{
  const withCurrencies=(context=ctx())=>({...context,currencies:['UZS','USD']});
  // From the menu: name, currency, balance, then a valid Cash record.
- const named=run([{text:'Add cash account'},{text:'Wallet'}],withCurrencies());
+ // A name already used by a cash account, in any case, is refused and the question is asked again.
+ const taken=run([{text:'Add cash account'},{text:' wallet '}],withCurrencies());
+ assert.equal(taken.draft.step,'accname');assert.equal(taken.reply.text,'You already have a cash account named wallet. Type another name.');
+ assert.deepEqual(buttons(taken.reply),['f:accname:cash','f:cancel']);
+ const named=run([{text:'Add cash account'},{text:'Savings'}],withCurrencies());
  assert.equal(named.draft.step,'currency');assert.deepEqual(buttons(named.reply),['f:cur:UZS','f:cur:USD','f:back','f:cancel']);
  const wrong=advance(named.draft,{callback:'f:cur:EUR'},withCurrencies(),chat);assert.equal(wrong.draft.step,'currency');
  const balance=advance(named.draft,{callback:'f:cur:USD'},withCurrencies(),chat);assert.equal(balance.draft.step,'balance');
@@ -207,7 +211,10 @@ test('the bot creates a cash account itself, from the menu or from a dead end, a
  const saved=advance(balance.draft,{text:'1250.5'},withCurrencies(),chat);
  assert.equal(saved.draft,null);assert.equal(saved.commit.resume,undefined);
  assert.equal(recordSchema.safeParse(saved.commit.record).success,true);
- assert.deepEqual({name:saved.commit.record.name,kind:saved.commit.record.kind,currency:saved.commit.record.currency,amount:saved.commit.record.amount},{name:'Wallet',kind:'Cash',currency:'USD',amount:1250.5});
+ assert.deepEqual({name:saved.commit.record.name,kind:saved.commit.record.kind,currency:saved.commit.record.currency,amount:saved.commit.record.amount},{name:'Savings',kind:'Cash',currency:'USD',amount:1250.5});
+ // A refused balance says what to type and keeps the 0 button.
+ const badBalance=advance(balance.draft,{text:'lots'},withCurrencies(),chat);
+ assert.equal(badBalance.reply.text,'Type a number such as 250000 or 12.50, or 0.');assert.deepEqual(buttons(badBalance.reply),['f:zero','f:back','f:cancel']);
  // An empty account is allowed through the 0 button, and the record id survives a redelivered update.
  const zero=advance(balance.draft,{callback:'f:zero'},withCurrencies(),chat);assert.equal(zero.commit.record.amount,0);assert.equal(zero.commit.record.id,id(99));
  // A user with no account at all is offered the button instead of being sent to the app.
@@ -216,6 +223,11 @@ test('the bot creates a cash account itself, from the menu or from a dead end, a
  assert.equal(stuck.reply.text,'Add a cash account to continue.');assert.ok(buttons(stuck.reply).includes('f:newacc'));
  const inside=advance(stuck.draft,{callback:'f:newacc'},empty,chat);
  assert.equal(inside.draft.kind,'account');assert.equal(inside.draft.data.resume.step,'account');assert.equal(inside.reply.text,'Name the cash account, for example Wallet.');
+ // Started from a dead end, the name question offers Back to the interrupted conversation.
+ assert.deepEqual(buttons(inside.reply),['f:accname:cash','f:back','f:cancel']);
+ const returned=advance(inside.draft,{callback:'f:back'},empty,chat);
+ assert.equal(returned.draft.kind,'expense');assert.equal(returned.draft.step,'account');assert.equal(returned.reply.text,'Add a cash account to continue.');
+ assert.deepEqual(buttons(advance(null,{text:'Add cash account'},empty,chat).reply),['f:accname:cash','f:cancel'],'a standalone account has no Back at its first question');
  const cash=advance(inside.draft,{callback:'f:accname:cash'},empty,chat);
  const done=advance(advance(cash.draft,{callback:'f:cur:UZS'},empty,chat).draft,{text:'500000'},empty,chat);
  assert.equal(done.commit.record.name,'Cash');assert.equal(done.commit.resume.kind,'expense');assert.equal(done.commit.resume.data.category,'Charity');
@@ -245,15 +257,26 @@ test('the bot creates loans, debts and mortgages itself, and a loan payment with
  const amount=advance(currency.draft,{callback:'f:cur:USD'},context,chat);assert.equal(amount.reply.text,'Type the outstanding amount in USD');
  const due=advance(amount.draft,{text:'5000'},context,chat);assert.equal(due.draft.step,'duedate');
  assert.equal(advance(due.draft,{text:'yesterday'},context,chat).draft.step,'duedate');
+ // A new loan cannot already be due; today is allowed.
+ const past=advance(due.draft,{text:'2020-01-01'},context,chat);
+ assert.equal(past.draft.step,'duedate');assert.equal(past.reply.text,'The due date cannot be in the past. Type today or a later date.');
+ assert.equal(advance(due.draft,{text:'2026-09-30'},context,chat).draft.step,'rate');
  // Due dates may be in the future, unlike record dates.
  const rate=advance(due.draft,{text:'31.03.2027'},context,chat);assert.equal(rate.draft.data.date,'2027-03-31');assert.equal(rate.reply.text,'Type the yearly interest rate in percent, or 0');
  const payment=advance(rate.draft,{text:'12.5'},context,chat);assert.equal(payment.reply.text,'Type the monthly payment in USD, or 0');
+ // Rates may carry a percent sign, spaces or a decimal comma; a refusal says why and keeps the 0 button.
+ for(const typed of ['7.5%','7.5 %',' 7,5% ','7,5'])assert.equal(advance(rate.draft,{text:typed},context,chat).draft.data.rate,7.5,typed);
+ const badRate=advance(rate.draft,{text:'seven'},context,chat);
+ assert.equal(badRate.draft.step,'rate');assert.equal(badRate.reply.text,'Type the rate as a number like 7.5 or 7.5%, or 0.');assert.deepEqual(buttons(badRate.reply),['f:zero','f:back','f:cancel']);
+ assert.equal(advance(rate.draft,{text:'2000%'},context,chat).reply.text,'The rate must be 1,000% or less.');
+ const badPayment=advance(payment.draft,{text:'a lot'},context,chat);
+ assert.equal(badPayment.reply.text,'Type a number such as 250000 or 12.50, or 0.');assert.deepEqual(buttons(badPayment.reply),['f:zero','f:back','f:cancel']);
  const confirm=advance(payment.draft,{text:'250'},context,chat);
  assert.equal(confirm.draft.step,'confirm');assert.match(confirm.reply.text,/Loan · <b>QA Car loan<\/b>\n\$5,000 · Due: 31 March 2027\nInterest rate 12.5% · Monthly payment \$250/);
  const saved=advance(confirm.draft,{callback:'f:save'},context,chat);
  assert.equal(recordSchema.safeParse(saved.commit.record).success,true);
  const r=saved.commit.record;
- assert.deepEqual({kind:r.kind,name:r.name,currency:r.currency,amount:r.amount,date:r.date,rate:r.rate,payment:r.estimated_monthly_payment},{kind:'Loan',name:'QA Car loan',currency:'USD',amount:5000,date:'2027-03-31',rate:12.5,payment:250});
+ assert.deepEqual({kind:r.kind,name:r.name,currency:r.currency,amount:r.amount,date:r.date,rate:r.rate,payment:r.estimated_monthly_payment,opened_on:r.opened_on},{kind:'Loan',name:'QA Car loan',currency:'USD',amount:5000,date:'2027-03-31',rate:12.5,payment:250,opened_on:'2026-09-30'});
  // Back walks the questions in order, and the 0 buttons skip rate and payment.
  assert.equal(advance(payment.draft,{callback:'f:back'},context,chat).draft.step,'rate');
  const zero=advance(advance(rate.draft,{callback:'f:zero'},context,chat).draft,{callback:'f:zero'},context,chat);
@@ -267,7 +290,10 @@ test('the bot creates loans, debts and mortgages itself, and a loan payment with
  // From a mortgage payment the kind is already known.
  const mortgage=advance(advance(null,{text:'Mortgage payment'},none,chat).draft,{callback:'f:newliab'},none,chat);
  assert.equal(mortgage.draft.step,'lname');assert.equal(mortgage.draft.data.lkind,'Mortgage');
- assert.equal(advance(mortgage.draft,{callback:'f:back'},none,chat).draft.step,'lname','the kind question was never asked');
+ assert.equal(mortgage.reply.text,'Name it, for example Home mortgage.');
+ // The kind question was never asked, so Back returns to the mortgage payment that needed the mortgage.
+ const back=advance(mortgage.draft,{callback:'f:back'},none,chat);
+ assert.equal(back.draft.kind,'mortgage');assert.equal(back.draft.step,'target');assert.equal(back.reply.text,'No open mortgage found.');
 });
 
 test('business income asks which business, and is offered only when one exists',()=>{

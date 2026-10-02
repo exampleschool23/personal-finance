@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
 const { monthOccurrences, recurringSummary, daysFrom, calendarWeeks } = loadTS('lib/recurring.ts');
-const { upcomingPayments } = loadTS('lib/planning.ts');
+const { upcomingPayments, debtPaymentsFrom } = loadTS('lib/planning.ts');
 
 const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Monthly', notes: '', ...extra });
 
@@ -28,6 +28,30 @@ test('the shared schedule helpers keep upcoming payments unchanged, including in
  const salary = [record('pay', 'Pay', 'Salary', 10, '2026-01-31'), { ...record('receipt', 'Pay', 'Salary', 10, '2026-10-30', { frequency: 'Once', income_source_id: 'pay', income_due_on: '2026-10-31' }) }];
  assert.equal(monthOccurrences(salary, [], '2026-10', '2026-11-02')[0].status, 'paid', 'a recorded salary receipt settles its occurrence');
  assert.equal(monthOccurrences(salary, [], '2026-02', '2026-11-02')[0].date, '2026-02-28');
+});
+
+test('a loan with a monthly payment is due on its start day each month until the due date, and a payment that month marks it paid', () => {
+ const loan = record('loan', 'Car loan', 'Loan', 5000, '2027-01-10', { frequency: 'Once', opened_on: '2026-08-31', estimated_monthly_payment: 250.4, created_at: '2026-08-31T10:00:00Z' });
+ const mortgage = record('flat', 'Flat', 'Mortgage', 90000, '2046-01-01', { frequency: 'Once', estimated_monthly_payment: 900, created_at: '2026-09-11T21:30:00Z' });
+ const none = record('debt', 'Debt', 'Debt', 300, '2027-01-01', { frequency: 'Once', opened_on: '2026-01-05', estimated_monthly_payment: 0 });
+ const repaid = record('done', 'Done', 'Loan', 0, '2027-01-01', { frequency: 'Once', opened_on: '2026-01-05', estimated_monthly_payment: 100 });
+ const records = [loan, mortgage, none, repaid];
+ const payments = debtPaymentsFrom([{ action: 'repayment', target_id: 'loan', occurred_on: '2026-10-02' }, { action: 'transfer', target_id: 'flat', occurred_on: '2026-10-02' }], [{ mortgage_id: 'flat', paid_on: '2026-09-30' }]);
+ assert.deepEqual(payments, [{ record_id: 'loan', date: '2026-10-02' }, { record_id: 'flat', date: '2026-09-30' }]);
+ // Without the payment history the installments are left out, so nothing paid can show as overdue.
+ assert.deepEqual(monthOccurrences(records, [], '2026-10', '2026-10-15').map(item => item.record.id), []);
+ assert.deepEqual(upcomingPayments(records, [], '2026-10-15', '2026-11-30').filter(item => item.type === 'installment'), []);
+ // The 31st falls back to the month's last day; a mortgage without a start date counts from its creation day in Tashkent (12 September).
+ const october = monthOccurrences(records, [], '2026-10', '2026-10-15', payments);
+ assert.deepEqual(october.map(item => [item.record.id, item.date, item.status, item.amount, item.installment]), [['flat', '2026-10-12', 'overdue', 900, true], ['loan', '2026-10-31', 'paid', 250.4, true]]);
+ assert.deepEqual(monthOccurrences(records, [], '2026-11', '2026-10-15', payments).map(item => [item.record.id, item.date, item.status]), [['flat', '2026-11-12', 'due'], ['loan', '2026-11-30', 'due']]);
+ assert.deepEqual(monthOccurrences(records, [], '2026-09', '2026-10-15', payments).map(item => [item.record.id, item.status]), [['loan', 'overdue']], 'an unpaid month stays overdue; the September mortgage day came before the mortgage was added');
+ // Payments stop at the due date, which keeps its own repayment reminder.
+ assert.deepEqual(monthOccurrences(records, [], '2027-01', '2026-10-15', payments).filter(item => item.record.id === 'loan'), []);
+ const summary = recurringSummary(october, amount => amount);
+ assert.deepEqual(summary.expense, { done: 250.4, remaining: 900 });
+ const due = upcomingPayments(records, [], '2026-10-15', '2026-11-30', payments).filter(item => item.type === 'installment');
+ assert.deepEqual(due.map(item => [item.record.id, item.date, item.overdue, item.amount]), [['loan', '2026-09-30', true, 250.4], ['flat', '2026-10-12', true, 900], ['flat', '2026-11-12', false, 900], ['loan', '2026-11-30', false, 250.4]]);
 });
 
 test('due labels count whole days and the calendar starts weeks on Monday', () => {

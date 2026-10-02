@@ -11,7 +11,9 @@ export function currencyLabel(code: string, locale: string) {
   try { return `${code} · ${new Intl.DisplayNames([locale], { type: 'currency' }).of(code) || code}`; }
   catch { return `${code} · ${catalogue.find(c => c.code === code)?.name || code}`; }
 }
-export type Preferences = { display_name?: string; country?: string; language: Language; currencies: string[]; font?: Font; onboarded?: boolean };
+export type Preferences = { display_name?: string; country?: string; language: Language; currencies: string[]; font?: Font; onboarded?: boolean;
+  /** The calendar day (Asia/Tashkent) the welcome setup was finished; read-only, never saved from the client. */
+  onboarded_on?: string };
 // The top bar switches between these; the first is the primary currency.
 export const maxPreferredCurrencies = 2;
 /** Toggles `code` in the preferred list. Returns why the tap was refused instead of dropping it silently. */

@@ -2,6 +2,7 @@ import { monthActuals, monthsBetween, shiftMonth } from './budget';
 import { expenses, income, type Entry } from './finance';
 import { convertAmount } from './market';
 import type { Category, PlanningData } from './planning';
+import { spendingAmount } from './spending';
 import type { TransactionSplit } from './transaction-tools';
 
 export const reportPeriods = ['month', 'quarter', 'year'] as const;
@@ -23,7 +24,8 @@ const shares = (totals: Map<string, number>): Share[] => {
 const add = (totals: Map<string, number>, key: string, amount: number) => totals.set(key, (totals.get(key) ?? 0) + amount);
 
 /** Income and spending over some months: totals, savings, savings rate, and shares by category and by merchant.
- * Category totals reuse the Monthly review, so repayments count as spending exactly as on the Budget page. */
+ * Spending follows the shared definition (`lib/spending.ts`) through the Monthly review, exactly as on the Budget page:
+ * mortgage payments count their interest only, and loan or debt principal repayments are transfers. */
 export function cashFlowReport(data: Pick<PlanningData, 'records' | 'activity' | 'investmentLinks' | 'categories'>, splits: TransactionSplit[], months: string[], currency: string, today: string, rates: Rates) {
  const incomeKeys = new Set([...income, ...data.categories.filter((category: Category) => category.direction === 'income').map(category => category.id)]);
  const byCategory = { income: new Map<string, number>(), expense: new Map<string, number>() };
@@ -44,7 +46,7 @@ export function cashFlowReport(data: Pick<PlanningData, 'records' | 'activity' |
  for (const record of data.records as Entry[]) {
   if (record.frequency !== 'Once' || !first || !last || record.date.slice(0, 7) < first || record.date.slice(0, 7) > last || record.date > today) continue;
   const direction = income.includes(record.kind) ? 'income' : expenses.includes(record.kind) ? 'expense' : null;
-  const value = direction && convertAmount(Number(record.amount), record.currency, currency, rates);
+  const value = direction && convertAmount(direction === 'income' ? Number(record.amount) : spendingAmount(record), record.currency, currency, rates);
   if (direction && value !== null && value !== undefined) add(byMerchant[direction], record.name.trim() || record.kind, value);
  }
  const totalIncome = series.reduce((sum, item) => sum + item.income, 0), totalSpending = series.reduce((sum, item) => sum + item.expenses, 0);

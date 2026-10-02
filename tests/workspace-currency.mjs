@@ -25,6 +25,7 @@ function component(file,name){
   '@/components/presentation-foundation/date-picker':{DatePicker:()=>React.createElement('button',null,'Month picker')},
   '@/components/presentation-foundation/category-badge':{CategoryBadge:({label})=>React.createElement('span',null,label)},
   '@/lib/deposit-interest':{depositToday:()=> '2026-09-18'},
+  '@/hooks/use-display-order':{useDisplayOrder:(key,items)=>({items,reorder(){},disabled:false,error:''})},
  });
  const tree=props=>{cursor=0;return loaded[name](props);};
  return Object.assign(props=>renderToStaticMarkup(tree(props)),{tree});
@@ -131,7 +132,7 @@ test('expense uses one category above amount, including user categories and safe
 });
 test('Settings exposes added categories beside the category creation form',()=>{
  const render=component('components/transaction-tools-panel.tsx','TransactionToolsPanel');
- const html=render({tools:{data:{rules:[]},loading:false,error:'',retry(){},save:async()=>{}},categories:[{id:'food',name:'Eating out',direction:'expense'}],saveCategory:async()=>{}});
+ const html=render({tools:{data:{rules:[]},loading:false,error:'',retry(){},save:async()=>{}},categories:[{id:'food',name:'Eating out',direction:'expense'}],saveCategory:async()=>{},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true});
  assert.ok(html.includes('id="categories"'));
  assert.ok(html.includes('Eating out'));
  assert.ok(html.includes('Add expense category'));assert.ok(html.includes('Add income category'));

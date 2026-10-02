@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
 import {z} from 'zod';
-import {parseDatedExchangeRate,loadDatedExchangeRate} from '../lib/dated-exchange-rate.ts';
+import {parseDatedExchangeRate,parseEcbExchangeRate,loadDatedExchangeRate} from '../lib/dated-exchange-rate.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const id=n=>`40000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const rows=[{Ccy:'USD',Rate:'12000',Nominal:'1',Date:'01.01.2020'},{Ccy:'EUR',Rate:'1300000',Nominal:'100',Date:'01.01.2020'},{Ccy:'USD',Rate:'99999',Nominal:'1',Date:'03.01.2020'}];
@@ -19,6 +19,22 @@ test('provider request always includes the selected date',async()=>{
  const original=global.fetch;
  try{global.fetch=async url=>{assert.equal(url,'https://cbu.uz/ru/arkhiv-kursov-valyut/json/all/2020-01-02/');return Response.json(rows);};assert.equal((await loadDatedExchangeRate('USD','UZS','2020-01-02')).rate,12000);}
  finally{global.fetch=original;}
+});
+test('international pairs use ECB reference rates and fall back to the CBU cross rate',async()=>{
+ const ecb={amount:1,base:'EUR',date:'2020-01-02',rates:{USD:1.12}};
+ assert.deepEqual(parseEcbExchangeRate(ecb,'EUR','USD','2020-01-03'),{from:'EUR',to:'USD',date:'2020-01-03',effective_date:'2020-01-02',rate:1.12,source:'ECB'});
+ for(const bad of [null,{...ecb,base:'USD'},{...ecb,rates:{}},{...ecb,rates:{USD:0}},{...ecb,date:'2020-01-04'}])assert.throws(()=>parseEcbExchangeRate(bad,'EUR','USD','2020-01-03'),/unavailable/);
+ const original=global.fetch,urls=[];
+ try{
+  global.fetch=async url=>{urls.push(url);return url.includes('frankfurter')?Response.json(ecb):Response.json(rows);};
+  assert.equal((await loadDatedExchangeRate('EUR','USD','2020-01-03')).source,'ECB');
+  assert.equal(urls[0],'https://api.frankfurter.dev/v1/2020-01-03?from=EUR&to=USD');
+  urls.length=0;assert.equal((await loadDatedExchangeRate('USD','UZS','2020-01-02')).source,'CBU');
+  assert.ok(urls.every(url=>url.includes('cbu.uz')),'the sum never asks the ECB');
+  global.fetch=async url=>url.includes('frankfurter')?new Response('',{status:404}):Response.json(rows);
+  const fallback=await loadDatedExchangeRate('USD','EUR','2020-01-02');
+  assert.equal(fallback.source,'CBU');assert.equal(fallback.rate,12000/13000);
+ }finally{global.fetch=original;}
 });
 test('exchange payment API verifies rates server-side and reuses committed rates on retry during an outage',async()=>{
  let rate=12000,prior=[],calls=[],offline=false,authenticated=true;

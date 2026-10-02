@@ -4,5 +4,5 @@ export type ReminderSettings=Extract<WorkspacePreference,{key:'reminders'}>['dat
 export function dueReminders(data:PlanningData,settings:ReminderSettings,today:string){
  if(!settings.enabled)return [];
  const through=new Date(Date.parse(today+'T00:00:00Z')+settings.days_ahead*86400000).toISOString().slice(0,10);
- return upcomingPayments(data.records,data.occurrences,today,through).filter(item=>!settings.snoozed.some(s=>s.key===item.key&&s.until>today));
+ return upcomingPayments(data.records,data.occurrences,today,through,data.debtPayments).filter(item=>!settings.snoozed.some(s=>s.key===item.key&&s.until>today));
 }

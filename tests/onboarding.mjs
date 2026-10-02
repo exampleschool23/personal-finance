@@ -135,3 +135,23 @@ test('the welcome setup and Settings list every language from one catalogue and 
  assert.deepEqual(helpers.startingCurrencies(['UZS','USD']),['UZS','USD']);
  assert.deepEqual(helpers.startingCurrencies(['EUR']),['EUR']);
 });
+
+test('the dashboard says Welcome on the day the setup was finished and Welcome back afterwards',async()=>{
+ assert.equal(helpers.firstVisit({onboarded_on:'2026-10-02'},'2026-10-02'),true);
+ assert.equal(helpers.firstVisit({onboarded_on:'2026-10-01'},'2026-10-02'),false);
+ assert.equal(helpers.firstVisit({},'2026-10-02'),false,'accounts set up before the day was recorded are returning');
+ assert.equal(helpers.onboardedOn('2026-10-01T19:30:00Z'),'2026-10-02','Asia/Tashkent calendar');
+ assert.equal(helpers.onboardedOn(null),undefined);assert.equal(helpers.onboardedOn('soon'),undefined);
+ const {OverviewHeading}=loadTS('components/overview-page.tsx',{'@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:(text,values={})=>text.replace(/\{(\w+)\}/g,(_,key)=>values[key])})}});
+ const heading=props=>renderToStaticMarkup(React.createElement(OverviewHeading,props));
+ assert.match(heading({name:'QA Tester',firstVisit:true}),/Welcome, QA Tester!/);
+ assert.match(heading({firstVisit:true}),/Welcome!/);
+ assert.match(heading({name:'QA Tester'}),/Welcome back, QA Tester!/);
+});
+
+test('a custom goal date starts tomorrow and the custom tracking start offers past presets',()=>{
+ const source=fs.readFileSync(new URL('../components/onboarding-screen.tsx',import.meta.url),'utf8');
+ assert.match(source,/value=\{goal\.custom\} min=\{presetDay\('tomorrow', today\)\}/);
+ assert.match(source,/presets=\{pastDatePresets\}/);
+ assert.match(source,/onboardingGoalPayload\(goal, primary, t\('Net worth target'\), today, goalId\)/,'a retry updates the same goal');
+});

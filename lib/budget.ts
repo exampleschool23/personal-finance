@@ -19,9 +19,8 @@ export const emptyBudget: BudgetState = { mode: 'category', applyForward: false,
 
 /** The Flexible bucket's single amount in flex mode. */
 export const flexBucketKey = 'flex:flexible';
-/** Repayments arrive as their own spending categories. */
-const repaymentKinds = ['Mortgage', 'Loan', 'Debt'];
-const fixedKinds = ['Rent expense', ...repaymentKinds];
+// Loan and mortgage principal are transfers (`lib/spending.ts`), so repayments never become budget categories.
+const fixedKinds = ['Rent expense'];
 export const defaultGroups: Record<BudgetDirection | BudgetType, string> = { income: 'Income', expense: 'Everyday spending', fixed: 'Bills & recurring', flexible: 'Everyday spending', non_monthly: 'Future spending' };
 export const budgetTypeLabels: Record<BudgetType, string> = { fixed: 'Fixed', flexible: 'Flexible', non_monthly: 'Non-monthly' };
 export const historyMonths = 6;
@@ -38,22 +37,20 @@ export function monthsBetween(from: string, to: string) {
  return months;
 }
 
-/** Every category that can carry a budget: built-in kinds, custom categories, and any other key that has spending. */
-export function budgetCategories(categories: readonly Category[], settings: readonly BudgetCategorySetting[], seen: readonly string[] = []): BudgetCategory[] {
+/** Every category that can carry a budget: built-in kinds and custom categories. */
+export function budgetCategories(categories: readonly Category[], settings: readonly BudgetCategorySetting[]): BudgetCategory[] {
  const byKey = new Map(settings.map(setting => [setting.category_key, setting]));
  const build = (key: string, name: string, custom: boolean, direction: BudgetDirection): BudgetCategory => {
   const setting = byKey.get(key);
   const type: BudgetType = direction === 'income' ? 'fixed' : setting?.budget_type ?? (fixedKinds.includes(key) ? 'fixed' : 'flexible');
   return { key, name, custom, direction, type, group: setting?.group_name?.trim() || (direction === 'income' ? defaultGroups.income : defaultGroups[type]), rollover: direction === 'expense' && !!setting?.rollover, rolloverStart: setting?.rollover_start?.slice(0, 7) ?? null, excluded: !!setting?.excluded };
  };
- const list = [
+ return [
   ...income.map(kind => build(kind, kind, false, 'income')),
   ...categories.filter(category => category.direction === 'income').map(category => build(category.id, category.name, true, 'income')),
   ...expenses.map(kind => build(kind, kind, false, 'expense')),
   ...categories.filter(category => category.direction === 'expense').map(category => build(category.id, category.name, true, 'expense')),
  ];
- for (const key of seen) if (!list.some(item => item.key === key) && repaymentKinds.includes(key)) list.push(build(key, key, false, 'expense'));
- return list;
 }
 
 /** The amount saved for exactly this month, or else the latest forward amount before it. */
@@ -160,18 +157,32 @@ export function groupRows(rows: readonly BudgetRow[], byType: boolean): BudgetGr
 /** A goal's planned monthly saving: the Contributions section. */
 export const goalContribution = (goal: Goal) => goal.archived || goal.completed_on ? 0 : Math.max(0, Number(goal.funding_monthly ?? goal.monthly_contribution ?? 0));
 
-export type LeftToBudget = { income: number; expenses: number; contributions: number; left: number; flexible: number | null; unallocatedFlexible: number | null };
+const isFlexible = (row: BudgetRow) => row.direction === 'expense' && row.type === 'flexible' && !row.excluded;
+
+/** Flex mode plans one amount for the Flexible bucket: the saved bucket amount, or until one is saved, the sum of
+ * its categories' budgets, so switching style keeps the plan. Null when the saved amount cannot be converted. */
+export function flexBucketBudget(amounts: readonly BudgetAmount[], rows: readonly BudgetRow[], month: string, currency: string, rates: Rates): number | null {
+ if (budgetAmountFor(amounts, flexBucketKey, month)) return budgetedIn(amounts, flexBucketKey, month, currency, rates);
+ return rows.filter(isFlexible).reduce((sum, row) => sum + (row.budget ?? 0) + row.rolloverIn, 0);
+}
+
+/** In flex mode flexible categories carry no budget of their own: only the bucket is planned, and they show what was spent.
+ * Their saved amounts are kept for Category mode, but never shown as a plan the totals ignore. */
+export function budgetRowsForMode(rows: readonly BudgetRow[], mode: BudgetMode): BudgetRow[] {
+ if (mode === 'category') return [...rows];
+ return rows.map(row => row.direction === 'expense' && row.type === 'flexible' ? { ...row, budget: null, rolloverIn: 0, remaining: null, progress: 0 } : row);
+}
+
+export type LeftToBudget = { income: number; expenses: number; contributions: number; left: number; flexible: number | null };
 /** Budgeted income minus budgeted spending and goal contributions. Green when positive, grey at zero, red when negative.
- * In flex mode the Flexible bucket replaces the sum of its categories, which become optional limits inside it. */
+ * In flex mode the Flexible bucket replaces the sum of its categories. */
 export function leftToBudget(rows: readonly BudgetRow[], mode: BudgetMode, flexibleBudget: number | null, contributions: number): LeftToBudget {
  const active = rows.filter(row => !row.excluded);
  const plannedIncome = active.filter(row => row.direction === 'income').reduce((sum, row) => sum + (row.budget ?? 0), 0);
- const spending = active.filter(row => row.direction === 'expense');
- const limits = spending.filter(row => row.type === 'flexible').reduce((sum, row) => sum + (row.budget ?? 0), 0);
- const others = spending.filter(row => mode === 'category' || row.type !== 'flexible').reduce((sum, row) => sum + (row.budget ?? 0), 0);
+ const others = active.filter(row => row.direction === 'expense' && (mode === 'category' || row.type !== 'flexible')).reduce((sum, row) => sum + (row.budget ?? 0), 0);
  const flexible = mode === 'flex' ? flexibleBudget ?? 0 : null;
  const planned = others + (flexible ?? 0);
- return { income: plannedIncome, expenses: planned, contributions, left: plannedIncome - planned - contributions, flexible, unallocatedFlexible: flexible === null ? null : flexible - limits };
+ return { income: plannedIncome, expenses: planned, contributions, left: plannedIncome - planned - contributions, flexible };
 }
 
 export type BudgetTone = 'positive' | 'negative' | 'neutral';

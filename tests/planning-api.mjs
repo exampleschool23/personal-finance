@@ -6,7 +6,9 @@ import ts from 'typescript';
 import {z} from 'zod';
 import {loadTS} from './helpers/load-ts.mjs';
 const {planningReadFilters,currentReviewMonth}=loadTS('lib/planning-reads.ts');
+const {categoryNameTaken,duplicateCategoryMessage}=loadTS('lib/category-names.ts');
 const {signBackup}=loadTS('lib/backup-signature.ts');
+const {debtPaymentsFrom}=loadTS('lib/planning.ts');
 import {instrumentFor} from '../lib/market.ts';
 import {timingSafeEqual} from 'node:crypto';
 import {exportCSV,parseCSV,mapCSV,FINANCE_RECORD_CSV_COLUMNS} from '../lib/csv.ts';
@@ -15,7 +17,7 @@ const id='10000000-0000-4000-8000-000000000001';
 const req=(body,origin='https://local')=>new Request('https://local',{method:'POST',headers:{origin},body:JSON.stringify(body)});
 test('planning API rejects anonymous, cross-origin and malformed operations and ignores forged ownership',async()=>{
  let authenticated=true,calls=[];
- const api=apiFunction('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts','planningReadFilters','currentReviewMonth',compile('app/api/planning/route.ts')+';return {GET,POST};')(instrumentFor,z,async()=>authenticated?{token:'owner'}:null,async(path,init,token)=>{if(init.method!=='POST'){assert.equal(path,'/rest/v1/savings_goals?select=investment_targets&limit=0');return Response.json([]);}calls.push({path,body:JSON.parse(init.body),token});return Response.json({ok:true});},r=>r.headers.get('origin')==='https://local',async()=>[],code=>['USD','EUR','UZS'].includes(code),async()=>[],planningReadFilters,currentReviewMonth);
+ const api=apiFunction('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts','planningReadFilters','currentReviewMonth','categoryNameTaken','duplicateCategoryMessage',compile('app/api/planning/route.ts')+';return {GET,POST};')(instrumentFor,z,async()=>authenticated?{token:'owner'}:null,async(path,init,token)=>{if(init.method!=='POST'){assert.equal(path,'/rest/v1/savings_goals?select=investment_targets&limit=0');return Response.json([]);}calls.push({path,body:JSON.parse(init.body),token});return Response.json({ok:true});},r=>r.headers.get('origin')==='https://local',async table=>table==='transaction_categories'?[{id:'10000000-0000-4000-8000-000000000009',name:'QA Coffee',direction:'expense'}]:[],code=>['USD','EUR','UZS'].includes(code),async()=>[],planningReadFilters,currentReviewMonth,categoryNameTaken,duplicateCategoryMessage);
  authenticated=false;assert.equal((await api.GET()).status,401);assert.equal((await api.POST(req({}))).status,401);authenticated=true;
  assert.equal((await api.POST(req({},'https://elsewhere'))).status,403);
  for(const body of [{action:'unknown',data:{}},{action:'transfer',data:{id}},{action:'goal',data:{id,name:'Goal',account_id:id,target:10,allocated:11,target_date:null}},{action:'category',data:{id,name:''}}])assert.equal((await api.POST(req(body))).status,400);
@@ -32,7 +34,11 @@ test('planning API rejects anonymous, cross-origin and malformed operations and 
  const multiCall=calls.pop();assert.equal(multiCall.path,'/rest/v1/rpc/planning_investment_goal');assert.equal(multiCall.body.p_action,undefined);const saved=multiCall.body.p_data;assert.equal(saved.target,4);assert.equal(saved.monthly_contribution,.1);assert.deepEqual(saved.investment_targets,[target,more]);
  for(const investment_targets of [[],[target,target],[target,{...more,target:0}],[target,{...more,monthly_contribution:-1}],[target,{...more,holding_account_id:'missing'}],[target,{...target,asset_symbol:'UNKNOWNCOIN'}],Array(51).fill(target)])assert.equal((await api.POST(req({action:'goal',data:{...accumulation,investment_targets}}))).status,400);
  assert.equal((await api.POST(req({action:'goal',data:{...goal,investment_targets:[target]}}))).status,400);
- assert.equal(calls.length,0);assert.equal((await api.POST(req({action:'category',data:{id,name:'Travel',direction:'expense',user_id:'attacker'}}))).status,200);assert.deepEqual(calls[0].body,{p_action:'category',p_data:{id,name:'Travel',direction:'expense'}});assert.equal(calls[0].token,'owner');
+ assert.equal(calls.length,0);
+ // Letter case alone never makes a new category, whether the match is an added or a built-in one.
+ for(const name of ['qa coffee',' OTHER EXPENSE '])assert.equal((await api.POST(req({action:'category',data:{id,name,direction:'expense'}}))).status,409);
+ assert.equal(calls.length,0);assert.equal((await api.POST(req({action:'category',data:{id,name:'QA coffee',direction:'income'}}))).status,200);calls.pop();
+ assert.equal((await api.POST(req({action:'category',data:{id,name:'Travel',direction:'expense',user_id:'attacker'}}))).status,200);assert.deepEqual(calls[0].body,{p_action:'category',p_data:{id,name:'Travel',direction:'expense'}});assert.equal(calls[0].token,'owner');
 });
 test('statement import produces stable distinct duplicate keys and authenticates before any write',async()=>{
  let calls=[];
@@ -63,8 +69,9 @@ test('CSV backup exports owner records and cannot be misread as a signed bank st
 test('planning reads include holding accounts and computed deposit income exactly once',async()=>{
  const deposit={id:'deposit',kind:'Deposit',amount:1000,estimated_monthly_income:999};
  let fail=false;
- const get=apiFunction('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts','planningReadFilters','currentReviewMonth',compile('app/api/planning/route.ts')+';return GET;')(instrumentFor,z,async()=>({token:'owner'}),()=>{},()=>true,async(table,token)=>{assert.equal(token,'owner');return table==='finance_records'?[deposit,{id:'cash',kind:'Cash',amount:20}]:table==='holding_accounts'?[{id:'broker',kind:'Stock'}]:[];},()=>true,async token=>{assert.equal(token,'owner');if(fail)throw Error('missing history');return [{id:'deposit',estimated_monthly_income:10}];},planningReadFilters,currentReviewMonth);
+ const get=apiFunction('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts','planningReadFilters','currentReviewMonth','debtPaymentsFrom',compile('app/api/planning/route.ts')+';return GET;')(instrumentFor,z,async()=>({token:'owner'}),()=>{},()=>true,async(table,token)=>{assert.equal(token,'owner');return table==='finance_records'?[deposit,{id:'cash',kind:'Cash',amount:20}]:table==='holding_accounts'?[{id:'broker',kind:'Stock'}]:table==='mortgage_payments'?[{mortgage_id:'flat',paid_on:'2026-10-01'}]:[];},()=>true,async token=>{assert.equal(token,'owner');if(fail)throw Error('missing history');return [{id:'deposit',estimated_monthly_income:10}];},planningReadFilters,currentReviewMonth,debtPaymentsFrom);
  const result=await (await get()).json();
+ assert.deepEqual(result.debtPayments,[{record_id:'flat',date:'2026-10-01'}]);
  assert.equal(result.records.length,2);assert.equal(result.records[0].estimated_monthly_income,10);assert.equal(result.records[0].amount,1000);assert.equal(result.holdingAccounts.length,1);
  fail=true;assert.equal((await get()).status,503);
 });

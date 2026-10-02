@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
-import { assetRecordKinds, income } from '../lib/finance.ts';
+import { assetRecordKinds, income, lendingRecordKinds } from '../lib/finance.ts';
 
 // Exercise the currency control's actual visibility and change handler without a browser.
 const source = fs.readFileSync('components/record-dialog.tsx', 'utf8');
@@ -17,14 +17,18 @@ function visit(node) {
 }
 visit(tree);
 assert.ok(condition && change, 'Currency selector and change handler exist');
-const visible = new Function('editing', 'existing', 'assetRecord', 'income', `return ${condition};`);
+const visible = new Function('editing', 'existing', 'assetRecord', 'income', 'lendingRecordKinds', `return ${condition};`);
 
-test('every new asset offers currency selection; existing asset currencies stay locked', () => {
+test('every new asset and lending record offers currency selection; existing currencies stay locked', () => {
  for (const kind of assetRecordKinds) {
-  assert.equal(visible({kind}, false, true, income), true, kind);
-  assert.equal(visible({kind}, true, true, income), false, kind);
+  assert.equal(visible({kind}, false, true, income, lendingRecordKinds), true, kind);
+  assert.equal(visible({kind}, true, true, income, lendingRecordKinds), false, kind);
  }
- assert.equal(visible({kind:'Mortgage'}, false, false, income), false);
+ for (const kind of lendingRecordKinds) {
+  assert.equal(visible({kind}, false, false, income, lendingRecordKinds), true, kind);
+  assert.equal(visible({kind}, true, false, income, lendingRecordKinds), false, kind);
+ }
+ assert.equal(visible({kind:'Living expense'}, false, false, income, lendingRecordKinds), false);
 });
 
 test('choosing an asset currency preserves exact entered amounts and account assignment', () => {

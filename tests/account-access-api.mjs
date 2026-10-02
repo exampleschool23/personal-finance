@@ -57,31 +57,31 @@ test('failed deletion preserves the session and never deletes an unverified acco
  }finally{if(previous===undefined)delete process.env.SUPABASE_SERVICE_ROLE_KEY;else process.env.SUPABASE_SERVICE_ROLE_KEY=previous;}
 });
 
-test('passwords need at least six characters everywhere, and the messages say so in every language',async()=>{
+test('passwords need at least eight characters everywhere, and the messages say so in every language',async()=>{
  const {accountAccessSchema}=loadTS('lib/account-access.ts');
  const {minPasswordLength,maxPasswordLength}=loadTS('lib/password-policy.ts');
- assert.equal(minPasswordLength,6);
+ assert.equal(minPasswordLength,8);
  const signup=password=>accountAccessSchema.safeParse({action:'signup',email:'new@example.com',password}).success;
- assert.equal(signup('abcde'),false);
- assert.equal(signup('abcdef'),true);
+ assert.equal(signup('abcdefg'),false);
+ assert.equal(signup('abcdefgh'),true);
  assert.equal(signup('x'.repeat(maxPasswordLength)),true);
  assert.equal(signup('x'.repeat(maxPasswordLength+1)),false);
- for(const action of ['reset'])assert.equal(accountAccessSchema.safeParse({action,password:'abcde'}).success,false);
- assert.equal(accountAccessSchema.safeParse({action:'change_password',current_password:'old',password:'abcdef'}).success,true);
- const hint='Use a unique password with at least 6 characters.',failure='Check the account fields. Passwords need at least 6 characters.';
+ for(const action of ['reset'])assert.equal(accountAccessSchema.safeParse({action,password:'abcdefg'}).success,false);
+ assert.equal(accountAccessSchema.safeParse({action:'change_password',current_password:'old',password:'abcdefgh'}).success,true);
+ const hint='Use a unique password with at least 8 characters.',failure='Check the account fields. Passwords need at least 8 characters.';
  assert.ok(fs.readFileSync('components/account-access-panel.tsx','utf8').includes(hint));
  assert.ok(fs.readFileSync('app/api/account-access/route.ts','utf8').includes(failure));
  for(const language of ['en','ru','uz']){const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));assert.ok(labels[hint],language);assert.ok(labels[failure],language);assert.ok(!/12/.test(labels[hint]+labels[failure]),language);}
 });
 
 test('an account made with a phone number can add an email and password, and nobody else can use that path',async()=>{
- const add={action:'add_email',email:'new@example.com',password:'secret1'};
+ const add={action:'add_email',email:'new@example.com',password:'secret12'};
  const phoneOnly=api({email:'',provider:()=>Response.json({})});
  const done=await phoneOnly.POST(request(add));
  assert.equal(done.status,200);assert.equal((await done.json()).message,'Check your email to confirm it.');
  assert.equal(phoneOnly.calls.length,1);
  assert.equal(phoneOnly.calls[0].path,'/auth/v1/user');assert.equal(phoneOnly.calls[0].init.method,'PUT');assert.equal(phoneOnly.calls[0].token,'owner');
- assert.deepEqual(JSON.parse(phoneOnly.calls[0].init.body),{email:'new@example.com',password:'secret1'});
+ assert.deepEqual(JSON.parse(phoneOnly.calls[0].init.body),{email:'new@example.com',password:'secret12'});
  // An account that already has an email keeps using its password screens.
  const withEmail=api({provider:()=>Response.json({})});
  assert.equal((await withEmail.POST(request(add))).status,400);assert.equal(withEmail.calls.length,0);
@@ -121,7 +121,7 @@ test('a phone-only account deletes with DELETE alone, while an email account sti
 
 test('a refused sign-up explains the reason the provider gives, logging only its code',async context=>{
  const {signupError}=loadTS('lib/account-access.ts');
- assert.equal(signupError(422,'weak_password'),'Choose a stronger password. Use at least 6 characters, mixing letters and numbers.');
+ assert.equal(signupError(422,'weak_password'),'Choose a stronger password. Use at least 8 characters, mixing letters and numbers.');
  assert.equal(signupError(400,'email_address_invalid'),'Check the email address.');
  assert.equal(signupError(400,'email_address_not_authorized'),'Registration by email is not available right now.');
  assert.equal(signupError(422,'user_already_exists'),'This email already has an account. Sign in or reset your password.');

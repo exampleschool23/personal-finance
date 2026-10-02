@@ -190,7 +190,8 @@ test('someone who pressed stop signs back in with the same number, and with no o
  assert.equal(back.created.length,0);assert.equal(back.db.tables.telegram_subscriptions[0].chat_id,777);
  const connected=t('en','Connected. You will get a morning digest of upcoming payments and a message after every saved action.');
  // The greeting uses the name saved in the app, never Telegram's profile name (the sender here is "Aziz"); with no saved name there is no greeting.
- assert.equal(outcome.replies[0].text,'Welcome, Jasurbek! You are connected.\n\n'+connected);
+ // One message: the greeting and what the chat will receive, without saying "connected" twice.
+ assert.equal(outcome.replies[0].text,'Welcome, Jasurbek! You are connected and will get a morning digest of upcoming payments and a message after every saved action.');
  const unnamed=setup({seed:{...structuredClone(seed),user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:''}]}});
  assert.equal((await run(contact(),unnamed)).replies[0].text,connected);
  const stranger=setup({seed:structuredClone(seed)});
@@ -198,14 +199,17 @@ test('someone who pressed stop signs back in with the same number, and with no o
  assert.equal(stranger.db.tables.telegram_subscriptions[0].chat_id,null);
  // The same number from the linked chat is simply welcomed back.
  const linked=setup({seed:{telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:'Aziz'}]}});
- assert.match((await run(contact(),linked)).replies[0].text,/^Welcome, Aziz! You are connected\.\n\nConnected/);
+ assert.match((await run(contact(),linked)).replies[0].text,/^Welcome, Aziz! You are connected and will get a morning digest/);
 });
 
 test('a linked email account can add its number from the chat, once and only if it is free',async()=>{
  const seed=()=>({telegram_subscriptions:[subscription({chat_id:777})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]});
  const context=setup({seed:seed()});
  const asked=(await run(text('/phone'),context)).replies[0];
- assert.deepEqual(asked,{chat_id:777,text:t('en','Share your phone number so you can also sign in on the web with it.'),keyboard:{contact:t('en','Share my number')}});
+ assert.deepEqual(asked,{chat_id:777,text:t('en','Share your phone number so you can also sign in on the web with it.'),keyboard:{contact:t('en','Share my number'),cancel:t('en','Cancel')}});
+ // Cancel under the number button brings the main menu back.
+ const cancelled=(await run(text('Cancel'),context)).replies[0];
+ assert.equal(cancelled.text,t('en','Cancelled.'));assert.deepEqual(cancelled.keyboard.reply,[['Expense','Income'],['More actions']]);
  const saved=await run(contact(),context);
  assert.deepEqual(context.phones,[[ownerId,'+998901234567']]);
  assert.equal(context.db.tables.telegram_subscriptions[0].phone,'+998901234567');assert.equal(context.db.tables.telegram_subscriptions[0].telegram_user_id,777);

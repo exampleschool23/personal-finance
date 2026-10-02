@@ -19,10 +19,21 @@ export function formatMoney(value: number, currency: string, locale: string, uni
   const displayed = !unitPrice && Math.abs(value) < 0.5 ? 0 : value;
   return new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: unitPrice ? 8 : 0 }).format(displayed);
 }
+/** A cash account in a picker: "Wallet · $2,918". The balance tells apart accounts that share a name. */
+export function formatAccountOption(account: { name: string; amount: number | string; currency: string }, locale: string) {
+  return `${account.name} · ${formatMoney(Number(account.amount), account.currency, locale)}`;
+}
+/** A whole amount with its direction: "+$1,200" in, "−$13" out (a true minus sign, U+2212), "$0" for nothing. */
+export function formatSignedMoney(value: number, currency: string, locale: string) {
+  if (!Number.isFinite(value)) return '—';
+  const shown = formatMoney(Math.abs(value), currency, locale);
+  return Math.abs(value) < 0.5 ? shown : (value > 0 ? '+' : '\u2212') + shown;
+}
 // Short axis labels ("$1.2M"); tooltips and totals keep formatMoney precision.
 export function formatCompactMoney(value: number, currency: string, locale: string) {
   if (!Number.isFinite(value)) return '—';
-  return new Intl.NumberFormat(locale, { style: 'currency', currency, notation: 'compact', maximumFractionDigits: 1 }).format(value);
+  // Below a thousand nothing is abbreviated, so the amount stays whole ("$13", never "$12.8").
+  return Math.abs(value) < 999.5 ? formatMoney(value, currency, locale) : new Intl.NumberFormat(locale, { style: 'currency', currency, notation: 'compact', maximumFractionDigits: 1 }).format(value);
 }
 /** Monday-first weekday labels for the calendar grid, in the locale's language. */
 export function weekdayLabels(locale: string): string[] {

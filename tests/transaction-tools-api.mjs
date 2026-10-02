@@ -35,3 +35,11 @@ test('forecast saves retain directional precision and report missing database up
   assert.equal(response.status,409);assert.equal((await response.json()).error,expected);
  }
 });
+
+test('splits accept built-in category kinds and reads return one category label',async()=>{
+ const app=api();
+ assert.equal((await app.POST(request({action:'split',data:{record_id:id(4),splits:[{category_id:'Living expense',amount:1},{category_id:id(3),amount:1}]}}))).status,200);
+ assert.equal((await api().POST(request({action:'split',data:{record_id:id(4),splits:[{category_id:'Groceries',amount:1},{category_id:id(3),amount:1}]}}))).status,400);
+ const {normalizeSplits}=loadTS('lib/transaction-tools.ts');
+ assert.deepEqual(normalizeSplits([{record_id:'r',position:0,category_id:null,kind:'Charity',amount:'2.5'},{record_id:'r',position:1,category_id:id(3),kind:null,amount:1}]),[{record_id:'r',position:0,category_id:'Charity',amount:2.5},{record_id:'r',position:1,category_id:id(3),amount:1}]);
+});

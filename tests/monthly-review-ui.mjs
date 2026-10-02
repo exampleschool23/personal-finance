@@ -30,15 +30,16 @@ test('monthly review selects a month without showing a day',()=>{
  assert.match(html,/class="date-picker-trigger"[^>]*aria-label="Month"[^>]*><span>September 2026<\/span>/);
  assert.doesNotMatch(html,/18 September 2026/);
 });
-test('review receives rates and repayment activity and flags incomplete conversion',()=>{
+test('review receives rates, treats loan repayments as transfers and flags incomplete conversion',()=>{
  const data={...props.data,records:[record('cash',100,{kind:'Cash'}),record('loan',1000,{kind:'Loan'}),record('groceries',125000,{currency:'UZS'})],activity:[{id:'paid',action:'repayment',target_id:'loan',account_id:'cash',amount:50,fee:0,occurred_on:'2026-09-10'}]};
  const html=render({data,market:{rates:{USD:1,UZS:12500}}});
- assert.match(html,/\$60/);assert.doesNotMatch(html,/totals are incomplete/);
+ // $10 of groceries; the $50 loan principal is a transfer (lib/spending.ts), not spending.
+ assert.match(html,/\$10/);assert.doesNotMatch(html,/\$60/);assert.doesNotMatch(html,/totals are incomplete/);
  assert.match(render({data}),/Current or previous month totals are incomplete/);
 });
-test('monthly review passes tracker car payments into actual spending',()=>{
+test('monthly review leaves Tracker car repayments out of actual spending',()=>{
  const data={...props.data,records:[record('cash',1000,{kind:'Cash'}),record('car',5000,{kind:'Loan'})],investmentLinks:[{id:'paid',account_id:'cash',amount:-250,investment_history:{record_id:'car',event_type:'withdrawal',occurred_on:'2026-09-10'}}]};
- assert.match(render({data}),/\$250/);
+ assert.doesNotMatch(render({data}),/\$250/);
 });
 
 test('remote monthly review normalizes undated lending and never presents failed reads as zero totals',()=>{

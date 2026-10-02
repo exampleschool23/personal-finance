@@ -66,7 +66,8 @@ function numberInput(props){
   '@/components/ui/input':{Input:'input'},
   '@/components/language-provider':{useLanguage:()=>({locale:'en-US'})},
  });
- return FormattedNumberInput(props);
+ // The field is the first child; a limit message may follow it.
+ return FormattedNumberInput(props).props.children[0];
 }
 const typed=value=>({currentTarget:{value,selectionStart:value.length,setSelectionRange(){}}});
 test('number fields report a blank entry separately from a typed zero',()=>{
@@ -135,4 +136,32 @@ test('deleting an account that still has savings goals explains what blocks it',
   async()=>Response.json({code:'23503',message:'update or delete on table "finance_records" violates foreign key constraint',details:'Key (id) is still referenced from table "savings_goals".'},{status:409}),()=>true);
  const response=await remove(new Request('https://local',{method:'DELETE',body:JSON.stringify({id:expense.account_id})}));
  assert.equal(response.status,409);assert.equal((await response.json()).error,'This account has savings goals. Delete or move those goals first.');
+});
+
+test('QA 2026-10-02: dialogs explain limits, prefill scheduled amounts and offer the right choices',()=>{
+ const read=file=>fs.readFileSync(file,'utf8');
+ // Add transaction offers income as well as expense, through the existing forms.
+ const transactions=read('components/workspace/screens/transactions-screen.tsx');
+ assert.match(transactions,/onAdd\('Other income'\)/);assert.match(transactions,/onAdd\('Other expense'\)/);
+ // Split choices are built-in plus added categories of the transaction's type.
+ assert.match(read('components/transaction-tools-panel.tsx'),/categoryChoices\(categories,income\.includes\(record\.kind\)\?'income':'expense'\)/);
+ // A scheduled payment starts at its scheduled amount instead of a placeholder.
+ const operation=read('components/planning/account-operation.tsx');
+ assert.match(operation,/amount:operation\.amount\?\?\(operation\.action==='occurrence'/);
+ assert.doesNotMatch(operation,/placeholder=\{formatNumber\(target/);
+ // Over-limit quantities and oversized fees say why; the stablecoin note is for crypto only.
+ const movement=read('components/planning/asset-movement-dialog.tsx');
+ assert.match(movement,/max=\{available\} maxMessage=\{t\('Only \{amount\} available'/);
+ assert.match(movement,/feeTooHigh&&<small role="alert"/);
+ assert.match(movement,/\(source\.kind==='Crypto'\|\|target\.kind==='Crypto'\)&&<p className="muted">\{t\('USDT and USDC/);
+ // Cash account pickers show balances through the shared label.
+ for(const file of ['components/planning/asset-movement-dialog.tsx','components/planning/account-operation.tsx','components/planning/goals-page.tsx','components/data-tools.tsx','components/cash-account-field.tsx'])assert.match(read(file),/formatAccountOption\(/,file);
+ assert.doesNotMatch(read('components/planning/account-operation.tsx'),/\{a\.name\} · \{a\.currency\}/);
+ // Loans & debts: currency choice for new records, loan-only filter, payments for loans and debts, plural counts.
+ assert.match(read('components/record-dialog.tsx'),/!existing&&\(assetRecord\|\|lendingRecordKinds\.includes\(editing\.kind\)\)/);
+ const table=read('components/workspace/records-table.tsx');
+ assert.match(table,/categories=\{sectionKey === 'debts' \? \[\] : planning\.data\.categories\}/);
+ assert.match(table,/\(r\.kind === 'Loan' \|\| r\.kind === 'Debt'\) && <Button.*?setDebtPayment/);
+ assert.match(table,/<Pagination /);assert.match(read('components/recently-deleted.tsx'),/<Pagination /);
+ assert.match(read('components/debt-summary.tsx'),/lentCount===1\?'1 lending record'/);
 });

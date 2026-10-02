@@ -15,15 +15,16 @@ import type { Entry } from '@/lib/finance';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { goalEmoji } from '@/lib/goal-emoji';
 import { goalStatus, goalSummary } from '@/lib/goal-projection';
-import { alreadyAdded, canContinue, draftProblems, goalSetupSteps, goalTemplates, maxPerTemplate, monthlyTotals, setupDrafts, type SetupDraft } from '@/lib/goal-setup';
+import { alreadyAdded, canContinue, draftProblems, goalAccountOptions, goalSetupSteps, goalTemplates, maxPerTemplate, monthlyTotals, pickTemplate, savingsCurrencies, setupDrafts, withSavingsCurrency, type SetupDraft } from '@/lib/goal-setup';
 import type { Goal } from '@/lib/planning';
 import { GoalSummaryRow } from './goal-summary-row';
 
 const stepLabels = { select: 'Select', targets: 'Targets', contribution: 'Contribution', budget: 'Budget' } as const;
 
-type Props = { goals: Goal[]; accounts: Entry[]; currency: string; currencies: string[]; netWorth: (currency: string) => number | null; today: string; maxDate: string; save: (action: string, data: unknown) => Promise<void>; onClose: () => void; onCreated: (id: string) => void; onInvestment: () => void };
+type Props = { goals: Goal[]; accounts: Entry[]; currency: string; currencies: string[]; netWorth: (currency: string) => number | null; today: string; maxDate: string; save: (action: string, data: unknown) => Promise<void>; onClose: () => void; onCreated: (ids: string[]) => void; onInvestment: () => void };
 
-/** Monarch's add-goal flow: pick goals from tiles, set targets, add what is already saved, then plan the monthly amount. */
+/** Monarch's add-goal flow: pick goals from tiles, set targets, add what is already saved, then plan the monthly amount.
+ * `currency` is the primary currency every new goal starts in. */
 export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth, today, maxDate, save, onClose, onCreated, onInvestment }: Props) {
  const { t, locale } = useLanguage();
  const [step, setStep] = useState(0), [counts, setCounts] = useState<Record<string, number>>({}), [drafts, setDrafts] = useState<SetupDraft[]>([]);
@@ -40,7 +41,7 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
   if (!ready) { setTouched(true); return; }
   setTouched(false); setError('');
   if (name === 'select') {
-   setDrafts(setupDrafts(counts, template => t(template.name), { currency, account: accounts[0] ? { id: accounts[0].id, currency: accounts[0].currency } : null }, () => crypto.randomUUID(), drafts));
+   setDrafts(setupDrafts(counts, template => t(template.name), { currency, accounts }, () => crypto.randomUUID(), drafts));
    setStep(1); return;
   }
   if (name !== 'budget') { setStep(step + 1); return; }
@@ -49,7 +50,7 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
  // Goals are saved one by one; a retry saves the same ids again, so nothing is created twice.
  async function create(goals: Goal[]) {
   setBusy(true); setError('');
-  try { for (const goal of goals) await save('goal', goal); onCreated(goals[0].id); }
+  try { for (const goal of goals) await save('goal', goal); onCreated(goals.map(goal => goal.id)); }
   catch (reason) { setError((reason as Error).message); }
   finally { setBusy(false); }
  }
@@ -90,7 +91,7 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
      <ul className="goal-template-grid">{goalTemplates.map(template => {
       const count = counts[template.id] ?? 0, added = alreadyAdded(template, goals);
       const disabled = template.kind === 'savings' && !accounts.length;
-      const set = (value: number) => setCounts({ ...counts, [template.id]: Math.max(0, Math.min(maxPerTemplate, value)) });
+      const set = (value: number) => setCounts(pickTemplate(counts, template.id, value));
       return <li key={template.id} className="goal-template" data-selected={count > 0 || undefined} data-disabled={disabled || undefined}>
        <button type="button" className="goal-template-pick" disabled={disabled} aria-pressed={template.kind === 'investment' ? undefined : count > 0} onClick={() => template.kind === 'investment' ? onInvestment() : set(count ? 0 : 1)}>
         <span className="goal-row-cover" aria-hidden="true">{template.emoji}</span>
@@ -106,9 +107,10 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
      {list.map(goal => <article key={goal.id} className="panel goal-setup-card">
       <header><span className="goal-row-cover" aria-hidden="true">{goalEmoji(goal)}</span><label className="goal-setup-name">{t('Name')}<Input required maxLength={120} value={goal.name} onChange={event => update(goal.id, { name: event.target.value })}/></label></header>
       <div className="goal-setup-fields">
-       <label>{t('Target amount')}<FormattedNumberInput max={1e15} value={goal.target} onValueChange={target => update(goal.id, { target, allocated: Math.min(goal.allocated, target) })}/></label>
+       <label>{t('Target amount')} ({goal.currency})<FormattedNumberInput max={1e15} value={goal.target} onValueChange={target => update(goal.id, { target, allocated: Math.min(goal.allocated, target) })}/></label>
        <label>{t(goal.kind === 'net_worth' ? 'Target date' : 'Target date (optional)')}<DatePicker required={goal.kind === 'net_worth'} value={goal.target_date ?? ''} min={today} max={maxDate} onChange={date => update(goal.id, { target_date: date || null })}/></label>
-       {goal.kind === 'net_worth' && <CurrencySelect value={goal.currency ?? currency} currencies={currencies} onChange={code => update(goal.id, { currency: code })}/>}
+       {goal.kind === 'net_worth' ? <CurrencySelect value={goal.currency ?? currency} currencies={currencies} onChange={code => update(goal.id, { currency: code })}/>
+       : <CurrencySelect value={goal.currency ?? currency} currencies={savingsCurrencies(accounts, currencies)} onChange={code => setDrafts(previous => previous.map(draft => draft.goal.id === goal.id ? { ...draft, goal: withSavingsCurrency(draft.goal, code, accounts) } : draft))}/>}
       </div>
       {problems(goal).map(problem => <p key={problem} role="alert" className="goal-row-alert">{t(problem)}</p>)}
      </article>)}
@@ -121,7 +123,7 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
        <header><span className="goal-row-cover" aria-hidden="true">{goalEmoji(goal)}</span><strong>{goal.name}</strong></header>
        {goal.kind === 'net_worth' ? <p className="goal-setup-note">{t('Starts from your current net worth: {amount}', { amount: netWorth(goal.currency ?? currency) === null ? '—' : money(netWorth(goal.currency ?? currency)!, goal.currency) })}</p>
        : <div className="goal-setup-fields">
-        <label>{t('Cash account')}<NativeSelect required value={goal.account_id ?? ''} onChange={event => { const chosen = accounts.find(item => item.id === event.target.value); update(goal.id, { account_id: chosen?.id ?? null, currency: chosen?.currency ?? goal.currency }); }}>{accounts.map(item => <option key={item.id} value={item.id}>{item.name} · {money(item.amount, item.currency)}</option>)}</NativeSelect></label>
+        <label>{t('Cash account')}<NativeSelect required value={goal.account_id ?? ''} onChange={event => update(goal.id, { account_id: event.target.value || null })}>{goalAccountOptions(accounts, goal.currency).map(item => <option key={item.id} value={item.id}>{item.name} · {money(item.amount, item.currency)}</option>)}</NativeSelect></label>
         <label>{t('Already saved')} ({goal.currency})<FormattedNumberInput required={false} value={goal.allocated} max={goal.target || 1e15} onValueChange={allocated => update(goal.id, { allocated })}/></label>
        </div>}
        {goal.kind === 'savings' && account(goal) && list.filter(item => item.account_id === goal.account_id).reduce((sum, item) => sum + item.allocated, 0) + goals.filter(item => item.account_id === goal.account_id && !item.archived).reduce((sum, item) => sum + Number(item.allocated), 0) > account(goal)!.amount && <p role="alert" className="goal-row-alert">{t('Your goal allocations exceed the current account balance. Update the allocations.')}</p>}

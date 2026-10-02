@@ -105,3 +105,20 @@ test('receipt totals retain precision separately from estimates and exclude futu
  const cards=monthlyIncomeCards(rows,'2026-09',[{id:'source',schedule_id:'schedule'}],'2026-09-25');
  assert.equal(cards.length,1);assert.equal(cards[0].amount,5700);assert.equal(cards[0].receivedAmount,19.47);
 });
+
+test('a variable source shows its approximate monthly income as the estimate, and its receipts join that card', () => {
+ const { sourcesIn } = loadTS('lib/monthly-income-cards.ts');
+ const source = { id: 'freelance', name: 'QA Freelance', kind: 'Other income', currency: 'USD', mode: 'variable', archived: false, amount: null, frequency: null, start_date: null, end_date: null, linked_record_id: null, approx_monthly: 1200 };
+ const receipt = entry('r1', 'Other income', { name: 'QA Freelance', frequency: 'Once', amount: 450.5, date: '2026-09-03', earning_source_id: 'freelance' });
+ const cards = monthlyIncomeCards([receipt], '2026-09', [source], '2026-09-20');
+ assert.equal(cards.length, 1);
+ assert.equal(cards[0].excluded, false); assert.equal(cards[0].amount, 1200);
+ assert.equal(cards[0].received, true); assert.equal(cards[0].receivedAmount, 450.5);
+ const pending = monthlyIncomeCards([], '2026-09', [source], '2026-09-20');
+ assert.equal(pending[0].amount, 1200); assert.equal(pending[0].received, false);
+ assert.equal(monthlyIncomeCards([], '2026-09', [{ ...source, archived: true }]).length, 0);
+ assert.equal(monthlyIncomeCards([], '2026-09', [{ ...source, approx_monthly: null }]).length, 0);
+ // Approximate amounts follow the display currency of the converted entries; no rate means no estimate.
+ assert.deepEqual(sourcesIn([{ ...source, currency: 'UZS', approx_monthly: 12500000 }], 'USD', { UZS: 12500 }).map(item => [item.currency, item.approx_monthly]), [['USD', 1000]]);
+ assert.equal(sourcesIn([{ ...source, currency: 'EUR' }], 'USD', {})[0].approx_monthly, null);
+});

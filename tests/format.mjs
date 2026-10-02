@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatNumberInput, numberInputValue, formatMoney, formatCompactMoney, formatDate, formatDateTime, formatMonthYear, formatPercent } from '../lib/format.ts';
+import { formatNumberInput, numberInputValue, formatMoney, formatAccountOption, formatSignedMoney, formatCompactMoney, formatDate, formatDateTime, formatMonthYear, formatPercent } from '../lib/format.ts';
 test('amount entry groups digits and round-trips supported locales',()=>{
  for(const locale of ['en-US','ru-RU','uz-UZ']) {
   const formatted=numberInputValue(9300.25,locale);
@@ -78,6 +78,17 @@ test('compact money shortens chart axis labels in every supported language',()=>
  assert.equal(formatCompactMoney(4000000,'USD','en-US'),'$4M');
  assert.equal(formatCompactMoney(1500,'USD','en-US'),'$1.5K');
  assert.equal(formatCompactMoney(0,'USD','en-US'),'$0');
+ // Day totals and rows share one signed format with a true minus sign.
+ assert.equal(formatSignedMoney(-13,'USD','en-US'),'\u2212$13');
+ assert.equal(formatSignedMoney(1200.4,'USD','en-US'),'+$1,200');
+ assert.equal(formatSignedMoney(-0.2,'USD','en-US'),'$0');
+ assert.equal(formatSignedMoney(NaN,'USD','en-US'),'—');
+ for(const locale of ['ru-RU','uz-UZ'])assert.ok(formatSignedMoney(-13,'USD',locale).startsWith('\u2212')&&!formatSignedMoney(-13,'USD',locale).includes('-'));
+ // Small compact labels are whole amounts, never a calculation tail such as $12.8.
+ assert.equal(formatCompactMoney(12.8,'USD','en-US'),'$13');
+ assert.equal(formatCompactMoney(999.4,'USD','en-US'),'$999');
+ assert.equal(formatCompactMoney(2480,'USD','en-US'),'$2.5K');
+ for(const locale of ['ru-RU','uz-UZ'])assert.ok(!/[.,]\d/.test(formatCompactMoney(12.8,'USD',locale)));
  assert.equal(formatCompactMoney(NaN,'USD','en-US'),'—');
  for(const locale of ['ru-RU','uz-UZ'])assert.ok(formatCompactMoney(25000000,'UZS',locale).startsWith('25'));
 });
@@ -149,4 +160,11 @@ test('short month names stay on their calendar month in EN, RU and UZ', async ()
  assert.match(formatMonthShort('2026-09', 'ru-RU'), /^сент/);
  assert.ok(formatMonthShort('2026-12', 'uz-UZ').length > 0);
  assert.equal(formatMonthShort('bad', 'en-US'), '—');
+});
+
+test('cash account options show the whole balance so same-named accounts stay distinct',()=>{
+ assert.equal(formatAccountOption({name:'QA Wallet',amount:2918.4,currency:'USD'},'en-US'),'QA Wallet · $2,918');
+ assert.match(formatAccountOption({name:'QA Wallet',amount:'150000.7',currency:'UZS'},'en-US'),/^QA Wallet · UZS\s150,001$/);
+ assert.match(formatAccountOption({name:'Кошелёк',amount:1200,currency:'USD'},'ru-RU'),/^Кошелёк · 1\s200\s\$$/);
+ assert.match(formatAccountOption({name:'Hamyon',amount:1200,currency:'USD'},'uz-UZ'),/^Hamyon · /);
 });

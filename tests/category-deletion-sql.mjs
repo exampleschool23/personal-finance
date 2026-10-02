@@ -44,7 +44,7 @@ test('category deletion is atomic, reassigns every reference, preserves amounts,
  assert.equal((await db.query("SELECT data FROM workspace_preferences WHERE key='watchlists'")).rows[0].data.items[0].category,id(11));
  await db.query('SELECT restore_deleted_item($1)',[deleted.id]);assert.equal(Number(await balance()),99.4);
  const before=(await db.query('SELECT export_finance_backup() AS data')).rows[0].data;
- await assert.rejects(remove(11,null,'Travel'),/unique/);
+ await assert.rejects(remove(11,null,'Travel'),/unique|already exists/);
  assert.equal((await usage(11)).records,3);
  const renamed=(await db.query('SELECT delete_transaction_category($1,NULL,$2) AS data',[id(11),'Recreation'])).rows[0].data.replacement;
  assert.ok(renamed);assert.equal(Number(await balance()),99.4);

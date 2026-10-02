@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
-import { buildRangeCalendar, shiftCalendarMonth, calendarYearAnchor, openingCalendarDay } from '@/lib/date-picker-calendar';
+import { availablePresets, buildRangeCalendar, shiftCalendarMonth, calendarYearAnchor, datePresetLabels, defaultDatePresets, openingCalendarDay, type DatePreset } from '@/lib/date-picker-calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
 import { formatDate, formatMonthYear, formatYear, parseCalendarDate, calendarIso, weekdayLabels } from '@/lib/format';
 
-type DatePickerProps = { value: string; onChange: (value: string) => void; min?: string; max?: string; required?: boolean; mode?: 'date' | 'month' };
+type DatePickerProps = { value: string; onChange: (value: string) => void; min?: string; max?: string; required?: boolean; mode?: 'date' | 'month'; presets?: readonly DatePreset[] };
 
 export function DatePicker({ mode = 'date', ...props }: DatePickerProps) {
   return mode === 'month' ? <MonthSelection {...props}/> : <DayPicker {...props}/>;
@@ -44,7 +44,7 @@ function MonthSelection({ value, onChange, min, max }: DatePickerProps) {
 }
 
 // Single-date adaptation of zar-kebab-pos/src/components/DateRangePicker.jsx.
-function DayPicker({ value, onChange, min, max, required = true }: { value: string; onChange: (value: string) => void; min?: string; max?: string; required?: boolean }) {
+function DayPicker({ value, onChange, min, max, required = true, presets = defaultDatePresets }: Omit<DatePickerProps, 'mode'>) {
   const { locale, t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState<Date>(() => parseCalendarDate(value) || new Date());
@@ -55,12 +55,11 @@ function DayPicker({ value, onChange, min, max, required = true }: { value: stri
     onChange(date);
     setOpen(false);
   };
-  const preset = (offset: number) => { const day = new Date(); day.setDate(day.getDate() + offset); const iso = calendarIso(day); if (!min || iso >= min) { selectDate(iso); } };
   return <Popover open={open} onOpenChange={next => { if (next) { setMonth(parseCalendarDate(openingCalendarDay(parseCalendarDate(value) ? value : '', calendarIso(new Date()), min, max)) || new Date()); } setOpen(next); }}>
     <PopoverTrigger asChild><button type="button" className="date-picker-trigger" aria-label={value ? formatDate(value, locale) : t('Select date')}><span>{value ? formatDate(value, locale) : t('Select date')}</span><CalendarDays size={17}/></button></PopoverTrigger>
     <PopoverContent className="finance-date-picker" align="start" collisionPadding={12} aria-label={t('Select date')}>
       <div className="date-picker-body"><MonthCalendar monthKey={calendarIso(month).slice(0, 7)} draft={value} min={min} max={max} onSelect={selectDate} onYearChange={year => setMonth(parseCalendarDate(calendarYearAnchor(calendarIso(month).slice(0, 7), year, 0) + '-01')!)} previous={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), -1) + '-01')!)} next={compact ? () => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!) : undefined}/>{!compact && <MonthCalendar monthKey={shiftCalendarMonth(calendarIso(month).slice(0, 7), 1)} draft={value} min={min} max={max} onSelect={selectDate} onYearChange={year => setMonth(parseCalendarDate(calendarYearAnchor(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1), year, 1) + '-01')!)} next={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!)}/>}
-      <aside className="date-picker-presets"><strong>{t('Presets')}</strong>{[[0,'Today'],[1,'Tomorrow'],[7,'In one week']].map(([offset,label]) => { const day = new Date(); day.setDate(day.getDate() + Number(offset)); return <Button key={label} type="button" variant="ghost" disabled={(!!min && calendarIso(day) < min) || (!!max && calendarIso(day) > max)} onClick={() => preset(Number(offset))}>{t(String(label))}</Button>; })}{!required && <Button type="button" variant="ghost" onClick={() => selectDate('')}>{t('Clear date')}</Button>}</aside></div>
+      <aside className="date-picker-presets"><strong>{t('Presets')}</strong>{availablePresets(presets, calendarIso(new Date()), min, max).map(({ preset, date }) => <Button key={preset} type="button" variant="ghost" onClick={() => selectDate(date)}>{t(datePresetLabels[preset])}</Button>)}{!required && <Button type="button" variant="ghost" onClick={() => selectDate('')}>{t('Clear date')}</Button>}</aside></div>
     </PopoverContent>
   </Popover>;
 }

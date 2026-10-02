@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
-import { formatMoney, formatNumber } from '@/lib/format';
+import { formatAccountOption, formatMoney, formatNumber } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
 import { decimalSum } from '@/lib/decimal-amounts';
 import { isHolding, movementSources, movementTargets, type AssetMovement, type MovementKind } from '@/lib/asset-movements';
@@ -41,8 +41,10 @@ export function AssetMovementDialog({initial,records,accounts=[],save,onClose}:{
  if(interest){sourceValue=0;targetValue=received;}
  const available=source?(isHolding(source)?source.quantity:source.amount):0;
  const valid=!!source&&!!target&&(interest||(source.id!==target.id&&draft.sent>0&&draft.sent<=available&&sourceValue>0))&&received>0&&targetValue>0&&!!draft.date&&draft.date<=depositToday()&&(draft.kind!=='transfer'||draft.fee<draft.sent);
+ // Say why Save is unavailable rather than leaving an oversized fee unexplained.
+ const feeTooHigh=draft.kind==='transfer'&&draft.fee>0&&draft.sent>0&&draft.fee>=draft.sent;
  const title={transfer:'Transfer money',buy:'Buy holding',sell:'Sell / convert holding',interest:'Record capitalized interest'}[draft.kind];
- const accountName=(record:Entry)=>{const parent=accounts.find(account=>account.id===record.holding_account_id);return `${parent?parent.name+' · ':''}${record.name} · ${record.currency}`;};
+ const accountName=(record:Entry)=>{const parent=accounts.find(account=>account.id===record.holding_account_id);return `${parent?parent.name+' · ':''}${isHolding(record)?`${record.name} · ${record.currency}`:formatAccountOption(record,locale)}`;};
  const units=(record:Entry,amount:number)=>isHolding(record)?t('{quantity} units',{quantity:formatNumber(amount,locale,8)}):formatMoney(amount,record.currency,locale);
  const change=(name:keyof typeof draft,value:string|number)=>setDraft({...draft,[name]:value});
  const [initialDraft]=useState(()=>JSON.stringify(draft));
@@ -58,14 +60,14 @@ export function AssetMovementDialog({initial,records,accounts=[],save,onClose}:{
    <fieldset className="tracker-fields" disabled={busy||submitted}>
     <label>{t(interest?'Deposit':'From')}<NativeSelect required value={draft.source_id} onChange={event=>setDraft({...draft,source_id:event.target.value,target_id:draft.target_id===event.target.value?'':draft.target_id,sent:0,received:0,source_value:0,target_value:0})}><option value="">{t('Select account')}</option>{movementSources(draft.kind,records).map(record=><option key={record.id} value={record.id}>{accountName(record)}</option>)}</NativeSelect></label>
     {!interest&&<label>{t('To')}<NativeSelect required value={draft.target_id} onChange={event=>setDraft({...draft,target_id:event.target.value,received:0,source_value:0,target_value:0})}><option value="">{t('Select account')}</option>{movementTargets(draft.kind,source,records).map(record=><option key={record.id} value={record.id}>{accountName(record)}</option>)}</NativeSelect></label>}
-    {source&&!interest&&<><p className="muted">{t('Available')}: {units(source,available)}</p><label>{t(isHolding(source)?'Quantity sent':'Total amount debited')} {isHolding(source)?source.name:source.currency}<FormattedNumberInput value={draft.sent} max={available} onValueChange={amount=>change('sent',amount)}/></label></>}
+    {source&&!interest&&<><p className="muted">{t('Available')}: {units(source,available)}</p><label>{t(isHolding(source)?'Quantity sent':'Total amount debited')} {isHolding(source)?source.name:source.currency}<FormattedNumberInput value={draft.sent} max={available} maxMessage={t('Only {amount} available',{amount:units(source,available)})} onValueChange={amount=>change('sent',amount)}/></label></>}
     {target&&draft.kind!=='transfer'&&<label>{t(interest?'Interest credited':isHolding(target)?'Quantity received':'Net amount received')} {isHolding(target)?target.name:target.currency}<FormattedNumberInput value={draft.received} onValueChange={amount=>change('received',amount)}/></label>}
     {trade&&source&&target&&<>
      {isHolding(source)&&(!sameCurrency||isHolding(target))&&<label>{t(draft.kind==='buy'?'Total purchase cost (including fees)':'Net sale proceeds (after fees)')} {source.currency}<FormattedNumberInput value={draft.source_value} onValueChange={amount=>change('source_value',amount)}/></label>}
      {isHolding(target)&&!sameCurrency&&<label>{t('Total purchase cost (including fees)')} {target.currency}<FormattedNumberInput value={draft.target_value} onValueChange={amount=>change('target_value',amount)}/></label>}
-     <p className="muted">{t('USDT and USDC are crypto holdings. Enter the actual quantity and fiat value; no exchange rate is assumed.')}</p>
+     {(source.kind==='Crypto'||target.kind==='Crypto')&&<p className="muted">{t('USDT and USDC are crypto holdings. Enter the actual quantity and fiat value; no exchange rate is assumed.')}</p>}
     </>}
-    {!interest&&<label>{t('Fee included in these amounts')} {draft.kind==='buy'?target?.currency:source?.currency}<FormattedNumberInput value={draft.fee} required={false} onValueChange={amount=>change('fee',amount)}/><small className="muted">{t('This records the fee as an expense without deducting it again.')}</small></label>}
+    {!interest&&<label>{t('Fee included in these amounts')} {draft.kind==='buy'?target?.currency:source?.currency}<FormattedNumberInput value={draft.fee} required={false} onValueChange={amount=>change('fee',amount)}/><small className="muted">{t('This records the fee as an expense without deducting it again.')}</small>{feeTooHigh&&<small role="alert" className="negative">{t('The transfer fee must be less than the amount sent.')}</small>}</label>}
     {crossTransfer&&<ExchangeRatePreview fx={fx}/>}
     {draft.kind==='transfer'&&target&&rate&&<p>{t('Net amount received')}: {formatMoney(received,target.currency,locale)}</p>}
     <label>{t('Date')}<DatePicker value={draft.date} max={depositToday()} onChange={date=>change('date',date)}/></label>

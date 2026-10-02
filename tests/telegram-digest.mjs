@@ -6,10 +6,10 @@ const {digestMessage,paymentsSection}=loadTS('lib/digest-message.ts');
 const today='2026-09-30';
 const record=(name,kind,amount,currency='UZS')=>({id:name,name,kind,amount,currency,date:today,frequency:'Monthly',quantity:0,cost:0,rate:0,notes:''});
 const items=[
- {key:'a',record:record('Rent','Rent expense',3000000),date:'2026-09-28',overdue:true,type:'scheduled'},
- {key:'b',record:record('Salary <sept>','Salary',1200,'USD'),date:today,overdue:false,type:'scheduled'},
- {key:'c',record:record('Car loan','Loan',400,'USD'),date:'2026-10-02',overdue:false,type:'repayment'},
- {key:'d',record:record('Term deposit','Deposit',5000,'USD'),date:'2026-10-02',overdue:false,type:'maturity'},
+ {amount:3000000,key:'a',record:record('Rent','Rent expense',3000000),date:'2026-09-28',overdue:true,type:'scheduled'},
+ {amount:1200,key:'b',record:record('Salary <sept>','Salary',1200,'USD'),date:today,overdue:false,type:'scheduled'},
+ {amount:400,key:'c',record:record('Car loan','Loan',400,'USD'),date:'2026-10-02',overdue:false,type:'repayment'},
+ {amount:5000,key:'d',record:record('Term deposit','Deposit',5000,'USD'),date:'2026-10-02',overdue:false,type:'maturity'},
 ];
 
 const sun='\u2600\uFE0F',greeting=sun+' <b>Good morning, Aziz</b>\n<i>Every record you add makes tomorrow easier to plan.</i>';
@@ -93,6 +93,7 @@ function cronRoute({subscriptions,records={},occurrences={},languages={},names={
    if(path.startsWith('/rest/v1/user_preferences'))return owner in languages||owner in names||owner in currencies?[{language:languages[owner],display_name:names[owner],currencies:currencies[owner]}]:[];
    if(path.startsWith('/rest/v1/portfolio_snapshots'))return [...(snapshots[owner]??[])].reverse();
    if(path.startsWith('/rest/v1/workspace_preferences'))return owner in reminders?[{data:reminders[owner]}]:[];
+   if(path.startsWith('/rest/v1/account_activity')||path.startsWith('/rest/v1/mortgage_payments'))return [];
    throw Error('unexpected '+path);
   },
   async write(){throw Error('digest never writes');},

@@ -1,4 +1,5 @@
 import { calendarIso } from './format';
+import { depositToday } from './deposit-interest';
 import { replacePreferredCurrency, togglePreferredCurrency, type Preferences } from './currencies';
 
 /** The welcome setup shown once after the first sign-in, one question per step. */
@@ -19,6 +20,11 @@ export const awaitingSettings = (state: { user: string | null; demo: boolean; lo
 export function needsOnboarding(state: { user: string | null; demo: boolean; loading: boolean; error: string; preferences: Pick<Preferences, 'onboarded'> }) {
   return !!state.user && !state.demo && !state.loading && !state.error && state.preferences.onboarded === false;
 }
+
+/** The day the welcome setup was finished, on the app's Asia/Tashkent calendar. */
+export const onboardedOn = (finishedAt: unknown) => typeof finishedAt === 'string' && finishedAt && Number.isFinite(Date.parse(finishedAt)) ? depositToday(new Date(finishedAt)) : undefined;
+/** The dashboard greets a brand-new account ("Welcome") on the day it finished the welcome setup, and says "Welcome back" afterwards. */
+export const firstVisit = (preferences: Pick<Preferences, 'onboarded_on'>, today: string) => !!preferences.onboarded_on && preferences.onboarded_on === today;
 
 /** A tap on a currency card: toggle it, or when two are already chosen replace the secondary one so the primary stays. */
 export function pickCurrency(list: string[], code: string) {

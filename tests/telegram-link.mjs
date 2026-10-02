@@ -43,6 +43,8 @@ test('messages use HTML mode, escape names and describe keyboards the way Telegr
  assert.deepEqual(telegram.sendMessageBody({chat_id:7,text:'hi'}),{chat_id:7,text:'hi',parse_mode:'HTML',disable_web_page_preview:true});
  assert.deepEqual(telegram.sendMessageBody({chat_id:7,text:'hi',keyboard:{inline:[[{text:'Save',callback_data:'save'}]]}}).reply_markup,{inline_keyboard:[[{text:'Save',callback_data:'save'}]]});
  assert.deepEqual(telegram.sendMessageBody({chat_id:7,text:'hi',keyboard:{reply:[['Expense','Income']],once:true}}).reply_markup,{keyboard:[[{text:'Expense'},{text:'Income'}]],resize_keyboard:true,one_time_keyboard:true});
+ // The number request can carry a Cancel button under the contact button.
+ assert.deepEqual(telegram.sendMessageBody({chat_id:7,text:'hi',keyboard:{contact:'Share my number',cancel:'Cancel'}}).reply_markup,{keyboard:[[{text:'Share my number',request_contact:true}],[{text:'Cancel'}]],resize_keyboard:true,one_time_keyboard:true});
  assert.deepEqual(telegram.sendMessageBody({chat_id:7,text:'hi',keyboard:{remove:true}}).reply_markup,{remove_keyboard:true});
  const calls=[];
  const config={token:'TOKEN',webhookSecret:'s',botUsername:'b'};

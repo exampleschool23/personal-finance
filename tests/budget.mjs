@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, leftToBudget, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, demoBudget, shiftMonth } = loadTS('lib/budget.ts');
+const { budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, leftToBudget, flexBucketBudget, budgetRowsForMode, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, demoBudget, shiftMonth } = loadTS('lib/budget.ts');
 const { demoRecords } = loadTS('lib/demo-finance.ts');
 
 const amount = (category_key, month, value, applies_forward = false, currency = 'USD') => ({ category_key, month, amount: value, currency, applies_forward });
@@ -36,8 +36,8 @@ test('"this month only" keeps later months, "all future months" replaces them', 
  assert.equal(budgetAmountFor(setBudgetAmount([], 'X', '2026-01', 13782.113487716848, 'USD', false), 'X', '2026-01').amount, 13782.113487716848);
 });
 
-test('categories cover built-in kinds, custom categories and repayments, with Monarch default types', () => {
- const list = budgetCategories([{ id: 'c1', name: 'Pets', direction: 'expense' }, { id: 'c2', name: 'Tips', direction: 'income' }], [{ category_key: 'Living expense', budget_type: 'non_monthly', group_name: 'Home', rollover: true, rollover_start: '2026-01', excluded: false }], ['Mortgage', 'Groceries']);
+test('categories cover built-in kinds and custom categories, with Monarch default types; repayments are not categories', () => {
+ const list = budgetCategories([{ id: 'c1', name: 'Pets', direction: 'expense' }, { id: 'c2', name: 'Tips', direction: 'income' }], [{ category_key: 'Living expense', budget_type: 'non_monthly', group_name: 'Home', rollover: true, rollover_start: '2026-01', excluded: false }]);
  const by = key => list.find(item => item.key === key);
  assert.equal(by('Salary').direction, 'income');
  assert.equal(by('c2').direction, 'income');
@@ -47,7 +47,7 @@ test('categories cover built-in kinds, custom categories and repayments, with Mo
  assert.equal(by('Living expense').type, 'non_monthly');
  assert.equal(by('Living expense').group, 'Home');
  assert.equal(by('Living expense').rolloverStart, '2026-01');
- assert.equal(by('Mortgage').type, 'fixed', 'repayments arrive as fixed spending');
+ for (const key of ['Mortgage', 'Loan', 'Debt']) assert.equal(by(key), undefined, 'principal repayments are transfers, not budget categories');
  assert.equal(by('Groceries'), undefined, 'unknown keys without a category are not invented');
 });
 
@@ -103,11 +103,10 @@ test('left to budget: income minus spending and contributions; flex replaces fle
  const amounts = [amount('Salary', '2026-09', 3000), amount('Rent expense', '2026-09', 1200), amount('Living expense', '2026-09', 300), amount('Other expense', '2026-09', 100), amount('Charity', '2026-09', 999), amount(flexBucketKey, '2026-09', 800)];
  const rows = budgetRows(categories, amounts, new Map(), '2026-09', 'USD', rates);
  const category = leftToBudget(rows, 'category', null, 250);
- assert.deepEqual(category, { income: 3000, expenses: 1600, contributions: 250, left: 1150, flexible: null, unallocatedFlexible: null });
+ assert.deepEqual(category, { income: 3000, expenses: 1600, contributions: 250, left: 1150, flexible: null });
  const flex = leftToBudget(rows, 'flex', 800, 250);
  assert.equal(flex.expenses, 2100);
  assert.equal(flex.left, 650);
- assert.equal(flex.unallocatedFlexible, 500, 'flexible limits come out of the one flexible amount');
  assert.equal(remainingTone(-1), 'negative');
  assert.equal(remainingTone(0), 'neutral');
  assert.equal(remainingTone(5, 'income'), 'neutral', 'income still to come is not red');
@@ -136,4 +135,29 @@ test('the sample workspace has six months of history and a budget that leaves mo
  const rows = budgetRows(categories, state.amounts, history, month, 'USD', rates);
  assert.ok(leftToBudget(rows, 'category', null, 0).left > 0);
  assert.ok(rows.find(row => row.key === 'Charity').rolloverIn > 0);
+});
+
+test('flex mode shows one coherent flexible plan: the bucket, or the categories\' budgets until a bucket is saved', () => {
+ const categories = budgetCategories([], []);
+ const history = new Map([['2026-09', { month: '2026-09', byCategory: new Map([['Living expense', 120]]), missing: 0 }]]);
+ const before = [amount('Salary', '2026-09', 1000), amount('Rent expense', '2026-09', 300), amount('Living expense', '2026-09', 200)];
+ const rows = budgetRows(categories, before, history, '2026-09', 'USD', rates);
+ // No bucket saved yet: the flexible plan is the $200 the category already had, not $0.
+ const bucket = flexBucketBudget(before, rows, '2026-09', 'USD', rates);
+ assert.equal(bucket, 200);
+ const shown = budgetRowsForMode(rows, 'flex');
+ const living = shown.find(row => row.key === 'Living expense');
+ assert.equal(living.budget, null, 'a flexible category has no separate plan in flex mode');
+ assert.equal(living.remaining, null);
+ assert.equal(living.actual, 120, 'its spending still shows and counts in the bucket');
+ assert.equal(shown.find(row => row.key === 'Rent expense').budget, 300, 'fixed categories keep their own plan');
+ const flexible = groupRows(shown, true).find(group => group.type === 'flexible');
+ assert.equal(flexible.actual, 120);
+ const left = leftToBudget(shown, 'flex', bucket, 0);
+ assert.deepEqual(left, { income: 1000, expenses: 500, contributions: 0, left: 500, flexible: 200 });
+ // Once a bucket amount is saved it is the plan, whatever the categories had.
+ const saved = [...before, amount(flexBucketKey, '2026-09', 450)];
+ assert.equal(flexBucketBudget(saved, budgetRows(categories, saved, history, '2026-09', 'USD', rates), '2026-09', 'USD', rates), 450);
+ // Category mode is untouched.
+ assert.deepEqual(budgetRowsForMode(rows, 'category'), rows);
 });

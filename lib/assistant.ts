@@ -15,6 +15,9 @@ export const assistantRequestSchema = z.object({
 });
 export type AssistantRequest = z.infer<typeof assistantRequestSchema>;
 
+/** The server's answer while no model key is configured; the screen then shows the assistant as unavailable. */
+export const assistantUnavailable = 'The assistant is not set up yet.';
+
 export const assistantSuggestions = ['What recurring expenses do I have?', 'How much did I spend last month, and on what?', 'Am I on track with my budget this month?', 'How are my savings goals going?'] as const;
 
 /** A compact, factual snapshot of the user's money for the assistant: holdings, debts, recent cash flow by category,
@@ -33,8 +36,8 @@ export function assistantContext(data: Pick<PlanningData, 'records' | 'categorie
   const top = report.categories.expense.slice(0, 8).map(entry => `${categoryName(entry.key)} ${round(entry.amount)}`).join(', ');
   return `${item}${item === month ? ' (so far)' : ''}: income ${round(report.income)}, spending ${round(report.expenses)}${top ? ` (${top})` : ''}${report.missing ? `; ${report.missing} amounts in currencies without a rate are left out` : ''}`;
  });
- const recurring = monthOccurrences(records, data.occurrences, month, today).map(item => `${item.date} ${item.record.name} (${item.record.kind}, ${item.record.frequency}): ${inCurrency(item.record.amount, item.record.currency)}, ${item.status}`);
- const reminders = upcomingPayments(records, data.occurrences, today).filter(item => item.type !== 'scheduled').map(item => `${item.date} ${item.record.name} (${item.record.kind}): ${inCurrency(item.record.amount, item.record.currency)}${item.overdue ? ', overdue' : ''}`);
+ const recurring = monthOccurrences(records, data.occurrences, month, today).map(item => `${item.date} ${item.record.name} (${item.record.kind}, ${item.record.frequency}): ${inCurrency(item.amount, item.record.currency)}, ${item.status}`);
+ const reminders = upcomingPayments(records, data.occurrences, today).filter(item => item.type !== 'scheduled').map(item => `${item.date} ${item.record.name} (${item.record.kind}): ${inCurrency(item.amount, item.record.currency)}${item.overdue ? ', overdue' : ''}`);
  const goals = data.goals.filter(goal => !goal.archived).map(goal => `${goal.name}: ${round(Number(goal.allocated))} of ${round(Number(goal.target))} ${goal.currency ?? currency}${goal.target_date ? ` by ${goal.target_date}` : ''}${goal.funding_monthly ?? goal.monthly_contribution ? `, saving ${round(Number(goal.funding_monthly ?? goal.monthly_contribution))} a month` : ''}`);
  const section = (title: string, lines: string[]) => `## ${title}\n${lines.length ? lines.map(line => `- ${line}`).join('\n') : '- none'}`;
  return [`Today is ${today}. Display currency: ${currency}.`, section('Holdings', holdings), section('Debts', debts), section(`Cash flow by month (${currency})`, flows), section(`Scheduled income and bills in ${month}`, recurring), section('Debt and deposit reminders', reminders), section('Savings goals', goals)].join('\n\n');

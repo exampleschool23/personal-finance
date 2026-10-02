@@ -25,20 +25,44 @@ export function alreadyAdded(template: GoalTemplate, goals: readonly Goal[]) {
  return goals.filter(goal => !goal.archived && (goal.kind ?? 'savings') === template.kind && goalEmoji(goal) === template.emoji).length;
 }
 
-/** One new goal per selected tile, numbered when a tile was picked more than once.
- * Savings goals start in the first cash account; net-worth goals in the display currency. */
+/** Cash accounts a savings goal can keep its money in: only accounts in the goal's own currency, so the target and the reserved cash never mix currencies. */
+type CashAccount = { id: string; currency: string };
+export const goalAccountOptions = <T extends CashAccount>(accounts: readonly T[], currency: string | null | undefined) => accounts.filter(account => account.currency === currency);
+/** Currencies a savings goal can use: those of the person's cash accounts, preferred currencies first. */
+export function savingsCurrencies(accounts: readonly CashAccount[], preferred: readonly string[]) {
+ const held = new Set(accounts.map(account => account.currency));
+ return [...new Set([...preferred.filter(code => held.has(code)), ...accounts.map(account => account.currency)])];
+}
+/** A new savings goal uses the primary currency and its first account in it; without one, the first cash account and its currency. */
+export function savingsDefaults(accounts: readonly CashAccount[], primary: string) {
+ const account = goalAccountOptions(accounts, primary)[0] ?? accounts[0] ?? null;
+ return { currency: account?.currency ?? primary, account_id: account?.id ?? null };
+}
+/** Changing a savings goal's currency moves it to the first cash account in that currency. */
+export const withSavingsCurrency = (goal: Goal, currency: string, accounts: readonly CashAccount[]): Goal => ({ ...goal, currency, account_id: goalAccountOptions(accounts, currency)[0]?.id ?? null });
+
+/** One new goal per selected tile, in the order the tiles were picked, numbered when a tile was picked more than once.
+ * Every goal starts in the primary currency; a savings goal also starts in a cash account in that currency when there is one. */
 export type SetupDraft = { template: string; goal: Goal };
-export function setupDrafts(counts: Readonly<Record<string, number>>, label: (template: GoalTemplate) => string, defaults: { currency: string; account: { id: string; currency: string } | null }, newId: () => string, kept: readonly SetupDraft[] = []): SetupDraft[] {
- return goalTemplates.filter(template => template.kind !== 'investment').flatMap(template => {
+export function setupDrafts(counts: Readonly<Record<string, number>>, label: (template: GoalTemplate) => string, defaults: { currency: string; accounts: readonly CashAccount[] }, newId: () => string, kept: readonly SetupDraft[] = []): SetupDraft[] {
+ const picked = Object.keys(counts).map(id => goalTemplates.find(template => template.id === id)).filter((template): template is GoalTemplate => !!template && template.kind !== 'investment');
+ return picked.flatMap(template => {
   const count = Math.max(0, Math.min(maxPerTemplate, Math.floor(counts[template.id] ?? 0)));
   return Array.from({ length: count }, (_, index) => {
    // Drafts already filled in for this tile keep their edits when the person comes back to change the selection.
    const previous = kept.filter(draft => draft.template === template.id)[index];
    if (previous) return previous;
-   const savings = template.kind === 'savings';
-   return { template: template.id, goal: { id: newId(), name: count > 1 ? `${label(template)} ${index + 1}` : label(template), kind: template.kind as 'savings' | 'net_worth', currency: savings ? defaults.account?.currency ?? defaults.currency : defaults.currency, account_id: savings ? defaults.account?.id ?? null : null, target: 0, allocated: 0, target_date: null, archived: false, monthly_contribution: null, annual_return: 0 } };
+   const savings = template.kind === 'savings' ? savingsDefaults(defaults.accounts, defaults.currency) : { currency: defaults.currency, account_id: null };
+   return { template: template.id, goal: { id: newId(), name: count > 1 ? `${label(template)} ${index + 1}` : label(template), kind: template.kind as 'savings' | 'net_worth', ...savings, target: 0, allocated: 0, target_date: null, archived: false, monthly_contribution: null, annual_return: 0 } };
   });
  });
+}
+/** Picking a tile adds it after the tiles already picked; clearing it forgets its place. */
+export function pickTemplate(counts: Readonly<Record<string, number>>, id: string, count: number): Record<string, number> {
+ const next = { ...counts };
+ const value = Math.max(0, Math.min(maxPerTemplate, Math.floor(count)));
+ if (value) next[id] = value; else delete next[id];
+ return next;
 }
 
 /** What still blocks a draft on a step, as translation keys; empty when it can go on. These mirror the server's goal rules. */

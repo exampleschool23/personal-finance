@@ -8,6 +8,7 @@ import { isInvestmentRecord } from './comparison-profile';
 import { expenses, liabilities, value } from './finance';
 import { convertAmount, marketEntry } from './market';
 import { shiftDay, validDay } from './benchmark-data';
+import { spendingAmount } from './spending';
 
 export type FundingScope='investments'|'expenses';
 export type ComparisonMethod={mode:'purchases'|'date';date:string;scope?:FundingScope};
@@ -33,7 +34,7 @@ const inOrder=(a:{date:string;time:string;id:string},b:{date:string;time:string;
 export function benchmarkExpenseFunding(cashflows:InvestmentPortfolioInput['cashflows'],today:string):ExpenseFunding[]{
  return (cashflows??[]).flatMap(row=>{
   if(!expenses.includes(row.kind)||row.frequency!=='Once'||!validDay(row.date)||row.date>today)return [];
-  const amount=row.mortgage_payment_id?Number(row.payment_interest??0):Number(row.amount);
+  const amount=spendingAmount(row);
   return Number.isFinite(amount)&&amount>0?[{id:'expense:'+row.id,date:row.date,name:row.name,kind:row.kind,amount,currency:row.currency}]:[];
  }).sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
 }
@@ -143,8 +144,8 @@ export function purchaseComparisonStart(input:Pick<DecisionInput,'records'|'even
  return [holding,funded,spent].filter((date):date is string=>!!date).sort()[0]??input.today;
 }
 
-/** A tracking start cannot precede the first recorded investment: there is no value to compare from that day.
- * A start saved earlier than that reads as the first investment day; a future one is ignored. */
+/** The day benchmark comparisons start from. They cannot precede the first recorded investment: there is no value to compare from that day.
+ * A start saved earlier than that compares from the first investment day (the saved day itself is kept and shown); a future one is ignored. */
 export function effectiveTrackingStart(trackingStart:string|null,firstInvestment:string,today:string){
  if(!trackingStart||trackingStart>today)return null;
  return trackingStart<firstInvestment?firstInvestment:trackingStart;

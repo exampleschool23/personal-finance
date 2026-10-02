@@ -9,6 +9,10 @@ import { BudgetCard, GoalsCard, RecentTransactionsCard } from '@/components/dash
 import { Button } from '@/components/ui/button';
 import { useDashboardLayout } from '@/hooks/use-dashboard-layout';
 import type { DashboardCard } from '@/lib/dashboard-layout';
+import { depositToday } from '@/lib/deposit-interest';
+import { savedGoalOrder } from '@/lib/goal-order';
+import { firstVisit } from '@/lib/onboarding';
+import { goalFinancials } from '@/lib/goal-projection';
 import { PortfolioOverview } from '@/components/portfolio-overview';
 import { SpendingPaceCard } from '@/components/spending-pace-card';
 import { TelegramNudge } from '@/components/telegram-nudge';
@@ -28,14 +32,14 @@ export function OverviewScreen() {
   budget: planningReady && <BudgetCard owner={user} demo={demo} revision={reload} data={planning.data} currency={currency} market={market} splits={transactionTools.data.splits}/>,
   commitments: cards.commitments,
   allocation: cards.allocation,
-  goals: planningReady && <GoalsCard goals={planning.data.goals} currency={currency}/>,
+  goals: planningReady && <GoalsCard goals={planning.data.goals} order={savedGoalOrder(workspacePreferences.data.preferences)} data={planning.data} currency={currency} netWorth={code => goalFinancials(planning.data.records, [], depositToday().slice(0, 7), code, market, false).netWorth}/>,
   transactions: planningReady && <RecentTransactionsCard owner={user} demo={demo} revision={reload} data={planning.data}/>,
   upcoming: cards.upcoming,
   income,
  });
  return <>
   <div data-page="Overview" className="content overview-content">
-   <OverviewHeading name={preferencesData.display_name?.trim()}><Button variant="outline" onClick={() => setCustomizing(true)}><LayoutGrid size={16} aria-hidden="true"/>{t('Customize')}</Button></OverviewHeading>
+   <OverviewHeading name={preferencesData.display_name?.trim()} firstVisit={!demo && firstVisit(preferencesData, depositToday())}><Button variant="outline" onClick={() => setCustomizing(true)}><LayoutGrid size={16} aria-hidden="true"/>{t('Customize')}</Button></OverviewHeading>
    <ScreenNotices/>
    {!workspaceLoading&&<TelegramNudge demo={demo}/>}
    {workspaceLoading ? <WorkspaceSkeleton label={t("Loading your workspace…")} section="Overview"/> : <PortfolioOverview excludedCurrencies={excludedCurrencies} snapshots={snapshots.snapshots} snapshotError={snapshots.error} onSnapshotRetry={snapshots.retry} key={demo ? 'demo' : user} entries={current} demoRecords={demo ? rows : undefined} currency={currency} market={market} demo={demo} revision={reload} onAddIncome={() => addCashFlow('Other income')} board={nodes => <DashboardBoard layout={layout} cards={card(nodes)} onChange={change}/>}/>}

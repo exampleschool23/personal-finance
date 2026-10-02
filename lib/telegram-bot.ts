@@ -8,9 +8,10 @@ import {ownerProfile} from './telegram-owner';
 import {actionMessage,type ActionEvent,type ActionLookup} from './action-messages';
 import {depositToday} from './deposit-interest';
 import {paymentsSection} from './digest-message';
-import type {Entry} from './finance';
-import {translate,isLanguage,detectLanguage,type Language} from './i18n';
-import {upcomingPayments,type Category,type Occurrence} from './planning';
+import {expenses,type Entry} from './finance';
+import {formatMoney} from './format';
+import {translate,isLanguage,detectLanguage,locales,type Language} from './i18n';
+import {debtPaymentsFrom,upcomingPayments,type Category,type Occurrence} from './planning';
 import {planningSchemas} from './planning-schemas';
 import {legalPaths} from './legal';
 import {normalizePhone} from './phone';
@@ -21,7 +22,7 @@ import {advance,mainMenu,menuChoice,prompt,retryKeyboard,type Commit,type Draft,
 import {connectMinutes,connectStartPath,createConnectRequest,linkChat} from './telegram-connect';
 import {linkExpired,startCode,type TelegramSubscription} from './telegram-link';
 import {advanceOnboarding,isOnboardDraft,startOnboarding,type OnboardDraft} from './telegram-onboarding';
-import type {TelegramMessage} from './telegram';
+import {escapeHtml,type TelegramMessage} from './telegram';
 type TelegramFrom={id?:number;first_name?:string;language_code?:string};
 export type TelegramUpdate={update_id?:number;message?:{message_id?:number;chat:{id:number};text?:string;from?:TelegramFrom;contact?:{phone_number?:string;user_id?:number;first_name?:string}};callback_query?:{id:string;data?:string;message?:{chat:{id:number}};from?:TelegramFrom}};
 /** What the bot needs beyond the database to create accounts and sign people in. Missing pieces switch those features off. */
@@ -50,8 +51,8 @@ async function subscriptionByChat(db:ServiceDatabase,chatId:number){
  return rows[0];
 }
 const connectedText=(language:Language,name?:string|null)=>{
- const body=t(language,'Connected. You will get a morning digest of upcoming payments and a message after every saved action.'),first=(name??'').trim();
- return first?t(language,'Welcome, {name}! You are connected.',{name:first})+'\n\n'+body:body;
+ const first=(name??'').trim();
+ return first?t(language,'Welcome, {name}! You are connected and will get a morning digest of upcoming payments and a message after every saved action.',{name:escapeHtml(first)}):t(language,'Connected. You will get a morning digest of upcoming payments and a message after every saved action.');
 };
 /** The "you are connected" message with the main menu, in the owner's language. */
 export async function connectedReply(db:ServiceDatabase,owner:string,chatId:number):Promise<TelegramMessage>{
@@ -104,11 +105,17 @@ async function loadContext(db:ServiceDatabase,owner:string,language:Language,clo
  return {language,currencies:preferences[0]?.currencies??[],today:clock.today,newId:clock.newId(),categories,records,accounts:records.filter(record=>record.kind==='Cash'),businesses:records.filter(record=>record.kind==='Business'),liabilities:records.filter(record=>['Loan','Debt','Mortgage'].includes(record.kind))};
 }
 function commitEvent(commit:Commit):ActionEvent{
- if(commit.type==='record')return {type:'record',created:true,kind:commit.record.kind,name:commit.record.name,amount:commit.record.amount,currency:commit.record.currency,date:commit.record.date||null,frequency:commit.record.frequency};
+ if(commit.type==='record')return {type:'record',created:true,kind:commit.record.kind,name:commit.record.name,amount:commit.record.amount,currency:commit.record.currency,date:commit.record.date||null,frequency:commit.record.frequency,category_id:commit.record.custom_category_id??null};
  const d=commit.data;
  if(commit.action==='transfer')return {type:'transfer',account_id:d.account_id,target_id:d.target_id,amount:d.amount,received:d.received,date:d.date};
  if(commit.action==='repayment')return {type:'repayment',account_id:d.account_id,target_id:d.target_id,amount:d.amount,date:d.date};
  return {type:'mortgage',account_id:d.account_id,target_id:d.target_id,principal:d.amount,interest:d.fee,date:d.date};
+}
+/** The cash account a save would overdraw, when the amount it takes is more than the account holds. */
+function overdrawn(commit:Commit,accounts:Entry[]):Entry|undefined{
+ const [accountId,debit]=commit.type==='record'?[commit.record.account_id,expenses.includes(commit.record.kind)?commit.record.amount:0]:[commit.data.account_id,commit.action==='mortgage'?commit.data.amount+commit.data.fee:commit.data.amount];
+ const account=accounts.find(item=>item.id===accountId);
+ return account&&debit>Number(account.amount)?account:undefined;
 }
 /** Save what the flow produced through the owner-scoped wrappers. Returns the reply text. */
 async function commitDraft(db:ServiceDatabase,owner:string,commit:Commit,ctx:FlowContext&{records:Entry[]}):Promise<{text:string;saved:boolean}>{
@@ -128,18 +135,22 @@ async function commitDraft(db:ServiceDatabase,owner:string,commit:Commit,ctx:Flo
  if(!response.ok){
   const failure=await response.json().catch(()=>({})) as {code?:string;message?:string};
   // The same wording the app gives: named refusals are relayed, an overdrawn balance and a duplicate are explained.
-  const reason=failure.code==='P0001'&&failure.message?t(language,failure.message):failure.code==='23514'?t(language,'Insufficient balance or invalid amount.'):failure.code==='23505'?t(language,'This name or payment already exists.'):t(language,'Please try again.');
+  const short=overdrawn(commit,ctx.accounts);
+  const insufficient=failure.code==='23514'||(failure.code==='P0001'&&/insufficient balance/i.test(failure.message??''));
+  const reason=insufficient&&short?t(language,'Insufficient balance: {account} has {amount}.',{account:escapeHtml(short.name),amount:formatMoney(short.amount,short.currency,locales[language])}):failure.code==='P0001'&&failure.message?t(language,failure.message):failure.code==='23514'?t(language,'Insufficient balance or invalid amount.'):failure.code==='23505'?t(language,'This name or payment already exists.'):t(language,'Please try again.');
   return failed(t(language,'Could not save. {reason}',{reason}));
  }
- const lookup:ActionLookup={records:Object.fromEntries(ctx.records.map(record=>[record.id,{name:record.name,kind:record.kind,currency:record.currency}])),goals:{},deleted:{}};
+ const lookup:ActionLookup={records:Object.fromEntries(ctx.records.map(record=>[record.id,{name:record.name,kind:record.kind,currency:record.currency}])),goals:{},deleted:{},categories:Object.fromEntries(ctx.categories.map(category=>[category.id,category.name]))};
  return {text:`${t(language,'Saved.')}\n${actionMessage(commitEvent(commit),lookup,language)}`,saved:true};
 }
 async function upcomingReply(db:ServiceDatabase,owner:string,language:Language,today:string){
- const [records,occurrences]=await Promise.all([
+ const [records,occurrences,repayments,mortgagePayments]=await Promise.all([
   db.read<Entry[]>(`/rest/v1/finance_records?select=*&user_id=eq.${owner}&order=id.asc`),
   db.read<Occurrence[]>(`/rest/v1/payment_occurrences?select=id,record_id,due_on,status&user_id=eq.${owner}`),
+  db.read<Array<{action:string;target_id:string|null;occurred_on:string}>>(`/rest/v1/account_activity?select=action,target_id,occurred_on&action=in.(repayment,mortgage)&user_id=eq.${owner}`),
+  db.read<Array<{mortgage_id:string;paid_on:string}>>(`/rest/v1/mortgage_payments?select=mortgage_id,paid_on&user_id=eq.${owner}`),
  ]);
- return paymentsSection(upcomingPayments(records,occurrences,today),language,today)??t(language,'No payments due in the next 31 days.');
+ return paymentsSection(upcomingPayments(records,occurrences,today,undefined,debtPaymentsFrom(repayments,mortgagePayments)),language,today)??t(language,'No payments due in the next 31 days.');
 }
 /** The "your account also works on the web" message. Accounts created in Telegram get one-tap buttons; other accounts get a plain link. */
 async function openAppReply(db:ServiceDatabase,subscription:TelegramSubscription,chatId:number,language:Language,now:Date,env:BotEnv):Promise<TelegramMessage|null>{
@@ -205,7 +216,8 @@ const welcome=(chatId:number,language:Language,env:BotEnv):TelegramMessage[]=>[
 ];
 /** The number button, worded for signing up, signing back in, or adding a number to an account linked from the web. */
 const contactPrompts={signup:'Share your phone number to create your account. It is also how you sign in on the web.',return:'Share your phone number to sign in again.',add:'Share your phone number so you can also sign in on the web with it.'};
-const contactRequest=(chatId:number,language:Language,purpose:keyof typeof contactPrompts):TelegramMessage=>({chat_id:chatId,text:t(language,contactPrompts[purpose]),keyboard:{contact:t(language,'Share my number')}});
+// A linked chat adding its number can change its mind: Cancel brings the main menu back.
+const contactRequest=(chatId:number,language:Language,purpose:keyof typeof contactPrompts):TelegramMessage=>({chat_id:chatId,text:t(language,contactPrompts[purpose]),keyboard:{contact:t(language,'Share my number'),...(purpose==='add'?{cancel:t(language,'Cancel')}:{})}});
 const subscriptionsWhere=(db:ServiceDatabase,filter:string)=>db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&'+filter);
 /** Who an unlinked chat belongs to. Someone who signed out of an account made here returns to it, so they are spoken to in its language and never asked to create an account again. */
 async function stranger(db:ServiceDatabase,from:TelegramFrom|undefined,hint:Language):Promise<{returning:boolean;language:Language}>{

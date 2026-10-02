@@ -1,9 +1,10 @@
 // Actual cash flow over a date range, for the Telegram digest and weekly recap.
-// Pure: only one-time income and expense records count (scheduled ones become
+// Pure: only one-time income and expense records count (spending by lib/spending.ts) (scheduled ones become
 // one-time records when they are paid), converted with USD-based rates.
 import {expenses,income,type Entry} from './finance';
 import {convertAmount} from './market';
-type Row=Pick<Entry,'kind'|'amount'|'currency'|'date'|'frequency'|'custom_category_id'>;
+import {spendingAmount} from './spending';
+type Row=Pick<Entry,'kind'|'amount'|'currency'|'date'|'frequency'|'custom_category_id'>&Partial<Pick<Entry,'mortgage_payment_id'|'payment_principal'|'payment_interest'>>;
 export type PeriodTotals={income:number;spending:number;byCategory:Record<string,number>};
 /** A calendar day moved by whole days, staying on the ISO date. */
 export function shiftDay(day:string,days:number){const date=new Date(day+'T00:00:00Z');date.setUTCDate(date.getUTCDate()+days);return date.toISOString().slice(0,10);}
@@ -16,7 +17,8 @@ export function periodTotals(records:readonly Row[],from:string,to:string,curren
   if(row.frequency!=='Once'||!row.date||row.date<from||row.date>to)continue;
   const isIncome=income.includes(row.kind);
   if(!isIncome&&!expenses.includes(row.kind))continue;
-  const amount=convertAmount(Number(row.amount),row.currency,currency,{USD:1,...rates});
+  // Spending follows the shared definition: a mortgage payment counts only its interest.
+  const amount=convertAmount(isIncome?Number(row.amount):spendingAmount(row),row.currency,currency,{USD:1,...rates});
   if(amount===null||!Number.isFinite(amount))continue;
   if(isIncome)totals.income+=amount;
   else{totals.spending+=amount;const key=categoryKey(row);totals.byCategory[key]=(totals.byCategory[key]??0)+amount;}

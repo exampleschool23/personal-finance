@@ -184,4 +184,45 @@ test('sortable items carry a named six-dot handle, and sortable lists render the
  assert.match(html,/^<li class="sortable-item goal-row"[^>]*><button type="button" class="drag-handle" aria-label="Move Emergency fund"[^>]*aria-roledescription="sortable"[^>]*><svg/);
  assert.ok(html.indexOf('Move Emergency fund')<html.indexOf('Move Car'));
  assert.match(html,/<div class="sortable-item"[^>]*><button[^>]*aria-label="Move Car"/);
+ // Wrapping badges (categories) use the grid layout and render the same handles.
+ const grid=render(SortableList,{id:'categories',layout:'grid',items:['a'],nameOf:id=>id,onMove(){}},React.createElement(SortableItem,{id:'a',label:'Charity',as:'li'},'A'));
+ assert.match(grid,/^<li class="sortable-item"[^>]*><button type="button" class="drag-handle" aria-label="Move Charity"/);
+});
+
+test('number fields fill in the maximum and say so instead of ignoring an over-limit entry',()=>{
+ globalThis.requestAnimationFrame??=()=>0;
+ // A tiny hook store that keeps state between two renders, like React does.
+ const state=[];let cursor=0;
+ const fakeReact={...React,useState:initial=>{const slot=cursor++;if(slot>=state.length)state.push(typeof initial==='function'?initial():initial);return [state[slot],next=>{state[slot]=next;}];},useRef:current=>({current}),useEffect:()=>{}};
+ const {FormattedNumberInput}=load('formatted-number-input.tsx',{react:fakeReact,'@/components/ui/input':{Input:'input'}});
+ const calls=[];const props={value:0,max:2.5,maxMessage:'Only 2.5 units available',onValueChange:(value,blank)=>calls.push([value,blank])};
+ const field=FormattedNumberInput(props).props.children[0];
+ field.props.onChange({currentTarget:{value:'3',selectionStart:1,setSelectionRange(){}}});
+ assert.deepEqual(calls,[[2.5,false]]);assert.deepEqual(state,['2.5',true]);
+ // Re-render with the state the keystroke left behind: the clamped value and the message.
+ cursor=0;
+ const shown=FormattedNumberInput({...props,value:2.5});
+ const [input,message]=shown.props.children;
+ assert.equal(input.props.value,'2.5');
+ assert.equal(renderToStaticMarkup(message),'<small role="alert" class="muted">Only 2.5 units available</small>');
+ // A later entry within the limit clears the message.
+ cursor=0;FormattedNumberInput({...props,value:2.5}).props.children[0].props.onChange({currentTarget:{value:'2',selectionStart:1,setSelectionRange(){}}});
+ cursor=0;assert.equal(FormattedNumberInput({...props,value:2}).props.children[1],false);
+ // Without a custom message the limit itself is shown.
+ state.length=0;cursor=0;
+ FormattedNumberInput({value:0,max:100,onValueChange(){}}).props.children[0].props.onChange({currentTarget:{value:'250',selectionStart:3,setSelectionRange(){}}});
+ cursor=0;assert.equal(renderToStaticMarkup(FormattedNumberInput({value:100,max:100,onValueChange(){}}).props.children[1]),'<small role="alert" class="muted">Enter 100 or less</small>');
+});
+
+test('pagination hides itself when there is no other page, and otherwise moves one page at a time',()=>{
+ const {Pagination}=load('pagination.tsx');
+ const pages=[];const props={label:'Record pages',summary:'Page 1',page:1,hasNext:false,onPage:page=>pages.push(page)};
+ assert.equal(render(Pagination,props),'');
+ assert.equal(render(Pagination,{...props,hasNext:true}),'<nav class="records-pagination" aria-label="Record pages"><span>Page 1</span><div><button disabled="">Previous</button><button>Next</button></div></nav>');
+ // A later page stays reachable back even when it came up empty.
+ assert.match(render(Pagination,{...props,page:2,summary:'Page 2'}),/<button>Previous<\/button><button disabled="">Next<\/button>/);
+ const tree=Pagination({...props,page:2,hasNext:true});
+ const [previous,next]=tree.props.children[1].props.children;previous.props.onClick();next.props.onClick();
+ assert.deepEqual(pages,[1,3]);
+ assert.match(render(Pagination,{...props,page:2,hasNext:true,disabled:true}),/<button disabled="">Previous<\/button><button disabled="">Next<\/button>/);
 });

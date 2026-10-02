@@ -6,7 +6,7 @@ import {formatDate,formatMoney,formatNumber} from './format';
 import {locales,translate,type Language} from './i18n';
 import {escapeHtml} from './telegram';
 export type ActionEvent=
- |{type:'record';created:boolean;kind:Kind;name:string;amount:number;currency:string;date:string|null;frequency:string}
+ |{type:'record';created:boolean;kind:Kind;name:string;amount:number;currency:string;date:string|null;frequency:string;category_id?:string|null}
  |{type:'record_deleted';id:string}
  |{type:'occurrence';account_id:string;target_id:string;amount:number;date:string}
  |{type:'repayment';account_id:string;target_id:string;amount:number;date:string}
@@ -23,8 +23,8 @@ export type ActionEvent=
  |{type:'import';added:number;skipped:number};
 export type NamedRecord={name:string;kind:string;currency:string};
 export type NamedGoal={name:string;currency:string};
-/** Names the caller must look up before the message can be written. */
-export type ActionLookup={records:Record<string,NamedRecord>;goals:Record<string,NamedGoal>;deleted:Record<string,NamedRecord&{amount:number}>};
+/** Names the caller must look up before the message can be written. `categories` maps a custom category id to its name. */
+export type ActionLookup={records:Record<string,NamedRecord>;goals:Record<string,NamedGoal>;deleted:Record<string,NamedRecord&{amount:number}>;categories?:Record<string,string>};
 export function referencedIds(event:ActionEvent):{records:string[];goals:string[];deleted:string[]}{
  switch(event.type){
   case 'occurrence':case 'repayment':case 'mortgage':case 'transfer':return {records:[event.account_id,event.target_id],goals:[],deleted:[]};
@@ -45,7 +45,8 @@ export function actionMessage(event:ActionEvent,lookup:ActionLookup,language:Lan
  const name=(value:string)=>`<b>${escapeHtml(value)}</b>`;
  const line=(title:string,...parts:Array<string|null|undefined>)=>`${title}\n${parts.filter(Boolean).join(' · ')}`;
  switch(event.type){
-  case 'record':return line(t(event.created?'Added {kind}':'Updated {kind}',{kind:t(event.kind)}),name(event.name),money(event.amount,event.currency),event.date?day(event.date):null,event.frequency!=='Once'?t(event.frequency):null);
+  // A record in a custom category is named by that category, as the app shows it, not by its stored Other income/expense kind.
+  case 'record':return line(t(event.created?'Added {kind}':'Updated {kind}',{kind:(event.category_id&&lookup.categories?.[event.category_id])?escapeHtml(lookup.categories[event.category_id]):t(event.kind)}),name(event.name),money(event.amount,event.currency),event.date?day(event.date):null,event.frequency!=='Once'?t(event.frequency):null);
   case 'record_deleted':{const deleted=lookup.deleted[event.id];return deleted?line(t('Deleted {kind}',{kind:t(deleted.kind)}),name(deleted.name),money(deleted.amount,deleted.currency)):t('Deleted a record');}
   case 'occurrence':{const target=record(event.target_id),account=record(event.account_id);return line(t('Payment recorded'),name(target.name),money(event.amount,target.currency||account.currency),day(event.date),t('from {account}',{account:escapeHtml(account.name)}));}
   case 'repayment':{const target=record(event.target_id),account=record(event.account_id);return line(t('Repayment recorded'),name(target.name),money(event.amount,target.currency||account.currency),day(event.date),t('from {account}',{account:escapeHtml(account.name)}));}

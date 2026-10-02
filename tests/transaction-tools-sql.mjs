@@ -38,3 +38,27 @@ test('rules, splits and forecast assignments are atomic, owner scoped, backed up
  await db.exec(`SET request.jwt.claim.sub='${owner}';`);await split([]);await db.query('UPDATE finance_records SET amount=1 WHERE id=$1',[id(21)]);assert.equal(await balance(),989);
  }finally{await db.close();}
 });
+
+test('splits accept built-in categories of the transaction type and survive Recently deleted',{skip:!process.env.PGLITE_MODULE},async()=>{
+ const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();const id=n=>`a1000000-0000-4000-8000-${String(n).padStart(12,'0')}`;const owner=id(1);
+ try{
+ await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${owner}');`);
+ const setup=fs.readFileSync('database/setup.sql','utf8');const migration=fs.readFileSync('migrations/091_split_builtin_categories.sql','utf8');assert.ok(setup.includes(migration));
+ await db.exec(setup);
+ await db.exec(`GRANT SELECT,INSERT,UPDATE,DELETE ON finance_records TO authenticated;SET ROLE authenticated;SET request.jwt.claim.sub='${owner}';`);
+ const record=(n,kind,amount)=>db.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency) VALUES($1,$2,'Shop',$3,'USD',$4,'2026-01-01','Once')",[id(n),owner,kind,amount]);
+ await db.query("SELECT planning_action('category',$1)",[{id:id(10),name:'Coffee',direction:'expense'}]);
+ await record(20,'Living expense',30);await record(21,'Salary',100);
+ const split=(n,parts)=>db.query('SELECT save_transaction_splits($1,$2)',[id(n),JSON.stringify(parts)]);
+ await split(20,[{category_id:'Living expense',amount:10},{category_id:id(10),amount:20}]);
+ assert.deepEqual((await db.query('SELECT category_id,kind,amount::numeric AS amount FROM transaction_splits ORDER BY position')).rows.map(r=>[r.category_id,r.kind,Number(r.amount)]),[[null,'Living expense',10],[id(10),null,20]]);
+ await split(21,[{category_id:'Salary',amount:60},{category_id:'Other income',amount:40}]);
+ await assert.rejects(split(21,[{category_id:'Salary',amount:60},{category_id:'Charity',amount:40}]),/matching the transaction type/);
+ await assert.rejects(split(21,[{category_id:'Salary',amount:60},{category_id:id(10),amount:40}]),/matching the transaction type/);
+ await db.query('DELETE FROM finance_records WHERE id=$1',[id(20)]);
+ const deleted=(await db.query("SELECT id,splits FROM deleted_items WHERE data->>'id'=$1",[id(20)])).rows[0];
+ assert.deepEqual(deleted.splits.map(part=>part.category_id),['Living expense',id(10)]);
+ await db.query('SELECT restore_deleted_item($1)',[deleted.id]);
+ assert.equal((await db.query("SELECT count(*)::int AS n FROM transaction_splits WHERE record_id=$1 AND kind='Living expense'",[id(20)])).rows[0].n,1);
+ }finally{await db.close();}
+});

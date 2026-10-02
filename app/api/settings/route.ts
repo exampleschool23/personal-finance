@@ -5,6 +5,7 @@ import { isLanguage, languageCodes } from '@/lib/i18n';
 import { queueLanguageMenu } from '@/lib/notify-action';
 import { session, supa, sameOrigin } from '@/lib/supabase';
 import { defaultPreferences, isCurrency, maxPreferredCurrencies } from '@/lib/currencies';
+import { onboardedOn } from '@/lib/onboarding';
 const schema = z.object({ country: z.string().refine(value => value === '' || isCountry(value)).nullable().transform(value => value ?? '').optional(), display_name: z.string().trim().max(80).optional(), language: z.enum(languageCodes), currencies: z.array(z.string().refine(isCurrency)).min(1).max(maxPreferredCurrencies).refine(list => new Set(list).size === list.length), font: z.enum(fontIds).nullish().transform(resolveFont), onboarded: z.boolean().optional() });
 export async function GET() {
   try {
@@ -19,7 +20,7 @@ export async function GET() {
     // nobody is asked again. An account without preferences has not been through the welcome setup yet.
     // A saved language this version does not offer shows as English; the stored value is left alone.
     const parsed = schema.safeParse(row && Array.isArray(row.currencies) ? { ...row, language: isLanguage(row.language) ? row.language : 'en', currencies: row.currencies.slice(0, maxPreferredCurrencies), onboarded: row.onboarded_at === undefined || !!row.onboarded_at } : row);
-    return Response.json(parsed.success ? parsed.data : { ...defaultPreferences, onboarded: false }, { headers: { 'Cache-Control': 'private, no-store' } });
+    return Response.json(parsed.success ? { ...parsed.data, onboarded_on: onboardedOn(row?.onboarded_at) } : { ...defaultPreferences, onboarded: false }, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch { return Response.json({ error: 'Could not load settings.' }, { status: 503 }); }
 }
 export async function PUT(req: Request) {
@@ -31,14 +32,16 @@ export async function PUT(req: Request) {
     if (!parsed.success) return Response.json({ error: 'Choose a language, one or two currencies, a font, a valid country, and a name of up to 80 characters.' }, { status: 400 });
     const { onboarded, ...preferences } = parsed.data;
     // The saved language before this save, so a change can refresh the Telegram menu afterwards.
-    const earlier = await supa('/rest/v1/user_preferences?select=language&user_id=eq.' + s.user.id, {}, s.token);
-    const earlierRows = earlier.ok ? await earlier.json() as Array<{ language?: unknown }> : [];
+    // Every column is read so this works before migration 078 adds onboarded_at.
+    const earlier = await supa('/rest/v1/user_preferences?select=*&user_id=eq.' + s.user.id, {}, s.token);
+    const earlierRows = earlier.ok ? await earlier.json() as Array<{ language?: unknown; onboarded_at?: unknown }> : [];
     const previousLanguage = isLanguage(earlierRows[0]?.language) ? earlierRows[0].language : 'en';
     // The setup timestamp changes only when the request says so; the Settings form leaves it alone.
     const response = await supa('/rest/v1/user_preferences?on_conflict=user_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: s.user.id, ...preferences, ...(onboarded === undefined ? {} : { onboarded_at: onboarded ? new Date().toISOString() : null }) }) }, s.token);
     if (!response.ok) throw Error();
     // A linked Telegram chat gets a new keyboard in the new language, so nobody has to press Start again.
     if (parsed.data.language !== previousLanguage) queueLanguageMenu(s, parsed.data.language);
-    return Response.json(parsed.data);
+    const finishedAt = onboarded === undefined ? earlierRows[0]?.onboarded_at : onboarded ? new Date().toISOString() : null;
+    return Response.json({ ...parsed.data, onboarded_on: onboardedOn(finishedAt) });
   } catch { return Response.json({ error: 'Could not save settings. Try again.' }, { status: 503 }); }
 }

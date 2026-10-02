@@ -3,6 +3,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
+import { pastDatePresets, presetDay } from '@/lib/date-picker-calendar';
+import { benchmarkHistoryStart } from '@/lib/investment-benchmarks';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +40,8 @@ export function OnboardingScreen({ brand, initial, telegram, savePreferences, ap
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState<Preferences | null>(null);
+  // One id for the first goal, so a retry after a failed save updates it instead of adding a second goal.
+  const [goalId] = useState(() => crypto.randomUUID());
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { heading.current?.focus(); }, [step, saved]);
   const current = onboardingSteps[step];
@@ -53,7 +57,7 @@ export function OnboardingScreen({ brand, initial, telegram, savePreferences, ap
     try {
       const preferences = { ...draft, display_name: name };
       if (!skipAll) {
-        const payload = onboardingGoalPayload(goal, primary, t('Net worth target'), today);
+        const payload = onboardingGoalPayload(goal, primary, t('Net worth target'), today, goalId);
         if (payload) await saveGoal(payload);
         const start = trackingStartFor(tracking.preset, today, tracking.custom);
         if (start) await saveTrackingStart(start);
@@ -107,7 +111,7 @@ export function OnboardingScreen({ brand, initial, telegram, savePreferences, ap
           {goalHorizons.map(years => <button key={years} type="button" className={styles.option} aria-pressed={goal.horizon === years} onClick={() => setGoal({ ...goal, horizon: goal.horizon === years ? null : years })}><span className={styles.optionMark}><Check size={14} strokeWidth={3} aria-hidden="true"/></span><strong>{t(years === 1 ? 'In 1 year' : 'In {years} years', { years })}</strong><span>{formatDate(horizonDate(today, years), locale)}</span></button>)}
           <button type="button" className={styles.option} aria-pressed={goal.horizon === 'custom'} onClick={() => setGoal({ ...goal, horizon: goal.horizon === 'custom' ? null : 'custom' })}><span className={styles.optionMark}><Check size={14} strokeWidth={3} aria-hidden="true"/></span><strong>{t('Choose a date')}</strong><span>{goal.horizon === 'custom' && goal.custom ? formatDate(goal.custom, locale) : t('Any day after today')}</span></button>
         </div>
-        {goal.horizon === 'custom' && <div className={styles.picker}><DatePicker value={goal.custom} min={today} onChange={custom => setGoal({ ...goal, custom })}/></div>}
+        {goal.horizon === 'custom' && <div className={styles.picker}><DatePicker value={goal.custom} min={presetDay('tomorrow', today)} onChange={custom => setGoal({ ...goal, custom })}/></div>}
         {goal.target > 0 && targetDate && <p className={styles.hint}>{t('Reach {amount} by {date}.', { amount: formatMoney(goal.target, primary, locale), date: formatDate(targetDate, locale) })}</p>}
       </>}
       {current === 'connect' && <>
@@ -118,7 +122,7 @@ export function OnboardingScreen({ brand, initial, telegram, savePreferences, ap
         <div className={styles.options} role="group" aria-labelledby="onboarding-tracking">
           {([['today', t('Today'), formatDate(today, locale)], ['year', t('Start of this year'), formatDate(today.slice(0, 4) + '-01-01', locale)], ['custom', t('Choose a date'), tracking.preset === 'custom' && tracking.custom ? formatDate(tracking.custom, locale) : t('Any earlier day')], ['later', t('Decide later'), t('From your first investment')]] as const).map(([preset, label, detail]) => <button key={preset} type="button" className={styles.option} aria-pressed={tracking.preset === preset} onClick={() => setTracking({ ...tracking, preset })}><span className={styles.optionMark}><Check size={14} strokeWidth={3} aria-hidden="true"/></span><strong>{label}</strong><span>{detail}</span></button>)}
         </div>
-        {tracking.preset === 'custom' && <div className={styles.picker}><DatePicker value={tracking.custom} min="2016-01-01" max={today} onChange={custom => setTracking({ ...tracking, custom })}/></div>}
+        {tracking.preset === 'custom' && <div className={styles.picker}><DatePicker value={tracking.custom} min={benchmarkHistoryStart} max={today} presets={pastDatePresets} onChange={custom => setTracking({ ...tracking, custom })}/></div>}
       </>}
     </section>
     {error && <p className={styles.error} role="alert">{t(error)}</p>}

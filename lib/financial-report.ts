@@ -5,7 +5,8 @@ import { assets, interestKinds, liabilities, income, expenses, value, normalizeE
 import { formatDate, formatDateTime, formatMoney, formatNumber } from './format';
 import { isCurrency, currencyLabel } from './currencies';
 import { locales, translate, type Language } from './i18n';
-import { monthlyReview, type TransactionSplit } from './transaction-tools';
+import { monthlyReview, normalizeSplits } from './transaction-tools';
+import { transferAmount } from './spending';
 import { upcomingPayments, type Activity, type Goal, type Occurrence, type PlanningData } from './planning';
 import { legacyEarningSources, sourceSchedule, type EarningSource } from './earning-sources';
 import { investmentGoalItems, investmentGoalPlan } from './investment-goals';
@@ -67,7 +68,7 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
  });
  const total=(kind:'assets'|'debt',currency:string,native=false)=>sum(wealth.filter(w=>(kind==='assets'?assets:liabilities).includes(w.record.kind)&&(!native||w.record.currency===currency)).map(w=>w.amount===null?null:convertAmount(w.amount,w.record.currency,currency,rates)));
  const net=(currency:string)=>{const a=total('assets',currency),d=total('debt',currency);return a===null||d===null?null:a-d;};
- const splits=(tables.transaction_splits??[]) as TransactionSplit[];
+ const splits=normalizeSplits((tables.transaction_splits??[]) as unknown as Parameters<typeof normalizeSplits>[0]);
  const activity=(tables.account_activity??[]) as Activity[];
  const history=new Map((tables.investment_history??[]).map(row=>[row.id,row]));
  const links=(tables.investment_account_links??[]).map(row=>({...row,investment_history:history.get(row.id)})) as NonNullable<PlanningData['investmentLinks']>;
@@ -78,22 +79,20 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
   const linked=links.filter(l=>(l.account_currency??byId.get(l.account_id)?.currency)===currency);
   const review=monthlyReview(scoped,splits,[],period,currency,cutoff,acts,undefined,linked);
   const actual=records.filter(r=>r.currency===currency&&r.frequency==='Once'&&inPeriod(r.date,period,cutoff));
-  // Separate principal from expenses while keeping total cash outflow equal to the shared ledger.
-  const principalCategories=new Map<string,number>();
-  const addPrincipal=(key:string,amount:number)=>principalCategories.set(key,(principalCategories.get(key)??0)+amount);
-  for(const r of actual.filter(r=>expenses.includes(r.kind)))addPrincipal(r.custom_category_id??r.kind,Number(r.payment_principal??0));
-  let principal=actual.filter(r=>expenses.includes(r.kind)).reduce((n,r)=>n+Number(r.payment_principal??0),0);
+  // The review's spending already excludes principal (lib/spending.ts); principal paid is reported beside it,
+  // and net cash flow still subtracts it, because the money left the account.
+  let principal=actual.reduce((n,r)=>n+transferAmount(r),0);
   for(const a of new Map(acts.map(a=>[a.id,a])).values()){
    if(!inPeriod(a.occurred_on,period,cutoff)||!['repayment','mortgage'].includes(a.action)||!liabilities.includes(String(byId.get(a.target_id??'')?.kind))||actual.some(r=>r.mortgage_payment_id===a.id))continue;
-   principal+=Number(a.amount);addPrincipal(String(byId.get(a.target_id??'')?.kind),Number(a.amount));
+   principal+=Number(a.amount);
   }
   for(const l of new Map(linked.map(l=>[l.id,l])).values()){
    const event=l.investment_history;
-   if(event&&inPeriod(event.occurred_on,period,cutoff)&&event.event_type==='withdrawal'&&Number(l.amount)<0&&['Loan','Debt'].includes(String(byId.get(event.record_id)?.kind))&&!acts.some(a=>a.id===l.id)&&!actual.some(r=>r.history_event_id===l.id)){principal-=Number(l.amount);addPrincipal(String(byId.get(event.record_id)?.kind),-Number(l.amount));}
+   if(event&&inPeriod(event.occurred_on,period,cutoff)&&event.event_type==='withdrawal'&&Number(l.amount)<0&&['Loan','Debt'].includes(String(byId.get(event.record_id)?.kind))&&!acts.some(a=>a.id===l.id)&&!actual.some(r=>r.history_event_id===l.id))principal-=Number(l.amount);
   }
-  const invalid=![review.received,review.spent,principal].every(Number.isFinite)||actual.some(r=>number(byId.get(r.id)?.amount)===null)||review.missing>0||principal>review.spent+1e-7;
+  const invalid=![review.received,review.spent,principal].every(Number.isFinite)||actual.some(r=>number(byId.get(r.id)?.amount)===null)||review.missing>0;
   if(invalid)issues.add(`${currency}: ${t('Cash flow incomplete; check missing payment amounts and linked accounts')}`);
-  return {received:invalid?null:review.received,spent:invalid?null:review.spent-principal,principal:invalid?null:principal,net:invalid?null:review.saved,review,actual,principalCategories};
+  return {received:invalid?null:review.received,spent:invalid?null:review.spent,principal:invalid?null:principal,net:invalid?null:review.received-review.spent-principal,review,actual};
  }
  for(const a of activity)if(inPeriod(a.occurred_on)&&['repayment','mortgage'].includes(a.action)&&!byId.has(a.account_id))issues.add(t('A payment has no linked account; its currency and cash flow cannot be verified.'));
  const flows=new Map(currencies.map(c=>[c,cashFlow(c)]));
@@ -170,7 +169,7 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
  for(const c of currencies){
   const f=flows.get(c)!;add('subheading',c);
   const rows=new Map<string,number>([...expenses,...(tables.transaction_categories??[]).filter(r=>r.direction==='expense').map(r=>String(r.id))].map(k=>[k,0]));
-  for(const category of f.review.categories)rows.set(category.id,category.amount-(f.principalCategories.get(category.id)??0));
+  for(const category of f.review.categories)rows.set(category.id,category.amount);
   table(['Expense category','Actual expenses'],[...rows].map(([id,amount])=>[categories.get(id)??(expenses.includes(id)||liabilities.includes(id)?t(id):t('Uncategorized expense')),money(f.spent===null?null:amount,c)]),[.65,.35],[1]);
  }
  add('text',t('Categories show actual expenses, excluding principal. Budgets below follow linked plans; category budgets are not stored.'));

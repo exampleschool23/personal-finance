@@ -1,6 +1,6 @@
 "use client";
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors, type Announcements, type DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { rectSortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -24,13 +24,14 @@ export function useSortableSensors() {
  return useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
 }
 
-/** One list the person can put in their own order. `onMove` receives the moved id and the id it was dropped on. */
-export function SortableList({ id, items, nameOf, onMove, disabled = false, children }: { id: string; items: string[]; nameOf: (id: string) => string; onMove: (active: string, over: string) => void; disabled?: boolean; children: ReactNode }) {
+/** One list the person can put in their own order. `onMove` receives the moved id and the id it was dropped on.
+ * `layout="grid"` suits items that wrap onto several lines, such as badges. */
+export function SortableList({ id, items, nameOf, onMove, disabled = false, layout = 'list', children }: { id: string; items: string[]; nameOf: (id: string) => string; onMove: (active: string, over: string) => void; disabled?: boolean; layout?: 'list' | 'grid'; children: ReactNode }) {
  const { t } = useLanguage();
  const sensors = useSortableSensors();
  const end = ({ active, over }: DragEndEvent) => { if (over && active.id !== over.id) onMove(String(active.id), String(over.id)); };
  return <DndContext id={id} sensors={sensors} collisionDetection={closestCenter} onDragEnd={end} accessibility={sortableAccessibility(t, nameOf)}>
-  <SortableContext items={items} strategy={verticalListSortingStrategy} disabled={disabled}>{children}</SortableContext>
+  <SortableContext items={items} strategy={layout === 'grid' ? rectSortingStrategy : verticalListSortingStrategy} disabled={disabled}>{children}</SortableContext>
  </DndContext>;
 }
 

@@ -50,7 +50,7 @@ test('delete dialog requires a loaded preview and explicit same-type replacement
 });
 test('added category badges expose named delete buttons; text fields stay editable during loading',()=>{
  const h=harness('components/transaction-tools-panel.tsx','TransactionToolsPanel');const category={id:id(1),name:'Leisure',direction:'expense'};
- const props={categories:[category],saveCategory:async()=>{},loading:true,error:'',onRetry(){},onDeleted(){}};
+ const props={categories:[category],saveCategory:async()=>{},loading:true,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true};
  const panel=h.render(props);const group=find(panel,node=>node.type?.name==='CategoryGroup'&&node.props.direction==='expense');
  // The group uses hooks from the same mocked React module.
  const tree=group.type(group.props);

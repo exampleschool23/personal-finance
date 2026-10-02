@@ -17,9 +17,11 @@ import { formatDate, formatMoney, formatPercent } from '@/lib/format';
 import { assetAllocation, nextPayments } from '@/lib/overview';
 import { upcomingPayments, type PlanningData } from '@/lib/planning';
 
-export function OverviewHeading({ name, children }: { name?: string; children?: ReactNode }) {
+/** `firstVisit` greets a brand-new account with "Welcome" instead of "Welcome back". */
+export function OverviewHeading({ name, firstVisit = false, children }: { name?: string; firstVisit?: boolean; children?: ReactNode }) {
  const { t, locale } = useLanguage();
- return <PageHeader eyebrow={formatDate(depositToday(), locale)} title={name ? t("Welcome back, {name}!", { name }) : t("Welcome back!")}>{children}</PageHeader>;
+ const title = firstVisit ? (name ? t('Welcome, {name}!', { name }) : t('Welcome!')) : name ? t('Welcome back, {name}!', { name }) : t('Welcome back!');
+ return <PageHeader eyebrow={formatDate(depositToday(), locale)} title={title}>{children}</PageHeader>;
 }
 
 type Props = { entries: Entry[]; currency: string; excludedCurrencies: string[]; forecast: ReturnType<typeof estimatedCashFlow>; forecastReady: boolean; planning: PlanningData | null };
@@ -30,7 +32,7 @@ export function useOverviewCards({ entries, currency, excludedCurrencies, foreca
  const percent = (value: number | null) => formatPercent(value ?? NaN, locale);
  const { totalAssets, totalDebt } = financialTotals(entries);
  const allocation = assetAllocation(entries);
- const due = planning ? nextPayments(upcomingPayments(planning.records, planning.occurrences)) : [];
+ const due = planning ? nextPayments(upcomingPayments(planning.records, planning.occurrences, undefined, undefined, planning.debtPayments)) : [];
  const figure = (value: string) => <span className="panel-figure">{value}</span>;
  const commitments = <section className="panel overview-panel" key="commitments">
   <PanelTitle title={<>{t("Monthly commitments")} {forecastReady && figure(t('{amount} left', { amount: money(forecast.forecast) }))}</>} hint={<>

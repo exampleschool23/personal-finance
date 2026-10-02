@@ -1,6 +1,7 @@
 import { depositToday } from './deposit-interest';
 import type { EarningSource } from './earning-sources';
 import { income, interestKinds, monthly, duplicatesAssetEstimate, type Entry } from './finance';
+import { convertAmount } from './market';
 
 type IncomeCard = { entry: Entry; amount: number; asset: boolean; excluded: boolean; notes: string[]; received: boolean; receivedAmount: number };
 
@@ -12,6 +13,22 @@ function receiptKey(entry: Entry): string {
  return JSON.stringify([entry.currency, entry.kind, entry.payment_type ?? 'regular', ...source]);
 }
 
+/** Sources expressed in the display currency, like the converted entries the cards read.
+ * An approximate amount without a usable rate is dropped rather than guessed. */
+export function sourcesIn(sources: readonly EarningSource[], currency: string, rates?: number | Record<string, number>): EarningSource[] {
+ return sources.map(source => {
+  if (source.approx_monthly == null || source.currency === currency) return source;
+  const approx = convertAmount(source.approx_monthly, source.currency, currency, rates);
+  return { ...source, currency, approx_monthly: approx !== null && Number.isFinite(approx) && approx > 0 ? approx : null };
+ });
+}
+
+/** A variable source's approximate monthly income, as a card that this month's receipts from it join. */
+const approximateCard = (source: EarningSource): IncomeCard => ({
+ entry: { id: 'source:' + source.id, earning_source_id: source.id, name: source.name, kind: source.kind, currency: source.currency, amount: source.approx_monthly!, date: '', frequency: 'Monthly', quantity: 1, cost: 0, rate: 0, notes: '' },
+ amount: source.approx_monthly!, asset: false, excluded: false, notes: [], received: false, receivedAmount: 0,
+});
+
 // Requires individual dated records, never the all-time valuation summary.
 export function monthlyIncomeCards(entries: Entry[], month: string, sources: EarningSource[] = [], today = depositToday()): IncomeCard[] {
  const assets = entries.filter(entry => ['Business', 'Property', ...interestKinds].includes(entry.kind) && (entry.estimated_monthly_income ?? 0) > 0);
@@ -22,6 +39,8 @@ export function monthlyIncomeCards(entries: Entry[], month: string, sources: Ear
  const cards: IncomeCard[] = [
   ...included.map(entry => ({ entry, amount: monthly(entry, month), asset: false, excluded: false, notes: [] as string[], received: false, receivedAmount: 0 })),
   ...assets.map(entry => ({ entry, amount: entry.estimated_monthly_income ?? 0, asset: true, excluded: false, notes: [] as string[], received: false, receivedAmount: 0 })),
+  // Variable income has no schedule; its approximate amount is the monthly estimate shown beside receipts.
+  ...sources.filter(source => source.mode === 'variable' && !source.archived && (source.approx_monthly ?? 0) > 0).map(approximateCard),
  ];
  for (const entry of recurring.filter(entry => !included.includes(entry))) {
   // Undated summary rows and receipts from other months are not monthly income.

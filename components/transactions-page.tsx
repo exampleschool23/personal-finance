@@ -3,13 +3,16 @@ import { useState, type ReactNode } from 'react';
 import { Check, Trash2 } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
+import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { income, type Entry } from '@/lib/finance';
-import { formatDate, formatMoney } from '@/lib/format';
+import { formatDate, formatMoney, formatSignedMoney } from '@/lib/format';
+import { isMortgagePayment, spendingAmount, transferAmount } from '@/lib/spending';
+import { signedAmount } from '@/lib/transaction-list';
 import type { Category } from '@/lib/planning';
 import { categoryChoices, choiceKey, directionOf, ruleTargets, suggestedPattern, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
 
@@ -76,15 +79,23 @@ export function DayGroup({ date, total, currency, today, children }: { date: str
  const yesterday = new Date(Date.parse(today + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);
  const label = date === today ? t('Today') : date === yesterday ? t('Yesterday') : formatDate(date, locale);
  return <section className="transaction-day" aria-label={label}>
-  <div className="transaction-day-heading"><h3>{label}</h3><span className={total !== null && total > 0 ? 'positive' : undefined}>{total === null ? '—' : (total > 0 ? '+' : '') + formatMoney(total, currency, locale)}</span></div>
+  <div className="transaction-day-heading"><h3>{label}</h3><span className={total !== null && total > 0 ? 'positive' : undefined}>{total === null ? '—' : formatSignedMoney(total, currency, locale)}</span></div>
   <ul>{children}</ul>
  </section>;
 }
 
+/** A mortgage payment's split: the principal is a transfer to the debt, the interest is spending. */
+export function MortgageSplit({ record }: { record: Entry }) {
+ const { t, locale } = useLanguage();
+ if (!isMortgagePayment(record)) return null;
+ return <small>{t('Mortgage payment · Principal: {principal} · Interest: {interest}', { principal: formatMoney(transferAmount(record), record.currency, locale), interest: formatMoney(spendingAmount(record), record.currency, locale) })}</small>;
+}
+
+/** The row's signed amount by the shared spending definition (`lib/spending.ts`): a mortgage payment shows its interest. */
 export function TransactionAmount({ record }: { record: Entry }) {
  const { locale } = useLanguage();
  const incoming = income.includes(record.kind);
- return <strong className={incoming ? 'transaction-amount positive' : 'transaction-amount'}>{incoming ? '+' : '−'}{formatMoney(Number(record.amount), record.currency, locale)}</strong>;
+ return <strong className={incoming ? 'transaction-amount positive' : 'transaction-amount'}>{formatSignedMoney(signedAmount(record), record.currency, locale)}</strong>;
 }
 
 /** Create or edit a rule: a name fragment and the category it means, optionally applied to past transactions. */
@@ -124,16 +135,25 @@ export function RuleDialog({ rule, records, categories, splits, onSave, onClose 
 export function RulesDialog({ rules, categories, onEdit, onAdd, onRemove, onClose }: { rules: TransactionRule[]; categories: readonly Category[]; onEdit: (rule: TransactionRule) => void; onAdd: (direction: Category['direction']) => void; onRemove: (rule: TransactionRule) => Promise<void>; onClose: () => void }) {
  const { t } = useLanguage();
  const choiceName = useChoiceName(categories);
- return <Dialog open onOpenChange={value => { if (!value) onClose(); }}>
+ const [deleting, setDeleting] = useState<TransactionRule | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
+ async function remove() {
+  if (!deleting || busy) return;
+  setBusy(true); setError('');
+  try { await onRemove(deleting); setDeleting(null); }
+  catch (reason) { setError((reason as Error).message); }
+  finally { setBusy(false); }
+ }
+ return <><Dialog open onOpenChange={value => { if (!value) onClose(); }}>
   <DialogContent className="budget-dialog">
    <DialogTitle>{t('Rules')}</DialogTitle>
    {rules.length ? <ul className="rule-list">{rules.map(rule => <li key={rule.id}>
     <button type="button" onClick={() => onEdit(rule)}><span>{t('Name contains “{pattern}”', { pattern: rule.pattern })}</span><span className="rule-arrow" aria-hidden="true">→</span><span className="transaction-category"><CategoryIcon kind={rule.category_id ? choiceName(rule) : rule.kind} size="sm"/><span>{choiceName(rule)}</span></span></button>
-    <Button size="icon" variant="ghost" aria-label={t('Delete {name}', { name: rule.pattern })} onClick={() => onRemove(rule)}><Trash2 size={15}/></Button>
+    <Button size="icon" variant="ghost" aria-label={t('Delete {name}', { name: rule.pattern })} onClick={() => { setError(''); setDeleting(rule); }}><Trash2 size={15}/></Button>
    </li>)}</ul> : <p className="budget-left-empty">{t('No rules yet. Change a transaction’s category and choose Create rule, or add one here.')}</p>}
    <div className="record-form-footer"><Button variant="outline" onClick={() => onAdd('income')}>{t('Add income rule')}</Button><Button onClick={() => onAdd('expense')}>{t('Add expense rule')}</Button></div>
   </DialogContent>
- </Dialog>;
+ </Dialog>
+ <ConfirmDialog open={!!deleting} onClose={() => setDeleting(null)} busy={busy} destructive error={error} title={t('Delete {name}?', { name: deleting ? t('Name contains “{pattern}”', { pattern: deleting.pattern }) : '' })} description={t('New transactions will no longer be categorized by this rule. Transactions it already changed keep their category.')} confirmLabel={t(busy ? 'Deleting…' : 'Delete rule')} onConfirm={remove}/></>;
 }
 
 /** A new rule suggested from one category change. */

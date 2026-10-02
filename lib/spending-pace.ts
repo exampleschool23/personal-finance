@@ -4,7 +4,7 @@ import type { PortfolioSnapshot } from './portfolio-snapshots';
 import { monthlyReview, type TransactionSplit } from './transaction-tools';
 
 export type SpendingPacePoint = { day: number; current: number | null; previous: number | null };
-export type SpendingPace = { month: string; previousMonth: string; points: SpendingPacePoint[]; spent: number; previousToDate: number; missing: boolean };
+export type SpendingPace = { month: string; previousMonth: string; points: SpendingPacePoint[]; spent: number; previousToDate: number; missing: boolean; empty: boolean };
 type Input = { records: Entry[]; splits: TransactionSplit[]; snapshots: PortfolioSnapshot[]; activity?: PlanningData['activity']; investmentLinks?: PlanningData['investmentLinks'] };
 
 const daysIn = (month: string) => new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).getUTCDate();
@@ -30,5 +30,7 @@ export function spendingPace(input: Input, today: string, currency: string, rate
   points.push({ day, current: current ? current.spent : null, previous: previous.spent });
  }
  const reached = points[Math.min(todayDay, length) - 1];
- return { month, previousMonth, points, spent: reached.current ?? 0, previousToDate: reached.previous ?? 0, missing };
+ // Nothing spent in either month: the card shows an empty state rather than a meaningless $0–$1 axis.
+ const empty = !missing && points.every(point => !point.current && !point.previous);
+ return { month, previousMonth, points, spent: reached.current ?? 0, previousToDate: reached.previous ?? 0, missing, empty };
 }

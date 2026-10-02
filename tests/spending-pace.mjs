@@ -31,3 +31,10 @@ test('spending pace handles year boundaries, February and missing exchange rates
  const foreign=spendingPace({records:[record('y','Living expense',50000,'2026-10-01',{currency:'UZS'})],splits:[],snapshots:[]},'2026-10-01','USD',{USD:1});
  assert.equal(foreign.missing,true,'no rate is inferred');
 });
+
+test('a month and previous month without spending is empty, so the card shows an empty state instead of a $0–$1 axis',()=>{
+ const empty=spendingPace({records:[record('salary','Salary',3000,'2026-10-02')],splits:[],snapshots:[]},'2026-10-02','USD',{USD:1});
+ assert.equal(empty.empty,true);assert.equal(empty.spent,0);
+ assert.equal(spendingPace(input,'2026-10-02','USD',{USD:1}).empty,false);
+ assert.equal(spendingPace({records:[record('x','Living expense',5,'2026-09-03',{currency:'EUR'})],splits:[],snapshots:[]},'2026-10-02','USD',{USD:1}).empty,false,'missing rates are not an empty month');
+});

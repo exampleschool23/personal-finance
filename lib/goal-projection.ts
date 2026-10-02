@@ -32,6 +32,15 @@ export function goalFinancials(records: Entry[], plans: ExpensePlan[], month: st
  return {netWorth,surplus};
 }
 
+/** The currency a goal is measured in: an investment goal's holding account, a savings goal's cash account, otherwise its own currency. */
+export function goalCurrency(goal: { kind?: string | null; currency?: string | null; account_id?: string | null; holding_account_id?: string | null }, data: { records: readonly { id: string; currency: string }[]; holdingAccounts?: readonly { id: string; currency: string }[] }, fallback: string) {
+ if (goal.kind === 'investment') return data.holdingAccounts?.find(account => account.id === goal.holding_account_id)?.currency ?? goal.currency ?? fallback;
+ if (goal.kind === 'net_worth') return goal.currency ?? fallback;
+ return data.records.find(record => record.id === goal.account_id)?.currency ?? goal.currency ?? fallback;
+}
+/** Where a savings or net-worth goal stands: the current net worth in the goal's currency for a net-worth goal, the reserved cash otherwise. */
+export const goalCurrentValue = (goal: { kind?: string | null; allocated: number }, netWorth: number | null) => goal.kind === 'net_worth' ? netWorth : Number(goal.allocated);
+
 /** Target is expressed in today's purchasing power; starting wealth stays fixed. */
 export function projectGoalScenario(starting:number,target:number,today:string,scenario:{deadline:string;monthly:number;annual_return:number;inflation:number;missed_date?:string|null}){
  if(!Number.isFinite(scenario.inflation)||scenario.inflation<0||scenario.inflation>100)return null;

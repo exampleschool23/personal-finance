@@ -9,8 +9,9 @@ import { PanelSkeleton } from '@/components/presentation-foundation/loading-plac
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { Segmented } from '@/components/presentation-foundation/segmented';
-import { BulkCategoryBar, CategoryPicker, DayGroup, RuleDialog, RulesDialog, TransactionAmount, ruleFromChange, useChoiceName } from '@/components/transactions-page';
+import { BulkCategoryBar, CategoryPicker, DayGroup, MortgageSplit, RuleDialog, RulesDialog, TransactionAmount, ruleFromChange, useChoiceName } from '@/components/transactions-page';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
@@ -77,7 +78,7 @@ export function TransactionsScreen() {
   <PageHeader title={t('Transactions')} hint={t('Every income and spending record in one list, grouped by day. Click a category to change it.')}>
    <Button variant="outline" onClick={() => setRulesOpen(true)}><Wand2 size={16} aria-hidden="true"/>{t('Rules')}</Button>
    <Button variant="outline" aria-pressed={selecting} onClick={() => { setSelecting(!selecting); setSelected(new Set()); }}><ListChecks size={16} aria-hidden="true"/>{t('Edit multiple')}</Button>
-   <Button onClick={() => addCashFlow('Other expense')}><Plus size={16} aria-hidden="true"/>{t('Add transaction')}</Button>
+   <AddTransactionMenu onAdd={addCashFlow}/>
   </PageHeader>
   <div className="transactions-tools">
    <label className="transactions-search"><Search size={16} aria-hidden="true"/><Input type="search" placeholder={t('Search transactions')} aria-label={t('Search transactions')} maxLength={200} value={filter.query} onChange={event => setFilter({ ...filter, query: event.currentTarget.value })}/></label>
@@ -96,12 +97,12 @@ export function TransactionsScreen() {
       const editable = canRecategorize(record, splits);
       return <li key={record.id} className="transaction-row" data-selected={selected.has(record.id) || undefined} tabIndex={0} aria-label={t('View details for {name}', { name: record.name })} onClick={open(record)} onKeyDown={open(record)}>
        {selecting && <input type="checkbox" aria-label={t('Select {name}', { name: record.name })} checked={selected.has(record.id)} onChange={() => toggle(record.id)}/>}
-       <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span><strong>{record.name}</strong>{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}</span></span>
+       <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span><strong>{record.name}</strong>{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}<MortgageSplit record={record}/></span></span>
        <CategoryPicker record={record} categories={data.categories} disabled={!editable || selecting} onChange={choice => change([record], choice)}/>
        <TransactionAmount record={record}/>
       </li>;
      })}
-    </DayGroup>) : <EmptyState icon={<ReceiptText/>} title={t('No transactions')} description={t(filter.query || filter.category !== 'all' || filter.direction !== 'all' ? 'Nothing matches these filters in this period.' : 'Income and spending you record appear here, grouped by day.')}><Button onClick={() => addCashFlow('Other expense')}>{t('Add transaction')}</Button></EmptyState>}
+    </DayGroup>) : <EmptyState icon={<ReceiptText/>} title={t('No transactions')} description={t(filter.query || filter.category !== 'all' || filter.direction !== 'all' ? 'Nothing matches these filters in this period.' : 'Income and spending you record appear here, grouped by day.')}><AddTransactionMenu onAdd={addCashFlow}/></EmptyState>}
    </section>
    <aside className="panel transactions-summary" aria-label={t('Summary')}>
     <PanelTitle title={t('Summary')}/>
@@ -115,6 +116,18 @@ export function TransactionsScreen() {
    </aside>
   </div>}
   {rule && <RuleDialog key={rule.id} rule={rule} records={data.records} categories={data.categories} splits={splits} onSave={async (next, apply) => { const changed = await rules.save(next, apply); if (apply) showNotice(t('{changed} updated', { changed })); return changed; }} onClose={() => setRule(null)}/>}
-  {rulesOpen && !rule && <RulesDialog rules={rules.rules} categories={data.categories} onEdit={setRule} onAdd={direction => setRule({ id: crypto.randomUUID(), pattern: '', direction, kind: (direction === 'income' ? income : expenses)[3] as Entry['kind'], category_id: null })} onRemove={item => rules.remove(item.id).catch(reason => showError((reason as Error).message))} onClose={() => setRulesOpen(false)}/>}
+  {rulesOpen && !rule && <RulesDialog rules={rules.rules} categories={data.categories} onEdit={setRule} onAdd={direction => setRule({ id: crypto.randomUUID(), pattern: '', direction, kind: (direction === 'income' ? income : expenses)[3] as Entry['kind'], category_id: null })} onRemove={item => rules.remove(item.id)} onClose={() => setRulesOpen(false)}/>}
  </div>;
+}
+
+/** "Add transaction" offers both directions; each opens the existing income or expense form. */
+function AddTransactionMenu({ onAdd }: { onAdd: (kind: Entry['kind']) => void }) {
+ const { t } = useLanguage();
+ return <DropdownMenu>
+  <DropdownMenuTrigger asChild><Button><Plus size={16} aria-hidden="true"/>{t('Add transaction')}</Button></DropdownMenuTrigger>
+  <DropdownMenuContent align="end">
+   <DropdownMenuItem onSelect={() => onAdd('Other income')}>{t('Add income')}</DropdownMenuItem>
+   <DropdownMenuItem onSelect={() => onAdd('Other expense')}>{t('Add expense')}</DropdownMenuItem>
+  </DropdownMenuContent>
+ </DropdownMenu>;
 }
