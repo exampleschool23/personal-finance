@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?OFX OFXHEADER="200" VERSION="220" SECURITY="NONE" OLDFILEUID="NONE" NEWFILEUID="NONE"?>
+<OFX>
+  <SIGNONMSGSRSV1>
+    <SONRS>
+      <STATUS><CODE>0</CODE><SEVERITY>INFO</SEVERITY></STATUS>
+      <DTSERVER>20260201083000.000[+5:UZT]</DTSERVER>
+      <LANGUAGE>ENG</LANGUAGE>
+      <INTU.BID>1234</INTU.BID>
+    </SONRS>
+  </SIGNONMSGSRSV1>
+  <BANKMSGSRSV1>
+    <STMTTRNRS>
+      <TRNUID>0</TRNUID>
+      <STATUS><CODE>0</CODE><SEVERITY>INFO</SEVERITY></STATUS>
+      <STMTRS>
+        <CURDEF>USD</CURDEF>
+        <BANKACCTFROM>
+          <BANKID>021000021</BANKID>
+          <ACCTID>000123456789</ACCTID>
+          <ACCTTYPE>SAVINGS</ACCTTYPE>
+        </BANKACCTFROM>
+        <BANKTRANLIST>
+          <DTSTART>20260101</DTSTART>
+          <DTEND>20260131</DTEND>
+          <STMTTRN>
+            <TRNTYPE>INT</TRNTYPE>
+            <DTPOSTED>20260131235959.000[+5:UZT]</DTPOSTED>
+            <TRNAMT>+3.21</TRNAMT>
+            <FITID>INT-202601</FITID>
+            <NAME>Interest &lt;January&gt;</NAME>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260105</DTPOSTED>
+            <TRNAMT>-1250.00</TRNAMT>
+            <FITID>DUP</FITID>
+            <PAYEE><NAME>City Rentals</NAME><ADDR1>1 Main St</ADDR1></PAYEE>
+            <MEMO>January rent</MEMO>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260106</DTPOSTED>
+            <TRNAMT>-1250.00</TRNAMT>
+            <FITID>DUP</FITID>
+            <NAME>City Rentals</NAME>
+          </STMTTRN>
+        </BANKTRANLIST>
+      </STMTRS>
+    </STMTTRNRS>
+  </BANKMSGSRSV1>
+</OFX>

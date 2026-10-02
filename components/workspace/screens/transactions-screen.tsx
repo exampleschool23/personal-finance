@@ -9,7 +9,7 @@ import { PanelSkeleton } from '@/components/presentation-foundation/loading-plac
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { Segmented } from '@/components/presentation-foundation/segmented';
-import { BulkEditBar, BulkEditSheet, BusinessPicker, CategoryPicker, DayGroup, MortgageSplit, RuleDialog, RulesDialog, TransactionAmount, newRule, ruleFromBusiness, ruleFromChange, useChoiceName } from '@/components/transactions-page';
+import { BulkEditBar, BulkEditSheet, BusinessPicker, CategoryPicker, DayGroup, MortgageSplit, RuleDialog, RulesDialog, TagFilter, TransactionAmount, newRule, ruleFromBusiness, ruleFromChange, useChoiceName } from '@/components/transactions-page';
 import { BusinessFilter } from '@/components/presentation-foundation/business-filter';
 import { TagChip } from '@/components/presentation-foundation/tag-chip';
 import { queryList, useLocationSearch } from '@/hooks/use-location-search';
@@ -41,7 +41,7 @@ export function TransactionsScreen() {
  const search = useLocationSearch();
  const [appliedSearch, setAppliedSearch] = useState('');
  // They open the longest period, so a tag's or a business's whole history is there to select and move.
- if (search !== appliedSearch) { setAppliedSearch(search); if (search) { setFilter({ ...emptyTransactionFilter, businesses: queryList(search, 'business'), tag: queryList(search, 'tag')[0] ?? 'all' }); setPeriod('two_years'); } }
+ if (search !== appliedSearch) { setAppliedSearch(search); if (search) { setFilter({ ...emptyTransactionFilter, businesses: queryList(search, 'business'), tags: queryList(search, 'tag') }); setPeriod('two_years'); } }
  const [editingMany, setEditingMany] = useState(false);
  const [selecting, setSelecting] = useState(false);
  const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -126,10 +126,7 @@ export function TransactionsScreen() {
     {categoryOptions.map(choice => <option key={choiceKey(choice)} value={choiceKey(choice)}>{choice.custom ? choice.name : t(choice.name)}</option>)}
    </NativeSelect>
    {businessList.length > 0 && <BusinessFilter businesses={businessList} value={filter.businesses} onChange={businesses => setFilter({ ...filter, businesses })}/>}
-   {tags.data.tags.length > 0 && <NativeSelect aria-label={t('Tag')} value={filter.tag} onChange={event => setFilter({ ...filter, tag: event.currentTarget.value })}>
-    <option value="all">{t('All tags')}</option>
-    {tags.data.tags.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
-   </NativeSelect>}
+   {tags.data.tags.length > 0 && <TagFilter tags={tags.data.tags} value={filter.tags} match={filter.tagMatch} onChange={(chosen, tagMatch) => setFilter({ ...filter, tags: chosen, tagMatch })}/>}
    <Segmented label={t('Type')} options={[{ value: 'all', label: t('All') }, { value: 'income', label: t('Income') }, { value: 'expense', label: t('Expenses') }] as const} value={filter.direction} onChange={direction => setFilter({ ...filter, direction })}/>
   </div>
   {selecting && <BulkEditBar count={chosen.length} total={records.length} onAll={select => setSelected(new Set(select ? records.map(record => record.id) : []))} onEdit={() => setEditingMany(true)} onCancel={() => { setSelecting(false); setSelected(new Set()); }}/>}

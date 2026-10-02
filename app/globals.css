@@ -2246,6 +2246,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .business-filter-popover li>button:hover,.business-filter-popover li>button:focus-visible{background:var(--muted);outline:none}
 .business-filter-popover li>button>svg{margin-inline-start:auto;color:var(--mark-bg)}
 .business-filter-all{width:24px;height:24px;flex-shrink:0;border:1.5px dashed var(--border);border-radius:7px}
+.tag-filter-match{display:flex;margin-bottom:8px}.tag-filter-match>button{flex:1 1 0}
 .bulk-edit-sheet{gap:0;width:min(420px,100%);max-width:100%;overflow-y:auto}
 .bulk-edit-form{display:flex;flex-direction:column;gap:16px;padding:0 16px 16px}
 .bulk-edit-form fieldset{display:flex;flex-direction:column;gap:16px;margin:0;padding:0;border:0}

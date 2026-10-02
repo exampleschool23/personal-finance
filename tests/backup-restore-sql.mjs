@@ -45,3 +45,56 @@ test('verified backup restores exact balances and history atomically without rep
  assert.equal((await db.query("SELECT count(*)::int AS n FROM pg_trigger WHERE NOT tgisinternal AND tgenabled='D'")).rows[0].n,0);
  }finally{await db.close();}
 });
+
+test('backups carry transaction rules with their criteria, tags and tag links; older backups without them still restore',async()=>{
+ const db=new PGlite();const owner=id(1),other=id(2);try{
+ await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${owner}'),('${other}');`);
+ const setup=fs.readFileSync('database/setup.sql','utf8');
+ assert.ok(setup.includes(fs.readFileSync('migrations/099_rules_in_backups.sql','utf8')));
+ await db.exec(setup);
+ await db.exec(`INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency) VALUES('${id(10)}','${owner}','Card','Cash','USD',500,'2020-01-01','Once'),('${id(11)}','${owner}','Studio','Business','USD',0,'2020-01-01','Once'),('${id(12)}','${other}','Other cash','Cash','USD',10,'2020-01-01','Once');
+  INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency,account_id) VALUES('${id(20)}','${owner}','Coffee shop','Other expense','USD',5,'2020-01-02','Once','${id(10)}');
+  INSERT INTO transaction_categories(id,user_id,name,direction) VALUES('${id(50)}','${owner}','Coffee','expense');
+  INSERT INTO transaction_tags(id,user_id,name,color) VALUES('${id(60)}','${owner}','Trip','teal'),('${id(61)}','${owner}','Receipts','blue'),('${id(62)}','${other}','Theirs','red');
+  INSERT INTO transaction_tag_links(record_id,tag_id,user_id) VALUES('${id(20)}','${id(60)}','${owner}');
+  INSERT INTO transaction_rules(id,user_id,pattern,match,direction,kind,category_id,business_id,tag_ids,account_id,match_kind,amount_min,amount_max) VALUES('${id(70)}','${owner}','coffee shop','exact','expense','Other expense','${id(50)}','${id(11)}',ARRAY['${id(60)}','${id(61)}']::uuid[],'${id(10)}','Other expense',1.5,99.12345678);
+  INSERT INTO transaction_rules(id,user_id,pattern,direction,match_business_id,tag_ids) VALUES('${id(71)}','${owner}','','any','${id(11)}',ARRAY['${id(61)}']::uuid[]);
+  INSERT INTO transaction_rules(id,user_id,pattern,direction,tag_ids) VALUES('${id(79)}','${other}','theirs','any',ARRAY['${id(62)}']::uuid[]);
+  SET request.jwt.claim.sub='${owner}';SET ROLE authenticated;`);
+ const backup=(await db.query('SELECT export_finance_backup()::text AS backup')).rows[0].backup;
+ const parsed=JSON.parse(backup);
+ assert.deepEqual(['transaction_tags','transaction_tag_links','transaction_rules'].map(name=>parsed.tables[name].length),[2,1,2]);
+ const saved=parsed.tables.transaction_rules.find(rule=>rule.id===id(70));
+ assert.deepEqual([saved.match,saved.account_id,saved.match_kind,saved.amount_min,saved.amount_max,saved.category_id,saved.business_id,[...saved.tag_ids].sort()],['exact',id(10),'Other expense',1.5,99.12345678,id(50),id(11),[id(60),id(61)]]);
+ assert.equal(parsed.tables.transaction_rules.find(rule=>rule.id===id(71)).match_business_id,id(11));
+ // After the backup: a rule removed, a tag deleted (which edits the remaining rule), a link removed and a new rule added.
+ await db.exec(`DELETE FROM transaction_rules WHERE id='${id(71)}';DELETE FROM transaction_tags WHERE id='${id(61)}';INSERT INTO transaction_rules(id,user_id,pattern,direction,kind) VALUES('${id(72)}','${owner}','rent','expense','Rent expense');`);
+ await db.query('SELECT tag_transactions($1,$2,$3)',[[id(20)],[],[id(60)]]);
+ assert.deepEqual((await db.query('SELECT tag_ids FROM transaction_rules WHERE id=$1',[id(70)])).rows[0].tag_ids,[id(60)]);
+ const preview=(await db.query('SELECT preview_finance_restore($1) AS result',[backup])).rows[0].result;
+ assert.deepEqual([preview.counts.transaction_rules,preview.counts.transaction_tags,preview.counts.transaction_tag_links],[2,2,1]);
+ await db.query('SELECT restore_finance_backup($1,$2)',[backup,preview.expected_state]);
+ const restored=(await db.query('SELECT export_finance_backup() AS backup')).rows[0].backup;
+ const sort=rows=>rows.map(row=>JSON.stringify(row)).sort();
+ for(const name of Object.keys(parsed.tables))assert.deepEqual(sort(restored.tables[name]),sort(parsed.tables[name]),name);
+ // Restored rules still work: applying one sets its category, business and tags again.
+ assert.equal((await db.query('SELECT apply_transaction_rule($1) AS n',[id(70)])).rows[0].n,1);
+ assert.deepEqual((await db.query('SELECT custom_category_id,business_id FROM finance_records WHERE id=$1',[id(20)])).rows[0],{custom_category_id:id(50),business_id:id(11)});
+ assert.equal((await db.query('SELECT count(*)::int AS n FROM transaction_tag_links WHERE record_id=$1',[id(20)])).rows[0].n,2);
+ // A backup from before rules were backed up has none of these tables; it still verifies and restores without them.
+ await db.exec('RESET ROLE');
+ assert.equal((await db.query('SELECT count(*)::int AS n FROM transaction_rules WHERE user_id=$1',[other])).rows[0].n,1,'other owners keep their rules');
+ const older={...parsed,id:id(98),tables:{...parsed.tables}};for(const name of ['transaction_tags','transaction_tag_links','transaction_rules'])delete older.tables[name];
+ const olderText=JSON.stringify(older);
+ await db.query('SELECT register_verified_finance_backup($1,$2)',[olderText,owner]);
+ await db.exec(`SET request.jwt.claim.sub='${owner}';SET ROLE authenticated;`);
+ const olderPreview=(await db.query('SELECT preview_finance_restore($1) AS result',[olderText])).rows[0].result;
+ assert.equal(olderPreview.counts.transaction_rules,0);
+ await db.query('SELECT restore_finance_backup($1,$2)',[olderText,olderPreview.expected_state]);
+ assert.equal((await db.query('SELECT count(*)::int AS n FROM transaction_rules')).rows[0].n,0);
+ assert.equal((await db.query('SELECT count(*)::int AS n FROM finance_records')).rows[0].n,parsed.tables.finance_records.length);
+ // A present table that is not a list is still refused.
+ const broken=JSON.stringify({...older,id:id(97),tables:{...older.tables,transaction_rules:{}}});
+ await db.exec('RESET ROLE');await assert.rejects(db.query('SELECT register_verified_finance_backup($1,$2)',[broken,owner]),/invalid owner data/);
+ }finally{await db.close();}
+});
