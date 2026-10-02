@@ -681,58 +681,19 @@ tbody tr:last-child td{border-bottom:0}
 .record-filters > input { flex:2; min-width:200px; }
 @media(max-width:640px){.planning-cards{grid-template-columns:1fr}.record-filters>label{min-width:130px;}}
 
-.goal-cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:24px;margin:24px 0 32px}
-.goal-card{container-type:inline-size;display:flex;flex-direction:column;gap:24px;font-size:var(--type-small);position:relative;overflow:hidden;transition:border-color .15s}
-.workspace .content .goal-card{padding:24px}
-.workspace .content .goal-card:hover{border-color:color-mix(in srgb,var(--primary) 35%,var(--border))}
-.workspace .content .goal-card-selected{border-color:color-mix(in srgb,var(--primary) 55%,var(--border));background:var(--surface-glow),var(--card)}
-.goal-card-header{display:flex;justify-content:space-between;align-items:start;gap:16px}
-.goal-card-identity{display:flex;align-items:start;gap:14px;min-width:0}
-.goal-card-identity>div{min-width:0}
-.goal-card-icon{display:grid;place-items:center;width:56px;height:56px;flex-shrink:0;border-radius:14px;background:var(--muted);font-size:30px;line-height:1}
-.goal-card-kind{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;font-size:var(--type-small);color:var(--muted-foreground);line-height:1.5;margin-bottom:6px}
-.goal-card-archived{border:1px solid var(--border);border-radius:6px;padding:1px 7px;background:var(--muted);color:var(--muted-foreground)}
-.goal-card-identity h2{font-size:26px;font-weight:600;line-height:1.35;letter-spacing:-.5px;overflow-wrap:anywhere}
-.goal-card-account{font-size:var(--type-small);color:var(--muted-foreground);margin-top:8px;overflow-wrap:anywhere}
-.goal-card [data-slot=button]{font-size:var(--type-small);min-height:44px}
 .goal-card-values{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:24px;margin:0}
 .goal-card-values>div{min-width:0;display:flex;flex-direction:column;justify-content:end;gap:8px}
 .goal-card-values>div+div{padding-left:24px;border-left:1px solid var(--border)}
 .goal-card-values dt{font-size:var(--type-small);line-height:1.5;color:var(--muted-foreground)}
 .goal-card-values dd{font-size:26px;font-weight:550;line-height:1.25;letter-spacing:-.5px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-.goal-card-values .goal-card-current dd{font-size:36px;letter-spacing:-1px}
-.goal-card-progress>div{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px}
-.goal-card-progress strong{font-weight:500;font-size:var(--type-small)}
-.goal-card-progress span{display:flex;align-items:center;gap:6px;font-size:var(--type-small);color:var(--muted-foreground)}
-.goal-card-progress span svg{color:var(--primary)}
-.goal-card-progress progress{display:block;width:100%;height:12px;border:0;border-radius:20px;overflow:hidden;appearance:none;background:var(--muted)}
-.goal-card-progress progress::-webkit-progress-bar{background:var(--muted);border-radius:20px}
-.goal-card-progress progress::-webkit-progress-value{background:var(--positive);border-radius:20px}
-.goal-card-progress progress::-moz-progress-bar{background:var(--positive);border-radius:20px}
-.goal-card-footer{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding-top:20px;border-top:1px solid var(--border);margin-top:auto}
-.goal-card-deadline{display:flex;align-items:center;gap:12px;min-width:0}
-.goal-card-deadline>svg{color:var(--muted-foreground);flex-shrink:0}
-.goal-card-deadline>div{display:flex;flex-direction:column;gap:3px}
-.goal-card-deadline span{font-size:var(--type-small);color:var(--muted-foreground)}
-.goal-card-deadline strong{font-size:var(--type-small);font-weight:500;overflow-wrap:anywhere}
-.goal-card-footer [data-slot=button]{padding:10px 18px;gap:14px}
 .goal-planner-destination{display:flex;flex-direction:column;gap:16px;scroll-margin-top:100px;border-radius:20px}
 .goal-planner-destination:focus-visible{outline:2px solid var(--ring);outline-offset:4px}
 @container(max-width:520px){
  .goal-card-values{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
- .goal-card-values .goal-card-current{grid-column:1/-1}
  .goal-card-values>div:nth-child(2){border-left:0;padding-left:0}
  .goal-card-values>div+div{padding-left:16px}
- .goal-card-identity h2{font-size:24px}
  .goal-card-values dd{font-size:24px}
- .goal-card-values .goal-card-current dd{font-size:34px}
 }
-@container(max-width:350px){
- .goal-card-header{flex-wrap:wrap}
- .goal-card-footer>button{width:100%}
- .goal-card-icon{display:none}
-}
-@media(max-width:640px){.workspace .content .goal-card{padding:20px}}
 .goal-milestones{max-height:320px;margin-top:12px}
 .goal-milestones table{width:100%;text-align:left}
 .goal-milestones th,.goal-milestones td{padding:10px;border-bottom:1px solid var(--border)}
@@ -1111,22 +1072,12 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .tools-panel [aria-disabled=true]{opacity:.6;cursor:not-allowed}
 
 /* Goal funding: full-width, named cards instead of a narrow fieldset in a flex row. */
-.goal-funding-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.goal-funding-heading>div{flex:1 1 280px;min-width:0}
-.goal-funding-heading h2,.goal-funding-heading h3{margin:0}
-.goal-funding-heading p{max-width:75ch}
-.goal-funding-currency{border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:var(--type-small);color:var(--muted-foreground)}
-.goal-funding-summary{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-block:20px 16px}
-.goal-funding-summary h3{font-size:var(--type-small);font-weight:500;line-height:1.5;color:var(--muted-foreground)}
-.goal-funding-summary strong{font-size:24px}
 .goal-funding-notice{padding:14px 16px;background:var(--accent);border:1px solid var(--border);border-radius:10px;font-size:var(--type-small)}
-.goal-funding-settings{margin-top:20px;border-top:1px solid var(--border)}
-.goal-funding-settings>summary,.goal-funding-advanced>summary{display:flex;align-items:center;gap:10px;list-style:none}
-.goal-funding-settings>summary::-webkit-details-marker,.goal-funding-advanced>summary::-webkit-details-marker{display:none}
-.goal-funding-settings>summary:focus-visible,.goal-funding-advanced>summary:focus-visible{outline:2px solid var(--ring);outline-offset:3px;border-radius:6px}
+.goal-funding-advanced>summary{display:flex;align-items:center;gap:10px;list-style:none}
+.goal-funding-advanced>summary::-webkit-details-marker{display:none}
+.goal-funding-advanced>summary:focus-visible{outline:2px solid var(--ring);outline-offset:3px;border-radius:6px}
 .goal-disclosure-chevron{margin-left:auto;flex-shrink:0;transition:transform .15s ease}
-:is(.goal-funding-settings,.goal-funding-advanced)[open]>summary>.goal-disclosure-chevron{transform:rotate(180deg)}
-.goal-funding-help{font-size:var(--type-small)}
+.goal-funding-advanced[open]>summary>.goal-disclosure-chevron{transform:rotate(180deg)}
 .goal-funding-editors{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:16px}
 .goal-funding-editor{display:flex;flex-direction:column;gap:16px;min-width:0;padding:18px;border:1px solid var(--border);border-radius:12px;background:var(--background)}
 .goal-funding-editor header h3{font-size:var(--type-body);margin:0;overflow-wrap:anywhere}
@@ -1141,32 +1092,17 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .goal-funding-editor-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:12px;border-top:1px solid var(--border)}
 .goal-funding-editor-footer>span{font-size:var(--type-small);flex:1 1 100px}
 .goal-funding-editor-footer>div{display:flex;gap:8px;flex-wrap:wrap}
-.goal-cash-activity{padding-top:24px;margin-top:24px;border-top:1px solid var(--border)}
-.goal-cash-activity:first-child{padding-top:0;margin-top:0;border-top:0}
-.goal-cash-activity>.goal-funding-heading>button{white-space:normal;height:auto;min-width:0;text-align:left}
-.goal-cash-activity h3{font-size:var(--type-body)}
-.goal-cash-activity>.goal-funding-heading p{font-size:var(--type-small)}
-.goal-activity-empty{display:flex;align-items:flex-start;gap:12px;padding:18px;border:1px dashed var(--border);border-radius:12px;margin-top:12px;background:var(--accent)}
-.goal-activity-empty>svg{flex-shrink:0;color:var(--muted-foreground)}
-.goal-activity-empty strong{font-size:var(--type-body)}
-.goal-activity-empty p{font-size:var(--type-small);color:var(--muted-foreground);margin:4px 0 0}
-.goal-activity-form{padding:18px;border:1px solid var(--border);border-radius:12px;margin-top:16px}
+.goal-activity-form{margin:0}
 .goal-activity-form>p{font-size:var(--type-small);margin-top:0;margin-bottom:16px}
 .goal-field-wide{grid-column:1/-1}
 .goal-activity-actions{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
 .goal-activity-actions>button{white-space:normal;height:auto}
 .goal-activity-amount{font-variant-numeric:tabular-nums}
-.goal-activity-list p{font-size:var(--type-small);margin:4px 0 0}
 @container(min-width:740px){.goal-funding-editors{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @container(max-width:480px){
- .goal-funding-summary{grid-template-columns:minmax(0,1fr);gap:8px}
- .goal-funding-summary>article{padding:14px;display:flex;align-items:center;justify-content:space-between;gap:16px}
- .goal-funding-summary h3{margin:0;flex:1;min-width:0}
- .goal-funding-summary strong{font-size:22px}
  .goal-funding-editor{padding:14px}
  .goal-funding-fields{grid-template-columns:minmax(0,1fr)}
  .goal-activity-actions>button{width:100%}
- .goal-cash-activity>.goal-funding-heading>button{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.goal-disclosure-chevron{transition:none}}
 
@@ -1220,47 +1156,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
  .investment-goal-plan .goal-projection-chart{height:200px}
 }
 
-/* Compact goal summaries expand only when holding details are needed. */
-.goal-list-toolbar{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px 20px}
-.goal-list-toolbar .planning-check{margin:0;font-size:var(--type-small)}
-.goal-cards-compact{gap:16px;align-items:start;margin-top:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))}
-.workspace .content .goal-cards-compact .goal-card{padding:18px;gap:14px}
-.goal-cards-compact .goal-card-header{gap:10px}
-.goal-cards-compact .goal-card-icon{width:48px;height:48px;border-radius:12px;font-size:26px}
-.goal-cards-compact .goal-card-identity{gap:10px}
-.goal-cards-compact .goal-card-identity h2{font-size:20px;letter-spacing:-.2px}
-.goal-cards-compact .goal-card-kind,.goal-cards-compact .goal-card-account{font-size:var(--type-caption);margin:0 0 4px}
-.goal-card-actions{display:flex;flex-shrink:0;gap:2px}
-.goal-cards-compact .goal-card-actions button{width:32px;min-height:36px;height:36px;padding:4px}
-.goal-cards-compact .goal-card-values{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.goal-cards-compact .goal-card-values .goal-card-current{grid-column:auto}
-.goal-cards-compact .goal-card-values>div{gap:4px}
-.goal-cards-compact .goal-card-values>div+div{padding-left:12px;border-left:1px solid var(--border)}
-.goal-cards-compact .goal-card-values dt{font-size:var(--type-caption)}
-.goal-cards-compact .goal-card-values dd,.goal-cards-compact .goal-card-values .goal-card-current dd{font-size:20px;letter-spacing:-.3px}
-.goal-cards-compact .goal-card-progress>div{margin-bottom:7px;gap:6px}
-.goal-cards-compact .goal-card-progress strong,.goal-cards-compact .goal-card-progress span{font-size:var(--type-caption)}
-.goal-cards-compact .goal-card-progress progress{height:8px}
-.goal-cards-compact .goal-card-footer{padding-top:12px;margin-top:0;gap:10px}
-.goal-cards-compact .goal-card-deadline{gap:8px}
-.goal-cards-compact .goal-card-deadline span,.goal-cards-compact .goal-card-deadline strong{font-size:var(--type-caption)}
-.goal-cards-compact .goal-card-footer button{min-height:38px;padding:7px 12px;gap:8px;font-size:var(--type-caption)}
-.goal-holdings-details{font-size:var(--type-small)}
-.goal-holdings-details>summary{cursor:pointer;padding:6px 0;min-height:36px;color:var(--muted-foreground)}
-.goal-holdings-details>summary:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
-.goal-holdings-details .goal-help{font-size:var(--type-caption);margin-top:10px}
-.goal-holdings-details .investment-target-summary{padding:8px 0;font-size:var(--type-caption)}
-@container(max-width:380px){
- .goal-cards-compact .goal-card-header{flex-wrap:wrap}
- .goal-card-actions{margin-left:auto}
- .goal-cards-compact .goal-card-values{grid-template-columns:repeat(2,minmax(0,1fr))}
- .goal-cards-compact .goal-card-values .goal-card-current{grid-column:1/-1}
- .goal-cards-compact .goal-card-values>div:nth-child(2){padding-left:0;border-left:0}
-}
 
-/* Goal cards open their plan; their edit/reorder/disclosure controls stay independent. */
-.goal-card{cursor:pointer}
-.goal-card:has(.goal-card-footer button:focus-visible){outline:2px solid var(--ring);outline-offset:3px}
 .investment-plan-body{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,1.5fr);gap:24px;align-items:center;min-width:0}
 .investment-plan-controls{display:grid;gap:12px;min-width:0}
 .investment-goal-plan .goal-card-values{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -1296,11 +1192,6 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
  .account-security-panel[data-mode="change_password"] .tracker-fields{grid-template-columns:1fr}
 }
 
-.goal-drag-handle{touch-action:none;cursor:grab;user-select:none}
-.goal-drag-handle[data-dragging=true]{cursor:grabbing}
-.goal-card:has(.goal-drag-handle[data-dragging=true]){opacity:.65}
-.goal-cards-compact .goal-card[data-drop-target=true]{outline:2px dashed var(--primary);outline-offset:3px}
-.goal-card:focus-visible{outline:2px solid var(--ring);outline-offset:3px}
 
 @media(max-width:540px){.record-dialog .record-form .amount-currency-row{grid-template-columns:minmax(0,1fr)}}
 
@@ -1858,7 +1749,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .dashboard-goal-list small{display:block;margin-top:6px;font-size:var(--type-caption);color:var(--muted-foreground)}
 .dashboard-goal-cover{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border-radius:10px;background:var(--muted);font-size:20px}
 .progress-track{height:6px;border-radius:6px;background:var(--muted);overflow:hidden}
-.progress-track>div{height:100%;border-radius:6px;background:var(--positive)}
+.progress-track>*{display:block;height:100%;border-radius:6px;background:var(--positive)}
 .workspace .content .overview-panel{padding:24px;min-width:0;box-shadow:var(--shadow-card)}
 .workspace .content .overview-panel .panel-title{margin-bottom:20px;align-items:baseline}
 .workspace .content .overview-panel .panel-title h2{font-size:var(--type-body);font-weight:600;letter-spacing:-.01em}
@@ -2099,13 +1990,13 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .dashboard-budget-list{margin-top:14px}
 .dashboard-budget-list>li>span{display:flex;flex-direction:column;gap:6px;min-width:0}
 /* Dashboard drag and drop: a six-dot handle in a card's top corner lifts it; the held card floats above the others. */
-.dashboard-card{position:relative;min-width:0;touch-action:manipulation}
-.dashboard-card[data-dragging]{z-index:5}
+.sortable-item{position:relative;min-width:0;touch-action:manipulation}
+.sortable-item[data-dragging]{z-index:5}
 .dashboard-card[data-dragging]>.panel{box-shadow:0 12px 32px rgb(0 0 0 / .14);opacity:.96}
 .drag-handle{display:inline-grid;place-items:center;width:20px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--muted-foreground);cursor:grab;touch-action:none}
 .drag-handle:hover{background:var(--muted);color:var(--foreground)}
 .drag-handle:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
-.dashboard-card[data-dragging] .drag-handle,.customize-row[data-dragging] .drag-handle{cursor:grabbing}
+.sortable-item[data-dragging] .drag-handle{cursor:grabbing}
 .dashboard-card>.drag-handle{position:absolute;inset-block-start:22px;inset-inline-start:2px;z-index:1;opacity:0;transition:opacity .15s}
 .dashboard-card:hover>.drag-handle,.dashboard-card>.drag-handle:focus-visible,.dashboard-card[data-dragging]>.drag-handle{opacity:1}
 @media (hover:none){.dashboard-card>.drag-handle{opacity:1}}
@@ -2127,15 +2018,22 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 @media (max-width:560px){.customize-grid{grid-template-columns:minmax(0,1fr)}}
 
 /* Goal detail: a cover band, the progress line and four figures heading a goal's plan. */
-.goal-detail{display:flex;flex-direction:column;gap:16px;padding:0;overflow:hidden}
-.goal-detail-cover{display:grid;place-items:center;height:96px;background:linear-gradient(135deg,color-mix(in srgb,var(--mark-bg) 18%,var(--card)),color-mix(in srgb,var(--mark-bg) 6%,var(--card)))}
-.goal-detail-cover>span{font-size:44px;line-height:1}
-.goal-detail-head{display:flex;flex-direction:column;gap:8px;padding:0 20px}
-.goal-detail-head h2{margin:0;font-size:var(--type-title);font-weight:600}
+.goal-detail{display:flex;flex-direction:column;gap:16px}
+.goal-detail-head{display:flex;flex-direction:column;gap:8px}
+.goal-detail-head>header{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.goal-detail-head>header>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-width:0}
+.goal-detail-mark{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border-radius:var(--radius-control);background:var(--muted);font-size:22px;line-height:1}
+/* Inside the goal card the figures sit flat, divided by hairlines, instead of boxed tiles inside a box. */
+.goal-detail .stat-tiles{gap:0;padding-top:14px;border-top:1px solid var(--hairline)}
+.goal-detail .stat-tile{gap:2px;padding:0 16px;border:0;border-inline-start:1px solid var(--hairline);border-radius:0;background:none;box-shadow:none}
+.goal-detail .stat-tile:first-child{padding-inline-start:0;border-inline-start:0}
+.goal-detail .stat-tile>strong{font-size:var(--type-title);font-weight:500}
+.goal-detail .stat-tile>p{margin-top:2px}
+@container content (max-width:720px){.goal-detail .stat-tiles[data-columns="3"]{gap:10px}.goal-detail .stat-tiles[data-columns="3"] .stat-tile{padding:0;border:0}}
+.goal-detail-head h2{margin:0;font-size:var(--type-title);font-weight:600;overflow-wrap:anywhere}
 .goal-detail-head p{display:flex;align-items:baseline;gap:8px;margin:0;color:var(--muted-foreground);font-size:var(--type-small)}
 .goal-detail-head p>strong{color:var(--foreground);font-size:var(--type-stat);font-weight:500;font-variant-numeric:tabular-nums}
 .goal-detail-percent{margin-inline-start:auto;color:var(--foreground);font-weight:500}
-.goal-detail>.stat-tiles{padding:0 20px 20px}
 
 /* Cash flow report: period figures, monthly bars, and the category / merchant breakdown or Sankey. */
 .cash-flow-report{display:flex;flex-direction:column;gap:16px;width:100%}
@@ -2169,3 +2067,55 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .assistant-form textarea{flex:1;min-height:48px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--field);font:inherit;font-size:var(--type-body);resize:vertical}
 .assistant-form textarea:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
 .assistant-note{margin:0;color:var(--muted-foreground);font-size:var(--type-caption);text-align:center}
+
+/* Savings goals, after Monarch: one ordered list of goals beside what is free for goals. */
+.goals-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:16px;align-items:start;width:100%}
+.goals-side{display:flex;flex-direction:column;gap:16px;min-width:0}
+@container content (max-width:900px){.goals-layout{grid-template-columns:minmax(0,1fr)}}
+.goal-rows{display:flex;flex-direction:column;margin:4px 0 0;padding:0;list-style:none}
+.goal-row{display:flex;align-items:center;gap:4px;margin-inline:-12px;padding-inline:4px;border-radius:var(--radius-control);background:var(--card)}
+.goal-row+.goal-row{border-top:1px solid var(--hairline)}
+.goal-row>.drag-handle{flex-shrink:0;opacity:0;transition:opacity .15s}
+.goal-row:hover>.drag-handle,.goal-row>.drag-handle:focus-visible,.goal-row[data-dragging]>.drag-handle{opacity:1}
+@media (hover:none){.goal-row>.drag-handle{opacity:1}}
+.goal-row[data-dragging]{box-shadow:0 12px 32px rgb(0 0 0 / .14)}
+.goal-row.is-selected{background:color-mix(in srgb,var(--primary) 6%,var(--card))}
+.goal-row-main{display:flex;flex:1;align-items:center;gap:14px;min-width:0;padding:14px 4px;border:0;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
+.goal-row-main:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:var(--radius-control)}
+.goal-row-cover{display:grid;place-items:center;width:48px;height:48px;flex-shrink:0;border-radius:var(--radius-control);background:var(--muted);font-size:24px;line-height:1}
+.goal-row-body{display:flex;flex:1;flex-direction:column;gap:6px;min-width:0}
+.goal-row-line{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-width:0}
+.goal-row-line>strong:first-child{font-size:var(--type-body);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal-row-amount{flex-shrink:0;font-size:var(--type-body);font-weight:500;font-variant-numeric:tabular-nums}
+.goal-row-meta{align-items:center;flex-wrap:wrap;row-gap:4px;font-size:var(--type-caption);color:var(--muted-foreground)}
+.goal-row-meta>span:first-child{display:flex;align-items:center;gap:8px;min-width:0}
+.goal-row-meta>span:first-child>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goals-list{container:goal-list/inline-size}
+@container goal-list (max-width:420px){.goal-row-cover{width:40px;height:40px;font-size:20px}.goal-row-main{gap:10px}}
+.goal-row-meta>span:last-child{flex-shrink:0;font-variant-numeric:tabular-nums}
+.goal-row .progress-track{margin-top:2px}
+.goal-row .progress-track[data-status=at_risk]>*{background:var(--caution)}
+.goal-row-alert{font-size:var(--type-caption);color:var(--negative)}
+.goal-row-menu{flex-shrink:0}
+.status-badge.goal-status.is-completed,.status-badge.goal-status.is-on_track{background:color-mix(in srgb,var(--positive) 12%,transparent);color:var(--positive)}
+.status-badge.goal-status.is-at_risk{background:color-mix(in srgb,var(--caution) 16%,transparent);color:var(--caution)}
+.goal-available{display:flex;flex-direction:column;align-items:center;gap:4px;margin:4px 0 12px;padding:20px 16px;border-radius:var(--radius-control);background:color-mix(in srgb,var(--positive) 8%,var(--card));text-align:center}
+.goal-available strong{font-size:var(--type-stat);font-weight:500;font-variant-numeric:tabular-nums;color:var(--positive)}
+.goal-available span{font-size:var(--type-small);color:var(--muted-foreground)}
+.goal-funding-figures{display:flex;flex-direction:column;margin:0}
+.goal-funding-figures>div,.goal-funding-allocations>li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--hairline);font-size:var(--type-small)}
+.goal-funding-figures dt{color:var(--muted-foreground)}
+.goal-funding-figures dd{margin:0;font-weight:500;font-variant-numeric:tabular-nums}
+.goal-funding-allocations{margin:0;padding:0;list-style:none}
+.goal-funding-allocations>li>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal-funding-allocations>li>strong{font-weight:500;font-variant-numeric:tabular-nums}
+.goal-funding-plan{width:100%;margin-top:12px}
+.goal-funding-panel>.goal-funding-notice{margin:8px 0 0;font-size:var(--type-small)}
+.goal-activity-list{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
+.goal-activity-list>li{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-top:1px solid var(--hairline);font-size:var(--type-small)}
+.goal-activity-list>li:first-child{border-top:0}
+.goal-activity-list>li>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.goal-activity-list small{font-size:var(--type-caption);color:var(--muted-foreground)}
+.goal-dialog-title{display:flex;align-items:center;gap:8px}
+.record-dialog.goal-funding-dialog{max-width:880px!important}
+.goal-funding-dialog .goal-funding-editors{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));margin-top:4px}

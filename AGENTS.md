@@ -75,6 +75,11 @@ it instead of styling a page on its own.
 - Income amounts are green; expenses stay in the ink colour. Red marks overdue,
   overspent or owed amounts only.
 - Rare row actions go in a ⋯ menu rather than a row of buttons.
+- Every list whose order the person chooses (goals, accounts, categories, cards,
+  templates and the like) is reorderable by drag and drop with `SortableList` /
+  `SortableItem` from `presentation-foundation/sortable.tsx`; chronological or
+  sorted lists are not. `UI-AGENT.md` has the full rules and the Monarch
+  reference workflow; read it before UI work.
 - Surfaces are `.panel`; their heading row is `PanelTitle` (title, `Count` pill,
   description, and an aside or action as children). Secondary tools sit in
   `.panel.tools-panel`, with rarely used settings behind `<details>`.

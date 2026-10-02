@@ -13,13 +13,15 @@ function setup(resource = {}, extra = {}) {
  const component = loadTS('components/planning/goal-funding-panel.tsx', {
   '@/components/language-provider': language,
   '@/components/discard-changes': { useUnsavedNavigation: () => null },
+  // Dialogs render their content inline so the funding plan and activity form can be inspected.
+  '@/components/ui/dialog': { Dialog: ({ children }) => children, DialogContent: ({ children, className }) => React.createElement('div', { className }, children), DialogTitle: ({ children }) => React.createElement('h2', null, children) },
   '@/hooks/use-owner-resource': { useOwnerResource: (...args) => { calls.push(args); return { data: { events: [] }, loading: false, error: '', retry() {}, invalidate() {}, ...resource }; }, saveOwnerResource: async () => ({}), ...extra.resource },
   ...extra.overrides,
  }).GoalFundingPanel;
  return { component, calls, render: goals => renderToStaticMarkup(React.createElement(component, props(goals))) };
 }
 
-test('investment and net-worth goals show named funding cards without requesting or showing cash activity', () => {
+test('investment and net-worth goals show what is available for goals and named funding cards, without cash activity', () => {
  const { render, calls } = setup();
  const html = render([goal('investment'), goal('net_worth')]);
  assert.equal(calls[0][2], false);
@@ -27,7 +29,9 @@ test('investment and net-worth goals show named funding cards without requesting
  assert.equal((html.match(/class="goal-funding-editor"/g) ?? []).length, 2);
  assert.match(html, /Save funding for investment goal/);
  assert.match(html, /Monthly funding budget \(USD\)/);
- assert.match(html, /No goals are scheduled for funding/);
+ assert.match(html, /Available for goals/);
+ assert.match(html, />Plan funding<\/button>/);
+ assert.match(html, /\$10,632/);
  assert.doesNotMatch(html, /<ul/);
  assert.match(html, /<details class="goal-funding-advanced"><summary>/);
  assert.match(html, /<label class="goal-funding-enable" for="([^"]+)"><button[^>]*id="\1"/);
@@ -37,10 +41,9 @@ test('cash goals explain empty activity and suppress zero-value migration openin
  const { render, calls } = setup({ data: { events: [{ id: 'zero', event_type: 'opening', delta: '0' }] } });
  const html = render([goal()]);
  assert.equal(calls[0][2], true);
- assert.match(html, /No cash goal activity yet/);
  assert.match(html, /Cash contributions, withdrawals and transfers will appear here when recorded/);
- assert.match(html, /aria-expanded="false"/);
- assert.match(html, /hidden=""/);
+ assert.match(html, /<h2>Record goal activity<\/h2>/);
+ assert.match(html, /class="goal-activity-form"/);
  assert.match(html, /Goal behavior/);
  assert.doesNotMatch(html, /<ul/);
 });
@@ -48,12 +51,12 @@ test('cash goals explain empty activity and suppress zero-value migration openin
 test('activity loading and failure states do not misrepresent unavailable history as empty', () => {
  const loading = setup({ loading: true }).render([goal()]);
  assert.match(loading, /Loading goal activity…/);
- assert.doesNotMatch(loading, /No cash goal activity yet/);
+ assert.doesNotMatch(loading, /will appear here when recorded/);
  const error = setup({ error: 'Internal error details' }).render([goal()]);
  assert.match(error, /role="alert"/);
  assert.match(error, /Goal activity could not be loaded/);
  assert.match(error, />Retry<\/button>/);
- assert.doesNotMatch(error, /No cash goal activity yet|Internal error details/);
+ assert.doesNotMatch(error, /will appear here when recorded|Internal error details/);
 });
 
 test('archived cash goals retain dated history without offering new activity or funding', () => {
@@ -61,7 +64,7 @@ test('archived cash goals retain dated history without offering new activity or 
  assert.match(html, /18 September 2026/);
  assert.match(html, /\$125/);
  assert.match(html, /Extra savings/);
- assert.doesNotMatch(html, /Record goal activity|Shared goal funding|No cash goal activity yet/);
+ assert.doesNotMatch(html, /Record goal activity|Available for goals|will appear here when recorded/);
  assert.equal(setup().render([]), '');
  assert.equal(setup().render([goal('investment', { archived: true })]), '');
 });

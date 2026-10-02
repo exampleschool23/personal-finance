@@ -177,3 +177,11 @@ test('liability tone marks any amount owed as negative and leaves no debt and un
  assert.equal(liabilityTone(undefined),undefined);
  assert.equal(liabilityTone(NaN),undefined);
 });
+
+test('sortable items carry a named six-dot handle, and sortable lists render their items in order',()=>{
+ const {SortableList,SortableItem}=load('sortable.tsx');
+ const html=render(SortableList,{id:'goals',items:['a','b'],nameOf:id=>id,onMove(){}},React.createElement(SortableItem,{id:'a',label:'Emergency fund',as:'li',className:'goal-row'},'A'),React.createElement(SortableItem,{id:'b',label:'Car'},'B'));
+ assert.match(html,/^<li class="sortable-item goal-row"[^>]*><button type="button" class="drag-handle" aria-label="Move Emergency fund"[^>]*aria-roledescription="sortable"[^>]*><svg/);
+ assert.ok(html.indexOf('Move Emergency fund')<html.indexOf('Move Car'));
+ assert.match(html,/<div class="sortable-item"[^>]*><button[^>]*aria-label="Move Car"/);
+});

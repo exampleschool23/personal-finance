@@ -35,4 +35,5 @@ export { ExchangeRatePreview } from './exchange-rate-preview';
 export { FormFooter } from './form-footer';
 export { ConfirmDialog } from './confirm-dialog';
 export { ErrorPopup } from './error-popup';
+export { SortableList, SortableItem, sortableAccessibility, useSortableSensors } from './sortable';
 export { signTone } from './tone';

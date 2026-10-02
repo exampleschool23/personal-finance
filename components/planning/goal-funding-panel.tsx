@@ -7,6 +7,9 @@ import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { ResourceState } from '@/components/presentation-foundation/resource-state';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { ChevronDown, History, Plus, SlidersHorizontal } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { EmptyState } from '@/components/presentation-foundation/empty-state';
+import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -32,7 +35,7 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
  const activity = useOwnerResource('/api/goal-tools', owner, !demo && savingsGoals.length > 0, revision, empty);
  const plan = fundingPlan(data.goals, surplus, currency, today, rates);
  const [busy, setBusy] = useState(false), [error, setError] = useState('');
- const [activityOpen, setActivityOpen] = useState(false);
+ const [activityOpen, setActivityOpen] = useState(false), [planning, setPlanning] = useState(false);
  const incomeHistory=useOwnerResource('/api/planning?scope=insights',owner,!demo&&activityOpen,revision,emptyPlanning);
  const events = activity.data.events.filter(event => event.event_type !== 'opening' || Number(event.delta) !== 0);
  const activityId = useId();
@@ -47,44 +50,45 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
  }
 
  if (!activeGoals.length && !savingsGoals.length) return null;
- return <section className="panel tools-panel goal-funding-panel">
-  {activeGoals.length > 0 && <>
-   <header className="goal-funding-heading">
-    <div><h2>{t('Shared goal funding')}<InfoHint>{t('Plan how to divide your monthly surplus between goals. Money stays in your accounts until you move it.')}</InfoHint></h2></div>
-    <span className="goal-funding-currency">{currency}</span>
-   </header>
-   <div className="review-grid goal-funding-summary">
-    <article><h3>{t('Available monthly surplus')}</h3><strong>{money(surplus)}</strong></article>
-    <article><h3>{t('Planned goal funding')}</h3><strong>{money(plan.requested)}</strong></article>
-    <article><h3>{t('Unassigned monthly surplus')}</h3><strong>{money(plan.remaining)}</strong></article>
-   </div>
+ // Monarch's goals sidebar: what is free for goals this month, the plan that uses it, and the money moved in and out of goals.
+ return <>
+  {activeGoals.length > 0 && <section className="panel goal-funding-panel" aria-labelledby={`${activityId}-funding`}>
+   <PanelTitle title={<span id={`${activityId}-funding`}>{t('Available for goals')}</span>} hint={t('Plan how to divide your monthly surplus between goals. Money stays in your accounts until you move it.')}/>
+   <div className="goal-available"><strong>{money(plan.remaining)}</strong><span>{t('Unassigned monthly surplus')}</span></div>
+   <dl className="goal-funding-figures">
+    <div><dt>{t('Available monthly surplus')}</dt><dd>{money(surplus)}</dd></div>
+    <div><dt>{t('Planned goal funding')}</dt><dd>{money(plan.requested)}</dd></div>
+   </dl>
    {plan.shortfall !== null && plan.shortfall > 0 && <p className="goal-funding-notice negative" role="status">{t('Your funding plan exceeds your monthly surplus by {amount}.', { amount: money(plan.shortfall) })}</p>}
    {!plan.complete && <p className="goal-funding-notice" role="status">{t('Enter each enabled goal’s monetary budget and provide all exchange rates to complete the plan.')}</p>}
-   {plan.rows.length > 0 ? <ul className="tool-list goal-funding-allocations" aria-label={t('Planned goal funding')}>
-    {plan.rows.map(row => <li key={row.goal.id}><strong>{row.goal.name}</strong><span>{t('Funded in this plan')}: {money(row.allocated)} / {money(row.requested)}</span></li>)}
-   </ul> : <p className="goal-funding-notice">{t('No goals are scheduled for funding. Open the settings below to choose goals and monthly amounts.')}</p>}
-   <details className="goal-funding-settings">
-    <summary><SlidersHorizontal size={18} aria-hidden="true"/><span>{t('Priorities and monthly funding')}</span><ChevronDown className="goal-disclosure-chevron" size={18} aria-hidden="true"/></summary>
-    <p className="muted goal-funding-help">{t('Lower priority numbers are funded first. Include only separate commitments so the same money is not planned twice.')}</p>
+   {plan.rows.length > 0 && <ul className="goal-funding-allocations" aria-label={t('Planned goal funding')}>
+    {plan.rows.map(row => <li key={row.goal.id}><span>{row.goal.name}</span><strong>{money(row.allocated)}</strong></li>)}
+   </ul>}
+   <Button type="button" className="goal-funding-plan" onClick={() => setPlanning(true)}><SlidersHorizontal size={16} aria-hidden="true"/>{t('Plan funding')}</Button>
+   <Dialog open={planning} onOpenChange={setPlanning}><DialogContent className="record-dialog goal-funding-dialog">
+    <DialogTitle className="goal-dialog-title">{t('Priorities and monthly funding')}<InfoHint>{t('Lower priority numbers are funded first. Include only separate commitments so the same money is not planned twice.')}</InfoHint></DialogTitle>
     <div className="goal-funding-editors">{activeGoals.map(goal => <FundingEditor key={JSON.stringify(goal)} goal={goal} today={today} busy={busy || demo} save={save}/>)}</div>
-   </details>
-  </>}
-  {savingsGoals.length > 0 && <section className="goal-cash-activity" aria-labelledby={activityId}>
-   <header className="goal-funding-heading"><div><h3 id={activityId}>{t('Cash goal activity')}</h3><p className="muted">{t('Contributions, withdrawals and transfers for your cash savings goals.')}</p></div>
-    {activeSavings.length > 0 && <Button type="button" variant="outline" disabled={busy || demo} aria-expanded={activityOpen} aria-controls={`${activityId}-form`} onClick={() => setActivityOpen(open => !open)}><Plus size={16} aria-hidden="true"/>{t('Record goal activity')}</Button>}
-   </header>
-   {demo && <p className="muted">{t('Sign in to record cash goal activity.')}</p>}
-   {activeSavings.length > 0 && <div id={`${activityId}-form`} hidden={!activityOpen}><ResourceState loading={activityOpen&&incomeHistory.loading} error={activityOpen?incomeHistory.error:null} onRetry={incomeHistory.retry}><GoalActivityForm data={demo||!activityOpen?data:{...data,records:incomeHistory.data.records}} goals={activeSavings} today={today} busy={busy || demo} save={save}/></ResourceState></div>}
+   </DialogContent></Dialog>
+  </section>}
+  {savingsGoals.length > 0 && <section className="panel goal-cash-activity" aria-labelledby={activityId}>
+   <PanelTitle title={<span id={activityId}>{t('Cash goal activity')}</span>} hint={t('Contributions, withdrawals and transfers for your cash savings goals.')}>
+    {activeSavings.length > 0 && <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => setActivityOpen(true)}><Plus size={16} aria-hidden="true"/>{t('Record')}</Button>}
+   </PanelTitle>
+   {activeSavings.length > 0 && <Dialog open={activityOpen} onOpenChange={setActivityOpen}><DialogContent className="record-dialog sm:max-w-2xl">
+    <DialogTitle>{t('Record goal activity')}</DialogTitle>
+    {demo && <p className="goal-funding-notice" role="status">{t('Sign in to record cash goal activity.')}</p>}
+    <ResourceState loading={activityOpen&&incomeHistory.loading} error={activityOpen?incomeHistory.error:null} onRetry={incomeHistory.retry}><GoalActivityForm data={demo||!activityOpen?data:{...data,records:incomeHistory.data.records}} goals={activeSavings} today={today} busy={busy || demo} save={save}/></ResourceState>
+   </DialogContent></Dialog>}
    {activity.error ? <InlineError as="div" className="goal-funding-notice" message={<p>{t('Goal activity could not be loaded. Please try again.')}</p>} onRetry={activity.retry}/>
     : activity.loading ? <LoadingPlaceholder label={t('Loading goal activity…')} rows={2}/>
-    : events.length > 0 ? <ul className="tool-list goal-activity-list">{events.map(event => {
+    : events.length > 0 ? <ul className="goal-activity-list">{events.slice(0, 6).map(event => {
       const goal = savingsGoals.find(item => item.id === event.goal_id);
-      return <li key={event.id}><div><strong>{goal?.name ?? t('Goal')}</strong><p className="muted">{formatDate(event.occurred_on, locale)} · {t(event.event_type)}{event.source_name && ` · ${event.source_name}`}</p>{event.notes && <p>{event.event_type === 'opening' ? t(event.notes) : event.notes}</p>}</div><strong className="goal-activity-amount">{formatMoney(Number(event.delta), goal?.currency ?? currency, locale)}</strong></li>;
+      return <li key={event.id}><div><strong>{goal?.name ?? t('Goal')}</strong><small>{formatDate(event.occurred_on, locale)} · {t(event.event_type)}{event.source_name && ` · ${event.source_name}`}</small>{event.notes && <small>{event.event_type === 'opening' ? t(event.notes) : event.notes}</small>}</div><strong className="goal-activity-amount">{formatMoney(Number(event.delta), goal?.currency ?? currency, locale)}</strong></li>;
      })}</ul>
-    : <div className="goal-activity-empty" role="status"><History size={22} aria-hidden="true"/><div><strong>{t('No cash goal activity yet.')}</strong><p>{t('Cash contributions, withdrawals and transfers will appear here when recorded.')}</p></div></div>}
+    : <EmptyState icon={<History aria-hidden="true"/>} description={t('Cash contributions, withdrawals and transfers will appear here when recorded.')}/>}
   </section>}
   <ErrorPopup message={error}/>
- </section>;
+ </>;
 }
 
 function FundingEditor({ goal, today, busy, save }: { goal: Goal; today: string; busy: boolean; save: (action: string, data: unknown) => Promise<void> }) {
