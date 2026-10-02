@@ -13,7 +13,7 @@ export function MonthlyMortgagePayments({records,currency,market,loading,error,o
  const mortgages=records.filter(record=>record.kind==='Mortgage'&&record.amount>0);
  if(!loading&&!error&&!mortgages.length)return null;
  return <section className="panel monthly-mortgage-payments">
-  <PanelTitle title={t('Monthly mortgage payments')} description={t('Included in estimated monthly expenses. Record each payment after it happens to add it to transaction history.')}/>
+  <PanelTitle title={t('Monthly mortgage payments')} hint={t('Included in estimated monthly expenses. Record each payment after it happens to add it to transaction history.')}/>
   {loading?<LoadingPlaceholder label={t('Loading records…')}/>:error?<InlineError message={t(error)}/>:<div className="table-scroll"><table><thead><tr><th>{t('Name')}</th><th>{t('Estimated per month')}</th><th>{t('Outstanding balance')}</th><th>{t('Actions')}</th></tr></thead><tbody>{mortgages.map(original=>{
    const record=marketEntry(original,currency,market)??original;
    return <tr key={original.id}><td>{original.name}</td><td>{(record.estimated_monthly_payment??0)>0?formatMoney(record.estimated_monthly_payment!,record.currency,locale):t('Not set')}</td><td>{formatMoney(record.amount,record.currency,locale)}</td><td><div className="row-actions"><Button variant="ghost" size="sm" onClick={()=>onEdit(original)}>{t('Edit')}</Button><Button variant="outline" size="sm" onClick={()=>onPay(original)}>{t('Record payment')}</Button></div></td></tr>;

@@ -30,7 +30,7 @@ export function RecentlyDeleted({demo,demoItems,onRestore,onDelete,onSaved}:{dem
   return ()=>controller.abort();
  },[demo,page,requestKey]);
  const visible=demo?demoItems.slice((page-1)*10,page*10):items;
- return <><PageHeader title={t('Recently deleted')} description={<>{t('Restore deleted items to bring them back, or permanently delete them to remove their recovery data.')} {t('Items deleted before recovery was enabled cannot be recovered here.')}</>}/><section className="panel records recovery-panel">
+ return <><PageHeader title={t('Recently deleted')} hint={<>{t('Restore deleted items to bring them back, or permanently delete them to remove their recovery data.')} {t('Items deleted before recovery was enabled cannot be recovered here.')}</>}/><section className="panel records recovery-panel">
  {error&&!restoring&&!loading&&<InlineError as="div" message={t(error)} onRetry={()=>setReload(n=>n+1)}/>}
  {loading?<LoadingPlaceholder label={t('Loading records…')}/>:!visible.length?<EmptyState icon={<ArchiveRestore aria-hidden="true"/>} title={t('No deleted items.')} description={t('Your deleted records will appear here for recovery.')}/>:<ul className="recovery-list">{visible.map(item=><li className="recovery-row" key={item.id} style={{'--recovery-color':categoryColor(deletedItemColorKind(item))} as CSSProperties}>
   <span className="recovery-icon"><ArchiveRestore size={20} aria-hidden="true"/></span>

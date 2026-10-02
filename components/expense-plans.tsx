@@ -20,7 +20,7 @@ import { FormattedNumberInput } from '@/components/presentation-foundation/forma
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { CategoryBadge } from '@/components/presentation-foundation/category-badge';
 import { useLanguage } from '@/components/language-provider';
-import { formatMoney, formatDate, formatMonthYear } from '@/lib/format';
+import { formatMoney, formatDate } from '@/lib/format';
 import { expensePlanCategories, expensePlanTotals, type ExpensePlan } from '@/lib/expense-plans';
 
 type Props={plans:ExpensePlan[];month:string;currency:string;loading:boolean;error:string;save:(plan:ExpensePlan)=>Promise<void>;remove:(id:string)=>Promise<void>;onSpend:(plan:ExpensePlan)=>void;onRetry:()=>void;currencies:string[]};
@@ -33,8 +33,11 @@ export function ExpensePlans({plans,month,currency,currencies,loading,error,save
  const open=(plan?:ExpensePlan)=>{setFailure('');setDraft(plan?{...plan,amount:plan.amount||plan.base_amount||0}:{id:crypto.randomUUID(),name:'',category:'Groceries',currency,amount:0,start_date:month+'-01',end_date:null});};
  async function submit(e:React.FormEvent){e.preventDefault();if(!draft||!draft.amount)return;setBusy(true);setFailure('');try{await save(draft);setDraft(null);}catch(e){setFailure((e as Error).message);}finally{setBusy(false);}}
  return <section className="panel expense-plans">
-  <PanelTitle title={t('Monthly expense plans')} description={formatMonthYear(month,locale)}><Button variant="outline" disabled={loading||!!error} onClick={()=>open()}><Plus size={16}/>{t('Add monthly plan')}</Button></PanelTitle>
-  <p className="muted">{t('Plan groceries and support for each family member. Record spending against a plan to track what remains.')}</p>
+  <PanelTitle title={t('Monthly expense plans')} hint={<>
+   <p>{t('Plan groceries and support for each family member. Record spending against a plan to track what remains.')}</p>
+   <p>{t('The forecast uses the higher of planned or spent. Optional rollover carries positive unused amounts forward. Plans do not move money.')}</p>
+   <p>{t('If a plan replaces an existing recurring expense, remove that recurring entry to avoid counting both.')}</p>
+  </>}><Button variant="outline" disabled={loading||!!error} onClick={()=>open()}><Plus size={16}/>{t('Add monthly plan')}</Button></PanelTitle>
   {error?<InlineError as="div" message={t(error)} onRetry={onRetry}/>:loading?<LoadingPlaceholder label={t('Loading plans…')}/>:!plans.length?<p className="expense-plans-empty">{t('No monthly plans yet. Add groceries, Mum’s allowance or another regular expense.')}</p>:<div className="table-scroll"><table><thead><tr><th>{t('Plan')}</th><th>{t('Planned')}</th><th>{t('Spent')}</th><th>{t('Remaining')}</th><th>{t('Budget used')}</th><th>{t('Actions')}</th></tr></thead><tbody>
    {[...plans].sort((a,b)=>a.category.localeCompare(b.category)||a.name.localeCompare(b.name)).map(plan=>{const totals=expensePlanTotals(plan,month);return <tr key={plan.id}>
     <td><div className="expense-plan-name"><strong>{plan.name}</strong><div className="expense-plan-meta"><CategoryBadge kind={plan.category} label={t(plan.category)}/><small className="muted">{formatDate(plan.start_date,locale)}{plan.end_date?` – ${formatDate(plan.end_date,locale)}`:''}</small></div>{!totals.active&&<small className="muted">{t('Not active in the selected month')}</small>}</div></td>
@@ -43,8 +46,6 @@ export function ExpensePlans({plans,month,currency,currencies,loading,error,save
     <td><div className="row-actions">{!plan.end_date&&<Button size="sm" variant="outline" onClick={()=>setStopping(plan)}>{t('Stop')}</Button>}<Button size="sm" variant="outline" onClick={()=>onSpend(plan)}>{t('Record spending')}</Button><Button size="icon" variant="ghost" aria-label={t('Edit {name}',{name:plan.name})} onClick={()=>open(plan)}><Pencil size={15}/></Button><Button size="icon" variant="ghost" aria-label={t('Delete {name}',{name:plan.name})} onClick={()=>{setFailure('');setDeleting(plan);}}><Trash2 size={15}/></Button></div></td>
    </tr>;})}
   </tbody></table></div>}
-  <p className="muted tracker-help">{t('The forecast uses the higher of planned or spent. Optional rollover carries positive unused amounts forward. Plans do not move money.')}</p>
-  <p className="muted tracker-help">{t('If a plan replaces an existing recurring expense, remove that recurring entry to avoid counting both.')}</p>
   {stopping&&<StopScheduleDialog name={stopping.name} start={stopping.start_date} onClose={()=>setStopping(null)} onSave={end_date=>save({...stopping,end_date})}/>}
   <Dialog open={!!draft} onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(draft&&plans.some(p=>p.id===draft.id)?'Edit monthly plan':'Add monthly plan')}</DialogTitle><DialogDescription>{t('Keep each person or purpose as a separate plan. The amount repeats every month.')}</DialogDescription>
    {draft&&<form className="record-form" onSubmit={submit}><fieldset className="tracker-fields" disabled={busy}>

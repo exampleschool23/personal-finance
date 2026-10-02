@@ -1,5 +1,6 @@
 "use client";
 import { InlineError } from '@/components/presentation-foundation/inline-error';
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { showError, showSaved } from '@/lib/feedback';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { useEffect, useState } from 'react';
@@ -52,7 +53,7 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, loadError, busy, dirty, serialized, failed, typingName, committed]);
   return <section className="settings-page">
-    <header className="preferences-heading"><h2>{t('Profile & preferences')}</h2><p className="muted">{t('Keep your profile details, language, and currency preferences up to date.')}</p></header>
+    <header className="preferences-heading"><h2>{t('Profile & preferences')}<InfoHint>{t('Keep your profile details, language, and currency preferences up to date.')}</InfoHint></h2></header>
     {loadError && <InlineError message={t(loadError)}><Button type="button" variant="outline" onClick={onRetry}>{t('Retry loading settings')}</Button></InlineError>}
     {loading ? <LoadingPlaceholder label={t('Loading settings…')}/> : <form onSubmit={event => { event.preventDefault(); setCommitted(serialized); }} className="settings-form preferences-form">
       <fieldset disabled={!!loadError} className="preferences-fields">

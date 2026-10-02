@@ -8,7 +8,8 @@ import { useGoalOrder } from '@/hooks/use-goal-order';
 import { CurrencySelect } from '@/components/presentation-foundation/currency-select';
 import { useDraftDialog } from '@/components/discard-changes';
 import { useEffect, useId, useRef, useState } from 'react';
-import { Bitcoin, CalendarDays, ChartNoAxesCombined, Check, Pencil, Plus, Target, Wallet } from 'lucide-react';
+import { CalendarDays, Check, Pencil, Plus, Target } from 'lucide-react';
+import { goalEmoji } from '@/lib/goal-emoji';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -62,12 +63,12 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
  const totals=new Map([...new Set([...currencies,...data.goals.map(goalCurrency)])].map(currency=>[currency,goalFinancials(data.records,plans,today.slice(0,7),currency,market,plansReady)]));
  const financials=active?totals.get(goalCurrency(active)):null;
  return <>
-  <PageHeader title={t('Savings goals')} description={t('Plan your future net worth and the savings that matter to you.')}><Button onClick={()=>open()}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></PageHeader>
+  <PageHeader title={t('Savings goals')}><Button onClick={()=>open()}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></PageHeader>
   {!accounts.length&&<p className="panel">{t('Net-worth and investment goals do not need a cash account. Cash savings goals reserve money in a cash account.')} <Link href="/accounts">{t('Accounts')}</Link></p>}
   <GoalFundingPanel data={data} currency={currency} surplus={totals.get(currency)?.surplus??null} today={today} rates={market?.rates} owner={owner} demo={demo} revision={revision} onSaved={onSaved}/>
   <ErrorPopup message={order.error}/>
   {preferences.error&&!demo&&<InlineError message={t('Load saved preferences before making changes.')} onRetry={preferences.retry}/>}
-  <div className="goal-list-toolbar">{visible.length>1&&<p className="muted">{t(demo?'Drag the handles to reorder goals. Demo changes last for this visit.':'Drag the handles to reorder goals. Your order is saved automatically.')}</p>}<label className="planning-check"><Checkbox aria-label={t('Show archived goals')} checked={archived} onCheckedChange={checked=>setArchived(checked===true)}/>{t('Show archived goals')}</label></div>
+  <div className="goal-list-toolbar"><label className="planning-check"><Checkbox aria-label={t('Show archived goals')} checked={archived} onCheckedChange={checked=>setArchived(checked===true)}/>{t('Show archived goals')}</label></div>
   {!visible.length&&<EmptyState as="section" className="panel goal-empty" icon={<Target aria-hidden="true"/>} title={t('What are you working toward?')} description={t('Set a target amount and date, then explore how monthly investments can get you there.')}><Button onClick={()=>open()}><Plus size={17} aria-hidden="true"/>{t('Add goal')}</Button></EmptyState>}
   <div ref={cardsRef} className="planning-cards goal-cards goal-cards-compact">{visible.map(goal=>{
    const investment=goal.kind==='investment',holdingItems=investmentGoalItems(goal,data);
@@ -76,10 +77,9 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
    const reserved=data.goals.filter(item=>item.account_id===goal.account_id&&!item.archived).reduce((sum,item)=>sum+Number(item.allocated),0);
    const isSelected=active?.id===goal.id;
    const showPlan=()=>{setSelected(goal.id);setPlannerVisit(visit=>visit+1);};
-   const GoalIcon=investment?(holdingItems.every(item=>item.target.asset_kind==='Crypto')?Bitcoin:ChartNoAxesCombined):goal.kind==='net_worth'?Target:Wallet;
    return <GoalCard data-goal-id={goal.id} data-drop-target={dragTarget===goal.id} aria-controls={plannerId} onOpen={showPlan} className={'panel goal-card'+(isSelected?' goal-card-selected':'')} key={goal.id} aria-label={goal.name}>
     <header className="goal-card-header">
-     <div className="goal-card-identity"><span className="goal-card-icon"><GoalIcon size={24} aria-hidden="true" /></span><div><p className="goal-card-kind">{t(investment?'Stock / crypto accumulation':goal.kind==='net_worth'?'Net-worth goal':'Savings goal')}{goal.archived&&<span className="goal-card-archived">{t('Archived')}</span>}</p><h2>{goal.name}</h2>{account&&<p className="goal-card-account">{account.name}</p>}</div></div>
+     <div className="goal-card-identity"><span className="goal-card-icon" aria-hidden="true">{goalEmoji(goal,investment&&holdingItems.every(item=>item.target.asset_kind==='Crypto'))}</span><div><p className="goal-card-kind">{t(investment?'Stock / crypto accumulation':goal.kind==='net_worth'?'Net-worth goal':'Savings goal')}{goal.archived&&<span className="goal-card-archived">{t('Archived')}</span>}</p><h2>{goal.name}</h2>{account&&<p className="goal-card-account">{account.name}</p>}</div></div>
      <div className="goal-card-actions"><GoalDragHandle name={goal.name} disabled={order.disabled||visible.length<2} onTarget={setDragTarget} onMove={direction=>{setSelected(active?.id??'');void order.move(goal.id,direction,visible.map(item=>item.id));}} onDrop={target=>{setSelected(active?.id??'');void order.reorder(goal.id,target,visible.map(item=>item.id));}}/><Button variant="ghost" size="icon" onClick={()=>open(goal)} aria-label={t('Edit goal')+': '+goal.name}><Pencil size={17} aria-hidden="true" /></Button></div>
     </header>
     {investment?<details className="goal-holdings-details"><summary>{t('Holdings')} · {formatNumber(holdingItems.length,locale,0)}</summary><div className="investment-target-summaries">{holdingItems.map(({target,progress},index)=><div className="investment-target-summary" key={index}><div><strong>{target.asset_symbol}</strong><span className="muted">{progress?.account.name??t('Progress unavailable')}</span></div><p>{t('{current} of {target}',{current:progress?formatNumber(progress.current,locale,8):'—',target:`${formatNumber(target.target,locale,8)} ${target.asset_symbol}`})}</p><progress value={progress?.percent??0} max={100} aria-label={target.asset_symbol} aria-valuetext={progress?t('{percent}% complete',{percent:formatNumber(progress.percent,locale,0)}):t('Progress unavailable')}/></div>)}</div>{holdingItems.length>1&&<p className="goal-help">{t('Overall progress averages each holding’s completion, capped at its target. Every holding must reach its target to complete this goal.')}</p>}</details>:<dl className="goal-card-values">

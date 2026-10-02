@@ -43,10 +43,13 @@ test('screens contain only their own page and leave the drawer, top bar and dial
 });
 
 test('every destination has a unique path and unknown paths open Overview',()=>{
- const {sections,sectionFor,navigationGroups}=loadTS('components/workspace/navigation.ts');
+ const {sections,sectionFor,sectionLabel,navigationGroups}=loadTS('components/workspace/navigation.ts');
  assert.equal(new Set(sections.map(section=>section.path)).size,sections.length);
  assert.equal(new Set(sections.map(section=>section.name)).size,sections.length);
- assert.deepEqual(navigationGroups,['WORKSPACE','Money','Planning','Manage']);
+ assert.deepEqual(navigationGroups,['WORKSPACE','Manage']);
+ // Monarch's drawer: short words in its order; the section names stay as identifiers.
+ assert.deepEqual(sections.map(section=>section.label),['Dashboard','Accounts','Transactions','Recurring','Investments','Loans & debts','Goals','Recently deleted','Settings']);
+ assert.equal(sectionLabel('Upcoming payments'),'Recurring');assert.equal(sectionLabel('Unknown'),'Unknown');
  assert.equal(sectionFor('/goals'),'Savings goals');
  assert.equal(sectionFor('/income-expenses'),'Income & expenses');
  assert.equal(sectionFor('/missing'),'Overview');
@@ -68,7 +71,7 @@ test('the drawer marks the current route, shows overdue payments and signs out t
  const props={account:{initial:'H',title:'Personal account',detail:'owner@example.com'},overdueCount:1234,signOutLabel:'Sign out',onSignOut:()=>{signedOut++;}};
  const html=renderToStaticMarkup(React.createElement(AppDrawer,props));
  assert.equal((html.match(/aria-current="page"/g)||[]).length,1);
- assert.match(html,/href="\/upcoming" aria-current="page"[^>]*>.*?Upcoming payments<\/span><span class="count">1,234<\/span>/);
+ assert.match(html,/href="\/upcoming" aria-current="page"[^>]*>.*?Recurring<\/span><span class="count">1,234<\/span>/);
  assert.match(html,/owner@example\.com/);
  assert.match(html,/aria-label="Sign out"/);
  path='/';

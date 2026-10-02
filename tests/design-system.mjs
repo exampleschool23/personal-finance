@@ -8,10 +8,12 @@ import {loadTS} from './helpers/load-ts.mjs';
 const language={useLanguage:()=>({locale:'en-US',t:(text,values={})=>text.replace(/\{(\w+)\}/g,(_,key)=>values[key]??key)})};
 const render=(component,props,...children)=>renderToStaticMarkup(React.createElement(component,props,...children));
 
-test('page header shows its eyebrow and actions only when they are provided',()=>{
- const {PageHeader}=loadTS('components/presentation-foundation/page-header.tsx');
- const plain=render(PageHeader,{title:'Accounts',description:'Your money, clearly organized.'});
- assert.match(plain,/^<header class="page-heading"><div><h1>Accounts<\/h1><p class="muted">Your money, clearly organized\.<\/p><\/div><\/header>$/);
+test('page header shows its eyebrow, hint and actions only when they are provided',()=>{
+ const hint={InfoHint:({children})=>React.createElement('i',null,children)};
+ const {PageHeader}=loadTS('components/presentation-foundation/page-header.tsx',{'@/components/presentation-foundation/info-hint':hint});
+ // No subtitle line: explanations sit behind the ⓘ next to the title.
+ assert.equal(render(PageHeader,{title:'Accounts'}),'<header class="page-heading"><div><h1>Accounts</h1></div></header>');
+ assert.equal(render(PageHeader,{title:'Upcoming payments',hint:'Reminders never move money.'}),'<header class="page-heading"><div><h1>Upcoming payments<i>Reminders never move money.</i></h1></div></header>');
  const full=render(PageHeader,{title:'Hi there!',eyebrow:'29 September 2026'},React.createElement('button',null,'Add'));
  assert.match(full,/<p class="page-eyebrow">29 September 2026<\/p><h1>Hi there!<\/h1>/);
  assert.match(full,/<div class="entry-actions"><button>Add<\/button><\/div>/);
@@ -40,16 +42,17 @@ test('debt summary totals stay whole amounts, money you owe and a net shortfall 
  assert.doesNotMatch(ahead,/class="(?:positive|negative)"/);
 });
 
-test('asset card shows share with one decimal, a dash without a total, and clamps its bar',()=>{
+test('asset card names its share on the bar with one decimal, a dash without a total, and clamps the bar',()=>{
  const {AssetCard}=loadTS('components/presentation-foundation/asset-card.tsx',{'@/components/language-provider':language});
  const base={record:{kind:'Stock',name:'ACME'},label:'Stock',worth:'$1,500',detailsLabel:'Asset details',details:null};
  const html=render(AssetCard,{...base,share:12.345,fact:{label:'Gain/loss',value:'-$20',tone:'negative'}},'actions');
  assert.match(html,/<h3>ACME<\/h3>/);
  assert.match(html,/<dt>Gain\/loss<\/dt><dd class="negative">-\$20<\/dd>/);
- assert.match(html,/<dt>Share of holdings<\/dt><dd>12\.3%<\/dd>/);
+ assert.match(html,/role="img" aria-label="Share of holdings: 12\.3%"/);
  assert.match(html,/style="width:12\.345%"/);
  const unknown=render(AssetCard,{...base,share:null},'actions');
- assert.match(unknown,/<dt>Share of holdings<\/dt><dd>—<\/dd>/);
+ assert.match(unknown,/aria-label="Share of holdings: —"/);
+ assert.doesNotMatch(unknown,/<dl/);
  assert.match(unknown,/style="width:0%"/);
  assert.doesNotMatch(unknown,/Gain\/loss/);
  assert.match(render(AssetCard,{...base,share:140},'actions'),/style="width:100%"/);

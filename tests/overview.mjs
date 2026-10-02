@@ -85,3 +85,13 @@ test('portfolio over time invites the first investment instead of a flat line at
  assert.doesNotMatch(render([entry('btc','Crypto',60000,{quantity:.1})]),/No investments yet/);
  assert.doesNotMatch(render([entry('cash','Cash',500,{is_investment:true})]),/No investments yet/,'an investment cash account counts');
 });
+
+test('the dashboard lists the newest real transactions and the top open goals',()=>{
+ const {recentTransactions,topGoals}=loadTS('components/dashboard-cards.tsx',{'@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:text=>text})}});
+ const rows=[entry('a','Living expense',10,{date:'2026-10-01'}),entry('b','Salary',900,{date:'2026-10-02'}),entry('c','Charity',5,{date:'2026-09-30'}),
+  entry('future','Living expense',7,{date:'2026-10-09'}),entry('plan','Rent expense',500,{date:'2026-09-01',frequency:'Monthly'}),entry('cash','Cash',100,{date:'2026-10-02'})];
+ assert.deepEqual(recentTransactions(rows,'2026-10-02').map(row=>row.id),['b','a','c'],'newest first; no future, planned or balance records');
+ assert.equal(recentTransactions(rows,'2026-10-02',1).length,1);
+ const goal=(id,extra={})=>({id,name:id,account_id:null,target:100,allocated:10,target_date:null,archived:false,...extra});
+ assert.deepEqual(topGoals([goal('low',{funding_priority:3}),goal('done',{completed_on:'2026-09-01'}),goal('old',{archived:true}),goal('top',{funding_priority:1}),goal('mid',{funding_priority:2})]).map(item=>item.id),['top','mid']);
+});

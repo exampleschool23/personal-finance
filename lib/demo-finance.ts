@@ -27,7 +27,23 @@ export function demoRecords(today: string): Entry[] {
   record('salary', 'Monthly salary', 'Salary', 18000000, { currency: 'UZS', frequency: 'Monthly' }),
   record('rent', 'Apartment rent', 'Rent expense', 4500000, { currency: 'UZS', frequency: 'Monthly' }),
   record('groceries', 'Groceries & everyday', 'Living expense', 2000000, { currency: 'UZS', frequency: 'Monthly' }),
+  ...demoSpending(today, record),
  ];
+}
+/** Day-to-day purchases last month and so far this month, so spending charts have something real to compare. */
+function demoSpending(today: string, record: (id: string, name: string, kind: Entry['kind'], amount: number, extra?: Partial<Entry>) => Entry): Entry[] {
+ const purchases: Array<[string, number]> = [['Groceries', 64], ['Coffee', 9], ['Taxi', 18], ['Lunch', 22], ['Pharmacy', 31], ['Groceries', 71], ['Fuel', 45], ['Dinner out', 58], ['Groceries', 52], ['Gym', 40]];
+ const month = today.slice(0, 7), todayDay = Number(today.slice(8, 10));
+ const previous = new Date(month + '-01T00:00:00Z'); previous.setUTCMonth(previous.getUTCMonth() - 1);
+ const previousMonth = previous.toISOString().slice(0, 7);
+ const spends: Entry[] = [];
+ purchases.forEach(([name, amount], index) => {
+  const day = 2 + index * 3;
+  spends.push(record(`spend-previous-${index}`, name, 'Living expense', amount, { date: `${previousMonth}-${String(day).padStart(2, '0')}` }));
+  // This month runs slightly ahead of last month, as real spending often does.
+  if (day <= todayDay) spends.push(record(`spend-current-${index}`, name, 'Living expense', Math.round(amount * 1.15), { date: `${month}-${String(day).padStart(2, '0')}` }));
+ });
+ return spends;
 }
 
 export function demoHistory(records: Entry[], today: string) {

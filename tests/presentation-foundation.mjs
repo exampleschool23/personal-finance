@@ -78,13 +78,58 @@ test('segmented control presses exactly the current option and reports the chose
  assert.deepEqual(chosen,[null]);
 });
 
-test('panel title keeps the heading, count and description together and the aside on the right',()=>{
- const {PanelTitle}=load('panel-title.tsx');
+test('panel title keeps the heading, count and hint on one line and the aside on the right',()=>{
+ const {PanelTitle}=load('panel-title.tsx',{'@/components/presentation-foundation/info-hint':{InfoHint:({children})=>React.createElement('i',null,children)}});
  const {Count}=load('count.tsx');
- const html=render(PanelTitle,{title:'Recent transactions',count:React.createElement(Count,{value:1234}),description:'Recorded income and expenses'},React.createElement('a',null,'View all'));
- assert.equal(html,'<div class="panel-title"><div><h2>Recent transactions<span class="count">1,234</span></h2><p class="muted">Recorded income and expenses</p></div><a>View all</a></div>');
- assert.equal(render(PanelTitle,{title:'Asset allocation'},React.createElement('span',null,'Current balances')),'<div class="panel-title"><div><h2>Asset allocation</h2></div><span>Current balances</span></div>');
+ const html=render(PanelTitle,{title:'Recent transactions',count:React.createElement(Count,{value:1234}),hint:'Recorded income and expenses'},React.createElement('a',null,'View all'));
+ assert.equal(html,'<div class="panel-title"><h2>Recent transactions<span class="count">1,234</span><i>Recorded income and expenses</i></h2><a>View all</a></div>');
+ assert.equal(render(PanelTitle,{title:'Asset allocation'}),'<div class="panel-title"><h2>Asset allocation</h2></div>');
  assert.equal(render(Count,{value:12,loading:true}),'<span class="count">—</span>');
+});
+
+test('info hint keeps its explanation behind a labelled ⓘ button',()=>{
+ const popover={Popover:element('span'),PopoverTrigger:element('button'),PopoverContent:({children,className})=>React.createElement('div',{className},children)};
+ const {InfoHint}=load('info-hint.tsx',{'@/components/ui/popover':popover});
+ const html=render(InfoHint,{},'Yearly records are divided by 12.');
+ assert.match(html,/<button class="info-hint" aria-label="Details"><svg[^>]*aria-hidden="true"/);
+ assert.match(html,/<div class="info-hint-content">Yearly records are divided by 12\.<\/div>/);
+ assert.match(render(InfoHint,{label:'About totals'},'x'),/aria-label="About totals"/);
+});
+
+test('every category has its own emoji and colour, and badges never repeat an emoji the name already starts with',()=>{
+ const {categoryEmoji,categoryEmojis}=loadTS('lib/category-icons.ts');
+ const {categoryHues}=loadTS('lib/category-colors.ts');
+ const {kinds}=loadTS('lib/finance.ts');
+ assert.deepEqual(Object.keys(categoryEmojis).sort(),Object.keys(categoryHues).sort());
+ for(const kind of kinds)assert.ok(categoryEmoji(kind),kind);
+ // Lending and borrowing stay visually distinct.
+ assert.equal(new Set(['Money lent','Mortgage','Loan','Debt'].map(categoryEmoji)).size,4);
+ assert.equal(categoryEmoji('🏋️ Gym'),'🏋️');
+ assert.equal(categoryEmoji('Gym'),categoryEmojis.Other);
+ const {CategoryBadge}=load('category-badge.tsx');
+ assert.equal(render(CategoryBadge,{kind:'Salary',label:'Salary'}),'<span class="badge category-badge" style="--category-hue:120"><span aria-hidden="true">💰</span>Salary</span>');
+ assert.doesNotMatch(render(CategoryBadge,{kind:'🏋️ Gym',label:'🏋️ Gym'}),/aria-hidden/);
+ const {CategoryIcon}=load('category-icon.tsx');
+ assert.equal(render(CategoryIcon,{kind:'Mortgage',size:'sm'}),'<span class="category-icon" data-size="sm" style="--category-hue:350" aria-hidden="true">🏡</span>');
+});
+
+test('record icons draw holdings and show the category emoji for income, spending and debts',()=>{
+ const {RecordIcon}=load('record-icon.tsx');
+ assert.match(render(RecordIcon,{record:{kind:'Stock',name:'AAPL'}}),/<svg class="asset-symbol"/);
+ assert.match(render(RecordIcon,{record:{kind:'Living expense',name:'Groceries'}}),/^<span class="record-icon category-record-icon" data-emoji="" style="--category-hue:48" aria-hidden="true">🛒<\/span>$/);
+ assert.match(render(RecordIcon,{record:{kind:'Money lent',name:'Loan to a friend'}}),/>🤝<\/span>$/);
+});
+
+test('goal covers follow the goal name, then its kind',()=>{
+ const {goalEmoji}=loadTS('lib/goal-emoji.ts');
+ assert.equal(goalEmoji({name:'Emergency fund',kind:'savings'}),'🧯');
+ assert.equal(goalEmoji({name:'Отпуск в Турции',kind:'savings'}),'🏖️');
+ assert.equal(goalEmoji({name:'Uy uchun',kind:'net_worth'}),'🏡');
+ assert.equal(goalEmoji({name:'Freedom',kind:'net_worth'}),'🎯');
+ assert.equal(goalEmoji({name:'Rainy',kind:'savings'}),'🧯');
+ assert.equal(goalEmoji({name:'Stack',kind:'investment'},true),'🪙');
+ assert.equal(goalEmoji({name:'Stack',kind:'investment'}),'📈');
+ assert.equal(goalEmoji({name:'Something',kind:'savings'}),'🐷');
 });
 
 test('form footer cancels through its callback and honours the busy state',()=>{

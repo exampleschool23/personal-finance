@@ -3,7 +3,7 @@ import { normalizeEntry } from '@/lib/finance';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import type { MarketData } from '@/lib/market';
 import { useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, Equal, CircleHelp, CalendarDays, ReceiptText, X } from 'lucide-react';
+import { CircleHelp, CalendarDays, ReceiptText, X } from 'lucide-react';
 import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { LoadingPlaceholder, StatTilesSkeleton } from '@/components/presentation-foundation/loading-placeholder';
@@ -41,11 +41,10 @@ export function MonthlyReview({data:providedData,owner,demo=false,revision=0,too
  if(compact)return <section className="cashflow-summary" aria-label={t('Monthly review')}>
   {tools.error&&<InlineError message={t(tools.error)} onRetry={tools.retry}/>}
   <StatTiles columns={3}>{[
-   {label:'Income received',value:result.received,estimate:estimates?.income,Icon:ArrowDownLeft},
-   {label:'Actual spending',value:result.spent,estimate:estimates?.spending,Icon:ArrowUpRight},
-   {label:'Net cash flow',value:result.saved,estimate:estimates?.net,Icon:Equal,tone:signTone(result.saved)},
-  ].map(({label,value,estimate,Icon,tone})=><StatTile key={label} label={t(label)} icon={<Icon aria-hidden="true"/>} value={tools.loading?<Skeleton aria-hidden="true" className="h-7 w-3/4"/>:tools.error?'—':money(value)} tone={tools.loading||tools.error?undefined:tone}><p>{t(label==='Net cash flow'?'Estimated monthly surplus':'Monthly estimate')}: {estimate==null?'—':money(estimate)}</p></StatTile>)}</StatTiles>
-  <p className="cashflow-summary-note muted">{t('Estimates exclude one-time entries. Actuals include recorded mortgage payments.')}</p>
+   {label:'Income received',value:result.received,estimate:estimates?.income},
+   {label:'Actual spending',value:result.spent,estimate:estimates?.spending},
+   {label:'Net cash flow',value:result.saved,estimate:estimates?.net,tone:signTone(result.saved)},
+  ].map(({label,value,estimate,tone})=><StatTile key={label} label={t(label)} value={tools.loading?<Skeleton aria-hidden="true" className="h-7 w-3/4"/>:tools.error?'—':money(value)} tone={tools.loading||tools.error?undefined:tone}><p>{t(label==='Net cash flow'?'Estimated monthly surplus':'Monthly estimate')}: {estimate==null?'—':money(estimate)}</p></StatTile>)}</StatTiles>
   {!!result.missing&&<p className="partial-total" role="status">{t('Some transactions could not be converted. Current or previous month totals are incomplete.')}</p>}
  </section>;
  return <section className="panel tools-panel monthly-review">
@@ -61,7 +60,7 @@ export function MonthlyReview({data:providedData,owner,demo=false,revision=0,too
      <div className="monthly-review-help-note"><CalendarDays size={21} aria-hidden="true"/><p>{t('The current month includes transactions through today; the previous month is a full month. Net-worth observations may not fall on month boundaries.')}</p></div>
      <DialogClose asChild><Button type="button" className="monthly-review-help-done">{t('Close')}</Button></DialogClose>
     </DialogContent>
-   </Dialog></div><p className="muted">{t('Recorded income and spending converted to {currency}. Includes principal and interest payments.',{currency})}</p></div>
+   </Dialog></div></div>
    <label>{t('Month')}<DatePicker mode="month" value={month} max={today} onChange={setMonth}/></label>
   </header>
   {tools.error&&<InlineError message={t(tools.error)} onRetry={tools.retry}/>}

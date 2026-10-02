@@ -53,12 +53,28 @@ it instead of styling a page on its own.
   piece at a time. Put a new piece there once it has more than one real caller,
   and cover it in `tests/presentation-foundation.mjs`, which also enforces the
   purity boundary.
+- The look follows Monarch Money: warm grey page and rail (`#f6f5f3`), white
+  cards with a hairline border and 12px radius, medium-weight figures.
+- Headings are one line. Never put a grey sentence under a page, panel or tile
+  heading. Explanations go behind the ⓘ: pass them as `hint` to `PageHeader` or
+  `PanelTitle`, or wrap them in `InfoHint`. A tile's second line is a live
+  figure (an estimate, a change), never prose.
 - Open each page with `PageHeader`. Pass page actions as children; the main
   action is the default `Button`, others `outline`.
 - Show key figures with `StatTiles` and `StatTile`. Colour a value only when its
   sign carries meaning, through `tone`; derive the tone with `signTone` from
   `tone.ts` rather than an inline comparison.
 - Holdings and accounts use `AssetCard`; the product mark is `Brand`.
+- Every category is recognisable at a glance: an emoji from `lib/category-icons.ts`
+  on a tile in its `categoryColor` hue. Use `CategoryIcon` beside a row's name and
+  `CategoryBadge` for labels; `RecordIcon` keeps drawn symbols for holdings. Goal
+  covers come from `goalEmoji`.
+- Long lists are grouped, with the group total in the group header: accounts by
+  type (collapsible `.account-group`), upcoming payments by month
+  (`.table-group-row`). Totals in different currencies are listed, never added.
+- Income amounts are green; expenses stay in the ink colour. Red marks overdue,
+  overspent or owed amounts only.
+- Rare row actions go in a ⋯ menu rather than a row of buttons.
 - Surfaces are `.panel`; their heading row is `PanelTitle` (title, `Count` pill,
   description, and an aside or action as children). Secondary tools sit in
   `.panel.tools-panel`, with rarely used settings behind `<details>`.

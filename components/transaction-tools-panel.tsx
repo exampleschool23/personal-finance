@@ -1,5 +1,6 @@
 "use client";
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { X } from 'lucide-react';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
@@ -21,7 +22,7 @@ import type { TransactionTools } from '@/lib/transaction-tools';
 export type ToolsController={data:TransactionTools;loading:boolean;error:string;save:(action:string,data:unknown)=>Promise<void>;retry:()=>void};
 export function TransactionToolsPanel({categories,saveCategory,loading,error,onRetry,onDeleted}:{categories:Category[];saveCategory:(name:string,direction:Category['direction'])=>Promise<void>;loading:boolean;error:string;onRetry:()=>void;onDeleted:()=>void}){
  const {t}=useLanguage();const [deleting,setDeleting]=useState<Category|null>(null);
- return <section id="categories" className="panel tools-panel category-settings"><h2>{t('Categories')}</h2><p className="muted">{t('Add income and expense categories to use when recording transactions.')}</p>
+ return <section id="categories" className="panel tools-panel category-settings"><h2>{t('Categories')}<InfoHint>{t('Add income and expense categories to use when recording transactions.')}</InfoHint></h2>
  {error&&<InlineError message={t(error)} onRetry={onRetry}/>}
  {(['income','expense'] as const).map(direction=><CategoryGroup key={direction} direction={direction} categories={categories.filter(category=>category.direction===direction)} saveCategory={saveCategory} disabled={loading||!!error} onDelete={setDeleting}/>)}
  {deleting&&<DeleteCategoryDialog key={deleting.id} category={deleting} categories={categories} onClose={()=>setDeleting(null)} onDeleted={onDeleted}/>}

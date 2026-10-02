@@ -10,6 +10,7 @@
 export { PageHeader } from './page-header';
 export { StatTile, StatTiles, type StatTone } from './stat-tile';
 export { PanelTitle } from './panel-title';
+export { InfoHint } from './info-hint';
 export { Count } from './count';
 export { EmptyState } from './empty-state';
 export { InlineError } from './inline-error';
@@ -20,6 +21,7 @@ export { AssetCard } from './asset-card';
 export { AssetIcon } from './asset-icon';
 export { RecordIcon } from './record-icon';
 export { CategoryBadge } from './category-badge';
+export { CategoryIcon } from './category-icon';
 export { Brand } from './brand';
 export { DrawerLink } from './drawer-link';
 export { PartialTotal } from './partial-total';

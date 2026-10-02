@@ -38,13 +38,13 @@ export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pend
   if (path !== pathname) onNavigate?.(path);
  };
  // Right-to-left languages open the drawer from the right edge.
- return <Sidebar side={language && directionOf(language) === 'rtl' ? 'right' : 'left'}>
+ return <Sidebar className="border-sidebar-border" side={language && directionOf(language) === 'rtl' ? 'right' : 'left'}>
   <SidebarHeader className="sidebar-brand"><Brand onClick={follow('/')}/></SidebarHeader>
   <SidebarContent className="sidebar-navigation">{navigationGroups.map(group => <nav className="nav-group" key={group} aria-label={t(group)}>
    <p className="nav-label">{t(group)}</p>
-   <SidebarMenu>{sections.filter(section => section.group === group).map(({ name, icon: Icon, path }) => <SidebarMenuItem key={name}>
+   <SidebarMenu>{sections.filter(section => section.group === group).map(({ name, label, icon: Icon, path }) => <SidebarMenuItem key={name}>
     <SidebarMenuButton asChild className="nav-item" isActive={active === name}>
-     <DrawerLink href={path} aria-current={active === name ? 'page' : undefined} onClick={follow(path)}><Icon/><span>{t(name)}</span>{name === 'Upcoming payments' && overdueCount > 0 && <span className="count">{formatNumber(overdueCount, locale, 0)}</span>}</DrawerLink>
+     <DrawerLink href={path} aria-current={active === name ? 'page' : undefined} onClick={follow(path)}><Icon/><span>{t(label)}</span>{name === 'Upcoming payments' && overdueCount > 0 && <span className="count">{formatNumber(overdueCount, locale, 0)}</span>}</DrawerLink>
     </SidebarMenuButton>
    </SidebarMenuItem>)}</SidebarMenu>
   </nav>)}</SidebarContent>

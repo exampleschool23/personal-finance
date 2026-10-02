@@ -6,7 +6,7 @@ import { Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  return <NextThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false} storageKey="hoggish-theme" disableTransitionOnChange>{children}</NextThemeProvider>;
+  return <NextThemeProvider attribute="data-theme" defaultTheme="light" enableSystem={false} storageKey="hoggish-theme" disableTransitionOnChange>{children}</NextThemeProvider>;
 }
 
 export function ThemeToggle() {

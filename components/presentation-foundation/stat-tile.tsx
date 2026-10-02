@@ -8,6 +8,6 @@ export function StatTiles({ children, label, columns = 4 }: { children: ReactNod
 }
 
 /** One key figure: a short label, the formatted value, and an optional line of context. */
-export function StatTile({ label, icon, value, tone, children }: { label: string; icon?: ReactNode; value: ReactNode; tone?: StatTone; children?: ReactNode }) {
- return <article className="stat-tile"><h3>{icon}{label}</h3><strong className={tone}>{value}</strong>{children}</article>;
+export function StatTile({ label, value, tone, children }: { label: string; value: ReactNode; tone?: StatTone; children?: ReactNode }) {
+ return <article className="stat-tile"><h3>{label}</h3><strong className={tone}>{value}</strong>{children}</article>;
 }

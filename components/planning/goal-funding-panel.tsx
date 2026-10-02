@@ -1,6 +1,7 @@
 "use client";
 
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { useId, useState } from 'react';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { ResourceState } from '@/components/presentation-foundation/resource-state';
@@ -49,7 +50,7 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
  return <section className="panel tools-panel goal-funding-panel">
   {activeGoals.length > 0 && <>
    <header className="goal-funding-heading">
-    <div><h2>{t('Shared goal funding')}</h2><p className="muted">{t('Plan how to divide your monthly surplus between goals. Money stays in your accounts until you move it.')}</p></div>
+    <div><h2>{t('Shared goal funding')}<InfoHint>{t('Plan how to divide your monthly surplus between goals. Money stays in your accounts until you move it.')}</InfoHint></h2></div>
     <span className="goal-funding-currency">{currency}</span>
    </header>
    <div className="review-grid goal-funding-summary">

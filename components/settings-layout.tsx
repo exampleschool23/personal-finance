@@ -27,7 +27,7 @@ export function SettingsLayout({preferences,benchmarks,security,categories,data}
  useEffect(()=>{document.querySelector(`.settings-navigation-list [data-state="active"]`)?.scrollIntoView({block:'nearest',inline:'nearest'});},[active]);
  const panels:Record<string,ReactNode>={preferences,benchmarks,security,categories,'data-tools':data};
  return <div className="settings-layout">
-  <PageHeader title={t('Settings')} description={t('Manage your preferences, security, and financial data.')}/>
+  <PageHeader title={t('Settings')}/>
   <Tabs value={active} onValueChange={value=>{setActive(value);window.history.replaceState(null,'','#'+value);}} className="settings-navigation">
    <TabsList aria-label={t('Settings')} className="settings-navigation-list">{sections.map(({id,label,icon:Icon})=><TabsTrigger key={id} value={id}><Icon size={18}/>{t(label)}</TabsTrigger>)}</TabsList>
    <div className="settings-section-content">{sections.map(({id})=><TabsContent key={id} value={id} forceMount hidden={active!==id}>{panels[id]}</TabsContent>)}</div>

@@ -37,7 +37,7 @@ export function WorkspaceSkeleton({ label, section }: { label: string; section: 
     <span className="sr-only">{label}</span>
     <section aria-hidden="true" className="panel overview-hero"><Skeleton className="h-4 w-28"/><Skeleton className="my-4 h-12 w-64 max-w-full"/><Skeleton className="h-64 w-full"/></section>
     <StatTilesSkeleton columns={4}/>
-    <div aria-hidden="true" className="overview-grid">{Array.from({ length: 3 }, (_, index) => <section className="panel overview-panel" key={index}><Skeleton className="mb-6 h-5 w-1/3"/><Skeleton className="h-40 w-full"/></section>)}</div>
+    <div aria-hidden="true" className="dashboard-grid">{Array.from({ length: 2 }, (_, index) => <section className="panel overview-panel" key={index}><Skeleton className="mb-6 h-5 w-1/3"/><Skeleton className="h-40 w-full"/></section>)}</div>
   </div>;
   return <div role="status" aria-busy="true">
     <span className="sr-only">{label}</span>

@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { formatDate, formatNumber } from '@/lib/format';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
+import { sectionLabel } from '@/components/workspace/navigation';
 
 /** Theme choice for the top bar. The language is chosen once, in onboarding or Settings. */
 export function DisplayPreferences() {
@@ -26,7 +27,7 @@ export function TopBar({ pendingSection }: { pendingSection?: string | null }) {
   : market?.fx ? t('1 USD = {rate} UZS · CBU · {date}', { rate: formatNumber(market.fx.rate, locale), date: date(market.fx.date) })
   : t(marketLoading ? 'Fetching prices…' : 'Exchange rate unavailable. Only records in the selected currency are included.');
  return <header className="topbar">
-  <div className="topbar-location"><SidebarTrigger aria-label={t('Toggle Sidebar')}/><span>{t(section)}</span></div>
+  <div className="topbar-location"><SidebarTrigger aria-label={t('Toggle Sidebar')}/><span>{t(sectionLabel(section))}</span></div>
   <div className="topbar-actions">
    <Popover>
     <PopoverTrigger asChild><Button variant="outline" size="sm" className="header-currency-trigger" aria-label={t('Display currency')}>{currency}<ChevronDown size={14} aria-hidden="true"/></Button></PopoverTrigger>

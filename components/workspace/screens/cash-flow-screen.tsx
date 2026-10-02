@@ -33,7 +33,7 @@ export function CashFlowScreen() {
  return <>
   <div data-page="Income & expenses" className="content">
    <DemoBanner/>
-   <PageHeader title={t('Cash flow')} description={t("Income, spending, and plans in one place.")}>
+   <PageHeader title={t('Cash flow')}>
     <DatePicker mode="month" value={forecastMonth} max={depositToday()} onChange={setForecastMonth}/>
     <Button variant="outline" className="cashflow-action" onClick={() => addCashFlow('Other income')}><Plus size={17} aria-hidden="true"/>{t("Add income")}</Button>
     <Button className="cashflow-action" onClick={() => addCashFlow('Other expense')}><Plus size={17} aria-hidden="true"/>{t("Add expense")}</Button>
@@ -48,8 +48,8 @@ export function CashFlowScreen() {
     {tab==='Income'&&(planning.loading || earningSources.loading ? <LoadingPlaceholder label={t('Loading records…')}/> : planning.error || earningSources.error ? <InlineError as="div" message={t(planning.error || earningSources.error)} onRetry={refreshRecords}/> : <EstimatedIncomeSources earningSources={earningSources.sources} entries={monthlyIncomeEntries} currency={currency} month={forecastMonth}/>)}
     {tab==='Spending'&&mortgages}
     {tab==='Spending'&&<ExpensePlans {...expensePlans} remove={removePlan} currency={currency} currencies={preferencesData.currencies} onSpend={spendFromPlan} onRetry={refreshRecords}/>}
-    {tab==='Overview'&&<RecordsTable transactions title={t('Recent transactions')} caption={t("Recorded income and expenses")} limit={4} pagination={false}><Button variant="link" className="cashflow-view-history" onClick={()=>setTab('Transactions')}>{t('View full transactions')} <ArrowUpRight size={16}/></Button></RecordsTable>}
-    {tab==='Transactions'&&<RecordsTable transactions title={t('Transaction history')} caption={t("Recorded income and expenses")}/>}
+    {tab==='Overview'&&<RecordsTable transactions title={t('Recent transactions')} limit={4} pagination={false}><Button variant="link" className="cashflow-view-history" onClick={()=>setTab('Transactions')}>{t('View full transactions')} <ArrowUpRight size={16}/></Button></RecordsTable>}
+    {tab==='Transactions'&&<RecordsTable transactions title={t('Transaction history')}/>}
    </>}
   </div>
   {(workspacePreferences.error||planning.error)&&<ToolsUnavailable/>}
