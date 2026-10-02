@@ -24,7 +24,7 @@ import { type HistoryEvent } from '@/lib/investment-history';
 import { type MarketData } from '@/lib/market';
 
 type History = { movements?:BenchmarkMovement[]; records: Entry[]; events: HistoryEvent[]; cashflows?: Entry[]; incomeRecords?: Entry[] };
-export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecords, currency, market, demo, revision, onAddIncome, children, aside, showNetWorth = true }: { showNetWorth?: boolean; children?: ReactNode; aside?: ReactNode; onAddIncome?: () => void; demoRecords?: Entry[]; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
+export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecords, currency, market, demo, revision, onAddIncome, board }: { board: (cards: { netWorth: ReactNode; income: ReactNode }) => ReactNode; onAddIncome?: () => void; demoRecords?: Entry[]; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
  const { t, locale } = useLanguage();
  const [savedHistory, setHistory] = useState<History | null>(null);
  const [error, setError] = useState(false);
@@ -57,10 +57,8 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
  const loading = !demo && !history && !error;
  const percent = changePercent(portfolioValue, change);
  const Trend = change !== null && change < 0 ? TrendingDown : TrendingUp;
- // Monarch's dashboard: net worth and the running cards on the left, goals, transactions and bills on the right.
- return <>
-  <div className="dashboard-grid"><div className="dashboard-column">
-  {showNetWorth && <section className="panel portfolio-trend overview-hero" aria-labelledby="overview-net-worth">
+ // Net worth and income over time are cards of the dashboard board, which places them wherever the person dragged them.
+ const netWorth = <section className="panel portfolio-trend overview-hero" aria-labelledby="overview-net-worth">
    <header className="overview-hero-head">
     <div className="overview-hero-value">
      <h2 id="overview-net-worth">{t('Net worth')}</h2>
@@ -75,9 +73,6 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
     {recorded.missing > 0 && <p className="muted overview-hero-note">{t('Some holdings have no recorded history yet.')}</p>}
     {excludedCurrencies.length > 0 && <p className="muted overview-hero-note">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
    </>}
-  </section>}
-  {children}
-  </div>{aside && <div className="dashboard-column">{aside}</div>}</div>
-  {!loading&&!error&&<IncomeHistoryChart records={history?.records??[]} events={history?.events??[]} incomeRecords={history?.incomeRecords??[]} currency={currency} rates={market?.rates??market?.fx?.rate} today={today} onAddIncome={onAddIncome}/>}
- </>;
+  </section>;
+ return board({ netWorth, income: !loading && !error && <IncomeHistoryChart records={history?.records??[]} events={history?.events??[]} incomeRecords={history?.incomeRecords??[]} currency={currency} rates={market?.rates??market?.fx?.rate} today={today} onAddIncome={onAddIncome}/> });
 }

@@ -1,15 +1,11 @@
 "use client";
-import { ArrowDown, ArrowUp, CalendarDays, ChartPie, Goal as GoalIcon, ReceiptText } from 'lucide-react';
+import { ChartPie, Goal as GoalIcon, ReceiptText } from 'lucide-react';
 import { BudgetProgress } from '@/components/budget-page';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useBudget } from '@/hooks/use-budget';
-import { budgetCategories, budgetedIn, budgetReadRange, budgetRows, flexBucketKey, leftToBudget, monthActuals, monthsBetween, remainingTone, shiftMonth } from '@/lib/budget';
-import { dashboardCardLabels, dashboardCards, defaultDashboardLayout, moveCard, pinnedCard, toggleCard, type DashboardLayout } from '@/lib/dashboard-layout';
+import { budgetCategories, budgetedIn, budgetReadRange, budgetRows, flexBucketKey, leftToBudget, monthActuals, monthsBetween, remainingTone } from '@/lib/budget';
 import { expensePlanMonth } from '@/lib/expense-plans';
 import type { MarketData } from '@/lib/market';
 import type { TransactionSplit } from '@/lib/transaction-tools';
-import { weeklyRecap } from '@/lib/weekly-recap';
 import { useLanguage } from '@/components/language-provider';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { DrawerLink } from '@/components/presentation-foundation/drawer-link';
@@ -62,26 +58,6 @@ export function GoalsCard({ goals, currency }: { goals: Goal[]; currency: string
 }
 
 /** Monarch's weekly recap: last week's money in and out against the week before, where most went, and what is due this week. */
-export function WeeklyRecapCard({ owner = null, demo = false, revision = 0, data: provided, currency, market }: { owner?: string | null; demo?: boolean; revision?: number; data: PlanningData; currency: string; market: MarketData | null }) {
- const { t, locale } = useLanguage();
- const today = depositToday(), month = today.slice(0, 7);
- const remote = useOwnerResource(`/api/planning?scope=budget&month=${month}&from=${shiftMonth(month, -1)}`, owner, !!owner && !demo, revision, emptyPlanning);
- const data = owner && !demo ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : provided;
- const recap = weeklyRecap(data.records, data.occurrences, today, currency, market?.rates ?? market?.fx?.rate);
- const money = (amount: number) => formatMoney(amount, currency, locale);
- const topName = recap.top ? data.categories.find(category => category.id === recap.top!.key)?.name ?? t(recap.top.key) : null;
- const net = recap.received - recap.spent;
- return <section className="panel overview-panel weekly-recap" aria-label={t('Your weekly recap')}>
-  <PanelTitle title={<>{t('Your weekly recap')} <span className="panel-figure">{formatDate(recap.from, locale)} – {formatDate(recap.to, locale)}</span></>}/>
-  {owner && !demo && remote.loading ? <LoadingPlaceholder label={t('Loading records…')} rows={3}/> : !recap.received && !recap.spent ? <EmptyState icon={<CalendarDays/>} description={t('A quiet week. Record income and spending to see your recap.')}/> : <ul className="weekly-recap-list">
-   <li><span aria-hidden="true">💰</span><p>{net >= 0 ? t('You saved {amount} last week.', { amount: money(net) }) : t('You spent {amount} more than you earned last week.', { amount: money(-net) })}</p></li>
-   <li><span aria-hidden="true">📉</span><p>{recap.spendingChange > 0 ? t('{amount} more spending than the week before', { amount: money(recap.spendingChange) }) : recap.spendingChange < 0 ? t('{amount} less spending than the week before', { amount: money(-recap.spendingChange) }) : t('Same spending as the week before')}</p></li>
-   {recap.top && topName && <li><span aria-hidden="true">🏷</span><p>{t('Top spending: {category} · {amount}', { category: topName, amount: money(recap.top.amount) })}</p></li>}
-   <li><span aria-hidden="true">📅</span><p>{recap.upcoming.count ? t('{count} bills due this week · {amount}', { count: recap.upcoming.count, amount: money(recap.upcoming.total) }) : t('No bills due this week')}</p></li>
-  </ul>}
- </section>;
-}
-
 /** This month's budget at a glance: planned spending against what is spent, and the categories closest to their limit. */
 export function BudgetCard({ owner = null, demo = false, revision = 0, data: provided, currency, market, splits }: { owner?: string | null; demo?: boolean; revision?: number; data: PlanningData; currency: string; market: MarketData | null; splits: TransactionSplit[] }) {
  const { t, locale } = useLanguage();
@@ -107,26 +83,4 @@ export function BudgetCard({ owner = null, demo = false, revision = 0, data: pro
    <ul className="overview-list dashboard-budget-list">{watched.map(row => <li key={row.key}><CategoryIcon kind={row.custom ? row.name : row.key} size="sm"/><span>{row.custom ? row.name : t(row.name)}<BudgetProgress row={row}/></span><strong data-tone={remainingTone(row.remaining)}>{row.remaining === null ? '—' : money(row.remaining)}</strong></li>)}</ul>
   </> : <EmptyState icon={<ChartPie/>} description={t('Plan this month’s spending to track it here.')}><DrawerLink href="/budget">{t('Set up a budget')}</DrawerLink></EmptyState>}
  </section>;
-}
-
-/** Customize: show or hide each dashboard card and move it within its column. */
-export function CustomizeDashboardDialog({ layout, onChange, onClose }: { layout: DashboardLayout; onChange: (layout: DashboardLayout) => void; onClose: () => void }) {
- const { t } = useLanguage();
- return <Dialog open onOpenChange={open => { if (!open) onClose(); }}>
-  <DialogContent className="budget-dialog">
-   <DialogTitle>{t('Customize dashboard')}</DialogTitle>
-   {(['left', 'right'] as const).map(column => {
-    const cards = layout.order.filter(card => (dashboardCards[column] as readonly string[]).includes(card));
-    return <section key={column} className="customize-column" aria-label={t(column === 'left' ? 'Left column' : 'Right column')}>
-     <p className="budget-dialog-label">{t(column === 'left' ? 'Left column' : 'Right column')}</p>
-     <ul>{cards.map((card, index) => <li key={card}>
-      <label className="customize-toggle"><input type="checkbox" checked={!layout.hidden.includes(card)} onChange={() => onChange(toggleCard(layout, card))}/>{t(dashboardCardLabels[card])}</label>
-      {card !== pinnedCard && <><Button size="icon" variant="ghost" disabled={index === 0 || cards[index - 1] === pinnedCard} aria-label={t('Move {name} up', { name: t(dashboardCardLabels[card]) })} onClick={() => onChange(moveCard(layout, card, -1))}><ArrowUp size={15}/></Button>
-      <Button size="icon" variant="ghost" disabled={index === cards.length - 1} aria-label={t('Move {name} down', { name: t(dashboardCardLabels[card]) })} onClick={() => onChange(moveCard(layout, card, 1))}><ArrowDown size={15}/></Button></>}
-     </li>)}</ul>
-    </section>;
-   })}
-   <div className="record-form-footer"><Button variant="outline" onClick={() => onChange(defaultDashboardLayout)}>{t('Reset to default')}</Button><Button onClick={onClose}>{t('Done')}</Button></div>
-  </DialogContent>
- </Dialog>;
 }

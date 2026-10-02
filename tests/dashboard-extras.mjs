@@ -1,43 +1,42 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { normalizeLayout, dashboardColumns, moveCard, toggleCard, defaultDashboardLayout } = loadTS('lib/dashboard-layout.ts');
-const { weeklyRecap, weekStart } = loadTS('lib/weekly-recap.ts');
+const { normalizeLayout, dashboardColumns, dropCard, placeCard, toggleCard, defaultDashboardLayout } = loadTS('lib/dashboard-layout.ts');
 const { workspacePreferenceSchema } = loadTS('lib/workspace-preferences.ts');
 
-test('dashboard layouts keep each card in its column, recover from old saves and pin net worth on top', () => {
- assert.deepEqual(dashboardColumns(defaultDashboardLayout), { left: ['net_worth', 'spending', 'budget', 'recap', 'commitments', 'allocation'], right: ['goals', 'transactions', 'upcoming'] });
- const saved = normalizeLayout({ order: ['upcoming', 'removed_card', 'allocation', 'upcoming'], hidden: ['goals', 'nope'] });
- assert.deepEqual(saved.order.slice(0, 2), ['upcoming', 'allocation']);
- assert.equal(saved.order.length, 9, 'new cards are appended');
- assert.deepEqual(saved.hidden, ['goals']);
- assert.deepEqual(dashboardColumns(saved).right, ['upcoming', 'transactions']);
- let layout = moveCard(defaultDashboardLayout, 'budget', -1);
- assert.deepEqual(dashboardColumns(layout).left.slice(0, 3), ['net_worth', 'budget', 'spending']);
- assert.deepEqual(moveCard(layout, 'budget', -1), layout, 'nothing moves above net worth');
- assert.deepEqual(moveCard(layout, 'net_worth', 1), layout);
- assert.deepEqual(moveCard(layout, 'allocation', 1), layout, 'the last card stays last');
- layout = moveCard(layout, 'goals', 1);
- assert.deepEqual(dashboardColumns(layout).right, ['transactions', 'goals', 'upcoming']);
- layout = toggleCard(toggleCard(layout, 'net_worth'), 'recap');
- assert.ok(!dashboardColumns(layout).left.includes('net_worth'));
- assert.ok(dashboardColumns(toggleCard(layout, 'recap')).left.includes('recap'));
+test('dashboard cards drag within and across columns, old saves load and every card can be hidden', () => {
+ assert.deepEqual(dashboardColumns(defaultDashboardLayout), { left: ['net_worth', 'spending', 'budget', 'commitments', 'allocation'], right: ['goals', 'transactions', 'upcoming', 'income'] });
+ const old = normalizeLayout({ order: ['upcoming', 'recap', 'removed_card', 'allocation', 'upcoming'], hidden: ['goals', 'recap', 'nope'] });
+ assert.deepEqual(old.columns.right, ['upcoming', 'goals', 'transactions', 'income'], 'a single-list save keeps its columns, new cards appended, removed cards dropped');
+ assert.equal(old.columns.left[0], 'allocation');
+ assert.equal(old.columns.left.length + old.columns.right.length, 9);
+ assert.deepEqual(old.hidden, ['goals']);
+ const repaired = normalizeLayout({ columns: { left: ['goals', 'goals', 'x'], right: ['goals', 'budget'] }, hidden: [] });
+ assert.deepEqual(repaired.columns.right.slice(0, 1), ['budget'], 'a card appears once, in the first column that lists it');
+ assert.equal(repaired.columns.left.filter(card => card === 'goals').length, 1);
+ // Same column: dropping on a card takes its place, as Monarch's drag does in both directions.
+ let layout = dropCard(defaultDashboardLayout, 'budget', 'net_worth');
+ assert.deepEqual(layout.columns.left.slice(0, 3), ['budget', 'net_worth', 'spending']);
+ layout = dropCard(layout, 'budget', 'commitments');
+ assert.deepEqual(layout.columns.left.slice(0, 4), ['net_worth', 'spending', 'commitments', 'budget']);
+ assert.equal(dropCard(layout, 'budget', 'budget'), layout);
+ // Across columns: the card lands before the one it was dropped on, or at the end of an empty column.
+ layout = dropCard(layout, 'net_worth', 'goals');
+ assert.deepEqual(layout.columns.right, ['net_worth', 'goals', 'transactions', 'upcoming', 'income']);
+ assert.ok(!layout.columns.left.includes('net_worth'));
+ layout = dropCard(layout, 'transactions', 'left');
+ assert.equal(layout.columns.left.at(-1), 'transactions');
+ let empty = defaultDashboardLayout;
+ for (const card of ['goals', 'transactions', 'upcoming', 'income']) empty = dropCard(empty, card, 'left');
+ assert.deepEqual(empty.columns.right, []);
+ assert.deepEqual(dropCard(empty, 'budget', 'right').columns.right, ['budget'], 'an empty column still takes a card');
+ assert.deepEqual(placeCard(defaultDashboardLayout, 'goals', 'left', 99).columns.left.at(-1), 'goals', 'an index past the end is clamped');
+ layout = toggleCard(toggleCard(layout, 'net_worth'), 'allocation');
+ assert.ok(!dashboardColumns(layout).right.includes('net_worth'));
+ assert.ok(layout.columns.right.includes('net_worth'), 'a hidden card keeps its place');
+ assert.ok(dashboardColumns(toggleCard(layout, 'allocation')).left.includes('allocation'));
  assert.ok(workspacePreferenceSchema.safeParse({ key: 'dashboard', data: layout }).success);
+ assert.ok(workspacePreferenceSchema.safeParse({ key: 'dashboard', data: { order: ['goals', 'recap'], hidden: ['recap'] } }).success, 'saves from before, naming the removed weekly recap, still load');
+ assert.ok(!workspacePreferenceSchema.safeParse({ key: 'dashboard', data: { columns: { left: ['hack'], right: [] }, hidden: [] } }).success);
  assert.ok(!workspacePreferenceSchema.safeParse({ key: 'dashboard', data: { order: ['hack'], hidden: [] } }).success);
-});
-
-test('the weekly recap compares last Monday-to-Sunday with the week before and lists bills due this week', () => {
- const record = (id, kind, amount, date, extra = {}) => ({ id, name: id, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Once', notes: '', ...extra });
- assert.equal(weekStart('2026-10-04'), '2026-09-28', 'Sunday belongs to the week that began on Monday');
- assert.equal(weekStart('2026-09-28'), '2026-09-28');
- const records = [record('a', 'Living expense', 40, '2026-09-21'), record('b', 'Charity', 70, '2026-09-27'), record('c', 'Salary', 500, '2026-09-25'), record('d', 'Living expense', 15, '2026-09-28'),
-  record('e', 'Living expense', 100, '2026-09-14'), record('f', 'Other expense', 9000, '2026-09-22', { currency: 'UZS' }),
-  record('rent', 'Rent expense', 800, '2026-01-03', { frequency: 'Monthly' }), record('gym', 'Living expense', 30, '2026-01-01', { frequency: 'Monthly' }), record('pay', 'Salary', 900, '2026-01-02', { frequency: 'Monthly' })];
- const recap = weeklyRecap(records, [], '2026-10-01', 'USD', { USD: 1 });
- assert.deepEqual([recap.from, recap.to], ['2026-09-21', '2026-09-27']);
- assert.equal(recap.received, 500);assert.equal(recap.spent, 110);assert.equal(recap.missing, 1, 'no inferred exchange rate');
- assert.deepEqual(recap.top, { key: 'Charity', amount: 70 });
- assert.equal(recap.spendingChange, 10);
- assert.deepEqual(recap.upcoming, { count: 2, total: 830 }, 'bills from today to Sunday; income is not a bill');
- assert.deepEqual(weeklyRecap(records, [], '2026-10-02', 'USD', { USD: 1 }).upcoming, { count: 1, total: 800 }, 'days already past are left out');
 });

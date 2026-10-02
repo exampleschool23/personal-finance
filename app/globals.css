@@ -648,9 +648,10 @@ tbody tr:last-child td{border-bottom:0}
 .workspace .content .settings-form>button.primary{border-radius:12px;min-height:44px;justify-self:start;min-width:180px}
 @media(prefers-reduced-motion:reduce){.workspace .content tbody tr,.workspace .content .comparison-settings-options label,.nav-item,.segmented>button{transition:none}}
 
-.income-history-chart{margin-block:24px}
 .income-history-chart .income-estimate-key{background:transparent;border:1px dashed var(--primary);border-radius:2px}
-@media(max-width:700px){.income-history-chart .panel-title{flex-direction:column;align-items:flex-start}}
+/* The card can sit in either dashboard column, so it adapts to its own width. */
+.income-history-chart{container:income-card/inline-size}
+@container income-card (max-width:560px){.income-history-chart .panel-title{flex-direction:column;align-items:flex-start;gap:12px}.workspace .content.overview-content .income-history-chart .portfolio-headline>div{padding:4px 12px}.workspace .content.overview-content .income-history-chart .portfolio-headline>div:first-child{padding-left:0}.income-history-chart .portfolio-headline strong{font-size:var(--type-title)}}
 
 /* Larger type needs room to wrap, without shrinking on smaller screens. */
 [data-slot="button"] { font-size: var(--type-small); font-weight: 500; min-height: 40px; border-radius: var(--radius-control); }
@@ -1847,7 +1848,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 
 /* Monarch's dashboard: a wider column for net worth and spending, a narrower one for goals, transactions and bills. */
 .dashboard-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start;width:100%}
-.dashboard-column{display:flex;flex-direction:column;gap:16px;min-width:0}
+.dashboard-column{display:flex;flex-direction:column;gap:16px;min-width:0;min-height:80px}
 @container content (max-width:900px){.dashboard-grid{grid-template-columns:minmax(0,1fr)}}
 .dashboard-goal-list{display:flex;flex-direction:column;gap:16px;margin:0;padding:0;list-style:none}
 .dashboard-goal-list li{display:flex;gap:12px;align-items:flex-start}
@@ -2088,10 +2089,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .recurring-chip[data-status=paid],.recurring-chip[data-status=skipped]{opacity:.55}
 @container content (max-width:720px){.recurring-summary{grid-template-columns:minmax(0,1fr)}.recurring-row{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}.recurring-row .row-actions{grid-column:1/-1;justify-content:flex-start}.recurring-calendar-day{min-height:64px;padding:4px}.recurring-chip>strong{display:none}}
 
-/* Dashboard extras: weekly recap, budget at a glance, and the Customize dialog. */
-.weekly-recap-list{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none;font-size:var(--type-small)}
-.weekly-recap-list>li{display:flex;align-items:flex-start;gap:10px}
-.weekly-recap-list p{margin:0}
+/* Dashboard extras: budget at a glance and the Customize dialog. */
 .dashboard-budget-total{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
 .dashboard-budget-total p{display:flex;align-items:baseline;gap:6px;margin:0}
 .dashboard-budget-total strong{font-size:var(--type-stat);font-weight:500;font-variant-numeric:tabular-nums}
@@ -2100,11 +2098,33 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .dashboard-budget-total small[data-tone=negative]{color:var(--negative)}
 .dashboard-budget-list{margin-top:14px}
 .dashboard-budget-list>li>span{display:flex;flex-direction:column;gap:6px;min-width:0}
-.customize-column ul{display:flex;flex-direction:column;margin:0 0 12px;padding:0;list-style:none}
-.customize-column li{display:flex;align-items:center;gap:4px;padding:4px 0}
-.customize-column li+li{border-top:1px solid var(--hairline)}
-.customize-toggle{display:flex;flex:1;align-items:center;gap:10px;font-size:var(--type-small);cursor:pointer}
-.customize-toggle input{accent-color:var(--mark-bg);width:16px;height:16px}
+/* Dashboard drag and drop: a six-dot handle in a card's top corner lifts it; the held card floats above the others. */
+.dashboard-card{position:relative;min-width:0;touch-action:manipulation}
+.dashboard-card[data-dragging]{z-index:5}
+.dashboard-card[data-dragging]>.panel{box-shadow:0 12px 32px rgb(0 0 0 / .14);opacity:.96}
+.drag-handle{display:inline-grid;place-items:center;width:20px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--muted-foreground);cursor:grab;touch-action:none}
+.drag-handle:hover{background:var(--muted);color:var(--foreground)}
+.drag-handle:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
+.dashboard-card[data-dragging] .drag-handle,.customize-row[data-dragging] .drag-handle{cursor:grabbing}
+.dashboard-card>.drag-handle{position:absolute;inset-block-start:22px;inset-inline-start:2px;z-index:1;opacity:0;transition:opacity .15s}
+.dashboard-card:hover>.drag-handle,.dashboard-card>.drag-handle:focus-visible,.dashboard-card[data-dragging]>.drag-handle{opacity:1}
+@media (hover:none){.dashboard-card>.drag-handle{opacity:1}}
+.customize-dialog{max-width:720px}
+.switch{display:inline-flex;flex-shrink:0;align-items:center;width:36px;height:20px;padding:2px;border:0;border-radius:999px;background:var(--input);cursor:pointer;transition:background .15s}
+.switch[data-state=checked]{background:var(--primary)}
+.switch:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.switch:disabled{cursor:not-allowed;opacity:.5}
+.switch-thumb{display:block;width:16px;height:16px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgb(0 0 0 / .2);transition:transform .15s}
+.switch-thumb[data-state=checked]{transform:translateX(16px)}
+[dir=rtl] .switch-thumb[data-state=checked]{transform:translateX(-16px)}
+.customize-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 28px;margin-top:4px}
+.customize-column{min-height:56px}
+.customize-column ul{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
+.customize-row{position:relative;display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 0;background:var(--background);user-select:none}
+.customize-row[data-dragging]{z-index:5;border-radius:var(--radius-control);box-shadow:0 8px 24px rgb(0 0 0 / .14)}
+.customize-row label{display:block;flex:1;margin:0;font-size:var(--type-small);cursor:pointer}
+.customize-footer{display:flex;justify-content:flex-start;margin-top:8px}
+@media (max-width:560px){.customize-grid{grid-template-columns:minmax(0,1fr)}}
 
 /* Goal detail: a cover band, the progress line and four figures heading a goal's plan. */
 .goal-detail{display:flex;flex-direction:column;gap:16px;padding:0;overflow:hidden}

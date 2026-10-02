@@ -1,7 +1,9 @@
 import {z} from 'zod';
-import {dashboardCardIds} from './dashboard-layout';
+import {dashboardCardIds,retiredDashboardCards} from './dashboard-layout';
 import {uuid,nonnegativeAmount,fiatCurrency,isoDate} from './api-validation';
 const weights=z.record(z.string().max(80),z.number().finite().min(0).max(100)).refine(value=>Object.keys(value).length<=50&&Math.abs(Object.values(value).reduce((sum,n)=>sum+n,0)-100)<1e-8);
+// Dashboard layouts saved before cards could change column keep one `order` list; both shapes load, as do ids of removed cards.
+const dashboardCardList=z.array(z.enum([...dashboardCardIds,...retiredDashboardCards] as string[] as [string,...string[]])).max(20);
 export const workspacePreferenceSchema=z.discriminatedUnion('key',[
  z.object({key:z.literal('daily_plan'),data:z.object({buffers:z.record(uuid,nonnegativeAmount).refine(v=>Object.keys(v).length<=200),budgets:z.array(z.object({plan_id:uuid,account_id:uuid,schedule_ids:z.array(uuid).max(200)})).max(200).refine(v=>new Set(v.map(b=>b.plan_id)).size===v.length&&new Set(v.flatMap(b=>b.schedule_ids)).size===v.flatMap(b=>b.schedule_ids).length)})}),
  z.object({key:z.literal('reminders'),data:z.object({enabled:z.boolean(),days_ahead:z.number().int().min(0).max(31),snoozed:z.array(z.object({key:z.string().max(100),until:isoDate})).max(500)})}),
@@ -11,7 +13,7 @@ export const workspacePreferenceSchema=z.discriminatedUnion('key',[
  z.object({key:z.literal('watchlists'),data:z.object({items:z.array(z.object({id:uuid,name:z.string().trim().min(1).max(80),query:z.string().trim().max(120),category:z.string().max(80),currency:fiatCurrency,target:nonnegativeAmount.positive()})).max(30)})}),
  z.object({key:z.literal('import_profiles'),data:z.object({items:z.array(z.object({id:uuid,name:z.string().trim().min(1).max(80),delimiter:z.enum([',',';','\t']),mapping:z.object({name:z.number().int().min(0).max(100),date:z.number().int().min(0).max(100),amount:z.number().int().min(0).max(100),notes:z.number().int().min(-1).max(100),sourceId:z.number().int().min(-1).max(100).optional(),dateFormat:z.enum(['iso','dmy','mdy']),decimal:z.enum(['.',','])})})).max(30)})}),
  z.object({key:z.literal('debt_plan'),data:z.object({currency:fiatCurrency,extra:nonnegativeAmount,method:z.enum(['avalanche','snowball']),payments:z.record(uuid,nonnegativeAmount).refine(value=>Object.keys(value).length<=500)})}),
- z.object({key:z.literal('dashboard'),data:z.object({order:z.array(z.enum(dashboardCardIds as [string,...string[]])).max(20),hidden:z.array(z.enum(dashboardCardIds as [string,...string[]])).max(20)})}),
+ z.object({key:z.literal('dashboard'),data:z.union([z.object({columns:z.object({left:dashboardCardList,right:dashboardCardList}),hidden:dashboardCardList}),z.object({order:dashboardCardList,hidden:dashboardCardList})])}),
  z.object({key:z.literal('goal_scenarios'),data:z.object({items:z.array(z.object({id:uuid,goal_id:uuid,name:z.string().trim().min(1).max(80),monthly:nonnegativeAmount,annual_return:z.number().min(0).max(100),inflation:z.number().min(0).max(100),deadline:isoDate,missed_date:isoDate.nullable().optional()})).max(50)})})
 ]);
 export type WorkspacePreference=z.infer<typeof workspacePreferenceSchema>;
