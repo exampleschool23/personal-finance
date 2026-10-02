@@ -4,7 +4,7 @@ import { useOwnerResource } from '@/hooks/use-owner-resource';
 import type { Entry } from '@/lib/finance';
 import { showNotice, showSaved } from '@/lib/feedback';
 import type { TransactionSplit } from '@/lib/transaction-tools';
-import { ruleChoice, ruleTargets, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
+import { openCriteria, ruleChoice, ruleTargets, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
 
 const emptyRules: { rules: TransactionRule[] } = { rules: [] };
 /** What applying a rule in the sample workspace does to its own records. */
@@ -14,7 +14,8 @@ export type RuleActions = {
  changeTags: (ids: string[], add: string[], remove: string[]) => Promise<number>;
  tagsOf: (id: string) => readonly string[];
 };
-const normalize = (rule: TransactionRule): TransactionRule => ({ ...rule, kind: rule.kind ?? null, category_id: rule.category_id ?? null, business_id: rule.business_id ?? null, tag_ids: rule.tag_ids ?? [] });
+// Rules saved before a field existed read as if it were unset; amounts arrive as text from numeric columns.
+const normalize = (rule: TransactionRule): TransactionRule => ({ ...openCriteria, ...rule, match: rule.match ?? 'contains', amount_min: rule.amount_min === null || rule.amount_min === undefined ? null : Number(rule.amount_min), amount_max: rule.amount_max === null || rule.amount_max === undefined ? null : Number(rule.amount_max), kind: rule.kind ?? null, category_id: rule.category_id ?? null, business_id: rule.business_id ?? null, tag_ids: rule.tag_ids ?? [] });
 
 /** Saved rules. Saving one can also apply it to matching past transactions; the result is how many changed.
  * The sample workspace keeps its rules in memory and applies them to its own records. */
@@ -46,7 +47,7 @@ export function useTransactionRules(owner: string | null, demo: boolean, revisio
      changed = Math.min(touched.size, counts.reduce((sum, count) => sum + count, 0));
     }
    } else {
-    changed = await post('save_rule', { id: rule.id, pattern: rule.pattern, direction: rule.direction, kind: rule.kind, category_id: rule.category_id, business_id: rule.business_id, tag_ids: rule.tag_ids, apply });
+    changed = await post('save_rule', { id: rule.id, pattern: rule.pattern, match: rule.match, direction: rule.direction, account_id: rule.account_id, match_business_id: rule.match_business_id, match_kind: rule.match_kind, match_category_id: rule.match_category_id, amount_min: rule.amount_min, amount_max: rule.amount_max, kind: rule.kind, category_id: rule.category_id, business_id: rule.business_id, tag_ids: rule.tag_ids, apply });
     remote.invalidate();
     if (changed) onSaved();
    }

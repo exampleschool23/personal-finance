@@ -39,7 +39,7 @@ export async function POST(req: Request) {
    return response.ok ? Response.json({ ok: true }) : failure(response);
   }
   const data = parsed.data as Input<'save_rule'>;
-  const saved = await supa('/rest/v1/transaction_rules?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ id: data.id, user_id: auth.user.id, pattern: data.pattern, direction: data.direction, kind: data.kind, category_id: data.category_id, business_id: data.business_id, tag_ids: data.tag_ids }) }, auth.token);
+  const saved = await supa('/rest/v1/transaction_rules?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ id: data.id, user_id: auth.user.id, pattern: data.pattern, match: data.match, direction: data.direction, account_id: data.account_id, match_business_id: data.match_business_id, match_kind: data.match_kind, match_category_id: data.match_category_id, amount_min: data.amount_min, amount_max: data.amount_max, kind: data.kind, category_id: data.category_id, business_id: data.business_id, tag_ids: data.tag_ids }) }, auth.token);
   if (!saved.ok) return failure(saved);
   if (!data.apply) return Response.json({ changed: 0 });
   return rpc('apply_transaction_rule', { p_rule: data.id });

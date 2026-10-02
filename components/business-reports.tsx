@@ -2,19 +2,21 @@
 import { Fragment, useState, type CSSProperties } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Sankey, Tooltip, XAxis, YAxis } from 'recharts';
 import type { LinkProps } from 'recharts/types/chart/Sankey';
-import { ReceiptText, X } from 'lucide-react';
+import { ChevronDown, Download, ReceiptText, X } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { ShareBars } from '@/components/cash-flow-report';
 import { BusinessMark } from '@/components/presentation-foundation/business-mark';
 import type { BusinessOption } from '@/components/presentation-foundation/business-filter';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
+import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { Button } from '@/components/ui/button';
 import { paletteColor } from '@/lib/business';
-import type { BusinessSankey, Drill, Interval, LedgerLine, PnlLine, ProfitAndLoss } from '@/lib/business-report';
+import { ledgerExportRows, summarizeLines, type BusinessSankey, type Drill, type Interval, type LedgerLine, type PnlLine, type ProfitAndLoss } from '@/lib/business-report';
 import type { Share } from '@/lib/cash-flow-report';
 import { categoryColor } from '@/lib/category-colors';
-import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMonthYear, formatSignedMoney, formatYear } from '@/lib/format';
+import { exportCSV } from '@/lib/csv';
+import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatSignedMoney, formatYear } from '@/lib/format';
 
 /** How a report names things: categories (built-in kinds are translated), the key a category's icon and colour come
  * from (a built-in kind, or an added category's own name), category groups and businesses. */
@@ -45,12 +47,15 @@ function grouped(lines: readonly PnlLine[], groupOf: (key: string) => string) {
 }
 
 /** Profit and loss table: total income (household income and each business's net income, made of gross
- * income less business expenses), household expenses and net cash flow. Hovering a row offers its transactions. */
+ * income less business expenses), household expenses and net cash flow. A section's chevron folds its lines away;
+ * hovering a row offers its transactions. */
 export function ProfitLossTable({ pnl, breakdown, names, groupOf, currency, onDrill }: { pnl: ProfitAndLoss; breakdown: Breakdown; names: ReportNames; groupOf: (key: string) => string; currency: string; onDrill: (drill: Drill) => void }) {
  const { t, locale } = useLanguage();
+ const [closed, setClosed] = useState<string[]>([]);
  const money = (amount: number) => formatMoney(amount, currency, locale);
- const row = (key: string, label: React.ReactNode, amount: number, level: number, drill: Drill | null, kind: 'line' | 'subtotal' | 'total' = 'line', tone?: 'positive' | 'negative') => <tr key={key} data-kind={kind} style={{ '--level': level } as CSSProperties}>
-  <th scope="row"><span className="pnl-label">{label}</span>{drill && <button type="button" className="pnl-drill" aria-label={t('Show transactions')} title={t('Show transactions')} onClick={() => onDrill(drill)}><ReceiptText size={14} aria-hidden="true"/></button>}</th>
+ const toggle = (key: string) => setClosed(list => list.includes(key) ? list.filter(item => item !== key) : [...list, key]);
+ const row = (key: string, label: React.ReactNode, amount: number, level: number, drill: Drill | null, kind: 'line' | 'subtotal' | 'total' = 'line', tone?: 'positive' | 'negative', section?: string) => <tr key={key} data-kind={kind} style={{ '--level': level } as CSSProperties}>
+  <th scope="row">{section && <button type="button" className="pnl-toggle" aria-expanded={!closed.includes(key)} aria-label={t(closed.includes(key) ? 'Show {name}' : 'Hide {name}', { name: section })} onClick={() => toggle(key)}><ChevronDown size={15} aria-hidden="true"/></button>}<span className="pnl-label">{label}</span>{drill && <button type="button" className="pnl-drill" aria-label={t('Show transactions')} title={t('Show transactions')} onClick={() => onDrill(drill)}><ReceiptText size={14} aria-hidden="true"/></button>}</th>
   <td className={tone}>{tone === 'negative' && amount > 0 ? '−' + money(amount) : money(amount)}</td>
  </tr>;
  const lines = (items: readonly PnlLine[], level: number, base: Drill, prefix: string) => breakdown === 'category'
@@ -65,19 +70,21 @@ export function ProfitLossTable({ pnl, breakdown, names, groupOf, currency, onDr
   <tbody>
    {row('income', t('Total income'), pnl.totalIncome, 0, { direction: 'income' }, 'total', pnl.totalIncome >= 0 ? undefined : 'negative')}
    {household && <>
-    {row('household-income', <BusinessName id={null} names={names}/>, household.incomeTotal, 1, { direction: 'income', business: null }, 'subtotal')}
-    {lines(household.income, 2, { direction: 'income', business: null }, 'hi')}
+    {row('household-income', <BusinessName id={null} names={names}/>, household.incomeTotal, 1, { direction: 'income', business: null }, 'subtotal', undefined, names.business(null))}
+    {!closed.includes('household-income') && lines(household.income, 2, { direction: 'income', business: null }, 'hi')}
    </>}
    {pnl.businesses.map(business => <Fragment key={business.id}>
-    {row(`b:${business.id}`, <><BusinessName id={business.id} names={names}/><small>{t('Net income')}</small></>, business.net, 1, { business: business.id }, 'subtotal', business.net < 0 ? 'negative' : undefined)}
-    {row(`b:${business.id}:gross`, t('Gross business income'), business.grossIncome, 2, { direction: 'income', business: business.id }, 'subtotal')}
-    {lines(business.income, 3, { direction: 'income', business: business.id }, `b:${business.id}:i`)}
-    {row(`b:${business.id}:expenses`, t('Business expenses'), business.totalExpenses, 2, { direction: 'expense', business: business.id }, 'subtotal')}
-    {lines(business.expenses, 3, { direction: 'expense', business: business.id }, `b:${business.id}:e`)}
+    {row(`b:${business.id}`, <><BusinessName id={business.id} names={names}/><small>{t('Net income')}</small></>, business.net, 1, { business: business.id }, 'subtotal', business.net < 0 ? 'negative' : undefined, names.business(business.id))}
+    {!closed.includes(`b:${business.id}`) && <>
+     {row(`b:${business.id}:gross`, t('Gross business income'), business.grossIncome, 2, { direction: 'income', business: business.id }, 'subtotal')}
+     {lines(business.income, 3, { direction: 'income', business: business.id }, `b:${business.id}:i`)}
+     {row(`b:${business.id}:expenses`, t('Business expenses'), business.totalExpenses, 2, { direction: 'expense', business: business.id }, 'subtotal')}
+     {lines(business.expenses, 3, { direction: 'expense', business: business.id }, `b:${business.id}:e`)}
+    </>}
    </Fragment>)}
    {household && <>
-    {row('household-expenses', t('Household expenses'), household.expenseTotal, 0, { direction: 'expense', business: null }, 'total')}
-    {lines(household.expenses, 1, { direction: 'expense', business: null }, 'he')}
+    {row('household-expenses', t('Household expenses'), household.expenseTotal, 0, { direction: 'expense', business: null }, 'total', undefined, t('Household expenses'))}
+    {!closed.includes('household-expenses') && lines(household.expenses, 1, { direction: 'expense', business: null }, 'he')}
    </>}
    {row('net', t(household ? 'Net cash flow' : 'Net income'), pnl.net, 0, null, 'total', pnl.net < 0 ? 'negative' : 'positive')}
   </tbody>
@@ -116,7 +123,7 @@ export function TrendChart({ rows, series, stacked, interval, currency }: { rows
  const [hidden, setHidden] = useState<string[]>([]);
  const label = useIntervalLabel(interval), longLabel = useIntervalLabel(interval, true);
  return <div className="cash-flow-chart"><ResponsiveContainer width="100%" height={280}>
-  <BarChart data={rows} barGap={2} accessibilityLayer margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
+  <BarChart data={rows} barGap={2} stackOffset="sign" accessibilityLayer margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
    <CartesianGrid stroke="var(--border)" strokeOpacity={.6} strokeDasharray="2 6" vertical={false}/>
    <XAxis dataKey="period" tickFormatter={value => label(String(value))} axisLine={false} tickLine={false} tickMargin={10}/>
    <YAxis width="auto" tickFormatter={value => formatCompactMoney(Number(value), currency, locale)} axisLine={false} tickLine={false} tickMargin={8}/>
@@ -151,18 +158,49 @@ export function attributeColor(attribute: 'category' | 'group' | 'merchant' | 'b
  return 'var(--foreground)';
 }
 
-/** The transactions behind a report, narrowed by the last click on a chart or table. */
-export function ReportTransactions({ lines, drill, label, names, currency, onClear }: { lines: readonly LedgerLine[]; drill: Drill | null; label: string | null; names: ReportNames; currency: string; onClear: () => void }) {
+/** The transactions behind a report, narrowed by the last click on a chart or table. A row opens its transaction. */
+export function ReportTransactions({ lines, drill, label, names, currency, onClear, onOpen }: { lines: readonly LedgerLine[]; drill: Drill | null; label: string | null; names: ReportNames; currency: string; onClear: () => void; onOpen?: (line: LedgerLine) => void }) {
  const { t, locale } = useLanguage();
  const [limit, setLimit] = useState(25);
  return <section className="panel report-transactions" aria-label={t('Transactions')}>
-  <div className="report-transactions-heading"><h2>{t('Transactions')}</h2>{drill && label && <span className="report-drill">{label}<button type="button" aria-label={t('Clear filter')} onClick={onClear}><X size={14} aria-hidden="true"/></button></span>}<span className="muted">{t('{count} transactions', { count: lines.length })}</span></div>
-  {lines.length ? <ul className="report-transaction-list">{lines.slice(0, limit).map(line => <li key={line.id}>
-   <CategoryIcon kind={names.icon(line.category)} size="sm"/>
-   <span><strong>{line.name}</strong><small>{formatDate(line.date, locale)} · {names.category(line.category)}</small></span>
-   <BusinessName id={line.business} names={names}/>
-   <strong className={line.direction === 'income' ? 'positive' : undefined}>{formatSignedMoney(line.direction === 'income' ? line.amount : -line.amount, currency, locale)}</strong>
-  </li>)}</ul> : <EmptyState icon={<ReceiptText/>} description={t('Nothing recorded in this period.')}/>}
+  <div className="report-transactions-heading"><h2>{t('Transactions')}</h2>{drill && label && <span className="report-drill">{label}<button type="button" aria-label={t('Clear filter')} onClick={onClear}><X size={14} aria-hidden="true"/></button></span>}<span className="muted">{t('{count} transactions', { count: formatNumber(lines.length, locale, 0) })}</span></div>
+  {lines.length ? <ul className="report-transaction-list">{lines.slice(0, limit).map(line => {
+   const cells = <>
+    <CategoryIcon kind={names.icon(line.category)} size="sm"/>
+    <span><strong>{line.name}</strong><small>{formatDate(line.date, locale)} · {names.category(line.category)}</small></span>
+    <BusinessName id={line.business} names={names}/>
+    <strong className={line.direction === 'income' ? 'positive' : undefined}>{formatSignedMoney(line.direction === 'income' ? line.amount : -line.amount, currency, locale)}</strong>
+   </>;
+   return <li key={line.id}>{onOpen && line.record ? <button type="button" aria-label={t('View details for {name}', { name: line.name })} onClick={() => onOpen(line)}>{cells}</button> : <div>{cells}</div>}</li>;
+  })}</ul> : <EmptyState icon={<ReceiptText/>} description={t('Nothing recorded in this period.')}/>}
   {lines.length > limit && <Button variant="outline" onClick={() => setLimit(limit + 50)}>{t('Show more')}</Button>}
  </section>;
+}
+
+/** The figures beside a report's transactions: how many, the largest and the average, totals, the first and last
+ * dates, and the same transactions as a CSV file. `mixed` reports show income and spending apart. */
+export function ReportSummary({ lines, mixed, names, currency, fileName }: { lines: readonly LedgerLine[]; mixed: boolean; names: ReportNames; currency: string; fileName: string }) {
+ const { t, locale } = useLanguage();
+ const summary = summarizeLines(lines), money = (amount: number) => formatMoney(amount, currency, locale);
+ const net = summary.income - summary.expenses, total = summary.income + summary.expenses;
+ function download() {
+  const headers = [t('Date'), t('Name'), t('Category'), t('Business'), t('Amount')];
+  const rows = ledgerExportRows(lines, names.category, names.business).map(row => ({ [headers[0]]: row.date, [headers[1]]: row.name, [headers[2]]: row.category, [headers[3]]: row.business, [headers[4]]: row.amount }));
+  const url = URL.createObjectURL(new Blob(['\uFEFF' + exportCSV(rows, headers)], { type: 'text/csv;charset=utf-8' })), link = document.createElement('a');
+  link.href = url; link.download = fileName + '.csv'; document.body.appendChild(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+ }
+ return <aside className="panel transactions-summary" aria-label={t('Summary')}>
+  <PanelTitle title={t('Summary')}/>
+  <dl className="budget-left-summary">
+   <div><dt>{t('Total transactions')}</dt><dd>{formatNumber(summary.count, locale, 0)}</dd></div>
+   <div><dt>{t('Largest transaction')}</dt><dd>{summary.largest ? money(summary.largest.amount) : '—'}</dd></div>
+   <div><dt>{t('Average transaction')}</dt><dd>{summary.count ? (mixed ? formatSignedMoney(net / summary.count, currency, locale) : money(total / summary.count)) : '—'}</dd></div>
+   {mixed ? <><div><dt>{t('Total income')}</dt><dd className={summary.income > 0 ? 'positive' : undefined}>{money(summary.income)}</dd></div><div><dt>{t('Total spending')}</dt><dd>{money(summary.expenses)}</dd></div></>
+    : <div><dt>{t('Total')}</dt><dd>{money(total)}</dd></div>}
+   <div><dt>{t('First transaction')}</dt><dd>{formatDate(summary.first ?? '', locale)}</dd></div>
+   <div><dt>{t('Last transaction')}</dt><dd>{formatDate(summary.last ?? '', locale)}</dd></div>
+  </dl>
+  <Button variant="outline" size="sm" disabled={!lines.length} onClick={download}><Download size={15} aria-hidden="true"/>{t('Download CSV')}</Button>
+ </aside>;
 }

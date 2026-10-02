@@ -4,14 +4,15 @@ import { income, type Entry } from './finance';
 import { spendingAmount } from './spending';
 import { isTransactionHistory } from './transaction-history';
 
-export const transactionPeriods = ['this_month', 'last_month', 'three_months', 'this_year', 'twelve_months'] as const;
+/** `two_years` is the longest a transaction read covers; links from a tag or a business open it so older history is in view. */
+export const transactionPeriods = ['this_month', 'last_month', 'three_months', 'this_year', 'twelve_months', 'two_years'] as const;
 export type TransactionPeriod = typeof transactionPeriods[number];
-export const transactionPeriodLabels: Record<TransactionPeriod, string> = { this_month: 'This month', last_month: 'Last month', three_months: 'Last 3 months', this_year: 'This year', twelve_months: 'Last 12 months' };
+export const transactionPeriodLabels: Record<TransactionPeriod, string> = { this_month: 'This month', last_month: 'Last month', three_months: 'Last 3 months', this_year: 'This year', twelve_months: 'Last 12 months', two_years: 'Last 24 months' };
 
 /** The months a period covers, ending no later than today. */
 export function periodRange(period: TransactionPeriod, today: string) {
  const month = today.slice(0, 7);
- const from = period === 'this_month' ? month : period === 'last_month' ? shiftMonth(month, -1) : period === 'three_months' ? shiftMonth(month, -2) : period === 'this_year' ? month.slice(0, 4) + '-01' : shiftMonth(month, -11);
+ const from = period === 'this_month' ? month : period === 'last_month' ? shiftMonth(month, -1) : period === 'three_months' ? shiftMonth(month, -2) : period === 'this_year' ? month.slice(0, 4) + '-01' : shiftMonth(month, period === 'two_years' ? -23 : -11);
  const to = period === 'last_month' ? shiftMonth(month, -1) : month;
  return { from, to };
 }
@@ -60,4 +61,11 @@ export function summarizeTransactions(records: readonly Entry[], convert: Conver
   else { spent += value; if (!largest || value > largest.amount) largest = { name: record.name, amount: value }; }
  }
  return { count: records.length, received, spent, largest, missing };
+}
+
+/** A list cut into parts of at most `size`, for database calls that take a limited number of ids. */
+export function chunks<T>(list: readonly T[], size: number): T[][] {
+ const parts: T[][] = [];
+ for (let index = 0; index < list.length; index += size) parts.push(list.slice(index, index + size));
+ return parts;
 }

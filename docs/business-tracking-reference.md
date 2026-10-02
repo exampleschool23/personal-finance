@@ -81,24 +81,26 @@ keep a general template beside it and never imply that one country's form applie
 - Preview export → Export summary: CSV or PDF, with transaction details, totals and the reference app
   categories → Download prep sheet.
 
-## Gap list against the build in progress (checked 2026-10-02 22:50, uncommitted)
+## Where the build stands (2026-10-03)
 
-| # | Video feature | State | Notes |
-|---|---|---|---|
-| 1 | Setup wizard and setup guide | Missing | Only the "Edit businesses" dialog on Accounts |
-| 2 | Business profile (structure, colour, logo, notes) | Done | `business-profile-fields.tsx`, migration 092 |
-| 3 | Dashboard Business tracking widget | Missing | `businessNetAssets` in `lib/business-report.ts` is unused |
-| 4 | Business filter on Accounts | Done | `BusinessFilter`, `?business=` |
-| 5 | Business filter on Transactions | Done | also `?tag=` |
-| 6 | Transactions follow the account's business | Done | `set_account_business`, import trigger |
-| 7 | Business on rows and details | Done | `BusinessPicker`, details dialog |
-| 8 | Bulk edit with business | Done | `BulkEditSheet` |
-| 9 | Rules: set business, from a transaction, preview count | Partial | Rule criteria by business are missing |
-| 10 | Tags: settings, clickable counts | Partial | No Tags section in Settings; `tagCounts` unused |
-| 11–15 | Reports: filter, Breakdown/Trends, Sankey, P&L, pie/bars, drill | Built, not mounted | `business-reports.tsx` is imported nowhere |
-| 16 | Tax prep sheet | Built, not mounted | `tax-prep-sheet.tsx`; check move-to-line and greyed lines |
-| 17 | Translations and tests | Missing | No locale keys; only one skipped SQL test |
-| 18 | Demo data | Done | Coastal Candle Co, Lakeside Rentals LLC |
+Built: business profiles, the setup flow with its guide (reopened from Settings → Businesses), the dashboard card,
+business filters on Accounts and Transactions, inline and bulk business changes, tags, rules that set a business,
+Reports (cash flow, spending, income; Sankey, profit and loss, trends by business, summary and CSV download) and
+business tax prep with a general template beside the US one. Migrations 092 and 093 carry the database side.
+
+Rule criteria (migration 093): a name that is contained or exact, an account, a business, a category and an amount range.
+
+Not built, on purpose or for later:
+
+| Feature in the reference | State | Why |
+|---|---|---|
+| Bulk edit of merchant name, date, notes, recurring and hide | Not built | Bulk edit changes category, business and tags. Dates and names go through each record's own checks (cash balances, linked sources), so a bulk change needs its own database function |
+| "Original statement" rule criterion | Not built | Imported rows keep one name; there is no separate statement text |
+| More than 24 months in Reports or Transactions | Not built | Reads cover at most 24 months; "Last 24 months" is the longest period |
+| Tag filter with several tags at once | Not built | One tag at a time |
+| Report tabs and filters in the address | Partly | Links can open a tab, a business and a view; changing them on the page does not update the address |
+| Telegram bot: business on any transaction | Not built | The bot asks for a business only for business income |
+| S corp and C corp businesses | Out of scope | The reference leaves them out too |
 
 ## Full transcript (auto captions, lightly joined)
 

@@ -94,3 +94,99 @@ test('the list keeps the period, search and filters, newest first, grouped by da
  const summary = summarizeTransactions(list, convert);
  assert.deepEqual(summary, { count: 4, received: 1000, spent: 1004, largest: { name: 'Rent', amount: 1000 }, missing: 1 });
 });
+
+test('rule criteria: an exact name, an account, a business, a category and an amount range narrow a rule', () => {
+ const { hasCriteria, extraCriteria, ruleCriterion, openCriteria } = loadTS('lib/transaction-rules.ts');
+ const shop = record('a', ' Shop ', 'Other expense', 40, '2026-09-01', { account_id: 'checking', business_id: 'candles', custom_category_id: 'ads' });
+ const longer = record('b', 'Shop online', 'Other expense', 400, '2026-09-01', { account_id: 'card' });
+ const base = { pattern: 'shop', direction: 'any', ...openCriteria };
+ assert.ok(ruleMatches(base, shop) && ruleMatches(base, longer));
+ assert.ok(ruleMatches({ pattern: 'shop', direction: 'any' }, longer), 'a rule saved before criteria existed still matches by name');
+ assert.ok(ruleMatches({ ...base, pattern: ' SHOP ', match: 'exact' }, shop), 'an exact name ignores case and the spaces around it');
+ assert.ok(!ruleMatches({ ...base, match: 'exact' }, longer));
+ assert.ok(ruleMatches({ ...base, account_id: 'checking' }, shop) && !ruleMatches({ ...base, account_id: 'checking' }, longer));
+ assert.ok(ruleMatches({ ...base, match_business_id: 'candles' }, shop) && !ruleMatches({ ...base, match_business_id: 'candles' }, longer));
+ assert.ok(ruleMatches({ ...base, match_kind: 'Other expense', match_category_id: 'ads' }, shop));
+ assert.ok(!ruleMatches({ ...base, match_kind: 'Other expense', match_category_id: null }, shop), 'the general category is not a custom one');
+ assert.ok(ruleMatches({ ...base, match_kind: 'Other expense', match_category_id: null }, longer));
+ assert.ok(ruleMatches({ ...base, amount_min: 40, amount_max: 40 }, shop) && !ruleMatches({ ...base, amount_min: 40.01 }, shop) && !ruleMatches({ ...base, amount_max: 399.99 }, longer));
+ // The name is optional once another criterion is set; a rule with no criterion matches nothing.
+ assert.ok(ruleMatches({ ...base, pattern: '', account_id: 'card' }, longer) && !ruleMatches({ ...base, pattern: '', account_id: 'card' }, shop));
+ assert.ok(!ruleMatches({ ...base, pattern: '  ' }, shop));
+ assert.ok(!hasCriteria({ ...base, pattern: '' }) && hasCriteria({ ...base, pattern: '', amount_max: 5 }));
+ assert.equal(extraCriteria({ ...base, account_id: 'x', match_business_id: 'y', match_kind: 'Charity', amount_min: 0, amount_max: 9 }), 4, 'an amount range counts once');
+ assert.equal(extraCriteria(base), 0);
+ assert.deepEqual(ruleCriterion({ ...base, match_kind: 'Other expense', match_category_id: 'ads' }), { kind: 'Other expense', category_id: 'ads' });
+ assert.equal(ruleCriterion(base), null);
+ // Applying a rule changes only what its criteria reach.
+ const rule = { id: 'r', ...base, pattern: '', account_id: 'card', kind: null, category_id: null, business_id: 'candles', tag_ids: [] };
+ assert.deepEqual(ruleTargets(rule, [shop, longer]), ['b']);
+});
+
+test('the rule schema accepts criteria and rejects a rule without one, a reversed range or a category of the other direction', () => {
+ const { transactionRuleSchemas } = loadTS('lib/transaction-rule-schemas.ts');
+ const uuid = n => `00000000-0000-4000-8000-00000000000${n}`;
+ const rule = { id: uuid(1), pattern: 'shop', match: 'contains', direction: 'expense', account_id: null, match_business_id: null, match_kind: null, match_category_id: null, amount_min: null, amount_max: null, kind: null, category_id: null, business_id: uuid(2), tag_ids: [], apply: false };
+ const ok = value => transactionRuleSchemas.save_rule.safeParse(value).success;
+ assert.ok(ok(rule));
+ assert.ok(ok({ ...rule, pattern: '', account_id: uuid(3) }) && ok({ ...rule, pattern: ' ', amount_min: 0 }), 'another criterion replaces the name');
+ assert.ok(!ok({ ...rule, pattern: '' }), 'a rule needs a criterion');
+ assert.ok(!ok({ ...rule, match: 'regex' }));
+ assert.ok(!ok({ ...rule, amount_min: 50, amount_max: 10 }) && !ok({ ...rule, amount_min: -1 }) && ok({ ...rule, amount_min: 10, amount_max: 10 }));
+ assert.ok(!ok({ ...rule, match_kind: 'Salary' }) && ok({ ...rule, direction: 'any', match_kind: 'Salary' }) && ok({ ...rule, match_kind: 'Charity' }));
+ assert.ok(!ok({ ...rule, match_kind: 'Charity', match_category_id: uuid(4) }) && ok({ ...rule, match_kind: 'Other expense', match_category_id: uuid(4) }));
+ const older = Object.fromEntries(Object.entries(rule).filter(([key]) => key !== 'account_id'));
+ assert.ok(!ok(older), 'every criterion is sent, so an update can clear it');
+});
+
+test('the longest period reaches 24 months, and long selections are sent in parts', () => {
+ const { chunks, transactionPeriods } = loadTS('lib/transaction-list.ts');
+ assert.deepEqual(periodRange('two_years', '2026-10-02'), { from: '2024-11', to: '2026-10' });
+ assert.equal(transactionPeriods.at(-1), 'two_years');
+ assert.deepEqual(chunks([1, 2, 3, 4, 5], 2), [[1, 2], [3, 4], [5]]);
+ assert.deepEqual(chunks([], 500), []);
+ assert.deepEqual(chunks(Array.from({ length: 1001 }, (_, index) => index), 500).map(part => part.length), [500, 500, 1]);
+});
+
+test('business helpers: colours, filters, who can take a business, account groups and the setup guide', () => {
+ const { nextPaletteColor, paletteColor, businessesIn, canAssignBusiness, inBusinessFilter, businessAccountGroups, isBusinessAccount, setupGuide, HOUSEHOLD } = loadTS('lib/business.ts');
+ assert.equal(nextPaletteColor([]), 'teal');assert.equal(nextPaletteColor(['teal', 'blue', null]), 'indigo');
+ assert.equal(nextPaletteColor(['teal', 'blue', 'indigo', 'violet', 'pink', 'red', 'orange', 'amber', 'green']), 'slate', 'grey is the last resort');
+ assert.equal(paletteColor('nope'), paletteColor('slate'));assert.notEqual(paletteColor('teal'), paletteColor('blue'));assert.equal(paletteColor(null), paletteColor(undefined));
+ const rows = [record('biz', 'Candles', 'Business', 0, '2026-01-01'), record('cash', 'Checking', 'Cash', 10, '2026-01-01'), record('loan', 'Loan', 'Loan', 10, '2026-01-01'), record('pay', 'Pay', 'Salary', 10, '2026-01-01', { income_source_id: 'job' }),
+  record('sale', 'Sale', 'Business income', 10, '2026-01-01', { business_id: 'biz' }), record('plan', 'Groceries', 'Living expense', 10, '2026-01-01', { expense_plan_id: 'p' }), record('buy', 'Wax', 'Other expense', 10, '2026-01-01')];
+ assert.deepEqual(businessesIn(rows).map(row => row.id), ['biz']);
+ assert.ok(inBusinessFilter([], null) && inBusinessFilter([HOUSEHOLD], undefined) && inBusinessFilter(['biz', HOUSEHOLD], 'biz') && !inBusinessFilter(['biz'], null) && !inBusinessFilter([HOUSEHOLD], 'biz'));
+ assert.ok(canAssignBusiness(rows[6], 'biz') && !canAssignBusiness(rows[6], null), 'a household transaction can move to a business, and is already in the household');
+ assert.ok(!canAssignBusiness(rows[3], 'biz'), 'salary from a source follows its source');
+ assert.ok(!canAssignBusiness(rows[4], null) && !canAssignBusiness(rows[4], 'biz'), 'business income keeps a business');
+ assert.ok(!canAssignBusiness(rows[5], 'biz'), 'planned spending stays household spending');
+ assert.ok(!canAssignBusiness(rows[1], 'biz'), 'an account is not a transaction');
+ // Every record that can belong to a business falls in exactly one group.
+ for (const kind of ['Cash', 'Deposit', 'Treasury bill', 'Stock', 'Crypto', 'Property', 'Valuables', 'Money lent', 'Mortgage', 'Loan', 'Debt']) {
+  assert.ok(isBusinessAccount({ kind }), kind);
+  assert.equal(businessAccountGroups.filter(([, matches]) => matches({ kind })).length, 1, kind);
+ }
+ assert.ok(!isBusinessAccount({ kind: 'Business' }) && !businessAccountGroups.some(([, matches]) => matches({ kind: 'Salary' })));
+ // The guide: three steps with a page each; tagged history is offered to those who tracked by hand, or who have tags.
+ const hrefs = cards => cards.map(card => card.href);
+ assert.deepEqual(hrefs(setupGuide(false, true)), ['/transactions?business=household', '/settings#rules', '/reports?tab=tax']);
+ assert.deepEqual(hrefs(setupGuide(true, false)), ['/transactions', '/settings#tags', '/settings#rules']);
+ assert.deepEqual(hrefs(setupGuide(null, true)).at(-1), '/settings#tags');
+ assert.equal(setupGuide(null, false).length, 3);
+ for (const card of [...setupGuide(true, true), ...setupGuide(null, true)]) assert.ok(card.title && card.detail && card.action && card.emoji);
+});
+
+test('tags: counts, tags of a transaction, what can be tagged, and the tag schema', () => {
+ const { tagsByRecord, tagCounts, canTag, tagSchemas } = loadTS('lib/tags.ts');
+ const links = [{ record_id: 'a', tag_id: 'trip' }, { record_id: 'a', tag_id: 'tax' }, { record_id: 'b', tag_id: 'trip' }];
+ assert.deepEqual([...tagsByRecord(links)], [['a', ['trip', 'tax']], ['b', ['trip']]]);
+ assert.deepEqual([...tagCounts(links)], [['trip', 2], ['tax', 1]]);
+ assert.equal(tagCounts([]).size, 0);
+ assert.ok(canTag({ kind: 'Other expense', frequency: 'Once', history_event_id: null }) && canTag({ kind: 'Salary', frequency: 'Once' }));
+ assert.ok(!canTag({ kind: 'Other expense', frequency: 'Monthly' }) && !canTag({ kind: 'Cash', frequency: 'Once' }) && !canTag({ kind: 'Other expense', frequency: 'Once', history_event_id: 'e' }));
+ const id = '00000000-0000-4000-8000-000000000001';
+ assert.equal(tagSchemas.save.parse({ id, name: '  Trip  ', color: 'teal' }).name, 'Trip');
+ assert.ok(!tagSchemas.save.safeParse({ id, name: ' ', color: 'teal' }).success && !tagSchemas.save.safeParse({ id, name: 'x'.repeat(61), color: 'teal' }).success && !tagSchemas.save.safeParse({ id, name: 'Trip', color: 'neon' }).success);
+ assert.ok(!tagSchemas.delete.safeParse({ id: 'nope' }).success);
+});

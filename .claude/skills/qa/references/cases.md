@@ -139,6 +139,9 @@ currencies (USD primary). Compute every expected figure yourself first.
 | TX-013 | P1 | Mortgage row | A mortgage payment | Shows −interest, "Principal … · Interest …" `[bug 2026-10-02]` |
 | TX-014 | P2 | Minus signs | Day header and row | Same true minus "−" `[bug 2026-10-02]` |
 | TX-015 | P1 | Cross-currency expense | Expense USD from EUR account | Rate line "1 EUR = … USD · ECB · effective …"; account debited converted amount `[bug 2026-10-02]` |
+| TX-016 | P1 | Rule conditions | Rules › Add rule › More conditions: exact name, account, category, business, amount range | The count of matching transactions follows each condition; a rule with no condition cannot be saved; an upper amount below the lower shows an error |
+| TX-017 | P1 | Select all | Edit multiple › Select all, then Clear selection | Every listed transaction is selected, then none; more than 500 still update |
+| TX-018 | P1 | Tag history | Settings › Tags; click a tag's count | Transactions open on Last 24 months filtered by the tag |
 
 ## CF — cash flow
 
@@ -180,6 +183,13 @@ currencies (USD primary). Compute every expected figure yourself first.
 | REP-013 | P1 | Edit multiple | Select rows › Edit › category, business, add tag | Every field applies; mixed income/expense keeps category disabled |
 | REP-014 | P1 | Tags | Settings › Tags add "QA Trip", tag a transaction, click the count | Transactions open filtered by the tag; delete removes it from rules too |
 | REP-015 | P1 | Dashboard widget | Net income / Net assets, each link | Rows open Reports filtered to the business, the thumbnail opens Trends, View P&L opens the table, Net assets opens Accounts filtered |
+| REP-016 | P1 | Report summary and CSV | Any report tab; click a chart part, then Download CSV (ask the user first) | Summary shows count, largest, average, totals, first and last date for the narrowed list; the file holds the same rows, spending negative |
+| REP-017 | P1 | Open a report transaction | Click a row under a report | The transaction's details open; closing returns to the same report and filter |
+| REP-018 | P1 | P&L sections fold | Profit & loss; click a business's chevron | Its gross income and expense lines hide and return; totals unchanged |
+| REP-019 | P1 | Trends by business | Cash flow › Trends › Net by business | One series per business plus Household; a loss draws below zero |
+| REP-020 | P1 | Setup guide | Settings › Businesses › Setup guide | Guide opens alone; each card's button goes to Transactions, Rules, tax prep or Tags |
+| REP-021 | P1 | Setup accounts step | Add business › accounts step; Add account | Accounts grouped by type; the account form opens above the setup and the new account appears in the list |
+| REP-022 | P1 | Tax tab without a business | Open /reports?tab=tax with no businesses | Cash flow shows, with its own tiles and chart |
 
 ## BUD — budget
 

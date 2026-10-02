@@ -199,7 +199,8 @@ function useWorkspaceState() {
     const tags={...tagResource,data:{...tagResource.data,tags:orderById(tagResource.data.tags,savedOrder(workspacePreferences.data.preferences,'tag_order'))}};
     // Businesses in the person's own order (Settings), shared by filters, reports and the dashboard.
     const businessList=orderById(businessesIn(planning.data.records),savedOrder(workspacePreferences.data.preferences,'business_order'));
-    const [settingUpBusinesses,setSettingUpBusinesses]=useState(false);
+    // `guide` reopens only the closing guide of business setup, from Settings.
+    const [settingUpBusinesses,setSettingUpBusinesses]=useState<boolean|'guide'>(false);
     const overdueCount = upcomingPayments(planning.data.records, planning.data.occurrences, undefined, undefined, planning.data.debtPayments).filter(item => item.overdue).length;
     const lastLoadedKey = useEffectEvent(() => loadedKey);
     const receiveServerPage=useEffectEvent((next:number)=>{if(!useFilteredRecords&&next!==page)setPageState({key:paginationKey,page:next});});

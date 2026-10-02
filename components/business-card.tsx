@@ -15,7 +15,7 @@ import { shiftMonth } from '@/lib/budget';
 import { businessNetAssets, cashFlowTrend, rangeFor, reportLedger, reportRangeLabels, type ReportRangePreset } from '@/lib/business-report';
 import { depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry, type Entry } from '@/lib/finance';
-import { formatMoney } from '@/lib/format';
+import { formatMoney, formatNumber } from '@/lib/format';
 import { marketEntry, type MarketData } from '@/lib/market';
 import { emptyPlanning, type PlanningData } from '@/lib/planning';
 import type { TransactionSplit } from '@/lib/transaction-tools';
@@ -38,7 +38,9 @@ export function BusinessCard({ owner, demo, revision, data: provided, splits, bu
  const today = depositToday();
  const [mode, setMode] = useState<'income' | 'assets'>('income');
  const [period, setPeriod] = useState<ReportRangePreset>('this_year');
- const range = rangeFor(period, today), trendFrom = shiftMonth(today.slice(0, 7), -5) + '-01';
+ // The tiny bars cover the chosen period month by month; a period of a month or two shows the last six months instead.
+ const range = rangeFor(period, today), sixBack = shiftMonth(today.slice(0, 7), -5) + '-01';
+ const long = range.from <= shiftMonth(range.to.slice(0, 7), -2) + '-01', trendFrom = long ? range.from : sixBack, trendTo = long ? range.to : today;
  const from = range.from < trendFrom ? range.from : trendFrom;
  const live = !!owner && !demo;
  const remote = useOwnerResource(`/api/planning?scope=budget&month=${today.slice(0, 7)}&from=${from.slice(0, 7)}`, owner, live && businesses.length > 0, revision, emptyPlanning);
@@ -60,11 +62,11 @@ export function BusinessCard({ owner, demo, revision, data: provided, splits, bu
    const lines = ledger.filter(line => line.business === business.id);
    if (mode === 'assets') {
     const net = assets.get(business.id)?.net ?? 0;
-    return <li key={business.id}><BusinessMark name={business.name} color={business.business_color} logo={business.business_logo}/><DrawerLink className="business-card-name" href={`/accounts?business=${business.id}`}>{business.name}<small>{t('{count} accounts and assets', { count: assets.get(business.id)?.accounts.length ?? 0 })}</small></DrawerLink><span/><DrawerLink href={`/accounts?business=${business.id}`} className={net < 0 ? 'negative' : undefined}><strong>{money(net)}</strong></DrawerLink></li>;
+    return <li key={business.id}><BusinessMark name={business.name} color={business.business_color} logo={business.business_logo}/><DrawerLink className="business-card-name" href={`/accounts?business=${business.id}`}>{business.name}<small>{t('{count} accounts and assets', { count: formatNumber(assets.get(business.id)?.accounts.length ?? 0, locale, 0) })}</small></DrawerLink><span/><DrawerLink href={`/accounts?business=${business.id}`} className={net < 0 ? 'negative' : undefined}><strong>{money(net)}</strong></DrawerLink></li>;
    }
    const inPeriod = lines.filter(line => line.date >= range.from && line.date <= range.to);
    const net = inPeriod.reduce((sum, line) => sum + (line.direction === 'income' ? line.amount : -line.amount), 0);
-   const trend = cashFlowTrend(lines, { from: trendFrom, to: today }, 'month').map(row => row.net);
+   const trend = cashFlowTrend(lines, { from: trendFrom, to: trendTo }, 'month').map(row => row.net);
    return <li key={business.id}>
     <BusinessMark name={business.name} color={business.business_color} logo={business.business_logo}/>
     <DrawerLink className="business-card-name" href={`/reports?tab=cash_flow&business=${business.id}`}>{business.name}<small>{t(net < 0 ? 'Net loss' : 'Net profit')}</small></DrawerLink>

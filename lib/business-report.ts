@@ -182,6 +182,33 @@ export function attributeTrend(lines: readonly LedgerLine[], range: ReportRange,
  return { keys, rows: [...rows.values()] };
 }
 
+/** Net income (income less expenses) for each interval, one series per key such as a business or the household. */
+export function netTrendBy(lines: readonly LedgerLine[], range: ReportRange, interval: Interval, keyOf: (line: LedgerLine) => string, keys: readonly string[]) {
+ const rows = new Map(intervalsIn(range, interval).map(period => [period, Object.fromEntries([['period', period], ...keys.map(key => [key, 0])]) as Record<string, number | string>]));
+ for (const line of lines) {
+  const row = rows.get(intervalOf(line.date, interval)), key = keyOf(line);
+  if (!row || !keys.includes(key)) continue;
+  row[key] = Number(row[key]) + (line.direction === 'income' ? line.amount : -line.amount);
+ }
+ return [...rows.values()];
+}
+
+/** The summary beside a report's transactions: how many, each direction's total, the largest one and the first and last dates. */
+export function summarizeLines(lines: readonly LedgerLine[]) {
+ let incomeTotal = 0, expenseTotal = 0, largest: LedgerLine | null = null, first: string | null = null, last: string | null = null;
+ for (const line of lines) {
+  if (line.direction === 'income') incomeTotal += line.amount; else expenseTotal += line.amount;
+  if (!largest || line.amount > largest.amount) largest = line;
+  if (!first || line.date < first) first = line.date;
+  if (!last || line.date > last) last = line.date;
+ }
+ return { count: lines.length, income: incomeTotal, expenses: expenseTotal, largest, first, last };
+}
+
+/** A report's transactions as export rows, newest first as shown. Spending is negative; amounts stay unrounded numbers. */
+export const ledgerExportRows = (lines: readonly LedgerLine[], categoryName: (key: string) => string, businessName: (id: string | null) => string) =>
+ lines.map(line => ({ date: line.date, name: line.name, category: categoryName(line.category), business: businessName(line.business), amount: line.direction === 'income' ? line.amount : -line.amount }));
+
 /** Each business's accounts and assets less what it owes, in the display currency. `records` are already converted;
  * a record that could not be converted is left out and counted in `missing`. The Business record's own value counts as an asset. */
 export function businessNetAssets(records: readonly (Entry | null)[], businessIds: readonly string[]) {

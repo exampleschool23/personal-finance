@@ -27,11 +27,12 @@ import { tagCounts, type Tag } from '@/lib/tags';
 
 /** Settings › Businesses: each business with its structure and how many accounts and transactions it has, in the
  * person's own order. Editing opens the business's record; setup walks through adding businesses and accounts. */
-export function BusinessSettings({ businesses, records, preferences, owner, demo, onEdit, onDelete, onSetup }: { businesses: Entry[]; records: readonly Entry[]; preferences: PreferenceResource; owner: string | null; demo: boolean; onEdit: (business: Entry) => void; onDelete: (business: Entry) => void; onSetup: () => void }) {
+export function BusinessSettings({ businesses, records, preferences, owner, demo, onEdit, onDelete, onSetup, onGuide }: { businesses: Entry[]; records: readonly Entry[]; preferences: PreferenceResource; owner: string | null; demo: boolean; onEdit: (business: Entry) => void; onDelete: (business: Entry) => void; onSetup: () => void; onGuide: () => void }) {
  const { t, locale } = useLanguage();
  const order = useDisplayOrder('business_order', businesses, preferences, owner, demo);
  return <section className="panel tools-panel business-settings">
   <PanelTitle title={t('Businesses')} count={<Count value={businesses.length}/>} hint={t('Track a side business, freelance work or rentals beside your household. Each business has its own profit and loss in Reports.')}>
+   {businesses.length > 0 && <Button variant="outline" onClick={onGuide}>{t('Setup guide')}</Button>}
    <Button onClick={onSetup}><Plus size={16} aria-hidden="true"/>{t(businesses.length ? 'Add business' : 'Set up business tracking')}</Button>
   </PanelTitle>
   {order.items.length ? <SortableList id="business-order" items={order.items.map(item => item.id)} nameOf={id => businesses.find(item => item.id === id)?.name ?? ''} onMove={(moved, over) => void order.reorder(moved, over)} disabled={order.disabled}>

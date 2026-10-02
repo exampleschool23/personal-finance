@@ -14,14 +14,16 @@ import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { income, type Entry } from '@/lib/finance';
-import { formatDate, formatMoney, formatSignedMoney } from '@/lib/format';
+import { formatDate, formatMoney, formatNumber, formatSignedMoney } from '@/lib/format';
 import { isMortgagePayment, spendingAmount, transferAmount } from '@/lib/spending';
 import { signedAmount } from '@/lib/transaction-list';
 import type { Category } from '@/lib/planning';
-import { categoryChoices, choiceKey, directionOf, ruleChoice, ruleTargets, suggestedPattern, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
+import { categoryChoices, choiceKey, directionOf, extraCriteria, hasCriteria, openCriteria, ruleChoice, ruleCriterion, ruleTargets, suggestedPattern, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
 import type { Tag } from '@/lib/tags';
 
 type Choice = ReturnType<typeof categoryChoices>[number];
@@ -68,10 +70,11 @@ export function CategoryPicker({ record, categories, disabled, onChange }: { rec
 }
 
 /** The Edit multiple bar: how many are selected, and the drawer that changes their fields together. */
-export function BulkEditBar({ count, onEdit, onCancel }: { count: number; onEdit: () => void; onCancel: () => void }) {
+export function BulkEditBar({ count, total, onAll, onEdit, onCancel }: { count: number; total: number; onAll: (select: boolean) => void; onEdit: () => void; onCancel: () => void }) {
  const { t } = useLanguage();
  return <div className="bulk-bar" role="region" aria-label={t('Edit multiple')}>
   <strong>{t('{count} selected', { count })}</strong>
+  <Button size="sm" variant="outline" disabled={!total} onClick={() => onAll(count < total)}>{t(total > 0 && count >= total ? 'Clear selection' : 'Select all')}</Button>
   <Button size="sm" disabled={!count} onClick={onEdit}>{t('Edit {count}', { count })}</Button>
   <Button size="sm" variant="outline" onClick={onCancel}>{t('Done')}</Button>
  </div>;
@@ -199,33 +202,69 @@ function RuleActionsSummary({ rule, categories, businesses = [], tags = [] }: { 
  </span>;
 }
 
-/** Create or edit a rule: a name fragment and what it sets (category, business, tags), optionally applied to past transactions. */
-export function RuleDialog({ rule, records, categories, businesses, tags, splits, tagsOf, onCreateTag, onSave, onClose }: { rule: TransactionRule; records?: Entry[]; categories: readonly Category[]; businesses: readonly BusinessOption[]; tags: readonly Tag[]; splits: Parameters<typeof ruleTargets>[2]; tagsOf: (id: string) => readonly string[]; onCreateTag?: (name: string) => Promise<string>; onSave: (rule: TransactionRule, apply: boolean) => Promise<number>; onClose: () => void }) {
- const { t } = useLanguage();
- const [pattern, setPattern] = useState(rule.pattern);
+/** What a rule matches, in words: its name test and how many other conditions it sets. */
+function useRuleCriteriaText() {
+ const { t, locale } = useLanguage();
+ return (rule: TransactionRule) => {
+  const name = rule.pattern.trim() ? t(rule.match === 'exact' ? 'Name is “{pattern}”' : 'Name contains “{pattern}”', { pattern: rule.pattern }) : t('Any name');
+  const extra = extraCriteria(rule);
+  return extra ? `${name} · ${t('+{count} conditions', { count: formatNumber(extra, locale, 0) })}` : name;
+ };
+}
+
+/** Create or edit a rule: what a transaction must match (its name and, behind "More conditions", an account, a
+ * category, a business and an amount range) and what the rule then sets (category, business, tags), optionally
+ * applied to past transactions. */
+export function RuleDialog({ rule, records, categories, businesses, accounts = [], tags, splits, tagsOf, onCreateTag, onSave, onClose }: { rule: TransactionRule; records?: Entry[]; categories: readonly Category[]; businesses: readonly BusinessOption[]; accounts?: ReadonlyArray<{ id: string; name: string }>; tags: readonly Tag[]; splits: Parameters<typeof ruleTargets>[2]; tagsOf: (id: string) => readonly string[]; onCreateTag?: (name: string) => Promise<string>; onSave: (rule: TransactionRule, apply: boolean) => Promise<number>; onClose: () => void }) {
+ const { t, locale } = useLanguage();
+ const [pattern, setPattern] = useState(rule.pattern), [match, setMatch] = useState(rule.match);
  const [direction, setDirection] = useState<TransactionRule['direction']>(rule.direction);
+ const [account, setAccount] = useState(rule.account_id), [inBusiness, setInBusiness] = useState(rule.match_business_id);
+ const [criterion, setCriterion] = useState<CategoryChoice | null>(ruleCriterion(rule));
+ const [amountMin, setAmountMin] = useState(rule.amount_min), [amountMax, setAmountMax] = useState(rule.amount_max);
  const [choice, setChoice] = useState<CategoryChoice | null>(ruleChoice(rule));
  const [business, setBusiness] = useState<string | null>(rule.business_id);
  const [tagIds, setTagIds] = useState<string[]>(rule.tag_ids);
  const [apply, setApply] = useState(true);
  const [busy, setBusy] = useState(false);
  const [error, setError] = useState('');
- const [picking, setPicking] = useState<'category' | 'business' | null>(null);
- // A category belongs to one direction, so a rule for both directions sets only a business and tags.
- const category = direction === 'any' ? null : choice && directionOf(choice.kind) === direction ? choice : null;
- const next: TransactionRule = { ...rule, pattern: pattern.trim(), direction, kind: category?.kind ?? null, category_id: category?.category_id ?? null, business_id: business, tag_ids: tagIds };
- const valid = !!next.pattern && (!!next.kind || !!next.business_id || next.tag_ids.length > 0);
+ const [picking, setPicking] = useState<'category' | 'business' | 'criterion' | null>(null);
+ // A category belongs to one direction, so a rule for both directions neither requires nor sets one.
+ const ofDirection = (value: CategoryChoice | null) => direction === 'any' ? null : value && directionOf(value.kind) === direction ? value : null;
+ const category = ofDirection(choice), required = ofDirection(criterion);
+ const next: TransactionRule = { ...rule, pattern: pattern.trim(), match, direction, account_id: account, match_business_id: inBusiness, match_kind: required?.kind ?? null, match_category_id: required?.category_id ?? null, amount_min: amountMin, amount_max: amountMax, kind: category?.kind ?? null, category_id: category?.category_id ?? null, business_id: business, tag_ids: tagIds };
+ const rangeValid = amountMax === null || amountMax >= (amountMin ?? 0);
+ const valid = hasCriteria(next) && rangeValid && (!!next.kind || !!next.business_id || next.tag_ids.length > 0);
  // Without the transactions at hand (Settings), the count is left to the database.
- const matches = records ? ruleTargets(next, records, splits, tagsOf).length : null;
+ const matches = records && valid ? ruleTargets(next, records, splits, tagsOf).length : null;
  const choiceName = useChoiceName(categories);
  const businessRecord = businesses.find(item => item.id === business);
+ const extra = extraCriteria(next);
+ const amount = (value: number | null, set: (value: number | null) => void, label: string) => <label>{t(label)}<FormattedNumberInput value={value ?? 0} required={false} ariaLabel={t(label)} placeholder="" onValueChange={(typed, blank) => set(blank ? null : typed)}/></label>;
  return <Dialog open onOpenChange={value => { if (!value && !busy) onClose(); }}>
-  <DialogContent className="budget-dialog">
+  <DialogContent className="budget-dialog rule-dialog">
    <DialogTitle>{t('Rule')}</DialogTitle>
    <form onSubmit={async event => { event.preventDefault(); if (!valid) return; setBusy(true); setError(''); try { await onSave(next, apply); onClose(); } catch (reason) { setError(t((reason as Error).message)); } finally { setBusy(false); } }}>
     <fieldset disabled={busy} className="budget-dialog-fields">
-     <label className="budget-dialog-label">{t('When the name contains')}<Input required maxLength={120} value={pattern} onChange={event => setPattern(event.currentTarget.value)}/></label>
+     <div className="budget-dialog-label">{t('When the name')}
+      <div className="rule-name-criterion">
+       <NativeSelect aria-label={t('Name match')} value={match} onChange={event => setMatch(event.currentTarget.value as TransactionRule['match'])}><option value="contains">{t('Contains')}</option><option value="exact">{t('Is exactly')}</option></NativeSelect>
+       <Input aria-label={t('Name')} required={!extra} maxLength={120} value={pattern} onChange={event => setPattern(event.currentTarget.value)}/>
+      </div>
+     </div>
      <div className="budget-dialog-label">{t('Applies to')}<Segmented label={t('Applies to')} options={[{ value: 'expense', label: t('Expenses') }, { value: 'income', label: t('Income') }, { value: 'any', label: t('Both') }] as const} value={direction} onChange={setDirection}/></div>
+     <details className="rule-more" open={extraCriteria(rule) > 0 || undefined}>
+      <summary>{t('More conditions')}{extra > 0 && <Count value={extra}/>}</summary>
+      {accounts.length > 0 && <label className="budget-dialog-label">{t('Account')}<NativeSelect value={account ?? ''} onChange={event => setAccount(event.currentTarget.value || null)}><option value="">{t('Any account')}</option>{accounts.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></label>}
+      {direction !== 'any' && <div className="budget-dialog-label">{t('Category')}
+       <Popover open={picking === 'criterion'} onOpenChange={open => setPicking(open ? 'criterion' : null)}>
+        <PopoverTrigger asChild><button type="button" className="rule-category-button">{required ? <><CategoryIcon kind={required.category_id ? choiceName(required) : required.kind} size="sm"/>{choiceName(required)}</> : t('Any category')}</button></PopoverTrigger>
+        <PopoverContent className="category-picker-popover" align="start"><CategoryList categories={categories} direction={direction} selected={required ? choiceKey(required) : undefined} onSelect={value => { setPicking(null); setCriterion(value); }}/>{required && <Button type="button" size="sm" variant="ghost" onClick={() => { setPicking(null); setCriterion(null); }}>{t('Any category')}</Button>}</PopoverContent>
+       </Popover>
+      </div>}
+      {businesses.length > 0 && <label className="budget-dialog-label">{t('Business')}<NativeSelect value={inBusiness ?? ''} onChange={event => setInBusiness(event.currentTarget.value || null)}><option value="">{t('Any business')}</option>{businesses.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></label>}
+      <div className="budget-dialog-label">{t('Amount')}<div className="rule-amount-range">{amount(amountMin, setAmountMin, 'From')}{amount(amountMax, setAmountMax, 'To')}</div>{!rangeValid && <span className="form-error" role="alert">{t('The upper amount must not be below {amount}.', { amount: formatNumber(amountMin ?? 0, locale) })}</span>}</div>
+     </details>
      {direction !== 'any' && <div className="budget-dialog-label">{t('Set the category to')}
       <Popover open={picking === 'category'} onOpenChange={open => setPicking(open ? 'category' : null)}>
        <PopoverTrigger asChild><button type="button" className="rule-category-button">{category ? <><CategoryIcon kind={category.category_id ? choiceName(category) : category.kind} size="sm"/>{choiceName(category)}</> : t('Leave unchanged')}</button></PopoverTrigger>
@@ -239,7 +278,7 @@ export function RuleDialog({ rule, records, categories, businesses, tags, splits
       </Popover>
      </div>}
      <div className="budget-dialog-label">{t('Add tags')}<TagSelector tags={tags} selected={tagIds} onToggle={id => setTagIds(list => list.includes(id) ? list.filter(item => item !== id) : list.length >= 10 ? list : [...list, id])} onCreate={onCreateTag}/></div>
-     <label className="budget-check"><input type="checkbox" checked={apply} onChange={event => setApply(event.currentTarget.checked)}/><span><strong>{matches === null ? t('Apply to matching past transactions') : t('Apply to {count} matching transactions', { count: matches })}</strong><small>{t('New bank statement imports follow the rule too. Categories you choose by hand are kept.')}</small></span></label>
+     <label className="budget-check"><input type="checkbox" checked={apply} onChange={event => setApply(event.currentTarget.checked)}/><span><strong>{matches === null ? t('Apply to matching past transactions') : t('Apply to {count} matching transactions', { count: formatNumber(matches, locale, 0) })}</strong><small>{t('New bank statement imports follow the rule too. Categories you choose by hand are kept.')}</small></span></label>
      {error && <p className="form-error" role="alert">{error}</p>}
     </fieldset>
     <FormFooter busy={busy} onCancel={onClose}><Button disabled={busy || !valid}>{t(busy ? 'Saving…' : 'Save rule')}</Button></FormFooter>
@@ -249,16 +288,17 @@ export function RuleDialog({ rule, records, categories, businesses, tags, splits
 }
 
 /** Saved rules as rows: what each matches and what it sets. Clicking a row edits it. */
-function ruleList({ rules, categories, businesses, tags, onEdit }: RulesProps, t: ReturnType<typeof useLanguage>['t'], onDelete: (rule: TransactionRule) => void) {
+function ruleList({ rules, categories, businesses, tags, onEdit }: RulesProps, t: ReturnType<typeof useLanguage>['t'], criteria: (rule: TransactionRule) => string, onDelete: (rule: TransactionRule) => void) {
  return rules.length ? <ul className="rule-list">{rules.map(rule => <li key={rule.id}>
-  <button type="button" onClick={() => onEdit(rule)}><span>{t('Name contains “{pattern}”', { pattern: rule.pattern })}</span><span className="rule-arrow" aria-hidden="true">→</span><RuleActionsSummary rule={rule} categories={categories} businesses={businesses} tags={tags}/></button>
-  <Button size="icon" variant="ghost" aria-label={t('Delete {name}', { name: rule.pattern })} onClick={() => onDelete(rule)}><Trash2 size={15}/></Button>
+  <button type="button" onClick={() => onEdit(rule)}><span>{criteria(rule)}</span><span className="rule-arrow" aria-hidden="true">→</span><RuleActionsSummary rule={rule} categories={categories} businesses={businesses} tags={tags}/></button>
+  <Button size="icon" variant="ghost" aria-label={t('Delete {name}', { name: criteria(rule) })} onClick={() => onDelete(rule)}><Trash2 size={15}/></Button>
  </li>)}</ul> : <p className="budget-left-empty">{t('No rules yet. Change a transaction’s category or business and choose Create rule, or add one here.')}</p>;
 }
 
 /** Deleting a rule asks first; the transactions it changed keep their changes. */
 function useRuleRemoval(onRemove: (rule: TransactionRule) => Promise<void>) {
  const { t } = useLanguage();
+ const criteria = useRuleCriteriaText();
  const [deleting, setDeleting] = useState<TransactionRule | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
  async function remove() {
   if (!deleting || busy) return;
@@ -268,8 +308,8 @@ function useRuleRemoval(onRemove: (rule: TransactionRule) => Promise<void>) {
   finally { setBusy(false); }
  }
  const ask = (rule: TransactionRule) => { setError(''); setDeleting(rule); };
- const dialog = <ConfirmDialog open={!!deleting} onClose={() => setDeleting(null)} busy={busy} destructive error={error} title={t('Delete {name}?', { name: deleting ? t('Name contains “{pattern}”', { pattern: deleting.pattern }) : '' })} description={t('New transactions will no longer follow this rule. Transactions it already changed keep their changes.')} confirmLabel={t(busy ? 'Deleting…' : 'Delete rule')} onConfirm={remove}/>;
- return { ask, dialog };
+ const dialog = <ConfirmDialog open={!!deleting} onClose={() => setDeleting(null)} busy={busy} destructive error={error} title={t('Delete {name}?', { name: deleting ? criteria(deleting) : '' })} description={t('New transactions will no longer follow this rule. Transactions it already changed keep their changes.')} confirmLabel={t(busy ? 'Deleting…' : 'Delete rule')} onConfirm={remove}/>;
+ return { ask, dialog, criteria };
 }
 
 type RulesProps = { rules: TransactionRule[]; categories: readonly Category[]; businesses?: readonly BusinessOption[]; tags?: readonly Tag[]; onEdit: (rule: TransactionRule) => void; onAdd: () => void; onRemove: (rule: TransactionRule) => Promise<void> };
@@ -280,7 +320,7 @@ export function RulesDialog({ onClose, ...props }: RulesProps & { onClose: () =>
  return <><Dialog open onOpenChange={value => { if (!value) onClose(); }}>
   <DialogContent className="budget-dialog">
    <DialogTitle>{t('Rules')}</DialogTitle>
-   {ruleList(props, t, removal.ask)}
+   {ruleList(props, t, removal.criteria, removal.ask)}
    <div className="record-form-footer"><Button onClick={props.onAdd}><Plus size={16} aria-hidden="true"/>{t('Add rule')}</Button></div>
   </DialogContent>
  </Dialog>
@@ -293,12 +333,12 @@ export function RulesPanel(props: RulesProps) {
  const removal = useRuleRemoval(props.onRemove);
  return <section className="panel tools-panel">
   <PanelTitle title={t('Rules')} count={<Count value={props.rules.length}/>} hint={t('A rule sets the category, business or tags of transactions whose name contains its words. New bank statement imports follow your rules too.')}><Button onClick={props.onAdd}><Plus size={16} aria-hidden="true"/>{t('Add rule')}</Button></PanelTitle>
-  {ruleList(props, t, removal.ask)}
+  {ruleList(props, t, removal.criteria, removal.ask)}
   {removal.dialog}
  </section>;
 }
 
-const emptyRule = (pattern: string, direction: TransactionRule['direction']): TransactionRule => ({ id: crypto.randomUUID(), pattern, direction, kind: null, category_id: null, business_id: null, tag_ids: [] });
+const emptyRule = (pattern: string, direction: TransactionRule['direction']): TransactionRule => ({ id: crypto.randomUUID(), pattern, direction, ...openCriteria, kind: null, category_id: null, business_id: null, tag_ids: [] });
 /** A new rule suggested from one category change. */
 export const ruleFromChange = (record: Entry, choice: CategoryChoice): TransactionRule => ({ ...emptyRule(suggestedPattern(record.name), directionOf(choice.kind) ?? 'expense'), ...choice });
 /** A new rule suggested from one business change: "anything from this merchant belongs to this business". */

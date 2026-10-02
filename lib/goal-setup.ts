@@ -1,7 +1,7 @@
 import { goalEmoji } from './goal-emoji';
 import type { Goal } from './planning';
 
-/** the "Select goals to add" tiles. The name is a translation key; savings goals reserve cash in an account. */
+/** The "Select goals to add" tiles. The name is a translation key; savings goals reserve cash in an account. */
 export type GoalTemplate = { id: string; name: string; emoji: string; kind: 'savings' | 'net_worth' | 'investment' };
 export const goalTemplates: readonly GoalTemplate[] = [
  { id: 'emergency', name: 'Emergency fund', emoji: '🧯', kind: 'savings' },

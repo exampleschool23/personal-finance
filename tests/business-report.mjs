@@ -115,3 +115,40 @@ test('tax prep maps categories to lines, lets the person move them, and exports 
  assert.deepEqual(taxPeriodRange(2026, 'q3'), { from: '2026-07-01', to: '2026-09-30' });
  assert.deepEqual(taxPeriodRange(2024, 'q1'), { from: '2024-01-01', to: '2024-03-31' });
 });
+
+test('the summary, the export rows and the per-business trend follow the same ledger', () => {
+ const { summarizeLines, ledgerExportRows, netTrendBy, businessKey, intervalsIn, rangeMonths } = loadTS('lib/business-report.ts');
+ const { lines } = reportLedger({ records, investmentLinks: [] }, splits, range, 'USD', today, { USD: 1, UZS: 12500 });
+ const summary = summarizeLines(lines);
+ assert.equal(summary.count, 10);
+ assert.equal(summary.income, 5000 + 1200 + 2600);
+ assert.equal(summary.expenses, 800 + 1500.5 + 400 + 10 + 300 + 100);
+ assert.equal(summary.largest.id, 'salary');
+ assert.deepEqual([summary.first, summary.last], ['2026-09-01', '2026-09-10']);
+ assert.deepEqual(summarizeLines([]), { count: 0, income: 0, expenses: 0, largest: null, first: null, last: null }, 'an empty report has no dates and no largest transaction');
+ // Export rows keep the order shown and unrounded amounts; spending is negative.
+ const rows = ledgerExportRows(lines, key => 'c:' + key, id => id ?? 'Household');
+ assert.equal(rows.length, lines.length);
+ assert.deepEqual(rows.find(row => row.name === 'CandleScience'), { date: '2026-09-05', name: 'CandleScience', category: 'c:supplies', business: 'candles', amount: -1500.5 });
+ assert.deepEqual(rows.find(row => row.name === 'Payroll'), { date: '2026-09-01', name: 'Payroll', category: 'c:Salary', business: 'Household', amount: 5000 });
+ // Net income per business and for the household, month by month; a business left out of the keys is not counted.
+ const trend = netTrendBy(lines, range, 'month', businessKey, ['household', 'candles']);
+ assert.deepEqual(trend, [{ period: '2026-09', household: 5000 - 800 - 10 - 100, candles: 1200 - 1500.5 }, { period: '2026-10', household: 0, candles: 0 }]);
+ assert.deepEqual(netTrendBy(lines, range, 'year', businessKey, ['rentals']), [{ period: '2026', rentals: 2600 - 400 - 300 }]);
+ assert.equal(businessKey({ business: null }), 'household');
+ assert.deepEqual(rangeMonths({ from: '2025-11-15', to: '2026-02-01' }), ['2025-11', '2025-12', '2026-01', '2026-02']);
+ assert.deepEqual(intervalsIn({ from: '2025-11-15', to: '2026-02-01' }, 'quarter'), ['2025-Q4', '2026-Q1']);
+});
+
+test('the tax export closes with totals only when asked, and names the form a template follows', () => {
+ const { taxFormLinks } = loadTS('lib/business-tax.ts');
+ const { lines } = reportLedger({ records, investmentLinks: [] }, splits, range, 'USD', today, { USD: 1, UZS: 12500 });
+ const sheet = taxSheet(lines.filter(line => line.business === 'rentals'), defaultTaxSettings, key => key);
+ const plain = taxExportRows(sheet, 'general', 'lines', text => text, key => key);
+ const closed = taxExportRows(sheet, 'general', 'lines', text => 'T:' + text, key => key, true);
+ assert.deepEqual(closed.slice(plain.length).map(row => [row.description, row.amount]), [['T:Gross income', sheet.grossIncome], ['T:Expenses', sheet.totalExpenses], ['T:Net profit or loss', sheet.net]]);
+ assert.equal(closed.length, plain.length + 3);
+ assert.deepEqual(taxExportRows(taxSheet([], defaultTaxSettings, key => key), 'general', 'lines', text => text, key => key, true), [], 'an empty sheet exports nothing, not three zero totals');
+ assert.equal(taxFormLinks.general, undefined, 'the general template follows no country’s form');
+ assert.match(taxFormLinks.schedule_c.href, /^https:\/\/www\.irs\.gov\//);
+});

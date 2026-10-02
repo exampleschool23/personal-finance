@@ -6,9 +6,24 @@ import { canTag } from './tags';
 
 /** Where a transaction belongs: a built-in kind, or a custom category on the general kind of its direction. */
 export type CategoryChoice = { kind: Entry['kind']; category_id: string | null };
-/** "Transactions whose name contains `pattern` get this category, business and tags." Each action is optional,
- * but a rule has at least one; a rule without a category may match income and expenses alike (`any`). */
-export type TransactionRule = { id: string; pattern: string; direction: Category['direction'] | 'any'; kind: Entry['kind'] | null; category_id: string | null; business_id: string | null; tag_ids: string[]; created_at?: string };
+/** "Transactions matching these criteria get this category, business and tags." The criteria: words the name
+ * contains (or the exact name), and optionally an account, a business, a category and an amount range; at least one
+ * is set. Each action is optional, but a rule has at least one; a rule without a category may match income and
+ * expenses alike (`any`). */
+export type TransactionRule = {
+ id: string; pattern: string; match: 'contains' | 'exact'; direction: Category['direction'] | 'any';
+ account_id: string | null; match_business_id: string | null; match_kind: Entry['kind'] | null; match_category_id: string | null; amount_min: number | null; amount_max: number | null;
+ kind: Entry['kind'] | null; category_id: string | null; business_id: string | null; tag_ids: string[]; created_at?: string;
+};
+/** The criteria a rule may leave unset, as a saved rule from before they existed has them. */
+export const openCriteria = { match: 'contains', account_id: null, match_business_id: null, match_kind: null, match_category_id: null, amount_min: null, amount_max: null } as const;
+type Criteria = Pick<TransactionRule, 'pattern' | 'direction'> & Partial<Omit<TransactionRule, 'pattern' | 'direction'>>;
+/** The category a rule requires, if any. */
+export const ruleCriterion = (rule: Criteria): CategoryChoice | null => rule.match_kind ? { kind: rule.match_kind, category_id: rule.match_category_id ?? null } : null;
+/** How many criteria a rule sets besides the name. */
+export const extraCriteria = (rule: Criteria) => [rule.account_id, rule.match_business_id, rule.match_kind, rule.amount_min ?? rule.amount_max].filter(value => value !== null && value !== undefined).length;
+/** A rule must narrow something: a name, or one of the other criteria. */
+export const hasCriteria = (rule: Criteria) => !!rule.pattern.trim() || extraCriteria(rule) > 0;
 /** The category a rule sets, if any. */
 export const ruleChoice = (rule: Pick<TransactionRule, 'kind' | 'category_id'>): CategoryChoice | null => rule.kind ? { kind: rule.kind, category_id: rule.category_id } : null;
 
@@ -48,8 +63,17 @@ export function recategorize(records: readonly Entry[], ids: readonly string[], 
  return { records: next, changed };
 }
 
-export const ruleMatches = (rule: Pick<TransactionRule, 'pattern' | 'direction'>, record: Pick<Entry, 'name' | 'kind' | 'frequency'>) =>
- record.frequency === 'Once' && !!directionOf(record.kind) && (rule.direction === 'any' || directionOf(record.kind) === rule.direction) && !!rule.pattern.trim() && record.name.toLowerCase().includes(rule.pattern.trim().toLowerCase());
+/** Whether a rule's criteria hold for a transaction; mirrors `public.transaction_rule_matches` and the direction test beside it. */
+export function ruleMatches(rule: Criteria, record: Pick<Entry, 'name' | 'kind' | 'frequency'> & Partial<Pick<Entry, 'account_id' | 'business_id' | 'custom_category_id' | 'amount'>>) {
+ const pattern = rule.pattern.trim().toLowerCase(), name = record.name.toLowerCase();
+ return record.frequency === 'Once' && !!directionOf(record.kind) && (rule.direction === 'any' || directionOf(record.kind) === rule.direction) && hasCriteria(rule)
+  && (rule.match === 'exact' ? name.trim() === pattern : name.includes(pattern))
+  && (!rule.account_id || record.account_id === rule.account_id)
+  && (!rule.match_business_id || record.business_id === rule.match_business_id)
+  && (!rule.match_kind || (record.kind === rule.match_kind && (record.custom_category_id ?? null) === (rule.match_category_id ?? null)))
+  && (rule.amount_min === null || rule.amount_min === undefined || Number(record.amount) >= rule.amount_min)
+  && (rule.amount_max === null || rule.amount_max === undefined || Number(record.amount) <= rule.amount_max);
+}
 
 /** Ids a rule would change: matching transactions that lack its category, its business or one of its tags.
  * `tagsOf` gives a transaction's tag ids. */

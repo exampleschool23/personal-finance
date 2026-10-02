@@ -69,3 +69,51 @@ test('key finance labels differ between languages, and the confirmation word sta
   assert.ok(dictionaries[code]['Type DELETE to confirm'].includes('DELETE'),code);
  }
 });
+
+// Text passed to t() as a literal, or as either branch of a condition, must be an English key; otherwise every
+// language silently shows the English words. Texts built at run time (label tables, server messages) are not covered.
+function translatedLiterals(source){
+ const found=[];
+ for(const match of source.matchAll(/(?<![\w.])t\(/g)){
+  let index=match.index+match[0].length,depth=1,quote='';
+  const start=index;
+  for(;index<source.length&&depth>0;index++){
+   const char=source[index];
+   if(quote){if(char==='\\')index++;else if(char===quote)quote='';}
+   else if(char==="'"||char==='"'||char==='`')quote=char;
+   else if('([{'.includes(char))depth++;
+   else if(')]}'.includes(char))depth--;
+   else if(char===','&&depth===1)break;
+  }
+  const argument=source.slice(start,index);
+  if(argument.includes('`')||!(/^\s*['"]/.test(argument)||argument.includes('?')))continue;
+  for(const literal of argument.matchAll(/'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"/g)){
+   const before=argument.slice(0,literal.index).trimEnd(),after=argument.slice(literal.index+literal[0].length).trimStart();
+   // A literal compared with something, or handed to a function, is a value, not text to show.
+   if(/[=!]==?$/.test(before)||/^[=!]==?/.test(after)||/\w\($/.test(before)||/^\]/.test(after)||/^in\b/.test(after))continue;
+   const text=(literal[1]??literal[2]).replace(/\\(['"])/g,'$1');
+   if(text)found.push(text);
+  }
+ }
+ return found;
+}
+const sourceFiles=directory=>fs.readdirSync(directory,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?sourceFiles(`${directory}/${entry.name}`):/\.tsx?$/.test(entry.name)?[`${directory}/${entry.name}`]:[]);
+
+test('every text a component passes to t() is an English key, so no language falls back to English',()=>{
+ assert.deepEqual(translatedLiterals("t(busy ? 'Saving…' : 'Save')+t('A, b')+t(kind === 'x' ? \"It's\" : labels[kind])+t(`skip ${1}`)+obj.t('no')+t(names.includes('y') ? 'Yes' : 'No')+t(({a:'Table'})[key??'a'])+t('own' in item ? 'Own' : 'Other')"),['Saving…','Save','A, b',"It's",'Yes','No','Table','Own','Other']);
+ const missing=new Map();
+ for(const file of ['components','app','hooks'].flatMap(sourceFiles))for(const text of translatedLiterals(fs.readFileSync(file,'utf8')))if(!(text in en))missing.set(text,file);
+ assert.deepEqual([...missing],[]);
+});
+
+test('texts shown through label tables and server messages of business tracking are English keys too',()=>{
+ const {setupGuide,businessAccountGroups,businessStructureLabels,paletteLabels}=loadTS('lib/business.ts');
+ const {transactionPeriodLabels}=loadTS('lib/transaction-list.ts');
+ const {taxLines,taxTemplateLabels}=loadTS('lib/business-tax.ts');
+ const {reportRangeLabels}=loadTS('lib/business-report.ts');
+ const texts=[...[true,false,null].flatMap(tracked=>setupGuide(tracked,true).flatMap(card=>[card.title,card.detail,card.action])),...businessAccountGroups.map(([label])=>label),...Object.values(businessStructureLabels),...Object.values(paletteLabels),
+  ...Object.values(transactionPeriodLabels),...Object.values(reportRangeLabels),...taxLines.map(line=>line.label),...Object.values(taxTemplateLabels),'Line','Description','Gross income','Expenses','Net profit or loss'];
+ // Messages the database raises for business tracking, rules and tags reach the person through t().
+ for(const file of ['migrations/092_business_tracking.sql','migrations/093_rule_criteria.sql'])for(const match of fs.readFileSync(file,'utf8').matchAll(/RAISE EXCEPTION '((?:[^']|'')+)'/g))texts.push(match[1].replaceAll("''","'"));
+ assert.deepEqual([...new Set(texts)].filter(text=>!(text in en)),[]);
+});

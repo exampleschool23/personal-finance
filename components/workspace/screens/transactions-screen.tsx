@@ -28,7 +28,7 @@ import { normalizeEntry, type Entry } from '@/lib/finance';
 import { formatMoney, formatNumber } from '@/lib/format';
 import { convertAmount } from '@/lib/market';
 import { emptyPlanning } from '@/lib/planning';
-import { emptyTransactionFilter, filtersTransactions, groupByDay, periodRange, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
+import { chunks, emptyTransactionFilter, filtersTransactions, groupByDay, periodRange, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
 import { canRecategorize, canTakeCategory, categoryChoices, choiceKey, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
 
 export function TransactionsScreen() {
@@ -40,7 +40,8 @@ export function TransactionsScreen() {
  // Links such as /transactions?tag=… or ?business=… open the list already filtered.
  const search = useLocationSearch();
  const [appliedSearch, setAppliedSearch] = useState('');
- if (search !== appliedSearch) { setAppliedSearch(search); if (search) setFilter({ ...emptyTransactionFilter, businesses: queryList(search, 'business'), tag: queryList(search, 'tag')[0] ?? 'all' }); }
+ // They open the longest period, so a tag's or a business's whole history is there to select and move.
+ if (search !== appliedSearch) { setAppliedSearch(search); if (search) { setFilter({ ...emptyTransactionFilter, businesses: queryList(search, 'business'), tag: queryList(search, 'tag')[0] ?? 'all' }); setPeriod('two_years'); } }
  const [editingMany, setEditingMany] = useState(false);
  const [selecting, setSelecting] = useState(false);
  const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -86,16 +87,18 @@ export function TransactionsScreen() {
  }
  /** The Edit multiple drawer: every field that changed, applied to the transactions it can apply to. */
  async function editMany(change: { choice: CategoryChoice | null; business: string | null | undefined; add: string[]; remove: string[] }) {
+  // The database takes up to 500 transactions at a time.
+  const each = async (ids: string[], run: (part: string[]) => Promise<number>) => { let sum = 0; for (const part of chunks(ids, 500)) sum += await run(part); return sum; };
   const ids = chosen.map(record => record.id);
   let changed = 0, kept = 0;
-  if (change.choice) changed = Math.max(changed, await categorize(chosen.filter(record => canTakeCategory(record, change.choice!, splits)).map(record => record.id), change.choice));
+  if (change.choice) changed = Math.max(changed, await each(chosen.filter(record => canTakeCategory(record, change.choice!, splits)).map(record => record.id), part => categorize(part, change.choice!)));
   if (change.business !== undefined) {
    // Planned spending, business income and salary from a source keep their business; say how many stayed.
    const business = change.business;
    kept = chosen.filter(record => (record.business_id ?? null) !== business && !canAssignBusiness(record, business)).length;
-   changed = Math.max(changed, await assignTransactionsBusiness(ids, business));
+   changed = Math.max(changed, await each(ids, part => assignTransactionsBusiness(part, business)));
   }
-  if (change.add.length || change.remove.length) changed = Math.max(changed, await tags.change(ids, change.add, change.remove));
+  if (change.add.length || change.remove.length) changed = Math.max(changed, await each(ids, part => tags.change(part, change.add, change.remove)));
   showNotice(kept ? t('{changed} updated; {skipped} could not change business here.', { changed, skipped: kept }) : t('{changed} updated', { changed }));
   setSelected(new Set());
  }
@@ -129,7 +132,7 @@ export function TransactionsScreen() {
    </NativeSelect>}
    <Segmented label={t('Type')} options={[{ value: 'all', label: t('All') }, { value: 'income', label: t('Income') }, { value: 'expense', label: t('Expenses') }] as const} value={filter.direction} onChange={direction => setFilter({ ...filter, direction })}/>
   </div>
-  {selecting && <BulkEditBar count={chosen.length} onEdit={() => setEditingMany(true)} onCancel={() => { setSelecting(false); setSelected(new Set()); }}/>}
+  {selecting && <BulkEditBar count={chosen.length} total={records.length} onAll={select => setSelected(new Set(select ? records.map(record => record.id) : []))} onEdit={() => setEditingMany(true)} onCancel={() => { setSelecting(false); setSelected(new Set()); }}/>}
   {error ? <InlineError message={t(error)} onRetry={live ? remote.retry : refreshRecords}/> : loading ? <PanelSkeleton label={t('Loading records…')} rows={6}/> : <div className="transactions-layout">
    <section className="panel transactions-list" aria-label={t('Transactions')}>
     {days.length ? days.map(day => <DayGroup key={day.date} date={day.date} total={day.total} currency={currency} today={today}>
@@ -158,7 +161,7 @@ export function TransactionsScreen() {
    </aside>
   </div>}
   {editingMany && <BulkEditSheet records={chosen} categories={data.categories} businesses={businessList} tags={tags.data.tags} tagsOf={tagsOf} onCreateTag={createTag} onSave={editMany} onClose={() => setEditingMany(false)}/>}
-  {rule && <RuleDialog key={rule.id} rule={rule} records={data.records} categories={data.categories} businesses={businessList} tags={tags.data.tags} tagsOf={tagsOf} onCreateTag={createTag} splits={splits} onSave={async (next, apply) => { const changed = await rules.save(next, apply); if (apply) showNotice(t('{changed} updated', { changed })); return changed; }} onClose={() => setRule(null)}/>}
+  {rule && <RuleDialog key={rule.id} rule={rule} records={data.records} categories={data.categories} businesses={businessList} accounts={[...accounts].map(([id, name]) => ({ id, name }))} tags={tags.data.tags} tagsOf={tagsOf} onCreateTag={createTag} splits={splits} onSave={async (next, apply) => { const changed = await rules.save(next, apply); if (apply) showNotice(t('{changed} updated', { changed })); return changed; }} onClose={() => setRule(null)}/>}
   {rulesOpen && !rule && <RulesDialog rules={rules.rules} categories={data.categories} businesses={businessList} tags={tags.data.tags} onEdit={setRule} onAdd={() => setRule(newRule())} onRemove={item => rules.remove(item.id)} onClose={() => setRulesOpen(false)}/>}
  </div>;
 }

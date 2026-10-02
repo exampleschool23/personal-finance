@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from 'react';
-import { attributeColor, BreakdownDonut, BusinessSankeyChart, ProfitLossTable, ReportTransactions, TrendChart, type ReportNames } from '@/components/business-reports';
+import { attributeColor, BreakdownDonut, BusinessSankeyChart, ProfitLossTable, ReportSummary, ReportTransactions, TrendChart, type ReportNames } from '@/components/business-reports';
 import { ShareBars } from '@/components/cash-flow-report';
 import { useLanguage } from '@/components/language-provider';
 import { BusinessFilter } from '@/components/presentation-foundation/business-filter';
@@ -20,11 +20,11 @@ import { queryList, useLocationSearch } from '@/hooks/use-location-search';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { budgetCategories } from '@/lib/budget';
 import { HOUSEHOLD } from '@/lib/business';
-import { attributeTrend, businessKey, businessSankey, cashFlowTrend, drillMatches, filterLines, intervals, profitAndLoss, rangeFor, rangeMonths, readableRange, reportLedger, reportRangeLabels, reportRanges, sharesBy, type Attribute, type Direction, type Drill, type Interval, type LedgerLine, type ReportRange, type ReportRangePreset } from '@/lib/business-report';
+import { attributeTrend, businessKey, businessSankey, cashFlowTrend, drillMatches, filterLines, intervals, netTrendBy, profitAndLoss, rangeFor, rangeMonths, readableRange, reportLedger, reportRangeLabels, reportRanges, sharesBy, type Attribute, type Direction, type Drill, type Interval, type LedgerLine, type ReportRange, type ReportRangePreset } from '@/lib/business-report';
 import { defaultTaxSettings, taxPeriodRange, type TaxPeriod, type TaxSettings } from '@/lib/business-tax';
 import { depositToday } from '@/lib/deposit-interest';
 import { expenses, income, normalizeEntry } from '@/lib/finance';
-import { formatDate, formatMoney, formatPercent } from '@/lib/format';
+import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
 import { emptyPlanning, type PlanningData } from '@/lib/planning';
 import type { WorkspacePreference } from '@/lib/workspace-preferences';
 
@@ -86,31 +86,36 @@ export function ReportsScreen() {
  const [drill, setDrill] = useState<{ drill: Drill; label: string } | null>(null);
  const describe = (next: Drill) => [next.category ? names.category(next.category) : next.categories ? t('{count} categories', { count: next.categories.length }) : next.direction ? t(next.direction === 'income' ? 'Income' : 'Expenses') : null, next.merchant, next.business !== undefined ? names.business(next.business) : null].filter(Boolean).join(' · ');
  const narrow = (next: Drill) => setDrill({ drill: next, label: describe(next) });
- const tabLines = tab === 'spending' ? lines.filter(line => line.direction === 'expense') : tab === 'income' ? lines.filter(line => line.direction === 'income') : lines;
- const shown = tabLines.filter(line => drillMatches(drill?.drill ?? null, line));
  const visibleTabs = tabs.filter(item => item !== 'tax' || businessList.length > 0);
+ // A link to tax prep without a business falls back to cash flow.
+ const shownTab = visibleTabs.includes(tab) ? tab : 'cash_flow';
+ const tabLines = shownTab === 'spending' ? lines.filter(line => line.direction === 'expense') : shownTab === 'income' ? lines.filter(line => line.direction === 'income') : lines;
+ const shown = tabLines.filter(line => drillMatches(drill?.drill ?? null, line));
  const rangeLabel = `${formatDate(range.from, locale)} – ${formatDate(range.to < today ? range.to : today, locale)}`;
 
  return <div data-page="Reports" className="content reports-content">
   <PageHeader title={t('Reports')} hint={t('Cash flow, spending and income for your household and each business. Click any part of a chart or table to see its transactions.')}>
-   {tab !== 'tax' && businessList.length > 0 && <BusinessFilter businesses={businessList} value={businesses} onChange={value => { setBusinesses(value); setDrill(null); }}/>}
-   {tab !== 'tax' && <NativeSelect aria-label={t('Date range')} value={preset} onChange={event => { setPreset(event.currentTarget.value as ReportRangePreset | 'custom'); setDrill(null); }}>
+   {shownTab !== 'tax' && businessList.length > 0 && <BusinessFilter businesses={businessList} value={businesses} onChange={value => { setBusinesses(value); setDrill(null); }}/>}
+   {shownTab !== 'tax' && <NativeSelect aria-label={t('Date range')} value={preset} onChange={event => { setPreset(event.currentTarget.value as ReportRangePreset | 'custom'); setDrill(null); }}>
     {reportRanges.map(item => <option key={item} value={item}>{t(reportRangeLabels[item])}</option>)}
     <option value="custom">{t('Custom range')}</option>
    </NativeSelect>}
   </PageHeader>
-  {tab !== 'tax' && preset === 'custom' && <div className="transactions-tools report-custom-range">
+  {shownTab !== 'tax' && preset === 'custom' && <div className="transactions-tools report-custom-range">
    <DatePicker value={custom.from} max={custom.to} onChange={from => from && setCustom({ ...custom, from })}/>
    <DatePicker value={custom.to} min={custom.from} max={today} onChange={to => to && setCustom({ ...custom, to })}/>
    {rangeMonths(custom).length > 24 && <span className="bulk-bar-note">{t('Reports cover up to 24 months.')}</span>}
   </div>}
-  <Segmented as="nav" className="cashflow-tabs" label={t('Reports')} options={visibleTabs.map(value => ({ value, label: t(tabLabels[value]) }))} value={visibleTabs.includes(tab) ? tab : 'cash_flow'} onChange={value => { setTab(value); setDrill(null); }}/>
-  {tab === 'tax' && businessList.length > 0 ? <TaxTab preferences={workspacePreferences.data.preferences} save={workspacePreferences.save} names={names} onOpen={line => line.record && setViewing(storedRecord(line.record))}/>
+  <Segmented as="nav" className="cashflow-tabs" label={t('Reports')} options={visibleTabs.map(value => ({ value, label: t(tabLabels[value]) }))} value={shownTab} onChange={value => { setTab(value); setDrill(null); }}/>
+  {shownTab === 'tax' ? <TaxTab preferences={workspacePreferences.data.preferences} save={workspacePreferences.save} names={names} onOpen={line => line.record && setViewing(storedRecord(line.record))}/>
    : error ? <InlineError message={t(error)} onRetry={retry}/> : loading ? <PanelSkeleton label={t('Loading records…')} rows={6}/> : <>
-   {tab === 'cash_flow' ? <CashFlowTab lines={lines} range={range} rangeLabel={rangeLabel} includeHousehold={!businesses.length || businesses.includes(HOUSEHOLD)} businessIds={businessList.map(item => item.id).filter(id => businesses.includes(id) || (!businesses.length && lines.some(line => line.business === id)))} names={names} groupOf={groupOf} currency={currency} view={cashView} onView={setCashView} mode={cashMode} onMode={setCashMode} onDrill={narrow}/>
-    : <AttributeTab key={tab} direction={tab === 'spending' ? 'expense' : 'income'} lines={tabLines} range={range} rangeLabel={rangeLabel} names={names} groupOf={groupOf} hasBusinesses={businessList.length > 0} currency={currency} onDrill={narrow}/>}
+   {shownTab === 'cash_flow' ? <CashFlowTab lines={lines} range={range} rangeLabel={rangeLabel} includeHousehold={!businesses.length || businesses.includes(HOUSEHOLD)} businessIds={businessList.map(item => item.id).filter(id => businesses.includes(id) || (!businesses.length && lines.some(line => line.business === id)))} names={names} groupOf={groupOf} currency={currency} view={cashView} onView={setCashView} mode={cashMode} onMode={setCashMode} onDrill={narrow}/>
+    : <AttributeTab key={shownTab} direction={shownTab === 'spending' ? 'expense' : 'income'} lines={tabLines} range={range} rangeLabel={rangeLabel} names={names} groupOf={groupOf} hasBusinesses={businessList.length > 0} currency={currency} onDrill={narrow}/>}
    {ledger.missing > 0 && <p className="muted">{t('{count} transactions in other currencies are left out until exchange rates load.', { count: ledger.missing })}</p>}
-   <ReportTransactions key={drill?.label ?? 'all'} lines={shown} drill={drill?.drill ?? null} label={drill?.label ?? null} names={names} currency={currency} onClear={() => setDrill(null)}/>
+   <div className="transactions-layout">
+    <ReportTransactions key={drill?.label ?? 'all'} lines={shown} drill={drill?.drill ?? null} label={drill?.label ?? null} names={names} currency={currency} onClear={() => setDrill(null)} onOpen={line => line.record && setViewing(storedRecord(line.record))}/>
+    <ReportSummary lines={shown} mixed={shownTab === 'cash_flow'} names={names} currency={currency} fileName={`${shownTab.replace('_', '-')}-${range.from}-${range.to < today ? range.to : today}`}/>
+   </div>
   </>}
  </div>;
 }
@@ -122,12 +127,16 @@ function CashFlowTab({ lines, range, rangeLabel, includeHousehold, businessIds, 
  const { t, locale } = useLanguage();
  const [breakdown, setBreakdown] = useState<'category' | 'group' | 'both'>('category');
  const [stacked, setStacked] = useState(false), [interval, setInterval] = useState<Interval>('month');
+ const [series, setSeries] = useState<'totals' | 'business'>('totals');
  const pnl = useMemo(() => profitAndLoss(lines, businessIds, line => line.category, includeHousehold), [lines, businessIds, includeHousehold]);
  const totals = lines.reduce((sum, line) => line.direction === 'income' ? { ...sum, income: sum.income + line.amount } : { ...sum, expenses: sum.expenses + line.amount }, { income: 0, expenses: 0 });
  const net = totals.income - totals.expenses;
  const money = (amount: number) => formatMoney(amount, currency, locale);
  const sankey = businessSankey(pnl, { category: names.category, business: id => names.business(id), total: t(businessIds.length ? 'Household income' : 'Income'), savings: t('Savings'), profit: t('Net profit'), loss: name => t('{name} net loss', { name }), otherIncome: t('Other income'), otherExpense: t('Other expense') });
  const trend = cashFlowTrend(lines, range, interval);
+ // Net income of the household and of each business, side by side or stacked, so businesses can be compared.
+ const netKeys = [...(includeHousehold ? [HOUSEHOLD] : []), ...businessIds];
+ const byBusiness = series === 'business' && businessIds.length > 0;
  return <>
   <StatTiles columns={4} label={t('Cash flow')}>
    <StatTile label={t('Income')} value={money(totals.income)} tone={totals.income > 0 ? 'positive' : undefined}/>
@@ -141,11 +150,13 @@ function CashFlowTab({ lines, range, rangeLabel, includeHousehold, businessIds, 
      <Segmented label={t('Report view')} options={[{ value: 'breakdown', label: t('Breakdown') }, { value: 'trends', label: t('Trends') }] as const} value={mode} onChange={setMode}/>
      {mode === 'breakdown' ? <Segmented label={t('Chart type')} options={[{ value: 'sankey', label: t('Sankey') }, { value: 'pnl', label: t('Profit & loss') }] as const} value={view} onChange={onView}/>
       : <><Segmented label={t('Chart type')} options={[{ value: 'grouped', label: t('Grouped') }, { value: 'stacked', label: t('Stacked') }] as const} value={stacked ? 'stacked' : 'grouped'} onChange={value => setStacked(value === 'stacked')}/>
-       <Segmented label={t('Interval')} options={intervals.map(value => ({ value, label: t(intervalLabels[value]) }))} value={interval} onChange={setInterval}/></>}
+       <Segmented label={t('Interval')} options={intervals.map(value => ({ value, label: t(intervalLabels[value]) }))} value={interval} onChange={setInterval}/>
+       {businessIds.length > 0 && <Segmented label={t('Series')} options={[{ value: 'totals', label: t('Income and expenses') }, { value: 'business', label: t('Net by business') }] as const} value={series} onChange={setSeries}/>}</>}
      {mode === 'breakdown' && view === 'pnl' && <Segmented label={t('Rows')} options={[{ value: 'category', label: t('Categories') }, { value: 'group', label: t('Groups') }, { value: 'both', label: t('Both') }] as const} value={breakdown} onChange={setBreakdown}/>}
     </div>
    </PanelTitle>
-   {mode === 'trends' ? <TrendChart rows={stacked ? trend.map(row => ({ period: row.period, income: row.income, expenses: -row.expenses })) : trend} interval={interval} currency={currency} stacked={stacked} series={[{ key: 'income', label: t('Income'), color: 'var(--positive)' }, { key: 'expenses', label: t('Expenses'), color: 'color-mix(in srgb, var(--foreground) 55%, transparent)' }]}/>
+   {mode === 'trends' && byBusiness ? <TrendChart key="business" rows={netTrendBy(lines, range, interval, businessKey, netKeys)} interval={interval} currency={currency} stacked={stacked} series={netKeys.map(key => ({ key, label: names.business(key), color: attributeColor('business', key, names) }))}/>
+    : mode === 'trends' ? <TrendChart key="totals" rows={stacked ? trend.map(row => ({ period: row.period, income: row.income, expenses: -row.expenses })) : trend} interval={interval} currency={currency} stacked={stacked} series={[{ key: 'income', label: t('Income'), color: 'var(--positive)' }, { key: 'expenses', label: t('Expenses'), color: 'color-mix(in srgb, var(--foreground) 55%, transparent)' }]}/>
     : view === 'sankey' ? <BusinessSankeyChart data={sankey} currency={currency} onDrill={onDrill}/>
     : <ProfitLossTable pnl={pnl} breakdown={breakdown} names={names} groupOf={groupOf} currency={currency} onDrill={onDrill}/>}
   </section>
@@ -170,7 +181,7 @@ function AttributeTab({ direction, lines, range, rangeLabel, names, groupOf, has
  return <>
   <StatTiles columns="auto" label={t(direction === 'expense' ? 'Spending' : 'Income')}>
    <StatTile label={t(direction === 'expense' ? 'Total spending' : 'Total income')} value={formatMoney(total, currency, locale)} tone={direction === 'income' && total > 0 ? 'positive' : undefined}/>
-   <StatTile label={t('Transactions')} value={String(lines.length)}/>
+   <StatTile label={t('Transactions')} value={formatNumber(lines.length, locale, 0)}/>
   </StatTiles>
   <section className="panel">
    <PanelTitle title={<>{t(mode === 'breakdown' ? 'Breakdown' : 'Trends')} <span className="panel-figure">{rangeLabel}</span></>}>
@@ -206,5 +217,5 @@ function TaxTab({ preferences, save, names, onOpen }: { preferences: readonly Wo
  const { t } = useLanguage();
  if (error) return <InlineError message={t(error)} onRetry={retry}/>;
  if (loading) return <PanelSkeleton label={t('Loading records…')} rows={6}/>;
- return <TaxPrepSheet lines={lines} businesses={businessList} business={businessList.some(item => item.id === business) ? business : businessList[0]?.id ?? ''} onBusiness={setBusiness} year={year} years={[thisYear, thisYear - 1]} onYear={setYear} period={period} onPeriod={setPeriod} categories={categories} settings={settings} onSettings={async next => { if (demo) setSample(next); else await save({ key: 'tax_lines', data: next }); }} names={names} currency={currency} onOpen={onOpen}/>;
+ return <TaxPrepSheet lines={lines} businesses={businessList} business={businessList.some(item => item.id === business) ? business : businessList[0]?.id ?? ''} onBusiness={setBusiness} year={year} years={[0, 1, 2, 3, 4].map(back => thisYear - back)} onYear={setYear} period={period} onPeriod={setPeriod} categories={categories} settings={settings} onSettings={async next => { if (demo) setSample(next); else await save({ key: 'tax_lines', data: next }); }} names={names} currency={currency} onOpen={onOpen}/>;
 }

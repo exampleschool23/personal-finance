@@ -27,6 +27,13 @@ export const businessesIn = (records: readonly Entry[]) => records.filter(record
 /** Records that can belong to a business as its accounts and assets: everything held or owed except the Business record itself. */
 export const businessAccountKinds: readonly string[] = ['Cash', 'Stock', 'Crypto', 'Deposit', 'Treasury bill', 'Property', 'Valuables', 'Money lent', ...liabilities];
 export const isBusinessAccount = (record: Pick<Entry, 'kind'>) => businessAccountKinds.includes(record.kind);
+/** Those records by type, as lists that assign accounts to businesses show them. */
+export const businessAccountGroups: ReadonlyArray<readonly [label: string, matches: (record: Pick<Entry, 'kind'>) => boolean]> = [
+ ['Cash and deposits', record => ['Cash', 'Deposit', 'Treasury bill'].includes(record.kind)],
+ ['Holdings', record => ['Stock', 'Crypto'].includes(record.kind)],
+ ['Property and other assets', record => ['Property', 'Valuables', 'Money lent'].includes(record.kind)],
+ ['Loans and debts', record => liabilities.includes(record.kind)],
+];
 
 /** Whether a business can be set on a transaction by hand, mirroring `public.assign_transaction_business`. */
 export function canAssignBusiness(record: Entry, business: string | null) {
@@ -75,4 +82,20 @@ export function withAccount(entry: Entry, accountId: string | null, records: rea
  const after = records.find(record => record.id === accountId)?.business_id ?? null;
  const follows = (entry.business_id ?? null) === before && entry.kind !== 'Business income' && !entry.expense_plan_id && !(entry.kind === 'Salary' && entry.income_source_id);
  return { ...entry, account_id: accountId, ...(follows && after && after !== before ? { business_id: after } : follows && !after && before ? { business_id: null } : {}) };
+}
+
+/** What to do after setup, each with the page that does it. Someone who tracked a business by hand before is shown
+ * how their categories, tags and rules carry over; the guide reopened from Settings adds the tags card when tags exist. */
+export function setupGuide(trackedBefore: boolean | null, hasTags: boolean): Array<{ emoji: string; title: string; detail: string; action: string; href: string }> {
+ const tags = { emoji: '🔖', title: 'Move tagged history', detail: 'In Settings, open Tags and click a tag’s transaction count, then select them and set their business.', action: 'Open tags', href: '/settings#tags' };
+ return trackedBefore ? [
+  { emoji: '🏷️', title: 'Keep your categories', detail: 'Any category works for business transactions. Nothing needs recategorizing.', action: 'Review transactions', href: '/transactions' },
+  tags,
+  { emoji: '⚙️', title: 'Update your rules', detail: 'Rules that tagged a business can now set the business itself.', action: 'Set up rules', href: '/settings#rules' },
+ ] : [
+  { emoji: '🧾', title: 'Assign personal-account spending', detail: 'On Transactions, set the business of anything paid from a personal account.', action: 'Review transactions', href: '/transactions?business=household' },
+  { emoji: '⚙️', title: 'Create rules', detail: 'A rule can send every purchase from a merchant to a business automatically.', action: 'Set up rules', href: '/settings#rules' },
+  { emoji: '📊', title: 'Watch each business', detail: 'Reports show each business’s profit and loss; tax prep is ready when you need it.', action: 'Explore business tax tools', href: '/reports?tab=tax' },
+  ...(trackedBefore === null && hasTags ? [tags] : []),
+ ];
 }

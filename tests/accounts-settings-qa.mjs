@@ -123,7 +123,8 @@ test('deleting a rule asks first and confirms with Deleted, never Saved',async()
  const render=()=>{cursor=0;return RulesDialog({rules:[rule],categories:[],onEdit(){},onAdd(){},onRemove:async item=>{removed.push(item.id);},onClose(){}});};
  let tree=render();
  assert.equal(find(tree,node=>node.type?.name==='ConfirmDialog').props.open,false);
- find(tree,node=>node.props?.['aria-label']==='Delete coffee').props.onClick();
+ // A rule is named by what it matches, since its name test may be empty.
+ find(tree,node=>node.props?.['aria-label']==='Delete Name contains “coffee”').props.onClick();
  tree=render();
  const confirm=find(tree,node=>node.type?.name==='ConfirmDialog');
  assert.equal(confirm.props.open,true);assert.equal(removed.length,0);assert.equal(confirm.props.confirmLabel,'Delete rule');
