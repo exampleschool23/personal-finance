@@ -1793,6 +1793,20 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .spending-pace-legend li{display:flex;align-items:center;gap:6px}
 .spending-pace-legend i{width:14px;height:3px;border-radius:2px;background:var(--primary)}
 .spending-pace-legend i.previous{background:var(--muted-foreground);opacity:.55}
+.forecast-series{margin-bottom:16px}
+.forecast-chart{min-width:0;margin-top:20px}
+.forecast-warning{display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:14px 16px;border-radius:var(--radius-control);background:color-mix(in srgb,var(--caution) 14%,transparent);color:var(--pill-caution);font-size:var(--type-small)}
+.forecast-warning>svg{flex-shrink:0;width:18px;height:18px;margin-top:2px}
+.forecast-warning strong{display:flex;align-items:center;gap:6px;font-weight:600}
+.forecast-warning ul{margin:4px 0 0;padding:0;list-style:none}
+.forecast-what-if-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin-top:16px}
+.forecast-what-if-form>label{display:flex;flex-direction:column;gap:6px;min-width:160px;flex:1 1 160px;font-size:var(--type-small)}
+@container content (max-width:720px){.forecast-what-if-form>*{flex:1 1 100%}}
+.forecast-events .forecast-month-total{float:inline-end;font-weight:500;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.forecast-card-figures{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.forecast-card-figures li{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
+.forecast-card-figures strong{font-size:var(--type-stat);font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.forecast-card-figures small{font-size:var(--type-caption);color:var(--muted-foreground)}
 .overview-panel .allocation-bar{height:10px;gap:3px;margin:0 0 12px;border-radius:999px}
 .overview-list{list-style:none;margin:0;padding:0}
 .overview-list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:11px 0;border-top:1px solid color-mix(in srgb,var(--border) 60%,transparent);font-size:var(--type-small)}

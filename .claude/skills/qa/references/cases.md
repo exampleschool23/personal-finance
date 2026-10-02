@@ -98,6 +98,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | DASH-023 | P1 | Customize | Toggle a card off, Reset to default | Card hides / returns; saved across reload |
 | DASH-024 | P1 | Drag cards | Drag Goals into the left column; reload; Reset | New order saved; reset restores; handle named after the card title `[bug 2026-10-02]` |
 | DASH-025 | P2 | Telegram nudge | Unlinked account | "Get reminders in Telegram" / "Not now" works and stays dismissed |
+| DASH-026 | P1 | Lowest balance ahead | Read the card; View forecast | Lowest projected cash in the next 90 days with its date (per currency when rates are missing); link opens Cash flow on the Forecast tab |
 
 ## ACC — accounts
 
@@ -163,6 +164,9 @@ currencies (USD primary). Compute every expected figure yourself first.
 | CF-014 | P2 | Monthly estimate | Spending estimate | Expenses + mortgage + loan payments (cash-out forecast) |
 | CF-015 | P1 | Split an income record | Split a $300 income into two built-in income categories | Built-in income categories offered (the list was empty); saves; totals unchanged `[bug 2026-10-02]` |
 | CF-016 | P1 | No repeated figures | Read the month view | Income / spending / net shown once; no second Income / Expenses / Total savings row `[dr 2026-10-02]` |
+| CF-017 | P0 | Forecast view | Cash flow → Forecast; switch 30 / 90 / 180 / 365 days | Chart, Cash today, Lowest balance (with date) and "In N days" update; one point per day; amounts whole; month picker and monthly review hidden on this tab |
+| CF-018 | P1 | Forecast events and warning | Read "Cash movements ahead"; add a recurring expense on a cash account larger than its balance | Events grouped by month with signed month totals (currencies listed, never added without a rate); caution warning names the account and the first day below zero |
+| CF-019 | P1 | Forecast what-if | Add "−500 every month" from next month, then remove it; reload | Projection and events update at once; the change survives reload in this browser only; no record is created |
 
 ## REP — reports and business tracking
 
