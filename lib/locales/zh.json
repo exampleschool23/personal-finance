@@ -28,8 +28,6 @@
   "Sample data": "示例数据",
   "Exit demo": "退出演示",
   "Sign out": "退出登录",
-  "DEMO MODE": "演示模式",
-  "Sample balances · Changes are not saved to an account.": "示例余额 · 所做更改不会保存到账户。",
   "Everything you own, earn, and owe. In one place.": "您拥有的、赚取的和欠下的一切，尽在一处。",
   "Manage your records and keep your balances up to date.": "管理您的记录，随时更新余额。",
   "Add income": "添加收入",
@@ -1901,5 +1899,6 @@
   "{amount} target": "目标 {amount}",
   "Set a goal to watch your savings grow.": "设定一个目标，看着储蓄增长。",
   "Dashboard": "仪表板",
-  "Recurring": "定期"
+  "Recurring": "定期",
+  "Demo": "演示"
 }

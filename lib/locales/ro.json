@@ -28,8 +28,6 @@
   "Sample data": "Date demonstrative",
   "Exit demo": "Ieși din demo",
   "Sign out": "Deconectare",
-  "DEMO MODE": "MOD DEMO",
-  "Sample balances · Changes are not saved to an account.": "Solduri demonstrative · Modificările nu sunt salvate într-un cont.",
   "Everything you own, earn, and owe. In one place.": "Tot ce deții, câștigi și datorezi. Într-un singur loc.",
   "Manage your records and keep your balances up to date.": "Gestionează-ți înregistrările și păstrează soldurile la zi.",
   "Add income": "Adaugă venit",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Obiectiv {amount}",
   "Set a goal to watch your savings grow.": "Stabilește un obiectiv și urmărește cum cresc economiile.",
   "Dashboard": "Panou",
-  "Recurring": "Recurente"
+  "Recurring": "Recurente",
+  "Demo": "Demo"
 }

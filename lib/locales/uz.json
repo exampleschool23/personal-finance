@@ -28,8 +28,6 @@
   "Sample data": "Namuna ma’lumotlar",
   "Exit demo": "Namunadan chiqish",
   "Sign out": "Chiqish",
-  "DEMO MODE": "NAMUNA REJIMI",
-  "Sample balances · Changes are not saved to an account.": "Namuna balanslar · O‘zgarishlar hisobga saqlanmaydi.",
   "Everything you own, earn, and owe. In one place.": "Barcha aktivlar, daromadlar va qarzlar bir joyda.",
   "Manage your records and keep your balances up to date.": "Yozuvlarni boshqaring va balanslarni yangilab boring.",
   "Add income": "Daromad qo‘shish",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Maqsad {amount}",
   "Set a goal to watch your savings grow.": "Maqsad qo‘ying va jamg‘armangiz o‘sishini kuzating.",
   "Dashboard": "Bosh sahifa",
-  "Recurring": "Takroriy"
+  "Recurring": "Takroriy",
+  "Demo": "Demo"
 }

@@ -28,8 +28,6 @@
   "Sample data": "Datos de ejemplo",
   "Exit demo": "Salir de la demo",
   "Sign out": "Cerrar sesión",
-  "DEMO MODE": "MODO DEMO",
-  "Sample balances · Changes are not saved to an account.": "Saldos de ejemplo · Los cambios no se guardan en ninguna cuenta.",
   "Everything you own, earn, and owe. In one place.": "Todo lo que tienes, ganas y debes. En un solo lugar.",
   "Manage your records and keep your balances up to date.": "Gestiona tus registros y mantén tus saldos al día.",
   "Add income": "Añadir ingreso",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Meta {amount}",
   "Set a goal to watch your savings grow.": "Crea una meta y mira crecer tus ahorros.",
   "Dashboard": "Panel",
-  "Recurring": "Recurrentes"
+  "Recurring": "Recurrentes",
+  "Demo": "Demo"
 }

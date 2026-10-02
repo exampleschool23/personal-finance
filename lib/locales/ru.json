@@ -28,8 +28,6 @@
   "Sample data": "Демонстрационные данные",
   "Exit demo": "Выйти из демоверсии",
   "Sign out": "Выйти",
-  "DEMO MODE": "ДЕМОРЕЖИМ",
-  "Sample balances · Changes are not saved to an account.": "Пример балансов · Изменения не сохраняются в аккаунт.",
   "Everything you own, earn, and owe. In one place.": "Все активы, доходы и долги в одном месте.",
   "Manage your records and keep your balances up to date.": "Управляйте записями и обновляйте балансы.",
   "Add income": "Добавить доход",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Цель {amount}",
   "Set a goal to watch your savings grow.": "Поставьте цель и следите, как растут сбережения.",
   "Dashboard": "Главная",
-  "Recurring": "Регулярные"
+  "Recurring": "Регулярные",
+  "Demo": "Демо"
 }

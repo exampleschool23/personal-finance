@@ -28,8 +28,6 @@
   "Sample data": "بيانات تجريبية",
   "Exit demo": "الخروج من العرض التجريبي",
   "Sign out": "تسجيل الخروج",
-  "DEMO MODE": "الوضع التجريبي",
-  "Sample balances · Changes are not saved to an account.": "أرصدة تجريبية · لا تُحفظ التغييرات في أي حساب.",
   "Everything you own, earn, and owe. In one place.": "كل ما تملكه وتكسبه وتدين به. في مكان واحد.",
   "Manage your records and keep your balances up to date.": "أدِر سجلاتك وحافظ على تحديث أرصدتك.",
   "Add income": "أضف دخلًا",
@@ -1901,5 +1899,6 @@
   "{amount} target": "الهدف {amount}",
   "Set a goal to watch your savings grow.": "ضع هدفًا وشاهد مدخراتك تنمو.",
   "Dashboard": "لوحة التحكم",
-  "Recurring": "المتكررة"
+  "Recurring": "المتكررة",
+  "Demo": "تجريبي"
 }

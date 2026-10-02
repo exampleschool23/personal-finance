@@ -28,8 +28,6 @@
   "Sample data": "샘플 데이터",
   "Exit demo": "데모 종료",
   "Sign out": "로그아웃",
-  "DEMO MODE": "데모 모드",
-  "Sample balances · Changes are not saved to an account.": "샘플 잔액 · 변경 내용은 계정에 저장되지 않아요.",
   "Everything you own, earn, and owe. In one place.": "가진 것, 버는 것, 갚을 것을 한곳에서.",
   "Manage your records and keep your balances up to date.": "기록을 관리하고 잔액을 최신 상태로 유지하세요.",
   "Add income": "수입 추가",
@@ -1901,5 +1899,6 @@
   "{amount} target": "목표 {amount}",
   "Set a goal to watch your savings grow.": "목표를 정하고 저축이 늘어나는 걸 지켜보세요.",
   "Dashboard": "대시보드",
-  "Recurring": "정기"
+  "Recurring": "정기",
+  "Demo": "데모"
 }

@@ -28,8 +28,6 @@
   "Sample data": "Data contoh",
   "Exit demo": "Keluar dari demo",
   "Sign out": "Log keluar",
-  "DEMO MODE": "MOD DEMO",
-  "Sample balances · Changes are not saved to an account.": "Baki contoh · Perubahan tidak disimpan ke akaun.",
   "Everything you own, earn, and owe. In one place.": "Semua yang anda miliki, perolehi dan hutang. Di satu tempat.",
   "Manage your records and keep your balances up to date.": "Urus rekod anda dan pastikan baki sentiasa terkini.",
   "Add income": "Tambah pendapatan",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Sasaran {amount}",
   "Set a goal to watch your savings grow.": "Tetapkan matlamat dan lihat simpanan anda bertambah.",
   "Dashboard": "Papan pemuka",
-  "Recurring": "Berulang"
+  "Recurring": "Berulang",
+  "Demo": "Demo"
 }

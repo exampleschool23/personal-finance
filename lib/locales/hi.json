@@ -28,8 +28,6 @@
   "Sample data": "सैंपल डेटा",
   "Exit demo": "डेमो से बाहर निकलें",
   "Sign out": "साइन आउट करें",
-  "DEMO MODE": "डेमो मोड",
-  "Sample balances · Changes are not saved to an account.": "सैंपल बैलेंस · बदलाव किसी अकाउंट में सेव नहीं होते।",
   "Everything you own, earn, and owe. In one place.": "जो कुछ आपके पास है, जो कमाते हैं और जो चुकाना है। सब एक जगह।",
   "Manage your records and keep your balances up to date.": "अपने रिकॉर्ड प्रबंधित करें और बैलेंस अप-टू-डेट रखें।",
   "Add income": "आय जोड़ें",
@@ -1901,5 +1899,6 @@
   "{amount} target": "लक्ष्य {amount}",
   "Set a goal to watch your savings grow.": "लक्ष्य बनाएँ और अपनी बचत बढ़ते देखें।",
   "Dashboard": "डैशबोर्ड",
-  "Recurring": "आवर्ती"
+  "Recurring": "आवर्ती",
+  "Demo": "डेमो"
 }

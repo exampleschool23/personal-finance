@@ -28,8 +28,6 @@
   "Sample data": "Sample na data",
   "Exit demo": "Lumabas sa demo",
   "Sign out": "Mag-sign out",
-  "DEMO MODE": "DEMO MODE",
-  "Sample balances · Changes are not saved to an account.": "Mga sample na balanse · Hindi sine-save sa account ang mga pagbabago.",
   "Everything you own, earn, and owe. In one place.": "Lahat ng pag-aari, kinikita, at utang mo. Sa iisang lugar.",
   "Manage your records and keep your balances up to date.": "Pamahalaan ang mga record mo at panatilihing napapanahon ang mga balanse.",
   "Add income": "Magdagdag ng kita",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Target {amount}",
   "Set a goal to watch your savings grow.": "Magtakda ng layunin at panoorin ang paglaki ng ipon mo.",
   "Dashboard": "Dashboard",
-  "Recurring": "Paulit-ulit"
+  "Recurring": "Paulit-ulit",
+  "Demo": "Demo"
 }

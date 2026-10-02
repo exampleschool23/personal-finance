@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useState, useRef, useEffectEvent,
 import { usePathname, useRouter } from 'next/navigation';
 import { showSaved, showError } from '@/lib/feedback';
 import { decimalSum } from '@/lib/decimal-amounts';
-import { demoRecords, demoMarket } from '@/lib/demo-finance';
+import { demoMarket, type DemoWorkspace } from '@/lib/demo-finance';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { applyRecordChange } from '@/lib/record-balance';
 import { refreshRead } from '@/lib/refresh-read';
@@ -40,7 +40,6 @@ import { sectionFor } from '@/components/workspace/navigation';
 
 const today = depositToday;
 const fresh = (): Entry => ({ id: crypto.randomUUID(), name: '', kind: 'Cash', currency: 'USD', amount: 0, quantity: 1, cost: 0, rate: 0, date: today(), lent_date: today(), frequency: 'Once', notes: '', business_id: null, ownership_percentage: 100, estimated_monthly_income: 0, estimated_monthly_payment: 0 });
-const sample = () => demoRecords(today());
 const emptyHistoryPage={records:[] as Entry[],total:0,page:1};
 
 /** Session, records and actions shared by the drawer, the top bar, the dialogs and every screen. */
@@ -117,6 +116,7 @@ function useWorkspaceState() {
     const [businesses, setBusinesses] = useState<Array<{ id: string; name: string }>>([]);
     const [summary, setSummary] = useState<Entry[]>([]);
     const [demoHoldingAccounts,setDemoHoldingAccounts]=useState<HoldingAccount[]>([]);
+    const [demoPlanning,setDemoPlanning]=useState<Pick<DemoWorkspace,'goals'|'occurrences'>>({goals:[],occurrences:[]});
     const [recordTotal, setRecordTotal] = useState(0);
     const [pageState, setPageState] = useState({ key: '', page: 1 });
     const [recordsLoading, setRecordsLoading] = useState(false);
@@ -174,7 +174,7 @@ function useWorkspaceState() {
     const requestKey = recordsRequestKey(user,sectionKey,currencyFilter,serverPage);
     const refreshRecords = () => { setError(''); setReload(n => n + 1); };
     const [forecastMonth,setForecastMonth] = useState(expensePlanMonth);
-    const basePlanning = usePlanning(user, demo, rows, reload, refreshRecords, demoHoldingAccounts, section==='Accounts'?'full':section==='Income & expenses'?'review':'workspace',section==='Income & expenses'?forecastMonth:undefined);
+    const basePlanning = usePlanning(user, demo, rows, reload, refreshRecords, demoHoldingAccounts, section==='Accounts'?'full':section==='Income & expenses'?'review':'workspace',section==='Income & expenses'?forecastMonth:undefined,demoPlanning);
     const [debtPayment,setDebtPayment]=useState<Entry|null>(null);
     const [editingIncomeSource,setEditingIncomeSource]=useState<import('@/lib/earning-sources').EarningSource|null>(null);
     const earningSources=useEarningSources(user,demo,reload,refreshRecords,(source,original)=>{
@@ -325,7 +325,7 @@ function useWorkspaceState() {
     finally {
         setBusy(false);
     } }
-    function clearLocalSession() { setEditing(null); setDeleting(null); setStopping(null); setSplitting(null); setViewing(null); setTracking(null); setPayingMortgage(null); setSettingsError(''); setPageState({key:'',page:1}); setRecordKinds(kinds); setPriceResult({key:'',message:''}); setLoadedKey(''); setSettingsLoading(true); setUser(null); setDemo(false); setDemoHoldingAccounts([]); setDeletedItems([]); setRows([]); setSummary([]); setBusinesses([]); setRecordTotal(0); setPreferencesData(defaultPreferences); setCurrency('USD'); setSummaryLoaded(false); summaryCache.current = {loaded:false,revision:-1}; setError(''); }
+    function clearLocalSession() { setEditing(null); setDeleting(null); setStopping(null); setSplitting(null); setViewing(null); setTracking(null); setPayingMortgage(null); setSettingsError(''); setPageState({key:'',page:1}); setRecordKinds(kinds); setPriceResult({key:'',message:''}); setLoadedKey(''); setSettingsLoading(true); setUser(null); setDemo(false); setDemoHoldingAccounts([]); setDemoPlanning({goals:[],occurrences:[]}); setDeletedItems([]); setRows([]); setSummary([]); setBusinesses([]); setRecordTotal(0); setPreferencesData(defaultPreferences); setCurrency('USD'); setSummaryLoaded(false); summaryCache.current = {loaded:false,revision:-1}; setError(''); }
     async function logout() { if (!demo) {
         const r = await fetch('/api/auth', { method: 'DELETE' });
         if (!r.ok) {
@@ -419,7 +419,17 @@ function useWorkspaceState() {
     const navigate = (path: string) => router.push(path);
     const field = (key: keyof Entry, v: string | number) => setEditing(p => p ? { ...p, [key]: v, ...(key === 'currency' ? {account_id: null} : {}) } : p);
 
-    const startDemo = () => { setRows(withAssetIncomePlans(sample())); setDemo(true); setError(''); };
+    async function startDemo() {
+        setBusy(true); setError('');
+        try {
+            // The sample workspace comes from the backend, like a signed-in account's records.
+            const response = await fetch('/api/demo', { cache: 'no-store' });
+            if (!response.ok) throw Error();
+            const sample = await response.json() as DemoWorkspace;
+            setRows(withAssetIncomePlans(sample.records.map(normalizeEntry))); setDemoHoldingAccounts(sample.holdingAccounts); setDemoPlanning({goals:sample.goals,occurrences:sample.occurrences}); expensePlans.seedDemo(sample.expensePlans); setDemo(true);
+        } catch { setError('Connection unavailable. Please try again.'); }
+        finally { setBusy(false); }
+    }
     const quickExpense = () => { setError(''); setRecordKinds(expenses); setEditing({ ...fresh(), currency, kind: 'Other expense', frequency: 'Once' }); };
     const recordFromSource = (source: EarningSource, bonus?: boolean) => { setError(''); const entry = { ...fresh(), kind: source.kind, currency: source.currency, frequency: 'Once' as const }; setRecordKinds(income); setEditing({ ...entry, ...selectEarningSource(entry, source, bonus) }); };
     const reviewRecurring = (record: Entry) => { setError(''); setRecordKinds([...income, ...expenses]); setEditing(record); };

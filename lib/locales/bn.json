@@ -28,8 +28,6 @@
   "Sample data": "নমুনা ডেটা",
   "Exit demo": "ডেমো থেকে বের হন",
   "Sign out": "সাইন আউট",
-  "DEMO MODE": "ডেমো মোড",
-  "Sample balances · Changes are not saved to an account.": "নমুনা ব্যালেন্স · পরিবর্তন কোনো অ্যাকাউন্টে সংরক্ষিত হয় না।",
   "Everything you own, earn, and owe. In one place.": "আপনার যা আছে, যা আয় করেন এবং যা ধার আছে, সব এক জায়গায়।",
   "Manage your records and keep your balances up to date.": "আপনার রেকর্ড পরিচালনা করুন এবং ব্যালেন্স হালনাগাদ রাখুন।",
   "Add income": "আয় যোগ করুন",
@@ -1901,5 +1899,6 @@
   "{amount} target": "লক্ষ্য {amount}",
   "Set a goal to watch your savings grow.": "একটি লক্ষ্য ঠিক করুন, সঞ্চয় বাড়তে দেখুন।",
   "Dashboard": "ড্যাশবোর্ড",
-  "Recurring": "পুনরাবৃত্ত"
+  "Recurring": "পুনরাবৃত্ত",
+  "Demo": "ডেমো"
 }

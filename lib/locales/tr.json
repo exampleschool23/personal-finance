@@ -28,8 +28,6 @@
   "Sample data": "Örnek veriler",
   "Exit demo": "Demodan çık",
   "Sign out": "Çıkış yap",
-  "DEMO MODE": "DEMO MODU",
-  "Sample balances · Changes are not saved to an account.": "Örnek bakiyeler · Değişiklikler bir hesaba kaydedilmez.",
   "Everything you own, earn, and owe. In one place.": "Sahip olduğunuz, kazandığınız ve borçlu olduğunuz her şey. Tek bir yerde.",
   "Manage your records and keep your balances up to date.": "Kayıtlarınızı yönetin ve bakiyelerinizi güncel tutun.",
   "Add income": "Gelir ekle",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Hedef {amount}",
   "Set a goal to watch your savings grow.": "Bir hedef koy, birikimini büyürken izle.",
   "Dashboard": "Pano",
-  "Recurring": "Düzenli"
+  "Recurring": "Düzenli",
+  "Demo": "Demo"
 }

@@ -28,8 +28,6 @@
   "Sample data": "Dữ liệu mẫu",
   "Exit demo": "Thoát demo",
   "Sign out": "Đăng xuất",
-  "DEMO MODE": "CHẾ ĐỘ DEMO",
-  "Sample balances · Changes are not saved to an account.": "Số dư mẫu · Các thay đổi không được lưu vào tài khoản.",
   "Everything you own, earn, and owe. In one place.": "Mọi thứ bạn sở hữu, kiếm được và còn nợ. Tại một nơi.",
   "Manage your records and keep your balances up to date.": "Quản lý các bản ghi và cập nhật số dư của bạn.",
   "Add income": "Thêm thu nhập",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Mục tiêu {amount}",
   "Set a goal to watch your savings grow.": "Đặt mục tiêu và xem khoản tiết kiệm tăng lên.",
   "Dashboard": "Tổng quan",
-  "Recurring": "Định kỳ"
+  "Recurring": "Định kỳ",
+  "Demo": "Demo"
 }

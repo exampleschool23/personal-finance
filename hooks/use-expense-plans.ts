@@ -37,6 +37,7 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
   showSaved();
   onSaved();
  }
+ function seedDemo(plans:ExpensePlan[]){setDemoPlans(plans);}
  function restoreDemo(plan:ExpensePlan) {
   if(rows.some(r=>r.expense_plan_id===plan.id&&(r.currency!==plan.currency||r.date<plan.start_date||(plan.end_date&&r.date>plan.end_date))))throw Error('Keep the currency and dates compatible with recorded spending.');
   setDemoPlans(prev=>[...prev.filter(p=>p.id!==plan.id),plan]);
@@ -46,5 +47,5 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
   else {const response=await fetch('/api/expense-plans',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});const result=await response.json() as {error?:string};if(!response.ok)throw Error(result.error);}
   onSaved();
  }
- return {restoreDemo,plans,month,loading:!!user&&!demo&&loadedScope!==scope,refreshing:!!user&&!demo&&loading,error:!demo&&user&&loadedScope===scope?error:'',save,remove};
+ return {seedDemo,restoreDemo,plans,month,loading:!!user&&!demo&&loadedScope!==scope,refreshing:!!user&&!demo&&loading,error:!demo&&user&&loadedScope===scope?error:'',save,remove};
 }

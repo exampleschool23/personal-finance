@@ -28,8 +28,6 @@
   "Sample data": "Voorbeeldgegevens",
   "Exit demo": "Demo verlaten",
   "Sign out": "Afmelden",
-  "DEMO MODE": "DEMOMODUS",
-  "Sample balances · Changes are not saved to an account.": "Voorbeeldsaldi · Wijzigingen worden niet in een account opgeslagen.",
   "Everything you own, earn, and owe. In one place.": "Alles wat u bezit, verdient en verschuldigd bent. Op één plek.",
   "Manage your records and keep your balances up to date.": "Beheer uw gegevens en houd uw saldi actueel.",
   "Add income": "Inkomsten toevoegen",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Doel {amount}",
   "Set a goal to watch your savings grow.": "Stel een doel en zie je spaargeld groeien.",
   "Dashboard": "Dashboard",
-  "Recurring": "Terugkerend"
+  "Recurring": "Terugkerend",
+  "Demo": "Demo"
 }

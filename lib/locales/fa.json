@@ -28,8 +28,6 @@
   "Sample data": "داده‌های نمونه",
   "Exit demo": "خروج از نسخهٔ نمایشی",
   "Sign out": "خروج",
-  "DEMO MODE": "حالت نمایشی",
-  "Sample balances · Changes are not saved to an account.": "موجودی‌های نمونه · تغییرات در حساب ذخیره نمی‌شوند.",
   "Everything you own, earn, and owe. In one place.": "هر چه دارید، کسب می‌کنید و بدهکارید. در یک جا.",
   "Manage your records and keep your balances up to date.": "اطلاعات خود را مدیریت کنید و موجودی‌هایتان را به‌روز نگه دارید.",
   "Add income": "افزودن درآمد",
@@ -1901,5 +1899,6 @@
   "{amount} target": "هدف {amount}",
   "Set a goal to watch your savings grow.": "هدفی بگذارید و رشد پس‌اندازتان را ببینید.",
   "Dashboard": "داشبورد",
-  "Recurring": "تکراری"
+  "Recurring": "تکراری",
+  "Demo": "دمو"
 }

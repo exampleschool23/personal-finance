@@ -42,7 +42,7 @@ function WorkspaceShell({ children }: { children: ReactNode }) {
   ? { initial: 'D', title: t("Demo workspace"), detail: t("Sample data") }
   : { initial: (preferencesData.display_name?.trim() || user!).replace(/^\+/, '').slice(0, 1).toUpperCase(), title: t("Personal account"), detail: user! };
  return <SidebarProvider>
-  <AppDrawer account={account} overdueCount={overdueCount} signOutLabel={demo ? t("Exit demo") : t("Sign out")} onSignOut={logout} pendingPath={destination} onNavigate={navigate}/>
+  <AppDrawer account={account} overdueCount={overdueCount} signOutLabel={demo ? t("Exit demo") : t("Sign out")} onSignOut={logout} pendingPath={destination} onNavigate={navigate} badge={demo ? t("Demo") : undefined}/>
   <main className="workspace">
    <DatabaseStatus owner={user} demo={demo}/>
    <TopBar pendingSection={destination && sectionFor(destination)}/>

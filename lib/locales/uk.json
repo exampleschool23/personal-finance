@@ -28,8 +28,6 @@
   "Sample data": "Демонстраційні дані",
   "Exit demo": "Вийти з демо",
   "Sign out": "Вийти",
-  "DEMO MODE": "ДЕМО-РЕЖИМ",
-  "Sample balances · Changes are not saved to an account.": "Демонстраційні баланси · Зміни не зберігаються в обліковому записі.",
   "Everything you own, earn, and owe. In one place.": "Усе, що ви маєте, заробляєте та винні. В одному місці.",
   "Manage your records and keep your balances up to date.": "Керуйте записами та підтримуйте баланси актуальними.",
   "Add income": "Додати дохід",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Ціль {amount}",
   "Set a goal to watch your savings grow.": "Поставте ціль і стежте, як ростуть заощадження.",
   "Dashboard": "Головна",
-  "Recurring": "Регулярні"
+  "Recurring": "Регулярні",
+  "Demo": "Демо"
 }

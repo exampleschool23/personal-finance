@@ -28,8 +28,6 @@
   "Sample data": "Ukázková data",
   "Exit demo": "Ukončit demo",
   "Sign out": "Odhlásit se",
-  "DEMO MODE": "DEMO REŽIM",
-  "Sample balances · Changes are not saved to an account.": "Ukázkové zůstatky · Změny se do účtu neukládají.",
   "Everything you own, earn, and owe. In one place.": "Vše, co vlastníte, vyděláváte a dlužíte. Na jednom místě.",
   "Manage your records and keep your balances up to date.": "Spravujte své záznamy a udržujte zůstatky aktuální.",
   "Add income": "Přidat příjem",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Cíl {amount}",
   "Set a goal to watch your savings grow.": "Nastavte cíl a sledujte, jak úspory rostou.",
   "Dashboard": "Přehled",
-  "Recurring": "Opakované"
+  "Recurring": "Opakované",
+  "Demo": "Demo"
 }

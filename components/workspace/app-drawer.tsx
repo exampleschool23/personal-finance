@@ -22,10 +22,12 @@ type Props = {
  pendingPath?: string | null;
  /** Called when a tap will navigate this tab, before the route loads. */
  onNavigate?: (path: string) => void;
+ /** A short label beside the logo, such as Demo for the sample workspace. */
+ badge?: string;
 };
 
 /** The navigation drawer. It knows the routes and the signed-in account, and nothing about any screen. */
-export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pendingPath, onNavigate }: Props) {
+export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pendingPath, onNavigate, badge }: Props) {
  const { t, locale, language } = useLanguage();
  const pathname = usePathname();
  const { setOpenMobile } = useSidebar();
@@ -39,7 +41,7 @@ export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pend
  };
  // Right-to-left languages open the drawer from the right edge.
  return <Sidebar className="border-sidebar-border" side={language && directionOf(language) === 'rtl' ? 'right' : 'left'}>
-  <SidebarHeader className="sidebar-brand"><Brand onClick={follow('/')}/></SidebarHeader>
+  <SidebarHeader className="sidebar-brand"><Brand onClick={follow('/')} badge={badge}/></SidebarHeader>
   <SidebarContent className="sidebar-navigation">{navigationGroups.map(group => <nav className="nav-group" key={group} aria-label={t(group)}>
    <p className="nav-label">{t(group)}</p>
    <SidebarMenu>{sections.filter(section => section.group === group).map(({ name, label, icon: Icon, path }) => <SidebarMenuItem key={name}>

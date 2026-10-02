@@ -18,7 +18,7 @@ import { TransactionInsights } from '@/components/transaction-insights';
 import { Button } from '@/components/ui/button';
 import { depositToday } from '@/lib/deposit-interest';
 import { RecordsTable } from '@/components/workspace/records-table';
-import { DemoBanner, ScreenNotices, ToolsUnavailable } from '@/components/workspace/screen-notices';
+import { ScreenNotices, ToolsUnavailable } from '@/components/workspace/screen-notices';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
 const tabs = ['Overview', 'Income', 'Spending', 'Transactions'] as const;
@@ -32,7 +32,6 @@ export function CashFlowScreen() {
  const watchlists = !transactionTools.loading&&!transactionTools.error ? <SpendingWatchlists data={planning.data} splits={transactionTools.data.splits} today={depositToday()} currency={currency} currencies={preferencesData.currencies} preferences={workspacePreferences}/> : null;
  return <>
   <div data-page="Income & expenses" className="content">
-   <DemoBanner/>
    <PageHeader title={t('Cash flow')}>
     <DatePicker mode="month" value={forecastMonth} max={depositToday()} onChange={setForecastMonth}/>
     <Button variant="outline" className="cashflow-action" onClick={() => addCashFlow('Other income')}><Plus size={17} aria-hidden="true"/>{t("Add income")}</Button>

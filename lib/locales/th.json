@@ -28,8 +28,6 @@
   "Sample data": "ข้อมูลตัวอย่าง",
   "Exit demo": "ออกจากโหมดสาธิต",
   "Sign out": "ออกจากระบบ",
-  "DEMO MODE": "โหมดสาธิต",
-  "Sample balances · Changes are not saved to an account.": "ยอดคงเหลือตัวอย่าง · การเปลี่ยนแปลงจะไม่ถูกบันทึกลงบัญชี",
   "Everything you own, earn, and owe. In one place.": "ทุกอย่างที่คุณมี หามาได้ และเป็นหนี้ ในที่เดียว",
   "Manage your records and keep your balances up to date.": "จัดการรายการของคุณและอัปเดตยอดคงเหลือให้เป็นปัจจุบัน",
   "Add income": "เพิ่มรายรับ",
@@ -1901,5 +1899,6 @@
   "{amount} target": "เป้าหมาย {amount}",
   "Set a goal to watch your savings grow.": "ตั้งเป้าหมายแล้วดูเงินออมของคุณเติบโต",
   "Dashboard": "แดชบอร์ด",
-  "Recurring": "รายการประจำ"
+  "Recurring": "รายการประจำ",
+  "Demo": "เดโม"
 }

@@ -28,8 +28,6 @@
   "Sample data": "نمونہ ڈیٹا",
   "Exit demo": "ڈیمو سے باہر نکلیں",
   "Sign out": "سائن آؤٹ کریں",
-  "DEMO MODE": "ڈیمو موڈ",
-  "Sample balances · Changes are not saved to an account.": "نمونہ بیلنس · تبدیلیاں کسی اکاؤنٹ میں محفوظ نہیں ہوتیں۔",
   "Everything you own, earn, and owe. In one place.": "جو کچھ آپ کا ہے، جو آپ کماتے ہیں اور جو آپ کے ذمے ہے۔ سب ایک جگہ۔",
   "Manage your records and keep your balances up to date.": "اپنے ریکارڈ سنبھالیں اور بیلنس تازہ رکھیں۔",
   "Add income": "آمدنی شامل کریں",
@@ -1901,5 +1899,6 @@
   "{amount} target": "ہدف {amount}",
   "Set a goal to watch your savings grow.": "ہدف بنائیں اور اپنی بچت بڑھتی دیکھیں۔",
   "Dashboard": "ڈیش بورڈ",
-  "Recurring": "بار بار"
+  "Recurring": "بار بار",
+  "Demo": "ڈیمو"
 }

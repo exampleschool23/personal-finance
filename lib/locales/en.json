@@ -28,8 +28,6 @@
   "Sample data": "Sample data",
   "Exit demo": "Exit demo",
   "Sign out": "Sign out",
-  "DEMO MODE": "DEMO MODE",
-  "Sample balances · Changes are not saved to an account.": "Sample balances · Changes are not saved to an account.",
   "Everything you own, earn, and owe. In one place.": "Everything you own, earn, and owe. In one place.",
   "Manage your records and keep your balances up to date.": "Manage your records and keep your balances up to date.",
   "Add income": "Add income",
@@ -1901,5 +1899,6 @@
   "{amount} target": "{amount} target",
   "Set a goal to watch your savings grow.": "Set a goal to watch your savings grow.",
   "Dashboard": "Dashboard",
-  "Recurring": "Recurring"
+  "Recurring": "Recurring",
+  "Demo": "Demo"
 }

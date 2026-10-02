@@ -28,8 +28,6 @@
   "Sample data": "Data ya mfano",
   "Exit demo": "Toka kwenye majaribio",
   "Sign out": "Toka",
-  "DEMO MODE": "HALI YA MAJARIBIO",
-  "Sample balances · Changes are not saved to an account.": "Salio za mfano · Mabadiliko hayahifadhiwi kwenye akaunti.",
   "Everything you own, earn, and owe. In one place.": "Kila ulichonacho, unachopata na unachodaiwa. Mahali pamoja.",
   "Manage your records and keep your balances up to date.": "Dhibiti rekodi zako na uweke salio zako zikiwa za kisasa.",
   "Add income": "Ongeza mapato",
@@ -1901,5 +1899,6 @@
   "{amount} target": "Lengo {amount}",
   "Set a goal to watch your savings grow.": "Weka lengo uone akiba yako ikikua.",
   "Dashboard": "Dashibodi",
-  "Recurring": "Zinazojirudia"
+  "Recurring": "Zinazojirudia",
+  "Demo": "Onyesho"
 }

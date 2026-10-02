@@ -28,8 +28,6 @@
   "Sample data": "נתוני דוגמה",
   "Exit demo": "יציאה מההדגמה",
   "Sign out": "התנתקות",
-  "DEMO MODE": "מצב הדגמה",
-  "Sample balances · Changes are not saved to an account.": "יתרות לדוגמה · שינויים אינם נשמרים בחשבון.",
   "Everything you own, earn, and owe. In one place.": "כל מה שיש לכם, מרוויחים ומעניקים. במקום אחד.",
   "Manage your records and keep your balances up to date.": "נהלו את הרשומות ושמרו על יתרות מעודכנות.",
   "Add income": "הוספת הכנסה",
@@ -1901,5 +1899,6 @@
   "{amount} target": "יעד {amount}",
   "Set a goal to watch your savings grow.": "הציבו יעד וצפו בחיסכון גדל.",
   "Dashboard": "לוח בקרה",
-  "Recurring": "חוזרים"
+  "Recurring": "חוזרים",
+  "Demo": "הדגמה"
 }

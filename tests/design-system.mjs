@@ -84,6 +84,7 @@ test('the logo links to the main page from every screen that shows it',()=>{
  const {Brand}=loadTS('components/presentation-foundation/brand.tsx',{...{'@/components/language-provider':language},'@/components/presentation-foundation/drawer-link':{DrawerLink:element('a')}});
  const html=render(Brand,{});
  assert.match(html,/^<a href="\/" class="brand"><span class="mark">h\.<\/span><span>HOGGISH<small class="block">PERSONAL FINANCE<\/small><\/span><\/a>$/);
+ assert.match(render(Brand,{badge:'Demo'}),/<\/span><span class="brand-badge">Demo<\/span><\/a>$/,'the sample workspace is labelled beside the logo');
  // The drawer, sign-in, loading, setup and account pages all render the same mark.
  for(const file of ['components/workspace/app-drawer.tsx','components/workspace/workspace-shell.tsx','app/auth/access/page.tsx','app/auth/confirm/page.tsx'])assert.match(fs.readFileSync(file,'utf8'),/<Brand/,file);
  const css=fs.readFileSync('app/globals.css','utf8');

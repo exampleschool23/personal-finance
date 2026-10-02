@@ -5,13 +5,6 @@ import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { marketEntry } from '@/lib/market';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
-/** Reminds the visitor that a sample workspace saves nothing. */
-export function DemoBanner() {
- const { t } = useLanguage();
- const { demo } = useWorkspace();
- return demo ? <div className="demo-banner"><span>{t("DEMO MODE")}</span> {t("Sample balances · Changes are not saved to an account.")}</div> : null;
-}
-
 /** Warnings that qualify the totals on a screen: excluded currencies, stale prices and plans that failed to load. */
 export function ScreenNotices({ planErrors = true }: { planErrors?: boolean }) {
  const { t } = useLanguage();

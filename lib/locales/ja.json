@@ -28,8 +28,6 @@
   "Sample data": "サンプルデータ",
   "Exit demo": "デモを終了",
   "Sign out": "サインアウト",
-  "DEMO MODE": "デモモード",
-  "Sample balances · Changes are not saved to an account.": "サンプル残高です。変更はアカウントに保存されません。",
   "Everything you own, earn, and owe. In one place.": "所有するもの、稼ぐもの、負うもの。すべてを一か所に。",
   "Manage your records and keep your balances up to date.": "記録を管理し、残高を最新の状態に保ちましょう。",
   "Add income": "収入を追加",
@@ -1901,5 +1899,6 @@
   "{amount} target": "目標 {amount}",
   "Set a goal to watch your savings grow.": "目標を設定して、貯蓄が増えるのを見守りましょう。",
   "Dashboard": "ダッシュボード",
-  "Recurring": "定期"
+  "Recurring": "定期",
+  "Demo": "デモ"
 }

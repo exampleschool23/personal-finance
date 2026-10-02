@@ -8,7 +8,7 @@ import { DebtPayoffPanel } from '@/components/planning/debt-payoff-panel';
 import { Button } from '@/components/ui/button';
 import { depositToday } from '@/lib/deposit-interest';
 import { RecordsTable } from '@/components/workspace/records-table';
-import { DemoBanner, ScreenNotices } from '@/components/workspace/screen-notices';
+import { ScreenNotices } from '@/components/workspace/screen-notices';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
 export function LoansDebtsScreen() {
@@ -16,7 +16,6 @@ export function LoansDebtsScreen() {
  const { user, current, currency, planning, workspacePreferences, workspaceLoading, addRecord } = useWorkspace();
  return <>
   <div data-page="Loans & debts" className="content">
-   <DemoBanner/>
    <PageHeader title={t('Loans & debts')}><Button onClick={addRecord}><Plus size={17} aria-hidden="true"/>{t("Add record")}</Button></PageHeader>
    <ScreenNotices/>
    {workspaceLoading ? <WorkspaceSkeleton label={t("Loading your workspace…")} section="Loans & debts"/> : <>

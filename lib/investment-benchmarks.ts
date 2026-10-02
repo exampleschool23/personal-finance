@@ -143,6 +143,13 @@ export function purchaseComparisonStart(input:Pick<DecisionInput,'records'|'even
  return [holding,funded,spent].filter((date):date is string=>!!date).sort()[0]??input.today;
 }
 
+/** A tracking start cannot precede the first recorded investment: there is no value to compare from that day.
+ * A start saved earlier than that reads as the first investment day; a future one is ignored. */
+export function effectiveTrackingStart(trackingStart:string|null,firstInvestment:string,today:string){
+ if(!trackingStart||trackingStart>today)return null;
+ return trackingStart<firstInvestment?firstInvestment:trackingStart;
+}
+
 export function investmentDecisionComparison(input:DecisionInput,data:BenchmarkData,portfolio?:DiversifiedPortfolio|null){
  const scope=input.method.scope??'investments',dated=input.method.mode==='date';
  const activity=investmentActivity(input.records,input.events,input.movements,input.today);

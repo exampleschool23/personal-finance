@@ -7,7 +7,7 @@ import { GoalsCard, RecentTransactionsCard } from '@/components/dashboard-cards'
 import { PortfolioOverview } from '@/components/portfolio-overview';
 import { SpendingPaceCard } from '@/components/spending-pace-card';
 import { TelegramNudge } from '@/components/telegram-nudge';
-import { DemoBanner, ScreenNotices, ToolsUnavailable } from '@/components/workspace/screen-notices';
+import { ScreenNotices, ToolsUnavailable } from '@/components/workspace/screen-notices';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
 export function OverviewScreen() {
@@ -22,7 +22,6 @@ export function OverviewScreen() {
  </>;
  return <>
   <div data-page="Overview" className="content overview-content">
-   <DemoBanner/>
    <OverviewHeading name={preferencesData.display_name?.trim()}/>
    <ScreenNotices/>
    {!workspaceLoading&&<TelegramNudge demo={demo}/>}

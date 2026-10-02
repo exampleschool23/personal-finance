@@ -1,7 +1,7 @@
 "use client";
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { NativeSelect } from '@/components/ui/native-select';
-import { benchmarkHistoryStart, benchmarkMethodStorageKey, readBenchmarkScope, investmentComparisonCoverage, investmentDecisionComparison, purchaseComparisonStart, type ComparisonMethod, type BenchmarkMovement, type FundingScope } from '@/lib/investment-benchmarks';
+import { benchmarkHistoryStart, benchmarkMethodStorageKey, readBenchmarkScope, investmentComparisonCoverage, investmentDecisionComparison, purchaseComparisonStart, effectiveTrackingStart, type ComparisonMethod, type BenchmarkMovement, type FundingScope } from '@/lib/investment-benchmarks';
 import { showError } from '@/lib/feedback';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { BenchmarkTooltip } from '@/components/benchmark-tooltip';
@@ -54,9 +54,10 @@ export function InvestmentComparison({history,today,currency,market,demo,windowS
  const purchaseStart=useMemo(()=>purchaseComparisonStart({records:history.records,events:history.events,movements:history.movements,cashflows:history.cashflows,today},scope),[history,today,scope]);
  // Market history is limited. Earlier purchases compare from recorded values on its first day.
  const earliestStart=purchaseStart<benchmarkHistoryStart?benchmarkHistoryStart:purchaseStart;
- const beforeMarketHistory=!trackingStart&&purchaseStart<benchmarkHistoryStart;
+ const trackingFrom=effectiveTrackingStart(trackingStart,earliestStart,today);
+ const beforeMarketHistory=!trackingFrom&&purchaseStart<benchmarkHistoryStart;
  // A tracking start compares from the investment value recorded on that day; nothing earlier is shown.
- const method:ComparisonMethod=trackingStart&&trackingStart<=today?{mode:'date',date:trackingStart,scope}:beforeMarketHistory?{mode:'date',date:earliestStart,scope}:{mode:'purchases',date:purchaseStart,scope};
+ const method:ComparisonMethod=trackingFrom?{mode:'date',date:trackingFrom,scope}:beforeMarketHistory?{mode:'date',date:earliestStart,scope}:{mode:'purchases',date:purchaseStart,scope};
  function chooseScope(next:FundingScope){if(!overviewOwner)return;setScopeChoice({owner:overviewOwner,scope:next});setDetailDate(null);try{localStorage.setItem(benchmarkMethodStorageKey(overviewOwner),JSON.stringify({scope:next}));}catch{}}
  async function chooseTrackingStart(date:string|null){setSavingStart(true);try{await onTrackingStartChange(date);setDetailDate(null);}catch(reason){showError((reason as Error).message);}finally{setSavingStart(false);}}
  const overviewKeys=overviewSelection?.owner===overviewOwner?overviewSelection?.keys??[]:[];
@@ -107,14 +108,14 @@ export function InvestmentComparison({history,today,currency,market,demo,windowS
   {summary}
  </>;
  return <>
-  <div className="overview-chart-heading"><div className="overview-chart-title"><h3>{t('Portfolio over time')}</h3><div className="tracking-start" aria-busy={savingStart}><span>{t('Tracking since')}</span><DatePicker value={trackingStart??''} required={false} min={benchmarkHistoryStart} max={today} onChange={date=>{if(!savingStart)void chooseTrackingStart(date||null);}}/></div></div><div className="comparison-legend" aria-busy={comparisonsLoading}>{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div></div>
+  <div className="overview-chart-heading"><div className="overview-chart-title"><h3>{t('Portfolio over time')}</h3><div className="tracking-start" aria-busy={savingStart}><span>{t('Tracking since')}</span><DatePicker value={trackingFrom??''} required={false} min={earliestStart<today?earliestStart:today} max={today} onChange={date=>{if(!savingStart)void chooseTrackingStart(date||null);}}/></div></div><div className="comparison-legend" aria-busy={comparisonsLoading}>{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div></div>
   {ready&&!decision&&<p className="comparison-notice">{t('Investment history or exchange rates are incomplete for this comparison.')}</p>}
   {ready&&visibleSeries.filter(item=>item.key!=='actual').map(item=>{const reason=ready.errors[item.key]??ready.errors.fx??(overviewResult?.unavailable.includes(item.key)?'Price data, exchange rates or funds needed for a matching withdrawal are unavailable.':null);return reason?<p key={item.key} className="comparison-note">{item.label}: {t(reason)}</p>:null;})}
   {comparisonsLoading?<ChartSkeleton label={t('Loading comparisons…')}/>:!!chartPoints.length&&<><InvestmentValueChart onPointSelect={setDetailDate} label={t('Net worth')} points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={<BenchmarkTooltip scope={scope} marketHistory={ready} fundingDetails={decision?.details} receipts={[]} currency={currency} series={chartSeries}/>}/></>}
   {summary}
   <details className="overview-details"><summary>{t('Comparison settings')}</summary>
    <div className="form-grid"><label>{t('Benchmark funding')}<NativeSelect value={scope} disabled={!overviewOwner} onChange={event=>chooseScope(event.target.value as FundingScope)}><option value="investments">{t('Excluding expenses')}</option><option value="expenses">{t('Including expenses')}</option></NativeSelect></label></div>
-   <p className="comparison-note">{trackingStart?t('Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.',{date:formatDate(trackingStart,locale)}):t('Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.')}</p>
+   <p className="comparison-note">{trackingFrom?t('Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.',{date:formatDate(trackingFrom,locale)}):t('Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.')}</p>
    <p className="comparison-note">{t(scope==='expenses'?'Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.':'Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.')}</p>
    {beforeMarketHistory&&<p className="comparison-note">{t('Market history starts on {date}. Earlier purchases are compared from their recorded values on that day.',{date:formatDate(earliestStart,locale)})}</p>}
    {coverage.missing.length>0&&<p className="comparison-note">{t('Some investments have no recorded purchase. Their first recorded value counts as invested on the day it was recorded, so it is never shown as a gain.')}</p>}
