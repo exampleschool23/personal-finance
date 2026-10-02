@@ -103,3 +103,11 @@ test('stored what-ifs are validated before use', () => {
  assert.deepEqual(readAdjustments('nope'), []);
  assert.deepEqual(readAdjustments([{ ...good, amount: 0 }, { ...good, amount: Infinity }, { ...good, frequency: 'Weekly' }, { ...good, date: '2027-02-30' }, null, { ...good, name: 5 }]), []);
 });
+
+test('income arriving today never lifts the lowest balance above today\'s opening balance', () => {
+ const records = [record('cash', 'Checking', 'Cash', 500, '2026-01-01'), record('pay', 'Pay', 'Salary', 2000, today, { frequency: 'Monthly', account_id: 'cash' })];
+ const forecast = cashForecast({ ...base, records, days: 30 });
+ assert.equal(forecast.totals[0].points[0].balance, 2500, 'the chart shows the end of today');
+ assert.deepEqual(forecast.totals[0].lowest, { date: today, balance: 500 });
+ assert.deepEqual(forecast.accounts[0].lowest, { date: today, balance: 500 });
+});

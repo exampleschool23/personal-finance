@@ -97,9 +97,11 @@ function series(id: string, name: string, currency: string, accountId: string | 
   balance += deltas.get(date) ?? 0;
   points.push({ date, balance });
  }
- const lowest = points.reduce((low, point) => point.balance < low.balance ? point : low, points[0]);
+ // Today's opening balance counts too, so the lowest point is never above the balance shown as today's.
+ const opening = { date: today, balance: start };
+ const lowest = points.reduce((low, point) => point.balance < low.balance ? point : low, opening);
  // Sub-cent float residue is not an overdraft.
- const negative = points.find(point => point.balance < -0.005);
+ const negative = [opening, ...points].find(point => point.balance < -0.005);
  return { id, name, currency, accountId, start, end: balance, points, lowest, belowZero: negative?.date ?? null };
 }
 
