@@ -2006,9 +2006,14 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .recurring-list>ul{margin:0;padding:0;list-style:none}
 .recurring-row{display:grid;grid-template-columns:minmax(0,1.6fr) auto minmax(90px,auto) minmax(150px,auto);align-items:center;gap:12px;padding:10px 16px;font-size:var(--type-small)}
 .recurring-row+.recurring-row{border-top:1px solid var(--hairline)}
-.recurring-row[data-status=paid],.recurring-row[data-status=skipped]{color:var(--muted-foreground)}
+.recurring-row[data-status=paid],.recurring-row[data-status=skipped],.recurring-row[data-status=missed]{color:var(--muted-foreground)}
 .recurring-row .row-actions{justify-content:flex-end}
 .recurring-row>.status-badge{justify-self:start}
+.subscriptions-panel{width:100%}
+.subscription-totals{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:var(--type-small);font-weight:500;font-variant-numeric:tabular-nums}
+.subscription-list{margin:0;padding:0;list-style:none}
+.subscription-list>.recurring-row{padding-inline:0}
+.subscription-hidden{margin-top:8px;border-top:1px solid var(--hairline)}
 .status-badge.is-paid{background:color-mix(in srgb,var(--positive) 12%,transparent);color:var(--pill-positive)}
 .recurring-calendar{width:100%;padding:0;overflow:hidden}
 .recurring-calendar-grid{display:flex;flex-direction:column}
@@ -2156,7 +2161,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .goal-row-alert{font-size:var(--type-caption);color:var(--negative)}
 .goal-row-menu{flex-shrink:0}
 .status-badge.goal-status.is-completed,.status-badge.goal-status.is-on_track{background:color-mix(in srgb,var(--positive) 12%,transparent);color:var(--pill-positive)}
-.status-badge.goal-status.is-at_risk{background:color-mix(in srgb,var(--caution) 14%,transparent);color:var(--pill-caution)}
+.status-badge.goal-status.is-at_risk,.status-badge.is-caution{background:color-mix(in srgb,var(--caution) 14%,transparent);color:var(--pill-caution)}
 .goal-available{display:flex;flex-direction:column;align-items:center;gap:4px;margin:4px 0 12px;padding:20px 16px;border-radius:var(--radius-control);background:color-mix(in srgb,var(--positive) 8%,var(--card));text-align:center}
 .goal-available strong{font-size:var(--type-stat);font-weight:500;font-variant-numeric:tabular-nums;color:var(--positive)}
 .goal-available span{font-size:var(--type-small);color:var(--muted-foreground)}

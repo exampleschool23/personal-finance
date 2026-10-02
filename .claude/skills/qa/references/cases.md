@@ -224,6 +224,9 @@ currencies (USD primary). Compute every expected figure yourself first.
 | REC-009 | P1 | Instalment paid | Repay in the month | Shows Paid |
 | REC-010 | P1 | Reminders | Snooze until tomorrow / Dismiss | Hidden until tomorrow / gone |
 | REC-011 | P1 | Calendar equals list | Calendar view for this month | Every list item, including debt repayments and loan instalments, is on its day `[dr 2026-10-02]` |
+| REC-012 | P1 | Subscriptions detected | Sample workspace, Recurring | Subscriptions panel lists Netflix (Price went up, caution pill), Spotify and Daily News digital (Possibly cancelled); totals per currency leave Daily News out; no day-to-day purchases listed |
+| REC-013 | P1 | Subscription decisions | ⋯ on a subscription: Not a subscription, Mark cancelled; then Restore under Hidden subscriptions | Row moves to Hidden with its reason and back; totals follow; survives reload on a signed-in account |
+| REC-014 | P1 | Track as recurring | ⋯ → Track as recurring, save | Record form opens with the name, amount and next charge date; once saved the plan is listed and the subscription row is gone |
 
 ## INV — investments
 
