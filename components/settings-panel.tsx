@@ -20,8 +20,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { currencyLabel, fiatCurrencies, maxPreferredCurrencies, replacePreferredCurrency, togglePreferredCurrency, type Preferences } from '@/lib/currencies';
 export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRetry, onRestartSetup }: { initial: Preferences; demo: boolean; onSaved: (p: Preferences) => void; loading: boolean; loadError: string; onRetry:()=>void; onRestartSetup?:()=>Promise<void> }) {
   const { t, locale } = useLanguage();
-  // A time zone not saved yet is filled from the browser and saved like any change, so the Telegram digest arrives in the owner's morning.
-  const [draft, setDraft] = useState(() => loading || loadError || initial.timezone ? initial : { ...initial, timezone: browserTimezone() ?? undefined });
+  // A time zone not saved yet is filled from the browser and saved quietly, so the Telegram digest arrives in the owner's morning.
+  const [draft, setDraft] = useState(() => demo || loading || loadError || initial.timezone ? initial : { ...initial, timezone: browserTimezone() ?? undefined });
   const [saved,setSaved]=useState(initial);
   const serialized=JSON.stringify(draft);
   const dirty=serialized!==JSON.stringify(saved);
@@ -40,21 +40,23 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
   }
   const zones = useMemo(() => timezoneOptions(new Date(), draft.timezone), [draft.timezone]);
   const currencies = fiatCurrencies.filter(c => currencyLabel(c.code, locale).toLowerCase().includes(query.trim().toLowerCase()));
-  async function save(snapshot: Preferences) {
+  // Only the browser's time zone filled in: saved without a "Saved" notice, since the owner changed nothing.
+  const autoFill=dirty&&!saved.timezone&&JSON.stringify({...draft,timezone:saved.timezone})===JSON.stringify(saved);
+  async function save(snapshot: Preferences, quiet = false) {
     setBusy(true);
     try {
       let next = { ...snapshot, display_name: (snapshot.display_name ?? '').trim() };
       if (!demo) { const response = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...snapshot, onboarded: undefined }) }); if (!response.ok) { const data = await response.json() as { error: string }; throw Error(data.error); } next = await response.json() as typeof next; }
-      onSaved(next); setSaved(next); setDraft(current => JSON.stringify(current) === JSON.stringify(snapshot) ? next : current); showSaved(next.language);
+      onSaved(next); setSaved(next); setDraft(current => JSON.stringify(current) === JSON.stringify(snapshot) ? next : current); if (!quiet) showSaved(next.language);
     } catch (error) { setFailed(JSON.stringify(snapshot)); showError((error as Error).message || 'Could not save settings. Try again.'); }
     finally { setBusy(false); }
   }
   useEffect(() => {
     if (loading || loadError || busy || !dirty || serialized === failed) return;
-    const timer = setTimeout(() => void save(draft), typingName && committed !== serialized ? 900 : 0);
+    const timer = setTimeout(() => void save(draft, autoFill), typingName && committed !== serialized ? 900 : 0);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, loadError, busy, dirty, serialized, failed, typingName, committed]);
+  }, [loading, loadError, busy, dirty, serialized, failed, typingName, committed, autoFill]);
   return <section className="settings-page">
     <header className="preferences-heading"><h2>{t('Profile & preferences')}<InfoHint>{t('Keep your profile details, language, and currency preferences up to date.')}</InfoHint></h2></header>
     {loadError && <InlineError message={t(loadError)}><Button type="button" variant="outline" onClick={onRetry}>{t('Retry loading settings')}</Button></InlineError>}
