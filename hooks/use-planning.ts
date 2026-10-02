@@ -2,9 +2,14 @@
 import { showSaved } from '@/lib/feedback';
 import { useOwnerResource } from './use-owner-resource';
 import { useCallback } from 'react';
+import { demoPlanning } from '@/lib/demo-finance';
+import { depositToday } from '@/lib/deposit-interest';
 import { emptyPlanning,type Category } from '@/lib/planning';
 import type { HoldingAccount } from '@/lib/holding-accounts';
 import { normalizeEntry,type Entry } from '@/lib/finance';
+// One stable copy per day, so the sample workspace's goals keep their identity between renders.
+let sample:{day:string;value:ReturnType<typeof demoPlanning>}|null=null;
+const sampleGoals=()=>{const day=depositToday();if(sample?.day!==day)sample={day,value:demoPlanning(day)};return sample.value;};
 export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:number,onSaved:()=>void,holdingAccounts:HoldingAccount[]=[],scope:'full'|'review'|'workspace'='full',month?:string){
  const resource=useOwnerResource('/api/planning?scope='+scope+(scope==='review'&&month?'&month='+encodeURIComponent(month):''),user,!demo,revision,emptyPlanning);
  const save=useCallback(async(action:string,payload:unknown)=>{
@@ -22,5 +27,5 @@ export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:
   showSaved();
   onSaved();
  },[demo,onSaved,resource]);
- return {data:demo?{...emptyPlanning,records:rows,holdingAccounts}:{...resource.data,records:resource.data.records.map(normalizeEntry)},loading:resource.initialLoading,refreshing:resource.loading,error:resource.error,save};
+ return {data:demo?{...emptyPlanning,...sampleGoals(),records:rows,holdingAccounts}:{...resource.data,records:resource.data.records.map(normalizeEntry)},loading:resource.initialLoading,refreshing:resource.loading,error:resource.error,save};
 }

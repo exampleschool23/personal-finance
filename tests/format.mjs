@@ -141,3 +141,12 @@ test('amounts keep whole numbers, grouping and Latin digits in every offered lan
   assert.equal(formatNumberInput('1,5', 'fr-FR')?.value, 1.5);
   assert.equal(formatNumberInput('1.5', 'es-MX')?.value, 1.5);
 });
+
+test('short month names stay on their calendar month in EN, RU and UZ', async () => {
+ const { formatMonthShort } = await import('../lib/format.ts');
+ assert.equal(formatMonthShort('2026-09', 'en-US'), 'Sep');
+ assert.equal(formatMonthShort('2026-01-01', 'en-US'), 'Jan');
+ assert.match(formatMonthShort('2026-09', 'ru-RU'), /^сент/);
+ assert.ok(formatMonthShort('2026-12', 'uz-UZ').length > 0);
+ assert.equal(formatMonthShort('bad', 'en-US'), '—');
+});

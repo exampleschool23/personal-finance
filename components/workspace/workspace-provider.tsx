@@ -37,6 +37,7 @@ import { compareRecordDates } from '@/lib/record-dates';
 import { sortAssetsByWorth } from '@/lib/asset-sort';
 import { type Entry, normalizeEntry, kinds, assets, liabilities, assetRecordKinds, lendingRecordKinds, income, expenses, financialTotals, estimatedCashFlow } from '@/lib/finance';
 import { sectionFor } from '@/components/workspace/navigation';
+import { recategorize, type CategoryChoice } from '@/lib/transaction-rules';
 
 const today = depositToday;
 const fresh = (): Entry => ({ id: crypto.randomUUID(), name: '', kind: 'Cash', currency: 'USD', amount: 0, quantity: 1, cost: 0, rate: 0, date: today(), lent_date: today(), frequency: 'Once', notes: '', business_id: null, ownership_percentage: 100, estimated_monthly_income: 0, estimated_monthly_payment: 0 });
@@ -427,6 +428,19 @@ function useWorkspaceState() {
     const discardDeletedItem = (item: DeletedItem) => setDeletedItems(items => items.filter(existing => existing.id !== item.id));
     const showFirstPage = () => setPageState({ key: paginationKey, page: 1 });
     const showPage = (next: number) => setPageState({ key: paginationKey, page: next });
+    /** Moves transactions to another category: the Transactions page's inline change, Edit multiple and rules. Resolves to how many changed. */
+    async function categorize(ids: string[], choice: CategoryChoice) {
+        if (demo) {
+            const changed = recategorize(rows, ids, choice, transactionTools.data.splits).changed;
+            setRows(previous => recategorize(previous, ids, choice, transactionTools.data.splits).records);
+            return changed;
+        }
+        const response = await fetch('/api/transaction-rules', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'categorize', data: { ids, kind: choice.kind, category_id: choice.category_id } }) });
+        const result = await response.json() as { changed?: number; error?: string };
+        if (!response.ok) throw Error(result.error);
+        refreshRecords();
+        return result.changed ?? 0;
+    }
     return {
         // Session
         ready, user, demo, pathname, section, sectionKey, cashFlowSection, busy, configured, error, login, logout, startDemo, clearLocalSession,
@@ -441,7 +455,7 @@ function useWorkspaceState() {
         recordsLoading, showFirstPage, showPage,
         // Actions
         addRecord, addCashFlow, addAccountRecord, editRecord, storedRecord, closeEditing, closeDeleting, navigate, quickExpense, recordFromSource, reviewRecurring, requestDelete, spendFromPlan, removePlan,
-        saveHoldingAccount, assignHolding, recordMortgagePayment, save, remove, stopRecord, field, fetchPrice, fetchingPrice, priceMessage,
+        saveHoldingAccount, assignHolding, recordMortgagePayment, save, remove, stopRecord, categorize, field, fetchPrice, fetchingPrice, priceMessage,
         // Open dialogs
         editing, setEditing, editingCashFlow, recordKinds, linkedExpensePlan, deleting, setDeleting, stopping, setStopping, splitting, setSplitting,
         viewing, setViewing, tracking, setTracking, payingMortgage, setPayingMortgage, debtPayment, setDebtPayment, editingIncomeSource, setEditingIncomeSource,

@@ -3,6 +3,7 @@ import { defaultComparisonPreferences, isInvestmentRecord } from './comparison-p
 import { interestKinds, value, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import type { MarketData } from './market';
+import type { Category, Goal } from './planning';
 
 // Illustrative fixtures only: never represent these as historical market quotes.
 export const demoMarket: MarketData = { rates: { USD: 1, UZS: 12500 }, fx: null, quotes: {}, errors: {}, stocksConfigured: false };
@@ -30,19 +31,29 @@ export function demoRecords(today: string): Entry[] {
   ...demoSpending(today, record),
  ];
 }
-/** Day-to-day purchases last month and so far this month, so spending charts have something real to compare. */
+/** Seven months of day-to-day purchases, bills, giving and pay, so spending charts and budget history have something real to compare.
+ * The current month runs slightly ahead of the one before, as real spending often does. */
 function demoSpending(today: string, record: (id: string, name: string, kind: Entry['kind'], amount: number, extra?: Partial<Entry>) => Entry): Entry[] {
  const purchases: Array<[string, number]> = [['Groceries', 64], ['Coffee', 9], ['Taxi', 18], ['Lunch', 22], ['Pharmacy', 31], ['Groceries', 71], ['Fuel', 45], ['Dinner out', 58], ['Groceries', 52], ['Gym', 40]];
+ const monthly: Array<[string, Entry['kind'], number, number, Partial<Entry>?]> = [
+  ['Apartment rent', 'Rent expense', 1, 4500000, { currency: 'UZS' }], ['Monthly salary', 'Salary', 5, 18000000, { currency: 'UZS' }],
+  ['Phone & internet', 'Other expense', 8, 25], ['Streaming', 'Other expense', 14, 12], ['Donation', 'Charity', 18, 20],
+ ];
  const month = today.slice(0, 7), todayDay = Number(today.slice(8, 10));
- const previous = new Date(month + '-01T00:00:00Z'); previous.setUTCMonth(previous.getUTCMonth() - 1);
- const previousMonth = previous.toISOString().slice(0, 7);
  const spends: Entry[] = [];
- purchases.forEach(([name, amount], index) => {
-  const day = 2 + index * 3;
-  spends.push(record(`spend-previous-${index}`, name, 'Living expense', amount, { date: `${previousMonth}-${String(day).padStart(2, '0')}` }));
-  // This month runs slightly ahead of last month, as real spending often does.
-  if (day <= todayDay) spends.push(record(`spend-current-${index}`, name, 'Living expense', Math.round(amount * 1.15), { date: `${month}-${String(day).padStart(2, '0')}` }));
- });
+ for (let back = 6; back >= 0; back--) {
+  const date = new Date(month + '-01T00:00:00Z'); date.setUTCMonth(date.getUTCMonth() - back);
+  const target = date.toISOString().slice(0, 7), label = back === 0 ? 'current' : back === 1 ? 'previous' : 'past' + back;
+  const pace = back === 0 ? 1.15 : 1 + ((back * 7) % 5 - 2) / 20;
+  const add = (id: string, name: string, kind: Entry['kind'], day: number, amount: number, extra: Partial<Entry> = {}) => {
+   if (back === 0 && day > todayDay) return;
+   spends.push(record(`${id}-${label}`, name, kind, amount, { ...extra, date: `${target}-${String(day).padStart(2, '0')}` }));
+  };
+  purchases.forEach(([name, amount], index) => add(`spend-${index}`, name, 'Living expense', 2 + index * 3, back <= 1 ? (back === 0 ? Math.round(amount * 1.15) : amount) : Math.round(amount * pace)));
+  monthly.forEach(([name, kind, day, amount, extra], index) => add(`bill-${index}`, name, kind, day, amount, extra));
+  if (back % 2 === 0) add('freelance', 'Freelance project', 'Other income', 20, 600);
+  if (back === 3) add('gift', 'Birthday gifts', 'Other expense', 11, 180);
+ }
  return spends;
 }
 
@@ -73,4 +84,15 @@ export function demoHistory(records: Entry[], today: string) {
   }
  }
  return { records, events, cashflows: [] as Entry[], incomeRecords: records };
+}
+
+/** Sample goals and custom categories, so goal pages, budget contributions and the category picker have something to show. */
+export function demoPlanning(today: string): { goals: Goal[]; categories: Category[] } {
+ const months = (count: number) => { const date = new Date(today + 'T00:00:00Z'); date.setUTCMonth(date.getUTCMonth() + count); return date.toISOString().slice(0, 10); };
+ const goal = (id: string, name: string, allocated: number, target: number, date: string, monthly: number, priority: number): Goal =>
+  ({ id: 'demo-goal-' + id, name, kind: 'savings', account_id: 'demo-cash', currency: 'USD', allocated, target, target_date: date, archived: false, monthly_contribution: monthly, funding_monthly: monthly, funding_priority: priority });
+ return {
+  goals: [goal('emergency', 'Emergency fund', 4200, 10000, months(14), 400, 1), goal('vacation', 'Summer vacation', 1150, 3000, months(8), 230, 2)],
+  categories: [{ id: 'demo-category-restaurants', name: 'Restaurants', direction: 'expense' }, { id: 'demo-category-transport', name: 'Transport', direction: 'expense' }, { id: 'demo-category-freelance', name: 'Freelance', direction: 'income' }],
+ };
 }

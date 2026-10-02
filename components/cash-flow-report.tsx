@@ -1,0 +1,102 @@
+"use client";
+import { useMemo, useState } from 'react';
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Sankey, Tooltip, XAxis, YAxis } from 'recharts';
+import { useLanguage } from '@/components/language-provider';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
+import { ChartSkeleton } from '@/components/presentation-foundation/loading-placeholder';
+import { PanelTitle } from '@/components/presentation-foundation/panel-title';
+import { Segmented } from '@/components/presentation-foundation/segmented';
+import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
+import { signTone } from '@/components/presentation-foundation/tone';
+import { useOwnerResource } from '@/hooks/use-owner-resource';
+import { cashFlowReport, periodMonths, reportPeriods, sankeyFlows, trailingMonths, type ReportPeriod, type Share } from '@/lib/cash-flow-report';
+import { categoryColor } from '@/lib/category-colors';
+import { depositToday } from '@/lib/deposit-interest';
+import { normalizeEntry } from '@/lib/finance';
+import { formatCompactMoney, formatMoney, formatMonthShort, formatMonthYear, formatPercent } from '@/lib/format';
+import type { MarketData } from '@/lib/market';
+import { emptyPlanning, type PlanningData } from '@/lib/planning';
+import type { TransactionSplit } from '@/lib/transaction-tools';
+
+const periodLabels: Record<ReportPeriod, string> = { month: 'Month', quarter: 'Quarter', year: 'Year' };
+type Props = { owner: string | null; demo: boolean; revision: number; data: PlanningData; splits: TransactionSplit[]; month: string; currency: string; market: MarketData | null };
+
+/** One side of the breakdown: proportional bars with amount and share, Monarch's Income / Expenses panels. */
+function ShareBars({ items, label, colorKey, currency }: { items: Share[]; label: (key: string) => string; colorKey: (key: string) => string; currency: string }) {
+ const { t, locale } = useLanguage();
+ if (!items.length) return <p className="budget-left-empty">{t('Nothing recorded in this period.')}</p>;
+ const peak = items[0].amount;
+ return <ul className="share-bars">{items.slice(0, 12).map(item => <li key={item.key} title={`${label(item.key)} · ${formatMoney(item.amount, currency, locale)}`}>
+  <span className="share-bar" style={{ width: `${Math.max(2, item.amount / peak * 100)}%`, background: `color-mix(in srgb, ${colorKey(item.key)} 22%, transparent)` }}><span>{label(item.key)}</span></span>
+  <strong>{formatMoney(item.amount, currency, locale)}</strong><small>{formatPercent(item.share * 100, locale)}</small>
+ </li>)}</ul>;
+}
+
+/** Monarch's Cash flow: figures for the period, monthly bars, and where money came from and went, as bars or a Sankey diagram. */
+export function CashFlowReport({ owner, demo, revision, data: provided, splits, month, currency, market }: Props) {
+ const { t, locale } = useLanguage();
+ const today = depositToday();
+ const [period, setPeriod] = useState<ReportPeriod>('month');
+ const [grouping, setGrouping] = useState<'category' | 'merchant'>('category');
+ const [view, setView] = useState<'bars' | 'sankey'>('bars');
+ const series = trailingMonths(month);
+ const live = !!owner && !demo;
+ const remote = useOwnerResource(`/api/planning?scope=budget&month=${month}&from=${series[0]}`, owner, live, revision, emptyPlanning);
+ const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : provided, [live, remote.data, provided]);
+ const rates = market?.rates ?? market?.fx?.rate;
+ const report = useMemo(() => cashFlowReport(data, splits, periodMonths(month, period), currency, today, rates), [data, splits, month, period, currency, today, rates]);
+ const trend = useMemo(() => cashFlowReport(data, splits, trailingMonths(month), currency, today, rates).series, [data, splits, month, currency, today, rates]);
+ const money = (amount: number) => formatMoney(amount, currency, locale);
+ const categoryName = (key: string) => data.categories.find(category => category.id === key)?.name ?? t(key);
+ const label = grouping === 'category' ? categoryName : (key: string) => key;
+ const colorKey = (key: string) => grouping === 'category' ? categoryColor(data.categories.find(category => category.id === key)?.name ?? key) : 'var(--foreground)';
+ const flows = sankeyFlows(report, categoryName);
+ if (live && remote.initialLoading) return <section className="panel cash-flow-report"><ChartSkeleton label={t('Loading records…')}/></section>;
+ if (live && remote.error) return <section className="panel cash-flow-report"><InlineError message={t(remote.error)} onRetry={remote.retry}/></section>;
+ return <section className="cash-flow-report" aria-label={t('Cash flow')}>
+  <div className="cash-flow-report-tools">
+   <Segmented label={t('Period')} options={reportPeriods.map(value => ({ value, label: t(periodLabels[value]) }))} value={period} onChange={setPeriod}/>
+  </div>
+  <StatTiles columns={4} label={t('Cash flow')}>
+   <StatTile label={t('Income')} value={money(report.income)} tone="positive"/>
+   <StatTile label={t('Expenses')} value={money(report.expenses)}/>
+   <StatTile label={t('Total savings')} value={money(report.savings)} tone={signTone(report.savings)}/>
+   <StatTile label={t('Savings rate')} value={report.savingsRate === null ? '—' : formatPercent(report.savingsRate, locale)} tone={report.savingsRate === null ? undefined : signTone(report.savingsRate)}/>
+  </StatTiles>
+  <section className="panel">
+   <PanelTitle title={t('Income and spending by month')}/>
+   <div className="cash-flow-chart"><ResponsiveContainer width="100%" height={260}>
+    <BarChart data={trend} barGap={2} accessibilityLayer margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
+     <CartesianGrid stroke="var(--border)" strokeOpacity={.6} strokeDasharray="2 6" vertical={false}/>
+     <XAxis dataKey="month" tickFormatter={value => formatMonthShort(String(value), locale)} axisLine={false} tickLine={false} tickMargin={10}/>
+     <YAxis width="auto" tickFormatter={value => formatCompactMoney(Number(value), currency, locale)} axisLine={false} tickLine={false} tickMargin={8}/>
+     <Tooltip cursor={{ fill: 'var(--accent)', fillOpacity: .45 }} labelFormatter={value => formatMonthYear(String(value), locale)} formatter={(value, name) => [money(Number(value)), String(name)]}/>
+     <Legend iconType="circle" iconSize={8}/>
+     <Bar dataKey="income" name={t('Income')} fill="var(--positive)" radius={[4, 4, 0, 0]} maxBarSize={18}/>
+     <Bar dataKey="expenses" name={t('Expenses')} fill="color-mix(in srgb, var(--foreground) 55%, transparent)" radius={[4, 4, 0, 0]} maxBarSize={18}/>
+    </BarChart>
+   </ResponsiveContainer></div>
+  </section>
+  <section className="panel">
+   <PanelTitle title={<>{t('Breakdown')} <span className="panel-figure">{period === 'month' ? formatMonthYear(month, locale) : `${formatMonthYear(periodMonths(month, period)[0], locale)} – ${formatMonthYear(month, locale)}`}</span></>}>
+    <div className="cash-flow-switches">
+     {view === 'bars' && <Segmented label={t('Group by')} options={[{ value: 'category', label: t('Category') }, { value: 'merchant', label: t('Merchant') }] as const} value={grouping} onChange={setGrouping}/>}
+     <Segmented label={t('Chart type')} options={[{ value: 'bars', label: t('Bars') }, { value: 'sankey', label: t('Sankey') }] as const} value={view} onChange={setView}/>
+    </div>
+   </PanelTitle>
+   {view === 'bars' ? <div className="cash-flow-breakdown">
+    <div><h3>{t('Income')}</h3><ShareBars items={report[grouping === 'category' ? 'categories' : 'merchants'].income} label={label} colorKey={() => 'var(--positive)'} currency={currency}/></div>
+    <div><h3>{t('Expenses')}</h3><ShareBars items={report[grouping === 'category' ? 'categories' : 'merchants'].expense} label={label} colorKey={colorKey} currency={currency}/></div>
+   </div> : flows.links.length ? <div className="cash-flow-sankey"><ResponsiveContainer width="100%" height={Math.max(280, flows.nodes.length * 34)}>
+    <Sankey data={flows} nodePadding={18} nodeWidth={10} margin={{ top: 8, right: 160, bottom: 8, left: 120 }} link={{ stroke: 'var(--border)', strokeOpacity: .9 }} node={({ x, y, width, height, index, payload }: { x: number; y: number; width: number; height: number; index: number; payload: { name: string; value: number } }) => {
+     const kind = flows.nodes[index]?.kind;
+     const fill = kind === 'income' || kind === 'savings' ? 'var(--positive)' : kind === 'total' ? 'var(--mark-bg)' : 'color-mix(in srgb, var(--foreground) 55%, transparent)';
+     const left = kind === 'income';
+     return <g><rect x={x} y={y} width={width} height={Math.max(2, height)} rx={3} fill={fill}/><text x={left ? x - 8 : x + width + 8} y={y + height / 2} dy="0.35em" textAnchor={left ? 'end' : 'start'} className="sankey-label">{payload.name} · {formatCompactMoney(payload.value, currency, locale)}</text></g>;
+    }}>
+     <Tooltip formatter={value => money(Number(value))}/>
+    </Sankey>
+   </ResponsiveContainer></div> : <p className="budget-left-empty">{t('Nothing recorded in this period.')}</p>}
+  </section>
+ </section>;
+}

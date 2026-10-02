@@ -40,3 +40,14 @@ export function projectGoalScenario(starting:number,target:number,today:string,s
  const result=projectGoal(starting,target*inflationFactor,today,scenario.deadline,scenario.monthly,scenario.annual_return,scenario.missed_date?.slice(0,7));
  return result?{...result,realValue:result.projected/inflationFactor,inflatedTarget:target*inflationFactor}:null;
 }
+
+/** The figures heading a goal's page: progress, what is left, the planned monthly saving, and what saving would finish on time.
+ * The needed amount is whole and rounded up, so following it reaches the target. */
+export function goalSummary(goal: { target: number; target_date: string | null; funding_monthly?: number | null; monthly_contribution?: number | null }, current: number | null, today: string) {
+ const target = Number(goal.target);
+ const left = current === null ? null : Math.max(0, target - current);
+ const percent = current === null || target <= 0 ? null : Math.max(0, Math.min(100, current / target * 100));
+ const monthsLeft = goal.target_date ? Math.max(0, (Number(goal.target_date.slice(0, 4)) - Number(today.slice(0, 4))) * 12 + Number(goal.target_date.slice(5, 7)) - Number(today.slice(5, 7))) : null;
+ const needed = left === null || monthsLeft === null ? null : left === 0 ? 0 : Math.ceil(left / Math.max(1, monthsLeft));
+ return { percent, left, monthsLeft, needed, monthly: Math.max(0, Number(goal.funding_monthly ?? goal.monthly_contribution ?? 0)) };
+}

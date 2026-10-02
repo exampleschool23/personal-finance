@@ -5063,3 +5063,168 @@ SELECT pg_temp.patch_treasury_bills('public.planning_action_with_actual_amount(t
 
 NOTIFY pgrst,'reload schema';
 COMMIT;
+
+-- Budgets: a monthly amount per category, Monarch-style category settings
+-- (Fixed / Flexible / Non-monthly, group, rollover, excluded), the budget
+-- style (category or flex) and whether an edited amount also covers later months. `category_key` is a built-in kind such as
+-- 'Rent expense', a custom category id, or 'flex:flexible' for the single
+-- Flexible amount in flex mode. Amounts keep their own currency. A forward
+-- amount covers every later month until the next saved amount.
+-- Apply after 085. No existing rows are changed.
+BEGIN;
+
+CREATE TABLE public.budget_settings (
+ user_id uuid PRIMARY KEY DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+ mode text NOT NULL DEFAULT 'category' CHECK (mode IN ('category','flex')),
+ apply_forward boolean NOT NULL DEFAULT false,
+ updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE public.budget_categories (
+ user_id uuid NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+ category_key text NOT NULL CHECK (length(category_key) BETWEEN 1 AND 80),
+ budget_type text NOT NULL DEFAULT 'flexible' CHECK (budget_type IN ('fixed','flexible','non_monthly')),
+ group_name text CHECK (group_name IS NULL OR length(trim(group_name)) BETWEEN 1 AND 60),
+ rollover boolean NOT NULL DEFAULT false,
+ rollover_start date CHECK (rollover_start IS NULL OR extract(day FROM rollover_start)=1),
+ excluded boolean NOT NULL DEFAULT false,
+ updated_at timestamptz NOT NULL DEFAULT now(),
+ PRIMARY KEY (user_id,category_key)
+);
+CREATE TABLE public.budget_amounts (
+ user_id uuid NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+ category_key text NOT NULL CHECK (length(category_key) BETWEEN 1 AND 80),
+ month date NOT NULL CHECK (extract(day FROM month)=1),
+ amount numeric NOT NULL CHECK (amount>=0 AND amount<=1e15),
+ currency text NOT NULL CHECK (currency ~ '^[A-Z]{3}$'),
+ applies_forward boolean NOT NULL DEFAULT false,
+ PRIMARY KEY (user_id,category_key,month)
+);
+ALTER TABLE public.budget_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.budget_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.budget_amounts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Owners manage budget settings" ON public.budget_settings FOR ALL TO authenticated USING (user_id=auth.uid()) WITH CHECK (user_id=auth.uid());
+CREATE POLICY "Owners manage budget categories" ON public.budget_categories FOR ALL TO authenticated USING (user_id=auth.uid()) WITH CHECK (user_id=auth.uid());
+CREATE POLICY "Owners manage budget amounts" ON public.budget_amounts FOR ALL TO authenticated USING (user_id=auth.uid()) WITH CHECK (user_id=auth.uid());
+REVOKE ALL ON public.budget_settings, public.budget_categories, public.budget_amounts FROM PUBLIC, anon;
+GRANT SELECT,INSERT,UPDATE,DELETE ON public.budget_settings, public.budget_categories, public.budget_amounts TO authenticated;
+
+-- "This month only" keeps later months; "All future months" replaces them.
+-- Replacing a forward amount for one month moves it on to the next month, so
+-- the months after keep their budget. Mirrors setBudgetAmount in lib/budget.ts.
+CREATE FUNCTION public.set_budget_amount(p_key text,p_month date,p_amount numeric,p_currency text,p_forward boolean) RETURNS void
+LANGUAGE plpgsql SECURITY INVOKER SET search_path=public AS $$
+DECLARE owner uuid:=auth.uid(); existing public.budget_amounts;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ IF extract(day FROM p_month)<>1 THEN RAISE EXCEPTION 'Budgets are set for whole months.'; END IF;
+ SELECT * INTO existing FROM public.budget_amounts WHERE user_id=owner AND category_key=p_key AND month=p_month FOR UPDATE;
+ IF p_forward THEN
+  DELETE FROM public.budget_amounts WHERE user_id=owner AND category_key=p_key AND month>p_month;
+ ELSIF existing.applies_forward THEN
+  INSERT INTO public.budget_amounts(user_id,category_key,month,amount,currency,applies_forward)
+  VALUES(owner,p_key,(p_month+interval '1 month')::date,existing.amount,existing.currency,true) ON CONFLICT DO NOTHING;
+ END IF;
+ INSERT INTO public.budget_amounts(user_id,category_key,month,amount,currency,applies_forward)
+ VALUES(owner,p_key,p_month,p_amount,p_currency,p_forward)
+ ON CONFLICT (user_id,category_key,month) DO UPDATE SET amount=excluded.amount,currency=excluded.currency,applies_forward=excluded.applies_forward;
+END $$;
+REVOKE ALL ON FUNCTION public.set_budget_amount(text,date,numeric,text,boolean) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.set_budget_amount(text,date,numeric,text,boolean) TO authenticated;
+
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+-- Transaction rules and category changes from the Transactions page.
+-- A rule says: transactions whose name contains `pattern` belong in a
+-- category. It is applied when it is saved (to matching past transactions,
+-- on request) and to new bank-statement imports. Imports keep their
+-- 'Other income' / 'Other expense' type, so only rules that pick a custom
+-- category apply there. Manual entries keep the category the user chose.
+-- set_transaction_category changes one or many transactions at once; it
+-- skips generated rows, split rows and rows linked to a schedule, a business
+-- or an income source, and returns how many it changed.
+-- Apply after 086. No existing rows are changed.
+BEGIN;
+
+CREATE TABLE public.transaction_rules (
+ id uuid PRIMARY KEY,
+ user_id uuid NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+ pattern text NOT NULL CHECK (length(trim(pattern)) BETWEEN 1 AND 120),
+ direction text NOT NULL CHECK (direction IN ('income','expense')),
+ kind text NOT NULL CHECK (kind IN ('Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense')),
+ category_id uuid,
+ created_at timestamptz NOT NULL DEFAULT now(),
+ UNIQUE (id,user_id),
+ FOREIGN KEY (category_id,user_id) REFERENCES public.transaction_categories(id,user_id) ON DELETE CASCADE,
+ CHECK (direction = CASE WHEN kind IN ('Salary','Rent income','Business income','Other income') THEN 'income' ELSE 'expense' END),
+ CHECK (category_id IS NULL OR kind IN ('Other income','Other expense'))
+);
+CREATE INDEX transaction_rules_owner ON public.transaction_rules(user_id,created_at);
+ALTER TABLE public.transaction_rules ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Owners manage transaction rules" ON public.transaction_rules FOR ALL TO authenticated USING (user_id=auth.uid()) WITH CHECK (user_id=auth.uid());
+REVOKE ALL ON public.transaction_rules FROM PUBLIC, anon;
+GRANT SELECT,INSERT,UPDATE,DELETE ON public.transaction_rules TO authenticated;
+
+CREATE FUNCTION public.set_transaction_category(p_ids uuid[],p_kind text,p_category uuid) RETURNS integer
+LANGUAGE plpgsql SECURITY INVOKER SET search_path=public AS $$
+DECLARE owner uuid:=auth.uid(); incoming boolean; changed integer;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ IF p_kind IS NULL OR p_kind NOT IN ('Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense') OR coalesce(array_length(p_ids,1),0)>500 THEN RAISE EXCEPTION 'Choose a category matching the transaction type.'; END IF;
+ incoming:=p_kind IN ('Salary','Rent income','Business income','Other income');
+ IF p_category IS NOT NULL AND (p_kind NOT IN ('Other income','Other expense') OR NOT EXISTS(SELECT 1 FROM public.transaction_categories WHERE id=p_category AND user_id=owner AND direction=CASE WHEN incoming THEN 'income' ELSE 'expense' END)) THEN RAISE EXCEPTION 'Choose a category matching the transaction type.'; END IF;
+ UPDATE public.finance_records r SET kind=p_kind,custom_category_id=p_category
+ WHERE r.user_id=owner AND r.id=ANY(p_ids) AND r.frequency='Once'
+  AND r.kind IN (SELECT unnest(CASE WHEN incoming THEN ARRAY['Salary','Rent income','Business income','Other income'] ELSE ARRAY['Rent expense','Living expense','Charity','Other expense'] END))
+  AND (r.kind,r.custom_category_id) IS DISTINCT FROM (p_kind,p_category)
+  AND r.movement_id IS NULL AND r.operation_id IS NULL AND r.mortgage_payment_id IS NULL AND r.history_event_id IS NULL
+  AND r.business_id IS NULL AND r.income_source_id IS NULL AND r.earning_source_id IS NULL
+  AND NOT EXISTS(SELECT 1 FROM public.transaction_splits s WHERE s.record_id=r.id AND s.user_id=owner);
+ GET DIAGNOSTICS changed=ROW_COUNT;
+ RETURN changed;
+END $$;
+REVOKE ALL ON FUNCTION public.set_transaction_category(uuid[],text,uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.set_transaction_category(uuid[],text,uuid) TO authenticated;
+
+-- Applies one rule to every matching past transaction of its direction.
+CREATE FUNCTION public.apply_transaction_rule(p_rule uuid) RETURNS integer
+LANGUAGE plpgsql SECURITY INVOKER SET search_path=public AS $$
+DECLARE owner uuid:=auth.uid(); rule public.transaction_rules; ids uuid[];
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ SELECT * INTO rule FROM public.transaction_rules WHERE id=p_rule AND user_id=owner;
+ IF NOT FOUND THEN RAISE EXCEPTION 'Rule not found.'; END IF;
+ SELECT coalesce(array_agg(id),'{}') INTO ids FROM (SELECT r.id FROM public.finance_records r WHERE r.user_id=owner AND r.frequency='Once'
+  AND strpos(lower(r.name),lower(trim(rule.pattern)))>0
+  AND r.kind IN (SELECT unnest(CASE WHEN rule.direction='income' THEN ARRAY['Salary','Rent income','Business income','Other income'] ELSE ARRAY['Rent expense','Living expense','Charity','Other expense'] END))
+  LIMIT 500) matched;
+ RETURN public.set_transaction_category(ids,rule.kind,rule.category_id);
+END $$;
+REVOKE ALL ON FUNCTION public.apply_transaction_rule(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.apply_transaction_rule(uuid) TO authenticated;
+
+-- New statement rows take the newest matching custom-category rule.
+CREATE FUNCTION public.classify_imported_transaction() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ -- PostgREST saves use INSERT ... ON CONFLICT; existing rows are never reclassified.
+ IF NEW.import_key IS NULL OR NEW.custom_category_id IS NOT NULL OR NEW.frequency<>'Once' OR NEW.kind NOT IN ('Other income','Other expense')
+  OR public.finance_restore_active() OR coalesce(current_setting('finance.restore_transaction',true),'0')='1'
+  OR EXISTS(SELECT 1 FROM public.finance_records WHERE id=NEW.id AND user_id=NEW.user_id) THEN RETURN NEW; END IF;
+ SELECT category_id INTO NEW.custom_category_id FROM public.transaction_rules
+ WHERE user_id=NEW.user_id AND category_id IS NOT NULL AND kind=NEW.kind AND strpos(lower(NEW.name),lower(trim(pattern)))>0
+ ORDER BY created_at DESC,id LIMIT 1;
+ RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public.classify_imported_transaction() FROM PUBLIC, anon;
+CREATE TRIGGER classify_imported_transaction BEFORE INSERT ON public.finance_records FOR EACH ROW EXECUTE FUNCTION public.classify_imported_transaction();
+
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+-- Dashboard layout: the order of the dashboard cards and which are hidden,
+-- saved as a workspace preference. Apply after 087. No rows are changed.
+BEGIN;
+ALTER TABLE public.workspace_preferences DROP CONSTRAINT workspace_preferences_key_check;
+ALTER TABLE public.workspace_preferences ADD CONSTRAINT workspace_preferences_key_check CHECK(key IN ('allocation','watchlists','import_profiles','debt_plan','goal_scenarios','goal_order','daily_plan','entry_templates','reminders','dashboard'));
+NOTIFY pgrst,'reload schema';
+COMMIT;
