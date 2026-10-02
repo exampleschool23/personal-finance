@@ -5,6 +5,7 @@ import {config,supa,session,saveSession,sameOrigin} from '@/lib/supabase';
 import {serviceDatabase,serviceKeyHeaders} from '@/lib/service-role';
 import {sendTelegramMessage} from '@/lib/telegram';
 import {deletionNotice} from '@/lib/telegram-bot';
+import {attachmentStore,removeOwnerAttachments} from '@/lib/record-attachments';
 const authSession=z.object({access_token:z.string().min(1),refresh_token:z.string().min(1),expires_in:z.number().positive(),user:z.object({id:z.string().uuid()})});
 const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
 export async function GET(){
@@ -74,6 +75,8 @@ export async function POST(req:Request){
  const key=process.env.SUPABASE_SERVICE_ROLE_KEY;if(!key)return reply({error:'Account deletion is awaiting server setup.'},503);
  // A linked Telegram chat is told afterwards, so it is not left with the menu of an account that is gone.
  const db=serviceDatabase(),notice=db?await deletionNotice(db,auth.user.id).catch(()=>null):null;
+ // Stored receipts are removed first; the database rows go with the account.
+ await removeOwnerAttachments(attachmentStore((path,init)=>supa(path,init,auth.token)),auth.user.id).catch(()=>null);
  const response=await fetch(config().url+'/auth/v1/admin/users/'+auth.user.id,{method:'DELETE',headers:serviceKeyHeaders(key),cache:'no-store',signal:AbortSignal.timeout(15000)});
  if(!response.ok)return reply({error:'Could not delete the account. Please try again.'},503);
  if(notice)await sendTelegramMessage(notice);

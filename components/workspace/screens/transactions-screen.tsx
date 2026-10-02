@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react';
-import { ListChecks, Plus, ReceiptText, Search, Wand2 } from 'lucide-react';
+import { ListChecks, Paperclip, Plus, ReceiptText, Search, Wand2 } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
@@ -33,7 +33,7 @@ import { canRecategorize, canTakeCategory, categoryChoices, choiceKey, type Cate
 
 export function TransactionsScreen() {
  const { t, locale } = useLanguage();
- const { user, demo, reload, currency, market, planning, transactionTools, workspaceLoading, addCashFlow, setViewing, storedRecord, categorize, assignTransactionsBusiness, businessList, tags, refreshRecords } = useWorkspace();
+ const { user, demo, reload, currency, market, planning, transactionTools, workspaceLoading, addCashFlow, setViewing, storedRecord, categorize, assignTransactionsBusiness, businessList, tags, attachments, refreshRecords } = useWorkspace();
  const today = depositToday();
  const [period, setPeriod] = useState<TransactionPeriod>('this_month');
  const [filter, setFilter] = useState(emptyTransactionFilter);
@@ -141,7 +141,7 @@ export function TransactionsScreen() {
       const recordTags = tagsOf(record.id).map(id => tagById.get(id)).filter(tag => !!tag);
       return <li key={record.id} className="transaction-row" data-selected={selected.has(record.id) || undefined} tabIndex={0} aria-label={t('View details for {name}', { name: record.name })} onClick={open(record)} onKeyDown={open(record)}>
        {selecting && <input type="checkbox" aria-label={t('Select {name}', { name: record.name })} checked={selected.has(record.id)} onChange={() => toggle(record.id)}/>}
-       <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span><strong>{record.name}</strong>{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}<MortgageSplit record={record}/>{recordTags.length > 0 && <span className="transaction-tags">{recordTags.map(tag => <TagChip key={tag.id} name={tag.name} color={tag.color}/>)}</span>}</span></span>
+       <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span>{attachments.counts.get(record.id) ? <span className="transaction-name"><strong>{record.name}</strong><Paperclip className="transaction-attachment-mark" size={13} role="img" aria-label={t('Attachments: {count}', { count: attachments.counts.get(record.id)! })}/></span> : <strong>{record.name}</strong>}{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}<MortgageSplit record={record}/>{recordTags.length > 0 && <span className="transaction-tags">{recordTags.map(tag => <TagChip key={tag.id} name={tag.name} color={tag.color}/>)}</span>}</span></span>
        <span className="transaction-labels"><CategoryPicker record={record} categories={data.categories} disabled={!editable || selecting} onChange={choice => change([record], choice)}/>
        {businessList.length > 0 && <BusinessPicker record={record} businesses={businessList} disabled={selecting || record.frequency !== 'Once' || !!record.history_event_id || !!record.earning_source_id || (record.kind === 'Salary' && !!record.income_source_id)} onChange={business => moveToBusiness(record, business)}/>}</span>
        <TransactionAmount record={record}/>

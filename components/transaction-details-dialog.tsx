@@ -14,8 +14,8 @@ import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import type { Entry } from '@/lib/finance';
 
 type TagProps={tags:readonly Tag[];tagIds:readonly string[];onTags:(add:string[],remove:string[])=>Promise<unknown>;onCreateTag:(name:string)=>Promise<string>};
-/** A transaction at a glance. Its business and tags change right here, as on the transaction drawer. */
-export function TransactionDetailsDialog({record:initial,incoming,categoryName,businesses,onBusiness,tagging,accountName,editable,onEdit,onClose}:{record:Entry;incoming:boolean;categoryName?:string;businesses:readonly BusinessOption[];onBusiness:(business:string|null)=>Promise<number>;tagging:TagProps;accountName?:string;editable:boolean;onEdit:()=>void;onClose:()=>void}) {
+/** A transaction at a glance. Its business, tags and receipts change right here, as on the transaction drawer. */
+export function TransactionDetailsDialog({record:initial,incoming,categoryName,businesses,onBusiness,tagging,accountName,attachments,editable,onEdit,onClose}:{record:Entry;incoming:boolean;categoryName?:string;businesses:readonly BusinessOption[];onBusiness:(business:string|null)=>Promise<number>;tagging:TagProps;accountName?:string;attachments?:ReactNode;editable:boolean;onEdit:()=>void;onClose:()=>void}) {
  const {t,locale}=useLanguage();
  const [record,setRecord]=useState(initial),[tagIds,setTagIds]=useState<readonly string[]>(tagging.tagIds);
  const business=businesses.find(item=>item.id===record.business_id);
@@ -37,5 +37,6 @@ export function TransactionDetailsDialog({record:initial,incoming,categoryName,b
  if(accountName)rows.push([t('Account'),accountName]);
  if(record.account_currency&&record.account_currency!==record.currency&&record.account_exchange_rate)rows.push([t('Exchange rate'),`1 ${record.account_currency} = ${formatNumber(record.account_exchange_rate,locale)} ${record.currency}`]);
  if(record.notes)rows.push([t('Notes'),<span key="n" className="whitespace-pre-wrap break-words">{record.notes}</span>]);
+ if(attachments)rows.push([t('Attachments'),attachments]);
  return <Dialog open onOpenChange={open=>{if(!open)onClose();}}><DialogContent><DialogTitle>{record.name}</DialogTitle><DialogDescription>{t('Transaction details')}</DialogDescription><dl className="grid grid-cols-[minmax(0,8rem)_1fr] gap-x-4 gap-y-3 text-sm">{rows.map(([label,value])=><div key={label} className="contents"><dt className="muted">{label}</dt><dd>{value}</dd></div>)}</dl><FormFooter onCancel={onClose} cancelLabel={t('Close')}>{editable&&<Button type="button" onClick={onEdit}>{t('Edit')}</Button>}</FormFooter></DialogContent></Dialog>;
 }

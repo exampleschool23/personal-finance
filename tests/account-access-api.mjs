@@ -108,7 +108,7 @@ test('a phone-only account deletes with DELETE alone, while an email account sti
  try{
   const phone=api({email:''});
   const result=await phone.POST(request({action:'delete_account',confirmation:'DELETE'}));
-  assert.equal(result.status,200);assert.equal(phone.calls.length,0,'no password check');
+  assert.equal(result.status,200);assert.deepEqual(phone.calls.map(call=>call.path.split('?')[0]),['/rest/v1/record_attachments'],'no password check; only its receipts are listed for removal');assert.equal(phone.calls[0].token,'owner');
   assert.equal(calls.length,1);assert.equal(calls[0].url,'https://supabase.invalid/auth/v1/admin/users/'+id);assert.deepEqual(phone.deleted,['hf_access','hf_refresh']);
   assert.equal((await api({email:''}).POST(request({action:'delete_account',confirmation:'delete'}))).status,400,'DELETE is still required');
   const emailed=api();

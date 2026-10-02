@@ -43,6 +43,7 @@ import { assignBusiness, businessesIn, isBusinessAccount, moveAccountToBusiness 
 import { orderedGoals as orderById } from '@/lib/goal-order';
 import { savedOrder } from '@/lib/workspace-preferences';
 import { useTags } from '@/hooks/use-tags';
+import { useRecordAttachments } from '@/hooks/use-record-attachments';
 import { emptyTags, type TagData } from '@/lib/tags';
 
 const today = depositToday;
@@ -195,6 +196,7 @@ function useWorkspaceState() {
     const transactionTools=useTransactionTools(user,demo,reload,refreshRecords);
     const workspacePreferences=useWorkspacePreferences(user,demo,reload);
     const tagResource=useTags(user,demo,reload,planning.data.records,demoTags);
+    const attachments=useRecordAttachments(user,demo,reload);
     // Tags in the person's own order (Settings), wherever they are listed.
     const tags={...tagResource,data:{...tagResource.data,tags:orderById(tagResource.data.tags,savedOrder(workspacePreferences.data.preferences,'tag_order'))}};
     // Businesses in the person's own order (Settings), shared by filters, reports and the dashboard.
@@ -517,7 +519,7 @@ function useWorkspaceState() {
         // Records and market data
         rows, summary, current, market, marketLoading, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, expensePlans, snapshots,
         reload, refreshRecords, budget, forecast, forecastReady, forecastMonth, setForecastMonth, excludedCurrencies, netWorth, totalDebt, monthlyIncomeEntries,
-        availableBusinesses, businessList, tags, overdueCount, workspaceLoading, deletedItems, restoreDemoItem, discardDeletedItem,
+        availableBusinesses, businessList, tags, attachments, overdueCount, workspaceLoading, deletedItems, restoreDemoItem, discardDeletedItem,
         // Record table
         filters, setFilters, filtersActive, historyOnly, useFilteredRecords, remoteHistory, historyPage, visible, totalRecords, pageCount, tablePage, tableLoading,
         recordsLoading, showFirstPage, showPage,

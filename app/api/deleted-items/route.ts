@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { session, supa, sameOrigin } from '@/lib/supabase';
+import { attachmentStore, ownsAttachmentPath } from '@/lib/record-attachments';
 export async function GET(req:Request) {
  try {
   const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
@@ -31,6 +32,10 @@ export async function DELETE(req:Request) {
   if(!parsed.success)return Response.json({error:'Check the record fields.'},{status:400});
   const result=await supa('/rest/v1/rpc/permanently_delete_item',{method:'POST',body:JSON.stringify({p_id:parsed.data.id})},auth.token);
   if(!result.ok)return Response.json({error:'Could not permanently delete this item. Check that database update 048 is installed and try again.'},{status:409});
+  // Attachments of a transaction that is gone for good come back as paths; their files are removed too.
+  const paths=((await result.json().catch(()=>({})) as {paths?:unknown}).paths);
+  const owner=auth.user?.id;
+  if(owner&&Array.isArray(paths)){const owned=paths.filter((path):path is string=>typeof path==='string'&&ownsAttachmentPath(owner,path));await attachmentStore((path,init)=>supa(path,init,auth.token)).remove(owned).catch(()=>null);}
   return Response.json({ok:true});
  } catch {return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
 }
