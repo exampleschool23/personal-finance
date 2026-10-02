@@ -10,6 +10,7 @@ import { tagsByRecord } from '@/lib/tags';
 import type { TransactionRule } from '@/lib/transaction-rules';
 import { AccountAccessPanel } from '@/components/account-access-panel';
 import { DataTools } from '@/components/data-tools';
+import { HouseholdPanel } from '@/components/household-panel';
 import { ImportHistory } from '@/components/import-history';
 import { InvestmentComparisonSettings } from '@/components/investment-comparison-settings';
 import { SettingsLayout } from '@/components/settings-layout';
@@ -20,7 +21,7 @@ import { PlanningError } from '@/components/workspace/screen-notices';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
 export function SettingsScreen() {
- const { user, demo, currency, market, reload, preferencesData, applyPreferences, settingsLoading, settingsError, retrySettings, planning, workspacePreferences, refreshRecords, clearLocalSession, restartOnboarding,
+ const { household, user, demo, currency, market, reload, preferencesData, applyPreferences, settingsLoading, settingsError, retrySettings, planning, workspacePreferences, refreshRecords, clearLocalSession, restartOnboarding,
   businessList, tags, transactionTools, categorize, assignTransactionsBusiness, editRecord, requestDelete, setSettingUpBusinesses } = useWorkspace();
  const { t } = useLanguage();
  const tagMap = useMemo(() => tagsByRecord(tags.data.links), [tags.data.links]);
@@ -31,6 +32,7 @@ export function SettingsScreen() {
  return <div data-page="Settings" className="content">
   <SettingsLayout
    preferences={<><SettingsPanel key={String(user) + settingsLoading} initial={preferencesData} demo={demo} onSaved={applyPreferences} loading={!demo && settingsLoading} loadError={settingsError} onRetry={retrySettings} onRestartSetup={demo?undefined:restartOnboarding}/><TelegramPanel demo={demo}/><PlanningError/></>}
+   household={<HouseholdPanel household={household} demo={demo}/>}
    benchmarks={<InvestmentComparisonSettings demo={demo} currencies={preferencesData.currencies}/>}
    security={<AccountAccessPanel settings onSignedOut={clearLocalSession}/>}
    categories={<TransactionToolsPanel preferences={workspacePreferences} owner={demo?null:user} demo={demo} onDeleted={refreshRecords} categories={planning.data.categories} loading={planning.loading} error={planning.error} onRetry={refreshRecords} saveCategory={async (name,direction)=>{await planning.save('category',{id:crypto.randomUUID(),name,direction});}}/>}

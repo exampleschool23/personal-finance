@@ -4,7 +4,7 @@
 // When the operator becomes a company, change `legalOperator` and `legalUpdated`.
 export const legalOperator='Jasurbek Shomurodov';
 export const legalContact='dangerhoggish@gmail.com';
-export const legalUpdated='2026-10-01';
+export const legalUpdated='2026-10-03';
 export type LegalSection={heading:string;paragraphs:string[];items?:string[]};
 export type LegalDocument={kind:'terms'|'privacy';sections:LegalSection[]};
 export const legalPaths={terms:'/terms',privacy:'/privacy'} as const;
@@ -75,11 +75,12 @@ export const privacyPolicy:LegalDocument={kind:'privacy',sections:[
   'We keep your data while your account is open. Records you delete go to Recently deleted, where you can restore them. When you delete your account, your records are deleted; copies in encrypted backups are removed as those backups expire.',
  ]},
  {heading:'Your choices and rights',paragraphs:[
+  'If you invite people to your household in Settings, they can see your records, and change them if you allow it, until you remove them or they leave. Each person keeps their own account, preferences and backups.',
   'You can see and correct your data in the app, download a full backup in Settings, turn off Telegram messages or sign out of the bot at any time, and delete your account in Settings, including an account created in Telegram.',
   `Depending on where you live, you may also have the right to ask what data we hold, to object to or restrict its use, or to complain to a data protection authority. Write to ${legalContact} and we will reply as soon as we can.`,
  ]},
  {heading:'Security',paragraphs:[
-  'Data is encrypted in transit, each account can read only its own records, and backups are encrypted. No system is perfectly secure; if a breach affects your data, we will tell you.',
+  'Data is encrypted in transit, each account can read only its own records and those of households whose owners invited it, and backups are encrypted. No system is perfectly secure; if a breach affects your data, we will tell you.',
  ]},
  {heading:'Children',paragraphs:['Hoggish is not meant for children, and we do not knowingly collect their data.']},
  {heading:'Changes',paragraphs:['When we change this policy, we will update the date at the top and tell you in the app or in Telegram about important changes.']},

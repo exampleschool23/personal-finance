@@ -7,6 +7,7 @@ import { BusinessMark } from '@/components/presentation-foundation/business-mark
 import type { BusinessOption } from '@/components/presentation-foundation/business-filter';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { TagChip } from '@/components/presentation-foundation/tag-chip';
+import { PersonAvatar } from '@/components/presentation-foundation/person-avatar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { Count } from '@/components/presentation-foundation/count';
@@ -100,6 +101,22 @@ export function BusinessPicker({ record, businesses, disabled, onChange }: { rec
   <PopoverTrigger asChild><button type="button" className="transaction-category-button" aria-label={t('Change business for {name}', { name: record.name })}>{pill}</button></PopoverTrigger>
   <PopoverContent className="category-picker-popover" align="start">
    <BusinessList businesses={businesses} selected={record.business_id ?? null} household={record.kind !== 'Business income'} onSelect={next => { setOpen(false); if (next !== (record.business_id ?? null)) onChange(next); }}/>
+  </PopoverContent>
+ </Popover>;
+}
+
+/** Who paid, as a small avatar; clicking it lists the household to choose from. */
+export function MemberPicker({ record, member, people, disabled, onChange }: { record: Entry; member: { id: string; name: string }; people: ReadonlyArray<{ id: string; name: string }>; disabled?: boolean; onChange: (member: string) => void }) {
+ const { t } = useLanguage();
+ const [open, setOpen] = useState(false);
+ const avatar = <PersonAvatar size="sm" name={member.name}/>;
+ if (disabled) return avatar;
+ return <Popover open={open} onOpenChange={setOpen}>
+  <PopoverTrigger asChild><button type="button" className="transaction-member-button" aria-label={t('Change who paid for {name}', { name: record.name })}>{avatar}</button></PopoverTrigger>
+  <PopoverContent className="category-picker-popover" align="start">
+   <ul className="category-picker business-picker" role="listbox" aria-label={t('Paid by')}>
+    {people.map(person => <li key={person.id} role="option" aria-selected={person.id === member.id}><button type="button" onClick={() => { setOpen(false); if (person.id !== member.id) onChange(person.id); }}><PersonAvatar size="sm" name={person.name}/><span>{person.name}</span>{person.id === member.id && <Check size={15} aria-hidden="true"/>}</button></li>)}
+   </ul>
   </PopoverContent>
  </Popover>;
 }

@@ -1,3 +1,4 @@
+import { workspaceOwner } from '@/lib/household';
 import { z } from 'zod';
 import { isCurrency } from '@/lib/currencies';
 import { session, sameOrigin, supa } from '@/lib/supabase';
@@ -13,7 +14,7 @@ export async function POST(req: Request) {
   if (!parsed.success) return Response.json({ error: 'Check the account fields.' }, { status: 400 });
   const data = parsed.data;
   const response = data.action === 'save'
-   ? await supa('/rest/v1/holding_accounts?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=representation' }, body: JSON.stringify({ id: data.id, name: data.name, kind: data.kind, currency: data.currency, user_id: auth.user.id }) }, auth.token)
+   ? await supa('/rest/v1/holding_accounts?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=representation' }, body: JSON.stringify({ id: data.id, name: data.name, kind: data.kind, currency: data.currency, user_id: workspaceOwner(auth) }) }, auth.token)
    : await supa(`/rest/v1/finance_records?id=eq.${data.record_id}&kind=in.(Cash,Stock,Crypto)`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ holding_account_id: data.holding_account_id }) }, auth.token);
   if (!response.ok) {
    const failure = await response.json() as { message?: string };
