@@ -4,6 +4,7 @@ import { Segmented } from '@/components/presentation-foundation/segmented';
 import { useState } from 'react';
 import { ArrowUpRight, Plus } from 'lucide-react';
 import { CashflowPreview } from '@/components/cashflow-preview';
+import { CashFlowReport } from '@/components/cash-flow-report';
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { EstimatedIncomeSources } from '@/components/estimated-income-sources';
 import { ExpensePlans } from '@/components/expense-plans';
@@ -42,6 +43,7 @@ export function CashFlowScreen() {
    {workspaceLoading ? <WorkspaceSkeleton label={t("Loading your workspace…")} section="Income & expenses"/> : <>
     {planning.loading?<CashflowSummarySkeleton/>:!planning.error&&<MonthlyReview compact selectedMonth={forecastMonth} estimates={forecastReady?{income:forecast.plannedIncome,spending:forecast.monthlyExpenses+forecast.mortgagePayments,net:forecast.forecast}:null} owner={user} demo={demo} revision={reload} market={market} data={planning.data} tools={transactionTools} snapshots={snapshots.snapshots} historyError={snapshots.error} currency={currency}/>}
     {transactionTools.error&&<InlineError message={t(transactionTools.error)} onRetry={transactionTools.retry}/>}
+    {tab==='Overview'&&<CashFlowReport owner={user} demo={demo} revision={reload} data={planning.data} splits={transactionTools.data.splits} month={forecastMonth} currency={currency} market={market}/>}
     {tab==='Overview'&&<CashflowPreview entries={monthlyIncomeEntries} sources={earningSources.sources} plans={expensePlans.plans} month={forecastMonth} currency={currency} loading={planning.loading||earningSources.loading||expensePlans.loading} error={planning.error||earningSources.error||expensePlans.error} onRetry={refreshRecords} onIncome={()=>setTab('Income')} onSpending={()=>setTab('Spending')} mortgages={mortgages} watchlists={watchlists}/>}
     {tab==='Income'&&<IncomeSourcesPanel controller={earningSources} currencies={preferencesData.currencies} records={planning.data.records} onRecord={recordFromSource}/>}
     {tab==='Income'&&(planning.loading || earningSources.loading ? <LoadingPlaceholder label={t('Loading records…')}/> : planning.error || earningSources.error ? <InlineError as="div" message={t(planning.error || earningSources.error)} onRetry={refreshRecords}/> : <EstimatedIncomeSources earningSources={earningSources.sources} entries={monthlyIncomeEntries} currency={currency} month={forecastMonth}/>)}

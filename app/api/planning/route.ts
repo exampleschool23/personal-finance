@@ -11,12 +11,15 @@ import type { ActionEvent } from '@/lib/action-messages';
 export async function GET(req?:Request){
  try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
  const scope=req?new URL(req.url).searchParams.get('scope')??'full':'full';
- if(!['full','review','workspace','insights'].includes(scope))return Response.json({error:'Invalid planning scope.'},{status:400});
+ if(!['full','review','workspace','insights','budget'].includes(scope))return Response.json({error:'Invalid planning scope.'},{status:400});
  const month=req?new URL(req.url).searchParams.get('month')??currentReviewMonth():currentReviewMonth();
  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||!isoDate.safeParse(month+'-01').success)return Response.json({error:'Invalid review month.'},{status:400});
- const filters=planningReadFilters(scope,month);
+ const first=req?new URL(req.url).searchParams.get('from')??undefined:undefined;
+ // A budget read covers at most two years, ending with `month`.
+ if(scope==='budget'&&(!first||!/^\d{4}-(0[1-9]|1[0-2])$/.test(first)||first>month||(Number(month.slice(0,4))*12+Number(month.slice(5)))-(Number(first.slice(0,4))*12+Number(first.slice(5)))>23))return Response.json({error:'Invalid review month.'},{status:400});
+ const filters=planningReadFilters(scope,month,first);
  const tables={movements:'asset_movements',holdingAccounts:'holding_accounts',records:'finance_records',categories:'transaction_categories',goals:'savings_goals',occurrences:'payment_occurrences',activity:'account_activity',investmentLinks:'investment_account_links'};
- const results=await Promise.all(Object.entries(tables).filter(([key])=>scope==='insights'?key==='records':scope==='full'||(key!=='movements'&&(scope==='review'||!['activity','investmentLinks'].includes(key)))).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,filters[key as keyof typeof filters]??{})]));
+ const results=await Promise.all(Object.entries(tables).filter(([key])=>scope==='insights'?key==='records':scope==='full'||(key!=='movements'&&(scope==='review'||scope==='budget'||!['activity','investmentLinks'].includes(key)))).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,filters[key as keyof typeof filters]??{})]));
  const data={records:[],categories:[],goals:[],occurrences:[],activity:[],movements:[],investmentLinks:[],...Object.fromEntries(results)} as Record<string,unknown>;
  const estimates=new Map((scope==='insights'?[]:await depositForecasts(auth.token)).map(record=>[record.id,record.estimated_monthly_income]));
  data.records=(data.records as Entry[]).map(record=>interestKinds.includes(record.kind)?{...record,estimated_monthly_income:estimates.get(record.id)??0}:record);

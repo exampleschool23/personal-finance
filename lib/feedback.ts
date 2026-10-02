@@ -38,3 +38,15 @@ export function showNotice(message: string, options: { language?: Language } = {
     className: 'app-feedback',
   });
 }
+
+/** A finished change with a follow-up the user may want, such as "Create rule". Messages and labels are translation keys. */
+export function showAction(message: string, options: { params?: Record<string, string | number>; detail?: string; action: string; onAction: () => void; language?: Language }) {
+  const language = currentLanguage(options.language);
+  toast.success(translate(language, message, options.params), {
+    id: 'action-feedback',
+    duration: 8000,
+    className: 'app-feedback',
+    description: options.detail ? translate(language, options.detail) : undefined,
+    action: { label: translate(language, options.action), onClick: options.onAction },
+  });
+}

@@ -8,11 +8,11 @@ import { useWorkspace } from '@/components/workspace/workspace-provider';
 
 export function UpcomingScreen() {
  const { t } = useLanguage();
- const { user, planning, workspacePreferences } = useWorkspace();
+ const { user, planning, workspacePreferences, currency, market } = useWorkspace();
  return <>
   <div data-page="Upcoming payments" className="content">
    <PlanningError/>
-   {planning.loading ? <LoadingPlaceholder label={t('Loading records…')}/> : <UpcomingPage data={planning.data} save={planning.save}/>}
+   {planning.loading ? <LoadingPlaceholder label={t('Loading records…')}/> : <UpcomingPage data={planning.data} save={planning.save} currency={currency} rates={market?.rates ?? market?.fx?.rate}/>}
   </div>
   {(workspacePreferences.error||planning.error)&&<ToolsUnavailable/>}
   {(planning.loading||workspacePreferences.loading)&&<div className="content review-content"><PanelSkeleton label={t('Loading records…')} rows={2}/></div>}

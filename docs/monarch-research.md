@@ -11,7 +11,7 @@ illustrations are not. Vestnu's accent is teal (`#0f766e`); see the
 |---|---|---|
 | [Getting Started with Monarch](https://www.youtube.com/watch?v=WGR8B6vBVqM) (Monarch, official) | 2:28 | Frames every ~7 s, done |
 | [How to Create a Budget with Monarch Money (Full Tutorial)](https://www.youtube.com/watch?v=QC-L5T_glEs) (Marriage Kids and Money) | 11:03 | **Full narration + ~40 frames, done** |
-| [How To Use Monarch Money (Budget App)](https://www.youtube.com/watch?v=31FINPdHH68) (Feasible Creative) | 9:45 | Only sampled (15 frames). **Redo fully.** |
+| [How To Use Monarch Money (Budget App)](https://www.youtube.com/watch?v=31FINPdHH68) (Feasible Creative) | 9:45 | **Full narration + frames of every app screen, done** |
 
 ### How to study a video in the built-in browser
 
@@ -94,7 +94,7 @@ Data model needed: monthly budget amounts per category (and per group), category
 type / group / rollover / excluded flags, and a budget mode preference — a new
 migration (next number after `085_treasury_bills.sql`).
 
-## Findings from the other two videos (sampled; confirm when redone)
+## Findings from the earlier samples (dashboard, accounts, rules)
 
 - **Dashboard**: Customize (toggle widgets, drag to reorder, separate web/mobile
   layouts); Weekly Recap card; Advice card with guided plans; Recurring card
@@ -117,3 +117,97 @@ migration (next number after `085_treasury_bills.sql`).
   Yearly, Sankey (income → savings + expense groups → categories), category filter
   chip with a summary card (count, largest, average, total).
 - **Loading feel**: brand-coloured stroke drawing the logo, no spinners.
+
+## Findings from "How To Use Monarch Money" (full study, 2026-10-02)
+
+Narration recorded in full (0:00–9:45); frames at every app screen.
+
+- **Setup (1:25–2:27)**: connect accounts (Plaid), or import a CSV statement, or add
+  manual accounts (car value, cash). These feed every chart and the AI insights.
+- **Transactions (2:27–3:50)**: one consolidated list across cards and accounts: date,
+  merchant, category, account, amount. Review it now and then; fix oddly worded rows
+  (rent) by changing the category and creating a **rule** so future rows are fixed
+  too. Receipt photos: AI splits a receipt into line items by category.
+- **Dashboard (3:50–4:17)**: frame shows Advice, Spending (this month vs last month
+  line), Recurring "$0 remaining due · This month", Transactions "Most recent" with
+  an "All transactions" filter, **Your Weekly Recap** ("See how your net worth and
+  spending changed last week, and what's coming up this week"), **Budget** card
+  (month, Expenses dropdown), Goals "$0.00 this month", Credit score. **Customize**
+  button top right: hide cards (net worth) and rearrange tiles.
+- **Budget (4:17–6:51)**:
+  - Budget Settings modal: *System* Flex Budget (Recommended, "Simplify your budget
+    by focusing on your flexible expense number") or Category Budget ("Budget every
+    category individually, the traditional way"); *By default, apply budget changes
+    to* This month only / All future months (each with an explanation; either can be
+    overridden per edit); *More options*: Recalculate default budgets (from
+    historical averages) with a Recalculate button.
+  - Header: month title left; right: ← →, Today, Month / Year / Decade, ⚙ Settings.
+  - Grey section bands **Income / Expenses / Contributions** carry the column labels
+    **Planned · Actual · Remaining**; each group is a white collapsible card (Income;
+    Fixed, Flexible, Non-Monthly; Save up, Pay down) with **Total Income / Total
+    Expenses / Total Contributions** rows. "Show 11 unbudgeted" / "Collapse 3
+    unbudgeted" with an eye icon. Category rows: emoji, name, small Planned input.
+  - Flex: the Flexible group carries one Planned input ($2,000) and an italic
+    **Unallocated Flexible Budget** row ($1,200) under it.
+  - Remaining shows as a green pill when money is left.
+  - **History popover** opens on focusing a Planned input: two tiles ("Earned / Spent
+    last month", "Monthly average"), six monthly bars (green for income, red for
+    spending), and a checkbox "Apply $X to all future months" ⓘ.
+  - **Left to budget** card (right column): large figure on a green tint, ⓘ, tabs
+    Summary / Income / Expenses; the Expenses tab lists Fixed and Flexible with
+    "$1,830 planned", a bar, "$0 spent", "$1,630 remaining". Empty state: "You
+    haven't added any expense budgets…".
+  - Narration: Planned is the target, Actual flows in, Remaining is the difference;
+    start from the historical average, aim lower where you want to cut; plan next
+    month and next year too (rent rise, bonus); left to budget is the buffer for
+    discretionary spending or saving.
+- **Cash flow (6:51–7:10)**: KPI row Income / Expenses / Total savings / Savings rate;
+  Income and Expenses panels as horizontal proportional bars with amount and share,
+  switch Category / Group / Merchant, Share menu (export, hide amounts); bar chart and
+  Sankey.
+- **Reports (7:10–7:24)**: charts with time-frame filters; pie chart deep dives.
+- **Recurring (7:24–7:50)**: tabs Monthly / All recurring; Filters, Manage recurring;
+  month arrows, Today, **List / Calendar**; summary "Income $0.00 received ·
+  $7,287.02 remaining", "Expenses $0.00 paid · $1,693.40 remaining" with bars;
+  calendar cells hold chips (red expenses, blue income) with amounts. Monarch detects
+  recurring items on sync; the user confirms them.
+- **Goals (7:50–8:06)**: save up (house, emergency fund, vacation) or pay down
+  (student debt); allocate funds from an account.
+- **Investments (8:06–8:28)**: portfolio vs S&P 500; holdings with quantity, price,
+  gain/loss; Forecasting (Plus plan).
+- **AI Assistant (8:28–9:12)**: chat "Ask anything about your money…"; conversation
+  list on the left; answers with a list and a table (Recurring transaction, Payment
+  account, Category, Amount); thumbs up/down; "can make mistakes and isn't for
+  financial advice"; can be disabled in Settings.
+- **Advice (9:12–9:38)**: "What is most important to you?" (buy a home, pay off
+  student loans); tailored recommendations with task lists (buy or lease, credit
+  score, loan options).
+
+## Build plan (priority order)
+
+1. **Budget page** (`/budget`): Category / Flex styles; Fixed / Flexible /
+   Non-monthly types, groups, rollover, exclude; month header with ← → Today and
+   Month / Year; Planned / Actual / Remaining with progress lines and pills; History
+   popover with "Apply to all future months"; Left to budget card with Summary /
+   Income / Expenses; Show N unbudgeted; Contributions (goals); Budget settings
+   modal with the default edit scope and Recalculate. Migration 086.
+2. **Transactions**: day groups with daily totals, inline category change with a
+   "Create rule" toast, search, filters, edit multiple, rules page.
+3. **Recurring**: received / paid summary bars, "in N days", List / Calendar.
+4. **Dashboard**: Customize (hide and reorder cards), Weekly recap, Budget card.
+5. **Goal detail**, then **Cash flow** reports (bars by category / merchant, savings
+   rate, Sankey), then the **AI assistant**.
+
+### Built on 2026-10-02 (worktree `inspiring-spence-94e22f`)
+
+| Step | Where | Migration |
+|---|---|---|
+| Budget page (category/flex, types, groups, rollover, exclude, Month/Year, History popover, Left to budget, unbudgeted toggle, contributions, settings + recalculate) | `/budget`, `lib/budget.ts` | 086 |
+| Transactions (day groups with totals, inline category, Create rule toast, search, filters, Edit multiple, Rules) | `/transactions`, `lib/transaction-rules.ts` | 087 |
+| Recurring (received/paid bars, "in N days", List / Calendar) | `/upcoming`, `lib/recurring.ts` | – |
+| Dashboard (Customize, Weekly recap, Budget card) | `/`, `lib/dashboard-layout.ts`, `lib/weekly-recap.ts` | 088 |
+| Goal header (cover, progress, saved / left / monthly / date) | `/goals`, `components/planning/goal-detail.tsx` | – |
+| Cash flow report (figures, monthly bars, category/merchant bars, Sankey) | `/income-expenses`, `lib/cash-flow-report.ts` | – |
+| Assistant (Claude, needs `ANTHROPIC_API_KEY`) | `/assistant`, `lib/assistant.ts` | – |
+
+Still open from the research: merchant logos, receipts, Reports page with pie deep dives, Advice, budget by group, Decade view, investments top movers, accounts sparklines.

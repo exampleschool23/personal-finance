@@ -1,0 +1,42 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { loadTS } from './helpers/load-ts.mjs';
+const { monthOccurrences, recurringSummary, daysFrom, calendarWeeks } = loadTS('lib/recurring.ts');
+const { upcomingPayments } = loadTS('lib/planning.ts');
+
+const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Monthly', notes: '', ...extra });
+
+test('a month lists every scheduled income and bill by date and name, with paid, skipped, due and overdue status', () => {
+ const records = [record('rent', 'Rent', 'Rent expense', 1200, '2026-01-01'), record('pay', 'Pay', 'Salary', 3000, '2026-01-15'), record('gym', 'Gym', 'Living expense', 40, '2026-09-03', { frequency: 'Weekly' }),
+  record('old', 'Old', 'Living expense', 9, '2026-01-01', { end_date: '2026-08-31' }), record('paused', 'Paused', 'Salary', 9, '2026-01-01', { source_paused: true }), record('once', 'Once', 'Living expense', 9, '2026-10-05', { frequency: 'Once' }),
+  record('loan', 'Loan', 'Loan', 500, '2026-10-20', { frequency: 'Once' })];
+ const occurrences = [{ id: 'o1', record_id: 'rent', due_on: '2026-10-01', status: 'paid' }, { id: 'o2', record_id: 'gym', due_on: '2026-10-08', status: 'dismissed' }];
+ const items = monthOccurrences(records, occurrences, '2026-10', '2026-10-10');
+ assert.deepEqual(items.map(item => [item.record.id, item.date, item.status]), [
+  ['gym', '2026-10-01', 'overdue'], ['rent', '2026-10-01', 'paid'], ['gym', '2026-10-08', 'skipped'], ['gym', '2026-10-15', 'due'], ['pay', '2026-10-15', 'due'], ['gym', '2026-10-22', 'due'], ['gym', '2026-10-29', 'due'],
+ ]);
+ assert.equal(items.find(item => item.record.id === 'pay').direction, 'income');
+ const summary = recurringSummary(items, (amount, unit) => unit === 'USD' ? amount : null);
+ assert.deepEqual(summary, { income: { done: 0, remaining: 3000 }, expense: { done: 1200, remaining: 160 }, missing: 0 });
+ assert.equal(recurringSummary(monthOccurrences([record('x', 'X', 'Salary', 5, '2026-10-01', { currency: 'EUR' })], [], '2026-10', '2026-10-10'), () => null).missing, 1);
+});
+
+test('the shared schedule helpers keep upcoming payments unchanged, including income tied to an asset', () => {
+ const records = [record('shop', 'Shop', 'Business', 1000, '2026-10-20', { frequency: 'Once' }), record('dividend', 'Dividend', 'Business income', 100, '2026-01-05', { business_id: 'shop' })];
+ assert.deepEqual(upcomingPayments(records, [], '2026-10-01', '2026-12-31').map(item => item.date), ['2026-11-05', '2026-12-05']);
+ assert.deepEqual(monthOccurrences(records, [], '2026-10', '2026-10-01'), [], 'income starts no earlier than its business');
+ const salary = [record('pay', 'Pay', 'Salary', 10, '2026-01-31'), { ...record('receipt', 'Pay', 'Salary', 10, '2026-10-30', { frequency: 'Once', income_source_id: 'pay', income_due_on: '2026-10-31' }) }];
+ assert.equal(monthOccurrences(salary, [], '2026-10', '2026-11-02')[0].status, 'paid', 'a recorded salary receipt settles its occurrence');
+ assert.equal(monthOccurrences(salary, [], '2026-02', '2026-11-02')[0].date, '2026-02-28');
+});
+
+test('due labels count whole days and the calendar starts weeks on Monday', () => {
+ assert.equal(daysFrom('2026-10-02', '2026-10-05'), 3);
+ assert.equal(daysFrom('2026-10-02', '2026-09-30'), -2);
+ assert.equal(daysFrom('2026-03-28', '2026-03-30'), 2, 'daylight saving does not shift whole days');
+ const weeks = calendarWeeks('2026-10');
+ assert.deepEqual(weeks[0], [null, null, null, '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04']);
+ assert.equal(weeks.at(-1).at(-1), null);
+ assert.ok(weeks.every(week => week.length === 7));
+ assert.equal(calendarWeeks('2027-02').flat().filter(Boolean).length, 28);
+});

@@ -71,3 +71,10 @@ export function formatMonthYear(value: string, locale: string) {
 export function formatYear(year: number, locale: string) {
   return new Intl.NumberFormat(locale, { useGrouping: false, maximumFractionDigits: 0 }).format(year);
 }
+
+/** A short month name for chart and table columns ("Sep", "сент."). The month is read as a calendar month, independent of timezone. */
+export function formatMonthShort(value: string, locale: string) {
+  const match = /^(\d{4})-(\d{2})/.exec(value);
+  if (!match) return '—';
+  return new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, 1)));
+}

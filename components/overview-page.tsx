@@ -1,4 +1,5 @@
 "use client";
+import type { ReactNode } from 'react';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
@@ -16,9 +17,9 @@ import { formatDate, formatMoney, formatPercent } from '@/lib/format';
 import { assetAllocation, nextPayments } from '@/lib/overview';
 import { upcomingPayments, type PlanningData } from '@/lib/planning';
 
-export function OverviewHeading({ name }: { name?: string }) {
+export function OverviewHeading({ name, children }: { name?: string; children?: ReactNode }) {
  const { t, locale } = useLanguage();
- return <PageHeader eyebrow={formatDate(depositToday(), locale)} title={name ? t("Welcome back, {name}!", { name }) : t("Welcome back!")}/>;
+ return <PageHeader eyebrow={formatDate(depositToday(), locale)} title={name ? t("Welcome back, {name}!", { name }) : t("Welcome back!")}>{children}</PageHeader>;
 }
 
 type Props = { entries: Entry[]; currency: string; excludedCurrencies: string[]; forecast: ReturnType<typeof estimatedCashFlow>; forecastReady: boolean; planning: PlanningData | null };

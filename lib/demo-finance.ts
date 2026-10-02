@@ -115,7 +115,7 @@ function previousMonth(month: string, count: number) {
  return date.toISOString().slice(0, 7);
 }
 
-/** Day-to-day purchases over the last three months and so far this month, so spending charts have something real to compare. */
+/** Day-to-day purchases over the last six months and so far this month, so spending charts and budget history have something real to compare. */
 function demoSpending(today: string, record: (id: string, name: string, kind: Entry['kind'], amount: number, extra?: Partial<Entry>) => Entry): Entry[] {
  const purchases: Array<[string, number, Entry['kind'], string?]> = [
   ['Whole Foods', 184, 'Living expense', 'groceries'], ['Coffee', 9, 'Living expense'], ['Uber', 24, 'Living expense'], ['Lunch', 22, 'Living expense'],
@@ -126,14 +126,14 @@ function demoSpending(today: string, record: (id: string, name: string, kind: En
  ];
  const month = today.slice(0, 7), todayDay = Number(today.slice(8, 10));
  const spends: Entry[] = [];
- for (let back = 3; back >= 0; back--) {
+ for (let back = 6; back >= 0; back--) {
   const current = previousMonth(month, back);
   // Recent months run slightly ahead of earlier ones, as real spending often does.
-  const factor = [1, 1.04, .97, 1.12][3 - back];
+  const factor = [.95, 1.02, .98, 1, 1.04, .97, 1.12][6 - back];
   purchases.forEach(([name, amount, kind, plan], index) => {
    const day = 1 + Math.floor(index * 27 / purchases.length);
    if (back === 0 && day > todayDay) return;
-   spends.push(record(`spend-${back}-${index}`, name, kind, Math.round(amount * factor), { date: `${current}-${String(day).padStart(2, '0')}`, expense_plan_id: plan ? 'demo-plan-' + plan : null }));
+   spends.push(record(`spend-${back}-${index}`, name, kind, Math.round(amount * factor), { date: `${current}-${String(day).padStart(2, '0')}`, expense_plan_id: plan && back <= 3 ? 'demo-plan-' + plan : null }));
   });
  }
  // One larger trip last month.

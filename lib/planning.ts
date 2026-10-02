@@ -10,16 +10,26 @@ export type Activity = {id:string;action:string;account_id:string;target_id:stri
 export type PlanningData = {movements?:Array<Omit<AssetMovement,'date'> & {occurred_on:string;realized_gain:number|null}>;holdingAccounts?:HoldingAccount[];records:Entry[];categories:Category[];goals:Goal[];occurrences:Occurrence[];activity:Activity[];investmentLinks?:Array<{id:string;account_id:string;account_currency?:string|null;amount:number;investment_history:{occurred_on:string;record_id:string;event_type:string}}>};
 export const emptyPlanning:PlanningData={records:[],categories:[],goals:[],occurrences:[],activity:[]};
 export type DueItem = {key:string;record:Entry;date:string;overdue:boolean;type:'scheduled'|'repayment'|'maturity'};
+/** Schedule occurrences already settled: paid or skipped occurrences, and salary receipts recorded against an income source. */
+export function settledOccurrences(records:Entry[],occurrences:Occurrence[]){
+ return new Set([...occurrences.map(o=>o.record_id+':'+o.due_on),...records.filter(r=>r.kind==='Salary'&&r.frequency==='Once'&&r.income_source_id).map(r=>r.income_source_id+':'+(r.income_due_on??r.date))]);
+}
+export const isRecurringCashFlow=(record:Entry)=>[...income,...expenses].includes(record.kind)&&record.frequency!=='Once';
+export const scheduleAssets=(records:Entry[])=>new Map(records.filter(record=>['Business','Property'].includes(record.kind)).map(record=>[record.id,record]));
+/** Income from a business or property starts no earlier than the asset itself. */
+export function scheduleStart(record:Entry,assetsById:Map<string,Entry>){
+ const asset=assetsById.get((record.kind==='Business income'?record.business_id:record.kind==='Rent income'?record.income_source_id:null)??'');
+ return asset?.date&&asset.date>record.date?asset.date:record.date;
+}
 export function upcomingPayments(records:Entry[],occurrences:Occurrence[],today=depositToday(),through?:string):DueItem[] {
  const end=through??new Date(Date.parse(today+'T00:00:00Z')+31*86400000).toISOString().slice(0,10);
- const settled=new Set([...occurrences.map(o=>o.record_id+':'+o.due_on),...records.filter(r=>r.kind==='Salary'&&r.frequency==='Once'&&r.income_source_id).map(r=>r.income_source_id+':'+(r.income_due_on??r.date))]);
+ const settled=settledOccurrences(records,occurrences);
  const result:DueItem[]=[];
- const assetsById=new Map(records.filter(record=>['Business','Property'].includes(record.kind)).map(record=>[record.id,record]));
+ const assetsById=scheduleAssets(records);
  for(const record of records){
   if(!record.date||record.source_paused)continue;
-  const recurring=[...income,...expenses].includes(record.kind)&&record.frequency!=='Once';
-  const asset=assetsById.get((record.kind==='Business income'?record.business_id:record.kind==='Rent income'?record.income_source_id:null)??'');
-  const start=asset?.date&&asset.date>record.date?asset.date:record.date;
+  const recurring=isRecurringCashFlow(record);
+  const start=scheduleStart(record,assetsById);
   const add=(date:string,type:DueItem['type'])=>{const key=record.id+':'+date;if(date>=start&&date<=end&&!settled.has(key))result.push({key,record,date,type,overdue:date<today});};
   if(recurring){
    for(const date of scheduleDates(record,start,end))add(date,'scheduled');
