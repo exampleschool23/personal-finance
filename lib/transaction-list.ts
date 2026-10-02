@@ -2,6 +2,7 @@ import { shiftMonth } from './budget';
 import { inBusinessFilter } from './business';
 import { income, type Entry } from './finance';
 import { spendingAmount } from './spending';
+import { matchesTags, type TagMatch } from './tags';
 import { isTransactionHistory } from './transaction-history';
 
 /** `two_years` is the longest a transaction read covers; links from a tag or a business open it so older history is in view. */
@@ -17,10 +18,10 @@ export function periodRange(period: TransactionPeriod, today: string) {
  return { from, to };
 }
 
-/** `businesses` holds business ids and `household` (none means all); `tag` is a tag id or `all`. */
-export type TransactionFilter = { query: string; direction: 'all' | 'income' | 'expense'; category: string; businesses: string[]; tag: string };
-export const emptyTransactionFilter: TransactionFilter = { query: '', direction: 'all', category: 'all', businesses: [], tag: 'all' };
-export const filtersTransactions = (filter: TransactionFilter) => !!filter.query || filter.category !== 'all' || filter.direction !== 'all' || filter.businesses.length > 0 || filter.tag !== 'all';
+/** `businesses` holds business ids and `household`, `tags` holds tag ids (none means all); `tagMatch` says whether a row needs any or all of the tags. */
+export type TransactionFilter = { query: string; direction: 'all' | 'income' | 'expense'; category: string; businesses: string[]; tags: string[]; tagMatch: TagMatch };
+export const emptyTransactionFilter: TransactionFilter = { query: '', direction: 'all', category: 'all', businesses: [], tags: [], tagMatch: 'any' };
+export const filtersTransactions = (filter: TransactionFilter) => !!filter.query || filter.category !== 'all' || filter.direction !== 'all' || filter.businesses.length > 0 || filter.tags.length > 0;
 
 /** Recorded income and spending in the period, newest first, matching the search and filters. */
 export function transactionsIn(records: readonly Entry[], range: { from: string; to: string }, today: string, filter: TransactionFilter, categoryName: (record: Entry) => string, tagsOf: (id: string) => readonly string[] = () => []) {
@@ -28,7 +29,7 @@ export function transactionsIn(records: readonly Entry[], range: { from: string;
  return records.filter(record => isTransactionHistory(record) && record.date <= today && record.date.slice(0, 7) >= range.from && record.date.slice(0, 7) <= range.to
   && (filter.direction === 'all' || (filter.direction === 'income') === income.includes(record.kind))
   && (filter.category === 'all' || (record.custom_category_id ?? record.kind) === filter.category)
-  && inBusinessFilter(filter.businesses, record.business_id) && (filter.tag === 'all' || tagsOf(record.id).includes(filter.tag))
+  && inBusinessFilter(filter.businesses, record.business_id) && matchesTags(tagsOf(record.id), filter.tags, filter.tagMatch)
   && (!query || `${record.name} ${record.notes} ${categoryName(record)}`.toLowerCase().includes(query)))
   .sort((a, b) => b.date.localeCompare(a.date) || a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 }

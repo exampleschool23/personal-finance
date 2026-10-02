@@ -86,7 +86,14 @@ test('the list keeps the period, search and filters, newest first, grouped by da
  const owned = rows.map(row => row.id === 'c' ? { ...row, business_id: 'biz' } : row);
  assert.deepEqual(transactionsIn(owned, range, '2026-10-02', { ...emptyTransactionFilter, businesses: ['biz'] }, name).map(row => row.id), ['c']);
  assert.deepEqual(transactionsIn(owned, range, '2026-10-02', { ...emptyTransactionFilter, businesses: ['household'] }, name).map(row => row.id), ['h', 'a', 'b'], 'the household is everything without a business');
- assert.deepEqual(transactionsIn(owned, range, '2026-10-02', { ...emptyTransactionFilter, tag: 't' }, name, id => id === 'a' ? ['t'] : []).map(row => row.id), ['a']);
+ assert.deepEqual(transactionsIn(owned, range, '2026-10-02', { ...emptyTransactionFilter, tags: ['t'] }, name, id => id === 'a' ? ['t'] : []).map(row => row.id), ['a']);
+ // Several tags: any of them by default, or only rows carrying all of them.
+ const tagged = { a: ['trip', 'tax'], b: ['trip'], c: ['tax'] };
+ const tagsOf = id => tagged[id] ?? [];
+ assert.deepEqual(transactionsIn(owned, range, '2026-10-02', { ...emptyTransactionFilter, tags: ['trip', 'tax'] }, name, tagsOf).map(row => row.id), ['c', 'a', 'b']);
+ assert.deepEqual(transactionsIn(owned, range, '2026-10-02', { ...emptyTransactionFilter, tags: ['trip', 'tax'], tagMatch: 'all' }, name, tagsOf).map(row => row.id), ['a']);
+ assert.deepEqual(transactionsIn(owned, range, '2026-10-02', { ...emptyTransactionFilter, tags: ['tax'], tagMatch: 'all', businesses: ['household'] }, name, tagsOf).map(row => row.id), ['a'], 'tags combine with the other filters');
+ assert.deepEqual(transactionsIn(owned, range, '2026-10-02', { ...emptyTransactionFilter, tagMatch: 'all' }, name, tagsOf).map(row => row.id), ['h', 'c', 'a', 'b'], 'no chosen tags shows everything');
  const convert = (amount, unit) => unit === 'USD' ? amount : unit === 'UZS' ? amount / 12500 : null;
  const days = groupByDay(list, convert);
  assert.deepEqual(days.map(day => [day.date, day.total]), [['2026-10-02', null], ['2026-10-01', 996]]);
@@ -178,7 +185,9 @@ test('business helpers: colours, filters, who can take a business, account group
 });
 
 test('tags: counts, tags of a transaction, what can be tagged, and the tag schema', () => {
- const { tagsByRecord, tagCounts, canTag, tagSchemas } = loadTS('lib/tags.ts');
+ const { tagsByRecord, tagCounts, canTag, tagSchemas, matchesTags } = loadTS('lib/tags.ts');
+ assert.ok(matchesTags([], [], 'all') && matchesTags(['trip'], ['trip', 'tax'], 'any') && matchesTags(['tax', 'trip', 'x'], ['trip', 'tax'], 'all'));
+ assert.ok(!matchesTags(['trip'], ['trip', 'tax'], 'all') && !matchesTags([], ['trip'], 'any'));
  const links = [{ record_id: 'a', tag_id: 'trip' }, { record_id: 'a', tag_id: 'tax' }, { record_id: 'b', tag_id: 'trip' }];
  assert.deepEqual([...tagsByRecord(links)], [['a', ['trip', 'tax']], ['b', ['trip']]]);
  assert.deepEqual([...tagCounts(links)], [['trip', 2], ['tax', 1]]);

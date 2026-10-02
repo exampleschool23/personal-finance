@@ -26,6 +26,15 @@ export function tagCounts(links: readonly TagLink[]) {
  for (const link of links) counts.set(link.tag_id, (counts.get(link.tag_id) ?? 0) + 1);
  return counts;
 }
+/** How a filter with several tags matches: a transaction with any of them, or only those with all of them. */
+export const tagMatches = ['any', 'all'] as const;
+export type TagMatch = typeof tagMatches[number];
+/** Whether a transaction's tags pass a tag filter. No chosen tags lets everything through. */
+export function matchesTags(recordTags: readonly string[], chosen: readonly string[], match: TagMatch) {
+ if (!chosen.length) return true;
+ return match === 'all' ? chosen.every(tag => recordTags.includes(tag)) : chosen.some(tag => recordTags.includes(tag));
+}
+
 /** Only recorded income and spending carry tags, as `public.tag_transactions` enforces. */
 export const canTag = (record: Pick<Entry, 'kind' | 'frequency' | 'history_event_id'>) => record.frequency === 'Once' && [...income, ...expenses].includes(record.kind) && !record.history_event_id;
 
