@@ -1,5 +1,6 @@
 import vinext from "vinext";
-import { defineConfig } from "vite";
+import { createConnection, createServer, type AddressInfo } from "node:net";
+import { defineConfig, type Plugin } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { readExecutionProfile } from "./scripts/execution-profile.mjs";
 import { sites } from "./build/sites-vite-plugin";
@@ -35,6 +36,34 @@ const localBindingConfig = {
     : [],
 };
 
+// macOS AirPlay Receiver listens on port 5000 too. Vite binds "localhost" to ::1
+// only, so a browser that reconnects over 127.0.0.1 gets AirPlay's 403 for the
+// stylesheets and scripts and the page stays unstyled on "Loading your
+// workspace…". Answer on the IPv4 loopback as well by forwarding it to Vite.
+function ipv4LoopbackForwarder(): Plugin {
+  return {
+    name: "ipv4-loopback-forwarder",
+    apply: "serve",
+    configureServer(server) {
+      const http = server.httpServer;
+      http?.once("listening", () => {
+        const { address, port } = http.address() as AddressInfo;
+        if (address !== "::1") return;
+        const forwarder = createServer((client) => {
+          const upstream = createConnection({ host: "::1", port });
+          client.pipe(upstream).pipe(client);
+          client.on("error", () => upstream.destroy());
+          upstream.on("error", () => client.destroy());
+        });
+        forwarder.on("error", (error) =>
+          server.config.logger.warn(`127.0.0.1:${port} unavailable: ${error.message}`));
+        forwarder.listen(port, "127.0.0.1");
+        http.once("close", () => forwarder.close());
+      });
+    },
+  };
+}
+
 export default defineConfig(async () => {
   // Use Miniflare's local Request.cf placeholder unless fetching is requested.
   process.env.CLOUDFLARE_CF_FETCH_ENABLED ??= "false";
@@ -57,6 +86,7 @@ export default defineConfig(async () => {
       ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
     },
     plugins: [
+      ...(!managedLinux ? [ipv4LoopbackForwarder()] : []),
       vinext(),
       sites({ mockAuth: !managedLinux }),
       cloudflare({
