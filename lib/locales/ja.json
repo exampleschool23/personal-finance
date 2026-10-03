@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "スペースキーでカードを持ち上げ、矢印キーで移動し、もう一度スペースキーで配置します。",
   "Plan this month’s spending to track it here.": "今月の支出を計画すると、ここで管理できます。",
   "Reset to default": "デフォルトに戻す",
+  "Rearrange cards": "カードを並べ替え",
   "Set up a budget": "予算を設定",
   "Bars": "棒グラフ",
   "Breakdown": "内訳",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "{name} のオーナーを {owner} に変更しました",
   "Owner of {name} changed to {owner}, along with {count} records": "{name} のオーナーを {count} 件の記録とともに {owner} に変更しました",
   "Transactions and holdings follow the owner of their account.": "取引と保有資産は口座のオーナーに従います。",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "パートナーや家族と家計を共有します。編集できる人は記録を追加・変更でき、閲覧できる人は見るだけです。口座と取引は、個人のものにも共有にもできます。サインイン、設定、Telegram、バックアップはそれぞれ個人のままです。"
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "パートナーや家族と家計を共有します。編集できる人は記録を追加・変更でき、閲覧できる人は見るだけです。口座と取引は、個人のものにも共有にもできます。サインイン、設定、Telegram、バックアップはそれぞれ個人のままです。",
+  "or sign up with email": "またはメールで登録",
+  "Already have an account?": "すでにアカウントをお持ちですか？",
+  "Search countries": "国を検索",
+  "No matching countries.": "一致する国がありません。",
+  "Country code": "国番号"
 }

@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Bonyeza nafasi ili kuinua kadi, vitufe vya mishale kuisogeza, na nafasi tena kuiweka.",
   "Plan this month’s spending to track it here.": "Panga matumizi ya mwezi huu ili uyafuatilie hapa.",
   "Reset to default": "Rejesha chaguomsingi",
+  "Rearrange cards": "Panga upya kadi",
   "Set up a budget": "Weka bajeti",
   "Bars": "Pau",
   "Breakdown": "Mchanganuo",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "Mmiliki wa {name} amebadilishwa kuwa {owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "Mmiliki wa {name} amebadilishwa kuwa {owner}, pamoja na rekodi {count}",
   "Transactions and holdings follow the owner of their account.": "Miamala na vitu ulivyomiliki hufuata mmiliki wa akaunti yake.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Shiriki fedha zako na mwenzi au familia. Wanaoweza kuhariri huongeza na kubadilisha rekodi; wanaoweza kuangalia huangalia tu. Akaunti na miamala zinaweza kuwa za mtu mmoja au za pamoja. Kila mtu hubaki na kuingia kwake, mapendeleo, Telegram na nakala rudufu."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Shiriki fedha zako na mwenzi au familia. Wanaoweza kuhariri huongeza na kubadilisha rekodi; wanaoweza kuangalia huangalia tu. Akaunti na miamala zinaweza kuwa za mtu mmoja au za pamoja. Kila mtu hubaki na kuingia kwake, mapendeleo, Telegram na nakala rudufu.",
+  "or sign up with email": "au jisajili kwa barua pepe",
+  "Already have an account?": "Tayari una akaunti?",
+  "Search countries": "Tafuta nchi",
+  "No matching countries.": "Hakuna nchi zinazolingana.",
+  "Country code": "Msimbo wa nchi"
 }

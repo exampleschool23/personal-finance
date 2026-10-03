@@ -1,6 +1,7 @@
 "use client";
-import { closestCorners, DndContext, useDroppable, type DragEndEvent, type DragOverEvent } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { closestCorners, DndContext, KeyboardSensor, MouseSensor, TouchSensor, useDroppable, useSensor, useSensors, type DragEndEvent, type DragOverEvent } from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { Move } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { SortableItem, sortableAccessibility, useSortableSensors } from '@/components/presentation-foundation/sortable';
@@ -12,10 +13,9 @@ import { columnOf, dashboardCardLabels, dashboardColumnIds, dashboardColumns, de
 const sameLayout = (a: DashboardLayout, b: DashboardLayout) => JSON.stringify(a.columns) === JSON.stringify(b.columns);
 
 /** Drag and drop: a card follows the pointer (or the arrow keys), the others make room, and the layout is saved once on drop. */
-function useCardDrag(layout: DashboardLayout, onChange: (layout: DashboardLayout) => void) {
+function useCardDrag(layout: DashboardLayout, onChange: (layout: DashboardLayout) => void, sensors: ReturnType<typeof useSensors>) {
  const { t } = useLanguage();
  const [preview, setPreview] = useState<DashboardLayout | null>(null);
- const sensors = useSortableSensors();
  // Crossing into the other column moves the card there while it is held, so that column opens a gap for it.
  function over({ active, over }: DragOverEvent) {
   if (!over) return;
@@ -44,13 +44,18 @@ function DropColumn({ id, cards, className, children }: { id: DashboardColumn; c
  return <SortableContext id={id} items={cards} strategy={verticalListSortingStrategy}><div ref={setNodeRef} className={className} data-column={id}>{children}</div></SortableContext>;
 }
 
-/** The dashboard's two columns. Hover a card for its handle and drag it anywhere in either column. */
-export function DashboardBoard({ layout, cards, onChange }: { layout: DashboardLayout; cards: Record<DashboardCard, ReactNode>; onChange: (layout: DashboardLayout) => void }) {
+/** While rearranging, the whole card is the handle: a mouse lifts it after a 4px move, a finger after a short hold, so the page still scrolls. */
+function useBoardSensors() {
+ return useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 4 } }), useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
+}
+
+/** The dashboard's two columns. Cards only move in rearrange mode, where they wiggle and can be dragged anywhere in either column. */
+export function DashboardBoard({ layout, cards, arranging = false, onChange }: { layout: DashboardLayout; cards: Record<DashboardCard, ReactNode>; arranging?: boolean; onChange: (layout: DashboardLayout) => void }) {
  const { t } = useLanguage();
- const { shown, context } = useCardDrag(layout, onChange);
+ const { shown, context } = useCardDrag(layout, onChange, useBoardSensors());
  const columns = dashboardColumns(shown);
  return <DndContext id="dashboard-board" {...context}>
-  <div className="dashboard-grid">{dashboardColumnIds.map(column => {
+  <div className="dashboard-grid" data-arranging={arranging || undefined}>{dashboardColumnIds.map(column => {
    const placed = columns[column].filter(card => cards[card]);
    return <DropColumn key={column} id={column} cards={placed} className="dashboard-column">{placed.map(card => <SortableItem key={card} id={card} label={t(dashboardCardLabels[card])} className="dashboard-card">{cards[card]}</SortableItem>)}</DropColumn>;
   })}</div>
@@ -67,9 +72,9 @@ function CustomizeRow({ card, hidden, onToggle }: { card: DashboardCard; hidden:
 }
 
 /** Customize: every card in its column, a switch to show or hide it, and the same drag handle to move it. */
-export function CustomizeDashboardDialog({ layout, onChange, onClose }: { layout: DashboardLayout; onChange: (layout: DashboardLayout) => void; onClose: () => void }) {
+export function CustomizeDashboardDialog({ layout, onChange, onRearrange, onClose }: { layout: DashboardLayout; onChange: (layout: DashboardLayout) => void; onRearrange: () => void; onClose: () => void }) {
  const { t } = useLanguage();
- const { shown, context } = useCardDrag(layout, onChange);
+ const { shown, context } = useCardDrag(layout, onChange, useSortableSensors());
  return <Dialog open onOpenChange={open => { if (!open) onClose(); }}>
   <DialogContent className="customize-dialog sm:max-w-2xl">
    <DialogTitle>{t('Customize dashboard')}</DialogTitle>
@@ -78,7 +83,7 @@ export function CustomizeDashboardDialog({ layout, onChange, onClose }: { layout
      <ul>{shown.columns[column].map(card => <CustomizeRow key={card} card={card} hidden={shown.hidden.includes(card)} onToggle={() => onChange(toggleCard(layout, card))}/>)}</ul>
     </DropColumn>)}</div>
    </DndContext>
-   <div className="customize-footer"><Button variant="outline" size="sm" onClick={() => onChange(defaultDashboardLayout)}>{t('Reset to default')}</Button></div>
+   <div className="customize-footer"><Button variant="outline" size="sm" onClick={() => onChange(defaultDashboardLayout)}>{t('Reset to default')}</Button><Button size="sm" onClick={onRearrange}><Move size={16} aria-hidden="true"/>{t('Rearrange cards')}</Button></div>
   </DialogContent>
  </Dialog>;
 }

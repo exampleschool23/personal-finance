@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "按空格键拿起卡片，用方向键移动，再按空格键放下。",
   "Plan this month’s spending to track it here.": "规划本月支出，即可在此跟踪。",
   "Reset to default": "恢复默认",
+  "Rearrange cards": "调整卡片顺序",
   "Set up a budget": "设置预算",
   "Bars": "柱状图",
   "Breakdown": "明细",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "{name} 的所有者已更改为 {owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "{name} 的所有者已更改为 {owner}，连同 {count} 条记录",
   "Transactions and holdings follow the owner of their account.": "交易和持仓跟随其账户的所有者。",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "与伴侣或家人共享财务。可编辑的人可以添加和更改记录；可查看的人只能查看。账户和交易可以属于某个人，也可以共有。每个人保留自己的登录、偏好设置、Telegram 和备份。"
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "与伴侣或家人共享财务。可编辑的人可以添加和更改记录；可查看的人只能查看。账户和交易可以属于某个人，也可以共有。每个人保留自己的登录、偏好设置、Telegram 和备份。",
+  "or sign up with email": "或使用电子邮箱注册",
+  "Already have an account?": "已有账户？",
+  "Search countries": "搜索国家/地区",
+  "No matching countries.": "没有匹配的国家/地区。",
+  "Country code": "国家/地区代码"
 }

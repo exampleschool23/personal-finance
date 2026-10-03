@@ -7,7 +7,7 @@ const id=uuid, amount=nonnegativeAmount;
 const base=z.object({exchange_rate:z.number().finite().positive().max(1e15).optional(),id,account_id:id,target_id:id.nullable().optional(),amount,received:amount.default(0),fee:amount.default(0),date,notes:notes});
 const investmentTarget=z.object({holding_account_id:id,asset_kind:z.enum(['Stock','Crypto']),asset_symbol:z.string().trim().max(15),target:amount.positive().max(1e12),monthly_contribution:amount.max(1e12).nullable().default(null)}).refine(v=>instrumentFor({kind:v.asset_kind,name:v.asset_symbol})?.symbol===v.asset_symbol);
 export const planningSchemas={
- exception:z.object({target_id:id,date,skip:z.boolean()}),
+ exception:z.object({target_id:id,date,skip:z.boolean(),notes:notes}),
  transfer:base.refine(v=>!!v.target_id&&v.target_id!==v.account_id&&v.amount>0&&v.received>0),
  reconcile:base.refine(v=>!v.target_id&&v.received===0&&v.fee===0),
  repayment:base.refine(v=>!!v.target_id&&v.amount>0&&v.received===0),

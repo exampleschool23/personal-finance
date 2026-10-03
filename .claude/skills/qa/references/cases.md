@@ -34,7 +34,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | AUTH-008 | P1 | Wrong password | User types a wrong password (user does it) | Clear error, no account details leaked |
 | AUTH-009 | P1 | `/benchmarks` | Open | Redirects to `/` |
 | AUTH-010 | P1 | Sign out | Drawer → Sign out | Back to signed-out page; Back button does not reveal data |
-| AUTH-011 | P1 | Create account page | From `/sign-in` → "Create an account" (`/auth/access?mode=signup`) | Sign-up form only, never the recovery form; 8-character minimum stated; Brand header; Back to sign-in link |
+| AUTH-011 | P1 | Create account page | From `/sign-in` → "Create an account" (`/auth/access?mode=signup`) | Same card as sign-in: Google, phone (when set up), "or sign up with email", the sign-up form (never recovery), 8-character hint under New password, "Already have an account? Sign in", Explore sample workspace (opens the sample via `/sign-in?sample=1`) |
 | AUTH-012 | P1 | Password recovery page | "Forgot password?" (`/auth/access`) | Recovery form; submitting an unknown email gives the same neutral message as a known one (no account enumeration) |
 | AUTH-013 | P1 | Email confirmation link | Open `/auth/confirm` with no or a bad `token_hash` | Clear "link is invalid or expired" state with a way back to sign-in; no crash, no blank page |
 | AUTH-014 | P1 | Connect Telegram from the web | From the bot's web sign-in button, open `/connect/telegram` signed out, then signed in | Signed out → sign-in card; signed in → confirm screen naming the Telegram account; Cancel → "cancelled"; Confirm → "connected" and the bot says so; reused link → "expired" |

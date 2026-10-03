@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "কার্ড তুলতে স্পেস চাপুন, সরাতে তীর কী এবং রাখতে আবার স্পেস চাপুন।",
   "Plan this month’s spending to track it here.": "এখানে ট্র্যাক করতে এই মাসের খরচের পরিকল্পনা করুন।",
   "Reset to default": "ডিফল্টে ফিরিয়ে নিন",
+  "Rearrange cards": "কার্ডের ক্রম বদলান",
   "Set up a budget": "বাজেট সেট করুন",
   "Bars": "বার",
   "Breakdown": "বিভাজন",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "{name}-এর মালিক বদলে {owner} করা হয়েছে",
   "Owner of {name} changed to {owner}, along with {count} records": "{count}টি রেকর্ডসহ {name}-এর মালিক বদলে {owner} করা হয়েছে",
   "Transactions and holdings follow the owner of their account.": "লেনদেন ও হোল্ডিং তাদের অ্যাকাউন্টের মালিককে অনুসরণ করে।",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "সঙ্গী বা পরিবারের সাথে আপনার আর্থিক তথ্য শেয়ার করুন। যাঁরা সম্পাদনা করতে পারেন তাঁরা রেকর্ড যোগ ও পরিবর্তন করেন; যাঁরা দেখতে পারেন তাঁরা শুধু দেখেন। অ্যাকাউন্ট ও লেনদেন একজনের হতে পারে অথবা যৌথ হতে পারে। প্রত্যেকের নিজস্ব সাইন-ইন, পছন্দ, Telegram ও ব্যাকআপ থাকে।"
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "সঙ্গী বা পরিবারের সাথে আপনার আর্থিক তথ্য শেয়ার করুন। যাঁরা সম্পাদনা করতে পারেন তাঁরা রেকর্ড যোগ ও পরিবর্তন করেন; যাঁরা দেখতে পারেন তাঁরা শুধু দেখেন। অ্যাকাউন্ট ও লেনদেন একজনের হতে পারে অথবা যৌথ হতে পারে। প্রত্যেকের নিজস্ব সাইন-ইন, পছন্দ, Telegram ও ব্যাকআপ থাকে।",
+  "or sign up with email": "অথবা ইমেইল দিয়ে সাইন আপ করুন",
+  "Already have an account?": "আগেই অ্যাকাউন্ট আছে?",
+  "Search countries": "দেশ খুঁজুন",
+  "No matching countries.": "কোনো মিল থাকা দেশ নেই।",
+  "Country code": "দেশের কোড"
 }

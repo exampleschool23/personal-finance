@@ -40,3 +40,15 @@ test('dashboard cards drag within and across columns, old saves load and every c
  assert.ok(!workspacePreferenceSchema.safeParse({ key: 'dashboard', data: { columns: { left: ['hack'], right: [] }, hidden: [] } }).success);
  assert.ok(!workspacePreferenceSchema.safeParse({ key: 'dashboard', data: { order: ['hack'], hidden: [] } }).success);
 });
+
+test('dashboard cards move only in rearrange mode, which wiggles them until Done', async () => {
+ const { readFileSync } = await import('node:fs');
+ const css = readFileSync('app/globals.css', 'utf8'), board = readFileSync('components/dashboard-board.tsx', 'utf8'), screen = readFileSync('components/workspace/screens/overview-screen.tsx', 'utf8');
+ assert.match(css, /\.dashboard-card>\.drag-handle\{display:none\}/, 'no handles outside rearrange mode');
+ assert.match(css, /\.dashboard-grid\[data-arranging\] \.dashboard-card>\.panel\{[^}]*animation:card-wiggle/, 'cards wiggle while rearranging');
+ assert.match(css, /prefers-reduced-motion:reduce\)\{\.dashboard-grid\[data-arranging\] \.dashboard-card>\.panel\{animation:none\}/, 'reduced motion keeps them still');
+ assert.match(board, /data-arranging=\{arranging \|\| undefined\}/);
+ assert.match(board, /TouchSensor, \{ activationConstraint: \{ delay: \d+/, 'a finger lifts a card after a hold, so the page still scrolls');
+ assert.match(board, /onClick=\{onRearrange\}.*Rearrange cards/);
+ assert.match(screen, /arranging \? <Button onClick=\{\(\) => setArranging\(false\)\}>.*'Done'/, 'Done ends rearrange mode');
+});

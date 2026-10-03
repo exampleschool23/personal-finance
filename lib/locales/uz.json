@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Kartani olish uchun boʻshliq tugmasini, surish uchun strelkalarni bosing va qoʻyish uchun yana boʻshliqni bosing.",
   "Plan this month’s spending to track it here.": "Shu yerda kuzatish uchun bu oy xarajatlarini rejalashtiring.",
   "Reset to default": "Standart holatga qaytarish",
+  "Rearrange cards": "Kartalarni joylashtirish",
   "Set up a budget": "Byudjet tuzish",
   "Bars": "Ustunlar",
   "Breakdown": "Taqsimot",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "{name} egasi {owner}ga o‘zgartirildi",
   "Owner of {name} changed to {owner}, along with {count} records": "{name} egasi {count} ta yozuv bilan birga {owner}ga o‘zgartirildi",
   "Transactions and holdings follow the owner of their account.": "Operatsiyalar va aktivlar o‘z hisobining egasiga ergashadi.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Moliyangizni sherigingiz yoki oilangiz bilan ulashing. Tahrirlay oladiganlar yozuv qo‘shadi va o‘zgartiradi; ko‘ra oladiganlar faqat ko‘radi. Hisoblar va operatsiyalar bir kishiga tegishli yoki umumiy bo‘lishi mumkin. Har kim o‘z kirishi, sozlamalari, Telegrami va zaxira nusxalarini saqlaydi."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Moliyangizni sherigingiz yoki oilangiz bilan ulashing. Tahrirlay oladiganlar yozuv qo‘shadi va o‘zgartiradi; ko‘ra oladiganlar faqat ko‘radi. Hisoblar va operatsiyalar bir kishiga tegishli yoki umumiy bo‘lishi mumkin. Har kim o‘z kirishi, sozlamalari, Telegrami va zaxira nusxalarini saqlaydi.",
+  "or sign up with email": "yoki email orqali ro‘yxatdan o‘ting",
+  "Already have an account?": "Hisobingiz bormi?",
+  "Search countries": "Davlatlarni qidirish",
+  "No matching countries.": "Mos davlat topilmadi.",
+  "Country code": "Davlat kodi"
 }

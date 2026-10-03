@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "הקישו על רווח כדי להרים כרטיס, על החצים כדי להזיז אותו ושוב על רווח כדי לשחרר אותו.",
   "Plan this month’s spending to track it here.": "תכנן את ההוצאות של החודש כדי לעקוב אחריהן כאן.",
   "Reset to default": "איפוס לברירת המחדל",
+  "Rearrange cards": "סידור מחדש של הכרטיסים",
   "Set up a budget": "הגדרת תקציב",
   "Bars": "עמודות",
   "Breakdown": "פירוט",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "הבעלים של {name} שונו ל-{owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "הבעלים של {name} שונו ל-{owner}, יחד עם {count} רשומות",
   "Transactions and holdings follow the owner of their account.": "עסקאות ואחזקות משויכות לבעלים של החשבון שלהן.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "שתפו את הכספים עם בן/בת הזוג או המשפחה. מי שיכול לערוך מוסיף ומשנה רשומות; מי שיכול לצפות רק מסתכל. חשבונות ועסקאות יכולים להיות שייכים לאדם אחד או משותפים. לכל אחד נשארים הכניסה, ההעדפות, Telegram והגיבויים שלו."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "שתפו את הכספים עם בן/בת הזוג או המשפחה. מי שיכול לערוך מוסיף ומשנה רשומות; מי שיכול לצפות רק מסתכל. חשבונות ועסקאות יכולים להיות שייכים לאדם אחד או משותפים. לכל אחד נשארים הכניסה, ההעדפות, Telegram והגיבויים שלו.",
+  "or sign up with email": "או הירשמו עם אימייל",
+  "Already have an account?": "כבר יש לכם חשבון?",
+  "Search countries": "חיפוש מדינה",
+  "No matching countries.": "אין מדינות תואמות.",
+  "Country code": "קידומת מדינה"
 }

@@ -100,7 +100,7 @@ export function UpcomingPage({ data, save, currency, rates }: Props) {
      : <Button size="sm" variant="outline" onClick={() => payDebt(item.record)}>{t('Record payment')}</Button>}</div></td>
    </tr>)}</tbody></table></div> : <EmptyState icon={<CalendarCheck aria-hidden="true"/>} description={t('No unpaid items in this period.')}/>}
   </section>
-  <details className="panel tools-panel"><summary>{t('Skipped occurrences')}{skipped.length > 0 && <Count value={skipped.length}/>}</summary><ul className="tool-list">{skipped.map(o => <li key={o.id}><span>{data.records.find(r => r.id === o.record_id)?.name} · {formatDate(o.due_on, locale)}</span><Button size="sm" disabled={busy} variant="outline" onClick={() => run(() => save('exception', { target_id: o.record_id, date: o.due_on, skip: false }))}>{t('Restore occurrence')}</Button></li>)}</ul></details>
+  <details className="panel tools-panel"><summary>{t('Skipped occurrences')}{skipped.length > 0 && <Count value={skipped.length}/>}</summary><ul className="tool-list">{skipped.map(o => <li key={o.id}><span>{data.records.find(r => r.id === o.record_id)?.name} · {formatDate(o.due_on, locale)}{o.notes && <> · {o.notes}</>}</span><Button size="sm" disabled={busy} variant="outline" onClick={() => run(() => save('exception', { target_id: o.record_id, date: o.due_on, skip: false }))}>{t('Restore occurrence')}</Button></li>)}</ul></details>
   {operation && <AccountOperation operation={operation} records={data.records} save={save} onClose={() => setOperation(null)}/>}
  </>;
 }

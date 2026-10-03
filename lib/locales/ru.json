@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Нажмите пробел, чтобы взять карточку, стрелки — чтобы переместить её, и снова пробел — чтобы отпустить.",
   "Plan this month’s spending to track it here.": "Запланируйте расходы на этот месяц, чтобы отслеживать их здесь.",
   "Reset to default": "Сбросить по умолчанию",
+  "Rearrange cards": "Переставить карточки",
   "Set up a budget": "Создать бюджет",
   "Bars": "Столбцы",
   "Breakdown": "Разбивка",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "{name}: владелец изменён на {owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "{name}: владелец изменён на {owner}, вместе с записями ({count})",
   "Transactions and holdings follow the owner of their account.": "Операции и активы следуют за владельцем своего счёта.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Делитесь финансами с партнёром или семьёй. Те, кто может редактировать, добавляют и меняют записи; те, кто может просматривать, только смотрят. Счета и операции могут принадлежать одному человеку или быть общими. У каждого остаются свой вход, настройки, Telegram и резервные копии."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Делитесь финансами с партнёром или семьёй. Те, кто может редактировать, добавляют и меняют записи; те, кто может просматривать, только смотрят. Счета и операции могут принадлежать одному человеку или быть общими. У каждого остаются свой вход, настройки, Telegram и резервные копии.",
+  "or sign up with email": "или зарегистрируйтесь по email",
+  "Already have an account?": "Уже есть аккаунт?",
+  "Search countries": "Поиск страны",
+  "No matching countries.": "Нет подходящих стран.",
+  "Country code": "Код страны"
 }

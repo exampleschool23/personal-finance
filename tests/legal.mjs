@@ -32,7 +32,7 @@ test('both pages exist, are public, and link to each other; sign-in and sign-up 
  }
  const page=fs.readFileSync('components/legal-page.tsx','utf8');
  assert.match(page,/legalPaths\[other\]/);assert.match(page,/formatDate\(legalUpdated,locale\)/);
- assert.match(fs.readFileSync('components/sign-in-screen.tsx','utf8'),/legalPaths\.terms[\s\S]*legalPaths\.privacy/);
- assert.match(fs.readFileSync('components/account-access-panel.tsx','utf8'),/mode==='signup'&&<p className="legal-consent">/);
+ assert.match(fs.readFileSync('components/auth-card.tsx','utf8'),/legalPaths\.terms[\s\S]*legalPaths\.privacy/);
+ assert.match(fs.readFileSync('components/account-access-card.tsx','utf8'),/<p className=\{styles\.consent\}>\{t\('By creating an account/);
  for(const key of ['Terms of use','Privacy policy','Last updated: {date}','This document is available in English.','Back to Hoggish','Legal','By creating an account, you agree to the terms of use and privacy policy.'])assert.ok(en[key],key);
 });

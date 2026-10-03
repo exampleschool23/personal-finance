@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "스페이스 키로 카드를 들고, 화살표 키로 옮긴 다음, 스페이스 키를 다시 눌러 놓으세요.",
   "Plan this month’s spending to track it here.": "이번 달 지출을 계획하면 여기서 추적할 수 있어요.",
   "Reset to default": "기본값으로 재설정",
+  "Rearrange cards": "카드 재배열",
   "Set up a budget": "예산 설정",
   "Bars": "막대",
   "Breakdown": "세부 내역",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "{name}의 소유자를 {owner}(으)로 변경함",
   "Owner of {name} changed to {owner}, along with {count} records": "{name}의 소유자를 기록 {count}건과 함께 {owner}(으)로 변경함",
   "Transactions and holdings follow the owner of their account.": "거래와 보유 자산은 해당 계좌의 소유자를 따릅니다.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "파트너나 가족과 재정을 공유하세요. 편집 권한이 있는 사람은 기록을 추가하고 변경하며, 보기 권한이 있는 사람은 보기만 합니다. 계좌와 거래는 한 사람의 것이거나 공동 소유일 수 있습니다. 로그인, 환경설정, Telegram, 백업은 각자 따로 유지됩니다."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "파트너나 가족과 재정을 공유하세요. 편집 권한이 있는 사람은 기록을 추가하고 변경하며, 보기 권한이 있는 사람은 보기만 합니다. 계좌와 거래는 한 사람의 것이거나 공동 소유일 수 있습니다. 로그인, 환경설정, Telegram, 백업은 각자 따로 유지됩니다.",
+  "or sign up with email": "또는 이메일로 가입",
+  "Already have an account?": "이미 계정이 있으신가요?",
+  "Search countries": "국가 검색",
+  "No matching countries.": "일치하는 국가가 없습니다.",
+  "Country code": "국가 번호"
 }

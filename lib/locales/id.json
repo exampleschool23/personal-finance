@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Tekan spasi untuk mengambil kartu, tombol panah untuk memindahkannya, lalu spasi lagi untuk meletakkannya.",
   "Plan this month’s spending to track it here.": "Rencanakan pengeluaran bulan ini untuk melacaknya di sini.",
   "Reset to default": "Kembalikan ke default",
+  "Rearrange cards": "Atur ulang kartu",
   "Set up a budget": "Buat anggaran",
   "Bars": "Batang",
   "Breakdown": "Rincian",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "Pemilik {name} diubah menjadi {owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "Pemilik {name} diubah menjadi {owner}, beserta {count} catatan",
   "Transactions and holdings follow the owner of their account.": "Transaksi dan kepemilikan mengikuti pemilik rekeningnya.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Bagikan keuangan Anda dengan pasangan atau keluarga. Yang dapat mengedit menambah dan mengubah catatan; yang dapat melihat hanya melihat. Rekening dan transaksi dapat dimiliki satu orang atau bersama. Setiap orang tetap memiliki login, preferensi, Telegram, dan cadangan sendiri."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Bagikan keuangan Anda dengan pasangan atau keluarga. Yang dapat mengedit menambah dan mengubah catatan; yang dapat melihat hanya melihat. Rekening dan transaksi dapat dimiliki satu orang atau bersama. Setiap orang tetap memiliki login, preferensi, Telegram, dan cadangan sendiri.",
+  "or sign up with email": "atau daftar dengan email",
+  "Already have an account?": "Sudah punya akun?",
+  "Search countries": "Cari negara",
+  "No matching countries.": "Tidak ada negara yang cocok.",
+  "Country code": "Kode negara"
 }

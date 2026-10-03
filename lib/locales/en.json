@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Press space to pick up a card, the arrow keys to move it and space again to drop it.",
   "Plan this month’s spending to track it here.": "Plan this month’s spending to track it here.",
   "Reset to default": "Reset to default",
+  "Rearrange cards": "Rearrange cards",
   "Set up a budget": "Set up a budget",
   "Bars": "Bars",
   "Breakdown": "Breakdown",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "Owner of {name} changed to {owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "Owner of {name} changed to {owner}, along with {count} records",
   "Transactions and holdings follow the owner of their account.": "Transactions and holdings follow the owner of their account.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.",
+  "or sign up with email": "or sign up with email",
+  "Already have an account?": "Already have an account?",
+  "Search countries": "Search countries",
+  "No matching countries.": "No matching countries.",
+  "Country code": "Country code"
 }

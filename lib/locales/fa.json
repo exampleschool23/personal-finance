@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "برای برداشتن کارت فاصله را بزنید، با کلیدهای جهت‌نما آن را جابه‌جا کنید و برای رها کردن دوباره فاصله را بزنید.",
   "Plan this month’s spending to track it here.": "هزینه‌های این ماه را برنامه‌ریزی کنید تا اینجا پیگیری شوند.",
   "Reset to default": "بازنشانی به پیش‌فرض",
+  "Rearrange cards": "چیدمان دوباره کارت‌ها",
   "Set up a budget": "تنظیم بودجه",
   "Bars": "میله‌ای",
   "Breakdown": "تفکیک",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "مالک {name} به {owner} تغییر کرد",
   "Owner of {name} changed to {owner}, along with {count} records": "مالک {name} همراه با {count} سابقه به {owner} تغییر کرد",
   "Transactions and holdings follow the owner of their account.": "تراکنش‌ها و دارایی‌ها از مالک حساب خود پیروی می‌کنند.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "امور مالی خود را با همراه یا خانواده به اشتراک بگذارید. کسانی که می‌توانند ویرایش کنند سوابق را اضافه و تغییر می‌دهند؛ کسانی که فقط می‌توانند ببینند فقط مشاهده می‌کنند. حساب‌ها و تراکنش‌ها می‌توانند متعلق به یک نفر یا مشترک باشند. ورود، تنظیمات، Telegram و پشتیبان‌های هر نفر شخصی می‌ماند."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "امور مالی خود را با همراه یا خانواده به اشتراک بگذارید. کسانی که می‌توانند ویرایش کنند سوابق را اضافه و تغییر می‌دهند؛ کسانی که فقط می‌توانند ببینند فقط مشاهده می‌کنند. حساب‌ها و تراکنش‌ها می‌توانند متعلق به یک نفر یا مشترک باشند. ورود، تنظیمات، Telegram و پشتیبان‌های هر نفر شخصی می‌ماند.",
+  "or sign up with email": "یا با ایمیل ثبت‌نام کنید",
+  "Already have an account?": "از قبل حساب دارید؟",
+  "Search countries": "جستجوی کشور",
+  "No matching countries.": "کشوری مطابق نیست.",
+  "Country code": "کد کشور"
 }

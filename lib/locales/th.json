@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "กด Space เพื่อหยิบการ์ด ใช้ปุ่มลูกศรเพื่อย้าย แล้วกด Space อีกครั้งเพื่อวาง",
   "Plan this month’s spending to track it here.": "วางแผนการใช้จ่ายของเดือนนี้เพื่อติดตามที่นี่",
   "Reset to default": "รีเซ็ตเป็นค่าเริ่มต้น",
+  "Rearrange cards": "จัดเรียงการ์ดใหม่",
   "Set up a budget": "ตั้งงบประมาณ",
   "Bars": "แท่ง",
   "Breakdown": "รายละเอียด",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "เปลี่ยนเจ้าของของ {name} เป็น {owner} แล้ว",
   "Owner of {name} changed to {owner}, along with {count} records": "เปลี่ยนเจ้าของของ {name} เป็น {owner} พร้อม {count} รายการแล้ว",
   "Transactions and holdings follow the owner of their account.": "ธุรกรรมและสินทรัพย์ที่ถือจะมีเจ้าของตามบัญชีของตน",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "แชร์การเงินกับคู่ชีวิตหรือครอบครัว ผู้ที่แก้ไขได้จะเพิ่มและเปลี่ยนรายการได้ ผู้ที่ดูได้จะดูได้อย่างเดียว บัญชีและธุรกรรมอาจเป็นของคนคนเดียวหรือใช้ร่วมกันก็ได้ ทุกคนยังมีการลงชื่อเข้าใช้ การตั้งค่า Telegram และข้อมูลสำรองของตนเอง"
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "แชร์การเงินกับคู่ชีวิตหรือครอบครัว ผู้ที่แก้ไขได้จะเพิ่มและเปลี่ยนรายการได้ ผู้ที่ดูได้จะดูได้อย่างเดียว บัญชีและธุรกรรมอาจเป็นของคนคนเดียวหรือใช้ร่วมกันก็ได้ ทุกคนยังมีการลงชื่อเข้าใช้ การตั้งค่า Telegram และข้อมูลสำรองของตนเอง",
+  "or sign up with email": "หรือสมัครด้วยอีเมล",
+  "Already have an account?": "มีบัญชีอยู่แล้ว?",
+  "Search countries": "ค้นหาประเทศ",
+  "No matching countries.": "ไม่พบประเทศที่ตรงกัน",
+  "Country code": "รหัสประเทศ"
 }

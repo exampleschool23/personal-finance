@@ -263,6 +263,10 @@ function useWorkspaceState() {
         setUser(d.user.email);
 
     } }).catch(e => setError(e.message)).finally(() => setReady(true)); }, []);
+    // Create account links to the sign-in page with ?sample=1 to open the sample workspace, which lives here.
+    useEffect(() => { if (!ready || user || demo) return; const url = new URL(window.location.href); if (url.searchParams.get('sample') !== '1') return;
+        url.searchParams.delete('sample'); window.history.replaceState(null, '', url.pathname + url.search + url.hash); void startDemo();
+    }, [ready, user, demo]); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => { const ctx = (document as unknown as {
         modelContext?: {
             registerTool: (t: unknown, o: unknown) => void;

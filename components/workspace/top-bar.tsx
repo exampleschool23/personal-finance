@@ -11,6 +11,11 @@ import { formatDate, formatNumber } from '@/lib/format';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 import { sectionLabel } from '@/components/workspace/navigation';
 
+/** Two staggered bars, the long one over the short: the drawer's menu mark. */
+function DrawerIcon() {
+ return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden="true"><path d="M4 8h16"/><path d="M4 16h10"/></svg>;
+}
+
 /** Theme choice for the top bar. The language is chosen once, in onboarding or Settings. */
 export function DisplayPreferences() {
  return <div className="preferences"><ThemeToggle/></div>;
@@ -34,7 +39,7 @@ export function TopBar({ pendingSection }: { pendingSection?: string | null }) {
   : market?.fx ? t('1 USD = {rate} UZS · CBU · {date}', { rate: formatNumber(market.fx.rate, locale), date: date(market.fx.date) })
   : t(marketLoading ? 'Fetching prices…' : 'Exchange rate unavailable. Only records in the selected currency are included.');
  return <header className="topbar">
-  <div className="topbar-location"><SidebarTrigger aria-label={t('Toggle Sidebar')}/><span>{t(sectionLabel(section))}</span>{owner && <span className="status-badge topbar-household">{readOnly ? t('View only') : t('Household of {name}', { name: owner.name ?? t('Partner') })}</span>}</div>
+  <div className="topbar-location"><SidebarTrigger variant="outline" className="drawer-toggle" aria-label={t('Toggle Sidebar')}><DrawerIcon/></SidebarTrigger><span>{t(sectionLabel(section))}</span>{owner && <span className="status-badge topbar-household">{readOnly ? t('View only') : t('Household of {name}', { name: owner.name ?? t('Partner') })}</span>}</div>
   <div className="topbar-actions">
    <Popover>
     <PopoverTrigger asChild><Button variant="outline" size="sm" className="header-currency-trigger" aria-label={t('Display currency')}>{currency}<ChevronDown size={14} aria-hidden="true"/></Button></PopoverTrigger>

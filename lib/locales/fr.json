@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Appuyez sur Espace pour saisir une carte, sur les flèches pour la déplacer et de nouveau sur Espace pour la déposer.",
   "Plan this month’s spending to track it here.": "Planifiez les dépenses de ce mois pour les suivre ici.",
   "Reset to default": "Rétablir par défaut",
+  "Rearrange cards": "Réorganiser les cartes",
   "Set up a budget": "Créer un budget",
   "Bars": "Barres",
   "Breakdown": "Répartition",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "Propriétaire de {name} remplacé par {owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "Propriétaire de {name} remplacé par {owner}, ainsi que pour {count} écritures",
   "Transactions and holdings follow the owner of their account.": "Les transactions et les avoirs suivent le propriétaire de leur compte.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Partagez vos finances avec un partenaire ou votre famille. Les personnes qui peuvent modifier ajoutent et changent des écritures ; celles qui peuvent consulter regardent seulement. Les comptes et les transactions peuvent appartenir à une personne ou être partagés. Chacun garde sa propre connexion, ses préférences, Telegram et ses sauvegardes."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Partagez vos finances avec un partenaire ou votre famille. Les personnes qui peuvent modifier ajoutent et changent des écritures ; celles qui peuvent consulter regardent seulement. Les comptes et les transactions peuvent appartenir à une personne ou être partagés. Chacun garde sa propre connexion, ses préférences, Telegram et ses sauvegardes.",
+  "or sign up with email": "ou inscrivez-vous avec votre e-mail",
+  "Already have an account?": "Vous avez déjà un compte ?",
+  "Search countries": "Rechercher un pays",
+  "No matching countries.": "Aucun pays correspondant.",
+  "Country code": "Indicatif du pays"
 }

@@ -45,8 +45,10 @@ export async function POST(req:Request){
   return Response.json({ok:true});
  }
  if(body.action==='exception'&&'skip' in parsed.data){
-  const response=await supa('/rest/v1/rpc/set_schedule_exception',{method:'POST',body:JSON.stringify({p_record:parsed.data.target_id,p_day:parsed.data.date,p_skip:parsed.data.skip})},auth.token);
-  if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='P0001'?error.message:'Could not update the scheduled occurrence.'},{status:409});}
+  // A note travels only when there is one, so a skip still works before migration 104 is applied.
+  const note=parsed.data.skip?parsed.data.notes.trim():'';
+  const response=await supa('/rest/v1/rpc/set_schedule_exception',{method:'POST',body:JSON.stringify({p_record:parsed.data.target_id,p_day:parsed.data.date,p_skip:parsed.data.skip,...(note?{p_notes:note}:{})})},auth.token);
+  if(!response.ok){const error=await response.json() as {code?:string;message?:string};if(error.code==='PGRST202')return Response.json({error:'The app database needs an update. Ask the administrator to apply the latest migrations.'},{status:503});return Response.json({error:error.code==='P0001'?error.message:'Could not update the scheduled occurrence.'},{status:409});}
   queueMilestoneCheck(auth,{type:'exception',target_id:parsed.data.target_id,date:parsed.data.date,skip:parsed.data.skip});
   return Response.json({ok:true});
  }

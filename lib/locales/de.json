@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Drücken Sie die Leertaste, um eine Karte aufzunehmen, die Pfeiltasten, um sie zu verschieben, und erneut die Leertaste, um sie abzulegen.",
   "Plan this month’s spending to track it here.": "Plane die Ausgaben dieses Monats, um sie hier zu verfolgen.",
   "Reset to default": "Auf Standard zurücksetzen",
+  "Rearrange cards": "Karten anordnen",
   "Set up a budget": "Budget einrichten",
   "Bars": "Balken",
   "Breakdown": "Aufschlüsselung",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "Inhaber von {name} zu {owner} geändert",
   "Owner of {name} changed to {owner}, along with {count} records": "Inhaber von {name} zu {owner} geändert, zusammen mit {count} Einträgen",
   "Transactions and holdings follow the owner of their account.": "Transaktionen und Positionen folgen dem Inhaber ihres Kontos.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Teilen Sie Ihre Finanzen mit Partner oder Familie. Wer bearbeiten darf, fügt Einträge hinzu und ändert sie; wer ansehen darf, schaut nur. Konten und Transaktionen können einer Person gehören oder gemeinsam sein. Jede Person behält eigene Anmeldung, Einstellungen, Telegram und Sicherungen."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Teilen Sie Ihre Finanzen mit Partner oder Familie. Wer bearbeiten darf, fügt Einträge hinzu und ändert sie; wer ansehen darf, schaut nur. Konten und Transaktionen können einer Person gehören oder gemeinsam sein. Jede Person behält eigene Anmeldung, Einstellungen, Telegram und Sicherungen.",
+  "or sign up with email": "oder mit E-Mail registrieren",
+  "Already have an account?": "Schon ein Konto?",
+  "Search countries": "Länder suchen",
+  "No matching countries.": "Keine passenden Länder.",
+  "Country code": "Ländervorwahl"
 }

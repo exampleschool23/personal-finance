@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Nhấn phím cách để nhấc thẻ, dùng phím mũi tên để di chuyển và nhấn phím cách lần nữa để thả.",
   "Plan this month’s spending to track it here.": "Lập kế hoạch chi tiêu tháng này để theo dõi tại đây.",
   "Reset to default": "Đặt lại mặc định",
+  "Rearrange cards": "Sắp xếp lại thẻ",
   "Set up a budget": "Thiết lập ngân sách",
   "Bars": "Cột",
   "Breakdown": "Phân tích",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "Đã đổi chủ sở hữu của {name} thành {owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "Đã đổi chủ sở hữu của {name} thành {owner}, cùng {count} bản ghi",
   "Transactions and holdings follow the owner of their account.": "Giao dịch và tài sản nắm giữ theo chủ sở hữu của tài khoản.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Chia sẻ tài chính với người bạn đời hoặc gia đình. Người có quyền sửa thêm và thay đổi bản ghi; người có quyền xem chỉ xem. Tài khoản và giao dịch có thể thuộc về một người hoặc dùng chung. Mỗi người giữ đăng nhập, tùy chọn, Telegram và bản sao lưu riêng."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Chia sẻ tài chính với người bạn đời hoặc gia đình. Người có quyền sửa thêm và thay đổi bản ghi; người có quyền xem chỉ xem. Tài khoản và giao dịch có thể thuộc về một người hoặc dùng chung. Mỗi người giữ đăng nhập, tùy chọn, Telegram và bản sao lưu riêng.",
+  "or sign up with email": "hoặc đăng ký bằng email",
+  "Already have an account?": "Đã có tài khoản?",
+  "Search countries": "Tìm quốc gia",
+  "No matching countries.": "Không có quốc gia phù hợp.",
+  "Country code": "Mã quốc gia"
 }

@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "کارڈ اٹھانے کے لیے اسپیس دبائیں، منتقل کرنے کے لیے تیر والی کلیدیں اور رکھنے کے لیے دوبارہ اسپیس دبائیں۔",
   "Plan this month’s spending to track it here.": "یہاں ٹریک کرنے کے لیے اس مہینے کے اخراجات کی منصوبہ بندی کریں۔",
   "Reset to default": "ڈیفالٹ پر ری سیٹ کریں",
+  "Rearrange cards": "کارڈز کی ترتیب بدلیں",
   "Set up a budget": "بجٹ ترتیب دیں",
   "Bars": "بارز",
   "Breakdown": "تفصیل",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "{name} کا مالک تبدیل کر کے {owner} کر دیا گیا",
   "Owner of {name} changed to {owner}, along with {count} records": "{name} کا مالک {count} ریکارڈز کے ساتھ تبدیل کر کے {owner} کر دیا گیا",
   "Transactions and holdings follow the owner of their account.": "لین دین اور ہولڈنگز اپنے اکاؤنٹ کے مالک کے ساتھ چلتے ہیں۔",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "اپنی مالیات ساتھی یا خاندان کے ساتھ شیئر کریں۔ جو ترمیم کر سکتے ہیں وہ ریکارڈ شامل اور تبدیل کرتے ہیں؛ جو دیکھ سکتے ہیں وہ صرف دیکھتے ہیں۔ اکاؤنٹس اور لین دین کسی ایک شخص کے یا مشترکہ ہو سکتے ہیں۔ ہر شخص کا اپنا سائن ان، ترجیحات، Telegram اور بیک اپ برقرار رہتا ہے۔"
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "اپنی مالیات ساتھی یا خاندان کے ساتھ شیئر کریں۔ جو ترمیم کر سکتے ہیں وہ ریکارڈ شامل اور تبدیل کرتے ہیں؛ جو دیکھ سکتے ہیں وہ صرف دیکھتے ہیں۔ اکاؤنٹس اور لین دین کسی ایک شخص کے یا مشترکہ ہو سکتے ہیں۔ ہر شخص کا اپنا سائن ان، ترجیحات، Telegram اور بیک اپ برقرار رہتا ہے۔",
+  "or sign up with email": "یا ای میل سے سائن اپ کریں",
+  "Already have an account?": "پہلے سے اکاؤنٹ ہے؟",
+  "Search countries": "ممالک تلاش کریں",
+  "No matching countries.": "کوئی مماثل ملک نہیں۔",
+  "Country code": "ملک کا کوڈ"
 }

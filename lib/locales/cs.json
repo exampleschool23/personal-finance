@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Stiskněte mezerník pro zvednutí karty, šipky pro její přesun a znovu mezerník pro položení.",
   "Plan this month’s spending to track it here.": "Naplánuj výdaje na tento měsíc a sleduj je tady.",
   "Reset to default": "Obnovit výchozí",
+  "Rearrange cards": "Přeuspořádat karty",
   "Set up a budget": "Nastavit rozpočet",
   "Bars": "Sloupce",
   "Breakdown": "Rozpis",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "{name}: vlastník změněn na {owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "{name}: vlastník změněn na {owner}, včetně záznamů ({count})",
   "Transactions and holdings follow the owner of their account.": "Transakce a držby se řídí vlastníkem svého účtu.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Sdílejte finance s partnerem nebo rodinou. Kdo může upravovat, přidává a mění záznamy; kdo může prohlížet, se jen dívá. Účty a transakce mohou patřit jedné osobě, nebo být společné. Každý si ponechává vlastní přihlášení, nastavení, Telegram a zálohy."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Sdílejte finance s partnerem nebo rodinou. Kdo může upravovat, přidává a mění záznamy; kdo může prohlížet, se jen dívá. Účty a transakce mohou patřit jedné osobě, nebo být společné. Každý si ponechává vlastní přihlášení, nastavení, Telegram a zálohy.",
+  "or sign up with email": "nebo se zaregistrujte e-mailem",
+  "Already have an account?": "Už máte účet?",
+  "Search countries": "Hledat zemi",
+  "No matching countries.": "Žádné odpovídající země.",
+  "Country code": "Kód země"
 }

@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Apasă spațiu pentru a prelua un card, săgețile pentru a-l muta și din nou spațiu pentru a-l plasa.",
   "Plan this month’s spending to track it here.": "Planifică cheltuielile lunii acesteia pentru a le urmări aici.",
   "Reset to default": "Resetează la implicit",
+  "Rearrange cards": "Rearanjează cardurile",
   "Set up a budget": "Configurează un buget",
   "Bars": "Bare",
   "Breakdown": "Defalcare",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "Proprietarul pentru {name} schimbat în {owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "Proprietarul pentru {name} schimbat în {owner}, împreună cu {count} înregistrări",
   "Transactions and holdings follow the owner of their account.": "Tranzacțiile și deținerile urmează proprietarul contului lor.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Împarte finanțele cu partenerul sau familia. Cine poate edita adaugă și modifică înregistrări; cine poate vedea doar consultă. Conturile și tranzacțiile pot aparține unei persoane sau pot fi comune. Fiecare își păstrează autentificarea, preferințele, Telegram și copiile de rezervă."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Împarte finanțele cu partenerul sau familia. Cine poate edita adaugă și modifică înregistrări; cine poate vedea doar consultă. Conturile și tranzacțiile pot aparține unei persoane sau pot fi comune. Fiecare își păstrează autentificarea, preferințele, Telegram și copiile de rezervă.",
+  "or sign up with email": "sau înregistrează-te cu e-mail",
+  "Already have an account?": "Ai deja un cont?",
+  "Search countries": "Caută țări",
+  "No matching countries.": "Nicio țară potrivită.",
+  "Country code": "Prefixul țării"
 }

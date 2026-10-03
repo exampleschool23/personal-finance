@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Pindutin ang space para hawakan ang card, ang mga arrow key para ilipat ito, at space ulit para ilagay ito.",
   "Plan this month’s spending to track it here.": "Planuhin ang gastos ngayong buwan para masubaybayan dito.",
   "Reset to default": "I-reset sa default",
+  "Rearrange cards": "Ayusin muli ang mga card",
   "Set up a budget": "Mag-set up ng badyet",
   "Bars": "Mga bar",
   "Breakdown": "Paghahati",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "Ginawang {owner} ang may-ari ng {name}",
   "Owner of {name} changed to {owner}, along with {count} records": "Ginawang {owner} ang may-ari ng {name}, kasama ang {count} tala",
   "Transactions and holdings follow the owner of their account.": "Sumusunod ang mga transaksyon at hawak sa may-ari ng kanilang account.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Ibahagi ang iyong pananalapi sa kapareha o pamilya. Ang mga puwedeng mag-edit ay nagdaragdag at nagbabago ng mga tala; ang mga puwedeng tumingin ay tumitingin lang. Ang mga account at transaksyon ay puwedeng pag-aari ng isang tao o pinagsasaluhan. Bawat isa ay may sariling pag-sign in, kagustuhan, Telegram at backup."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Ibahagi ang iyong pananalapi sa kapareha o pamilya. Ang mga puwedeng mag-edit ay nagdaragdag at nagbabago ng mga tala; ang mga puwedeng tumingin ay tumitingin lang. Ang mga account at transaksyon ay puwedeng pag-aari ng isang tao o pinagsasaluhan. Bawat isa ay may sariling pag-sign in, kagustuhan, Telegram at backup.",
+  "or sign up with email": "o mag-sign up gamit ang email",
+  "Already have an account?": "May account ka na?",
+  "Search countries": "Maghanap ng bansa",
+  "No matching countries.": "Walang tugmang bansa.",
+  "Country code": "Country code"
 }

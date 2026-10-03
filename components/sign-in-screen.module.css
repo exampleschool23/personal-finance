@@ -17,3 +17,16 @@
 .footer{width:100%;max-width:var(--signin-width);margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 20px;color:var(--muted-foreground);font-size:var(--type-caption);line-height:1.6}.footer>span:last-child{display:flex;align-items:center;gap:6px}.legal{display:flex;gap:16px}.legal a{display:inline-flex;align-items:center;min-height:44px;color:inherit;text-decoration:underline;text-underline-offset:3px}.legal a:hover{color:var(--foreground)}
 @media(pointer:coarse){.card a{min-height:44px}.password button{width:44px;height:44px;top:0;right:0}.card .password input{padding-right:50px}}
 @media(max-width:740px){.page{padding:20px}.card{padding:24px}.footer{justify-content:center;text-align:center}.footer>span:first-child{display:none}}
+.card .phone{margin-top:10px}
+.hint{font-size:var(--type-caption);color:var(--muted-foreground);line-height:1.5;margin:2px 0 0}
+.sent{text-align:center}.sent .mark{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--secondary);color:var(--primary);margin-bottom:12px}.sent p{font-size:var(--type-small);color:var(--muted-foreground);line-height:1.6;margin:0 0 10px}
+.card .consent{font-size:var(--type-caption);color:var(--muted-foreground);line-height:1.6;margin:14px 0 0}.card .consent a{display:inline;min-height:0;text-decoration:underline;text-underline-offset:3px}
+.card .secondary{height:44px;width:100%;border-radius:var(--radius-control);font-size:var(--type-small);margin-top:6px}
+.phoneField{display:flex;gap:8px;min-width:0}.phoneField input{flex:1;min-width:0}
+.card .countryTrigger{flex-shrink:0;height:44px;gap:6px;padding:0 10px;border-radius:var(--radius-control);background:var(--field);border-color:var(--input);font-size:var(--type-body);font-weight:500;color:var(--foreground)}.countryTrigger svg:last-child{color:var(--muted-foreground)}
+.flag{font-size:20px;line-height:1}
+.countryOption{min-height:44px;gap:10px;cursor:pointer}.countryName{flex:1;min-width:0}.countryDial{color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.card .back{height:44px;gap:6px}
+.countryPopover{width:320px;max-width:calc(100vw - 32px);padding:0;overflow:hidden;border-radius:var(--radius-card)}
+/* The search box is the list's own header; the field focus ring would draw a box inside the popover. */
+.countryPopover [data-slot="command-input"]{font-size:var(--type-body)}.countryPopover [data-slot="command-input"]:focus-visible{border-color:transparent!important;box-shadow:none!important}

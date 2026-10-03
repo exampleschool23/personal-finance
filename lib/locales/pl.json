@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Naciśnij spację, aby podnieść kartę, strzałki, aby ją przesunąć, i ponownie spację, aby ją upuścić.",
   "Plan this month’s spending to track it here.": "Zaplanuj wydatki na ten miesiąc, aby śledzić je tutaj.",
   "Reset to default": "Przywróć domyślne",
+  "Rearrange cards": "Zmień kolejność kart",
   "Set up a budget": "Ustaw budżet",
   "Bars": "Słupki",
   "Breakdown": "Podział",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "{name}: właściciela zmieniono na {owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "{name}: właściciela zmieniono na {owner}, razem z wpisami ({count})",
   "Transactions and holdings follow the owner of their account.": "Transakcje i pozycje mają tego samego właściciela co ich konto.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Dziel się finansami z partnerem lub rodziną. Osoby z prawem edycji dodają i zmieniają wpisy; osoby z prawem podglądu tylko przeglądają. Konta i transakcje mogą należeć do jednej osoby albo być wspólne. Każdy zachowuje własne logowanie, ustawienia, Telegram i kopie zapasowe."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Dziel się finansami z partnerem lub rodziną. Osoby z prawem edycji dodają i zmieniają wpisy; osoby z prawem podglądu tylko przeglądają. Konta i transakcje mogą należeć do jednej osoby albo być wspólne. Każdy zachowuje własne logowanie, ustawienia, Telegram i kopie zapasowe.",
+  "or sign up with email": "lub zarejestruj się e-mailem",
+  "Already have an account?": "Masz już konto?",
+  "Search countries": "Szukaj kraju",
+  "No matching countries.": "Brak pasujących krajów.",
+  "Country code": "Kod kraju"
 }

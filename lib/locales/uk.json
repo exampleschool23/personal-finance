@@ -2008,6 +2008,7 @@
   "Press space to pick up a card, the arrow keys to move it and space again to drop it.": "Натисніть пробіл, щоб узяти картку, стрілки — щоб перемістити її, і знову пробіл — щоб відпустити.",
   "Plan this month’s spending to track it here.": "Сплануйте витрати на цей місяць, щоб відстежувати їх тут.",
   "Reset to default": "Скинути до типових",
+  "Rearrange cards": "Переставити картки",
   "Set up a budget": "Створити бюджет",
   "Bars": "Стовпці",
   "Breakdown": "Розбивка",
@@ -2575,5 +2576,10 @@
   "Owner of {name} changed to {owner}": "{name}: власника змінено на {owner}",
   "Owner of {name} changed to {owner}, along with {count} records": "{name}: власника змінено на {owner}, разом із записами ({count})",
   "Transactions and holdings follow the owner of their account.": "Транзакції та активи мають того самого власника, що й їхній рахунок.",
-  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Діліться фінансами з партнером чи родиною. Ті, хто може редагувати, додають і змінюють записи; ті, хто може переглядати, лише дивляться. Рахунки й транзакції можуть належати одній людині або бути спільними. Кожен зберігає власний вхід, налаштування, Telegram і резервні копії."
+  "Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.": "Діліться фінансами з партнером чи родиною. Ті, хто може редагувати, додають і змінюють записи; ті, хто може переглядати, лише дивляться. Рахунки й транзакції можуть належати одній людині або бути спільними. Кожен зберігає власний вхід, налаштування, Telegram і резервні копії.",
+  "or sign up with email": "або зареєструйтеся через email",
+  "Already have an account?": "Вже маєте акаунт?",
+  "Search countries": "Пошук країни",
+  "No matching countries.": "Немає відповідних країн.",
+  "Country code": "Код країни"
 }
