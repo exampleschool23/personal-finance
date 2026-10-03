@@ -79,3 +79,15 @@ test('both catalogs keep a run log for retests', () => {
  for (const path of Object.values(catalogs)) assert.match(fs.readFileSync(path, 'utf8'), /Run log[\s\S]*2026-\d\d-\d\d/);
  assert.match(fs.readFileSync(catalogs.qa, 'utf8'), /\| \d{4}-\d\d-\d\d \| [0-9a-f]{7}/, 'the /qa run log names the commit tested');
 });
+
+// Coverage floors: every functional area and every screen keeps enough cases that a run checks more than its happy path.
+test('every /qa area and every /dr screen keeps a minimum number of cases', () => {
+ const count = (path, pick) => rows(path).reduce((counts, cells) => { const key = pick(cells); counts[key] = (counts[key] ?? 0) + 1; return counts; }, {});
+ const qa = count(catalogs.qa, cells => cells[0].split('-')[0]);
+ for (const [area, total] of Object.entries(qa)) assert.ok(total >= 8, `/qa area ${area} has ${total} cases, fewer than 8`);
+ const dr = count(catalogs.dr, cells => cells[0].split('-')[0]);
+ for (const [area, total] of Object.entries(dr)) assert.ok(total >= 7, `/dr area ${area} has ${total} cases, fewer than 7`);
+ const screens = count(catalogs.dr, cells => cells[0].startsWith('SCR-') ? cells[2] : 'other');
+ delete screens.other;
+ for (const [screen, total] of Object.entries(screens)) assert.ok(total >= 3, `/dr screen ${screen} has ${total} cases, fewer than 3`);
+});
