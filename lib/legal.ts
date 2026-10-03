@@ -56,7 +56,7 @@ export const privacyPolicy:LegalDocument={kind:'privacy',sections:[
  ]},
  {heading:'How we use it',paragraphs:['We use your data to:'],items:[
   'provide Hoggish: store your records, calculate totals and forecasts, and show them back to you;',
-  'send the Telegram messages you have turned on, such as the morning digest, weekly summary and confirmations of saved actions;',
+  'send the Telegram messages you have turned on, such as the morning digest, weekly summary and milestone messages;',
   'sign you in, keep your account secure and prevent abuse;',
   'answer you when you contact us.',
  ]},

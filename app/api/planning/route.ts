@@ -9,7 +9,7 @@ import { session,supa,sameOrigin } from '@/lib/supabase';
 import { readOwnerRows } from '@/lib/server-records';
 import { categoryNameTaken, duplicateCategoryMessage } from '@/lib/category-names';
 import type { Category } from '@/lib/planning';
-import { queueActionNotification } from '@/lib/notify-action';
+import { queueMilestoneCheck } from '@/lib/notify-action';
 import type { ActionEvent } from '@/lib/action-messages';
 export async function GET(req?:Request){
  try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
@@ -41,13 +41,13 @@ export async function POST(req:Request){
   // Moves the goal and its activity to Recently deleted; retries are harmless.
   const response=await supa('/rest/v1/rpc/delete_savings_goal',{method:'POST',body:JSON.stringify({p_id:(parsed.data as {id:string}).id})},auth.token);
   if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='PGRST202'?'Goal deletion needs the latest database update.':error.code==='P0001'?error.message:'Could not delete the goal. Please try again.'},{status:error.code==='PGRST202'?503:409});}
-  queueActionNotification(auth,{type:'goal_deleted'});
+  queueMilestoneCheck(auth,{type:'goal_deleted'});
   return Response.json({ok:true});
  }
  if(body.action==='exception'&&'skip' in parsed.data){
   const response=await supa('/rest/v1/rpc/set_schedule_exception',{method:'POST',body:JSON.stringify({p_record:parsed.data.target_id,p_day:parsed.data.date,p_skip:parsed.data.skip})},auth.token);
   if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='P0001'?error.message:'Could not update the scheduled occurrence.'},{status:409});}
-  queueActionNotification(auth,{type:'exception',target_id:parsed.data.target_id,date:parsed.data.date,skip:parsed.data.skip});
+  queueMilestoneCheck(auth,{type:'exception',target_id:parsed.data.target_id,date:parsed.data.date,skip:parsed.data.skip});
   return Response.json({ok:true});
  }
  if(body.action==='category'){
@@ -83,7 +83,7 @@ export async function POST(req:Request){
     // Use the same atomic dated-payment function as Tracker and mortgage payments.
     const result=await supa(body.action==='repayment'?'/rest/v1/rpc/record_repayment_with_fx':'/rest/v1/rpc/record_investment_with_fx',{method:'POST',body:JSON.stringify(body.action==='repayment'?{p_data:p,p_rate:rate,p_rate_date:rateDate,p_account_currency:account.currency,p_record_currency:target.currency}:{p_id:p.id,p_record_id:target.id,p_type:body.action==='mortgage'?'mortgage_payment':'withdrawal',p_date:p.date,p_amount:Number(p.amount)+Number(p.fee??0),p_balance:null,p_notes:p.notes??'',p_account:account.id,p_rate:rate,p_rate_date:rateDate,p_account_currency:account.currency,p_record_currency:target.currency,p_principal:body.action==='mortgage'?p.amount:0,p_interest:body.action==='mortgage'?p.fee:0})},auth.token);
     if(!result.ok){const failure=await result.json() as {code?:string;message?:string};return Response.json({error:failure.code==='P0001'?failure.message:'Could not save the operation. Please try again.'},{status:409});}
-    const fxEvent=planningEvent(body.action,parsed.data);if(fxEvent)queueActionNotification(auth,fxEvent);
+    const fxEvent=planningEvent(body.action,parsed.data);if(fxEvent)queueMilestoneCheck(auth,fxEvent);
     return Response.json(await result.json());
    }
   }
@@ -97,7 +97,7 @@ export async function POST(req:Request){
  const multiGoal=body.action==='goal'&&'kind' in parsed.data&&parsed.data.kind==='investment'&&'investment_targets' in parsed.data&&Array.isArray(parsed.data.investment_targets);
  const result=await supa(multiGoal?'/rest/v1/rpc/planning_investment_goal':body.action==='occurrence'?'/rest/v1/rpc/planning_action_with_actual_amount':'/rest/v1/rpc/planning_action',{method:'POST',body:JSON.stringify(multiGoal?{p_data:parsed.data}:{p_action:body.action,p_data:paymentData})},auth.token);
  if(!result.ok){const error=await result.json() as {code?:string;message?:string};return Response.json({error:multiGoal&&error.code==='PGRST202'?'Could not save the goal. Check that the latest migrations are installed.':error.code==='P0001'?error.message:error.code==='23514'?'Insufficient balance or invalid amount.':error.code==='23505'?'This name or payment already exists.':'Could not save the operation. Please try again.'},{status:409});}
- const event=planningEvent(body.action,parsed.data);if(event)queueActionNotification(auth,event);
+ const event=planningEvent(body.action,parsed.data);if(event)queueMilestoneCheck(auth,event);
  return Response.json(await result.json());
  }catch{return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
 }

@@ -188,10 +188,10 @@ test('someone who pressed stop signs back in with the same number, and with no o
  const back=setup({seed:structuredClone(seed)});
  const outcome=await run(contact(),back);
  assert.equal(back.created.length,0);assert.equal(back.db.tables.telegram_subscriptions[0].chat_id,777);
- const connected=t('en','Connected. You will get a morning digest of upcoming payments and a message after every saved action.');
+ const connected=t('en','Connected. You will get a morning digest of upcoming payments and a message when you reach a milestone.');
  // The greeting uses the name saved in the app, never Telegram's profile name (the sender here is "Aziz"); with no saved name there is no greeting.
  // One message: the greeting and what the chat will receive, without saying "connected" twice.
- assert.equal(outcome.replies[0].text,'Welcome, Jasurbek! You are connected and will get a morning digest of upcoming payments and a message after every saved action.');
+ assert.equal(outcome.replies[0].text,'Welcome, Jasurbek! You are connected and will get a morning digest of upcoming payments and a message when you reach a milestone.');
  const unnamed=setup({seed:{...structuredClone(seed),user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:''}]}});
  assert.equal((await run(contact(),unnamed)).replies[0].text,connected);
  const stranger=setup({seed:structuredClone(seed)});

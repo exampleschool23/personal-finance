@@ -92,7 +92,7 @@ test('converted debt, mortgage and transfers cannot spend more than the locked s
 
 test('transfer API requires the selected date rate and does not trust a submitted conversion rate',async()=>{
  let calls=[],offline=false,prior=[];
- const post=new Function('z','session','sameOrigin','supa','loadDatedExchangeRate','queueActionNotification',compile('app/api/asset-movements/route.ts')+';return POST;')(z,async()=>({token:'owner'}),()=>true,async(path,init)=>{
+ const post=new Function('z','session','sameOrigin','supa','loadDatedExchangeRate','queueMilestoneCheck',compile('app/api/asset-movements/route.ts')+';return POST;')(z,async()=>({token:'owner'}),()=>true,async(path,init)=>{
   if(path.includes('finance_records?'))return Response.json([{id:id(2),currency:'USD'},{id:id(3),currency:'UZS'}]);
   if(path.includes('asset_movements?'))return Response.json(prior);
   calls.push({path,args:JSON.parse(init.body)});return Response.json({ok:true});

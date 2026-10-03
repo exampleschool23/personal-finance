@@ -168,9 +168,9 @@ a share button that carries no amounts. Celebrations (first record, a savings
 goal passing 25/50/75/100 percent, a new net-worth high found by the daily
 snapshot cron) are sent once each and recorded in `telegram_milestones`
 (migration 083). Digest and recap follow the digest switch; celebrations follow
-the action-message switch. A message after every saved action is sent from
-the write routes themselves, after the response, and never delays or fails a
-save.
+the milestone switch, checked by the write routes after the response, so they
+never delay or fail a save. Saves made in the app are not announced one by
+one in Telegram; only the bot replies to entries made in the bot.
 
 Once linked, the bot's keyboard adds records with buttons: Expense, Income,
 Transfer, Pay loan or debt, Mortgage payment and Upcoming payments. An entry

@@ -56,7 +56,7 @@ async function subscriptionByChat(db:ServiceDatabase,chatId:number){
 }
 const connectedText=(language:Language,name?:string|null)=>{
  const first=(name??'').trim();
- return first?t(language,'Welcome, {name}! You are connected and will get a morning digest of upcoming payments and a message after every saved action.',{name:escapeHtml(first)}):t(language,'Connected. You will get a morning digest of upcoming payments and a message after every saved action.');
+ return first?t(language,'Welcome, {name}! You are connected and will get a morning digest of upcoming payments and a message when you reach a milestone.',{name:escapeHtml(first)}):t(language,'Connected. You will get a morning digest of upcoming payments and a message when you reach a milestone.');
 };
 /** The "you are connected" message with the main menu, in the owner's language. */
 export async function connectedReply(db:ServiceDatabase,owner:string,chatId:number):Promise<TelegramMessage>{

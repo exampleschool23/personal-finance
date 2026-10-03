@@ -644,7 +644,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | BOT-070 | P1 | /app | `/app` | "Your account also works on the web." with Open in browser |
 | BOT-071 | P1 | /phone Cancel | `/phone` → Cancel | Menu restored; never share the number `[bug 2026-10-02]` |
 | BOT-072 | P1 | Language follows Settings | Change app language | Bot re-sends menu in that language |
-| BOT-073 | P1 | App action messages | Save in the app | Bot posts "Added …" with custom category names |
+| BOT-073 | P0 | No message per app save | Save an expense, a transfer and a goal contribution in the app | The bot posts nothing for these saves (only a milestone, if one is reached) `[2026-10-03]` |
 | BOT-074 | P0 | Sign out | More actions → Sign out | Warm message; keyboard removed; app shows Connect; stranger reply "Welcome back." |
 | BOT-080 | P1 | Digest / recap / milestones | Only with user OK | Correct figures; spending per XAPP-001 |
 | BOT-081 | P0 | Webhook secret check | From a terminal: `curl -i -X POST <prod>/api/telegram/webhook -d '{}'` with no `X-Telegram-Bot-Api-Secret-Token` header, then with the header set to `wrong` and to a value of a different length | 401 every time; no reply appears in any chat; never send the real secret |
@@ -653,11 +653,11 @@ currencies (USD primary). Compute every expected figure yourself first.
 | BOT-084 | P1 | Link code is single-use | After BOT-001, send the same `/start CODE` again | "This link has expired. Open Settings in the app and press Connect to Telegram again."; the link stays on the test account |
 | BOT-085 | P1 | Plain /start when linked | Linked chat, no flow open, send `/start` | Connected message greeting the Settings display name with the main keyboard; nothing is relinked or reset |
 | BOT-086 | P1 | Settings waiting state | Settings → Connect to Telegram, do not press Start; then press Cancel | Button reads "Waiting for Telegram…" with Cancel beside it; Cancel returns to "Connect to Telegram"; sending `/start CODE` within 10 min still flips the panel to Connected with a Saved toast after a reload |
-| BOT-087 | P0 | Action messages switch | Settings → untick "A message after every saved action"; add expense "QA Snack" 5 in the app; tick it again; add "QA Snack 2" 5 | No bot message for QA Snack; "Added …" for QA Snack 2; both toggles survive a reload |
+| BOT-087 | P0 | Milestones switch | Settings → untick "Milestones, like a goal reached", reload; tick it again, reload | Both toggles survive a reload; no message is posted for ordinary saves either way |
 | BOT-088 | P0 | Disconnect from Settings | Settings → Disconnect → dialog "Disconnect Telegram?" → Disconnect; then type "Expense" in the chat and save an expense in the app | Panel shows "Connect to Telegram"; chat gets the welcome (Create an account / I already have an account), never an expense flow; no message for the app save; all QA records unchanged |
 | BOT-089 | P0 | Linking moves a chat between accounts | Only with user OK (unlinks the real account): link the chat to the test account with `/start CODE` | Real account's Settings shows not connected; bot greets the test account's display name; real account gets no further messages; remind the user to reconnect at the end |
-| BOT-090 | P1 | Action messages for other saves | In the app: transfer $10 QA Wallet → QA Wallet 2; repay $10 on QA Loan; contribute $10 to QA goal; delete expense "QA Snack" | Bot posts "Transfer recorded", "Repayment recorded … from QA Wallet", "Goal contribution", "Deleted Expense · QA Snack · $5" in the account language |
-| BOT-091 | P1 | HTML in names | Add cash account in the bot named `QA <b>&co`, then an expense from it | Name shows literally `QA <b>&co` in the picker, summary, "Saved." reply and action message; every message arrives (none silently dropped) |
+| BOT-090 | P1 | Bot replies only to bot entries | In the bot: add expense "QA Snack" 5; in the app: delete it | "Saved." reply with the entry in the account language after the bot entry; nothing in the bot after the app delete |
+| BOT-091 | P1 | HTML in names | Add cash account in the bot named `QA <b>&co`, then an expense from it | Name shows literally `QA <b>&co` in the picker, summary and "Saved." reply; every message arrives (none silently dropped) |
 | BOT-092 | P1 | Category paging | Account with more than 8 expense categories (add QA categories if needed): Expense | 8 buttons then a › button; › shows the rest with ‹; Cancel stays on every page; custom categories listed first, A to Z |
 | BOT-093 | P1 | Text at a button question | Expense → at "Choose an expense category" type "food" | Same question again with the same buttons; nothing advances or saves |
 | BOT-094 | P1 | Menu label mid-flow | Expense → category → account, then tap Income (or More actions → Transfer) | The new flow starts at its first question; the expense draft is dropped; nothing saved |
@@ -702,12 +702,12 @@ currencies (USD primary). Compute every expected figure yourself first.
 | BOT-133 | P1 | Upcoming empty and overdue | More actions → Upcoming payments with nothing due; then with an overdue QA bill | "No payments due in the next 31 days."; overdue items under "Overdue" with their dates, income lines prefixed "+" |
 | BOT-134 | P1 | Digest greeting uses Settings name | Only with user OK to run the digest cron: set display name "QA Tester", run; clear the name, run again | "☀️ Good morning, QA Tester" then "Good morning"; never the Telegram profile name |
 | BOT-135 | P1 | Digest figures | Only with user OK: QA expenses $30 in the last 7 days and $50 the week before, run the digest | "Last 7 days you spent $30, $20 less than the week before."; net worth line only when a snapshot is at most 3 days old; no "since yesterday" when the change rounds to 0 |
-| BOT-136 | P1 | Digest toggle | Only with user OK: untick "Morning digest of upcoming payments", run digest and recap crons | Neither message reaches the test chat; action messages still arrive |
+| BOT-136 | P1 | Digest toggle | Only with user OK: untick "Morning digest of upcoming payments", run digest and recap crons | Neither message reaches the test chat; milestones still arrive |
 | BOT-137 | P1 | Recap content | Only with user OK to run the recap cron: week with QA income $100, spending $40 in custom category QA Coffee | "Your week, QA Tester", "You saved $60 this week.", "Top spending: QA Coffee · $40"; Share my week link text carries no amounts |
 | BOT-138 | P2 | Quiet week recap | Only with user OK: no records in the last 7 days, run the recap cron | "A quiet week. Add this week's records to see your recap." and no share button |
 | BOT-139 | P1 | First-record milestone | Fresh throwaway account with actions on: save its first record, then a second | "…you saved your first record 🎉…" once; nothing for the second; an account with older records never gets it |
 | BOT-140 | P1 | Goal milestones once | Savings goal QA Trip target $1,000: contribute $600, then $100, then $300 | One message "your QA Trip just passed 50% 🎉" (not 25%), then 75%, then "you reached your QA Trip goal 🏆"; repeating a contribution sends nothing more |
-| BOT-141 | P2 | Milestones respect the toggle | Untick "A message after every saved action", pass a goal threshold | No celebration; it is not sent later when the toggle is turned back on |
+| BOT-141 | P2 | Milestones respect the toggle | Untick "Milestones, like a goal reached", pass a goal threshold | No celebration; it is not sent later when the toggle is turned back on |
 | BOT-142 | P2 | Net-worth high | Only with user OK to run the snapshot cron: account with 8 or more days of snapshots, net worth 2% above the best earlier day | "New net-worth high: <amount> 📈" once; a rise under 2% sends nothing |
 
 ## XAPP — cross-page consistency (run after money-moving actions)
@@ -719,7 +719,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | XAPP-003 | P0 | Net worth | Dashboard = Investments page "Net worth" = assets − debts |
 | XAPP-004 | P1 | Upcoming | Bot upcoming = Dashboard card = Recurring list for the same window |
 | XAPP-005 | P1 | Goal values | Goals page = Dashboard goals card |
-| XAPP-006 | P1 | Category names | Same custom name in app list, bot buttons, bot confirmations, action messages |
+| XAPP-006 | P1 | Category names | Same custom name in app list, bot buttons, bot confirmations |
 | XAPP-007 | P1 | Rates | Same pair and date → same rate in every dialog; label names the source (ECB / CBU) |
 | XAPP-008 | P0 | Delete then restore | Deleting a QA expense, a QA stock and a QA loan with no recorded trades or payments moves each to Recently deleted; restoring each returns balances, net worth, spending, budget actuals and goal values exactly to their pre-delete figures on every page; a stock or loan with trades or payments refuses deletion with "This record has saved tracker updates or transactions and cannot be deleted." |
 | XAPP-009 | P0 | Edit a past record | Change a QA expense from last month (amount, then date into this month, then account): both months' spending, budget actuals and both accounts' balances move alike on Cash flow, Transactions, Dashboard and Budget |
