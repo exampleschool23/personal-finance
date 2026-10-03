@@ -81,10 +81,11 @@ test('households share an owner\'s workspace in the database: members edit, view
   assert.deepEqual((await db.query('SELECT id,member_id FROM finance_records WHERE id IN ($1,$2) ORDER BY id',[id(25),id(26)])).rows,[{id:id(25),member_id:owner},{id:id(26),member_id:null}]);
   await db.query(`SELECT move_item_to_deleted($1,'finance_records')`,[id(25)]);await db.query(`SELECT move_item_to_deleted($1,'finance_records')`,[id(26)]);
   await db.exec(`RESET ROLE`);await db.exec(`DELETE FROM deleted_items`);await db.exec('SET ROLE authenticated');
-  assert.equal(await call('set_transaction_member',[id(11),id(22)],partner),1,'only records that change are counted');
-  assert.equal(await one('SELECT member_id FROM finance_records WHERE id=$1',[id(11)]).then(row=>row.member_id),partner);
-  await assert.rejects(call('set_transaction_member',[id(11)],stranger),/no longer in your household/);
-  await assert.rejects(call('set_transaction_member',[id(40)],partner).then(changed=>{if(changed===0)throw Error('untouched');}),/untouched/,'another owner\'s record is never changed');
+  assert.equal(await call('set_record_owner',[id(11),id(22)],partner),2);
+  assert.equal(await call('set_record_owner',[id(11),id(22)],partner),0,'only records that change are counted');
+  assert.deepEqual(await one('SELECT member_id,shared FROM finance_records WHERE id=$1',[id(11)]),{member_id:partner,shared:false});
+  await assert.rejects(call('set_record_owner',[id(11)],stranger),/no longer in your household/);
+  await assert.rejects(call('set_record_owner',[id(40)],partner).then(changed=>{if(changed===0)throw Error('untouched');}),/untouched/,'another owner\'s record is never changed');
   // The member's own workspace stays theirs; their private settings never move.
   await as(partner);
   assert.deepEqual((await db.query('SELECT id FROM finance_records ORDER BY id')).rows.map(row=>row.id),[id(20)]);
@@ -114,7 +115,8 @@ test('households share an owner\'s workspace in the database: members edit, view
   await assert.rejects(save({id:id(30),name:'Coffee',kind:'Living expense',amount:3,account_id:id(10)}),/view-only|row-level security/);
   await assert.rejects(save({id:id(11),name:'Renamed',kind:'Living expense',amount:30,account_id:id(10)},),/view-only|row-level security|changed since/);
   await assert.rejects(db.query(`SELECT move_item_to_deleted($1,'finance_records')`,[id(11)]),/view-only/);
-  await assert.rejects(call('set_transaction_member',[id(11)],owner),/view-only/);
+  await assert.rejects(call('set_record_owner',[id(11)],owner),/view-only/);
+  await assert.rejects(call('set_account_owner',id(10),owner),/view-only/);
   await assert.rejects(db.query(`INSERT INTO transaction_tags(id,name,color) VALUES($1,'Nope','teal')`,[id(31)]),/row-level security|view-only/);
   await assert.rejects(db.query(`UPDATE transaction_tags SET name='x'`),/view-only/);
   await assert.rejects(db.query(`DELETE FROM transaction_tags`),/view-only/);

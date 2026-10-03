@@ -179,8 +179,20 @@ database, never by the app.
   `tests/households-sql.mjs` fails otherwise.
 - Personal tables (preferences, Telegram, backups, app activity) keep
   `auth.uid()`. The Telegram bot always writes to the person's own workspace.
-- `finance_records.member_id` records who paid. Show sharing UI only when
-  `sharedWorkspace()` is true; the sample workspace has no household.
+- Every account and transaction has an owner (migration 102): the whole
+  household (`shared`) or one person (`member_id`); a shared record's `member_id`
+  is who added it. Read it with `ownerOf` / `holdingOwner` from
+  `lib/household.ts`, never from the columns directly. A new record takes its
+  account's owner in the database; `set_account_owner` moves an account and the
+  records that followed it, `set_record_owner` sets transactions. Everything
+  from before owners, and anything of someone who left, is shared.
+- Owners are filtered with `OwnerFilter` and shown with `OwnerAvatar`
+  (Accounts, Transactions, Reports). Budget, goals, recurring and investments
+  always show the whole household.
+- Show sharing UI only when `sharedWorkspace()` is true. The sample workspace
+  has a sample household of two (`demoHousehold`) so owners can be tried; it has
+  no invites, and its owner changes run through the local copies
+  (`assignOwner`, `moveAccountToOwner`).
 
 # DRY and regression coverage
 

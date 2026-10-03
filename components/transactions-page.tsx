@@ -7,7 +7,8 @@ import { BusinessMark } from '@/components/presentation-foundation/business-mark
 import type { BusinessOption } from '@/components/presentation-foundation/business-filter';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { TagChip } from '@/components/presentation-foundation/tag-chip';
-import { PersonAvatar } from '@/components/presentation-foundation/person-avatar';
+import { OwnerAvatar } from '@/components/presentation-foundation/person-avatar';
+import type { OwnerOption } from '@/components/presentation-foundation/owner-filter';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { Count } from '@/components/presentation-foundation/count';
@@ -105,18 +106,24 @@ export function BusinessPicker({ record, businesses, disabled, onChange }: { rec
  </Popover>;
 }
 
-/** Who paid, as a small avatar; clicking it lists the household to choose from. */
-export function MemberPicker({ record, member, people, disabled, onChange }: { record: Entry; member: { id: string; name: string }; people: ReadonlyArray<{ id: string; name: string }>; disabled?: boolean; onChange: (member: string) => void }) {
+/** The household's owners to choose from, the current one ticked. */
+export function OwnerList({ owners, selected, onSelect }: { owners: readonly OwnerOption[]; selected?: string; onSelect: (owner: string) => void }) {
+ const { t } = useLanguage();
+ return <ul className="category-picker business-picker" role="listbox" aria-label={t('Owner')}>
+  {owners.map(owner => <li key={owner.id} role="option" aria-selected={owner.id === selected}><button type="button" onClick={() => onSelect(owner.id)}><OwnerAvatar owner={owner} size="sm"/><span>{owner.name}</span>{owner.id === selected && <Check size={15} aria-hidden="true"/>}</button></li>)}
+ </ul>;
+}
+
+/** Who a transaction belongs to, as a small avatar; clicking it lists the household to choose from. */
+export function OwnerPicker({ record, owner, owners, disabled, onChange }: { record: Entry; owner: OwnerOption; owners: readonly OwnerOption[]; disabled?: boolean; onChange: (owner: string) => void }) {
  const { t } = useLanguage();
  const [open, setOpen] = useState(false);
- const avatar = <PersonAvatar size="sm" name={member.name}/>;
+ const avatar = <OwnerAvatar size="sm" owner={owner}/>;
  if (disabled) return avatar;
  return <Popover open={open} onOpenChange={setOpen}>
-  <PopoverTrigger asChild><button type="button" className="transaction-member-button" aria-label={t('Change who paid for {name}', { name: record.name })}>{avatar}</button></PopoverTrigger>
+  <PopoverTrigger asChild><button type="button" className="transaction-member-button" aria-label={t('Change owner of {name}', { name: record.name })}>{avatar}</button></PopoverTrigger>
   <PopoverContent className="category-picker-popover" align="start">
-   <ul className="category-picker business-picker" role="listbox" aria-label={t('Paid by')}>
-    {people.map(person => <li key={person.id} role="option" aria-selected={person.id === member.id}><button type="button" onClick={() => { setOpen(false); if (person.id !== member.id) onChange(person.id); }}><PersonAvatar size="sm" name={person.name}/><span>{person.name}</span>{person.id === member.id && <Check size={15} aria-hidden="true"/>}</button></li>)}
-   </ul>
+   <OwnerList owners={owners} selected={owner.id} onSelect={next => { setOpen(false); if (next !== owner.id) onChange(next); }}/>
   </PopoverContent>
  </Popover>;
 }
@@ -161,24 +168,26 @@ export function TagSelector({ tags, selected, onToggle, onCreate }: { tags: read
  </div>;
 }
 
-/** Edit multiple drawer: change the category, the business and the tags of the selected transactions together.
+/** Edit multiple drawer: change the category, the business, the owner and the tags of the selected transactions together.
  * Fields left as they are stay unchanged on every transaction. */
-export function BulkEditSheet({ records, categories, businesses, tags, tagsOf, onCreateTag, onSave, onClose }: { records: Entry[]; categories: readonly Category[]; businesses: readonly BusinessOption[]; tags: readonly Tag[]; tagsOf: (id: string) => readonly string[]; onCreateTag?: (name: string) => Promise<string>; onSave: (change: { choice: CategoryChoice | null; business: string | null | undefined; add: string[]; remove: string[] }) => Promise<void>; onClose: () => void }) {
+export function BulkEditSheet({ records, categories, businesses, owners = [], tags, tagsOf, onCreateTag, onSave, onClose }: { records: Entry[]; categories: readonly Category[]; businesses: readonly BusinessOption[]; /** The household's owners, in a shared workspace. */ owners?: readonly OwnerOption[]; tags: readonly Tag[]; tagsOf: (id: string) => readonly string[]; onCreateTag?: (name: string) => Promise<string>; onSave: (change: { choice: CategoryChoice | null; business: string | null | undefined; owner: string | undefined; add: string[]; remove: string[] }) => Promise<void>; onClose: () => void }) {
  const { t } = useLanguage();
  const directions = new Set(records.map(record => directionOf(record.kind)));
  const direction = directions.size === 1 ? [...directions][0] : null;
  const [choice, setChoice] = useState<CategoryChoice | null>(null);
  const [business, setBusiness] = useState<string | null | undefined>(undefined);
  const [add, setAdd] = useState<string[]>([]), [remove, setRemove] = useState<string[]>([]);
- const [busy, setBusy] = useState(false), [error, setError] = useState(''), [picking, setPicking] = useState<'category' | 'business' | null>(null);
+ const [owner, setOwner] = useState<string | undefined>(undefined);
+ const [busy, setBusy] = useState(false), [error, setError] = useState(''), [picking, setPicking] = useState<'category' | 'business' | 'owner' | null>(null);
  const choiceName = useChoiceName(categories);
  const shared = tags.filter(tag => records.length > 0 && records.every(record => tagsOf(record.id).includes(tag.id))).map(tag => tag.id);
- const changed = !!choice || business !== undefined || add.length > 0 || remove.length > 0;
+ const changed = !!choice || business !== undefined || owner !== undefined || add.length > 0 || remove.length > 0;
+ const chosenOwner = owners.find(item => item.id === owner);
  const businessName = business === undefined ? t('Leave unchanged') : business === null ? t('Household') : businesses.find(item => item.id === business)?.name ?? '';
  return <Sheet open onOpenChange={open => { if (!open && !busy) onClose(); }}>
   <SheetContent className="bulk-edit-sheet" aria-describedby={undefined}>
    <SheetHeader><SheetTitle>{t('Edit {count} transactions', { count: records.length })}</SheetTitle></SheetHeader>
-   <form className="bulk-edit-form" onSubmit={async event => { event.preventDefault(); if (!changed) return; setBusy(true); setError(''); try { await onSave({ choice, business, add, remove }); onClose(); } catch (reason) { setError(t((reason as Error).message || 'Could not save changes.')); } finally { setBusy(false); } }}>
+   <form className="bulk-edit-form" onSubmit={async event => { event.preventDefault(); if (!changed) return; setBusy(true); setError(''); try { await onSave({ choice, business, owner, add, remove }); onClose(); } catch (reason) { setError(t((reason as Error).message || 'Could not save changes.')); } finally { setBusy(false); } }}>
     <fieldset disabled={busy}>
      <div className="budget-dialog-label">{t('Category')}
       {direction ? <Popover open={picking === 'category'} onOpenChange={open => setPicking(open ? 'category' : null)}>
@@ -190,6 +199,12 @@ export function BulkEditSheet({ records, categories, businesses, tags, tagsOf, o
       <Popover open={picking === 'business'} onOpenChange={open => setPicking(open ? 'business' : null)}>
        <PopoverTrigger asChild><button type="button" className="rule-category-button">{businessName}</button></PopoverTrigger>
        <PopoverContent className="category-picker-popover" align="start"><BusinessList businesses={businesses} selected={business} onSelect={value => { setPicking(null); setBusiness(value); }}/></PopoverContent>
+      </Popover>
+     </div>}
+     {owners.length > 0 && <div className="budget-dialog-label">{t('Owner')}
+      <Popover open={picking === 'owner'} onOpenChange={open => setPicking(open ? 'owner' : null)}>
+       <PopoverTrigger asChild><button type="button" className="rule-category-button">{chosenOwner ? <><OwnerAvatar owner={chosenOwner} size="sm"/>{chosenOwner.name}</> : t('Leave unchanged')}</button></PopoverTrigger>
+       <PopoverContent className="category-picker-popover" align="start"><OwnerList owners={owners} selected={owner} onSelect={value => { setPicking(null); setOwner(value); }}/></PopoverContent>
       </Popover>
      </div>}
      <div className="budget-dialog-label">{t('Add tags')}<TagSelector tags={tags} selected={add} onToggle={id => { setAdd(list => list.includes(id) ? list.filter(item => item !== id) : [...list, id]); setRemove(list => list.filter(item => item !== id)); }} onCreate={onCreateTag}/></div>

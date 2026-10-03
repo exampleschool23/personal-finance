@@ -240,8 +240,24 @@ test('pagination hides itself when there is no other page, and otherwise moves o
  assert.match(render(Pagination,{...props,page:2,hasNext:true,disabled:true}),/<button disabled="">Previous<\/button><button disabled="">Next<\/button>/);
 });
 
+test('the owner filter lists what is shared and each person; nothing selected shows everyone',()=>{
+ const pass=({children})=>React.createElement(React.Fragment,null,children);
+ const {OwnerFilter}=load('owner-filter.tsx',{'@/components/ui/popover':{Popover:pass,PopoverTrigger:pass,PopoverContent:({children})=>React.createElement('div',null,children)}});
+ const owners=[{id:'shared',name:'Shared'},{id:'p1',name:'Alex'},{id:'p2',name:'Sam'}];
+ let html=render(OwnerFilter,{owners,value:[],onChange:()=>{}});
+ assert.match(html,/<button type="button" class="business-filter-trigger" aria-label="Filter by owner"><svg[^>]*>.*?<\/svg><span>All owners<\/span>/);
+ assert.match(html,/<ul role="listbox" aria-multiselectable="true" aria-label="Filter by owner"><li role="option" aria-selected="true">/);
+ assert.equal((html.match(/role="option"/g)??[]).length,4);
+ html=render(OwnerFilter,{owners,value:['p2'],onChange:()=>{}});
+ assert.match(html,/data-active="true"[^>]*>.*?<span>Sam<\/span>/);
+ assert.match(render(OwnerFilter,{owners,value:['p1','shared'],onChange:()=>{}}),/<span>2 selected<\/span>/);
+});
+
 test('a person avatar shows initials, named on hover and for screen readers',()=>{
- const {PersonAvatar}=load('person-avatar.tsx');
+ const {PersonAvatar,OwnerAvatar}=load('person-avatar.tsx');
+ // An owner is one person, or the household's shared mark.
+ assert.equal(render(OwnerAvatar,{owner:{id:'p1',name:'Alex Morgan'},size:'sm'}),render(PersonAvatar,{name:'Alex Morgan',size:'sm'}));
+ assert.match(render(OwnerAvatar,{owner:{id:'shared',name:'Shared'}}),/^<span class="person-avatar" data-shared="" data-size="md" role="img" aria-label="Shared" title="Shared"><svg/);
  assert.equal(render(PersonAvatar,{name:'Alex Morgan'}),'<span class="person-avatar" data-size="md" role="img" aria-label="Alex Morgan" title="Alex Morgan">AM</span>');
  assert.match(render(PersonAvatar,{name:'sam@example.com',size:'sm'}),/data-size="sm"[^>]*>S<\/span>$/);
 });

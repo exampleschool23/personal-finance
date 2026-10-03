@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { useState, type ReactNode } from 'react';
-import { ArrowRightLeft, Bitcoin, Briefcase, ChartNoAxesCombined, ChevronDown, ChevronRight, Landmark, MoreHorizontal, Plus, Search, Wallet } from 'lucide-react';
+import { ArrowRightLeft, Bitcoin, Briefcase, ChartNoAxesCombined, ChevronDown, ChevronRight, Landmark, MoreHorizontal, Plus, Search, Users, Wallet } from 'lucide-react';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { Count } from '@/components/presentation-foundation/count';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
@@ -24,6 +24,10 @@ import { income, liabilities, value, type Entry } from '@/lib/finance';
 import { BusinessFilter, type BusinessOption } from '@/components/presentation-foundation/business-filter';
 import { BusinessMark } from '@/components/presentation-foundation/business-mark';
 import { AccountBusinessesDialog } from '@/components/account-businesses-dialog';
+import { AccountOwnersDialog } from '@/components/account-owners-dialog';
+import { OwnerFilter } from '@/components/presentation-foundation/owner-filter';
+import { OwnerAvatar } from '@/components/presentation-foundation/person-avatar';
+import { holdingOwner, inOwnerFilter, ownerChoices, ownerOf, sharedWorkspace, type HouseholdState } from '@/lib/household';
 import { HOUSEHOLD, inBusinessFilter, isBusinessAccount } from '@/lib/business';
 import { queryList, useLocationSearch } from '@/hooks/use-location-search';
 import { decimalSum } from '@/lib/decimal-amounts';
@@ -50,6 +54,9 @@ type Props = {
  assignHolding: (record: Entry, accountId: string|null) => Promise<void>;
  businesses: readonly BusinessOption[];
  onAccountBusiness: (accountId: string, business: string|null) => Promise<number>;
+ /** The open household, when it is shared: accounts then show and filter by their owner. */
+ household?: HouseholdState|null; readOnly?: boolean;
+ onAccountOwner: (accountId: string, owner: string) => Promise<number>;
 };
 
 function AccountMenu({ name, children }: { name: string; children: ReactNode }) {
@@ -67,7 +74,7 @@ function HoldingRow({ record, accounts, market, onEdit, onTrack, assignHolding, 
  </li>;
 }
 
-export function AccountsPage({ owner,onSaved,data, save, onAdd, onEdit, onTrack, onDelete, demo, preferences, market, currencies, currency, saveAccount, assignHolding, businesses, onAccountBusiness }: Props) {
+export function AccountsPage({ owner,onSaved,data, save, onAdd, onEdit, onTrack, onDelete, demo, preferences, market, currencies, currency, saveAccount, assignHolding, businesses, onAccountBusiness, household, readOnly, onAccountOwner }: Props) {
  const { t, locale } = useLanguage();
  const [statement,setStatement]=useState<Entry|null>(null),[corporate,setCorporate]=useState<Entry|null>(null);
  const [movement,setMovement]=useState<MovementDraft|null>(null);
@@ -77,6 +84,8 @@ export function AccountsPage({ owner,onSaved,data, save, onAdd, onEdit, onTrack,
  const search=useLocationSearch();
  const [businessFilter,setBusinessFilter]=useState<string[]>([]),[appliedSearch,setAppliedSearch]=useState(''),[editingBusinesses,setEditingBusinesses]=useState(false);
  if(search!==appliedSearch){setAppliedSearch(search);setBusinessFilter(queryList(search,'business'));}
+ const owners=household&&sharedWorkspace(household)?ownerChoices(household,{shared:t('Shared'),unnamed:t('Partner')}):[];
+ const [ownerFilter,setOwnerFilter]=useState<string[]>([]),[editingOwners,setEditingOwners]=useState(false);
  const [activityPage,setActivityPage]=useState({owner,page:1});
  const activity=accountActivityPage(data,activityPage.owner===owner?activityPage.page:1);
  const cash = data.records.filter(record=>record.kind==='Cash');
@@ -92,7 +101,9 @@ export function AccountsPage({ owner,onSaved,data, save, onAdd, onEdit, onTrack,
  const accountItems=order.items;
  const remove=(account:Entry)=>{if(accountHasLinks(account.id,data))showError(linkedAccountMessage);else onDelete(account);};
  const businessOf=(item:typeof accountItems[number])=>'business_id' in item.account?item.account.business_id:null;
- const visibleAccounts=accountItems.filter(item=>item.account.name.toLocaleLowerCase(locale).includes(query.toLocaleLowerCase(locale))&&inBusinessFilter(businessFilter,businessOf(item)));
+ const ownerOfItem=(item:typeof accountItems[number])=>item.key.startsWith('record:')?ownerOf(item.account,household!):holdingOwner(item.account,household!);
+ const visibleAccounts=accountItems.filter(item=>item.account.name.toLocaleLowerCase(locale).includes(query.toLocaleLowerCase(locale))&&inBusinessFilter(businessFilter,businessOf(item))&&(!owners.length||inOwnerFilter(ownerFilter,ownerOfItem(item))));
+ const ownerMark=(item:typeof accountItems[number])=>{const owner=owners.find(option=>option.id===ownerOfItem(item));return owner?<OwnerAvatar owner={owner} size="sm"/>:null;};
  const markOf=(id:string|null|undefined)=>{const business=businesses.find(item=>item.id===id);return business?<BusinessMark name={business.name} color={business.business_color} logo={business.business_logo} size="sm"/>:null;};
  // A business filter also lists the business's other assets and debts, so its whole net assets are in view.
  const businessHoldings=businessFilter.some(id=>id!==HOUSEHOLD)?data.records.filter(record=>isBusinessAccount(record)&&!['Cash','Deposit'].includes(record.kind)&&!!record.business_id&&businessFilter.includes(record.business_id)):[];
@@ -100,11 +111,11 @@ export function AccountsPage({ owner,onSaved,data, save, onAdd, onEdit, onTrack,
  const summaryCurrencies=Array.from(new Set(accountItems.map(item=>item.account.currency)));
   const rows = (records: Entry[]) => <ul className="account-holdings">{records.map(record=><HoldingRow key={record.id} record={record} accounts={investmentAccounts} market={market} onEdit={onEdit} onTrack={onTrack} assignHolding={assignHolding} onMove={setMovement} onCorporate={setCorporate}/>)}</ul>;
  return <>
-  <PageHeader title={t('Accounts')}>{businesses.length>0&&<Button variant="outline" onClick={()=>setEditingBusinesses(true)}><Briefcase size={17} aria-hidden="true"/>{t('Edit businesses')}</Button>}<Button variant="outline" onClick={()=>setMovement({kind:'transfer'})}><ArrowRightLeft size={17} aria-hidden="true"/>{t('Transfer money')}</Button><Button onClick={()=>setChoosing(true)}><Plus size={17} aria-hidden="true" />{t('Add account')}</Button></PageHeader>
+  <PageHeader title={t('Accounts')}>{owners.length>0&&<Button variant="outline" disabled={readOnly} onClick={()=>setEditingOwners(true)}><Users size={17} aria-hidden="true"/>{t('Edit owners')}</Button>}{businesses.length>0&&<Button variant="outline" onClick={()=>setEditingBusinesses(true)}><Briefcase size={17} aria-hidden="true"/>{t('Edit businesses')}</Button>}<Button variant="outline" onClick={()=>setMovement({kind:'transfer'})}><ArrowRightLeft size={17} aria-hidden="true"/>{t('Transfer money')}</Button><Button onClick={()=>setChoosing(true)}><Plus size={17} aria-hidden="true" />{t('Add account')}</Button></PageHeader>
   {!!accountItems.length&&<StatTiles columns="auto" label={t('About account totals')}>
    {summaryCurrencies.map(code=>{const items=accountItems.filter(item=>item.account.currency===code);const total=items.some(item=>item.total===null)?null:items.reduce((sum,item)=>sum+(item.total??0),0);return <StatTile key={code} label={t('{currency} balances',{currency:code})} value={total===null?'—':formatMoney(total,code,locale)}/>;})}
   </StatTiles>}
-  {businesses.length>0&&!!accountItems.length&&<div className="transactions-tools"><BusinessFilter businesses={businesses} value={businessFilter} onChange={setBusinessFilter}/></div>}
+  {(businesses.length>0||owners.length>0)&&!!accountItems.length&&<div className="transactions-tools">{businesses.length>0&&<BusinessFilter businesses={businesses} value={businessFilter} onChange={setBusinessFilter}/>}{owners.length>0&&<OwnerFilter owners={owners} value={ownerFilter} onChange={setOwnerFilter}/>}</div>}
   {!!accountItems.length&&<div className="accounts-master-detail">
    <section className="account-directory" aria-label={t('Accounts')}>
     {accountItems.length>6&&<label className="account-search"><Search size={18} aria-hidden="true"/><Input aria-label={t('Search accounts')} placeholder={t('Search accounts...')} value={query} onChange={event=>setQuery(event.target.value)}/></label>}
@@ -112,7 +123,7 @@ export function AccountsPage({ owner,onSaved,data, save, onAdd, onEdit, onTrack,
 const total=items.every(item=>item.total!==null)?[...new Set(items.map(item=>item.account.currency))].map(code=>formatMoney(items.filter(item=>item.account.currency===code).reduce((sum,item)=>sum+(item.total??0),0),code,locale)).join(' · '):null;return items.length>0&&<details className="panel account-group" key={group} open>
      <summary><ChevronDown size={18} aria-hidden="true"/><h2>{t(label)}</h2><Count value={items.length}/>{total&&<strong>{total}</strong>}</summary>
      <SortableList id={`accounts-${group}`} items={items.map(item=>item.id)} nameOf={id=>items.find(item=>item.id===id)?.account.name??''} onMove={(moved,over)=>void order.reorder(moved,over,items.map(item=>item.id))} disabled={order.disabled}>
-      {items.map(item=><SortableItem key={item.key} id={item.id} label={item.account.name} className="account-sortable-row"><button type="button" className="account-list-row" aria-pressed={active?.key===item.key} onClick={()=>setSelected(item.key)}><CategoryIcon kind={item.account.kind}/><span className="account-list-name"><span className="account-list-title">{item.account.name}{markOf(businessOf(item))}</span><small>{[item.count!==null?t('{count} holdings',{count:formatNumber(item.count,locale,0)}):t(item.account.kind==='Deposit'?'Deposit':'Cash account'),businesses.find(business=>business.id===businessOf(item))?.name].filter(Boolean).join(' · ')}</small></span><strong>{item.total===null?'—':formatMoney(item.total,item.account.currency,locale)}</strong><ChevronRight size={18} aria-hidden="true"/></button></SortableItem>)}
+      {items.map(item=><SortableItem key={item.key} id={item.id} label={item.account.name} className="account-sortable-row"><button type="button" className="account-list-row" aria-pressed={active?.key===item.key} onClick={()=>setSelected(item.key)}><CategoryIcon kind={item.account.kind}/><span className="account-list-name"><span className="account-list-title">{item.account.name}{markOf(businessOf(item))}{owners.length>0&&ownerMark(item)}</span><small>{[item.count!==null?t('{count} holdings',{count:formatNumber(item.count,locale,0)}):t(item.account.kind==='Deposit'?'Deposit':'Cash account'),businesses.find(business=>business.id===businessOf(item))?.name].filter(Boolean).join(' · ')}</small></span><strong>{item.total===null?'—':formatMoney(item.total,item.account.currency,locale)}</strong><ChevronRight size={18} aria-hidden="true"/></button></SortableItem>)}
      </SortableList>
     </details>;})}
     {!visibleAccounts.length&&<p className="account-search-empty muted">{t('No accounts match your search.')}</p>}
@@ -149,6 +160,7 @@ const total=items.every(item=>item.total!==null)?[...new Set(items.map(item=>ite
    {([{kind:'CashInvestment',title:'Cash investment account',description:'Hold cash in your preferred currencies as an investment.',Icon:Wallet},{kind:'Cash',title:'Cash account',description:'Money available for spending, transfers and savings goals.',Icon:Wallet},{kind:'Deposit',title:'Interest-bearing deposit',description:'A balance with an annual interest rate, top-ups and withdrawals.',Icon:Landmark},{kind:'Stock',title:'Stock account',description:'A brokerage account containing multiple stock holdings.',Icon:ChartNoAxesCombined},{kind:'Crypto',title:'Crypto account',description:'An exchange or wallet containing multiple crypto holdings.',Icon:Bitcoin}] as const).map(({kind,title,description,Icon})=><button key={kind} type="button" onClick={()=>{setChoosing(false);if(kind==='Cash'||kind==='Deposit')onAdd(kind);else setDraft({id:crypto.randomUUID(),kind:kind==='CashInvestment'?'Cash':kind,name:'',currency});}}><Icon size={24} aria-hidden="true" /><span><strong>{t(title)}</strong><span>{t(description)}</span></span></button>)}
   </div></DialogContent></Dialog>
   <ErrorPopup message={order.error}/>
+  {editingOwners&&household&&<AccountOwnersDialog records={data.records} accounts={investmentAccounts} market={market} household={household} owners={owners} onChange={onAccountOwner} onClose={()=>setEditingOwners(false)}/>}
   {editingBusinesses&&<AccountBusinessesDialog records={data.records} businesses={businesses} onChange={onAccountBusiness} onClose={()=>setEditingBusinesses(false)}/>}
   {statement&&<StatementReconciliation account={statement} owner={owner} onClose={()=>setStatement(null)} onSaved={onSaved}/>}
   {corporate&&<CorporateEventDialog record={corporate} records={data.records} accounts={investmentAccounts} owner={owner} onClose={()=>setCorporate(null)} onSaved={onSaved}/>}

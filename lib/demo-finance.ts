@@ -4,6 +4,7 @@ import { assets, expenses, income, interestKinds, liabilities, scheduleDates, va
 import { withAssetIncomePlans } from './earning-sources';
 import type { ExpensePlan } from './expense-plans';
 import type { HoldingAccount } from './holding-accounts';
+import { demoPeople, ownedBy } from './household';
 import type { HistoryEvent } from './investment-history';
 import type { MarketData } from './market';
 import type { Category, Goal, Occurrence } from './planning';
@@ -14,10 +15,12 @@ export const demoMarket: MarketData = { rates: { USD: 1, UZS: 12500 }, fx: null,
 // The sample workspace also shows the Treasury bill benchmark, so the risk-free comparison can be explored.
 export const demoBenchmarkKeys = [...defaultComparisonPreferences.benchmarks, 'BIL'] as const;
 
+// The sample household: the brokerage is Alex's, the crypto wallet Sam's; holdings follow their account.
 export const demoHoldingAccounts: HoldingAccount[] = [
- { id: 'demo-brokerage', name: 'Brokerage account', kind: 'Stock', currency: 'USD' },
- { id: 'demo-crypto-wallet', name: 'Crypto wallet', kind: 'Crypto', currency: 'USD' },
+ { id: 'demo-brokerage', name: 'Brokerage account', kind: 'Stock', currency: 'USD', member_id: demoPeople.me },
+ { id: 'demo-crypto-wallet', name: 'Crypto wallet', kind: 'Crypto', currency: 'USD', member_id: demoPeople.partner },
 ];
+const mine = ownedBy(demoPeople.me), partners = ownedBy(demoPeople.partner);
 
 /** Value a year ago, so the net-worth chart shows homes appreciating and debts being repaid. */
 const openings: Record<string, number> = {
@@ -30,8 +33,8 @@ export function demoRecords(today: string): Entry[] {
   id: 'demo-' + id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0,
   date: shiftDay(today, -365), frequency: 'Once', notes: '', ownership_percentage: 100, ...extra,
  });
- const stock = (symbol: string, quantity: number, price: number, cost: number) => record(symbol.toLowerCase(), symbol, 'Stock', price, { quantity, cost, holding_account_id: 'demo-brokerage' });
- const coin = (id: string, name: string, quantity: number, price: number, cost: number) => record(id, name, 'Crypto', price, { quantity, cost, holding_account_id: 'demo-crypto-wallet' });
+ const stock = (symbol: string, quantity: number, price: number, cost: number) => record(symbol.toLowerCase(), symbol, 'Stock', price, { quantity, cost, holding_account_id: 'demo-brokerage', ...mine });
+ const coin = (id: string, name: string, quantity: number, price: number, cost: number) => record(id, name, 'Crypto', price, { quantity, cost, holding_account_id: 'demo-crypto-wallet', ...partners });
  const monthly = (id: string, name: string, kind: Entry['kind'], amount: number, extra: Partial<Entry> = {}) => record(id, name, kind, amount, { frequency: 'Monthly', ...extra });
  return [
   // Cash
@@ -57,15 +60,15 @@ export function demoRecords(today: string): Entry[] {
   record('biz-rentals', 'Lakeside Rentals LLC', 'Business', 0, { business_structure: 'rental_property', business_color: 'violet' }),
   record('candle-checking', 'Candle Co. checking', 'Cash', 3200, { business_id: 'demo-biz-candles' }),
   record('rental-checking', 'Rentals operating account', 'Cash', 9800, { business_id: 'demo-biz-rentals' }),
-  record('watches', 'Watch collection', 'Valuables', 14000),
+  record('watches', 'Watch collection', 'Valuables', 14000, mine),
   record('lent', 'Loan to a friend', 'Money lent', 3000, { lent_date: shiftDay(today, -60), date: shiftDay(today, 30) }),
   // Debts
   record('mortgage', 'Family home mortgage', 'Mortgage', 182000, { rate: 6.1, estimated_monthly_payment: 1480, date: shiftDay(today, 20) }),
-  record('car-loan', 'Car loan', 'Loan', 18500, { rate: 5.4, estimated_monthly_payment: 520, date: shiftDay(today, 12) }),
+  record('car-loan', 'Car loan', 'Loan', 18500, { rate: 5.4, estimated_monthly_payment: 520, date: shiftDay(today, 12), ...partners }),
   record('credit-card', 'Credit card balance', 'Debt', 2300, { rate: 21.9, estimated_monthly_payment: 300, date: shiftDay(today, 8) }),
   // Income
-  monthly('salary', 'Monthly salary', 'Salary', 14500),
-  monthly('freelance', 'Freelance design', 'Other income', 1800),
+  monthly('salary', 'Monthly salary', 'Salary', 14500, mine),
+  monthly('freelance', 'Freelance design', 'Other income', 1800, partners),
   record('bonus', 'Annual bonus', 'Other income', 12000, { date: shiftDay(today, -45) }),
   record('dividends', 'Quarterly dividends', 'Other income', 640, { date: shiftDay(today, -20) }),
   // Recurring expenses
@@ -73,7 +76,7 @@ export function demoRecords(today: string): Entry[] {
   monthly('tuition', 'School tuition', 'Living expense', 1200),
   monthly('internet', 'Phone & internet', 'Living expense', 130),
   monthly('streaming', 'Streaming subscriptions', 'Living expense', 45),
-  monthly('gym', 'Gym membership', 'Living expense', 60),
+  monthly('gym', 'Gym membership', 'Living expense', 60, mine),
   monthly('home-insurance', 'Home insurance', 'Other expense', 210),
   monthly('car-insurance', 'Car insurance', 'Other expense', 140),
   monthly('hoa', 'Condo HOA fees', 'Other expense', 380),
@@ -179,6 +182,8 @@ function demoSpending(today: string, record: (id: string, name: string, kind: En
   ['Amazon', 87, 'Living expense', 'household'], ['Clothing', 164, 'Living expense'], ['Movie night', 42, 'Living expense'],
   ['Farmers market', 58, 'Living expense', 'groceries'], ['Car service', 289, 'Other expense'], ['Gift for a friend', 75, 'Other expense'],
  ];
+ // Most spending is the household's; a few purchases are one person's own.
+ const personal: Record<string, Partial<Entry>> = { Coffee: mine, Lunch: mine, 'Car service': mine, Uber: partners, Clothing: partners, 'Gift for a friend': partners };
  const month = today.slice(0, 7), todayDay = Number(today.slice(8, 10));
  const spends: Entry[] = [];
  for (let back = 6; back >= 0; back--) {
@@ -188,7 +193,7 @@ function demoSpending(today: string, record: (id: string, name: string, kind: En
   purchases.forEach(([name, amount, kind, plan], index) => {
    const day = 1 + Math.floor(index * 27 / purchases.length);
    if (back === 0 && day > todayDay) return;
-   spends.push(record(`spend-${back}-${index}`, name, kind, Math.round(amount * factor), { date: `${current}-${String(day).padStart(2, '0')}`, expense_plan_id: plan && back <= 3 ? 'demo-plan-' + plan : null }));
+   spends.push(record(`spend-${back}-${index}`, name, kind, Math.round(amount * factor), { date: `${current}-${String(day).padStart(2, '0')}`, expense_plan_id: plan && back <= 3 ? 'demo-plan-' + plan : null, ...personal[name] }));
   });
  }
  // One larger trip last month.

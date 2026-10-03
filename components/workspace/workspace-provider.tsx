@@ -46,7 +46,7 @@ import { useTags } from '@/hooks/use-tags';
 import { useRecordAttachments } from '@/hooks/use-record-attachments';
 import { emptyTags, type TagData } from '@/lib/tags';
 import { useHousehold } from '@/hooks/use-household';
-import { canEdit, inviteToken } from '@/lib/household';
+import { assignOwner, canEdit, demoHousehold, inviteToken, moveAccountToOwner } from '@/lib/household';
 
 const today = depositToday;
 const fresh = (): Entry => ({ id: crypto.randomUUID(), name: '', kind: 'Cash', currency: 'USD', amount: 0, quantity: 1, cost: 0, rate: 0, date: today(), lent_date: today(), frequency: 'Once', notes: '', business_id: null, ownership_percentage: 100, estimated_monthly_income: 0, estimated_monthly_payment: 0 });
@@ -526,6 +526,29 @@ function useWorkspaceState() {
         refreshRecords();
         return result.changed ?? 0;
     }
+    /** Gives records to an owner of the household: a person, or everyone with `SHARED`. Resolves to how many changed. */
+    async function assignRecordOwner(ids: string[], owner: string) {
+        if (demo) {
+            const changed = assignOwner(rows, ids, owner, demoHousehold).changed;
+            setRows(previous => assignOwner(previous, ids, owner, demoHousehold).records);
+            return changed;
+        }
+        const changed = await household.attribute(ids, owner);
+        refreshRecords();
+        return changed;
+    }
+    /** Gives an account to an owner; the records that followed it (its transactions, its holdings) move too. Resolves to how many moved. */
+    async function setAccountOwner(accountId: string, owner: string) {
+        if (demo) {
+            const moved = moveAccountToOwner(rows, demoHoldingAccounts, accountId, owner, demoHousehold);
+            setRows(previous => moveAccountToOwner(previous, demoHoldingAccounts, accountId, owner, demoHousehold).records);
+            setDemoHoldingAccounts(moved.accounts);
+            return moved.changed;
+        }
+        const changed = await household.setAccountOwner(accountId, owner);
+        refreshRecords();
+        return changed;
+    }
     /** Saves a business profile (a Business record) outside the record dialog: business setup and Settings. */
     async function saveBusiness(entry: Entry) {
         const record = normalizeEntry(entry);
@@ -541,7 +564,7 @@ function useWorkspaceState() {
         // Session
         ready, user, demo, pathname, section, sectionKey, cashFlowSection, busy, configured, error, login, logout, startDemo, clearLocalSession,
         // Household sharing
-        household, readOnly, pendingInvite, dismissInvite,
+        household, readOnly, pendingInvite, dismissInvite, assignRecordOwner, setAccountOwner,
         // Preferences
         currency, setCurrency, preferencesData, applyPreferences, savePreferences, settingsLoading, settingsError, retrySettings, workspacePreferences, onboardingNeeded, restartOnboarding, saveTrackingStart: saveTrackingStartRequest,
         // Records and market data

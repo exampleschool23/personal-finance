@@ -10,16 +10,46 @@ const me='11111111-1111-4111-8111-111111111111',owner='22222222-2222-4222-8222-2
 const jar=(values={})=>{const store=new Map(Object.entries(values)),writes=[],deleted=[];return {store,writes,deleted,get:name=>store.has(name)?{value:store.get(name)}:undefined,set:(name,value,options)=>{writes.push({name,value,options});store.set(name,value);},delete:name=>{deleted.push(name);store.delete(name);}};};
 const headerOf=init=>new Headers(init?.headers).get('x-workspace-owner');
 
-test('household helpers: who paid, the Mine / Partner / Ours filter, initials and invite links',()=>{
- const {matchesMember,recordMember,initials,inviteLink,inviteToken,workspaceId,workspaceOwner,sharedWorkspace,canEdit,personalRequest,knownHouseholdMessage}=household;
- // Records from before households belong to the workspace owner.
- assert.equal(recordMember({},owner),owner);assert.equal(recordMember({member_id:me},owner),me);
- const records=[{id:'a',member_id:me},{id:'b',member_id:owner},{id:'c'},{id:'d',member_id:null}];
- assert.deepEqual(records.filter(record=>matchesMember(record,'mine',me,owner)).map(record=>record.id),['a']);
- assert.deepEqual(records.filter(record=>matchesMember(record,'partner',me,owner)).map(record=>record.id),['b','c','d']);
- assert.equal(records.filter(record=>matchesMember(record,'all',me,owner)).length,4);
- // In your own workspace, unattributed records are yours.
- assert.deepEqual(records.filter(record=>matchesMember(record,'mine',owner,owner)).map(record=>record.id),['b','c','d']);
+test('household helpers: owners and their filter, initials and invite links',()=>{
+ const {SHARED,ownerOf,holdingOwner,inOwnerFilter,ownedBy,ownerMember,ownerChoices,assignOwner,moveAccountToOwner,accountOwnerChange,demoHousehold,initials,inviteLink,inviteToken,workspaceId,workspaceOwner,sharedWorkspace,canEdit,personalRequest,knownHouseholdMessage}=household;
+ const home={active:owner,people:[{id:owner,name:'Alex'},{id:me,name:null}]};
+ // Records from before owners are shared; so are those of someone who has left. A person is named only with shared switched off.
+ assert.equal(ownerOf({},home),SHARED);assert.equal(ownerOf({member_id:me},home),SHARED);assert.equal(ownerOf({shared:true,member_id:me},home),SHARED);
+ assert.equal(ownerOf({shared:false,member_id:me},home),me);assert.equal(ownerOf({shared:false,member_id:null},home),owner,'without a name it is the workspace owner\'s');
+ assert.equal(ownerOf({shared:false,member_id:other},home),SHARED);
+ assert.equal(holdingOwner({},home),SHARED);assert.equal(holdingOwner({member_id:me},home),me);assert.equal(holdingOwner({member_id:other},home),SHARED);
+ assert.equal(inOwnerFilter([],me),true);assert.equal(inOwnerFilter([SHARED,me],me),true);assert.equal(inOwnerFilter([SHARED],me),false);
+ assert.deepEqual(ownedBy(SHARED),{shared:true});assert.deepEqual(ownedBy(me),{shared:false,member_id:me});
+ assert.equal(ownerMember(SHARED),null);assert.equal(ownerMember(me),me);
+ assert.deepEqual(ownerChoices(home,{shared:'Shared',unnamed:'Partner'}),[{id:SHARED,name:'Shared'},{id:owner,name:'Alex'},{id:me,name:'Partner'}]);
+ // Giving records to an owner counts only those that change; a shared record keeps naming who added it.
+ const records=[{id:'a',kind:'Cash'},{id:'b',kind:'Living expense',account_id:'a',member_id:me},{id:'c',kind:'Living expense',account_id:'a',...ownedBy(owner)},{id:'d',kind:'Other income'},{id:'p',kind:'Property'},{id:'r',kind:'Rent income',income_source_id:'p'},{id:'s',kind:'Stock',holding_account_id:'h'}];
+ let given=assignOwner(records,['b','c','zz'],owner,home);
+ assert.equal(given.changed,1);assert.deepEqual(given.records.map(record=>ownerOf(record,home)),[SHARED,owner,owner,SHARED,SHARED,SHARED,SHARED]);
+ given=assignOwner(given.records,['b'],SHARED,home);
+ assert.deepEqual(given.records[1],{id:'b',kind:'Living expense',account_id:'a',member_id:owner,shared:true});
+ // An account takes along what followed it; a transaction given to someone by hand stays.
+ const accounts=[{id:'h',name:'Brokerage'}];
+ let moved=moveAccountToOwner(records,accounts,'a',me,home);
+ assert.equal(moved.changed,1);assert.deepEqual(moved.records.map(record=>ownerOf(record,home)),[me,me,owner,SHARED,SHARED,SHARED,SHARED]);
+ assert.equal(moveAccountToOwner(moved.records,accounts,'a',me,home).changed,0);
+ moved=moveAccountToOwner(moved.records,accounts,'a',SHARED,home);
+ assert.deepEqual(moved.records.slice(0,3).map(record=>ownerOf(record,home)),[SHARED,SHARED,owner]);
+ moved=moveAccountToOwner(records,accounts,'p',owner,home);
+ assert.equal(moved.changed,1,'a property\'s rent follows it');assert.equal(ownerOf(moved.records[5],home),owner);
+ moved=moveAccountToOwner(records,accounts,'h',me,home);
+ assert.equal(moved.changed,1);assert.deepEqual(moved.accounts,[{id:'h',name:'Brokerage',member_id:me}]);assert.equal(ownerOf(moved.records[6],home),me);
+ assert.deepEqual(moveAccountToOwner(moved.records,moved.accounts,'h',SHARED,home).accounts,[{id:'h',name:'Brokerage',member_id:null}]);
+ assert.equal(moveAccountToOwner(records,accounts,'missing',me,home).changed,0);
+ // A transaction moved to another account takes its owner, unless its own was chosen by hand.
+ const cash=[{id:'joint'},{id:'mine',...ownedBy(me)},{id:'theirs',...ownedBy(owner)}];
+ assert.deepEqual(accountOwnerChange({account_id:null},'mine',cash,home),{shared:false,member_id:me});
+ assert.deepEqual(accountOwnerChange({account_id:'mine',...ownedBy(me)},'theirs',cash,home),{shared:false,member_id:owner});
+ assert.deepEqual(accountOwnerChange({account_id:'mine',...ownedBy(me)},'joint',cash,home),{shared:true});
+ assert.deepEqual(accountOwnerChange({account_id:'mine',...ownedBy(owner)},'joint',cash,home),{},'chosen by hand');
+ assert.deepEqual(accountOwnerChange({account_id:'joint'},null,cash,home),{});
+ // The sample workspace has a household of two, so owners can be tried without an account.
+ assert.equal(sharedWorkspace(demoHousehold),true);assert.equal(canEdit(demoHousehold),true);assert.deepEqual(demoHousehold.memberships,[]);
  assert.equal(initials('Alex Morgan'),'AM');assert.equal(initials('sam@example.com'),'S');assert.equal(initials('ali_valiyev'),'AV');assert.equal(initials(null),'?');
  const token='a'.repeat(64);
  assert.equal(inviteLink('https://app.example',token),`https://app.example/settings?invite=${token}#household`);
@@ -66,7 +96,7 @@ function householdApi({cookie,state,failures={}}={}){
   if(name==='household_people')return Response.json([{id:headerOf(init)||me,name:'Owner',role:'owner'}]);
   if(name==='create_household_invite')return Response.json({id:other,token:'f'.repeat(64),role:'member',expires_at:'2026-10-10T00:00:00Z'});
   if(name==='accept_household_invite')return Response.json({owner_id:owner,role:'member'});
-  if(name==='set_transaction_member')return Response.json(2);
+  if(name==='set_record_owner'||name==='set_account_owner')return Response.json(2);
   return Response.json(null);
  };
  const route=loadTS('app/api/household/route.ts',{'next/headers':{cookies:async()=>cookies},'@/lib/account-access':{accountOrigin:()=>'https://app.example'},
@@ -98,10 +128,14 @@ test('the household API checks the open workspace against the database and keeps
  assert.equal(body.link,`https://app.example/settings?invite=${'f'.repeat(64)}#household`);assert.equal(body.invite.token,undefined);
  body=await (await api.post('accept',{token:'f'.repeat(64)})).json();
  assert.equal(body.owner_id,owner);assert.equal(api.cookies.store.get('hf_workspace'),owner);
- // Who paid is set in the open workspace.
+ // Owners are set in the open workspace: a person, or nobody for shared.
  api=householdApi({cookie:owner});
  body=await (await api.post('attribute',{ids:[other],member:me})).json();
- assert.equal(body.changed,2);assert.deepEqual(api.calls.at(-1),{name:'set_transaction_member',body:{p_ids:[other],p_member:me},workspace:owner,token:'token'});
+ assert.equal(body.changed,2);assert.deepEqual(api.calls.at(-1),{name:'set_record_owner',body:{p_ids:[other],p_member:me},workspace:owner,token:'token'});
+ await api.post('attribute',{ids:[other],member:null});assert.deepEqual(api.calls.at(-1).body,{p_ids:[other],p_member:null});
+ body=await (await api.post('account_owner',{account:other,member:null})).json();
+ assert.equal(body.changed,2);assert.deepEqual(api.calls.at(-1),{name:'set_account_owner',body:{p_account:other,p_member:null},workspace:owner,token:'token'});
+ assert.equal((await api.post('account_owner',{account:'nope',member:me})).status,400);assert.equal((await api.post('attribute',{ids:[],member:me})).status,400);
  // Leaving the open household closes it; the owner removes by member id only.
  assert.equal((await api.post('leave',{owner})).status,200);assert.ok(api.cookies.deleted.includes('hf_workspace'));
  assert.deepEqual(api.calls.at(-1).body,{p_owner:owner,p_member:me});
@@ -152,11 +186,20 @@ test('the shell, top bar and screens show sharing only where it applies',()=>{
  const top=fs.readFileSync('components/workspace/top-bar.tsx','utf8');
  assert.match(top,/\{!readOnly && <Button size="sm" className="quick-expense"/);
  const transactions=fs.readFileSync('components/workspace/screens/transactions-screen.tsx','utf8');
- assert.match(transactions,/\{shared && <Segmented label=\{t\('Who'\)\} options=\{\[\{ value: 'mine', label: t\('Mine'\) \}, \{ value: 'partner', label: t\('Partner'\) \}, \{ value: 'all', label: t\('Ours'\) \}\]/);
+ // Owner filters and pickers appear only in a shared household.
+ assert.match(transactions,/const owners = homes && sharedWorkspace\(homes\) \? ownerChoices\(/);
+ assert.match(transactions,/\{owners\.length > 0 && <OwnerFilter owners=\{owners\} value=\{ownerFilter\} onChange=\{setOwnerFilter\}\/>\}/);
+ assert.match(transactions,/\{owners\.length > 0 && <OwnerPicker record=\{record\}/);
+ const accountsPage=fs.readFileSync('components/planning/accounts-page.tsx','utf8');
+ assert.match(accountsPage,/\{owners\.length>0&&<Button variant="outline" disabled=\{readOnly\} onClick=\{\(\)=>setEditingOwners\(true\)\}>/);
+ assert.match(accountsPage,/\{owners\.length>0&&<OwnerFilter owners=\{owners\} value=\{ownerFilter\} onChange=\{setOwnerFilter\}\/>\}/);
+ assert.match(fs.readFileSync('components/workspace/screens/reports-screen.tsx','utf8'),/owners\.length > 0 && <OwnerFilter owners=\{owners\}/);
  const settings=fs.readFileSync('components/settings-layout.tsx','utf8');
  assert.match(settings,/\{id:'household',label:'Household sharing',icon:Users\}/);
  const panel=fs.readFileSync('components/household-panel.tsx','utf8');
- assert.match(panel,/demo \? <EmptyState icon=\{<Users\/>\} description=\{t\('Sharing is not available in the sample workspace\.'\)\}\/>/);
+ // The sample household lists its people and offers no invites.
+ assert.match(panel,/\{!demo && state && <Button disabled=\{people \+ state\.invites\.length >= householdLimit\}/);
+ assert.match(panel,/demo \? <ul className="household-people">\{state\?\.people\.map\(/);
  // The provider refuses to open edit forms for a viewer and skips the daily snapshot write.
  const provider=fs.readFileSync('components/workspace/workspace-provider.tsx','utf8');
  for(const action of ['addCashFlow','addRecord','addAccountRecord','quickExpense','requestDelete'])assert.match(provider,new RegExp(`const ${action} = [^\\n]*\\n?[^\\n]*editable\\(\\)`),action);

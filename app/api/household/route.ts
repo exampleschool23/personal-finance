@@ -74,9 +74,12 @@ export async function POST(req: Request) {
    jar.set(workspaceCookie, data.owner!, cookieOptions);
    return reply({ active: data.owner });
   }
-  if (action === 'attribute') {
-   const ids = (parsed.data as unknown as { ids: string[] }).ids;
-   const result = await rpc<number>('set_transaction_member', { p_ids: ids, p_member: data.member }, auth.token, auth.owner && auth.owner !== me ? auth.owner : '');
+  if (action === 'attribute' || action === 'account_owner') {
+   // The open workspace is named explicitly, so the database checks the caller may change it.
+   const workspace = auth.owner && auth.owner !== me ? auth.owner : '';
+   const input = parsed.data as unknown as { ids: string[]; account: string; member: string | null };
+   const result = action === 'attribute' ? await rpc<number>('set_record_owner', { p_ids: input.ids, p_member: input.member }, auth.token, workspace)
+    : await rpc<number>('set_account_owner', { p_account: input.account, p_member: input.member }, auth.token, workspace);
    return result.ok ? reply({ changed: Number(result.data) || 0 }) : failed(result);
   }
   const call = action === 'revoke' ? rpc('revoke_household_invite', { p_id: data.id }, auth.token)

@@ -1,10 +1,9 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { Copy, UserPlus, Users } from 'lucide-react';
+import { Copy, UserPlus } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { Count } from '@/components/presentation-foundation/count';
-import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
@@ -38,10 +37,11 @@ export function HouseholdPanel({ household, demo }: { household: Household; demo
  };
  const people = state ? 1 + state.members.length : 1;
  return <section className="panel household-panel" aria-label={t('Household sharing')}>
-  <PanelTitle title={t('Household sharing')} count={!demo && state ? <Count value={people}/> : undefined} hint={t('Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Each person keeps their own sign-in, preferences, Telegram and backups.')}>
+  <PanelTitle title={t('Household sharing')} count={state ? <Count value={people}/> : undefined} hint={t('Share your finances with a partner or family. People who can edit add and change records; people who can view only look. Accounts and transactions can belong to one person or be shared. Each person keeps their own sign-in, preferences, Telegram and backups.')}>
    {!demo && state && <Button disabled={people + state.invites.length >= householdLimit} onClick={() => setInviting(true)}><UserPlus size={16} aria-hidden="true"/>{t('Invite someone')}</Button>}
   </PanelTitle>
-  {demo ? <EmptyState icon={<Users/>} description={t('Sharing is not available in the sample workspace.')}/> : <ResourceState loading={household.loading} error={household.error || null} onRetry={household.retry}>
+  {/* The sample household is there to try owners and their filters; it has no invites. */}
+  {demo ? <ul className="household-people">{state?.people.map(person => <li key={person.id}><PersonAvatar name={name(person.name)}/><strong>{name(person.name)}</strong><span className="status-badge">{t(roleLabel(person.role))}</span></li>)}</ul> : <ResourceState loading={household.loading} error={household.error || null} onRetry={household.retry}>
    {state && <>
     <ul className="household-people">
      <li><PersonAvatar name={name(state.name)}/><strong>{name(state.name)}</strong><span className="status-badge">{t('Owner')}</span></li>

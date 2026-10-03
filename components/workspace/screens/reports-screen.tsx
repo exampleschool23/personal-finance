@@ -20,6 +20,8 @@ import { queryList, useLocationSearch } from '@/hooks/use-location-search';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { budgetCategories } from '@/lib/budget';
 import { HOUSEHOLD } from '@/lib/business';
+import { inOwnerFilter, ownerChoices, ownerOf, SHARED, sharedWorkspace } from '@/lib/household';
+import { OwnerFilter } from '@/components/presentation-foundation/owner-filter';
 import { attributeTrend, businessKey, businessSankey, cashFlowTrend, drillMatches, filterLines, intervals, netTrendBy, profitAndLoss, rangeFor, rangeMonths, readableRange, reportLedger, reportRangeLabels, reportRanges, sharesBy, type Attribute, type Direction, type Drill, type Interval, type LedgerLine, type ReportRange, type ReportRangePreset } from '@/lib/business-report';
 import { defaultTaxSettings, taxPeriodRange, type TaxPeriod, type TaxSettings } from '@/lib/business-tax';
 import { depositToday } from '@/lib/deposit-interest';
@@ -47,7 +49,11 @@ function useRangeData(range: ReportRange) {
  * profit and loss table, and business tax prep. Every chart narrows the transactions below it. */
 export function ReportsScreen() {
  const { t, locale } = useLanguage();
- const { user, demo, reload, currency, market, transactionTools, businessList, workspacePreferences, setViewing, storedRecord } = useWorkspace();
+ const { user, demo, reload, currency, market, transactionTools, businessList, workspacePreferences, setViewing, storedRecord, household } = useWorkspace();
+ // In a shared household, reports narrow to what one person owns or to what is shared.
+ const homes = household.state;
+ const owners = homes && sharedWorkspace(homes) ? ownerChoices(homes, { shared: t('Shared'), unnamed: t('Partner') }) : [];
+ const [ownerFilter, setOwnerFilter] = useState<string[]>([]);
  const today = depositToday();
  const search = useLocationSearch();
  const [tab, setTab] = useState<Tab>('cash_flow');
@@ -72,7 +78,8 @@ export function ReportsScreen() {
  const rates = market?.rates ?? market?.fx?.rate;
  const splits = transactionTools.data.splits;
  const ledger = useMemo(() => reportLedger(data, splits, range, currency, today, rates), [data, splits, range, currency, today, rates]);
- const lines = useMemo(() => filterLines(ledger.lines, businesses), [ledger.lines, businesses]);
+ // Costs that come from an asset's history rather than a transaction belong to the household.
+ const lines = useMemo(() => filterLines(ledger.lines, businesses).filter(line => !homes || inOwnerFilter(ownerFilter, line.record ? ownerOf(line.record, homes) : SHARED)), [ledger.lines, businesses, homes, ownerFilter]);
  const budget = useBudget(user, demo, reload);
  const groups = useMemo(() => new Map(budgetCategories(data.categories, budget.state.categories).map(category => [category.key, category.group])), [data.categories, budget.state.categories]);
  const groupOf = (key: string) => groups.get(key) ?? (income.includes(key) || data.categories.some(category => category.id === key && category.direction === 'income') ? 'Income' : 'Everyday spending');
@@ -96,6 +103,7 @@ export function ReportsScreen() {
  return <div data-page="Reports" className="content reports-content">
   <PageHeader title={t('Reports')} hint={t('Cash flow, spending and income for your household and each business. Click any part of a chart or table to see its transactions.')}>
    {shownTab !== 'tax' && businessList.length > 0 && <BusinessFilter businesses={businessList} value={businesses} onChange={value => { setBusinesses(value); setDrill(null); }}/>}
+   {shownTab !== 'tax' && owners.length > 0 && <OwnerFilter owners={owners} value={ownerFilter} onChange={value => { setOwnerFilter(value); setDrill(null); }}/>}
    {shownTab !== 'tax' && <NativeSelect aria-label={t('Date range')} value={preset} onChange={event => { setPreset(event.currentTarget.value as ReportRangePreset | 'custom'); setDrill(null); }}>
     {reportRanges.map(item => <option key={item} value={item}>{t(reportRangeLabels[item])}</option>)}
     <option value="custom">{t('Custom range')}</option>

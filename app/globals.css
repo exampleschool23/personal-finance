@@ -2458,6 +2458,8 @@ summary.tax-line-heading>svg{flex-shrink:0;color:var(--muted-foreground);transit
 /* Household sharing: people as initials, the drawer's workspace switch, Settings › Household sharing. */
 .person-avatar{display:inline-grid;place-items:center;flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--muted);color:var(--foreground);font-size:var(--type-caption);font-weight:600;line-height:1}
 .person-avatar[data-size=sm]{width:24px;height:24px;font-size:var(--type-micro)}
+.person-avatar[data-shared]{color:var(--muted-foreground)}
+.account-list-title>.person-avatar{width:18px;height:18px}
 .transaction-member-button{display:inline-flex;border-radius:50%}
 .transaction-member-button:hover .person-avatar{background:var(--accent)}
 .transaction-member-button:focus-visible{outline:2px solid var(--ring);outline-offset:1px}

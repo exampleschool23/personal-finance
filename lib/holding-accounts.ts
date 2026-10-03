@@ -1,7 +1,7 @@
 import { value, type Entry } from './finance';
 import { marketEntry, type MarketData } from './market';
 
-export type HoldingAccount = { id: string; name: string; kind: 'Cash' | 'Stock' | 'Crypto'; currency: string };
+export type HoldingAccount = { id: string; name: string; kind: 'Cash' | 'Stock' | 'Crypto'; currency: string; /** The one person of the household it belongs to; shared without one. */ member_id?: string | null };
 export const holdingAccountLabel = (kind: HoldingAccount['kind']) => kind === 'Cash' ? 'Cash investment account' : kind === 'Stock' ? 'Stock account' : 'Crypto account';
 export function holdingAccountValue(account: HoldingAccount, records: Entry[], market: MarketData | null) {
  const holdings = records.filter(record => record.holding_account_id === account.id && (record.kind === account.kind || record.kind === 'Cash'));
