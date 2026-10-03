@@ -232,7 +232,7 @@ input,select,textarea{min-height:44px!important;background:var(--field)!importan
 .topbar-location>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topbar-actions{display:flex;align-items:center;gap:8px}
 .topbar-actions [data-slot=button]{height:38px;min-height:38px}
-@media(max-width:640px){.topbar{gap:8px}.topbar-location>span{display:none}.topbar-actions{gap:6px}.quick-expense{width:38px;padding:0}@media(pointer:coarse){.quick-expense{width:44px}}.quick-expense>span{display:none}}
+@media(max-width:640px){.topbar{gap:8px}.topbar-location>span:not(.topbar-household){display:none}.topbar-actions{gap:6px}.quick-expense{width:38px;padding:0}@media(pointer:coarse){.quick-expense{width:44px}}.quick-expense>span{display:none}}
 .content{padding:32px 36px;max-width:1640px;margin:auto}
 .workspace .content{container:content/inline-size;display:flex;flex-direction:column;gap:var(--space-page);width:100%;max-width:1440px;margin-inline:auto;padding:28px 36px 0}
 .workspace .content>*{flex-shrink:0;margin-block:0}
@@ -1793,6 +1793,20 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .spending-pace-legend li{display:flex;align-items:center;gap:6px}
 .spending-pace-legend i{width:14px;height:3px;border-radius:2px;background:var(--primary)}
 .spending-pace-legend i.previous{background:var(--muted-foreground);opacity:.55}
+.forecast-series{margin-bottom:16px}
+.forecast-chart{min-width:0;margin-top:20px}
+.forecast-warning{display:flex;gap:12px;align-items:flex-start;margin-top:16px;padding:14px 16px;border-radius:var(--radius-control);background:color-mix(in srgb,var(--caution) 14%,transparent);color:var(--pill-caution);font-size:var(--type-small)}
+.forecast-warning>svg{flex-shrink:0;width:18px;height:18px;margin-top:2px}
+.forecast-warning strong{display:flex;align-items:center;gap:6px;font-weight:600}
+.forecast-warning ul{margin:4px 0 0;padding:0;list-style:none}
+.forecast-what-if-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin-top:16px}
+.forecast-what-if-form>label{display:flex;flex-direction:column;gap:6px;min-width:160px;flex:1 1 160px;font-size:var(--type-small)}
+@container content (max-width:720px){.forecast-what-if-form>*{flex:1 1 100%}}
+.forecast-events .forecast-month-total{float:inline-end;font-weight:500;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.forecast-card-figures{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.forecast-card-figures li{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
+.forecast-card-figures strong{font-size:var(--type-stat);font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.forecast-card-figures small{font-size:var(--type-caption);color:var(--muted-foreground)}
 .overview-panel .allocation-bar{height:10px;gap:3px;margin:0 0 12px;border-radius:999px}
 .overview-list{list-style:none;margin:0;padding:0}
 .overview-list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:11px 0;border-top:1px solid color-mix(in srgb,var(--border) 60%,transparent);font-size:var(--type-small)}
@@ -1836,6 +1850,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .budget-group-row{font-weight:600}
 .budget-group-row .budget-cell{font-weight:600;font-size:var(--type-compact)}
 .budget-group[data-open] .budget-group-row{border-bottom:1px solid var(--hairline)}
+.budget-group-name{display:inline-flex;align-items:center;gap:4px;min-width:0}
 .budget-group-toggle{display:inline-flex;align-items:center;gap:8px;min-width:0;font-size:var(--type-compact);font-weight:600;text-align:start}
 .budget-group-toggle:focus-visible,.budget-category-name:focus-visible,.budget-unbudgeted:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:6px}
 .budget-category-row+.budget-category-row{border-top:1px solid var(--hairline)}
@@ -1873,7 +1888,8 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-history-bars[data-direction=income]>li>span{background:var(--positive)}
 .budget-history-bars small{padding-bottom:6px;color:var(--muted-foreground);font-size:var(--type-micro);text-transform:uppercase}
 .budget-history-forward{display:flex;align-items:center;gap:8px;font-size:var(--type-caption)}
-.budget-left{position:sticky;top:16px;display:flex;flex-direction:column;gap:14px;padding:16px}
+.budget-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.budget-left{display:flex;flex-direction:column;gap:14px;padding:16px}
 .budget-left-figure{display:flex;flex-direction:column;align-items:center;gap:4px;padding:20px 12px;border-radius:var(--radius-control);background:var(--muted);text-align:center}
 .budget-left-figure strong{font-size:var(--type-stat);font-weight:500;font-variant-numeric:tabular-nums}
 .budget-left-figure span{display:inline-flex;align-items:center;gap:4px;color:var(--muted-foreground);font-size:var(--type-small)}
@@ -1899,6 +1915,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-dialog{max-width:520px}
 .budget-dialog-title{display:flex;align-items:center;gap:10px}
 .budget-dialog-fields{display:flex;flex-direction:column;gap:16px;margin-bottom:16px}
+.budget-rollover-fields{display:flex;flex-direction:column;gap:12px;padding-inline-start:12px;border-inline-start:2px solid var(--hairline)}
 .budget-dialog-label{display:flex;flex-direction:column;gap:6px;margin:0;font-size:var(--type-small);font-weight:500}
 .budget-choice-list{display:flex;flex-direction:column;gap:0}
 .budget-choice-list>.budget-dialog-label{margin-bottom:6px}
@@ -1927,7 +1944,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-year td[data-future]{color:var(--muted-foreground)}
 .budget-year td .budget-progress{margin-top:4px}
 .budget-year>.budget-left-empty{padding:24px}
-@container content (max-width:980px){.budget-layout{grid-template-columns:minmax(0,1fr)}.budget-left{position:static;order:-1}}
+@container content (max-width:980px){.budget-layout{grid-template-columns:minmax(0,1fr)}.budget-side{position:static;order:-1}}
 @container content (max-width:600px){.budget-row{grid-template-columns:minmax(0,1fr) minmax(84px,auto) minmax(72px,auto);padding-inline:12px}.budget-row>.budget-cell:nth-child(3){display:none}.budget-category-row .budget-progress{inset-inline:12px}.budget-pill{min-width:0}}
 
 /* Transactions: the day-grouped list with an inline category picker and a summary beside it. */
@@ -1992,9 +2009,14 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .recurring-list>ul{margin:0;padding:0;list-style:none}
 .recurring-row{display:grid;grid-template-columns:minmax(0,1.6fr) auto minmax(90px,auto) minmax(150px,auto);align-items:center;gap:12px;padding:10px 16px;font-size:var(--type-small)}
 .recurring-row+.recurring-row{border-top:1px solid var(--hairline)}
-.recurring-row[data-status=paid],.recurring-row[data-status=skipped]{color:var(--muted-foreground)}
+.recurring-row[data-status=paid],.recurring-row[data-status=skipped],.recurring-row[data-status=missed]{color:var(--muted-foreground)}
 .recurring-row .row-actions{justify-content:flex-end}
 .recurring-row>.status-badge{justify-self:start}
+.subscriptions-panel{width:100%}
+.subscription-totals{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:var(--type-small);font-weight:500;font-variant-numeric:tabular-nums}
+.subscription-list{margin:0;padding:0;list-style:none}
+.subscription-list>.recurring-row{padding-inline:0}
+.subscription-hidden{margin-top:8px;border-top:1px solid var(--hairline)}
 .status-badge.is-paid{background:color-mix(in srgb,var(--positive) 12%,transparent);color:var(--pill-positive)}
 .recurring-calendar{width:100%;padding:0;overflow:hidden}
 .recurring-calendar-grid{display:flex;flex-direction:column}
@@ -2142,7 +2164,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .goal-row-alert{font-size:var(--type-caption);color:var(--negative)}
 .goal-row-menu{flex-shrink:0}
 .status-badge.goal-status.is-completed,.status-badge.goal-status.is-on_track{background:color-mix(in srgb,var(--positive) 12%,transparent);color:var(--pill-positive)}
-.status-badge.goal-status.is-at_risk{background:color-mix(in srgb,var(--caution) 14%,transparent);color:var(--pill-caution)}
+.status-badge.goal-status.is-at_risk,.status-badge.is-caution{background:color-mix(in srgb,var(--caution) 14%,transparent);color:var(--pill-caution)}
 .goal-available{display:flex;flex-direction:column;align-items:center;gap:4px;margin:4px 0 12px;padding:20px 16px;border-radius:var(--radius-control);background:color-mix(in srgb,var(--positive) 8%,var(--card));text-align:center}
 .goal-available strong{font-size:var(--type-stat);font-weight:500;font-variant-numeric:tabular-nums;color:var(--positive)}
 .goal-available span{font-size:var(--type-small);color:var(--muted-foreground)}
@@ -2257,6 +2279,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .business-filter-popover li>button:hover,.business-filter-popover li>button:focus-visible{background:var(--muted);outline:none}
 .business-filter-popover li>button>svg{margin-inline-start:auto;color:var(--mark-bg)}
 .business-filter-all{width:24px;height:24px;flex-shrink:0;border:1.5px dashed var(--border);border-radius:7px}
+.tag-filter-match{display:flex;margin-bottom:8px}.tag-filter-match>button{flex:1 1 0}
 .bulk-edit-sheet{gap:0;width:min(420px,100%);max-width:100%;overflow-y:auto}
 .bulk-edit-form{display:flex;flex-direction:column;gap:16px;padding:0 16px 16px}
 .bulk-edit-form fieldset{display:flex;flex-direction:column;gap:16px;margin:0;padding:0;border:0}
@@ -2417,3 +2440,21 @@ summary.tax-line-heading>svg{flex-shrink:0;color:var(--muted-foreground);transit
 .rule-more>summary{display:flex;align-items:center;gap:8px;font-size:var(--type-small);font-weight:500;cursor:pointer}
 .rule-more[open]>summary{margin-block-end:12px}
 .rule-more>*+*{margin-block-start:12px}
+/* Household sharing: people as initials, the drawer's workspace switch, Settings › Household sharing. */
+.person-avatar{display:inline-grid;place-items:center;flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--muted);color:var(--foreground);font-size:var(--type-caption);font-weight:600;line-height:1}
+.person-avatar[data-size=sm]{width:24px;height:24px;font-size:var(--type-micro)}
+.transaction-member-button{display:inline-flex;border-radius:50%}
+.transaction-member-button:hover .person-avatar{background:var(--accent)}
+.transaction-member-button:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
+.segmented.workspace-switch{display:flex;flex-direction:column;align-items:stretch;width:100%;margin-block-end:6px}
+.segmented.workspace-switch>button{height:32px;overflow:hidden;text-overflow:ellipsis;text-align:start}
+.household-people{display:flex;flex-direction:column}
+.household-people>li{display:flex;align-items:center;gap:12px;min-height:52px;padding-block:8px;font-size:var(--type-small)}
+.household-people>li+li{border-top:1px solid var(--hairline)}
+.household-people>li>strong{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.household-people>li>small{color:var(--muted-foreground);font-size:var(--type-caption)}
+.household-people select{width:auto}
+.household-heading{margin-block-start:16px;font-size:var(--type-compact);font-weight:600}
+.household-link{display:flex;gap:8px}
+.household-link>input{flex:1;min-width:0}
+@container content (max-width:520px){.household-people>li{flex-wrap:wrap}.household-people>li>small{flex-basis:100%;padding-inline-start:44px}}

@@ -37,6 +37,15 @@ export function guessColumnMapping(headers:string[],current:ColumnMapping):Colum
  }
  return next;
 }
+const isoCell=/^\d{4}-\d{2}-\d{2}$/,plainNumberCell=/^[+-]?\d+(\.\d+)?$/;
+/** Mapping for a ready table (Excel, OFX, QIF): matched headers, plus ISO dates and `.` decimals when the cells already use them.
+ * Notes and IDs start unmapped, so a column chosen for an earlier file never points past this one. */
+export function guessTableMapping(rows:readonly string[][],current:ColumnMapping):ColumnMapping{
+ const mapping=guessColumnMapping([...(rows[0]??[])],{...current,notes:-1,sourceId:-1});
+ const values=(column:number)=>rows.slice(1).map(row=>row[column]??'').filter(Boolean);
+ const dates=values(mapping.date),amounts=values(mapping.amount);
+ return {...mapping,dateFormat:dates.length&&dates.every(value=>isoCell.test(value))?'iso':mapping.dateFormat,decimal:amounts.length&&amounts.every(value=>plainNumberCell.test(value))?'.':mapping.decimal};
+}
 export function guessDelimiter(text:string){
  const header=text.replace(/^\uFEFF/,'').split(/\r?\n/,1)[0]??'';
  let best=',',most=0;

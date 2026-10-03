@@ -1,3 +1,4 @@
+import { workspaceOwner } from '@/lib/household';
 import type { z } from 'zod';
 import { readOwnerRows } from '@/lib/server-records';
 import { session, supa, sameOrigin } from '@/lib/supabase';
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
    return response.ok ? Response.json({ ok: true }) : unavailable();
   }
   const tag = parsed.data as z.infer<typeof tagSchemas.save>;
-  const response = await supa('/rest/v1/transaction_tags?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ id: tag.id, user_id: auth.user.id, name: tag.name, color: tag.color }) }, auth.token);
+  const response = await supa('/rest/v1/transaction_tags?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ id: tag.id, user_id: workspaceOwner(auth), name: tag.name, color: tag.color }) }, auth.token);
   if (response.ok) return Response.json({ ok: true });
   const detail = await response.json().catch(() => ({})) as { code?: string };
   return detail.code === '23505' ? Response.json({ error: 'A tag with this name already exists.' }, { status: 409 }) : unavailable();

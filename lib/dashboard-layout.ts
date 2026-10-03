@@ -1,7 +1,7 @@
 /** Dashboard cards and where they start: two columns. Any card can be dragged to either column or hidden. */
 export const dashboardCards = {
  left: ['net_worth', 'spending', 'budget', 'commitments', 'allocation', 'business'],
- right: ['goals', 'transactions', 'upcoming', 'income'],
+ right: ['goals', 'transactions', 'upcoming', 'forecast', 'income'],
 } as const;
 export type DashboardCard = (typeof dashboardCards)[keyof typeof dashboardCards][number];
 export type DashboardColumn = 'left' | 'right';
@@ -11,7 +11,7 @@ export const dashboardCardIds: readonly DashboardCard[] = [...dashboardCards.lef
 export const retiredDashboardCards = ['recap'] as const;
 export const dashboardCardLabels: Record<DashboardCard, string> = {
  net_worth: 'Net worth', spending: 'Spending', budget: 'Budget', business: 'Business tracking', commitments: 'Monthly commitments', allocation: 'Asset allocation',
- goals: 'Goals', transactions: 'Transactions', upcoming: 'Upcoming payments', income: 'Income over time',
+ goals: 'Goals', transactions: 'Transactions', upcoming: 'Upcoming payments', forecast: 'Lowest balance ahead', income: 'Income over time',
 };
 export type DashboardLayout = { columns: Record<DashboardColumn, DashboardCard[]>; hidden: DashboardCard[] };
 export const defaultDashboardLayout: DashboardLayout = { columns: { left: [...dashboardCards.left], right: [...dashboardCards.right] }, hidden: [] };

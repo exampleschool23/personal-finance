@@ -1,12 +1,13 @@
 "use client";
 import { useState, type ReactNode } from 'react';
-import { Check, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronDown, Plus, Tag as TagIcon, Trash2 } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { BusinessMark } from '@/components/presentation-foundation/business-mark';
 import type { BusinessOption } from '@/components/presentation-foundation/business-filter';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { TagChip } from '@/components/presentation-foundation/tag-chip';
+import { PersonAvatar } from '@/components/presentation-foundation/person-avatar';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { Count } from '@/components/presentation-foundation/count';
@@ -24,7 +25,7 @@ import { isMortgagePayment, spendingAmount, transferAmount } from '@/lib/spendin
 import { signedAmount } from '@/lib/transaction-list';
 import type { Category } from '@/lib/planning';
 import { categoryChoices, choiceKey, directionOf, extraCriteria, hasCriteria, openCriteria, ruleChoice, ruleCriterion, ruleTargets, suggestedPattern, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
-import type { Tag } from '@/lib/tags';
+import type { Tag, TagMatch } from '@/lib/tags';
 
 type Choice = ReturnType<typeof categoryChoices>[number];
 
@@ -104,7 +105,44 @@ export function BusinessPicker({ record, businesses, disabled, onChange }: { rec
  </Popover>;
 }
 
+/** Who paid, as a small avatar; clicking it lists the household to choose from. */
+export function MemberPicker({ record, member, people, disabled, onChange }: { record: Entry; member: { id: string; name: string }; people: ReadonlyArray<{ id: string; name: string }>; disabled?: boolean; onChange: (member: string) => void }) {
+ const { t } = useLanguage();
+ const [open, setOpen] = useState(false);
+ const avatar = <PersonAvatar size="sm" name={member.name}/>;
+ if (disabled) return avatar;
+ return <Popover open={open} onOpenChange={setOpen}>
+  <PopoverTrigger asChild><button type="button" className="transaction-member-button" aria-label={t('Change who paid for {name}', { name: record.name })}>{avatar}</button></PopoverTrigger>
+  <PopoverContent className="category-picker-popover" align="start">
+   <ul className="category-picker business-picker" role="listbox" aria-label={t('Paid by')}>
+    {people.map(person => <li key={person.id} role="option" aria-selected={person.id === member.id}><button type="button" onClick={() => { setOpen(false); if (person.id !== member.id) onChange(person.id); }}><PersonAvatar size="sm" name={person.name}/><span>{person.name}</span>{person.id === member.id && <Check size={15} aria-hidden="true"/>}</button></li>)}
+   </ul>
+  </PopoverContent>
+ </Popover>;
+}
+
 /** Tags to switch on and off, and a quick way to create one. `onCreate` resolves to the new tag's id. */
+/** Top-level tag filter: any number of tags (none shows everything); with two or more, rows need any of them or all of them. */
+export function TagFilter({ tags, value, match, onChange }: { tags: readonly Tag[]; value: readonly string[]; match: TagMatch; onChange: (value: string[], match: TagMatch) => void }) {
+ const { t } = useLanguage();
+ const [open, setOpen] = useState(false);
+ const chosen = tags.filter(tag => value.includes(tag.id));
+ const label = !chosen.length ? t('All tags') : chosen.length === 1 ? chosen[0].name : t(match === 'all' ? 'All of {count} tags' : 'Any of {count} tags', { count: chosen.length });
+ const toggle = (id: string) => onChange(value.includes(id) ? value.filter(item => item !== id) : [...value, id], match);
+ return <Popover open={open} onOpenChange={setOpen}>
+  <PopoverTrigger asChild><button type="button" className="business-filter-trigger" aria-label={t('Filter by tag')} data-active={chosen.length > 0 || undefined}><TagIcon size={16} aria-hidden="true"/><span>{label}</span><ChevronDown size={15} aria-hidden="true"/></button></PopoverTrigger>
+  <PopoverContent className="business-filter-popover" align="start">
+   {chosen.length > 1 && <Segmented className="tag-filter-match" label={t('Match tags')} options={[{ value: 'any', label: t('Any tag') }, { value: 'all', label: t('Every tag') }] as const} value={match} onChange={next => onChange([...value], next)}/>}
+   <ul role="listbox" aria-multiselectable="true" aria-label={t('Filter by tag')}>
+    <li role="option" aria-selected={!chosen.length}><button type="button" onClick={() => onChange([], match)}><span className="business-filter-all" aria-hidden="true"/><span>{t('All tags')}</span>{!chosen.length && <Check size={15} aria-hidden="true"/>}</button></li>
+    {tags.map(tag => <li key={tag.id} role="option" aria-selected={value.includes(tag.id)}>
+     <button type="button" onClick={() => toggle(tag.id)}><TagChip name={tag.name} color={tag.color}/>{value.includes(tag.id) && <Check size={15} aria-hidden="true"/>}</button>
+    </li>)}
+   </ul>
+  </PopoverContent>
+ </Popover>;
+}
+
 export function TagSelector({ tags, selected, onToggle, onCreate }: { tags: readonly Tag[]; selected: readonly string[]; onToggle: (id: string) => void; onCreate?: (name: string) => Promise<string> }) {
  const { t } = useLanguage();
  const [name, setName] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');

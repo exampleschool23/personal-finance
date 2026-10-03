@@ -80,6 +80,7 @@ export function demoRecords(today: string): Entry[] {
   record('property-tax', 'Property tax', 'Other expense', 6800, { frequency: 'Yearly', date: shiftDay(today, -300) }),
   monthly('charity', 'Monthly donation', 'Charity', 300),
   ...demoSpending(today, record),
+  ...demoSubscriptionCharges(today, record),
   ...demoBusinessActivity(today, record),
  ];
 }
@@ -172,7 +173,7 @@ function previousMonth(month: string, count: number) {
 /** Day-to-day purchases over the last six months and so far this month, so spending charts and budget history have something real to compare. */
 function demoSpending(today: string, record: (id: string, name: string, kind: Entry['kind'], amount: number, extra?: Partial<Entry>) => Entry): Entry[] {
  const purchases: Array<[string, number, Entry['kind'], string?]> = [
-  ['Whole Foods', 184, 'Living expense', 'groceries'], ['Coffee', 9, 'Living expense'], ['Uber', 24, 'Living expense'], ['Lunch', 22, 'Living expense'],
+  ['Whole Foods', 184, 'Living expense', 'groceries'], ['Coffee', 46, 'Living expense'], ['Uber', 24, 'Living expense'], ['Lunch', 22, 'Living expense'],
   ['Pharmacy', 38, 'Living expense'], ['Costco', 236, 'Living expense', 'groceries'], ['Fuel', 62, 'Living expense'], ['Dinner out', 118, 'Living expense'],
   ['Home Depot', 146, 'Living expense', 'household'], ['Trader Joe\'s', 142, 'Living expense', 'groceries'], ['Kids\' activities', 95, 'Living expense'],
   ['Amazon', 87, 'Living expense', 'household'], ['Clothing', 164, 'Living expense'], ['Movie night', 42, 'Living expense'],
@@ -193,6 +194,23 @@ function demoSpending(today: string, record: (id: string, name: string, kind: En
  // One larger trip last month.
  spends.push(record('spend-trip', 'Summer trip flights', 'Other expense', 1840, { date: `${previousMonth(month, 1)}-18` }));
  return spends;
+}
+
+/** Card subscriptions for the subscriptions list on Recurring: a steady one, a price rise and one that stopped. */
+function demoSubscriptionCharges(today: string, record: (id: string, name: string, kind: Entry['kind'], amount: number, extra?: Partial<Entry>) => Entry): Entry[] {
+ const month = today.slice(0, 7), todayDay = Number(today.slice(8, 10));
+ const charges: Entry[] = [];
+ for (let back = 6; back >= 0; back--) {
+  const current = previousMonth(month, back);
+  const charge = (id: string, name: string, amount: number, day: number) => {
+   if (back === 0 && day > todayDay) return;
+   charges.push(record(`sub-${id}-${back}`, name, 'Living expense', amount, { date: `${current}-${String(day).padStart(2, '0')}`, account_id: 'demo-checking' }));
+  };
+  charge('music', 'Spotify', 11.99, 6);
+  charge('video', 'Netflix', back <= 1 ? 17.99 : 15.49, 11);
+  if (back >= 2) charge('news', 'Daily News digital', 9, 20);
+ }
+ return charges;
 }
 
 export function demoHistory(records: Entry[], today: string) {

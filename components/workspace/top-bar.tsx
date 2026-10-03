@@ -20,7 +20,10 @@ export function DisplayPreferences() {
 /** `pendingSection` names a destination tapped in the drawer whose route is still loading. */
 export function TopBar({ pendingSection }: { pendingSection?: string | null }) {
  const { t, locale } = useLanguage();
- const { section: current, currency, setCurrency, preferencesData, demo, market, marketLoading, refresh, quickExpense } = useWorkspace();
+ const { section: current, currency, setCurrency, preferencesData, demo, market, marketLoading, refresh, quickExpense, household, readOnly } = useWorkspace();
+ const homes = household.state;
+ // Someone else's household is open: say whose, and that it is view-only when it is.
+ const owner = homes && homes.active !== homes.me ? homes.people.find(person => person.role === 'owner') : null;
  const section = pendingSection ?? current;
  const date = (value: string) => formatDate(value, locale);
  const currentLabel = t(sectionLabel(current));
@@ -31,7 +34,7 @@ export function TopBar({ pendingSection }: { pendingSection?: string | null }) {
   : market?.fx ? t('1 USD = {rate} UZS · CBU · {date}', { rate: formatNumber(market.fx.rate, locale), date: date(market.fx.date) })
   : t(marketLoading ? 'Fetching prices…' : 'Exchange rate unavailable. Only records in the selected currency are included.');
  return <header className="topbar">
-  <div className="topbar-location"><SidebarTrigger aria-label={t('Toggle Sidebar')}/><span>{t(sectionLabel(section))}</span></div>
+  <div className="topbar-location"><SidebarTrigger aria-label={t('Toggle Sidebar')}/><span>{t(sectionLabel(section))}</span>{owner && <span className="status-badge topbar-household">{readOnly ? t('View only') : t('Household of {name}', { name: owner.name ?? t('Partner') })}</span>}</div>
   <div className="topbar-actions">
    <Popover>
     <PopoverTrigger asChild><Button variant="outline" size="sm" className="header-currency-trigger" aria-label={t('Display currency')}>{currency}<ChevronDown size={14} aria-hidden="true"/></Button></PopoverTrigger>
@@ -48,7 +51,7 @@ export function TopBar({ pendingSection }: { pendingSection?: string | null }) {
      </section>
     </PopoverContent>
    </Popover>
-   <Button size="sm" className="quick-expense" aria-label={t('Add expense')} onClick={quickExpense}><Plus size={16} aria-hidden="true"/><span>{t('Add expense')}</span></Button>
+   {!readOnly && <Button size="sm" className="quick-expense" aria-label={t('Add expense')} onClick={quickExpense}><Plus size={16} aria-hidden="true"/><span>{t('Add expense')}</span></Button>}
    <DisplayPreferences/>
   </div>
  </header>;

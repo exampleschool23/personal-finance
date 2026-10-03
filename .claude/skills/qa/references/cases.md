@@ -174,6 +174,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | DASH-036 | P1 | Greeting uses the app name | Settings display name "QA Name"; open the Dashboard on a day after onboarding; then clear the display name | "Welcome back, QA Name!", never the Telegram name; with no display name "Welcome back!" |
 | DASH-037 | P1 | Spending card load failure | DevTools block the request URL /api/planning?scope=review and reload the Dashboard; unblock and press Retry | Spending card shows an inline error with Retry; Net worth, Budget, Goals and Upcoming payments still render; Retry fills the Spending chart without a page reload |
 | DASH-038 | P2 | Spending axis with large or tiny values | New account: a $0.40 QA expense this month, read the Spending axis; then a $3,000,000 QA expense; delete both after | Axis ticks are whole steps ($0, $1 for the tiny case), never 0.1 or 0.3 steps; large ticks are compact ("$3M") and not clipped |
+| DASH-039 | P1 | Lowest balance ahead | Read the card; View forecast | Lowest projected cash in the next 90 days with its date (per currency when rates are missing); link opens Cash flow on the Forecast tab |
 
 ## ACC — accounts
 
@@ -296,6 +297,9 @@ currencies (USD primary). Compute every expected figure yourself first.
 | CF-030 | P1 | Income sources failure | Block /api/income-sources, open Cash flow Overview, then Income tab; unblock and Retry | Error with Retry in place of Income this month and Spending plans, and on Income tab; review tiles still show figures; Retry loads the sources |
 | CF-031 | P1 | Sample workspace cash flow | Demo, Income tab: Record income on a fixed source twice in the same pay period | First saves for the visit; second refused with "This scheduled payment is already recorded." |
 | CF-032 | P2 | Phone width | 375px, Breakdown Bars and Sankey | Sankey scrolls inside its card; no page horizontal scroll |
+| CF-033 | P0 | Forecast view | Cash flow → Forecast; switch 30 / 90 / 180 / 365 days | Chart, Cash today, Lowest balance (with date) and "In N days" update; one point per day; amounts whole; month picker and monthly review hidden on this tab |
+| CF-034 | P1 | Forecast events and warning | Read "Cash movements ahead"; add a recurring expense on a cash account larger than its balance | Events grouped by month with signed month totals (currencies listed, never added without a rate); caution warning names the account and the first day below zero |
+| CF-035 | P1 | Forecast what-if | Add "−500 every month" from next month, then remove it; reload | Projection and events update at once; the change survives reload in this browser only; no record is created |
 
 ## REP — reports and business tracking
 
@@ -391,6 +395,9 @@ currencies (USD primary). Compute every expected figure yourself first.
 | REC-021 | P1 | Sample workspace recurring | Demo: Recurring, Record payment and Skip this occurrence | Items listed; saves refused with "Sign in to save planning changes."; nothing changes |
 | REC-022 | P2 | Time zone day | Browser in a UTC−8 zone at an hour when Tashkent is already on the next day | "Today", "Tomorrow" and day counts follow the Tashkent calendar day |
 | REC-023 | P2 | Phone width calendar | 375px, Calendar view | Days and chips (name and amount) readable; no page horizontal scroll |
+| REC-024 | P1 | Subscriptions detected | Sample workspace, Recurring | Subscriptions panel lists Netflix (Price went up, caution pill), Spotify and Daily News digital (Possibly cancelled); totals per currency leave Daily News out; no day-to-day purchases listed |
+| REC-025 | P1 | Subscription decisions | ⋯ on a subscription: Not a subscription, Mark cancelled; then Restore under Hidden subscriptions | Row moves to Hidden with its reason and back; totals follow; survives reload on a signed-in account |
+| REC-026 | P1 | Track as recurring | ⋯ → Track as recurring, save | Record form opens with the name, amount and next charge date; once saved the plan is listed and the subscription row is gone |
 
 ## INV — investments
 

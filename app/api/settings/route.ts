@@ -6,7 +6,8 @@ import { queueLanguageMenu } from '@/lib/notify-action';
 import { session, supa, sameOrigin } from '@/lib/supabase';
 import { defaultPreferences, isCurrency, maxPreferredCurrencies } from '@/lib/currencies';
 import { onboardedOn } from '@/lib/onboarding';
-const schema = z.object({ country: z.string().refine(value => value === '' || isCountry(value)).nullable().transform(value => value ?? '').optional(), display_name: z.string().trim().max(80).optional(), language: z.enum(languageCodes), currencies: z.array(z.string().refine(isCurrency)).min(1).max(maxPreferredCurrencies).refine(list => new Set(list).size === list.length), font: z.enum(fontIds).nullish().transform(resolveFont), onboarded: z.boolean().optional() });
+import { isTimezone } from '@/lib/timezones';
+const schema = z.object({ country: z.string().refine(value => value === '' || isCountry(value)).nullable().transform(value => value ?? '').optional(), display_name: z.string().trim().max(80).optional(), language: z.enum(languageCodes), currencies: z.array(z.string().refine(isCurrency)).min(1).max(maxPreferredCurrencies).refine(list => new Set(list).size === list.length), font: z.enum(fontIds).nullish().transform(resolveFont), timezone: z.string().refine(isTimezone).nullish().transform(value => value ?? undefined), onboarded: z.boolean().optional() });
 export async function GET() {
   try {
     const s = await session();
@@ -37,7 +38,10 @@ export async function PUT(req: Request) {
     const earlierRows = earlier.ok ? await earlier.json() as Array<{ language?: unknown; onboarded_at?: unknown }> : [];
     const previousLanguage = isLanguage(earlierRows[0]?.language) ? earlierRows[0].language : 'en';
     // The setup timestamp changes only when the request says so; the Settings form leaves it alone.
-    const response = await supa('/rest/v1/user_preferences?on_conflict=user_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: s.user.id, ...preferences, ...(onboarded === undefined ? {} : { onboarded_at: onboarded ? new Date().toISOString() : null }) }) }, s.token);
+    const upsert = (row: Record<string, unknown>) => supa('/rest/v1/user_preferences?on_conflict=user_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify({ user_id: s.user.id, ...row, ...(onboarded === undefined ? {} : { onboarded_at: onboarded ? new Date().toISOString() : null }) }) }, s.token);
+    let response = await upsert(preferences);
+    // Before migration 095 adds the time zone column, everything else still saves.
+    if (!response.ok && preferences.timezone !== undefined) { const { timezone: _unsaved, ...rest } = preferences; void _unsaved; response = await upsert(rest); }
     if (!response.ok) throw Error();
     // A linked Telegram chat gets a new keyboard in the new language, so nobody has to press Start again.
     if (parsed.data.language !== previousLanguage) queueLanguageMenu(s, parsed.data.language);

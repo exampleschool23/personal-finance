@@ -1,0 +1,46 @@
+!Option:AutoSwitch
+!Account
+NEveryday checking
+TBank
+^
+NTravel card
+TCCard
+^
+!Clear:AutoSwitch
+!Account
+NEveryday checking
+TBank
+^
+!Type:Bank
+D12/31'25
+T-1,234.56
+PLandlord
+MDecember rent
+LHousing:Rent
+^
+D 1/ 5'26
+U2,500.00
+T2,500.00
+PEmployer Inc
+^
+D1/13/2026
+T-60.00
+PSupermarket
+SGroceries
+$-40.00
+SHousehold
+$-20.00
+^
+!Account
+NTravel card
+TCCard
+^
+!Type:CCard
+D01/20/26
+T-89.90
+MHotel deposit
+^
+!Type:Cat
+NGroceries
+E
+^

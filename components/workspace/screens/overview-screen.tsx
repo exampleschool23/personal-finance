@@ -7,6 +7,7 @@ import { LayoutGrid } from 'lucide-react';
 import { CustomizeDashboardDialog, DashboardBoard } from '@/components/dashboard-board';
 import { BudgetCard, GoalsCard, RecentTransactionsCard } from '@/components/dashboard-cards';
 import { BusinessCard } from '@/components/business-card';
+import { LowestBalanceCard } from '@/components/cash-forecast';
 import { Button } from '@/components/ui/button';
 import { useDashboardLayout } from '@/hooks/use-dashboard-layout';
 import type { DashboardCard } from '@/lib/dashboard-layout';
@@ -37,6 +38,7 @@ export function OverviewScreen() {
   goals: planningReady && <GoalsCard goals={planning.data.goals} order={savedGoalOrder(workspacePreferences.data.preferences)} data={planning.data} currency={currency} netWorth={code => goalFinancials(planning.data.records, [], depositToday().slice(0, 7), code, market, false).netWorth}/>,
   transactions: planningReady && <RecentTransactionsCard owner={user} demo={demo} revision={reload} data={planning.data}/>,
   upcoming: cards.upcoming,
+  forecast: planningReady && !expensePlans.loading && <LowestBalanceCard data={planning.data} plans={expensePlans.plans} plansMonth={expensePlans.month} currency={currency} rates={market?.rates ?? market?.fx?.rate}/>,
   income,
  });
  return <>

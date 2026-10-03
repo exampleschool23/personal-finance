@@ -12,6 +12,8 @@ export function currencyLabel(code: string, locale: string) {
   catch { return `${code} · ${catalogue.find(c => c.code === code)?.name || code}`; }
 }
 export type Preferences = { display_name?: string; country?: string; language: Language; currencies: string[]; font?: Font; onboarded?: boolean;
+  /** IANA time zone for the Telegram digest and recap; empty until saved. */
+  timezone?: string;
   /** The calendar day (Asia/Tashkent) the welcome setup was finished; read-only, never saved from the client. */
   onboarded_on?: string };
 // The top bar switches between these; the first is the primary currency.

@@ -39,7 +39,7 @@ test('the menu is translated and recognised in every language, and cancel return
  assert.equal(menuChoice(translate('ru','Sign out')),'signout');assert.equal(advance(null,{text:'Sign out'},ctx(),chat).draft,null,'signing out never starts an entry');
  assert.equal(menuChoice(translate('ru','Expense')),'expense');assert.equal(menuChoice(' '+translate('ru','Income').toUpperCase()+' '),'income');assert.equal(menuChoice('Upcoming payments'),'upcoming');assert.equal(menuChoice('hello'),null);
  const stray=advance(null,{text:'hello'},ctx(),chat);
- assert.equal(stray.draft,null);assert.equal(stray.reply.text,'Choose what to add.');assert.deepEqual(stray.reply.keyboard,mainMenu('en'));
+ assert.equal(stray.draft,null);assert.equal(stray.reply.text,'Choose what to add, or type it, like coffee 4.5 or +1500 salary.');assert.deepEqual(stray.reply.keyboard,mainMenu('en'));
  assert.deepEqual(advance(null,{text:'Upcoming payments'},ctx(),chat),{draft:null,reply:null,menu:'upcoming'});
  const cancelled=run([{text:'Expense'},{callback:'f:cat:'+id(20)},{callback:'f:cancel'}]);
  assert.equal(cancelled.draft,null);assert.equal(cancelled.reply.text,'Cancelled.');
@@ -94,12 +94,14 @@ test('transfers ask for the received amount only across currencies and exclude t
  assert.equal(run([{text:'Transfer'},{callback:'f:acc:'+id(2)},{callback:'f:tgt:'+id(2)}]).draft.step,'target','the same account cannot be both ends');
 });
 
-test('loan repayments and mortgage payments offer only matching-currency accounts and cap at the balance',()=>{
+test('loan repayments and mortgage payments offer every cash account and cap at the balance',()=>{
  const pick=run([{text:'Pay loan or debt'}]);
  assert.equal(pick.reply.text,'Which loan or debt?');assert.deepEqual(buttons(pick.reply),['f:tgt:'+id(10),'f:cancel'],'settled debts are left out');
  const accounts=run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)}]);
- assert.deepEqual(buttons(accounts.reply),['f:acc:'+id(2),'f:back','f:cancel'],'only the USD account can repay a USD loan');
- assert.equal(run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)},{callback:'f:acc:'+id(1)}]).draft.step,'account');
+ // An account in another currency converts at the day's rate, so every cash account is offered.
+ assert.deepEqual(buttons(accounts.reply),['f:acc:'+id(1),'f:acc:'+id(2),'f:back','f:cancel']);
+ const other=run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)},{callback:'f:acc:'+id(1)}]);
+ assert.equal(other.draft.step,'amount');assert.equal(other.reply.text,'Type the amount in USD','a loan is repaid in its own currency');
  const tooMuch=run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)},{callback:'f:acc:'+id(2)},{text:'2500'}]);
  assert.equal(tooMuch.draft.step,'amount');assert.equal(tooMuch.reply.text,'Repayment cannot exceed the outstanding balance.');
  const repaid=run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)},{callback:'f:acc:'+id(2)},{text:'400'},{callback:'f:date:today'},{callback:'f:save'}]);
@@ -234,9 +236,9 @@ test('the bot creates a cash account itself, from the menu or from a dead end, a
 });
 
 test('an account added while paying a loan uses the loan currency without asking, and a missing second account can be added',()=>{
- const usdOnly=ctx();usdOnly.accounts=[entry(1,'Wallet','Cash',900000)];usdOnly.currencies=['UZS','USD'];
+ const usdOnly=ctx();usdOnly.accounts=[];usdOnly.currencies=['UZS','USD'];
  const stuck=run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)}],usdOnly);
- assert.equal(stuck.reply.text,'No cash account uses USD. Add one to continue.');
+ assert.equal(stuck.reply.text,'Add a cash account to continue.');
  const named=advance(advance(stuck.draft,{callback:'f:newacc'},usdOnly,chat).draft,{text:'Dollars'},usdOnly,chat);
  assert.equal(named.draft.step,'balance');assert.equal(named.draft.data.currency,'USD');
  // Back from the balance skips the currency question that was never asked.
@@ -313,7 +315,12 @@ test('business income asks which business, and is offered only when one exists',
  const saved=run([{callback:'f:acc:'+id(2)},{text:'120'},{callback:'f:skip'},{callback:'f:date:today'},{callback:'f:save'}].reduce((steps,step)=>[...steps,step],[{text:'Income'},{callback:'f:cat:Business income'},{callback:'f:biz:'+id(40)}]),withBusiness);
  assert.equal(saved.commit.record.kind,'Business income');assert.equal(saved.commit.record.business_id,id(40));
  assert.equal(recordSchema.safeParse(saved.commit.record).success,true);
- // Other income skips the business question, and Back from the account returns to the category.
+ // Other income may name a business too, or stay personal; Back from the business returns to the category.
  const salary=advance(start.draft,{callback:'f:cat:Salary'},withBusiness,chat);
- assert.equal(salary.draft.step,'account');assert.equal(advance(salary.draft,{callback:'f:back'},withBusiness,chat).draft.step,'category');
+ assert.equal(salary.draft.step,'business');assert.deepEqual(buttons(salary.reply),['f:biz:'+id(40),'f:biz:none','f:back','f:cancel']);
+ assert.equal(advance(salary.draft,{callback:'f:back'},withBusiness,chat).draft.step,'category');
+ const personal=advance(salary.draft,{callback:'f:biz:none'},withBusiness,chat);
+ assert.equal(personal.draft.step,'account');assert.equal(personal.draft.data.business_id,null);
+ // Business income cannot stay personal.
+ assert.equal(advance(business.draft,{callback:'f:biz:none'},withBusiness,chat).draft.step,'business');
 });

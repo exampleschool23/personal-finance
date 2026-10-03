@@ -161,3 +161,74 @@ test('flex mode shows one coherent flexible plan: the bucket, or the categories\
  // Category mode is untouched.
  assert.deepEqual(budgetRowsForMode(rows, 'category'), rows);
 });
+
+const { rolloverCarry, startingBalanceIn, flexBucketCategory, flexBucketRollover, flexBucketPlan } = loadTS('lib/budget.ts');
+const fundSetting = (category_key, extra = {}) => ({ category_key, budget_type: 'flexible', group_name: null, rollover: true, rollover_start: '2026-01', excluded: false, ...extra });
+const fundOf = (extra, key = 'Charity') => budgetCategories([], [fundSetting(key, extra)]).find(category => category.key === key);
+const spentEach = entries => new Map(Object.entries(entries).map(([month, byKey]) => [month, { byCategory: new Map(Object.entries(byKey)) }]));
+
+test('rollover chains carry leftovers month to month from the start month and starting balance', () => {
+ const history = spentEach({ '2026-01': { Charity: 60 }, '2026-02': { Charity: 140 }, '2026-03': { Charity: 100 }, '2026-04': { Charity: 0 } });
+ const amounts = [amount('Charity', '2026-01', 100, true)];
+ const carry = (category, month) => rolloverBalance(category, amounts, history, month, 'USD', rates);
+ // +40, then −40 (overspent), then 0, then +100.
+ assert.deepEqual(['2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05'].map(month => carry(fundOf(), month)), [0, 0, 40, 0, 0, 100]);
+ // A starting balance is carried into the start month itself.
+ const funded = fundOf({ rollover_balance: 250, rollover_currency: 'USD' });
+ assert.equal(carry(funded, '2026-01'), 250);
+ assert.equal(carry(funded, '2026-03'), 250);
+ assert.equal(carry(funded, '2026-05'), 350);
+ const [row] = budgetRows([funded], amounts, history, '2026-02', 'USD', rates);
+ assert.deepEqual([row.budget, row.rolloverIn, row.actual, row.remaining], [100, 290, 140, 250], 'available is budget + rollover − actual');
+ // A later start month ignores earlier months.
+ assert.equal(carry(fundOf({ rollover_start: '2026-03' }), '2026-05'), 100);
+});
+
+test('negative carry: overspending reduces the next month unless turned off, which resets the fund to zero', () => {
+ const history = spentEach({ '2026-01': { Charity: 300 }, '2026-02': { Charity: 50 } });
+ const amounts = [amount('Charity', '2026-01', 100, true)];
+ const carry = (negative, month) => rolloverBalance(fundOf({ rollover_negative: negative }), amounts, history, month, 'USD', rates);
+ assert.equal(carry(true, '2026-02'), -200);
+ assert.equal(carry(true, '2026-03'), -150);
+ assert.equal(carry(false, '2026-02'), 0);
+ assert.equal(carry(false, '2026-03'), 50);
+ assert.equal(fundOf().rolloverNegative, true, 'existing funds keep carrying overspending');
+ const [row] = budgetRows([fundOf({ rollover_negative: true })], amounts, history, '2026-02', 'USD', rates);
+ assert.equal(row.remaining, -150);
+ assert.equal(remainingTone(row.remaining), 'negative');
+});
+
+test('turning rollover off stops the carry and drops the fund details', () => {
+ const off = fundOf({ rollover: false, rollover_balance: 500, rollover_currency: 'USD' });
+ assert.deepEqual([off.rollover, off.rolloverStart, off.rolloverBalance], [false, null, 0]);
+ assert.equal(rolloverBalance(off, [amount('Charity', '2026-01', 100, true)], spentEach({ '2026-01': { Charity: 10 } }), '2026-03', 'USD', rates), 0);
+ assert.equal(rolloverCarry({ rollover: true, rolloverStart: null, rolloverNegative: true }, '2026-03', 5, () => 1, () => 0), 0, 'no start month, no carry');
+ assert.equal(fundOf({}, 'Salary').rollover, false, 'income never rolls over');
+});
+
+test('rollover in other currencies converts with explicit rates only', () => {
+ const history = spentEach({ '2026-01': { Charity: 2 } });
+ // 125,000 UZS at 12,500 is $10: $8 left over, plus a 250,000 UZS ($20) starting balance.
+ const uzs = fundOf({ rollover_balance: 250000, rollover_currency: 'UZS' });
+ assert.equal(rolloverBalance(uzs, [amount('Charity', '2026-01', 125000, true, 'UZS')], history, '2026-02', 'USD', rates), 28);
+ assert.equal(startingBalanceIn(uzs, 'UZS', rates), 250000);
+ // Without a rate neither the starting balance nor the budget is guessed.
+ const eur = fundOf({ rollover_balance: 50, rollover_currency: 'EUR' });
+ assert.equal(startingBalanceIn(eur, 'USD', rates), 0);
+ assert.equal(rolloverBalance(eur, [amount('Charity', '2026-01', 10, true, 'EUR')], history, '2026-02', 'USD', rates), -2);
+});
+
+test('the Flexible bucket rolls over its plan minus all flexible spending', () => {
+ const bucket = flexBucketCategory([fundSetting(flexBucketKey, { rollover_negative: false, rollover_balance: 30, rollover_currency: 'USD' })]);
+ assert.deepEqual([bucket.key, bucket.rollover, bucket.rolloverBalance, bucket.rolloverNegative], [flexBucketKey, true, 30, false]);
+ assert.equal(flexBucketCategory([]).rollover, false);
+ const categories = budgetCategories([], [fundSetting('Charity', { rollover: false, rollover_start: null, excluded: true })]);
+ const history = spentEach({ '2026-01': { 'Living expense': 300, 'Other expense': 100, Charity: 999, 'Rent expense': 1200 }, '2026-02': { 'Living expense': 900 } });
+ // January: a saved bucket of 500 − 400 flexible spending (rent is fixed, Charity excluded) = +100, plus 30.
+ const amounts = [amount(flexBucketKey, '2026-01', 500, true), amount('Living expense', '2026-01', 50, true)];
+ assert.equal(flexBucketRollover(bucket, categories, amounts, history, '2026-02', 'USD', rates), 130);
+ // February overspends what it has: without negative carry, March starts at zero.
+ assert.equal(flexBucketRollover(bucket, categories, amounts, history, '2026-03', 'USD', rates), 0);
+ // Before a bucket amount is saved, its plan is the sum of the flexible categories' budgets.
+ assert.equal(flexBucketPlan([amount('Living expense', '2026-01', 50, true), amount('Other expense', '2026-01', 20, true), amount('Rent expense', '2026-01', 900, true)], categories, '2026-01', 'USD', rates), 70);
+});

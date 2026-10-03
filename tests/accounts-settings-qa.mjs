@@ -154,3 +154,11 @@ test('settings headings stay one line: explanations sit behind the ⓘ',()=>{
   assert.doesNotMatch(fs.readFileSync(file,'utf8'),/<\/h[234]>(\{[^}]*&&)?<p className="(muted|my-3 text-sm text-muted-foreground)">/,file);
  assert.match(fs.readFileSync('components/settings-panel.tsx','utf8'),/<h3>\{t\('About you'\)\}<InfoHint>\{t\('Personal details for your profile\.'\)\}<\/InfoHint><\/h3>/);
 });
+
+test('opening Settings fills the browser time zone quietly, and never in the sample workspace', () => {
+ const source=fs.readFileSync('components/settings-panel.tsx','utf8');
+ assert.match(source,/useState\(\(\) => demo \|\| loading \|\| loadError \|\| initial\.timezone \? initial :/,'the sample workspace keeps its preferences as they are');
+ assert.match(source,/const autoFill=dirty&&!saved\.timezone&&JSON\.stringify\(\{\.\.\.draft,timezone:saved\.timezone\}\)===JSON\.stringify\(saved\)/);
+ assert.match(source,/if \(!quiet\) showSaved\(next\.language\)/,'an automatic time zone save shows no "Saved" notice');
+ assert.match(source,/void save\(draft, autoFill\)/);
+});

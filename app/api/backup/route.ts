@@ -1,3 +1,4 @@
+import { personalRequest } from '@/lib/household';
 import { signBackup, verifyBackup } from '@/lib/backup-signature';
 import { z } from 'zod';
 import { uuid } from '@/lib/api-validation';
@@ -12,7 +13,7 @@ export async function GET(req:Request){
  if(query.get('recoveries')==='1'){
   const page=z.coerce.number().int().min(1).max(1000000).safeParse(query.get('page')??1);if(!page.success)return Response.json({error:'Invalid backup.'},{status:400});
   const params=new URLSearchParams({select:'id,created_at',order:'created_at.desc,id.desc',offset:String((page.data-1)*20),limit:'21'});
-  const result=await supa('/rest/v1/backup_recovery_points?'+params,{},auth.token);
+  const result=await supa('/rest/v1/backup_recovery_points?'+params,personalRequest(),auth.token);
   if(!result.ok)return Response.json({error:'Could not load recovery copies.'},{status:503});
   const rows=await result.json() as unknown[];return Response.json({items:rows.slice(0,20),hasMore:rows.length>20},{headers:{'Cache-Control':'no-store'}});
  }
@@ -22,7 +23,7 @@ export async function GET(req:Request){
  }
  const recovery=new URL(req.url).searchParams.get('recovery');
  if(recovery&&!uuid.safeParse(recovery).success)return Response.json({error:'Invalid backup.'},{status:400});
- const result=await supa(recovery?'/rest/v1/rpc/get_backup_recovery':'/rest/v1/rpc/export_finance_backup',{method:'POST',body:recovery?JSON.stringify({p_id:recovery}):'{}'},auth.token);
+ const result=await supa(recovery?'/rest/v1/rpc/get_backup_recovery':'/rest/v1/rpc/export_finance_backup',personalRequest({method:'POST',body:recovery?JSON.stringify({p_id:recovery}):'{}'}),auth.token);
  if(!result.ok)throw Error('Incomplete backup');
  const raw=await result.text();if(raw==='null')return Response.json({error:'Backup not found.'},{status:404});
  // Preserve PostgreSQL numeric literals; parsing and reserializing loses precision.
@@ -54,7 +55,7 @@ export async function POST(req:Request){
    const registration=await supa('/rest/v1/rpc/register_verified_finance_backup',{method:'POST',body:JSON.stringify({p_backup:backup,p_owner:auth.user.id}),headers:serviceKeyHeaders(serviceKey)});
    if(!registration.ok)return Response.json({error:'The backup could not be verified for this account.'},{status:409});
   }
-  const result=await supa('/rest/v1/rpc/'+(action==='preview'?'preview_finance_restore':'restore_finance_backup'),{method:'POST',body:JSON.stringify({p_backup:backup,...(action==='restore'?{p_expected_state:expected_state}:{})})},auth.token);
+  const result=await supa('/rest/v1/rpc/'+(action==='preview'?'preview_finance_restore':'restore_finance_backup'),personalRequest({method:'POST',body:JSON.stringify({p_backup:backup,...(action==='restore'?{p_expected_state:expected_state}:{})})}),auth.token);
   if(!result.ok){const failure=await result.json() as {code?:string;message?:string};return Response.json({error:failure.code==='PGRST202'?databaseUpdateMessage:failure.code==='55P03'?'The database is busy. Please try again.':failure.code==='P0001'?failure.message:'The backup could not be restored. No changes were made.'},{status:failure.code==='PGRST202'||failure.code==='55P03'?503:409});}
   return Response.json(await result.json(),{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Restore could not be confirmed. Retry with the same preview.'},{status:503});}

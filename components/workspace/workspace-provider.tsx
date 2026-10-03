@@ -45,6 +45,8 @@ import { savedOrder } from '@/lib/workspace-preferences';
 import { useTags } from '@/hooks/use-tags';
 import { useRecordAttachments } from '@/hooks/use-record-attachments';
 import { emptyTags, type TagData } from '@/lib/tags';
+import { useHousehold } from '@/hooks/use-household';
+import { canEdit, inviteToken } from '@/lib/household';
 
 const today = depositToday;
 const fresh = (): Entry => ({ id: crypto.randomUUID(), name: '', kind: 'Cash', currency: 'USD', amount: 0, quantity: 1, cost: 0, rate: 0, date: today(), lent_date: today(), frequency: 'Once', notes: '', business_id: null, ownership_percentage: 100, estimated_monthly_income: 0, estimated_monthly_payment: 0 });
@@ -58,10 +60,25 @@ function useWorkspaceState() {
     const { t, locale, language, setDefaultLanguage, setLanguage } = useLanguage();
     const [user, setUser] = useState<string | null>(null), [ready, setReady] = useState(false), [configured, setConfigured] = useState(true), [demo, setDemo] = useState(false), [rows, setRows] = useState<Entry[]>([]), [currency, setCurrency] = useState<string>('USD'), [editing, setEditing] = useState<Entry | null>(null), [deleting, setDeleting] = useState<Entry | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
     const [preferencesData, setPreferencesData] = useState<Preferences>(defaultPreferences);
+    // A household invite link (/settings?invite=…) waits through sign-in or sign-up, then asks to join.
+    const [pendingInvite, setPendingInvite] = useState<string | null>(null);
+    useEffect(() => {
+        const url = new URL(window.location.href), token = inviteToken(url.search);
+        let stored: string | null = null;
+        try { if (token) sessionStorage.setItem('hf_invite', token); stored = sessionStorage.getItem('hf_invite'); } catch { stored = token; }
+        if (token) { url.searchParams.delete('invite'); window.history.replaceState(null, '', url.pathname + url.search + url.hash); }
+        if (stored) queueMicrotask(() => setPendingInvite(stored));
+    }, []);
+    const dismissInvite = () => { try { sessionStorage.removeItem('hf_invite'); } catch {} setPendingInvite(null); };
     useEffect(() => {
         // Signed out, only the product tour and the sign-in page are open; signed in, the sign-in page has nothing to show.
         if (ready && (user || demo ? pathname === signInPath : pathname !== '/' && pathname !== signInPath)) router.replace('/');
     }, [ready, user, demo, pathname, router]);
+    // Someone following an invite link signs in (or up) first.
+    useEffect(() => { if (ready && !user && !demo && pendingInvite && pathname === '/') router.replace(signInPath); }, [ready, user, demo, pendingInvite, pathname, router]);
+    const household = useHousehold(user, demo);
+    // A viewer of someone's household reads everything and changes nothing; the database refuses writes either way.
+    const readOnly = !canEdit(household.state);
     const [settingsLoading, setSettingsLoading] = useState(true);
     const [settingsError, setSettingsError] = useState('');
     const [settingsRevision,setSettingsRevision]=useState(0);
@@ -133,12 +150,16 @@ function useWorkspaceState() {
     const [loadedKey, setLoadedKey] = useState('');
     const recordReadError = useRef('');
     const [reload, setReload] = useState(0);
+    // A household that is no longer available closed while the first reads were under way: read again from the person's own workspace.
+    const workspaceReset = !!household.state?.reset;
+    useEffect(() => { if (workspaceReset) queueMicrotask(() => setReload(n => n + 1)); }, [workspaceReset]);
     const [summaryLoaded, setSummaryLoaded] = useState(false);
     const summaryCache = useRef({ loaded: false, revision: -1 });
     const [recordKinds, setRecordKinds] = useState<readonly string[]>(kinds);
     const { market: liveMarket, loading: marketLoading, error: marketError, refresh } = useMarket(summary, !!user && !demo);
     const market = demo ? demoMarket : liveMarket;
-    const snapshots = usePortfolioSnapshots(demo ? null : user, market, summaryLoaded && !marketLoading, reload);
+    // Viewing someone's household as a viewer records no daily snapshot; wait to know the role first.
+    const snapshots = usePortfolioSnapshots(demo ? null : user, market, summaryLoaded && !marketLoading && (household.state ? !readOnly : !household.loading), reload);
     const [fetchingPrice, setFetchingPrice] = useState(false);
     const priceKey = JSON.stringify([editing?.id, editing?.name, editing?.currency]);
     const [priceResult, setPriceResult] = useState({key:'',message:''});
@@ -277,7 +298,9 @@ function useWorkspaceState() {
         setBusy(false);
     } }
     // A repeated message leaves the error state unchanged, so show the popup directly as well.
-    const fail = (message: string) => { setError(message); showError(message); };
+    const fail = (message: string) => { const shown = readOnly ? 'This shared workspace is view-only.' : message; setError(shown); showError(shown); };
+    /** Opens a form only where the person may change the workspace. */
+    const editable = () => { if (readOnly) showError('This shared workspace is view-only.'); return !readOnly; };
     async function save(e: React.FormEvent) { e.preventDefault(); if (!editing)
         return; if ((editing.kind === 'Money lent' && (!editing.lent_date || (editing.date && editing.date < editing.lent_date))) || (editing.kind !== 'Money lent' && !editing.date)) { fail('Check the record fields.'); return; }
         if (cashFlowAmountMissing(editing)) { fail('Enter an amount greater than zero.'); return; }
@@ -401,14 +424,16 @@ function useWorkspaceState() {
         setEditing({ ...fresh(), name: plan.name, kind: plan.category === 'Groceries' || plan.category === 'Household' ? 'Living expense' : 'Other expense', currency: plan.currency, frequency: 'Once', expense_plan_id: plan.id, date });
     };
 
-    const addCashFlow = (kind: Entry['kind']) => { setError(''); setRecordKinds(income.includes(kind) ? income : expenses); setEditing({ ...fresh(), currency, kind, frequency:'Once' }); };
+    const addCashFlow = (kind: Entry['kind']) => { if (!editable()) return; setError(''); setRecordKinds(income.includes(kind) ? income : expenses); setEditing({ ...fresh(), currency, kind, frequency:'Once' }); };
     const addRecord = () => {
+        if (!editable()) return;
         if (cashFlowSection) { addCashFlow('Other expense'); return; }
         setError('');
         setRecordKinds(section === 'Assets & investments' ? assetRecordKinds : section === 'Loans & debts' ? lendingRecordKinds : kinds);
         setEditing({ ...fresh(), currency, kind: section === 'Loans & debts' ? 'Mortgage' : 'Cash' });
     };
     const addAccountRecord = (kind: 'Cash'|'Deposit'|'Stock'|'Crypto', holdingAccountId?: string) => {
+        if (!editable()) return;
         setError(''); setRecordKinds(holdingAccountId ? [kind] : kind==='Cash'||kind==='Deposit' ? ['Cash','Deposit'] : ['Stock','Crypto']);
         const account=planning.data.holdingAccounts?.find(item=>item.id===holdingAccountId);
         setEditing({...fresh(),kind,is_investment:kind==='Cash'&&account?.kind==='Cash',currency:account&&preferencesData.currencies.includes(account.currency)?account.currency:currency,holding_account_id:holdingAccountId??null});
@@ -432,6 +457,7 @@ function useWorkspaceState() {
     const storedRecord = (record: Entry) => normalizeEntry(historyPage.data.records.find(r=>r.id===record.id) || planning.data.records.find(r=>r.id===record.id) || rows.find(r => r.id === record.id) || (demo ? record : summary.find(r => r.id === record.id) || record));
     const editRecord = (record: Entry) => {
         const source=earningSources.sources.find(source=>source.schedule_id===record.id);
+        if(!editable())return;
         if(source){setEditingIncomeSource(source);return;}
         setError('');
         setRecordKinds(income.includes(record.kind) ? income : expenses.includes(record.kind) ? expenses : assetRecordKinds.includes(record.kind) ? assetRecordKinds : lendingRecordKinds);
@@ -453,10 +479,10 @@ function useWorkspaceState() {
         } catch { setError('Connection unavailable. Please try again.'); }
         finally { setBusy(false); }
     }
-    const quickExpense = () => { setError(''); setRecordKinds(expenses); setEditing({ ...fresh(), currency, kind: 'Other expense', frequency: 'Once' }); };
+    const quickExpense = () => { if (!editable()) return; setError(''); setRecordKinds(expenses); setEditing({ ...fresh(), currency, kind: 'Other expense', frequency: 'Once' }); };
     const recordFromSource = (source: EarningSource, bonus?: boolean) => { setError(''); const entry = { ...fresh(), kind: source.kind, currency: source.currency, frequency: 'Once' as const }; setRecordKinds(income); setEditing({ ...entry, ...selectEarningSource(entry, source, bonus) }); };
     const reviewRecurring = (record: Entry) => { setError(''); setRecordKinds([...income, ...expenses]); setEditing(record); };
-    const requestDelete = (record: Entry) => { setError(''); setDeleting(record); };
+    const requestDelete = (record: Entry) => { if (!editable()) return; setError(''); setDeleting(record); };
     const discardDeletedItem = (item: DeletedItem) => setDeletedItems(items => items.filter(existing => existing.id !== item.id));
     const showFirstPage = () => setPageState({ key: paginationKey, page: 1 });
     const showPage = (next: number) => setPageState({ key: paginationKey, page: next });
@@ -514,6 +540,8 @@ function useWorkspaceState() {
     return {
         // Session
         ready, user, demo, pathname, section, sectionKey, cashFlowSection, busy, configured, error, login, logout, startDemo, clearLocalSession,
+        // Household sharing
+        household, readOnly, pendingInvite, dismissInvite,
         // Preferences
         currency, setCurrency, preferencesData, applyPreferences, savePreferences, settingsLoading, settingsError, retrySettings, workspacePreferences, onboardingNeeded, restartOnboarding, saveTrackingStart: saveTrackingStartRequest,
         // Records and market data

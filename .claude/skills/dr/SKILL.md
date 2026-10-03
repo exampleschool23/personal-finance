@@ -31,7 +31,7 @@ include it; a change to `app/globals.css`, `components/presentation-foundation/`
 | accounts | `/accounts` | `components/workspace/screens/accounts-screen.tsx`, `components/planning/accounts-page.tsx` |
 | transactions | `/transactions` | `components/workspace/screens/transactions-screen.tsx`, `components/transactions-page.tsx` |
 | reports | `/reports` | `components/workspace/screens/reports-screen.tsx`, `components/business-reports.tsx`, `components/tax-prep-sheet.tsx`, `components/business-card.tsx`, `components/business-setup-flow.tsx` |
-| cash-flow | `/income-expenses` | `components/workspace/screens/cash-flow-screen.tsx`, `components/cash-flow-report.tsx` |
+| cash-flow | `/income-expenses` | `components/workspace/screens/cash-flow-screen.tsx`, `components/cash-flow-report.tsx`, `components/cash-forecast.tsx` |
 | budget | `/budget` | `components/workspace/screens/budget-screen.tsx`, `components/budget-page.tsx` |
 | recurring | `/upcoming` | `components/workspace/screens/upcoming-screen.tsx`, `components/planning/upcoming-page.tsx` |
 | investments | `/assets` | `components/workspace/screens/assets-screen.tsx`, `components/asset-dashboard.tsx`, `components/portfolio-allocation-plan.tsx` |

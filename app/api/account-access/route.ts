@@ -1,3 +1,4 @@
+import { personalRequest, workspaceCookie } from '@/lib/household';
 import {cookies} from 'next/headers';
 import {z} from 'zod';
 import {accountAccessSchema,recoveryCookie,recoveryOptions,accountOrigin,signupError} from '@/lib/account-access';
@@ -76,10 +77,10 @@ export async function POST(req:Request){
  // A linked Telegram chat is told afterwards, so it is not left with the menu of an account that is gone.
  const db=serviceDatabase(),notice=db?await deletionNotice(db,auth.user.id).catch(()=>null):null;
  // Stored receipts are removed first; the database rows go with the account.
- await removeOwnerAttachments(attachmentStore((path,init)=>supa(path,init,auth.token)),auth.user.id).catch(()=>null);
+ await removeOwnerAttachments(attachmentStore((path,init)=>supa(path,personalRequest(init),auth.token)),auth.user.id).catch(()=>null);
  const response=await fetch(config().url+'/auth/v1/admin/users/'+auth.user.id,{method:'DELETE',headers:serviceKeyHeaders(key),cache:'no-store',signal:AbortSignal.timeout(15000)});
  if(!response.ok)return reply({error:'Could not delete the account. Please try again.'},503);
  if(notice)await sendTelegramMessage(notice);
- jar.delete('hf_access');jar.delete('hf_refresh');return reply({message:'Account deleted.'});
+ jar.delete('hf_access');jar.delete('hf_refresh');jar.delete(workspaceCookie);return reply({message:'Account deleted.'});
  }catch{return reply({error:'Account service is unavailable. Please try again.'},503);}
 }
