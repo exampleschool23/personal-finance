@@ -49,3 +49,34 @@ test('BTC spot recovers from temporary rate limiting',async()=>{
   assert.equal(attempts,2);assert.equal(data.quotes['Crypto:BTC'].usd,60000);assert.equal(data.errors['Crypto:BTC'],undefined);
  }finally{globalThis.fetch=original;}
 });
+
+test('coins Coinbase cannot price are quoted from Kraken, never from a lookalike ticker',async()=>{
+ const {krakenCoins}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
+ for(const symbol of krakenCoins)assert.ok(coins.some(coin=>coin[0]===symbol),symbol);
+ assert.ok(krakenCoins.has('JUP'));assert.ok(krakenCoins.has('XMR'));assert.ok(!krakenCoins.has('BTC'));
+ const original=globalThis.fetch,asked=[];
+ try{
+  globalThis.fetch=async raw=>{
+   const url=new URL(raw);asked.push(url.hostname+url.pathname+url.search);
+   if(url.hostname==='api.kraken.com'){
+    const pair=url.searchParams.get('pair');
+    if(pair==='JUPUSD')return Response.json({error:[],result:{JUPUSD:{c:['0.31465','169']}}});
+    if(pair==='XMRUSD')return Response.json({error:[],result:{XXMRZUSD:{c:['547.06','1']}}});
+    if(pair==='KASUSD')return Response.json({error:['EQuery:Unknown asset pair']});
+    if(pair==='NEOUSD')return Response.json({error:[],result:{XDGUSD:{c:['0.09','1']}}});
+    if(pair==='MNTUSD')return Response.json({error:[],result:{MNTUSD:{c:['0','1']}}});
+   }
+   // The unrelated asset Coinbase answers with for the JUP ticker.
+   if(url.pathname.includes('/JUP-USD/'))return Response.json({data:{base:'JUP',currency:'USD',amount:'0.00032'}});
+   if(url.pathname.includes('/BTC-USD/'))return Response.json({data:{base:'BTC',currency:'USD',amount:'60000'}});
+   return new Response('',{status:404});
+  };
+  const data=await(await GET(new Request('http://localhost/api/market?crypto=JUP,XMR,KAS,NEO,MNT,BTC'))).json();
+  assert.equal(data.quotes['Crypto:JUP'].usd,0.31465);assert.equal(data.quotes['Crypto:JUP'].source,'Kraken');
+  assert.equal(data.quotes['Crypto:XMR'].usd,547.06);
+  assert.equal(data.quotes['Crypto:BTC'].usd,60000);assert.equal(data.quotes['Crypto:BTC'].source,'Coinbase');
+  for(const symbol of ['KAS','NEO','MNT']){assert.equal(data.quotes['Crypto:'+symbol],undefined,symbol);assert.ok(data.errors['Crypto:'+symbol],symbol);}
+  assert.ok(!asked.some(url=>url.includes('JUP-USD')));
+  assert.ok(!asked.some(url=>url.startsWith('api.kraken.com')&&url.includes('BTC')));
+ }finally{globalThis.fetch=original;}
+});

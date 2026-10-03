@@ -56,7 +56,8 @@ The server-only key is never returned to the browser. Stock requests require
 sign-in and support USD-listed ticker symbols. Provider plan limits and quote
 delays apply; up to 20 unique stock tickers are requested per refresh.
 
-Crypto spot prices use Coinbase's public feed; USD/UZS uses the CBU official
+Crypto spot prices use Coinbase's public feed, and Kraken's public ticker for the
+coins Coinbase does not price (`krakenCoins` in `lib/server-market.ts`); USD/UZS uses the CBU official
 rate and displays its effective date. The app refreshes every five minutes
 while visible, with upstream caching (five minutes for quotes, one hour for FX).
 Saved values are used when a quote fails. Without FX, only records in the

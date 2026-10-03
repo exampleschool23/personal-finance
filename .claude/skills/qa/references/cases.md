@@ -448,6 +448,8 @@ currencies (USD primary). Compute every expected figure yourself first.
 | INV-032 | P1 | Buy and sell | Accounts › Buy holding 2 QA stock for 500 from a QA cash account; Sell / convert 1 for 300 | Cash −500 then +300; quantity 2 then 1; average cost updated on buy; selling more than held gives "Insufficient balance or holding quantity." |
 | INV-033 | P1 | Ten stock benchmarks | Settings › Investment benchmarks: add 10 stocks (the maximum), open Overview | Every chosen line loads, or the card says prices are rate-limited and retries; never "Market history is unavailable" for a valid ticker `[bug 2026-10-03]` |
 | INV-034 | P2 | Holding bought before tracking | Add a stock with purchase date 3 January 2023, tracking since 3 January 2023, All history | Chart starts at the purchase, or "Tracking since" explains that history starts when the holding was added `[bug 2026-10-03]` |
+| INV-035 | P0 | Jupiter and Monero live price | Add crypto › pick "Jupiter (JUP)", then "Monero (XMR)", quantity 1 each | Unit price matches the Kraken JUP/USD and XMR/USD quotes (source line reads "Kraken"); never a price about 1,000 times too low for JUP or "Price unavailable" for XMR `[bug 2026-10-03]` |
+| INV-036 | P1 | Larger instrument catalogue | Add crypto › search "hyperliquid", "kaspa", "tether gold"; Add stock › search "fiserv", "bitcoin trust", "t" | Finds HYPE, KAS, XAUT, FISV, IBIT, and AT&T (T) first; each coin fills a live unit price; the list scrolls without lag |
 
 ## LOAN — loans and debts
 

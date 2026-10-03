@@ -69,7 +69,7 @@ export const privacyPolicy:LegalDocument={kind:'privacy',sections:[
   'Telegram: delivering bot messages, if you connect the bot.',
   'Google: sign-in, if you choose Sign in with Google.',
   'Cloudflare R2: encrypted backups of the database.',
-  'Market and exchange-rate services (Twelve Data, Coinbase, Bitfinex, ExchangeRate-API): we send them only ticker symbols and currency codes, never your personal data.',
+  'Market and exchange-rate services (Twelve Data, Coinbase, Kraken, Bitfinex, ExchangeRate-API): we send them only ticker symbols and currency codes, never your personal data.',
  ]},
  {heading:'How long we keep it',paragraphs:[
   'We keep your data while your account is open. Records you delete go to Recently deleted, where you can restore them. When you delete your account, your records are deleted; copies in encrypted backups are removed as those backups expire.',

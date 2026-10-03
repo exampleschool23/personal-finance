@@ -26,6 +26,15 @@ function positive(value: unknown) {
   if (!Number.isFinite(number) || number <= 0) throw new Error('invalid_price');
   return number;
 }
+// Coinbase's spot endpoint has no market for these coins, or answers with an unrelated asset that shares the ticker (JUP).
+export const krakenCoins = new Set(['XMR', 'JUP', 'KAS', 'MNT', 'OKB', 'BGB', 'NEO', 'XDC', 'QTUM', 'CELO', 'AR', 'RUNE', 'A', 'DYDX', 'GMX', 'LRC', 'STORJ', 'GRASS', 'GALA', 'ENJ', 'NOT', 'MEW', 'USDE', 'RLUSD', 'XAUT']);
+async function krakenPrice(symbol: string) {
+  const result = await read(`https://api.kraken.com/0/public/Ticker?pair=${symbol}USD`, 300) as { error?: string[]; result?: Record<string, { c?: string[] }> };
+  const pairs = Object.entries(result.result ?? {});
+  // Kraken names some pairs in its own style (XXMRZUSD), so accept one USD pair that carries the symbol.
+  if (result.error?.length || pairs.length !== 1 || !pairs[0][0].includes(symbol) || !pairs[0][0].endsWith('USD')) throw new Error('invalid_quote');
+  return positive(pairs[0][1].c?.[0]);
+}
 export async function loadMarket(crypto:string[],stocks:string[],stockAccess:boolean):Promise<MarketData> {
   const key = process.env.TWELVE_DATA_API_KEY;
   const data: MarketData = { fx: null, quotes: {}, errors: {}, stocksConfigured: !!key };
@@ -48,6 +57,7 @@ export async function loadMarket(crypto:string[],stocks:string[],stockAccess:boo
   });
   for (const symbol of crypto) jobs.push(async () => {
     try {
+      if (krakenCoins.has(symbol)) { data.quotes[`Crypto:${symbol}`] = { usd: await krakenPrice(symbol), source: 'Kraken', fetchedAt: new Date().toISOString() }; return; }
       const result = await read(`https://api.coinbase.com/v2/prices/${symbol}-USD/spot`, 300) as { data?: { base: string; currency: string; amount: string } };
       if (result.data?.base !== symbol || result.data.currency !== 'USD') throw new Error('invalid_quote');
       data.quotes[`Crypto:${symbol}`] = { usd: positive(result.data.amount), source: 'Coinbase', fetchedAt: new Date().toISOString() };

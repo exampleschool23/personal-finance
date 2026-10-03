@@ -21,7 +21,7 @@ test('the terms and privacy policy name the operator and contact, and never tie 
 
 test('the privacy policy lists every outside service the code talks to',()=>{
  const text=JSON.stringify(legal.privacyPolicy);
- for(const name of ['Supabase','Vercel','Telegram','Google','Cloudflare R2','Twelve Data','Coinbase','Bitfinex','ExchangeRate-API'])assert.ok(text.includes(name),name);
+ for(const name of ['Supabase','Vercel','Telegram','Google','Cloudflare R2','Twelve Data','Coinbase','Kraken','Bitfinex','ExchangeRate-API'])assert.ok(text.includes(name),name);
 });
 
 test('both pages exist, are public, and link to each other; sign-in and sign-up link to them',()=>{

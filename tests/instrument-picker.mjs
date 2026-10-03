@@ -8,22 +8,30 @@ const {stocks,instrumentOptions,matchingInstruments,customStockSymbol}=new Funct
 const {fetchMarket}=new Function('instrumentFor',compile(fs.readFileSync('hooks/use-market.ts','utf8').split('export function useMarket')[0])+';return {fetchMarket};')(instrumentFor);
 
 test('crypto catalogue includes TON and preserves existing names and symbol recognition',()=>{
- assert.equal(coins.length,48);
+ assert.equal(coins.length,174);
  assert.equal(new Set(coins.map(coin=>coin[0])).size,coins.length);
  for(const coin of coins){
+  // Investment goals and portfolio benchmarks store the symbol under this database check.
+  assert.match(coin[0],/^[A-Z][A-Z0-9]{0,14}$/);
   for(const name of [coin[0],coin[1],coinName(coin)])assert.deepEqual(instrumentFor({kind:'Crypto',name}),{kind:'Crypto',symbol:coin[0]});
  }
  assert.equal(matchingInstruments('Crypto',' ton ')[0].value,'Toncoin (TON)');
  assert.equal(matchingInstruments('Crypto','toncoin')[0].symbol,'TON');
  assert.equal(matchingInstruments('Crypto','USD coin')[0].symbol,'USDC');
  assert.equal(matchingInstruments('Crypto','nonexistent').length,0);
+ assert.equal(matchingInstruments('Crypto','hyperliquid')[0].value,'Hyperliquid (HYPE)');
+ assert.equal(matchingInstruments('Crypto','s')[0].symbol,'S');
+ assert.equal(matchingInstruments('Crypto','tether gold')[0].symbol,'XAUT');
 });
 test('stock catalogue supports company search, share classes, ETFs and custom tickers',()=>{
- assert.equal(stocks.length,68);assert.equal(new Set(stocks.map(stock=>stock[0])).size,stocks.length);
+ assert.equal(stocks.length,384);assert.equal(new Set(stocks.map(stock=>stock[0])).size,stocks.length);
  assert.equal(matchingInstruments('Stock','apple')[0].value,'AAPL');
  assert.equal(matchingInstruments('Stock',' msft ')[0].value,'MSFT');
  assert.equal(matchingInstruments('Stock','berkshire')[0].value,'BRK.B');
  assert.equal(matchingInstruments('Stock','vanguard s&p')[0].value,'VOO');
+ assert.equal(matchingInstruments('Stock','t')[0].value,'T');
+ assert.equal(matchingInstruments('Stock','fiserv')[0].value,'FISV');
+ assert.equal(matchingInstruments('Stock','bitcoin trust')[0].value,'IBIT');
  for(const item of instrumentOptions('Stock'))assert.deepEqual(instrumentFor({kind:'Stock',name:item.value}),{kind:'Stock',symbol:item.symbol});
  assert.equal(customStockSymbol(' dxyz '),'DXYZ');
  for(const invalid of ['','Apple Inc','AAPL','../../secret','<script>','123','A'.repeat(16)])assert.equal(customStockSymbol(invalid),null);
@@ -40,7 +48,7 @@ test('large portfolios fetch every crypto and stock symbol within request limits
   };
   const entries=[...instrumentOptions('Crypto').map(item=>({kind:'Crypto',name:item.value})),...instrumentOptions('Stock').slice(0,42).map(item=>({kind:'Stock',name:item.value}))];
   const result=await fetchMarket([...entries,entries[0]]);
-  assert.equal(calls.length,3);assert.equal(Object.keys(result.quotes).length,90);assert.deepEqual(result.errors,{});
+  assert.equal(calls.length,11);assert.equal(Object.keys(result.quotes).length,216);assert.deepEqual(result.errors,{});
   assert.ok(result.quotes['Crypto:TON']);assert.ok(result.quotes['Stock:SBUX']);
  }finally{globalThis.fetch=original;}
 });
