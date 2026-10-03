@@ -1477,7 +1477,6 @@
   "Activity and investments": "Aktibidad at mga pamumuhunan",
   "Total funding invested by this date": "Kabuuang pondong inilagak hanggang sa petsang ito",
   "Opening net worth invested": "Inilagay na panimulang netong halaga",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Pinopondohan muna ng panimulang netong halaga ang bawat benchmark. Inilalagak ang kita pagkatapos ng petsang iyon kapag natanggap; hindi na idinaragdag muli ang kitang kasama na sa panimulang balanse.",
   "{symbol} price (USD)": "Presyo ng {symbol} (USD)",
   "Your money, clearly organized.": "Ang pera mo, malinaw na nakaayos.",
   "{currency} balances": "Mga balanse sa {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Mga kamakailang transaksyon",
   "Manage": "Pamahalaan",
   "Transferred from an existing investment": "Inilipat mula sa umiiral na pamumuhunan",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Pinopondohan ng mga bayad sa principal at pagbili ng pamumuhunan ang mga benchmark. Ang mga tahasang naka-link na paglilipat lang mula sa umiiral na pamumuhunan ang hindi isinasama. Hindi kasama ang interes, bayarin at gastusin sa pamumuhay.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Pinopondohan ng mga pagbili ng pamumuhunan at bayad sa principal ang mga benchmark. Hindi na binibilang muli ang mga tahasang paglilipat sa pagitan ng mga pamumuhunan. Hindi kasama ang mga balanse ng cash at natanggap na kita.",
   "Benchmark funding": "Pondo ng benchmark",
   "Excluding expenses": "Hindi kasama ang mga gastos",
   "Including expenses": "Kasama ang mga gastos",
   "Expense funding": "Pondo ng gastos",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Pinopondohan ng mga pagbili ng pamumuhunan, bayad sa principal at bawat naitalang gastos ang mga benchmark. Walang idinaragdag ang paggastos sa halaga ng pamumuhunan mo, kaya ipinapakita ng agwat kung magkano ang nagastos. Hindi binibilang ang mga paglilipat sa pagitan ng sarili mong account at natanggap na kita.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Pinopondohan ng mga bayad sa principal, pagbili ng pamumuhunan at bawat naitalang gastos, kasama ang interes at bayarin, ang mga benchmark. Ang mga tahasang naka-link na paglilipat lang mula sa umiiral na pamumuhunan ang hindi isinasama.",
   "Valuables": "Mga mahahalagang gamit",
   "e.g. Watch, jewellery, art or car": "hal. Relo, alahas, sining o kotse",
   "Valuables purchase": "Pagbili ng mahahalagang gamit",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Ang may-ari lang ang puwedeng mag-alis ng iba.",
   "You no longer have access to this shared workspace.": "Wala ka nang access sa pinaghahatiang workspace na ito.",
   "Could not load your household. Check that database update 100 is installed.": "Hindi ma-load ang iyong sambahayan. Tingnan kung naka-install ang update 100 ng database.",
-  "Check the household details.": "Suriin ang detalye ng sambahayan."
+  "Check the household details.": "Suriin ang detalye ng sambahayan.",
+  "Nothing spent on this day.": "Walang nagastos sa araw na ito.",
+  "{count} more": "{count} pa",
+  "Transaction pages": "Mga pahina ng transaksyon",
+  "Page {page} of {pages} · {count} transactions": "Pahina {page} ng {pages} · {count} transaksyon"
 }

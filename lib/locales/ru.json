@@ -1477,7 +1477,6 @@
   "Activity and investments": "Операции и инвестиции",
   "Total funding invested by this date": "Всего средств инвестировано к этой дате",
   "Opening net worth invested": "Начальный чистый капитал инвестирован",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Каждый бенчмарк начинается с начального чистого капитала. Доход после этой даты инвестируется при получении; доход, уже включённый в начальный баланс, повторно не добавляется.",
   "{symbol} price (USD)": "Цена {symbol} (USD)",
   "Your money, clearly organized.": "Ваши деньги — всё по порядку.",
   "{currency} balances": "Балансы в {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Последние операции",
   "Manage": "Управление",
   "Transferred from an existing investment": "Переведено из существующей инвестиции",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Погашение основной суммы и покупки инвестиций пополняют бенчмарки. Исключаются только явно связанные переводы из существующих инвестиций. Проценты, комиссии и бытовые расходы не учитываются.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Покупки инвестиций и погашение основной суммы пополняют бенчмарки. Явные переводы между инвестициями повторно не учитываются. Остатки денежных средств и поступления дохода исключены.",
   "Benchmark funding": "Что вкладывается в бенчмарк",
   "Excluding expenses": "Без учёта расходов",
   "Including expenses": "С учётом расходов",
   "Expense funding": "Расход, вложенный в бенчмарк",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Покупки инвестиций, погашение основного долга и каждый записанный расход вкладываются в бенчмарки. Расходы не увеличивают стоимость ваших инвестиций, поэтому разница показывает, во что они обошлись. Переводы между вашими счетами и поступления дохода не учитываются.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Погашение основного долга, покупки инвестиций и каждый записанный расход, включая проценты и комиссии, вкладываются в бенчмарки. Исключаются только явно связанные переводы из существующих инвестиций.",
   "Valuables": "Ценности",
   "e.g. Watch, jewellery, art or car": "например, часы, украшения, искусство или автомобиль",
   "Valuables purchase": "Покупка ценностей",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Удалять других может только владелец.",
   "You no longer have access to this shared workspace.": "У вас больше нет доступа к этому общему пространству.",
   "Could not load your household. Check that database update 100 is installed.": "Не удалось загрузить данные семьи. Проверьте, установлено ли обновление базы данных 100.",
-  "Check the household details.": "Проверьте данные семьи."
+  "Check the household details.": "Проверьте данные семьи.",
+  "Nothing spent on this day.": "В этот день трат не было.",
+  "{count} more": "ещё {count}",
+  "Transaction pages": "Страницы операций",
+  "Page {page} of {pages} · {count} transactions": "Страница {page} из {pages} · операций: {count}"
 }

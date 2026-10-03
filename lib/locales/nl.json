@@ -1477,7 +1477,6 @@
   "Activity and investments": "Activiteit en beleggingen",
   "Total funding invested by this date": "Totaal belegde financiering tot deze datum",
   "Opening net worth invested": "Belegd beginnettovermogen",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Het beginnettovermogen financiert eerst elke benchmark. Inkomsten na die datum worden belegd zodra ze zijn ontvangen; inkomsten die al in het beginsaldo zitten, worden niet opnieuw toegevoegd.",
   "{symbol} price (USD)": "Koers {symbol} (USD)",
   "Your money, clearly organized.": "Uw geld, helder georganiseerd.",
   "{currency} balances": "Saldi in {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Recente transacties",
   "Manage": "Beheren",
   "Transferred from an existing investment": "Overgedragen van een bestaande belegging",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Aflossingen en beleggingsaankopen financieren benchmarks. Alleen expliciet gekoppelde overboekingen van bestaande beleggingen zijn uitgesloten. Rente, kosten en leefkosten zijn uitgesloten.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Beleggingsaankopen en aflossingen financieren benchmarks. Expliciete overboekingen tussen beleggingen worden niet opnieuw meegeteld. Contante saldi en ontvangen inkomsten zijn uitgesloten.",
   "Benchmark funding": "Benchmarkfinanciering",
   "Excluding expenses": "Exclusief uitgaven",
   "Including expenses": "Inclusief uitgaven",
   "Expense funding": "Uitgavenfinanciering",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Beleggingsaankopen, aflossingen en elke geregistreerde uitgave financieren benchmarks. Uitgaven voegen niets toe aan uw beleggingswaarde, dus het verschil toont wat het heeft gekost. Overboekingen tussen uw rekeningen en ontvangen inkomsten worden niet meegeteld.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Aflossingen, beleggingsaankopen en elke geregistreerde uitgave, inclusief rente en kosten, financieren benchmarks. Alleen expliciet gekoppelde overboekingen van bestaande beleggingen zijn uitgesloten.",
   "Valuables": "Kostbaarheden",
   "e.g. Watch, jewellery, art or car": "bijv. Horloge, sieraden, kunst of auto",
   "Valuables purchase": "Aankoop van kostbaarheden",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Alleen de eigenaar kan iemand anders verwijderen.",
   "You no longer have access to this shared workspace.": "Je hebt geen toegang meer tot deze gedeelde omgeving.",
   "Could not load your household. Check that database update 100 is installed.": "Je huishouden kon niet worden geladen. Controleer of database-update 100 is geïnstalleerd.",
-  "Check the household details.": "Controleer de gegevens van het huishouden."
+  "Check the household details.": "Controleer de gegevens van het huishouden.",
+  "Nothing spent on this day.": "Niets uitgegeven op deze dag.",
+  "{count} more": "nog {count}",
+  "Transaction pages": "Transactiepagina's",
+  "Page {page} of {pages} · {count} transactions": "Pagina {page} van {pages} · {count} transacties"
 }

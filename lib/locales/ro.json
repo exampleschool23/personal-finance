@@ -1477,7 +1477,6 @@
   "Activity and investments": "Activitate și investiții",
   "Total funding invested by this date": "Total finanțare investită până la această dată",
   "Opening net worth invested": "Valoarea netă inițială investită",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Valoarea netă inițială finanțează mai întâi fiecare reper. Veniturile de după acea dată sunt investite când sunt încasate; veniturile deja incluse în soldul inițial nu se adaugă din nou.",
   "{symbol} price (USD)": "Preț {symbol} (USD)",
   "Your money, clearly organized.": "Banii tăi, organizați clar.",
   "{currency} balances": "Solduri în {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Tranzacții recente",
   "Manage": "Gestionează",
   "Transferred from an existing investment": "Transferat dintr-o investiție existentă",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Rambursările de principal și achizițiile de investiții finanțează reperele. Sunt excluse doar transferurile asociate explicit din investiții existente. Dobânzile, comisioanele și cheltuielile de trai sunt excluse.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Achizițiile de investiții și rambursările de principal finanțează reperele. Transferurile explicite între investiții nu se numără din nou. Soldurile de numerar și încasările de venituri sunt excluse.",
   "Benchmark funding": "Finanțarea reperelor",
   "Excluding expenses": "Fără cheltuieli",
   "Including expenses": "Cu cheltuieli",
   "Expense funding": "Finanțarea cheltuielilor",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Achizițiile de investiții, rambursările de principal și fiecare cheltuială înregistrată finanțează reperele. Cheltuielile nu adaugă nimic valorii investițiilor tale, așa că diferența arată cât au costat. Transferurile între conturile tale și încasările de venituri nu se numără.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Rambursările de principal, achizițiile de investiții și fiecare cheltuială înregistrată, inclusiv dobânzile și comisioanele, finanțează reperele. Sunt excluse doar transferurile asociate explicit din investiții existente.",
   "Valuables": "Obiecte de valoare",
   "e.g. Watch, jewellery, art or car": "ex. Ceas, bijuterii, artă sau mașină",
   "Valuables purchase": "Achiziție de obiecte de valoare",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Doar proprietarul poate elimina pe altcineva.",
   "You no longer have access to this shared workspace.": "Nu mai ai acces la acest spațiu partajat.",
   "Could not load your household. Check that database update 100 is installed.": "Gospodăria nu a putut fi încărcată. Verifică dacă actualizarea 100 a bazei de date este instalată.",
-  "Check the household details.": "Verifică datele gospodăriei."
+  "Check the household details.": "Verifică datele gospodăriei.",
+  "Nothing spent on this day.": "Nicio cheltuială în această zi.",
+  "{count} more": "încă {count}",
+  "Transaction pages": "Pagini de tranzacții",
+  "Page {page} of {pages} · {count} transactions": "Pagina {page} din {pages} · {count} tranzacții"
 }

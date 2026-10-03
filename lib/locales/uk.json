@@ -1477,7 +1477,6 @@
   "Activity and investments": "Активність та інвестиції",
   "Total funding invested by this date": "Загальне фінансування, інвестоване до цієї дати",
   "Opening net worth invested": "Інвестована початкова чиста вартість активів",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Початкова чиста вартість активів спочатку фінансує кожен бенчмарк. Дохід після цієї дати інвестується в момент отримання; дохід, уже включений у початковий баланс, повторно не додається.",
   "{symbol} price (USD)": "Ціна {symbol} (USD)",
   "Your money, clearly organized.": "Ваші гроші, чітко впорядковані.",
   "{currency} balances": "Баланси {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Останні транзакції",
   "Manage": "Керувати",
   "Transferred from an existing investment": "Переказано з наявної інвестиції",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Погашення основної суми та купівлі інвестицій фінансують бенчмарки. Виключаються лише явно пов’язані перекази з наявних інвестицій. Відсотки, комісії та життєві витрати виключено.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Купівлі інвестицій і погашення основної суми фінансують бенчмарки. Явні перекази між інвестиціями повторно не враховуються. Готівкові баланси та надходження доходу виключено.",
   "Benchmark funding": "Фінансування бенчмарків",
   "Excluding expenses": "Без витрат",
   "Including expenses": "З витратами",
   "Expense funding": "Фінансування витрат",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Купівлі інвестицій, погашення основної суми та кожна записана витрата фінансують бенчмарки. Витрати нічого не додають до вартості ваших інвестицій, тому різниця показує, скільки вони коштували. Перекази між вашими рахунками та надходження доходу не враховуються.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Погашення основної суми, купівлі інвестицій і кожна записана витрата, включно з відсотками та комісіями, фінансують бенчмарки. Виключаються лише явно пов’язані перекази з наявних інвестицій.",
   "Valuables": "Цінні речі",
   "e.g. Watch, jewellery, art or car": "напр. Годинник, коштовності, мистецтво чи авто",
   "Valuables purchase": "Купівля цінних речей",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Вилучати інших може лише власник.",
   "You no longer have access to this shared workspace.": "У вас більше немає доступу до цього спільного простору.",
   "Could not load your household. Check that database update 100 is installed.": "Не вдалося завантажити дані родини. Перевірте, чи встановлено оновлення бази даних 100.",
-  "Check the household details.": "Перевірте дані родини."
+  "Check the household details.": "Перевірте дані родини.",
+  "Nothing spent on this day.": "Цього дня витрат не було.",
+  "{count} more": "ще {count}",
+  "Transaction pages": "Сторінки операцій",
+  "Page {page} of {pages} · {count} transactions": "Сторінка {page} з {pages} · операцій: {count}"
 }

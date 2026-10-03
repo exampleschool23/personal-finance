@@ -11,12 +11,19 @@ import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { niceAxis } from '@/lib/chart-scale';
 import { depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry } from '@/lib/finance';
-import { formatCompactMoney, formatMoney, formatNumber } from '@/lib/format';
+import { formatCompactMoney, formatDate, formatMoney, formatNumber } from '@/lib/format';
 import type { MarketData } from '@/lib/market';
 import { emptyPlanning, type PlanningData } from '@/lib/planning';
 import type { PortfolioSnapshot } from '@/lib/portfolio-snapshots';
-import { spendingPace } from '@/lib/spending-pace';
+import { daysIn, spendingOnDay, spendingPace, type SpendingItem, type SpendingPacePoint } from '@/lib/spending-pace';
+import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import type { TransactionSplit } from '@/lib/transaction-tools';
+
+/** One day's spending in the chart tooltip: where the money went, largest first. */
+function SpentOn({ title, items, currency }: { title: string; items: SpendingItem[]; currency: string }) {
+ const { t, locale } = useLanguage();
+ return <section><h4>{title}</h4>{items.length ? items.slice(0, 5).map(item => <div className="portfolio-tooltip-row" key={item.id}><CategoryIcon kind={item.kind} size="sm"/><div><strong>{item.name}</strong><span>{t(item.kind)}</span></div><b>{formatMoney(item.amount, currency, locale)}</b></div>) : <p className="portfolio-tooltip-note">{t('Nothing spent on this day.')}</p>}{items.length > 5 && <p className="portfolio-tooltip-note">{t('{count} more', { count: formatNumber(items.length - 5, locale, 0) })}</p>}</section>;
+}
 
 type Props = { owner?: string | null; demo?: boolean; revision?: number; data: PlanningData; splits: TransactionSplit[]; snapshots: PortfolioSnapshot[]; currency: string; market: MarketData | null };
 
@@ -45,7 +52,23 @@ export function SpendingPaceCard({ owner = null, demo = false, revision = 0, dat
      <CartesianGrid stroke="var(--border)" strokeDasharray="2 6" vertical={false}/>
      <XAxis dataKey="day" tickFormatter={day => t('Day {day}', { day: formatNumber(Number(day), locale, 0) })} interval="preserveStartEnd" minTickGap={40} axisLine={false} tickLine={false} tickMargin={10}/>
      <YAxis width="auto" domain={axis.domain} ticks={axis.ticks} tickFormatter={amount => formatCompactMoney(Number(amount), currency, locale)} axisLine={false} tickLine={false} tickMargin={8}/>
-     <Tooltip isAnimationActive={false} labelFormatter={day => t('Day {day}', { day: formatNumber(Number(day), locale, 0) })} formatter={(amount, name) => [money(Number(amount)), name === 'current' ? t('This month') : t('Last month')]} contentStyle={{ background: 'var(--background)', borderColor: 'var(--border)', borderRadius: 12 }}/>
+     <Tooltip isAnimationActive={false} wrapperStyle={{ zIndex: 5 }} content={({ active, payload }) => {
+      const point = payload?.[0]?.payload as SpendingPacePoint | undefined;
+      if (!active || !point) return null;
+      const day = (month: string) => `${month}-${String(point.day).padStart(2, '0')}`;
+      // A shorter month has no such day, so nothing new was spent on it.
+      const items = (month: string) => point.day > daysIn(month) ? [] : spendingOnDay(data.records, day(month), currency, rates);
+      return <div className="portfolio-tooltip spending-pace-tooltip">
+       <header><span>{t('Day {day}', { day: formatNumber(point.day, locale, 0) })}</span>
+        {point.current !== null && <div className="portfolio-tooltip-row"><i className="current"/><div><strong>{t('This month')}</strong></div><b>{money(point.current)}</b></div>}
+        <div className="portfolio-tooltip-row"><i className="previous"/><div><strong>{t('Last month')}</strong></div><b>{money(point.previous ?? 0)}</b></div>
+       </header>
+       <div className="portfolio-tooltip-body">
+        {point.current !== null && <SpentOn title={formatDate(day(pace.month), locale)} items={items(pace.month)} currency={currency}/>}
+        {point.day <= daysIn(pace.previousMonth) && <SpentOn title={formatDate(day(pace.previousMonth), locale)} items={items(pace.previousMonth)} currency={currency}/>}
+       </div>
+      </div>;
+     }}/>
      <Line type="monotone" dataKey="previous" name="previous" stroke="var(--muted-foreground)" strokeOpacity={.55} strokeWidth={2} dot={false} isAnimationActive={false}/>
      <Area type="monotone" dataKey="current" name="current" stroke="var(--primary)" strokeWidth={2.5} fill="url(#spending-pace-fill)" dot={false} connectNulls={false} animationDuration={700}/>
     </ComposedChart>

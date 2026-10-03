@@ -1477,7 +1477,6 @@
   "Activity and investments": "Hoạt động và đầu tư",
   "Total funding invested by this date": "Tổng vốn đã đầu tư đến ngày này",
   "Opening net worth invested": "Tài sản ròng đầu kỳ đã đầu tư",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Tài sản ròng đầu kỳ được dùng làm vốn cho từng chuẩn so sánh trước. Thu nhập sau ngày đó được đầu tư khi nhận; thu nhập đã có trong số dư đầu kỳ không được cộng lại.",
   "{symbol} price (USD)": "Giá {symbol} (USD)",
   "Your money, clearly organized.": "Tiền của bạn, được sắp xếp rõ ràng.",
   "{currency} balances": "Số dư {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Giao dịch gần đây",
   "Manage": "Quản lý",
   "Transferred from an existing investment": "Chuyển từ một khoản đầu tư hiện có",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Các khoản trả nợ gốc và mua đầu tư được dùng làm vốn cho các chuẩn so sánh. Chỉ loại trừ các khoản chuyển từ khoản đầu tư hiện có được liên kết rõ ràng. Không tính lãi, phí và chi phí sinh hoạt.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Các lần mua đầu tư và trả nợ gốc được dùng làm vốn cho các chuẩn so sánh. Các khoản chuyển rõ ràng giữa các khoản đầu tư không bị tính lại. Không tính số dư tiền mặt và thu nhập đã nhận.",
   "Benchmark funding": "Vốn cho chuẩn so sánh",
   "Excluding expenses": "Không gồm chi phí",
   "Including expenses": "Gồm chi phí",
   "Expense funding": "Vốn từ chi phí",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Các lần mua đầu tư, trả nợ gốc và mọi khoản chi phí đã ghi nhận đều được dùng làm vốn cho các chuẩn so sánh. Chi tiêu không làm tăng giá trị đầu tư của bạn, nên khoảng chênh lệch cho thấy chi phí đã bỏ ra. Không tính chuyển khoản giữa các tài khoản của bạn và thu nhập đã nhận.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Các khoản trả nợ gốc, mua đầu tư và mọi khoản chi phí đã ghi nhận, kể cả lãi và phí, đều được dùng làm vốn cho các chuẩn so sánh. Chỉ loại trừ các khoản chuyển từ khoản đầu tư hiện có được liên kết rõ ràng.",
   "Valuables": "Vật có giá trị",
   "e.g. Watch, jewellery, art or car": "VD: Đồng hồ, trang sức, tranh hoặc xe",
   "Valuables purchase": "Mua vật có giá trị",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Chỉ chủ sở hữu mới có thể xóa người khác.",
   "You no longer have access to this shared workspace.": "Bạn không còn quyền truy cập không gian chung này.",
   "Could not load your household. Check that database update 100 is installed.": "Không thể tải gia đình của bạn. Kiểm tra xem bản cập nhật cơ sở dữ liệu 100 đã được cài đặt chưa.",
-  "Check the household details.": "Kiểm tra thông tin gia đình."
+  "Check the household details.": "Kiểm tra thông tin gia đình.",
+  "Nothing spent on this day.": "Không có chi tiêu trong ngày này.",
+  "{count} more": "thêm {count}",
+  "Transaction pages": "Trang giao dịch",
+  "Page {page} of {pages} · {count} transactions": "Trang {page} / {pages} · {count} giao dịch"
 }

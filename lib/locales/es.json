@@ -1477,7 +1477,6 @@
   "Activity and investments": "Actividad e inversiones",
   "Total funding invested by this date": "Financiación total invertida hasta esta fecha",
   "Opening net worth invested": "Patrimonio neto inicial invertido",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "El patrimonio neto inicial financia primero cada referencia. Los ingresos posteriores a esa fecha se invierten al recibirse; los ingresos ya incluidos en el saldo inicial no se añaden de nuevo.",
   "{symbol} price (USD)": "Precio de {symbol} (USD)",
   "Your money, clearly organized.": "Tu dinero, bien organizado.",
   "{currency} balances": "Saldos en {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Transacciones recientes",
   "Manage": "Gestionar",
   "Transferred from an existing investment": "Transferido desde una inversión existente",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Los reembolsos de capital y las compras de inversión financian las referencias. Solo se excluyen las transferencias vinculadas explícitamente desde inversiones existentes. Se excluyen intereses, comisiones y gastos de vida.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Las compras de inversión y los reembolsos de capital financian las referencias. Las transferencias explícitas entre inversiones no se cuentan de nuevo. Se excluyen los saldos en efectivo y los cobros de ingresos.",
   "Benchmark funding": "Financiación de la referencia",
   "Excluding expenses": "Sin gastos",
   "Including expenses": "Con gastos",
   "Expense funding": "Financiación de gastos",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Las compras de inversión, los reembolsos de capital y todos los gastos registrados financian las referencias. El gasto no aporta nada al valor de tu inversión, por lo que la diferencia muestra lo que costó. No se cuentan las transferencias entre tus cuentas ni los cobros de ingresos.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Los reembolsos de capital, las compras de inversión y todos los gastos registrados, incluidos intereses y comisiones, financian las referencias. Solo se excluyen las transferencias vinculadas explícitamente desde inversiones existentes.",
   "Valuables": "Objetos de valor",
   "e.g. Watch, jewellery, art or car": "p. ej., Reloj, joyas, arte o coche",
   "Valuables purchase": "Compra de objetos de valor",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Solo el propietario puede quitar a otra persona.",
   "You no longer have access to this shared workspace.": "Ya no tienes acceso a este espacio compartido.",
   "Could not load your household. Check that database update 100 is installed.": "No se pudo cargar tu hogar. Comprueba que la actualización 100 de la base de datos esté instalada.",
-  "Check the household details.": "Revisa los datos del hogar."
+  "Check the household details.": "Revisa los datos del hogar.",
+  "Nothing spent on this day.": "No se gastó nada este día.",
+  "{count} more": "{count} más",
+  "Transaction pages": "Páginas de movimientos",
+  "Page {page} of {pages} · {count} transactions": "Página {page} de {pages} · {count} movimientos"
 }

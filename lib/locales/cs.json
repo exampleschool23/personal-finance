@@ -1477,7 +1477,6 @@
   "Activity and investments": "Aktivita a investice",
   "Total funding invested by this date": "Celkové financování investované k tomuto datu",
   "Opening net worth invested": "Investované počáteční čisté jmění",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Počáteční čisté jmění nejprve financuje každý benchmark. Příjem po tomto datu se investuje při přijetí; příjem již zahrnutý v počátečním zůstatku se znovu nepřidává.",
   "{symbol} price (USD)": "Cena {symbol} (USD)",
   "Your money, clearly organized.": "Vaše peníze, přehledně uspořádané.",
   "{currency} balances": "Zůstatky v {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Nedávné transakce",
   "Manage": "Spravovat",
   "Transferred from an existing investment": "Převedeno z existující investice",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Splátky jistiny a investiční nákupy financují benchmarky. Vyloučeny jsou pouze výslovně propojené převody z existujících investic. Úroky, poplatky a životní výdaje jsou vyloučeny.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Investiční nákupy a splátky jistiny financují benchmarky. Výslovné převody mezi investicemi se znovu nepočítají. Hotovostní zůstatky a příjmy jsou vyloučeny.",
   "Benchmark funding": "Financování benchmarku",
   "Excluding expenses": "Bez výdajů",
   "Including expenses": "Včetně výdajů",
   "Expense funding": "Financování výdaji",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Investiční nákupy, splátky jistiny a každý zaznamenaný výdaj financují benchmarky. Výdaje nepřidávají nic k hodnotě vašich investic, takže rozdíl ukazuje, kolik stály. Převody mezi vašimi účty a příjmy se nepočítají.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Splátky jistiny, investiční nákupy a každý zaznamenaný výdaj, včetně úroků a poplatků, financují benchmarky. Vyloučeny jsou pouze výslovně propojené převody z existujících investic.",
   "Valuables": "Cennosti",
   "e.g. Watch, jewellery, art or car": "např. Hodinky, šperky, umění nebo auto",
   "Valuables purchase": "Nákup cenností",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Ostatní může odebrat jen vlastník.",
   "You no longer have access to this shared workspace.": "K tomuto sdílenému prostoru už nemáte přístup.",
   "Could not load your household. Check that database update 100 is installed.": "Domácnost se nepodařilo načíst. Zkontrolujte, zda je nainstalována aktualizace databáze 100.",
-  "Check the household details.": "Zkontrolujte údaje domácnosti."
+  "Check the household details.": "Zkontrolujte údaje domácnosti.",
+  "Nothing spent on this day.": "Tento den jste nic neutratili.",
+  "{count} more": "{count} dalších",
+  "Transaction pages": "Stránky transakcí",
+  "Page {page} of {pages} · {count} transactions": "Stránka {page} z {pages} · {count} transakcí"
 }

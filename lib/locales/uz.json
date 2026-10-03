@@ -1477,7 +1477,6 @@
   "Activity and investments": "Faoliyat va investitsiyalar",
   "Total funding invested by this date": "Shu sanagacha investitsiya qilingan jami mablag‘",
   "Opening net worth invested": "Boshlang‘ich sof boylik investitsiya qilindi",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Har bir benchmark boshlang‘ich sof boylik bilan boshlanadi. Keyingi daromad olingan sanada investitsiya qilinadi; boshlang‘ich qoldiqdagi daromad qayta qo‘shilmaydi.",
   "{symbol} price (USD)": "{symbol} narxi (USD)",
   "Your money, clearly organized.": "Mablag‘laringiz tartibli va tushunarli.",
   "{currency} balances": "{currency} qoldiqlari",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "So‘nggi operatsiyalar",
   "Manage": "Boshqarish",
   "Transferred from an existing investment": "Mavjud investitsiyadan o‘tkazilgan",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Asosiy qarz to‘lovlari va investitsiya xaridlari benchmarklarni moliyalashtiradi. Faqat mavjud investitsiyalardan aniq bog‘langan o‘tkazmalar chiqarib tashlanadi. Foizlar, komissiyalar va kundalik xarajatlar hisobga olinmaydi.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Investitsiya xaridlari va asosiy qarz to‘lovlari benchmarklarni moliyalashtiradi. Investitsiyalar orasidagi aniq o‘tkazmalar qayta hisoblanmaydi. Naqd pul qoldiqlari va daromad tushumlari hisobga olinmaydi.",
   "Benchmark funding": "Benchmarkga nima kiritiladi",
   "Excluding expenses": "Xarajatlarsiz",
   "Including expenses": "Xarajatlar bilan",
   "Expense funding": "Benchmarkga kiritilgan xarajat",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Investitsiya xaridlari, asosiy qarz to‘lovlari va har bir yozilgan xarajat benchmarklarga kiritiladi. Xarajatlar investitsiyalaringiz qiymatini oshirmaydi, shuning uchun farq ularning narxini ko‘rsatadi. Hisoblaringiz orasidagi o‘tkazmalar va daromad tushumlari hisobga olinmaydi.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Asosiy qarz to‘lovlari, investitsiya xaridlari va har bir yozilgan xarajat, jumladan foizlar va komissiyalar, benchmarklarga kiritiladi. Faqat mavjud investitsiyalardan aniq bog‘langan o‘tkazmalar chiqarib tashlanadi.",
   "Valuables": "Qimmatbaho buyumlar",
   "e.g. Watch, jewellery, art or car": "masalan, soat, zargarlik buyumi, san’at asari yoki avtomobil",
   "Valuables purchase": "Qimmatbaho buyum xaridi",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Boshqalarni faqat egasi chiqara oladi.",
   "You no longer have access to this shared workspace.": "Bu umumiy ish maydoniga endi ruxsatingiz yo‘q.",
   "Could not load your household. Check that database update 100 is installed.": "Oilangiz yuklanmadi. 100-raqamli ma’lumotlar bazasi yangilanishi o‘rnatilganini tekshiring.",
-  "Check the household details.": "Oila ma’lumotlarini tekshiring."
+  "Check the household details.": "Oila ma’lumotlarini tekshiring.",
+  "Nothing spent on this day.": "Bu kuni hech narsa sarflanmagan.",
+  "{count} more": "yana {count} ta",
+  "Transaction pages": "Tranzaksiya sahifalari",
+  "Page {page} of {pages} · {count} transactions": "{pages} dan {page}-sahifa · {count} ta tranzaksiya"
 }

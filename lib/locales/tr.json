@@ -1477,7 +1477,6 @@
   "Activity and investments": "Etkinlik ve yatırımlar",
   "Total funding invested by this date": "Bu tarihe kadar yatırılan toplam fonlama",
   "Opening net worth invested": "Yatırılan açılış net değeri",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Açılış net değeri, her kıyaslamayı önce fonlar. Bu tarihten sonraki gelir, alındığında yatırılır; açılış bakiyesine zaten dahil olan gelir tekrar eklenmez.",
   "{symbol} price (USD)": "{symbol} fiyatı (USD)",
   "Your money, clearly organized.": "Paranız, net bir düzende.",
   "{currency} balances": "{currency} bakiyeleri",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Son işlemler",
   "Manage": "Yönet",
   "Transferred from an existing investment": "Mevcut bir yatırımdan aktarıldı",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Anapara geri ödemeleri ve yatırım alımları kıyaslamaları fonlar. Yalnızca mevcut yatırımlardan açıkça bağlanan transferler hariç tutulur. Faiz, ücretler ve geçim giderleri hariçtir.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Yatırım alımları ve anapara geri ödemeleri kıyaslamaları fonlar. Yatırımlar arasındaki açık transferler yeniden sayılmaz. Nakit bakiyeler ve gelir tahsilatları hariçtir.",
   "Benchmark funding": "Kıyaslama fonlaması",
   "Excluding expenses": "Giderler hariç",
   "Including expenses": "Giderler dahil",
   "Expense funding": "Gider fonlaması",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Yatırım alımları, anapara geri ödemeleri ve kaydedilen her gider kıyaslamaları fonlar. Harcama yatırım değerinize bir şey katmaz, bu nedenle aradaki fark maliyeti gösterir. Hesaplarınız arasındaki transferler ve gelir tahsilatları sayılmaz.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Anapara geri ödemeleri, yatırım alımları ve faiz ile ücretler dahil kaydedilen her gider kıyaslamaları fonlar. Yalnızca mevcut yatırımlardan açıkça bağlanan transferler hariç tutulur.",
   "Valuables": "Değerli eşyalar",
   "e.g. Watch, jewellery, art or car": "ör. Saat, mücevher, sanat eseri veya araba",
   "Valuables purchase": "Değerli eşya alımı",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Başkasını yalnızca sahip çıkarabilir.",
   "You no longer have access to this shared workspace.": "Bu paylaşılan çalışma alanına artık erişiminiz yok.",
   "Could not load your household. Check that database update 100 is installed.": "Haneniz yüklenemedi. 100 numaralı veritabanı güncellemesinin kurulu olduğunu kontrol edin.",
-  "Check the household details.": "Hane bilgilerini kontrol edin."
+  "Check the household details.": "Hane bilgilerini kontrol edin.",
+  "Nothing spent on this day.": "Bu gün harcama yapılmadı.",
+  "{count} more": "{count} tane daha",
+  "Transaction pages": "İşlem sayfaları",
+  "Page {page} of {pages} · {count} transactions": "Sayfa {page} / {pages} · {count} işlem"
 }

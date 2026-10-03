@@ -1477,7 +1477,6 @@
   "Activity and investments": "سرگرمی اور سرمایہ کاریاں",
   "Total funding invested by this date": "اس تاریخ تک لگایا گیا کل فنڈ",
   "Opening net worth invested": "لگائی گئی ابتدائی نیٹ ورتھ",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "ابتدائی نیٹ ورتھ ہر بینچ مارک کو پہلے فنڈ کرتی ہے۔ اس تاریخ کے بعد کی آمدنی وصول ہونے پر لگائی جاتی ہے؛ ابتدائی بیلنس میں شامل آمدنی دوبارہ شامل نہیں کی جاتی۔",
   "{symbol} price (USD)": "{symbol} قیمت (USD)",
   "Your money, clearly organized.": "آپ کا پیسہ، واضح ترتیب میں۔",
   "{currency} balances": "{currency} بیلنس",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "حالیہ لین دین",
   "Manage": "سنبھالیں",
   "Transferred from an existing investment": "موجودہ سرمایہ کاری سے منتقل شدہ",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "اصل رقم کی واپسیاں اور سرمایہ کاری کی خریداریاں بینچ مارکس کو فنڈ کرتی ہیں۔ صرف موجودہ سرمایہ کاریوں سے واضح طور پر منسلک منتقلیاں خارج ہیں۔ سود، فیسیں اور رہن سہن کے اخراجات شامل نہیں ہیں۔",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "سرمایہ کاری کی خریداریاں اور اصل رقم کی واپسیاں بینچ مارکس کو فنڈ کرتی ہیں۔ سرمایہ کاریوں کے درمیان واضح منتقلیاں دوبارہ شمار نہیں ہوتیں۔ نقد بیلنس اور آمدنی کی وصولیاں شامل نہیں ہیں۔",
   "Benchmark funding": "بینچ مارک کی فنڈنگ",
   "Excluding expenses": "اخراجات کے بغیر",
   "Including expenses": "اخراجات سمیت",
   "Expense funding": "اخراجات کی فنڈنگ",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "سرمایہ کاری کی خریداریاں، اصل رقم کی واپسیاں اور ہر درج شدہ خرچ بینچ مارکس کو فنڈ کرتے ہیں۔ خرچ آپ کی سرمایہ کاری کی مالیت میں کچھ نہیں بڑھاتا، اس لیے فرق اس کی لاگت دکھاتا ہے۔ آپ کے اکاؤنٹس کے درمیان منتقلیاں اور آمدنی کی وصولیاں شمار نہیں ہوتیں۔",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "اصل رقم کی واپسیاں، سرمایہ کاری کی خریداریاں اور ہر درج شدہ خرچ، بشمول سود اور فیسیں، بینچ مارکس کو فنڈ کرتے ہیں۔ صرف موجودہ سرمایہ کاریوں سے واضح طور پر منسلک منتقلیاں خارج ہیں۔",
   "Valuables": "قیمتی اشیاء",
   "e.g. Watch, jewellery, art or car": "مثلاً گھڑی، زیورات، آرٹ یا کار",
   "Valuables purchase": "قیمتی اشیاء کی خریداری",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "صرف مالک کسی اور کو ہٹا سکتا ہے۔",
   "You no longer have access to this shared workspace.": "اب آپ کو اس مشترکہ ورک اسپیس تک رسائی نہیں ہے۔",
   "Could not load your household. Check that database update 100 is installed.": "آپ کا گھرانہ لوڈ نہیں ہو سکا۔ چیک کریں کہ ڈیٹا بیس اپ ڈیٹ 100 انسٹال ہے۔",
-  "Check the household details.": "گھرانے کی تفصیلات چیک کریں۔"
+  "Check the household details.": "گھرانے کی تفصیلات چیک کریں۔",
+  "Nothing spent on this day.": "اس دن کچھ خرچ نہیں ہوا۔",
+  "{count} more": "مزید {count}",
+  "Transaction pages": "لین دین کے صفحات",
+  "Page {page} of {pages} · {count} transactions": "صفحہ {page} از {pages} · {count} لین دین"
 }

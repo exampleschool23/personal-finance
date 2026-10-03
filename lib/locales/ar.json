@@ -1477,7 +1477,6 @@
   "Activity and investments": "النشاط والاستثمارات",
   "Total funding invested by this date": "إجمالي التمويل المستثمر حتى هذا التاريخ",
   "Opening net worth invested": "صافي الثروة الافتتاحي المستثمر",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "يموّل صافي الثروة الافتتاحي كل معيار مرجعي أولًا. يُستثمر الدخل بعد ذلك التاريخ عند استلامه؛ ولا يُضاف مجددًا الدخل المشمول أصلًا في الرصيد الافتتاحي.",
   "{symbol} price (USD)": "سعر {symbol} (USD)",
   "Your money, clearly organized.": "أموالك، منظَّمة بوضوح.",
   "{currency} balances": "أرصدة {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "المعاملات الأخيرة",
   "Manage": "أدِر",
   "Transferred from an existing investment": "محوَّل من استثمار قائم",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "تموّل سدادات أصل الدين ومشتريات الاستثمار المعايير المرجعية. تُستبعد فقط التحويلات المرتبطة صراحةً من الاستثمارات القائمة. تُستبعد الفائدة والرسوم ومصروفات المعيشة.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "تموّل مشتريات الاستثمار وسدادات أصل الدين المعايير المرجعية. لا تُحتسب التحويلات الصريحة بين الاستثمارات مرة أخرى. تُستبعد الأرصدة النقدية وإيصالات الدخل.",
   "Benchmark funding": "تمويل المعايير المرجعية",
   "Excluding expenses": "باستثناء المصروفات",
   "Including expenses": "شاملًا المصروفات",
   "Expense funding": "تمويل المصروفات",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "تموّل مشتريات الاستثمار وسدادات أصل الدين وكل مصروف مسجَّل المعايير المرجعية. لا يضيف الإنفاق شيئًا إلى قيمة استثمارك، فتُظهر الفجوة كلفته. لا تُحتسب التحويلات بين حساباتك وإيصالات الدخل.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "تموّل سدادات أصل الدين ومشتريات الاستثمار وكل مصروف مسجَّل، بما فيه الفائدة والرسوم، المعايير المرجعية. تُستبعد فقط التحويلات المرتبطة صراحةً من الاستثمارات القائمة.",
   "Valuables": "المقتنيات الثمينة",
   "e.g. Watch, jewellery, art or car": "مثال: ساعة أو مجوهرات أو عمل فني أو سيارة",
   "Valuables purchase": "شراء مقتنيات ثمينة",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "المالك وحده يمكنه إزالة شخص آخر.",
   "You no longer have access to this shared workspace.": "لم يعد لديك وصول إلى مساحة العمل المشتركة هذه.",
   "Could not load your household. Check that database update 100 is installed.": "تعذر تحميل أسرتك. تحقق من تثبيت تحديث قاعدة البيانات 100.",
-  "Check the household details.": "تحقق من بيانات الأسرة."
+  "Check the household details.": "تحقق من بيانات الأسرة.",
+  "Nothing spent on this day.": "لم يُنفق شيء في هذا اليوم.",
+  "{count} more": "{count} أخرى",
+  "Transaction pages": "صفحات المعاملات",
+  "Page {page} of {pages} · {count} transactions": "الصفحة {page} من {pages} · {count} معاملة"
 }

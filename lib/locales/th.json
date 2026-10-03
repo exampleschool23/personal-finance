@@ -1477,7 +1477,6 @@
   "Activity and investments": "กิจกรรมและการลงทุน",
   "Total funding invested by this date": "เงินทุนรวมที่ลงทุน ณ วันที่นี้",
   "Opening net worth invested": "มูลค่าสุทธิเริ่มต้นที่ลงทุน",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "มูลค่าสุทธิเริ่มต้นเป็นเงินทุนของแต่ละเกณฑ์เปรียบเทียบก่อน รายได้หลังจากวันนั้นจะลงทุนเมื่อได้รับ รายได้ที่รวมอยู่ในยอดเริ่มต้นแล้วจะไม่ถูกเพิ่มซ้ำ",
   "{symbol} price (USD)": "ราคา {symbol} (USD)",
   "Your money, clearly organized.": "เงินของคุณ จัดระเบียบอย่างชัดเจน",
   "{currency} balances": "ยอดคงเหลือ {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "ธุรกรรมล่าสุด",
   "Manage": "จัดการ",
   "Transferred from an existing investment": "โอนจากการลงทุนที่มีอยู่",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "การชำระเงินต้นและการซื้อการลงทุนเป็นเงินทุนของเกณฑ์เปรียบเทียบ ไม่รวมเฉพาะการโอนที่เชื่อมโยงโดยตรงจากการลงทุนที่มีอยู่ ไม่รวมดอกเบี้ย ค่าธรรมเนียม และค่าครองชีพ",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "การซื้อการลงทุนและการชำระเงินต้นเป็นเงินทุนของเกณฑ์เปรียบเทียบ การโอนโดยตรงระหว่างการลงทุนจะไม่ถูกนับซ้ำ ไม่รวมยอดเงินสดและรายรับ",
   "Benchmark funding": "เงินทุนของเกณฑ์เปรียบเทียบ",
   "Excluding expenses": "ไม่รวมรายจ่าย",
   "Including expenses": "รวมรายจ่าย",
   "Expense funding": "เงินทุนจากรายจ่าย",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "การซื้อการลงทุน การชำระเงินต้น และรายจ่ายที่บันทึกไว้ทุกรายการเป็นเงินทุนของเกณฑ์เปรียบเทียบ การใช้จ่ายไม่ได้เพิ่มมูลค่าการลงทุนของคุณ ส่วนต่างจึงแสดงต้นทุนของการใช้จ่ายนั้น ไม่นับการโอนระหว่างบัญชีของคุณและรายรับ",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "การชำระเงินต้น การซื้อการลงทุน และรายจ่ายที่บันทึกไว้ทุกรายการ รวมดอกเบี้ยและค่าธรรมเนียม เป็นเงินทุนของเกณฑ์เปรียบเทียบ ไม่รวมเฉพาะการโอนที่เชื่อมโยงโดยตรงจากการลงทุนที่มีอยู่",
   "Valuables": "ของมีค่า",
   "e.g. Watch, jewellery, art or car": "เช่น นาฬิกา เครื่องประดับ งานศิลปะ หรือรถยนต์",
   "Valuables purchase": "การซื้อของมีค่า",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "มีเพียงเจ้าของที่นำผู้อื่นออกได้",
   "You no longer have access to this shared workspace.": "คุณไม่มีสิทธิ์เข้าถึงพื้นที่ทำงานที่แชร์นี้แล้ว",
   "Could not load your household. Check that database update 100 is installed.": "โหลดครัวเรือนของคุณไม่ได้ ตรวจสอบว่าได้ติดตั้งการอัปเดตฐานข้อมูล 100 แล้ว",
-  "Check the household details.": "ตรวจสอบรายละเอียดครัวเรือน"
+  "Check the household details.": "ตรวจสอบรายละเอียดครัวเรือน",
+  "Nothing spent on this day.": "ไม่มีรายจ่ายในวันนี้",
+  "{count} more": "อีก {count} รายการ",
+  "Transaction pages": "หน้ารายการ",
+  "Page {page} of {pages} · {count} transactions": "หน้า {page} จาก {pages} · {count} รายการ"
 }

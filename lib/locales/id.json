@@ -1477,7 +1477,6 @@
   "Activity and investments": "Aktivitas dan investasi",
   "Total funding invested by this date": "Total pendanaan diinvestasikan hingga tanggal ini",
   "Opening net worth invested": "Kekayaan bersih awal diinvestasikan",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Kekayaan bersih awal mendanai setiap tolok ukur terlebih dahulu. Pemasukan setelah tanggal itu diinvestasikan saat diterima; pemasukan yang sudah termasuk dalam saldo awal tidak ditambahkan lagi.",
   "{symbol} price (USD)": "Harga {symbol} (USD)",
   "Your money, clearly organized.": "Uang Anda, tertata jelas.",
   "{currency} balances": "Saldo {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Transaksi terbaru",
   "Manage": "Kelola",
   "Transferred from an existing investment": "Ditransfer dari investasi yang ada",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Pelunasan pokok dan pembelian investasi mendanai tolok ukur. Hanya transfer yang terkait secara eksplisit dari investasi yang ada yang dikecualikan. Bunga, biaya, dan biaya hidup dikecualikan.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Pembelian investasi dan pelunasan pokok mendanai tolok ukur. Transfer eksplisit antar investasi tidak dihitung lagi. Saldo kas dan penerimaan pemasukan dikecualikan.",
   "Benchmark funding": "Pendanaan tolok ukur",
   "Excluding expenses": "Tanpa pengeluaran",
   "Including expenses": "Termasuk pengeluaran",
   "Expense funding": "Pendanaan pengeluaran",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Pembelian investasi, pelunasan pokok, dan setiap pengeluaran tercatat mendanai tolok ukur. Pengeluaran tidak menambah nilai investasi Anda, sehingga selisihnya menunjukkan biayanya. Transfer antar rekening Anda dan penerimaan pemasukan tidak dihitung.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Pelunasan pokok, pembelian investasi, dan setiap pengeluaran tercatat, termasuk bunga dan biaya, mendanai tolok ukur. Hanya transfer yang terkait secara eksplisit dari investasi yang ada yang dikecualikan.",
   "Valuables": "Barang berharga",
   "e.g. Watch, jewellery, art or car": "mis. Jam tangan, perhiasan, seni, atau mobil",
   "Valuables purchase": "Pembelian barang berharga",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Hanya pemilik yang dapat mengeluarkan orang lain.",
   "You no longer have access to this shared workspace.": "Anda tidak lagi memiliki akses ke ruang kerja bersama ini.",
   "Could not load your household. Check that database update 100 is installed.": "Tidak dapat memuat rumah tangga Anda. Periksa apakah pembaruan basis data 100 sudah dipasang.",
-  "Check the household details.": "Periksa detail rumah tangga."
+  "Check the household details.": "Periksa detail rumah tangga.",
+  "Nothing spent on this day.": "Tidak ada pengeluaran pada hari ini.",
+  "{count} more": "{count} lainnya",
+  "Transaction pages": "Halaman transaksi",
+  "Page {page} of {pages} · {count} transactions": "Halaman {page} dari {pages} · {count} transaksi"
 }

@@ -1477,7 +1477,6 @@
   "Activity and investments": "활동 및 투자",
   "Total funding invested by this date": "이 날짜까지 투자한 총 자금",
   "Opening net worth invested": "투자된 시작 순자산",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "시작 순자산이 먼저 각 벤치마크에 투자돼요. 그 이후의 수입은 받을 때 투자되며, 시작 잔액에 이미 포함된 수입은 다시 더하지 않아요.",
   "{symbol} price (USD)": "{symbol} 가격 (USD)",
   "Your money, clearly organized.": "내 돈을 깔끔하게 정리해요.",
   "{currency} balances": "{currency} 잔액",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "최근 거래",
   "Manage": "관리",
   "Transferred from an existing investment": "기존 투자에서 이체됨",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "원금 상환과 투자 매수가 벤치마크 자금으로 반영돼요. 기존 투자에서 이체된 것으로 명시적으로 연결된 항목만 제외돼요. 이자, 수수료, 생활비도 제외돼요.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "투자 매수와 원금 상환이 벤치마크 자금으로 반영돼요. 투자 간 명시적 이체는 다시 계산하지 않아요. 현금 잔액과 수입은 제외돼요.",
   "Benchmark funding": "벤치마크 자금",
   "Excluding expenses": "지출 제외",
   "Including expenses": "지출 포함",
   "Expense funding": "지출 자금",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "투자 매수, 원금 상환, 기록된 모든 지출이 벤치마크 자금으로 반영돼요. 지출은 투자 가치를 늘리지 않으므로 그 차이가 지출 비용을 보여줘요. 본인 계좌 간 이체와 수입은 계산하지 않아요.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "원금 상환, 투자 매수, 이자와 수수료를 포함한 기록된 모든 지출이 벤치마크 자금으로 반영돼요. 기존 투자에서 이체된 것으로 명시적으로 연결된 항목만 제외돼요.",
   "Valuables": "귀중품",
   "e.g. Watch, jewellery, art or car": "예: 시계, 보석, 미술품 또는 자동차",
   "Valuables purchase": "귀중품 구매",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "다른 사람은 소유자만 제거할 수 있습니다.",
   "You no longer have access to this shared workspace.": "이 공유 작업 공간에 더 이상 접근할 수 없습니다.",
   "Could not load your household. Check that database update 100 is installed.": "가구를 불러오지 못했습니다. 데이터베이스 업데이트 100이 설치되었는지 확인하세요.",
-  "Check the household details.": "가구 정보를 확인하세요."
+  "Check the household details.": "가구 정보를 확인하세요.",
+  "Nothing spent on this day.": "이날 지출이 없습니다.",
+  "{count} more": "외 {count}건",
+  "Transaction pages": "거래 페이지",
+  "Page {page} of {pages} · {count} transactions": "{pages}페이지 중 {page}페이지 · 거래 {count}건"
 }

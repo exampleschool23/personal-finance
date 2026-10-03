@@ -1,13 +1,15 @@
-import type { Entry } from './finance';
+import { expenses, type Entry } from './finance';
+import { convertAmount } from './market';
 import type { PlanningData } from './planning';
 import type { PortfolioSnapshot } from './portfolio-snapshots';
+import { spendingAmount } from './spending';
 import { monthlyReview, type TransactionSplit } from './transaction-tools';
 
 export type SpendingPacePoint = { day: number; current: number | null; previous: number | null };
 export type SpendingPace = { month: string; previousMonth: string; points: SpendingPacePoint[]; spent: number; previousToDate: number; missing: boolean; empty: boolean };
 type Input = { records: Entry[]; splits: TransactionSplit[]; snapshots: PortfolioSnapshot[]; activity?: PlanningData['activity']; investmentLinks?: PlanningData['investmentLinks'] };
 
-const daysIn = (month: string) => new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).getUTCDate();
+export const daysIn = (month: string) => new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).getUTCDate();
 const dayOf = (month: string, day: number) => `${month}-${String(day).padStart(2, '0')}`;
 export function previousMonthOf(month: string) {
  const date = new Date(month + '-01T00:00:00Z'); date.setUTCMonth(date.getUTCMonth() - 1);
@@ -33,4 +35,17 @@ export function spendingPace(input: Input, today: string, currency: string, rate
  // Nothing spent in either month: the card shows an empty state rather than a meaningless $0–$1 axis.
  const empty = !missing && points.every(point => !point.current && !point.previous);
  return { month, previousMonth, points, spent: reached.current ?? 0, previousToDate: reached.previous ?? 0, missing, empty };
+}
+
+export type SpendingItem = { id: string; name: string; kind: string; amount: number };
+/** Where the money went on one day: that day's actual spending, by the Monthly review's definition, largest first.
+ * An amount without a rate to `currency` is left out rather than guessed. */
+export function spendingOnDay(records: Entry[], date: string, currency: string, rates?: number | Record<string, number>): SpendingItem[] {
+ const items: SpendingItem[] = [];
+ for (const record of records) {
+  if (record.frequency !== 'Once' || record.date !== date || !expenses.includes(record.kind)) continue;
+  const amount = convertAmount(spendingAmount(record), record.currency, currency, rates);
+  if (amount !== null && Number.isFinite(amount) && amount > 0) items.push({ id: record.id, name: record.name, kind: record.kind, amount });
+ }
+ return items.sort((a, b) => b.amount - a.amount);
 }

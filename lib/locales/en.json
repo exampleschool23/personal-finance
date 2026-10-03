@@ -1477,7 +1477,6 @@
   "Activity and investments": "Activity and investments",
   "Total funding invested by this date": "Total funding invested by this date",
   "Opening net worth invested": "Opening net worth invested",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.",
   "{symbol} price (USD)": "{symbol} price (USD)",
   "Your money, clearly organized.": "Your money, clearly organized.",
   "{currency} balances": "{currency} balances",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Recent transactions",
   "Manage": "Manage",
   "Transferred from an existing investment": "Transferred from an existing investment",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.",
   "Benchmark funding": "Benchmark funding",
   "Excluding expenses": "Excluding expenses",
   "Including expenses": "Including expenses",
   "Expense funding": "Expense funding",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.",
   "Valuables": "Valuables",
   "e.g. Watch, jewellery, art or car": "e.g. Watch, jewellery, art or car",
   "Valuables purchase": "Valuables purchase",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Only the owner can remove someone else.",
   "You no longer have access to this shared workspace.": "You no longer have access to this shared workspace.",
   "Could not load your household. Check that database update 100 is installed.": "Could not load your household. Check that database update 100 is installed.",
-  "Check the household details.": "Check the household details."
+  "Check the household details.": "Check the household details.",
+  "Nothing spent on this day.": "Nothing spent on this day.",
+  "{count} more": "{count} more",
+  "Transaction pages": "Transaction pages",
+  "Page {page} of {pages} · {count} transactions": "Page {page} of {pages} · {count} transactions"
 }

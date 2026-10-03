@@ -1477,7 +1477,6 @@
   "Activity and investments": "アクティビティと投資",
   "Total funding invested by this date": "この日までに投資した資金の合計",
   "Opening net worth invested": "期首の純資産の投資額",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "各ベンチマークには、まず期首の純資産が投資されます。それ以降の収入は、受け取った時点で投資されます。期首残高にすでに含まれている収入は、重ねて加算されません。",
   "{symbol} price (USD)": "{symbol}の価格（USD）",
   "Your money, clearly organized.": "あなたのお金を、わかりやすく整理。",
   "{currency} balances": "{currency}の残高",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "最近の取引",
   "Manage": "管理",
   "Transferred from an existing investment": "既存の投資からの移管",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "元本の返済と投資の購入が、ベンチマークの資金になります。既存の投資から明示的に関連付けられた移管のみが除外されます。利息、手数料、生活費は除外されます。",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "投資の購入と元本の返済が、ベンチマークの資金になります。投資間の明示的な移管は、重ねて計上されません。現金残高と収入の受取は除外されます。",
   "Benchmark funding": "ベンチマークの資金",
   "Excluding expenses": "支出を除く",
   "Including expenses": "支出を含む",
   "Expense funding": "支出の資金",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "投資の購入、元本の返済、記録されたすべての支出が、ベンチマークの資金になります。支出は投資価値を増やさないため、差額がそのコストを示します。自分の口座間の送金と収入の受取は計上されません。",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "元本の返済、投資の購入、利息と手数料を含む記録されたすべての支出が、ベンチマークの資金になります。既存の投資から明示的に関連付けられた移管のみが除外されます。",
   "Valuables": "貴重品",
   "e.g. Watch, jewellery, art or car": "例：腕時計、宝飾品、美術品、車",
   "Valuables purchase": "貴重品の購入",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "ほかの人を外せるのはオーナーだけです。",
   "You no longer have access to this shared workspace.": "この共有ワークスペースにはもうアクセスできません。",
   "Could not load your household. Check that database update 100 is installed.": "世帯を読み込めませんでした。データベース更新 100 がインストールされているか確認してください。",
-  "Check the household details.": "世帯の情報を確認してください。"
+  "Check the household details.": "世帯の情報を確認してください。",
+  "Nothing spent on this day.": "この日の支出はありません。",
+  "{count} more": "ほか{count}件",
+  "Transaction pages": "取引のページ",
+  "Page {page} of {pages} · {count} transactions": "{page} / {pages} ページ · {count} 件の取引"
 }

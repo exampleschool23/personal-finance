@@ -284,6 +284,7 @@ export function RuleDialog({ rule, records, categories, businesses, accounts = [
    <DialogTitle>{t('Rule')}</DialogTitle>
    <form onSubmit={async event => { event.preventDefault(); if (!valid) return; setBusy(true); setError(''); try { await onSave(next, apply); onClose(); } catch (reason) { setError(t((reason as Error).message)); } finally { setBusy(false); } }}>
     <fieldset disabled={busy} className="budget-dialog-fields">
+     <div className="rule-columns"><div className="rule-column">
      <div className="budget-dialog-label">{t('When the name')}
       <div className="rule-name-criterion">
        <NativeSelect aria-label={t('Name match')} value={match} onChange={event => setMatch(event.currentTarget.value as TransactionRule['match'])}><option value="contains">{t('Contains')}</option><option value="exact">{t('Is exactly')}</option></NativeSelect>
@@ -303,6 +304,7 @@ export function RuleDialog({ rule, records, categories, businesses, accounts = [
       {businesses.length > 0 && <label className="budget-dialog-label">{t('Business')}<NativeSelect value={inBusiness ?? ''} onChange={event => setInBusiness(event.currentTarget.value || null)}><option value="">{t('Any business')}</option>{businesses.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></label>}
       <div className="budget-dialog-label">{t('Amount')}<div className="rule-amount-range">{amount(amountMin, setAmountMin, 'From')}{amount(amountMax, setAmountMax, 'To')}</div>{!rangeValid && <span className="form-error" role="alert">{t('The upper amount must not be below {amount}.', { amount: formatNumber(amountMin ?? 0, locale) })}</span>}</div>
      </details>
+     </div><div className="rule-column">
      {direction !== 'any' && <div className="budget-dialog-label">{t('Set the category to')}
       <Popover open={picking === 'category'} onOpenChange={open => setPicking(open ? 'category' : null)}>
        <PopoverTrigger asChild><button type="button" className="rule-category-button">{category ? <><CategoryIcon kind={category.category_id ? choiceName(category) : category.kind} size="sm"/>{choiceName(category)}</> : t('Leave unchanged')}</button></PopoverTrigger>
@@ -316,6 +318,7 @@ export function RuleDialog({ rule, records, categories, businesses, accounts = [
       </Popover>
      </div>}
      <div className="budget-dialog-label">{t('Add tags')}<TagSelector tags={tags} selected={tagIds} onToggle={id => setTagIds(list => list.includes(id) ? list.filter(item => item !== id) : list.length >= 10 ? list : [...list, id])} onCreate={onCreateTag}/></div>
+     </div></div>
      <label className="budget-check"><input type="checkbox" checked={apply} onChange={event => setApply(event.currentTarget.checked)}/><span><strong>{matches === null ? t('Apply to matching past transactions') : t('Apply to {count} matching transactions', { count: formatNumber(matches, locale, 0) })}</strong><small>{t('New bank statement imports follow the rule too. Categories you choose by hand are kept.')}</small></span></label>
      {error && <p className="form-error" role="alert">{error}</p>}
     </fieldset>

@@ -1477,7 +1477,6 @@
   "Activity and investments": "Aktiviti dan pelaburan",
   "Total funding invested by this date": "Jumlah pembiayaan dilaburkan setakat tarikh ini",
   "Opening net worth invested": "Nilai bersih permulaan dilaburkan",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Nilai bersih permulaan membiayai setiap penanda aras dahulu. Pendapatan selepas tarikh itu dilaburkan apabila diterima; pendapatan yang sudah termasuk dalam baki permulaan tidak ditambah semula.",
   "{symbol} price (USD)": "Harga {symbol} (USD)",
   "Your money, clearly organized.": "Wang anda, tersusun dengan jelas.",
   "{currency} balances": "Baki {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Transaksi terkini",
   "Manage": "Urus",
   "Transferred from an existing investment": "Dipindahkan daripada pelaburan sedia ada",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Bayaran balik prinsipal dan pembelian pelaburan membiayai penanda aras. Hanya pemindahan berpaut secara jelas daripada pelaburan sedia ada dikecualikan. Faedah, yuran dan perbelanjaan sara hidup dikecualikan.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Pembelian pelaburan dan bayaran balik prinsipal membiayai penanda aras. Pemindahan jelas antara pelaburan tidak dikira semula. Baki tunai dan terimaan pendapatan dikecualikan.",
   "Benchmark funding": "Pembiayaan penanda aras",
   "Excluding expenses": "Tidak termasuk perbelanjaan",
   "Including expenses": "Termasuk perbelanjaan",
   "Expense funding": "Pembiayaan perbelanjaan",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Pembelian pelaburan, bayaran balik prinsipal dan setiap perbelanjaan yang direkodkan membiayai penanda aras. Perbelanjaan tidak menambah apa-apa pada nilai pelaburan anda, jadi jurang menunjukkan kosnya. Pemindahan antara akaun anda dan terimaan pendapatan tidak dikira.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Bayaran balik prinsipal, pembelian pelaburan dan setiap perbelanjaan yang direkodkan, termasuk faedah dan yuran, membiayai penanda aras. Hanya pemindahan berpaut secara jelas daripada pelaburan sedia ada dikecualikan.",
   "Valuables": "Barang berharga",
   "e.g. Watch, jewellery, art or car": "cth. Jam tangan, barang kemas, seni atau kereta",
   "Valuables purchase": "Pembelian barang berharga",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Hanya pemilik boleh mengeluarkan orang lain.",
   "You no longer have access to this shared workspace.": "Anda tidak lagi mempunyai akses ke ruang kerja dikongsi ini.",
   "Could not load your household. Check that database update 100 is installed.": "Tidak dapat memuatkan isi rumah anda. Semak sama ada kemas kini pangkalan data 100 telah dipasang.",
-  "Check the household details.": "Semak butiran isi rumah."
+  "Check the household details.": "Semak butiran isi rumah.",
+  "Nothing spent on this day.": "Tiada perbelanjaan pada hari ini.",
+  "{count} more": "{count} lagi",
+  "Transaction pages": "Halaman transaksi",
+  "Page {page} of {pages} · {count} transactions": "Halaman {page} daripada {pages} · {count} transaksi"
 }

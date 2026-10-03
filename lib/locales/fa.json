@@ -1477,7 +1477,6 @@
   "Activity and investments": "فعالیت و سرمایه‌گذاری‌ها",
   "Total funding invested by this date": "کل وجه سرمایه‌گذاری‌شده تا این تاریخ",
   "Opening net worth invested": "ارزش خالص دارایی اولیهٔ سرمایه‌گذاری‌شده",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "ارزش خالص دارایی اولیه ابتدا هر معیار را تأمین می‌کند. درآمد پس از آن تاریخ هنگام دریافت سرمایه‌گذاری می‌شود؛ درآمدی که پیش‌تر در موجودی اولیه لحاظ شده دوباره اضافه نمی‌شود.",
   "{symbol} price (USD)": "قیمت {symbol} (USD)",
   "Your money, clearly organized.": "پول شما، منظم و روشن.",
   "{currency} balances": "موجودی‌های {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "تراکنش‌های اخیر",
   "Manage": "مدیریت",
   "Transferred from an existing investment": "منتقل‌شده از یک سرمایه‌گذاری موجود",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "بازپرداخت اصل و خرید سرمایه‌گذاری، معیارها را تأمین می‌کنند. فقط انتقال‌های صریحاً مرتبط از سرمایه‌گذاری‌های موجود کنار گذاشته می‌شوند. بهره، کارمزدها و هزینه‌های زندگی لحاظ نمی‌شوند.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "خرید سرمایه‌گذاری و بازپرداخت اصل، معیارها را تأمین می‌کنند. انتقال‌های صریح بین سرمایه‌گذاری‌ها دوباره شمرده نمی‌شوند. موجودی‌های نقدی و دریافتی‌های درآمد لحاظ نمی‌شوند.",
   "Benchmark funding": "تأمین مالی معیار",
   "Excluding expenses": "بدون هزینه‌ها",
   "Including expenses": "با هزینه‌ها",
   "Expense funding": "تأمین مالی هزینه‌ها",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "خرید سرمایه‌گذاری، بازپرداخت اصل و هر هزینهٔ ثبت‌شده، معیارها را تأمین می‌کنند. هزینه‌کرد چیزی به ارزش سرمایه‌گذاری شما نمی‌افزاید، پس فاصله نشان می‌دهد چه هزینه‌ای داشته است. انتقال بین حساب‌های شما و دریافتی‌های درآمد شمرده نمی‌شوند.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "بازپرداخت اصل، خرید سرمایه‌گذاری و هر هزینهٔ ثبت‌شده، از جمله بهره و کارمزد، معیارها را تأمین می‌کنند. فقط انتقال‌های صریحاً مرتبط از سرمایه‌گذاری‌های موجود کنار گذاشته می‌شوند.",
   "Valuables": "اشیای گرانبها",
   "e.g. Watch, jewellery, art or car": "مثلاً ساعت، جواهر، اثر هنری یا خودرو",
   "Valuables purchase": "خرید اشیای گرانبها",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "فقط مالک می‌تواند دیگران را حذف کند.",
   "You no longer have access to this shared workspace.": "دیگر به این فضای کاری مشترک دسترسی ندارید.",
   "Could not load your household. Check that database update 100 is installed.": "بارگیری خانواده شما ممکن نشد. بررسی کنید به‌روزرسانی ۱۰۰ پایگاه داده نصب شده باشد.",
-  "Check the household details.": "جزئیات خانواده را بررسی کنید."
+  "Check the household details.": "جزئیات خانواده را بررسی کنید.",
+  "Nothing spent on this day.": "در این روز هزینه‌ای نشده است.",
+  "{count} more": "{count} مورد دیگر",
+  "Transaction pages": "صفحه‌های تراکنش",
+  "Page {page} of {pages} · {count} transactions": "صفحه {page} از {pages} · {count} تراکنش"
 }

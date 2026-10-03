@@ -1477,7 +1477,6 @@
   "Activity and investments": "गतिविधि और निवेश",
   "Total funding invested by this date": "इस तारीख तक निवेश की गई कुल फ़ंडिंग",
   "Opening net worth invested": "ओपनिंग कुल संपत्ति निवेश की गई",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "ओपनिंग कुल संपत्ति पहले हर बेंचमार्क को फ़ंड करती है। उस तारीख के बाद की आय प्राप्त होने पर निवेश होती है; ओपनिंग बैलेंस में पहले से शामिल आय दोबारा नहीं जोड़ी जाती।",
   "{symbol} price (USD)": "{symbol} कीमत (USD)",
   "Your money, clearly organized.": "आपका पैसा, साफ़ तरीके से व्यवस्थित।",
   "{currency} balances": "{currency} बैलेंस",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "हाल के लेन-देन",
   "Manage": "प्रबंधित करें",
   "Transferred from an existing investment": "मौजूदा निवेश से ट्रांसफ़र किया गया",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "मूलधन की चुकौती और निवेश की खरीद बेंचमार्क को फ़ंड करती हैं। केवल मौजूदा निवेशों से स्पष्ट रूप से जुड़े ट्रांसफ़र शामिल नहीं हैं। ब्याज, शुल्क और रहने का खर्च शामिल नहीं हैं।",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "निवेश की खरीद और मूलधन की चुकौती बेंचमार्क को फ़ंड करती हैं। निवेशों के बीच स्पष्ट ट्रांसफ़र दोबारा नहीं गिने जाते। नकद बैलेंस और आय की प्राप्तियाँ शामिल नहीं हैं।",
   "Benchmark funding": "बेंचमार्क फ़ंडिंग",
   "Excluding expenses": "खर्च छोड़कर",
   "Including expenses": "खर्च सहित",
   "Expense funding": "खर्च फ़ंडिंग",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "निवेश की खरीद, मूलधन की चुकौती और हर दर्ज खर्च बेंचमार्क को फ़ंड करते हैं। खर्च से आपके निवेश मूल्य में कुछ नहीं जुड़ता, इसलिए अंतर दिखाता है कि उसकी कीमत क्या रही। आपके अकाउंट के बीच ट्रांसफ़र और आय की प्राप्तियाँ नहीं गिनी जातीं।",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "मूलधन की चुकौती, निवेश की खरीद और ब्याज व शुल्क सहित हर दर्ज खर्च बेंचमार्क को फ़ंड करते हैं। केवल मौजूदा निवेशों से स्पष्ट रूप से जुड़े ट्रांसफ़र शामिल नहीं हैं।",
   "Valuables": "कीमती सामान",
   "e.g. Watch, jewellery, art or car": "जैसे घड़ी, गहने, कला या कार",
   "Valuables purchase": "कीमती सामान की खरीद",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "केवल स्वामी ही किसी और को हटा सकता है।",
   "You no longer have access to this shared workspace.": "अब आपकी इस साझा कार्यक्षेत्र तक पहुँच नहीं है।",
   "Could not load your household. Check that database update 100 is installed.": "आपका घर लोड नहीं हो सका। जाँचें कि डेटाबेस अपडेट 100 इंस्टॉल है।",
-  "Check the household details.": "घर का विवरण जाँचें।"
+  "Check the household details.": "घर का विवरण जाँचें।",
+  "Nothing spent on this day.": "इस दिन कुछ खर्च नहीं हुआ।",
+  "{count} more": "{count} और",
+  "Transaction pages": "लेन-देन के पेज",
+  "Page {page} of {pages} · {count} transactions": "पेज {page} / {pages} · {count} लेन-देन"
 }

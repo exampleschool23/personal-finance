@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
-const {spendingPace,previousMonthOf}=loadTS('lib/spending-pace.ts');
+const {spendingPace,previousMonthOf,spendingOnDay}=loadTS('lib/spending-pace.ts');
 const {monthlyReview}=loadTS('lib/transaction-tools.ts');
 const record=(id,kind,amount,date,extra={})=>({id,name:id,kind,amount,quantity:1,cost:0,rate:0,currency:'USD',frequency:'Once',date,notes:'',...extra});
 const records=[
@@ -37,4 +37,13 @@ test('a month and previous month without spending is empty, so the card shows an
  assert.equal(empty.empty,true);assert.equal(empty.spent,0);
  assert.equal(spendingPace(input,'2026-10-02','USD',{USD:1}).empty,false);
  assert.equal(spendingPace({records:[record('x','Living expense',5,'2026-09-03',{currency:'EUR'})],splits:[],snapshots:[]},'2026-10-02','USD',{USD:1}).empty,false,'missing rates are not an empty month');
+});
+
+test('the tooltip shows where the money went on a day: that day\'s spending only, largest first',()=>{
+ const day=[...records,record('big','Rent expense',1200,'2026-09-15'),record('fx','Living expense',100,'2026-09-15',{currency:'EUR'}),record('pay','Salary',3000,'2026-09-15'),record('rent','Rent expense',800,'2026-09-15',{frequency:'Monthly'})];
+ assert.deepEqual(spendingOnDay(day,'2026-09-15','USD',{USD:1}).map(item=>[item.name,item.kind,item.amount]),[['big','Rent expense',1200],['d','Living expense',60]],'income, plans and amounts without a rate are left out');
+ assert.deepEqual(spendingOnDay(day,'2026-09-15','USD',{USD:1,EUR:.5}).map(item=>item.amount),[1200,200,60]);
+ assert.deepEqual(spendingOnDay(day,'2026-09-16','USD',{USD:1}),[]);
+ const pace=spendingPace({records:day,splits:[],snapshots:[]},'2026-10-02','USD',{USD:1});
+ assert.equal(pace.points[14].previous-pace.points[13].previous,spendingOnDay(day,'2026-09-15','USD',{USD:1}).reduce((sum,item)=>sum+item.amount,0),'the day\'s items add up to the jump in the line');
 });

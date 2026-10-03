@@ -1477,7 +1477,6 @@
   "Activity and investments": "Shughuli na uwekezaji",
   "Total funding invested by this date": "Jumla ya ufadhili uliowekezwa hadi tarehe hii",
   "Opening net worth invested": "Thamani halisi ya mwanzo iliyowekezwa",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "Thamani halisi ya mwanzo hufadhili kila kigezo kwanza. Mapato baada ya tarehe hiyo huwekezwa yanapopokelewa; mapato yaliyo tayari kwenye salio la mwanzo hayaongezwi tena.",
   "{symbol} price (USD)": "Bei ya {symbol} (USD)",
   "Your money, clearly organized.": "Pesa zako, zimepangwa vizuri.",
   "{currency} balances": "Salio za {currency}",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "Miamala ya hivi karibuni",
   "Manage": "Dhibiti",
   "Transferred from an existing investment": "Imehamishwa kutoka uwekezaji uliopo",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "Marejesho ya mkuu na ununuzi wa uwekezaji hufadhili vigezo. Ni uhamisho ulioungwa wazi kutoka uwekezaji uliopo pekee ndio hutengwa. Riba, ada na gharama za maisha hazijajumuishwa.",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "Ununuzi wa uwekezaji na marejesho ya mkuu hufadhili vigezo. Uhamisho wazi kati ya uwekezaji hauhesabiwi tena. Salio za fedha taslimu na risiti za mapato hazijajumuishwa.",
   "Benchmark funding": "Ufadhili wa vigezo",
   "Excluding expenses": "Bila matumizi",
   "Including expenses": "Pamoja na matumizi",
   "Expense funding": "Ufadhili wa matumizi",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "Ununuzi wa uwekezaji, marejesho ya mkuu na kila matumizi yaliyorekodiwa hufadhili vigezo. Matumizi hayaongezi chochote kwenye thamani ya uwekezaji wako, kwa hivyo pengo linaonyesha yaligharimu kiasi gani. Uhamisho kati ya akaunti zako na risiti za mapato hazihesabiwi.",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "Marejesho ya mkuu, ununuzi wa uwekezaji na kila matumizi yaliyorekodiwa, ikiwemo riba na ada, hufadhili vigezo. Ni uhamisho ulioungwa wazi kutoka uwekezaji uliopo pekee ndio hutengwa.",
   "Valuables": "Vitu vya thamani",
   "e.g. Watch, jewellery, art or car": "mf. Saa, vito, sanaa au gari",
   "Valuables purchase": "Ununuzi wa vitu vya thamani",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "Mmiliki pekee ndiye anaweza kumwondoa mtu mwingine.",
   "You no longer have access to this shared workspace.": "Huna tena ruhusa ya eneo hili la pamoja.",
   "Could not load your household. Check that database update 100 is installed.": "Imeshindwa kupakia kaya yako. Hakikisha sasisho la hifadhidata 100 limesakinishwa.",
-  "Check the household details.": "Kagua maelezo ya kaya."
+  "Check the household details.": "Kagua maelezo ya kaya.",
+  "Nothing spent on this day.": "Hakuna kilichotumika siku hii.",
+  "{count} more": "{count} zaidi",
+  "Transaction pages": "Kurasa za miamala",
+  "Page {page} of {pages} · {count} transactions": "Ukurasa {page} kati ya {pages} · miamala {count}"
 }

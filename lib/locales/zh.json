@@ -1477,7 +1477,6 @@
   "Activity and investments": "活动和投资",
   "Total funding invested by this date": "截至此日期投入的资金总额",
   "Opening net worth invested": "期初净资产投入",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "期初净资产首先为每个基准出资。此后的收入在收到时投入；已含在期初余额中的收入不会重复计入。",
   "{symbol} price (USD)": "{symbol} 价格（USD）",
   "Your money, clearly organized.": "您的资金，井井有条。",
   "{currency} balances": "{currency} 余额",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "近期交易",
   "Manage": "管理",
   "Transferred from an existing investment": "从现有投资转入",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "本金还款和投资买入为基准出资。仅排除明确关联的、来自现有投资的转账。利息、手续费和生活支出不计入。",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "投资买入和本金还款为基准出资。投资之间明确的转账不会重复计算。现金余额和收入收款不计入。",
   "Benchmark funding": "基准出资",
   "Excluding expenses": "不含支出",
   "Including expenses": "含支出",
   "Expense funding": "支出出资",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "投资买入、本金还款和每一笔已记录的支出都为基准出资。支出不会增加您的投资价值，因此差距即为其成本。您自己账户之间的转账和收入收款不计入。",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "本金还款、投资买入和每一笔已记录的支出（包括利息和手续费）都为基准出资。仅排除明确关联的、来自现有投资的转账。",
   "Valuables": "贵重物品",
   "e.g. Watch, jewellery, art or car": "例如：手表、珠宝、艺术品或汽车",
   "Valuables purchase": "贵重物品购买",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "只有所有者可以移除其他人。",
   "You no longer have access to this shared workspace.": "你已无法访问这个共享工作区。",
   "Could not load your household. Check that database update 100 is installed.": "无法加载你的家庭。请确认已安装数据库更新 100。",
-  "Check the household details.": "请检查家庭信息。"
+  "Check the household details.": "请检查家庭信息。",
+  "Nothing spent on this day.": "这一天没有支出。",
+  "{count} more": "还有 {count} 笔",
+  "Transaction pages": "交易分页",
+  "Page {page} of {pages} · {count} transactions": "第 {page} 页，共 {pages} 页 · {count} 笔交易"
 }

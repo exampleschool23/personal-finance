@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { PanelSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
+import { Pagination } from '@/components/presentation-foundation/pagination';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { BulkEditBar, BulkEditSheet, BusinessPicker, CategoryPicker, DayGroup, MemberPicker, MortgageSplit, RuleDialog, RulesDialog, TagFilter, TransactionAmount, newRule, ruleFromBusiness, ruleFromChange, useChoiceName } from '@/components/transactions-page';
@@ -32,6 +33,8 @@ import { emptyPlanning } from '@/lib/planning';
 import { chunks, emptyTransactionFilter, filtersTransactions, groupByDay, periodRange, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
 import { canRecategorize, canTakeCategory, categoryChoices, choiceKey, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
 
+const transactionsPerPage = 20;
+
 export function TransactionsScreen() {
  const { t, locale } = useLanguage();
  const { user, demo, reload, currency, market, planning, transactionTools, workspaceLoading, addCashFlow, setViewing, storedRecord, categorize, assignTransactionsBusiness, businessList, tags, attachments, refreshRecords, household, readOnly } = useWorkspace();
@@ -41,7 +44,7 @@ export function TransactionsScreen() {
  const [who, setWho] = useState<MemberFilter>('all');
  const personName = (id: string) => { const person = homes?.people.find(item => item.id === id); return person ? person.name ?? t('Partner') : t('Former member'); };
  const today = depositToday();
- const [period, setPeriod] = useState<TransactionPeriod>('this_month');
+ const [period, setPeriod] = useState<TransactionPeriod>('three_months');
  const [filter, setFilter] = useState(emptyTransactionFilter);
  // Links such as /transactions?tag=… or ?business=… open the list already filtered.
  const search = useLocationSearch();
@@ -68,7 +71,12 @@ export function TransactionsScreen() {
  const createTag = async (name: string) => { const id = crypto.randomUUID(); await tags.save({ id, name, color: nextPaletteColor(tags.data.tags.map(tag => tag.color)) }); return id; };
  const rates = market?.rates ?? market?.fx?.rate;
  const convert = (amount: number, unit: string) => convertAmount(amount, unit, currency, rates);
- const days = groupByDay(records, convert);
+ // Twenty transactions a page; changing the period or a filter starts again at the first page.
+ const listKey = JSON.stringify([period, filter, who]);
+ const [paging, setPaging] = useState({ key: listKey, page: 1 });
+ const pageCount = Math.max(1, Math.ceil(records.length / transactionsPerPage));
+ const page = paging.key === listKey ? Math.min(paging.page, pageCount) : 1;
+ const days = groupByDay(records.slice((page - 1) * transactionsPerPage, page * transactionsPerPage), convert);
  const summary = summarizeTransactions(records, convert);
  const accounts = new Map(data.records.filter(record => record.kind === 'Cash').map(record => [record.id, record.name]));
  const money = (amount: number) => formatMoney(amount, currency, locale);
@@ -155,6 +163,7 @@ export function TransactionsScreen() {
       </li>;
      })}
     </DayGroup>) : <EmptyState icon={<ReceiptText/>} title={t('No transactions')} description={t(filtersTransactions(filter) ? 'Nothing matches these filters in this period.' : 'Income and spending you record appear here, grouped by day.')}><AddTransactionMenu onAdd={addCashFlow}/></EmptyState>}
+    <Pagination label={t('Transaction pages')} summary={t('Page {page} of {pages} · {count} transactions', { page: formatNumber(page, locale, 0), pages: formatNumber(pageCount, locale, 0), count: formatNumber(records.length, locale, 0) })} page={page} hasNext={page < pageCount} onPage={next => { setPaging({ key: listKey, page: next }); document.querySelector('.transactions-list')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); }}/>
    </section>
    <aside className="panel transactions-summary" aria-label={t('Summary')}>
     <PanelTitle title={t('Summary')}/>

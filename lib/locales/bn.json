@@ -1477,7 +1477,6 @@
   "Activity and investments": "কার্যকলাপ ও বিনিয়োগ",
   "Total funding invested by this date": "এই তারিখ পর্যন্ত বিনিয়োগ করা মোট অর্থায়ন",
   "Opening net worth invested": "বিনিয়োগ করা প্রারম্ভিক নিট সম্পদ",
-  "Opening net worth funds each benchmark first. Income after that date is invested when received; income already included in the opening balance is not added again.": "প্রারম্ভিক নিট সম্পদ প্রথমে প্রতিটি বেঞ্চমার্কে অর্থায়ন করে। সেই তারিখের পরের আয় প্রাপ্তির সময় বিনিয়োগ করা হয়; প্রারম্ভিক ব্যালেন্সে ইতিমধ্যে অন্তর্ভুক্ত আয় আবার যোগ করা হয় না।",
   "{symbol} price (USD)": "{symbol}-এর দাম (USD)",
   "Your money, clearly organized.": "আপনার অর্থ, সুন্দরভাবে সাজানো।",
   "{currency} balances": "{currency} ব্যালেন্স",
@@ -1521,14 +1520,12 @@
   "Recent transactions": "সাম্প্রতিক লেনদেন",
   "Manage": "পরিচালনা করুন",
   "Transferred from an existing investment": "বিদ্যমান বিনিয়োগ থেকে স্থানান্তরিত",
-  "Principal repayments and investment purchases fund benchmarks. Only explicitly linked transfers from existing investments are excluded. Interest, fees and living expenses are excluded.": "আসল পরিশোধ ও বিনিয়োগ ক্রয় বেঞ্চমার্কে অর্থায়ন করে। বিদ্যমান বিনিয়োগ থেকে শুধু স্পষ্টভাবে সংযুক্ত স্থানান্তর বাদ দেওয়া হয়। সুদ, ফি ও জীবনযাত্রার ব্যয় বাদ দেওয়া হয়েছে।",
   "Investment purchases and principal repayments fund benchmarks. Explicit transfers between investments are not counted again. Cash balances and income receipts are excluded.": "বিনিয়োগ ক্রয় ও আসল পরিশোধ বেঞ্চমার্কে অর্থায়ন করে। বিনিয়োগগুলোর মধ্যে স্পষ্ট স্থানান্তর আবার গণনা করা হয় না। নগদ ব্যালেন্স ও আয়ের প্রাপ্তি বাদ দেওয়া হয়েছে।",
   "Benchmark funding": "বেঞ্চমার্ক অর্থায়ন",
   "Excluding expenses": "ব্যয় বাদে",
   "Including expenses": "ব্যয়সহ",
   "Expense funding": "ব্যয়ের অর্থায়ন",
   "Investment purchases, principal repayments and every recorded expense fund benchmarks. Spending adds nothing to your investment value, so the gap shows what it cost. Transfers between your accounts and income receipts are not counted.": "বিনিয়োগ ক্রয়, আসল পরিশোধ ও প্রতিটি রেকর্ড করা ব্যয় বেঞ্চমার্কে অর্থায়ন করে। খরচ আপনার বিনিয়োগ মূল্যে কিছু যোগ করে না, তাই পার্থক্যটি এর খরচ দেখায়। আপনার অ্যাকাউন্টগুলোর মধ্যে স্থানান্তর ও আয়ের প্রাপ্তি গণনা করা হয় না।",
-  "Principal repayments, investment purchases and every recorded expense, including interest and fees, fund benchmarks. Only explicitly linked transfers from existing investments are excluded.": "আসল পরিশোধ, বিনিয়োগ ক্রয় ও সুদ ও ফিসহ প্রতিটি রেকর্ড করা ব্যয় বেঞ্চমার্কে অর্থায়ন করে। বিদ্যমান বিনিয়োগ থেকে শুধু স্পষ্টভাবে সংযুক্ত স্থানান্তর বাদ দেওয়া হয়।",
   "Valuables": "মূল্যবান সামগ্রী",
   "e.g. Watch, jewellery, art or car": "যেমন, ঘড়ি, গয়না, শিল্পকর্ম বা গাড়ি",
   "Valuables purchase": "মূল্যবান সামগ্রী ক্রয়",
@@ -2574,5 +2571,9 @@
   "Only the owner can remove someone else.": "শুধু মালিক অন্য কাউকে সরাতে পারেন।",
   "You no longer have access to this shared workspace.": "এই শেয়ার করা ওয়ার্কস্পেসে আপনার আর অ্যাক্সেস নেই।",
   "Could not load your household. Check that database update 100 is installed.": "আপনার পরিবার লোড করা যায়নি। ডেটাবেস আপডেট 100 ইনস্টল আছে কিনা দেখুন।",
-  "Check the household details.": "পরিবারের তথ্য যাচাই করুন।"
+  "Check the household details.": "পরিবারের তথ্য যাচাই করুন।",
+  "Nothing spent on this day.": "এই দিনে কোনো খরচ হয়নি।",
+  "{count} more": "আরও {count}টি",
+  "Transaction pages": "লেনদেনের পৃষ্ঠা",
+  "Page {page} of {pages} · {count} transactions": "পৃষ্ঠা {page} / {pages} · {count}টি লেনদেন"
 }
