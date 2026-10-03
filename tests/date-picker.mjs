@@ -1,4 +1,4 @@
-import test from 'node:test';
+import fs from 'node:fs';import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildRangeCalendar, shiftCalendarMonth, calendarYearAnchor, openingCalendarDay, presetDay, availablePresets, defaultDatePresets, pastDatePresets, datePresetLabels } from '../lib/date-picker-calendar.ts';
 test('POS calendar grid starts Monday and always has six weeks',()=>{
@@ -39,4 +39,10 @@ test('presets resolve on the calendar and drop days outside the allowed range',(
  assert.deepEqual(availablePresets(defaultDatePresets,'2026-10-02',undefined,'2026-10-02').map(item=>item.preset),['today']);
  assert.deepEqual(availablePresets(pastDatePresets,'2026-01-01').map(item=>item.preset),['today'],'the same day is offered once');
  for(const preset of [...defaultDatePresets,...pastDatePresets])assert.ok(datePresetLabels[preset]);
+});
+
+test('month arrows stop at the minimum and maximum months, so the picker never pages into days it cannot select',()=>{
+ const source=fs.readFileSync(new URL('../components/presentation-foundation/date-picker.tsx',import.meta.url),'utf8');
+ assert.match(source,/disabled=\{!!min && monthKey <= min\.slice\(0, 7\)\} onClick=\{previous\}/);
+ assert.match(source,/disabled=\{!!max && monthKey >= max\.slice\(0, 7\)\} onClick=\{next\}/);
 });

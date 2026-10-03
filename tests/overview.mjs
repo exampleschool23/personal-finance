@@ -84,10 +84,11 @@ test('portfolio over time invites the first investment instead of a flat line at
  assert.doesNotMatch(empty,/Tracking since|comparison-legend/);
  assert.doesNotMatch(render([entry('btc','Crypto',60000,{quantity:.1})]),/No investments yet/);
  assert.doesNotMatch(render([entry('cash','Cash',500,{is_investment:true})]),/No investments yet/,'an investment cash account counts');
- // QA: "Start of this year" was saved but the chart said "Tracking since" the first investment day.
+ // A start saved before the first investment shows the day the chart really starts from, and earlier days cannot be chosen.
  const chosen=renderToStaticMarkup(React.createElement(InvestmentComparison,{history:{records:[entry('btc','Crypto',60000,{quantity:.1,date:'2026-09-20'})],events:[]},today:'2026-10-01',currency:'USD',market:null,demo:false,windowStart:'2026-01-01',points:[],profile:null,profileError:'',trackingStart:'2026-01-01',onTrackingStartChange:()=>{}}));
- assert.match(chosen,/Tracking since.*1 January 2026/,'the chosen start is shown, not moved to the first investment');
- assert.match(fs.readFileSync(new URL('../components/investment-comparison.tsx',import.meta.url),'utf8'),/min=\{benchmarkHistoryStart\} max=\{today\} presets=\{pastDatePresets\}/,'any past day can be chosen, with past presets');
+ assert.match(chosen,/Tracking since.*1 October 2026/,'the picker matches the chart, which starts at the first investment activity');
+ assert.doesNotMatch(chosen,/Tracking since.*1 January 2026/);
+ assert.match(fs.readFileSync(new URL('../components/investment-comparison.tsx',import.meta.url),'utf8'),/value=\{trackingFrom\?\?''\} required=\{false\} min=\{earliestStart\} max=\{today\} presets=\{pastDatePresets\}/,'no day before the first investment activity can be chosen');
 });
 
 test('the dashboard lists the newest real transactions and the top open goals',()=>{
