@@ -3,7 +3,7 @@
 // flow: given the draft and one input it returns the next draft, the reply and
 // what the bot should save. The bot handler owns storage.
 import {currencyLabel,fiatCurrencies,isCurrency} from './currencies';
-import {formatNumberInput} from './format';
+import {formatNumber,formatNumberInput} from './format';
 import {languageCatalogue,locales,translate,type Language} from './i18n';
 import {suggestedCurrencies} from './onboarding';
 import type {TelegramMessage} from './telegram';
@@ -114,7 +114,7 @@ export function advanceOnboarding(draft:OnboardDraft,input:{text?:string;callbac
   }
   case 'balance':{
    const amount=text?amountOf(text,ctx.language):null;
-   if(amount===null)return again(t(ctx.language,'Type an amount, such as 250000, or 0 if it is empty.'));
+   if(amount===null)return again(t(ctx.language,'Type an amount, such as {large}, or 0 if it is empty.',{large:formatNumber(250000,locales[ctx.language])}));
    const currency=draft.data.currency??ctx.currency??'USD';
    return {draft:null,reply:{chat_id:chat,text:t(ctx.language,'You are all set. Use the buttons below to add your first expense.'),keyboard:mainMenu(ctx.language)},effects:{account:{name:draft.data.account_name??t(ctx.language,'Cash'),amount,currency},finished:true}};
   }

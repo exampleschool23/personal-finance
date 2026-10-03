@@ -23,7 +23,7 @@ export async function POST(req: Request) {
  const auth = await session(); if (!auth) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
  const parsed = assistantRequestSchema.safeParse(await req.json().catch(() => null));
  if (!parsed.success) return Response.json({ error: 'Check your question and try again.' }, { status: 400 });
- const { messages, currency, rates } = parsed.data;
+ const { messages, currency, rates, language } = parsed.data;
  const today = depositToday(), month = today.slice(0, 7);
  let snapshot: string;
  try {
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
    readOwnerRows<PlanningData['goals'][number]>('savings_goals', auth.token), readOwnerRows<PlanningData['occurrences'][number]>('payment_occurrences', auth.token),
    readOwnerRows<PlanningData['activity'][number]>('account_activity', auth.token, filters.activity),
   ]);
-  snapshot = assistantContext({ records: records.map(normalizeEntry), categories, goals, occurrences, activity, investmentLinks: [] }, today, currency, rates);
+  snapshot = assistantContext({ records: records.map(normalizeEntry), categories, goals, occurrences, activity, investmentLinks: [] }, today, currency, rates, language);
  } catch { return Response.json({ error: 'Could not load your records. Please try again.' }, { status: 503 }); }
  try {
   const client = new Anthropic();

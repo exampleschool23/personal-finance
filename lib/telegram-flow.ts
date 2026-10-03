@@ -137,6 +137,11 @@ export function withRate(draft:Draft,quote:{rate:number;effective_date:string}|n
  return quote&&Number.isFinite(quote.rate)&&quote.rate>0?{...draft,data:{...draft.data,fx_rate:quote.rate,fx_rate_date:quote.effective_date}}:{...draft,step:'fxamount'};
 }
 const liabilityOptions=(ctx:FlowContext,kinds:string[])=>ctx.liabilities.filter(item=>kinds.includes(item.kind)&&item.amount>0).map(item=>({text:`${item.name} · ${money(item.amount,item.currency,ctx.language)}`,callback_data:'f:tgt:'+item.id}));
+/** Example dates in the prompts, shown the way the app shows dates (30 September 2026) and accepted when typed back. */
+const pastExample=(ctx:FlowContext)=>formatDate(ctx.today,locales[ctx.language]);
+const futureExample=(ctx:FlowContext)=>formatDate(`${Number(ctx.today.slice(0,4))+1}-12-31`,locales[ctx.language]);
+/** Example amounts in the same way: grouped and with the language's decimal mark (250,000 or 12.5; 250 000 or 12,5). */
+const numberExamples=(language:Language)=>({large:formatNumber(250000,locales[language]),small:formatNumber(12.5,locales[language])});
 /** Back and Cancel for a draft kept after a refused save, so the answer can be corrected. */
 export const retryKeyboard=(draft:Draft,ctx:FlowContext):TelegramKeyboard=>({inline:[controls(ctx.language,canGoBack(draft,ctx))]});
 /** The prompt for the draft's current step. */
@@ -173,7 +178,7 @@ export function prompt(draft:Draft,ctx:FlowContext,chat:number,page=0):TelegramM
   case 'received':return {chat_id:chat,text:t(language,'Type the amount received in {currency}',{currency:find(ctx.accounts,draft.data.target_id)?.currency??''}),keyboard:{inline:[controlRow]}};
   case 'interest':return {chat_id:chat,text:t(language,'Type the interest amount in {currency}, or 0',{currency:target?.currency??''}),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
   case 'name':return {chat_id:chat,text:t(language,'Type a name for this record, or skip to use the category'),keyboard:{inline:[[{text:t(language,'Skip'),callback_data:'f:skip'}],controlRow]}};
-  case 'date':return {chat_id:chat,text:t(language,'Which day? Choose, or type a date like 2026-09-30'),keyboard:{inline:[[{text:t(language,'Today'),callback_data:'f:date:today'},{text:t(language,'Yesterday'),callback_data:'f:date:yesterday'}],controlRow]}};
+  case 'date':return {chat_id:chat,text:t(language,'Which day? Choose, or type a date like {date}',{date:pastExample(ctx)}),keyboard:{inline:[[{text:t(language,'Today'),callback_data:'f:date:today'},{text:t(language,'Yesterday'),callback_data:'f:date:yesterday'}],controlRow]}};
   case 'accname':return {chat_id:chat,text:t(language,'Name the cash account, for example Wallet.'),keyboard:{inline:[[{text:t(language,'Cash'),callback_data:'f:accname:cash'}],controlRow]}};
   case 'business':{
    // Business income must name its business; anything else may stay personal.
@@ -182,7 +187,7 @@ export function prompt(draft:Draft,ctx:FlowContext,chat:number,page=0):TelegramM
   }
   case 'lkind':return {chat_id:chat,text:t(language,'Is it a loan, a debt or a mortgage?'),keyboard:{inline:[liabilityKinds.map(kind=>({text:t(language,kind),callback_data:'f:lkind:'+kind})),controlRow]}};
   case 'lname':return {chat_id:chat,text:t(language,draft.data.lkind==='Mortgage'?'Name it, for example Home mortgage.':'Name it, for example Car loan.'),keyboard:{inline:[controlRow]}};
-  case 'duedate':return {chat_id:chat,text:t(language,'When is it due? Type a date like 2027-03-31'),keyboard:{inline:[controlRow]}};
+  case 'duedate':return {chat_id:chat,text:t(language,'When is it due? Type a date like {date}',{date:futureExample(ctx)}),keyboard:{inline:[controlRow]}};
   case 'rate':return {chat_id:chat,text:t(language,'Type the yearly interest rate in percent, or 0'),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
   case 'payment':return {chat_id:chat,text:t(language,'Type the monthly payment in {currency}, or 0',{currency:draft.data.currency??''}),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
   case 'currency':return {chat_id:chat,text:t(language,draft.kind==='liability'?'Which currency is it in?':draft.kind==='account'?'Which currency is this account in?':'Which currency was it?'),keyboard:{inline:[currencyList(ctx).map(code=>({text:code,callback_data:'f:cur:'+code})),controlRow]}};
@@ -311,7 +316,7 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
   if(!choice&&input.text){
    const typed=startTyped(input.text,ctx);
    if('draft' in typed)return {draft:typed.draft,reply:prompt(typed.draft,ctx,chat)};
-   return {draft:null,reply:{chat_id:chat,text:t(language,typed.error==='date'?'Type a past or present date like 2026-09-30 or 30.09.2026':'Choose what to add, or type it, like coffee 4.5 or +1500 salary.'),keyboard:mainMenu(language)}};
+   return {draft:null,reply:{chat_id:chat,text:typed.error==='date'?t(language,'Type a past or present date like {date}',{date:pastExample(ctx)}):t(language,'Choose what to add, or type it, like coffee {small} or +{large} salary.',{small:formatNumber(4.5,locales[language]),large:formatNumber(1500,locales[language])}),keyboard:mainMenu(language)}};
   }
   // Sign out is handled by the bot before the flow; here it is just not something to add.
   if(!choice||choice==='signout')return {draft:null,reply:{chat_id:chat,text:t(language,'Choose what to add.'),keyboard:mainMenu(language)}};
@@ -405,7 +410,7 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
    const typed=input.text&&entered?amountWithCurrency(input.text,draft,ctx):null;
    if(typed&&'refused' in typed)return invalid(t(language,'{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.',{currency:typed.refused,own:find(ctx.accounts,draft.data.account_id)?.currency??''}));
    const amount=typed?typed.amount:input.text?parseAmount(input.text,language):null;
-   if(amount===null)return invalid(t(language,'Type a positive number, such as 250000 or 12.50'));
+   if(amount===null)return invalid(t(language,'Type a positive number, such as {large} or {small}',numberExamples(language)));
    const target=find(ctx.liabilities,draft.data.target_id);
    if(draft.kind==='repayment'&&target&&amount>target.amount)return invalid(t(language,'Repayment cannot exceed the outstanding balance.'));
    if(draft.kind==='mortgage'&&target&&amount>target.amount)return invalid(t(language,'Principal exceeds the outstanding balance.'));
@@ -415,7 +420,7 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
   }
   case 'received':{
    const received=input.text?parseAmount(input.text,language):null;
-   if(received===null)return invalid(t(language,'Type a positive number, such as 250000 or 12.50'));
+   if(received===null)return invalid(t(language,'Type a positive number, such as {large} or {small}',numberExamples(language)));
    const moved=next(draft,'date',{received});return {draft:moved,reply:prompt(moved,ctx,chat)};
   }
   case 'interest':{
@@ -431,8 +436,8 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
   }
   case 'date':{
    const chosen=value('f:date:');
-   const date=chosen==='today'?ctx.today:chosen==='yesterday'?new Date(Date.parse(ctx.today+'T00:00:00Z')-86400000).toISOString().slice(0,10):input.text?parseDay(input.text,ctx.today):null;
-   if(!date)return invalid(t(language,'Type a past or present date like 2026-09-30 or 30.09.2026'));
+   const date=chosen==='today'?ctx.today:chosen==='yesterday'?new Date(Date.parse(ctx.today+'T00:00:00Z')-86400000).toISOString().slice(0,10):input.text?parseDay(input.text,ctx.today,false,language):null;
+   if(!date)return invalid(t(language,'Type a past or present date like {date}',{date:pastExample(ctx)}));
    // The id is fixed here so a redelivered update saves the same record once.
    const moved=next(draft,'confirm',{date,id:draft.data.id??ctx.newId});return {draft:moved,reply:prompt(moved,ctx,chat)};
   }
@@ -453,7 +458,7 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
   case 'fxamount':case 'fxrate':{
    if(callback==='f:fxrate'||callback==='f:fxamount'){const moved=next(draft,callback==='f:fxrate'?'fxrate':'fxamount');return {draft:moved,reply:prompt(moved,ctx,chat)};}
    const typed=input.text?parseRate(input.text,language):null;
-   if(!typed)return invalid(t(language,'Type a positive number, such as 250000 or 12.50'));
+   if(!typed)return invalid(t(language,'Type a positive number, such as {large} or {small}',numberExamples(language)));
    // The owner's own figure, never a guessed rate: the amount in the account's currency, or what one unit costs there.
    const rate=draft.step==='fxamount'?(draft.data.amount??0)+(draft.kind==='mortgage'?draft.data.interest??0:0):1;
    const moved=next(draft,'confirm',{fx_rate:rate/typed,fx_rate_date:draft.data.date??ctx.today});return {draft:moved,reply:prompt(moved,ctx,chat)};
@@ -470,25 +475,25 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
    const moved=next(draft,'currency',{name,id:draft.data.id??ctx.newId});return {draft:moved,reply:prompt(moved,ctx,chat)};
   }
   case 'duedate':{
-   const date=input.text?parseDay(input.text,ctx.today,true):null;
-   if(!date)return invalid(t(language,'Type a date like 2027-03-31 or 31.03.2027'));
+   const date=input.text?parseDay(input.text,ctx.today,true,language):null;
+   if(!date)return invalid(t(language,'Type a date like {date}',{date:futureExample(ctx)}));
    if(date<ctx.today)return invalid(t(language,'The due date cannot be in the past. Type today or a later date.'));
    const moved=next(draft,'rate',{date});return {draft:moved,reply:prompt(moved,ctx,chat)};
   }
   case 'rate':{
    const rate=callback==='f:zero'?0:input.text?parseRate(input.text,language):null;
-   if(rate===null)return invalid(t(language,'Type the rate as a number like 7.5 or 7.5%, or 0.'));
+   if(rate===null)return invalid(t(language,'Type the rate as a number like {rate} or {percent}, or 0.',{rate:formatNumber(7.5,locales[language]),percent:formatPercent(7.5,locales[language])}));
    if(rate>1000)return invalid(t(language,'The rate must be {max} or less.',{max:formatPercent(1000,locales[language])}));
    const moved=next(draft,'payment',{rate});return {draft:moved,reply:prompt(moved,ctx,chat)};
   }
   case 'payment':{
    const payment=callback==='f:zero'?0:input.text?parseAmountOrZero(input.text,language):null;
-   if(payment===null)return invalid(t(language,'Type a number such as 250000 or 12.50, or 0.'));
+   if(payment===null)return invalid(t(language,'Type a number such as {large} or {small}, or 0.',numberExamples(language)));
    const moved=next(draft,'confirm',{payment});return {draft:moved,reply:prompt(moved,ctx,chat)};
   }
   case 'balance':{
    const amount=callback==='f:zero'?0:input.text?parseAmountOrZero(input.text,language):null;
-   if(amount===null)return invalid(t(language,'Type a number such as 250000 or 12.50, or 0.'));
+   if(amount===null)return invalid(t(language,'Type a number such as {large} or {small}, or 0.',numberExamples(language)));
    return {draft:null,reply:null,commit:commitFor(next(draft,'balance',{amount}),ctx)};
   }
   case 'confirm':{

@@ -1,7 +1,7 @@
 // One-time Telegram celebrations: a first record, savings goals passing 25, 50,
 // 75 and 100 percent, and a new net-worth high. The decisions and the wording
 // are pure; telegram-milestones.ts reads and writes what they need.
-import {formatMoney} from './format';
+import {formatMoney,formatPercent} from './format';
 import {locales,translate,type Language} from './i18n';
 import {escapeHtml} from './telegram';
 export const goalThresholds=[25,50,75,100];
@@ -39,7 +39,7 @@ export function milestoneMessage(milestone:Milestone,language:Language,name=''):
  const who=name.trim()?{name:escapeHtml(name.trim())}:null,pick=(named:string,plain:string,params:Record<string,string|number>={})=>who?t(named,{...params,...who}):t(plain,params);
  switch(milestone.type){
   case 'first_record':return pick('{name}, you saved your first record 🎉 Your money story starts here.','You saved your first record 🎉 Your money story starts here.');
-  case 'goal':return pick('{name}, your {goal} just passed {percent}% 🎉','Your {goal} just passed {percent}% 🎉',{goal:`<b>${escapeHtml(milestone.goal)}</b>`,percent:milestone.percent});
+  case 'goal':return pick('{name}, your {goal} just passed {percent} 🎉','Your {goal} just passed {percent} 🎉',{goal:`<b>${escapeHtml(milestone.goal)}</b>`,percent:formatPercent(milestone.percent,locales[language])});
   case 'goal_complete':return pick('{name}, you reached your {goal} goal 🏆','You reached your {goal} goal 🏆',{goal:`<b>${escapeHtml(milestone.goal)}</b>`});
   case 'net_worth':return pick('{name}, new net-worth high: {amount} 📈','New net-worth high: {amount} 📈',{amount:formatMoney(milestone.amount,milestone.currency,locales[language])});
  }

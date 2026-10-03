@@ -9,17 +9,26 @@ const data = { categories: [{ id: 'pets', name: 'Pets', direction: 'expense' }],
  records: [record('cash', 'Main account', 'Cash', 5000.4, '2026-01-01'), record('loan', 'Car loan', 'Loan', 125000000, '2027-01-01', { currency: 'UZS' }), record('rent', 'Rent', 'Rent expense', 900, '2026-01-03', { frequency: 'Monthly' }),
   record('food', 'Market', 'Living expense', 120.6, '2026-09-10'), record('vet', 'Vet', 'Other expense', 80, '2026-10-01', { custom_category_id: 'pets' }), record('pay', 'Payroll', 'Salary', 3000, '2026-09-05')] };
 
-test('the assistant snapshot lists holdings, debts, monthly cash flow, scheduled bills and open goals in whole amounts', () => {
+test('the assistant snapshot lists holdings, debts, monthly cash flow, scheduled bills and open goals in whole amounts, with dates and amounts formatted as the app shows them', () => {
  const text = assistantContext(data, '2026-10-02', 'USD', { USD: 1, UZS: 12500 });
- assert.match(text, /Today is 2026-10-02\. Display currency: USD\./);
- assert.match(text, /- Main account \(Cash\): 5000 USD/);
- assert.match(text, /- Car loan \(Loan\): 10000 USD, due 2027-01-01/);
- assert.match(text, /2026-09: income 3000, spending 121 \(Living expense 121\)/);
- assert.match(text, /2026-10 \(so far\): income 0, spending 80 \(Pets 80\)/);
- assert.match(text, /2026-10-03 Rent \(Rent expense, Monthly\): 900 USD, due/);
- assert.match(text, /Emergency fund: 4200 of 10000 USD by 2027-12-02, saving 400 a month/);
+ assert.match(text, /Today is 2 October 2026\. Display currency: USD\./);
+ assert.match(text, /- Main account \(Cash\): \$5,000\n/);
+ assert.match(text, /- Car loan \(Loan\): \$10,000, due 1 January 2027/);
+ assert.match(text, /September 2026: income \$3,000, spending \$121 \(Living expense \$121\)/);
+ assert.match(text, /October 2026 \(so far\): income \$0, spending \$80 \(Pets \$80\)/);
+ assert.match(text, /3 October 2026 Rent \(Rent expense, Monthly\): \$900, due/);
+ assert.match(text, /Emergency fund: \$4,200 of \$10,000 by 2 December 2027, saving \$400 a month/);
  assert.doesNotMatch(text, /Old goal/);
- assert.match(assistantContext(data, '2026-10-02', 'USD', { USD: 1 }), /Car loan \(Loan\): 125000000 UZS/, 'no inferred exchange rate');
+ assert.doesNotMatch(text, /\d{4}-\d{2}/, 'no ISO dates or months reach the model');
+ assert.match(assistantInstructions, /exactly as the snapshot writes them/);
+ // The snapshot follows the person's language, so the assistant's figures match the rest of the app.
+ const ru = assistantContext(data, '2026-10-02', 'USD', { USD: 1, UZS: 12500 }, 'ru');
+ assert.match(ru, /Today is 2 октября 2026\./);
+ assert.match(ru, /Main account \(Cash\): 5\s000\s\$/);
+ assert.match(ru, /Сентябрь 2026: income 3\s000\s\$/);
+ assert.match(assistantContext(data, '2026-10-02', 'USD', { USD: 1 }, 'de'), /Car loan \(Loan\): 125\.000\.000\sUZS, due 1\. Januar 2027/);
+ assert.equal(assistantContext(data, '2026-10-02', 'USD', { USD: 1 }, 'xx'), assistantContext(data, '2026-10-02', 'USD', { USD: 1 }), 'an unknown language reads as English');
+ assert.match(assistantContext(data, '2026-10-02', 'USD', { USD: 1 }), /Car loan \(Loan\): UZS\s125,000,000/, 'no inferred exchange rate');
  assert.doesNotMatch(assistantInstructions, /\d{4}-\d{2}-\d{2}/, 'the instructions carry no per-request data, so they cache');
 });
 

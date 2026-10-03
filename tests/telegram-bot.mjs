@@ -94,7 +94,7 @@ test('an unlinked chat is only invited to create an account or sign in, whether 
 test('a linked chat walks the expense flow across updates, keeps the draft in the database and saves through the owner wrapper',async()=>{
  const db=fakeDb(workspace());
  const menu=await handleTelegramUpdate(message(500,'hi'),db,clock);
- assert.equal(menu.replies[0].text,'Choose what to add, or type it, like coffee 4.5 or +1500 salary.');
+ assert.equal(menu.replies[0].text,'Choose what to add, or type it, like coffee 4.5 or +1,500 salary.');
  assert.equal((await handleTelegramUpdate(message(500,'Expense'),db,clock)).replies[0].text,'Choose an expense category');
  assert.deepEqual(db.drafts.map(d=>d.step),['expense:category']);
  const account=await handleTelegramUpdate(press(500,'f:cat:'+id(20)),db,clock);
@@ -135,7 +135,7 @@ test('stale drafts are ignored, database refusals are relayed, and the loan flow
  // The refused draft is kept at the confirmation, with Back to correct it.
  assert.deepEqual(outcome.replies[0].keyboard.inline.flat().map(button=>button.callback_data),['f:back','f:cancel']);
  assert.deepEqual(refused.drafts.map(d=>d.step),['repayment:confirm']);
- assert.equal((await handleTelegramUpdate(press(500,'f:back'),refused,clock)).replies[0].text,'Which day? Choose, or type a date like 2026-09-30');
+ assert.equal((await handleTelegramUpdate(press(500,'f:back'),refused,clock)).replies[0].text,'Which day? Choose, or type a date like 30 September 2026');
  // An overdrawn account fails a balance constraint, which the bot explains as the app does.
  const overdrawn=fakeDb({...workspace(),rpcFailure:{code:'23514',message:'new row violates check constraint'},drafts:[{user_id:owner,step:'repayment:confirm',data:{id:id(50),target_id:id(10),account_id:id(2),amount:400,date:'2026-09-30'},updated_at:clock.now.toISOString()}]});
  assert.equal((await handleTelegramUpdate(press(500,'f:save'),overdrawn,clock)).replies[0].text,'Could not save. Insufficient balance: Card has $300.');

@@ -39,7 +39,7 @@ test('the menu is translated and recognised in every language, and cancel return
  assert.equal(menuChoice(translate('ru','Sign out')),'signout');assert.equal(advance(null,{text:'Sign out'},ctx(),chat).draft,null,'signing out never starts an entry');
  assert.equal(menuChoice(translate('ru','Expense')),'expense');assert.equal(menuChoice(' '+translate('ru','Income').toUpperCase()+' '),'income');assert.equal(menuChoice('Upcoming payments'),'upcoming');assert.equal(menuChoice('hello'),null);
  const stray=advance(null,{text:'hello'},ctx(),chat);
- assert.equal(stray.draft,null);assert.equal(stray.reply.text,'Choose what to add, or type it, like coffee 4.5 or +1500 salary.');assert.deepEqual(stray.reply.keyboard,mainMenu('en'));
+ assert.equal(stray.draft,null);assert.equal(stray.reply.text,'Choose what to add, or type it, like coffee 4.5 or +1,500 salary.');assert.deepEqual(stray.reply.keyboard,mainMenu('en'));
  assert.deepEqual(advance(null,{text:'Upcoming payments'},ctx(),chat),{draft:null,reply:null,menu:'upcoming'});
  const cancelled=run([{text:'Expense'},{callback:'f:cat:'+id(20)},{callback:'f:cancel'}]);
  assert.equal(cancelled.draft,null);assert.equal(cancelled.reply.text,'Cancelled.');
@@ -118,6 +118,19 @@ test('loan repayments and mortgage payments offer every cash account and cap at 
 test('dates must be real and not in the future; long lists page eight at a time',()=>{
  assert.equal(parseDay('2026-09-30','2026-09-30'),'2026-09-30');assert.equal(parseDay('1.9.2026','2026-09-30'),'2026-09-01');
  for(const bad of ['2026-10-01','2026-02-30','yesterday','30/09/26'])assert.equal(parseDay(bad,'2026-09-30'),null,bad);
+ // The prompts show dates the way the app does, and the same text typed back is read in the owner's language or English.
+ assert.equal(parseDay('30 September 2026','2026-09-30'),'2026-09-30');assert.equal(parseDay(' 1  september 2026 ','2026-09-30'),'2026-09-01');
+ assert.equal(parseDay('30 сентября 2026','2026-09-30',false,'ru'),'2026-09-30');assert.equal(parseDay('30 sentabr 2026','2026-09-30',false,'uz'),'2026-09-30');
+ assert.equal(parseDay('30 September 2026','2026-09-30',false,'de'),'2026-09-30','English is read in every language');
+ assert.equal(parseDay('31 December 2027','2026-09-30',true,'en'),'2027-12-31');
+ for(const bad of ['1 October 2026','31 September 2026','September 2026'])assert.equal(parseDay(bad,'2026-09-30'),null,bad);
+ const day=(step,language='en')=>prompt({kind:step==='duedate'?'liability':'expense',step,data:{}},ctx(language),chat).text;
+ assert.equal(day('date'),'Which day? Choose, or type a date like 30 September 2026');
+ assert.equal(day('duedate'),'When is it due? Type a date like 31 December 2027');
+ assert.match(day('date','ru'),/30 сентября 2026/);
+ // Example amounts follow the language's grouping and decimal mark, so the hint reads like the app's own figures.
+ const amount=advance(null,{text:'Expense'},ctx('ru'),chat).draft;
+ assert.match(advance({...amount,step:'amount'},{text:'abc'},ctx('ru'),chat).reply.text,/250\u00a0000 или 12,5/);
  const many=ctx();many.categories=Array.from({length:10},(_,index)=>({id:id(30+index),name:'Category '+String(index).padStart(2,'0'),direction:'expense'}));
  const first=advance(null,{text:'Expense'},many,chat);
  assert.equal(first.reply.keyboard.inline.length,6,'four rows of two, a next arrow, and cancel');
@@ -216,7 +229,7 @@ test('the bot creates a cash account itself, from the menu or from a dead end, a
  assert.deepEqual({name:saved.commit.record.name,kind:saved.commit.record.kind,currency:saved.commit.record.currency,amount:saved.commit.record.amount},{name:'Savings',kind:'Cash',currency:'USD',amount:1250.5});
  // A refused balance says what to type and keeps the 0 button.
  const badBalance=advance(balance.draft,{text:'lots'},withCurrencies(),chat);
- assert.equal(badBalance.reply.text,'Type a number such as 250000 or 12.50, or 0.');assert.deepEqual(buttons(badBalance.reply),['f:zero','f:back','f:cancel']);
+ assert.equal(badBalance.reply.text,'Type a number such as 250,000 or 12.5, or 0.');assert.deepEqual(buttons(badBalance.reply),['f:zero','f:back','f:cancel']);
  // An empty account is allowed through the 0 button, and the record id survives a redelivered update.
  const zero=advance(balance.draft,{callback:'f:zero'},withCurrencies(),chat);assert.equal(zero.commit.record.amount,0);assert.equal(zero.commit.record.id,id(99));
  // A user with no account at all is offered the button instead of being sent to the app.
@@ -272,7 +285,7 @@ test('the bot creates loans, debts and mortgages itself, and a loan payment with
  assert.equal(badRate.draft.step,'rate');assert.equal(badRate.reply.text,'Type the rate as a number like 7.5 or 7.5%, or 0.');assert.deepEqual(buttons(badRate.reply),['f:zero','f:back','f:cancel']);
  assert.equal(advance(rate.draft,{text:'2000%'},context,chat).reply.text,'The rate must be 1,000% or less.');
  const badPayment=advance(payment.draft,{text:'a lot'},context,chat);
- assert.equal(badPayment.reply.text,'Type a number such as 250000 or 12.50, or 0.');assert.deepEqual(buttons(badPayment.reply),['f:zero','f:back','f:cancel']);
+ assert.equal(badPayment.reply.text,'Type a number such as 250,000 or 12.5, or 0.');assert.deepEqual(buttons(badPayment.reply),['f:zero','f:back','f:cancel']);
  const confirm=advance(payment.draft,{text:'250'},context,chat);
  assert.equal(confirm.draft.step,'confirm');assert.match(confirm.reply.text,/Loan · <b>QA Car loan<\/b>\n\$5,000 · Due: 31 March 2027\nInterest rate 12.5% · Monthly payment \$250/);
  const saved=advance(confirm.draft,{callback:'f:save'},context,chat);

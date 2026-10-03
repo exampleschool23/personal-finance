@@ -5,18 +5,29 @@
 import {isoDate} from './api-validation';
 import {isCurrency} from './currencies';
 import {expenses,income,type Entry} from './finance';
-import {numberSymbols} from './format';
+import {formatDate,numberSymbols} from './format';
 import {dictionaries,locales,translate,type Language} from './i18n';
 import {shiftDay} from './period-summary';
 import type {Category} from './planning';
 import {directionOf,ruleChoice,ruleMatches,type TransactionRule} from './transaction-rules';
 export type Direction='expense'|'income';
-/** A record date typed as ISO (2026-09-30) or day first (30.09.2026); past or today unless `future` allows later days. */
-export function parseDay(text:string,today:string,future=false):string|null{
+/** A record date typed the way the app shows it (30 September 2026, in the owner's language or English), as ISO (2026-09-30)
+ * or day first (30.09.2026); past or today unless `future` allows later days. */
+export function parseDay(text:string,today:string,future=false,language?:Language):string|null{
  const trimmed=text.trim();
  const european=/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/.exec(trimmed);
- const candidate=european?`${european[3]}-${european[2].padStart(2,'0')}-${european[1].padStart(2,'0')}`:trimmed;
+ const candidate=european?`${european[3]}-${european[2].padStart(2,'0')}-${european[1].padStart(2,'0')}`:longDay(trimmed,language)??trimmed;
  return isoDate.safeParse(candidate).success&&(future||candidate<=today)?candidate:null;
+}
+/** The ISO day of a date written as formatDate writes it, found by formatting each day the typed numbers could name. */
+function longDay(text:string,language?:Language):string|null{
+ const typed=text.normalize('NFC').replace(/\s+/g,' ').toLowerCase();
+ const numbers=typed.match(/\d+/g)??[],years=numbers.filter(item=>item.length===4),days=numbers.filter(item=>item.length<=2);
+ for(const locale of new Set([language?locales[language]:'en','en']))for(const year of years)for(const day of days)for(let month=1;month<=12;month++){
+  const iso=`${year}-${String(month).padStart(2,'0')}-${day.padStart(2,'0')}`;
+  if(formatDate(iso,locale).toLowerCase()===typed)return iso;
+ }
+ return null;
 }
 /** A typed number: spaces and apostrophes group digits; a lone comma or dot is decimal unless exactly three digits follow it,
  * in which case it is decimal only when it is the language's decimal mark (1,500 is 1500 in English and 1.5 in Russian;

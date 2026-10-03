@@ -2,6 +2,16 @@
 
 All user-facing prices, amounts, exchange rates, quantities, percentages, and dates must use the shared helpers in `lib/format.ts`. Do not add inline `Intl` constructors, `toLocaleString`, `toFixed`, or manual separator/date formatting in UI components.
 
+**Strict rule, no exceptions:** a person never reads a date as `2026-09-30`, `30.09.2026` or `09/30/2026`. Every
+date they see is written by the date formatter: `30 September 2026` (`formatDate`, `formatDateTime`,
+`formatMonthYear`, `formatMonthShort`, `formatYear`). Every price, amount, balance or cost they see goes through
+`formatMoney` (or `formatSignedMoney`, `formatCompactMoney`, `formatAccountOption`); quantities and rates through
+`formatNumber` / `formatPercent`. This covers every surface, not just the web UI: Telegram bot messages and prompts,
+the AI assistant's snapshot and instructions, PDF reports, emails, toasts, aria-labels and chart tooltips. Example
+dates in hints are a `{date}` placeholder filled by `formatDate`, never a literal; text that asks someone to type a
+date must also accept the formatted form back. Exempt: stored values, API payloads, URLs and CSV/data files, which
+keep ISO dates and plain numbers. `tests/formatting-rules.mjs` scans the whole codebase and every locale for this.
+
 - Use `formatMoney(value, currency, locale)` for balances, totals, costs, and gain/loss. Use its `unitPrice` option for stock and crypto unit quotes, preserving up to eight decimals.
 - Never show decimal remainders in monetary totals, balances, forecasts, or automatically filled monetary suggestions. Display whole amounts through the shared formatters; never expose calculation tails such as `13,782.113487716848`. Automatically filled goal contributions must use whole amounts, rounded up when needed to meet the target. Preserve precise underlying calculations and explicitly user-entered values; the stock/crypto unit-quote exception above still applies. Check both displayed results and auto-filled inputs when changing financial UI.
 - Use `formatNumber` for exchange rates, quantities, and rates. Always pass the current language locale from `useLanguage()`.

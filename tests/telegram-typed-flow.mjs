@@ -90,8 +90,8 @@ test('a currency the owner does not keep is asked about; unreadable text gets th
  const chosen=advance(asked.draft,{callback:'f:cur:USD'},ctx(),chat);
  assert.equal(chosen.draft.step,'confirm');assert.equal(chosen.draft.data.currency,'USD');
  const stray=run([{text:'hello there'}]);
- assert.equal(stray.draft,null);assert.equal(stray.reply.text,'Choose what to add, or type it, like coffee 4.5 or +1500 salary.');assert.deepEqual(stray.reply.keyboard,mainMenu('en'));
- assert.equal(run([{text:'coffee 3 2026-12-01'}]).reply.text,'Type a past or present date like 2026-09-30 or 30.09.2026');
+ assert.equal(stray.draft,null);assert.equal(stray.reply.text,'Choose what to add, or type it, like coffee 4.5 or +1,500 salary.');assert.deepEqual(stray.reply.keyboard,mainMenu('en'));
+ assert.equal(run([{text:'coffee 3 2026-12-01'}]).reply.text,'Type a past or present date like 30 September 2026');
  // Typing an entry at a button question starts it afresh; at a typed question the text is an answer.
  assert.equal(run([{text:'Transfer'},{text:'coffee 4500'}]).draft.step,'confirm');
  assert.equal(run([{text:'Expense'},{callback:'f:cat:Charity'},{callback:'f:acc:'+id(1)},{text:'coffee 4500'}]).draft.step,'amount');
