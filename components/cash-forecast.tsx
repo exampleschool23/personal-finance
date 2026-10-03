@@ -96,7 +96,7 @@ export function CashForecastView({ owner, data, plans, plansMonth, currency, rat
    {forecast.months.length ? <div className="table-scroll"><table>
     <thead><tr><th>{t('Name')}</th><th>{t('Date')}</th><th>{t('Amount')}</th></tr></thead>
     <tbody>{forecast.months.map(month => <Fragment key={month.month}>
-     <tr className="table-group-row"><th colSpan={3}><span>{formatMonthYear(month.month, locale)}</span><span className="forecast-month-total">{month.totals.map(total => formatSignedMoney(total.amount, total.currency, locale)).join(' · ')}</span></th></tr>
+     <tr className="table-group-row"><th colSpan={3}><div className="table-group-label"><span>{formatMonthYear(month.month, locale)}</span><span className="forecast-month-total">{month.totals.map(total => formatSignedMoney(total.amount, total.currency, locale)).join(' · ')}</span></div></th></tr>
      {month.events.map(event => <EventRow key={event.key} event={event} account={event.accountId ? accountNames.get(event.accountId) : undefined}/>)}
     </Fragment>)}</tbody>
    </table></div> : <EmptyState icon={<CalendarCheck aria-hidden="true"/>} description={t('No scheduled cash movements in this period.')}/>}

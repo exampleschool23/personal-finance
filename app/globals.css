@@ -329,7 +329,10 @@ tbody tr:last-child td{border-bottom:0}
 .record-icon svg{width:18px;height:18px}
 .amount{font-weight:600;font-variant-numeric:tabular-nums}
 .tools-panel :is(th,td).amount{text-align:end}
-.table-group-row th{padding-top:20px;padding-bottom:8px;color:var(--foreground);font-size:var(--type-small);font-weight:600;letter-spacing:0;text-transform:none}
+.table-group-row th{padding:20px 0 6px;border-bottom:0;color:var(--foreground);font-size:var(--type-compact);font-weight:600;letter-spacing:0;text-transform:none}
+.table-group-label{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px;padding:10px 16px;border-radius:var(--radius-control);background:var(--muted)}
+/* Rows under a group heading sit indented, so the heading reads as their parent. */
+@container content (min-width:721px){tbody:has(>.table-group-row) tr:not(.table-group-row) td:first-child{padding-inline-start:32px}tbody:has(>.table-group-row) tr:not(.table-group-row) td:last-child{padding-inline-end:16px}}
 .records td.amount{white-space:nowrap}
 @container content (min-width:721px){.records th:last-child,.records td:last-child{width:1%;text-align:right}}
 .row-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;color:var(--muted-foreground)}
@@ -375,7 +378,8 @@ tbody tr:last-child td{border-bottom:0}
  .upcoming-section td:first-child{grid-column:1;grid-row:1}
  .upcoming-section td:nth-child(2){grid-column:1;grid-row:2;font-size:var(--type-caption)}
  .upcoming-section td:nth-child(3){grid-column:2;grid-row:1;text-align:right}
- .upcoming-section tbody tr.table-group-row{display:block;padding:16px 0 4px}
+ .upcoming-section tbody tr.table-group-row{display:block;padding:16px 0 4px;border-bottom:0}
+ .upcoming-section tbody:has(>.table-group-row) tr:not(.table-group-row){padding-inline:16px}
  .upcoming-section .table-group-row th{display:block;padding:0;border:0}
 }
 
@@ -1802,7 +1806,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .forecast-what-if-form{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin-top:16px}
 .forecast-what-if-form>label{display:flex;flex-direction:column;gap:6px;min-width:160px;flex:1 1 160px;font-size:var(--type-small)}
 @container content (max-width:720px){.forecast-what-if-form>*{flex:1 1 100%}}
-.forecast-events .forecast-month-total{float:inline-end;font-weight:500;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.forecast-events .forecast-month-total{font-weight:500;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
 .forecast-card-figures{display:grid;gap:8px;margin:0;padding:0;list-style:none}
 .forecast-card-figures li{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
 .forecast-card-figures strong{font-size:var(--type-stat);font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
