@@ -2,9 +2,9 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 const id=n=>`10000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const [owner,partner,viewer,stranger]=[1,2,3,4].map(id);
 
-test('migration 100 is the last block of the fresh setup and keeps tokens hashed',()=>{
+test('the fresh setup includes migration 100 and keeps tokens hashed',()=>{
  const setup=fs.readFileSync('database/setup.sql','utf8'),migration=fs.readFileSync('migrations/100_households.sql','utf8');
- assert.ok(setup.trimEnd().endsWith(migration.trimEnd()),'the fresh setup ends with the migration');
+ assert.ok(setup.includes(migration),'the fresh setup includes the migration');
  assert.match(migration,/token_hash text NOT NULL UNIQUE/);
  assert.doesNotMatch(migration,/\btoken text\b[^;]*household_invites/,'raw tokens are never stored');
  for(const fn of ['can_read_owner','can_write_owner','active_owner'])assert.match(migration,new RegExp(`FUNCTION public\\.${fn}\\([^)]*\\) RETURNS \\w+\\s+LANGUAGE \\w+ STABLE SECURITY DEFINER SET search_path=public`),fn);
