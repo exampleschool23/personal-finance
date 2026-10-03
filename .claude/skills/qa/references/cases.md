@@ -79,7 +79,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | ONB-006 | P1 | Back keeps choices | Back from step 2 then Continue | Step 1 values and step 2 currencies unchanged |
 | ONB-007 | P1 | Goal amount grouping | Type 50000.75 | Field shows "50,000.75" |
 | ONB-008 | P1 | Goal date min | "Choose a date" | Today and earlier disabled; no Today preset; card says "Any day after today" `[bug 2026-10-02]` |
-| ONB-009 | P1 | Telegram connect in setup | Connect to Telegram, send `/start CODE` | Setup card flips to "Connected @hoggish_finance_bot" without reload |
+| ONB-009 | P1 | Telegram connect in setup | Connect to Telegram; in the bot press Start, I already have an account, then Connect on the web page | Setup card flips to "Connected @hoggish_finance_bot" without reload |
 | ONB-010 | P0 | Tracking start saved | Choose "Start of this year", Finish | Dashboard "Tracking since 1 January <year>" `[bug 2026-10-02]` |
 | ONB-011 | P1 | Finish | Finish setup → Open my workspace | "You're all set, QA Tester." then dashboard |
 | ONB-012 | P2 | First greeting | Dashboard right after setup | "Welcome, QA Tester!" (not "Welcome back") `[bug 2026-10-02]` |
@@ -571,7 +571,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | SET-024 | P1 | Run setup again disabled while saving | Type a name and immediately press "Run setup again" | Button disabled while unsaved; after "Saved" it opens setup with saved values; not offered in demo |
 | SET-025 | P1 | Country saved | Country / region → Germany, reload | Saved; never changes currencies by itself (only setup does) |
 | SET-026 | P1 | Demo settings stay local | In the sample workspace change language to Français and font to Onest, then Exit demo | Applied during the visit with "Saved"; after exit the landing is in the browser language and no account changed |
-| SET-027 | P1 | Telegram connect waiting | Settings › Connect to Telegram (user OK; a tab opens the bot) then Cancel | Button reads "Waiting for Telegram…" with Cancel; Cancel stops waiting; link stays valid ten minutes; never links without /start |
+| SET-027 | P1 | Telegram connect waiting | Settings › Connect to Telegram (user OK; a tab opens the bot) then Cancel | Button reads "Waiting for Telegram…" with Cancel; Cancel stops waiting; the opened link is the plain bot address with no `?start=` code |
 | SET-028 | P1 | Telegram toggles failure | Linked: block `POST /api/telegram`, untick "Morning digest of upcoming payments" | Error popup; the checkbox returns to its saved state on reload; unblocking and retrying saves |
 | SET-029 | P1 | Disconnect dialog | Linked QA test account: Disconnect → Cancel, then Disconnect → Disconnect (with user OK) | "Disconnect Telegram?" with records-stay text; Cancel keeps link; confirm shows Connect again; remind the user to reconnect the real account |
 | SET-030 | P1 | Telegram demo and unconfigured | Sample workspace Settings | "Sign in to connect Telegram to your own workspace."; no Connect button |
@@ -626,8 +626,8 @@ currencies (USD primary). Compute every expected figure yourself first.
 
 | ID | P | Case | Steps | Expect |
 |---|---|---|---|---|
-| BOT-001 | P0 | Link with code | `/start CODE` | "Welcome, QA Tester! You are connected and will get…" (one sentence) `[bug 2026-10-02]` |
-| BOT-002 | P1 | Expired code | `/start` old code | "This link has expired…" |
+| BOT-001 | P0 | Link by web sign-in | `/start` → I already have an account → Sign in → Connect | "Welcome, QA Tester! You are connected and will get…" (one sentence) `[bug 2026-10-02]` |
+| BOT-002 | P1 | Old start code ignored | `/start ABCDEFGH` from an unlinked chat | The welcome invitation; nothing links |
 | BOT-003 | P1 | Menu | Open keyboard | Expense / Income / More actions |
 | BOT-004 | P1 | Unknown text | "hello bot" | "Choose what to add." |
 | BOT-005 | P1 | Localised labels | "Расход" | Opens the expense flow |
@@ -665,10 +665,10 @@ currencies (USD primary). Compute every expected figure yourself first.
 | BOT-080 | P1 | Digest / recap / milestones | Only with user OK | Correct figures; spending per XAPP-001 |
 | BOT-081 | P0 | Webhook secret check | From a terminal: `curl -i -X POST <prod>/api/telegram/webhook -d '{}'` with no `X-Telegram-Bot-Api-Secret-Token` header, then with the header set to `wrong` and to a value of a different length | 401 every time; no reply appears in any chat; never send the real secret |
 | BOT-082 | P0 | Cron authorization | `curl -i <prod>/api/cron/telegram-digest`, `/api/cron/telegram-recap`, `/api/cron/portfolio-snapshots` with no `Authorization` and with `Authorization: Bearer wrong` | 401 for all six requests; no digest, recap or milestone reaches the test chat; never call them with the real CRON_SECRET without the user's OK |
-| BOT-083 | P1 | Start code variants | Settings → Connect to Telegram; send `/start@hoggish_finance_bot code` with the code typed in lower case | Linked; "Welcome, QA Tester! You are connected…" with the Expense / Income / More actions keyboard |
-| BOT-084 | P1 | Link code is single-use | After BOT-001, send the same `/start CODE` again | "This link has expired. Open Settings in the app and press Connect to Telegram again."; the link stays on the test account |
+| BOT-083 | P1 | Start with a payload while linked | Send `/start@hoggish_finance_bot abcdefgh` in a linked chat | "Welcome, QA Tester! You are connected…" with the Expense / Income / More actions keyboard; the link is unchanged |
+| BOT-084 | P1 | Settings opens the plain bot | Settings → Connect to Telegram; check the opened address | `https://t.me/hoggish_finance_bot` with no `?start=` code; no `POST /api/telegram` request is made |
 | BOT-085 | P1 | Plain /start when linked | Linked chat, no flow open, send `/start` | Connected message greeting the Settings display name with the main keyboard; nothing is relinked or reset |
-| BOT-086 | P1 | Settings waiting state | Settings → Connect to Telegram, do not press Start; then press Cancel | Button reads "Waiting for Telegram…" with Cancel beside it; Cancel returns to "Connect to Telegram"; sending `/start CODE` within 10 min still flips the panel to Connected with a Saved toast after a reload |
+| BOT-086 | P1 | Settings waiting state | Settings → Connect to Telegram, do not press Start; then press Cancel | Button reads "Waiting for Telegram…" with Cancel beside it; Cancel returns to "Connect to Telegram"; connecting through I already have an account within 15 min still flips the panel to Connected with a Saved toast after a reload |
 | BOT-087 | P0 | Milestones switch | Settings → untick "Milestones, like a goal reached", reload; tick it again, reload | Both toggles survive a reload; no message is posted for ordinary saves either way |
 | BOT-088 | P0 | Disconnect from Settings | Settings → Disconnect → dialog "Disconnect Telegram?" → Disconnect; then type "Expense" in the chat and save an expense in the app | Panel shows "Connect to Telegram"; chat gets the welcome (Create an account / I already have an account), never an expense flow; no message for the app save; all QA records unchanged |
 | BOT-089 | P0 | Linking moves a chat between accounts | Only with user OK (unlinks the real account): link the chat to the test account with `/start CODE` | Real account's Settings shows not connected; bot greets the test account's display name; real account gets no further messages; remind the user to reconnect at the end |

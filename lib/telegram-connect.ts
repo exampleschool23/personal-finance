@@ -53,6 +53,6 @@ export async function linkChat(db:ServiceDatabase,owner:string,person:{chatId:nu
  if(earlier&&earlier.user_id!==owner){const cleared=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+earlier.user_id,{method:'PATCH',body:JSON.stringify({chat_id:null,linked_at:null,updated_at:at,...(earlier.phone?{}:{telegram_user_id:null,first_name:null})})});if(!cleared.ok)failed();}
  const taken=person.telegramUserId?await db.read<Array<{user_id:string}>>('/rest/v1/telegram_subscriptions?select=user_id&telegram_user_id=eq.'+person.telegramUserId):[];
  const identity=person.telegramUserId&&!taken.some(row=>row.user_id!==owner)?{telegram_user_id:person.telegramUserId,first_name:(person.firstName??'').trim().slice(0,80)||null}:{};
- const saved=await db.write('/rest/v1/telegram_subscriptions?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({user_id:owner,chat_id:person.chatId,link_code:null,link_code_expires_at:null,linked_at:at,updated_at:at,...identity})});
+ const saved=await db.write('/rest/v1/telegram_subscriptions?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({user_id:owner,chat_id:person.chatId,linked_at:at,updated_at:at,...identity})});
  if(!saved.ok)failed();
 }

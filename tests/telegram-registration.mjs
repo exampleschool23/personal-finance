@@ -243,20 +243,7 @@ test('the app command gives one-tap buttons to accounts made here and a plain li
  assert.equal(buttons((await run(text('/app'),noSecret)).replies[0]).length,1);
 });
 
-test('linking an existing account with a code records the Telegram user once, never on two accounts',async()=>{
- const other='33333333-3333-4333-8333-333333333333';
- const code='ABCDEFGH',future=new Date(now.getTime()+60000).toISOString();
- const pending=subscription({chat_id:null,linked_at:null,link_code:code,link_code_expires_at:future});
- const free=setup({seed:{telegram_subscriptions:[pending],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]}});
- await run({message:{chat:chat(),text:'/start '+code,from:from()}},free);
- assert.equal(free.db.tables.telegram_subscriptions[0].chat_id,777);assert.equal(free.db.tables.telegram_subscriptions[0].telegram_user_id,777);assert.equal(free.db.tables.telegram_subscriptions[0].first_name,'Aziz');
- const held=setup({seed:{telegram_subscriptions:[{...pending},subscription({user_id:other,chat_id:null,telegram_user_id:777,phone:'+998900000001',linked_at:null})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]}});
- await run({message:{chat:chat(),text:'/start '+code,from:from()}},held);
- const mine=held.db.tables.telegram_subscriptions.find(row=>row.user_id===ownerId);
- assert.equal(mine.chat_id,777);assert.equal(mine.telegram_user_id??null,null,'the Telegram user stays with its first account');
-});
-
-test('signing out releases an account linked from the app, so the same person can start a new one or return to it by code',async()=>{
+test('signing out releases an account linked from the app, so the same person can start a new one or return to it through web sign-in',async()=>{
  // Linked from the app: an identity but no number.
  const seed={telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:null,consented_at:null,first_name:'Aziz'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:'Anti'}]};
  const context=setup({seed:structuredClone(seed)});
@@ -279,7 +266,7 @@ test('signing out keeps the identity of an account that signs in with its number
  for(const word of [t('ru','Sign out'),'/signout','/stop']){
   const context=setup({seed:structuredClone(seed)});
   const out=await run(text(word),context);
-  assert.equal(out.replies[0].text,t('ru','You are signed out. Sad to see you go! 👋 Come back any time: send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.'),word);
+  assert.equal(out.replies[0].text,t('ru','You are signed out. Sad to see you go! 👋 Come back any time: send /start and sign in with your phone number or on the web.'),word);
   const row=context.db.tables.telegram_subscriptions[0];
   assert.equal(row.chat_id,null);assert.equal(row.telegram_user_id,777);assert.equal(row.phone,'+998901234567');
   // Sharing the same number signs back in without creating anything.

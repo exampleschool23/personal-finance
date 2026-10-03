@@ -9,44 +9,20 @@ const supabase={session:async()=>authenticated?{user:{id:owner},token:'owner-tok
 const route=loadTS('app/api/telegram/route.ts',{'@/lib/supabase':supabase});
 const request=body=>new Request('https://app.local/api/telegram',{method:'POST',headers:{origin:'https://app.local','Content-Type':'application/json'},body:JSON.stringify(body)});
 
-test('status reads only the owner row and never exposes the link code',async()=>{
- calls=[];rows=[{user_id:owner,chat_id:5,digest_enabled:true,actions_enabled:false,link_code:'ABCDEFGH',link_code_expires_at:null,linked_at:'x'}];
+test('status reads only the owner row',async()=>{
+ calls=[];rows=[{user_id:owner,chat_id:5,digest_enabled:true,actions_enabled:false,linked_at:'x'}];
  const response=await route.GET();
  assert.equal(response.status,200);
  assert.deepEqual(await response.json(),{configured:true,linked:true,digest_enabled:true,actions_enabled:false,bot_username:'hoggish_bot'});
  assert.equal(calls[0].token,'owner-token');assert.match(calls[0].path,/user_id=eq\.11111111-1111-4111-8111-111111111111$/);
 });
 
-test('link inserts the owner row when none exists and returns the bot link',async()=>{
- calls=[];rows=[];
- const before=Date.now();
- const response=await route.POST(request({action:'link'}));
- assert.equal(response.status,200);
- const {url}=await response.json();
- const match=/^https:\/\/t\.me\/hoggish_bot\?start=([A-Z0-9]{8})$/.exec(url);assert.ok(match,url);
- assert.deepEqual(calls.map(call=>call.init.method),['PATCH','POST']);
- const body=JSON.parse(calls[1].init.body);
- assert.equal(body.user_id,owner);assert.equal(body.link_code,match[1]);
- assert.ok(Date.parse(body.link_code_expires_at)-before>=9*60000);assert.ok(Date.parse(body.link_code_expires_at)-before<=11*60000);
- assert.equal(calls[1].token,'owner-token');
-});
-
-test('link on an existing row patches only the code columns, never user_id, so column-level grants hold',async()=>{
- calls=[];rows=[{user_id:owner}];
- const response=await route.POST(request({action:'link'}));
- assert.equal(response.status,200);
- assert.equal(calls.length,1);assert.equal(calls[0].init.method,'PATCH');
- assert.match(calls[0].path,/user_id=eq\.11111111-1111-4111-8111-111111111111$/);
- assert.deepEqual(Object.keys(JSON.parse(calls[0].init.body)).sort(),['link_code','link_code_expires_at','updated_at']);
- assert.ok(!('Prefer' in calls[0].init.headers)||!/merge-duplicates/.test(calls[0].init.headers.Prefer));
-});
-
 test('unlink and settings patch only the owner row and echo the new status',async()=>{
- calls=[];rows=[{user_id:owner,chat_id:null,digest_enabled:false,actions_enabled:true,link_code:null,link_code_expires_at:null,linked_at:null}];
+ calls=[];rows=[{user_id:owner,chat_id:null,digest_enabled:false,actions_enabled:true,linked_at:null}];
  const unlinked=await route.POST(request({action:'unlink'}));
  assert.equal(unlinked.status,200);assert.equal((await unlinked.json()).linked,false);
  assert.equal(calls[0].init.method,'PATCH');assert.match(calls[0].path,/user_id=eq\.11111111-1111-4111-8111-111111111111$/);
- assert.deepEqual(Object.keys(JSON.parse(calls[0].init.body)).sort(),['chat_id','link_code','link_code_expires_at','linked_at','updated_at']);
+ assert.deepEqual(Object.keys(JSON.parse(calls[0].init.body)).sort(),['chat_id','linked_at','updated_at']);
  calls=[];
  const settings=await route.POST(request({action:'settings',digest_enabled:false,actions_enabled:true}));
  assert.equal(settings.status,200);
@@ -55,18 +31,19 @@ test('unlink and settings patch only the owner row and echo the new status',asyn
 
 test('rejects bad bodies, anonymous and cross-origin calls, and reports database failures',async()=>{
  calls=[];
- for(const body of [{action:'settings'},{action:'nope'},{action:'settings',digest_enabled:'yes',actions_enabled:true}])assert.equal((await route.POST(request(body))).status,400);
+ // No code is handed out any more: chats link through the bot's phone or web sign-in.
+ for(const body of [{action:'link'},{action:'settings'},{action:'nope'},{action:'settings',digest_enabled:'yes',actions_enabled:true}])assert.equal((await route.POST(request(body))).status,400);
  assert.equal(calls.length,0);
  assert.equal((await route.POST(new Request('https://app.local/api/telegram',{method:'POST',headers:{origin:'https://evil.local'},body:'{}'}))).status,403);
- authenticated=false;assert.equal((await route.GET()).status,401);assert.equal((await route.POST(request({action:'link'}))).status,401);authenticated=true;
- ok=false;try{assert.equal((await route.GET()).status,503);assert.equal((await route.POST(request({action:'link'}))).status,503);}finally{ok=true;}
+ authenticated=false;assert.equal((await route.GET()).status,401);assert.equal((await route.POST(request({action:'unlink'}))).status,401);authenticated=true;
+ ok=false;try{assert.equal((await route.GET()).status,503);assert.equal((await route.POST(request({action:'unlink'}))).status,503);}finally{ok=true;}
 });
 
 test('without bot configuration the panel is told to wait for server setup',async()=>{
  const bare=loadTS('app/api/telegram/route.ts',{'@/lib/supabase':supabase,'@/lib/telegram':{telegramConfig:()=>null}});
  rows=[];
  assert.equal((await (await bare.GET()).json()).configured,false);
- assert.equal((await bare.POST(request({action:'link'}))).status,503);
+ assert.equal((await bare.POST(request({action:'unlink'}))).status,503);
 });
 
 test('the webhook checks the secret header, hands updates to the bot and sends its replies',async()=>{

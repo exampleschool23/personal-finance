@@ -55,8 +55,8 @@ test('owners manage their notification settings but never the identity columns, 
   const phone='+998901234567';
   await db.exec(`INSERT INTO auth.users(id) VALUES('${owner}'),('${other}') ON CONFLICT DO NOTHING;`);
   await db.exec(`SET request.jwt.claim.sub='${owner}';SET ROLE authenticated;`);
-  // Settings and the link flow still work for the owner.
-  await db.exec(`INSERT INTO telegram_subscriptions(user_id,link_code,link_code_expires_at) VALUES('${owner}','ABCDEFGH',now());`);
+  // Settings still work for the owner.
+  await db.exec(`INSERT INTO telegram_subscriptions(user_id) VALUES('${owner}');`);
   await db.exec(`UPDATE telegram_subscriptions SET digest_enabled=false,actions_enabled=false,chat_id=NULL,linked_at=NULL WHERE user_id='${owner}';`);
   // Identity columns are written only by the server.
   for(const statement of [`UPDATE telegram_subscriptions SET phone='${phone}' WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET telegram_user_id=777 WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET consented_at=now() WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET first_name='x' WHERE user_id='${owner}'`,`INSERT INTO telegram_subscriptions(user_id,phone) VALUES('${other}','${phone}')`])

@@ -15,8 +15,8 @@ function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurren
    const owner=/user_id=eq\.([\w-]+)/.exec(path)?.[1];
    if(rules&&path.startsWith('/rest/v1/transaction_rules'))return rules.filter(rule=>rule.user_id===owner);
    if(path.startsWith('/rest/v1/telegram_subscriptions')){
-    const chat=/chat_id=eq\.(\d+)/.exec(path),code=/link_code=eq\.(\w+)/.exec(path);
-    return subscriptions.filter(s=>chat?s.chat_id===Number(chat[1]):code?s.link_code===code[1]:true);
+    const chat=/chat_id=eq\.(\d+)/.exec(path);
+    return subscriptions.filter(s=>chat?s.chat_id===Number(chat[1]):true);
    }
    if(path.startsWith('/rest/v1/user_preferences'))return owner in languages?[{language:languages[owner],...(currencies?{currencies}:{})}]:[];
    if(path.startsWith('/rest/v1/finance_records'))return records.filter(r=>r.user_id===owner);
@@ -38,37 +38,21 @@ function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurren
   },
  };
 }
-const pending={user_id:owner,chat_id:null,digest_enabled:true,actions_enabled:true,link_code:'ABCDEFGH',link_code_expires_at:'2026-09-30T09:10:00.000Z',linked_at:null};
-const linked={user_id:owner,chat_id:500,digest_enabled:true,actions_enabled:true,link_code:null,link_code_expires_at:null,linked_at:'2026-09-29T00:00:00Z'};
+const pending={user_id:owner,chat_id:null,digest_enabled:true,actions_enabled:true,linked_at:null};
+const linked={user_id:owner,chat_id:500,digest_enabled:true,actions_enabled:true,linked_at:'2026-09-29T00:00:00Z'};
 const message=(chat,text,language_code)=>({message:{chat:{id:chat},text,from:{language_code}}});
 const press=(chat,data)=>({callback_query:{id:'cb-'+data,data,message:{chat:{id:chat}}}});
 const workspace=()=>({subscriptions:[linked],languages:{[owner]:'en'},records:[entry(1,'Wallet','Cash',900000),entry(2,'Card','Cash',300,'USD'),entry(10,'Car loan','Loan',2000,'USD')],categories:[{id:id(20),name:'Groceries',direction:'expense'}]});
 
-test('a valid start code links the chat, clears the code, answers in the owner language and shows the menu',async()=>{
- const db=fakeDb({subscriptions:[pending],languages:{[owner]:'ru'}});
- const outcome=await handleTelegramUpdate(message(500,'/start ABCDEFGH','en'),db,clock);
- assert.equal(outcome.replies.length,1);assert.equal(outcome.replies[0].chat_id,500);
- assert.match(outcome.replies[0].text,/^Подключено\./);
- assert.deepEqual(outcome.replies[0].keyboard.reply[0],['Расход','Доходы']);
- assert.equal(db.writes.length,1);
- assert.equal(db.writes[0].path,'/rest/v1/telegram_subscriptions?on_conflict=user_id');
- assert.deepEqual(db.writes[0].body,{user_id:owner,chat_id:500,link_code:null,link_code_expires_at:null,linked_at:now.toISOString(),updated_at:now.toISOString()});
-});
-
-test('expired, unknown or malformed codes never write and reply in the Telegram client language',async()=>{
- const db=fakeDb({subscriptions:[{...pending,link_code_expires_at:'2026-09-30T08:59:59.000Z'}]});
- assert.match((await handleTelegramUpdate(message(500,'/start ABCDEFGH','uz'),db,clock)).replies[0].text,/^Havola muddati tugagan/);
- assert.match((await handleTelegramUpdate(message(500,'/start ZZZZZZZZ','ru'),db,clock)).replies[0].text,/^Срок действия ссылки истёк/);
- assert.match((await handleTelegramUpdate(message(500,'/start 0000','fi'),db,clock)).replies[0].text,/^Welcome to Hoggish/);
- assert.equal(db.writes.length,0);
-});
-
-test('a chat that already served another owner is released before it is linked',async()=>{
- const db=fakeDb({subscriptions:[pending,{...linked,user_id:other}],languages:{[owner]:'en'}});
- await handleTelegramUpdate(message(500,'/start ABCDEFGH'),db,clock);
- assert.equal(db.writes[0].path,'/rest/v1/telegram_subscriptions?user_id=eq.'+other);
- assert.deepEqual(db.writes[0].body,{chat_id:null,linked_at:null,updated_at:now.toISOString(),telegram_user_id:null,first_name:null});
- assert.equal(db.writes[1].body.chat_id,500);
+test('a code after /start never links a chat: a stranger is invited, a linked chat sees its menu, and nothing is written',async()=>{
+ const stranger=fakeDb({subscriptions:[pending],languages:{[owner]:'ru'}});
+ for(const text of ['/start ABCDEFGH','/start@hoggish_bot abcdefgh','/start 0000'])
+  assert.match((await handleTelegramUpdate(message(500,text,'en'),stranger,clock)).replies.map(reply=>reply.text).join('\n'),/Welcome to Hoggish/,text);
+ assert.equal(stranger.writes.length,0);
+ const owned=fakeDb({subscriptions:[linked],languages:{[owner]:'ru'}});
+ const menu=await handleTelegramUpdate(message(500,'/start ABCDEFGH'),owned,clock);
+ assert.match(menu.replies[0].text,/^Подключено\./);assert.deepEqual(menu.replies[0].keyboard.reply[0],['Расход','Доходы']);
+ assert.equal(owned.writes.length,0);
 });
 
 test('stop unlinks a connected chat, drops its draft and removes the keyboard; a bare start shows the menu again',async()=>{
@@ -170,8 +154,8 @@ test('a loan with a monthly payment is due every month on its start day, until a
 });
 
 test('database failures surface so the webhook can ask Telegram to retry',async()=>{
- const db=fakeDb({subscriptions:[pending],failWrites:true});
- await assert.rejects(handleTelegramUpdate(message(500,'/start ABCDEFGH'),db,clock),/Database request failed/);
+ const db=fakeDb({subscriptions:[linked],languages:{[owner]:'en'},failWrites:true});
+ await assert.rejects(handleTelegramUpdate(message(500,'/stop'),db,clock),/Database request failed/);
 });
 
 test('pressing Back in the chat returns to the previous question, stores the shorter draft and saves the corrected choice',async()=>{

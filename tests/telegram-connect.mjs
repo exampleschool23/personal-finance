@@ -33,7 +33,7 @@ test('connect requests are random, stored as hashes, one per chat, valid for fif
 test('linking a chat signs out its earlier owner and records the Telegram user only when no other account holds it',async()=>{
  const fresh=botDb({});
  await linkChat(fresh,ownerId,person,now);
- assert.deepEqual(fresh.tables.telegram_subscriptions,[{user_id:ownerId,chat_id:777,link_code:null,link_code_expires_at:null,linked_at:now.toISOString(),updated_at:now.toISOString(),telegram_user_id:777,first_name:'Aziz'}],'an account without a row gets one');
+ assert.deepEqual(fresh.tables.telegram_subscriptions,[{user_id:ownerId,chat_id:777,linked_at:now.toISOString(),updated_at:now.toISOString(),telegram_user_id:777,first_name:'Aziz'}],'an account without a row gets one');
  // The chat served a phone account before: that account keeps its identity, so it can sign back in with its number, and this one does not take it.
  const held=botDb({telegram_subscriptions:[subscription({user_id:other,chat_id:777,telegram_user_id:777,phone:'+998901234567'}),subscription({chat_id:null,linked_at:null})]});
  await linkChat(held,ownerId,person,now);

@@ -21,8 +21,8 @@ import type {ServiceDatabase} from './service-role';
 import {adminAccounts,createLoginToken,createTelegramAccount,type AdminAccounts} from './telegram-account';
 import {advance,mainMenu,menuChoice,needsRate,prompt,retryKeyboard,withRate,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
 import type {TransactionRule} from './transaction-rules';
-import {connectMinutes,connectStartPath,createConnectRequest,linkChat} from './telegram-connect';
-import {linkExpired,startCode,type TelegramSubscription} from './telegram-link';
+import {connectMinutes,connectStartPath,createConnectRequest} from './telegram-connect';
+import type {TelegramSubscription} from './telegram-link';
 import {advanceOnboarding,isOnboardDraft,startOnboarding,type OnboardDraft} from './telegram-onboarding';
 import {escapeHtml,type TelegramMessage} from './telegram';
 type TelegramFrom={id?:number;first_name?:string;language_code?:string};
@@ -63,13 +63,6 @@ export async function connectedReply(db:ServiceDatabase,owner:string,chatId:numb
  const language=await ownerLanguage(db,owner);
  return {chat_id:chatId,text:connectedText(language,await ownerName(db,owner)),keyboard:mainMenu(language)};
 }
-async function connect(db:ServiceDatabase,chatId:number,code:string,now:Date,hint:Language,from?:TelegramFrom):Promise<TelegramMessage>{
- const rows=await db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&link_code=eq.'+code);
- const pending=rows[0];
- if(!pending||linkExpired(pending,now))return {chat_id:chatId,text:t(hint,'This link has expired. Open Settings in the app and press Connect to Telegram again.')};
- await linkChat(db,pending.user_id,{chatId,telegramUserId:from?.id,firstName:from?.first_name},now);
- return connectedReply(db,pending.user_id,chatId);
-}
 /** The bot's answer to "I already have an account": a single-use link to sign in on the web, where any sign-in method works. */
 async function webSignIn(db:ServiceDatabase,chatId:number,from:TelegramFrom|undefined,language:Language,now:Date,env:BotEnv):Promise<TelegramMessage>{
  if(!env.appOrigin||!from?.id)return {chat_id:chatId,text:t(language,'Registration is not available yet. Please try again later.')};
@@ -82,7 +75,7 @@ async function signOut(db:ServiceDatabase,subscription:TelegramSubscription,now:
  const cleared=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+subscription.user_id,{method:'PATCH',body:JSON.stringify({chat_id:null,linked_at:null,updated_at:now.toISOString(),...(subscription.phone?{}:{telegram_user_id:null,first_name:null})})});
  if(!cleared.ok)throw Error('Database request failed.');
  await db.write('/rest/v1/telegram_drafts?user_id=eq.'+subscription.user_id,{method:'DELETE'});
- return {chat_id:subscription.chat_id!,text:t(language,'You are signed out. Sad to see you go! 👋 Come back any time: send /start to sign in again. To connect an account you use on the web, open its Settings and press Connect to Telegram.'),keyboard:{remove:true}};
+ return {chat_id:subscription.chat_id!,text:t(language,'You are signed out. Sad to see you go! 👋 Come back any time: send /start and sign in with your phone number or on the web.'),keyboard:{remove:true}};
 }
 type AnyDraft=Draft|OnboardDraft;
 async function loadDraft(db:ServiceDatabase,owner:string,now:Date):Promise<AnyDraft|null>{
@@ -314,8 +307,6 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
  if(!message)return {replies:[]};
  const chatId=message.chat.id,text=(message.text??'').trim(),hint=fromHint(message.from?.language_code);
  if(message.contact)return handleContact(db,message,hint,clock,env);
- const code=startCode(text);
- if(code)return {replies:[await connect(db,chatId,code,now,hint,message.from)]};
  const subscription=await subscriptionByChat(db,chatId);
  // A chat nobody has linked is invited to create an account.
  if(!subscription)return {replies:await invite(db,chatId,message.from,hint,env)};
@@ -323,7 +314,8 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
  const language=await ownerLanguage(db,subscription.user_id);
  if(/^\/phone(?:@\w+)?$/.test(text))return {replies:[contactRequest(chatId,language,'add')]};
  if(/^\/app(?:@\w+)?$/.test(text)){const open=await openAppReply(db,subscription,chatId,language,now,env);return {replies:open?[open]:[]};}
- if(/^\/start(?:@\w+)?$/.test(text)){
+ // Anything after /start, such as an old deep-link code, is ignored: chats link only by phone number or web sign-in.
+ if(/^\/start(?:@\w+)?(?:\s.*)?$/.test(text)){
   const draft=await loadDraft(db,subscription.user_id,now);
   // Mid-setup, Start means start over: the questions begin again from the language.
   if(isOnboardDraft(draft)){const restarted=startOnboarding(language,chatId);await storeDraft(db,subscription.user_id,restarted.draft,now);return {replies:restarted.reply?[restarted.reply]:[]};}

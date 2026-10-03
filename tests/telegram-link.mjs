@@ -5,30 +5,21 @@ import {loadTS} from './helpers/load-ts.mjs';
 const link=loadTS('lib/telegram-link.ts');
 const telegram=loadTS('lib/telegram.ts');
 
-test('link codes avoid look-alike characters, validate strictly and expire after ten minutes',()=>{
- const code=link.generateLinkCode(max=>max-1);
- assert.equal(code.length,8);assert.ok(link.isLinkCode(code));
- assert.ok(!/[01IO]/.test(link.generateLinkCode(max=>Math.floor(max/2))));
- for(const bad of ['ABCDEFG','abcdefgh','ABCD0123','',null,12345678])assert.ok(!link.isLinkCode(bad),String(bad));
- const now=new Date('2026-09-30T09:00:00Z');
- assert.equal(link.linkExpiry(now),'2026-09-30T09:10:00.000Z');
- assert.ok(!link.linkExpired({link_code:'ABCDEFGH',link_code_expires_at:'2026-09-30T09:10:00.000Z'},now));
- assert.ok(link.linkExpired({link_code:'ABCDEFGH',link_code_expires_at:'2026-09-30T09:00:00.000Z'},now));
- assert.ok(link.linkExpired({link_code:null,link_code_expires_at:'2026-09-30T09:10:00.000Z'},now));
- assert.equal(link.telegramLinkUrl('hoggish_bot','ABCDEFGH'),'https://t.me/hoggish_bot?start=ABCDEFGH');
+test('the bot link is the plain bot address and carries no code',()=>{
+ assert.equal(link.telegramBotUrl('hoggish_bot'),'https://t.me/hoggish_bot');
+ for(const name of ['generateLinkCode','isLinkCode','linkExpiry','linkExpired','startCode','telegramLinkUrl'])assert.equal(link[name],undefined,name);
 });
 
-test('the start command yields its code and nothing else does',()=>{
- assert.equal(link.startCode('/start ABCDEFGH'),'ABCDEFGH');
- assert.equal(link.startCode('/start@hoggish_bot abcdefgh '),'ABCDEFGH');
- for(const text of ['/start','/start ABC','/stop ABCDEFGH','ABCDEFGH','/start ABCDEFGH extra',undefined])assert.equal(link.startCode(text),null,String(text));
-});
-
-test('status hides the code and reports configuration, link state and toggles',()=>{
+test('status reports configuration, link state and toggles',()=>{
  assert.deepEqual(link.subscriptionStatus(undefined,null),{configured:false,linked:false,digest_enabled:true,actions_enabled:true,bot_username:null});
- const status=link.subscriptionStatus({user_id:'u',chat_id:42,digest_enabled:false,actions_enabled:true,link_code:'ABCDEFGH',link_code_expires_at:null,linked_at:'2026-09-30'},'hoggish_bot');
+ const status=link.subscriptionStatus({user_id:'u',chat_id:42,digest_enabled:false,actions_enabled:true,linked_at:'2026-09-30'},'hoggish_bot');
  assert.deepEqual(status,{configured:true,linked:true,digest_enabled:false,actions_enabled:true,bot_username:'hoggish_bot'});
- assert.ok(!JSON.stringify(status).includes('ABCDEFGH'));
+});
+
+test('migration 103 drops the link code columns and setup.sql ends with it',()=>{
+ const migration=fs.readFileSync('migrations/103_drop_telegram_link_code.sql','utf8');
+ assert.match(migration,/DROP COLUMN IF EXISTS link_code, DROP COLUMN IF EXISTS link_code_expires_at/);
+ assert.ok(fs.readFileSync('database/setup.sql','utf8').includes(migration));
 });
 
 test('telegram configuration needs all three variables and strips the handle prefix',()=>{

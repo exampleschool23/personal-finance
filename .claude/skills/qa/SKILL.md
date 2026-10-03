@@ -98,10 +98,10 @@ The Telegram tab must be fronted (`tabs_select`) and the pane visible, or messag
 stay in the input box. Bot replies take 5–9 s. Inline buttons on older messages may
 still be live — tapping a stale Save must never create a duplicate (case BOT-061).
 
-Linking the bot to the test account: Settings → Connect to Telegram, then read the
-code from the network log (`read_network_requests` → the `POST /api/telegram`
-response holds `https://t.me/hoggish_finance_bot?start=CODE`), and send `/start CODE`
-in Telegram. The page's own t.me pop-up is blocked by the pane; that is expected.
+Linking the bot to the test account: there is no link code. Send `/start` in
+Telegram, press I already have an account, open the Sign in link in the pane (signed
+in as the test account) and press Connect. The page's own t.me pop-up from Settings
+is blocked by the pane; that is expected.
 
 ## 3. Method
 

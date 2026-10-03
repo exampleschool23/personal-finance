@@ -48,4 +48,4 @@ export function botDb(seed = {}) {
   };
 }
 export const ownerId = '11111111-1111-4111-8111-111111111111';
-export const subscription = (extra = {}) => ({ user_id: ownerId, chat_id: 500, digest_enabled: true, actions_enabled: true, link_code: null, link_code_expires_at: null, linked_at: '2026-09-29T00:00:00Z', telegram_user_id: null, phone: null, first_name: null, consented_at: null, ...extra });
+export const subscription = (extra = {}) => ({ user_id: ownerId, chat_id: 500, digest_enabled: true, actions_enabled: true, linked_at: '2026-09-29T00:00:00Z', telegram_user_id: null, phone: null, first_name: null, consented_at: null, ...extra });

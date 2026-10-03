@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import { showSaved } from '@/lib/feedback';
-import type { TelegramStatus } from '@/lib/telegram-link';
-const pollMs=3000,pollMinutes=10;
+import { telegramBotUrl, type TelegramStatus } from '@/lib/telegram-link';
+// The bot's web sign-in link lasts fifteen minutes (connectMinutes in telegram-connect.ts).
+const pollMs=3000,pollMinutes=15;
 export const demoStatus:TelegramStatus={configured:false,linked:false,digest_enabled:true,actions_enabled:true,bot_username:null};
 async function call(body:unknown){
  const response=await fetch('/api/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -10,7 +11,7 @@ async function call(body:unknown){
  if(!response.ok)throw Error(result.error??'Could not save the Telegram settings. Try again.');
  return result;
 }
-/** The owner's Telegram link: its status, a Connect that opens the bot and waits for Start, and the two toggles. Shared by Settings and the Overview nudge. */
+/** The owner's Telegram link: its status, a Connect that opens the bot and waits until the chat signs in, and the two toggles. Shared by Settings and the Overview nudge. */
 export function useTelegramLink(demo:boolean){
  const [status,setStatus]=useState<TelegramStatus|null>(demo?demoStatus:null);
  const [loadError,setLoadError]=useState('');
@@ -25,7 +26,7 @@ export function useTelegramLink(demo:boolean){
   fetch('/api/telegram',{signal:controller.signal,cache:'no-store'}).then(async response=>{const result=await response.json() as TelegramStatus&{error?:string};if(!response.ok)throw Error(result.error);setStatus(result);setLoadError('');}).catch(reason=>{if(!controller.signal.aborted)setLoadError((reason as Error).message);});
   return()=>controller.abort();
  },[demo,attempt]);
- // After the owner opens the bot, watch for the link until it lands or the code expires.
+ // After the owner opens the bot, watch for the link until it lands or the bot's sign-in link would have expired.
  useEffect(()=>{
   if(!waiting)return;
   const timer=setInterval(async()=>{
@@ -40,9 +41,10 @@ export function useTelegramLink(demo:boolean){
   finally{setBusy(false);}
  }
  function connect(){
-  // The tab opens before the request so browsers treat it as a user action.
-  const tab=window.open('','_blank');
-  void run({action:'link'},result=>{const {url}=result as unknown as {url:string};if(tab)tab.location.href=url;else window.open(url,'_blank');waitingSince.current=Date.now();setWaiting(true);}).then(()=>{if(tab&&!waitingSince.current)tab.close();});
+  // The bot is opened plainly: the chat connects itself through the bot's phone or web sign-in, never a code in the link.
+  if(!status?.bot_username)return;
+  window.open(telegramBotUrl(status.bot_username),'_blank','noopener');
+  waitingSince.current=Date.now();setWaiting(true);
  }
  return {
   status,loadError,error,busy,waiting,
