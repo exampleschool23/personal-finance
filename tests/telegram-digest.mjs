@@ -142,3 +142,18 @@ test('the cron refuses a missing or wrong secret before touching the database',a
  const unconfigured=loadTS('app/api/cron/telegram-digest/route.ts',{'@/lib/service-role':{serviceDatabase:()=>null}});
  assert.equal((await unconfigured.GET(new Request('https://local',{headers:{authorization:'Bearer test-secret'}}))).status,503);
 });
+
+test('a long payment list stays within one Telegram message and says how many items it left out',()=>{
+ // Live QA 2026-10-03: 137 items (96 overdue) made a 5,660-character reply that Telegram refused, so the bot stayed silent.
+ const many=Array.from({length:137},(_,index)=>({amount:45,key:'k'+index,record:record('QA Gym membership '+index,'Living expense',45,'USD'),date:index<96?'2026-09-'+String(1+index%28).padStart(2,'0'):'2026-10-'+String(1+index%28).padStart(2,'0'),overdue:index<96,type:'scheduled'}));
+ const text=digestMessage(many,'en',today,{name:'Aziz',netWorth:{amount:241100,change:-784},spending:{current:4207,previous:3935}});
+ assert.ok(text.length<4096,'digest is '+text.length+' characters');
+ const shown=(text.match(/^• QA Gym/gm)||[]).length;
+ assert.ok(shown>0&&shown<137);
+ assert.match(text,new RegExp('• '+(137-shown)+' more$','m'));
+ // At most ten overdue items, newest first, so the days ahead still appear.
+ assert.equal((text.split('<b>Overdue</b>')[1].split('\n\n')[0].match(/^• QA Gym/gm)||[]).length,10);
+ assert.match(text,/<b>1 October 2026<\/b>/);
+ // A short list is unchanged: no "more" line.
+ assert.doesNotMatch(paymentsSection(items,'en',today),/more/);
+});

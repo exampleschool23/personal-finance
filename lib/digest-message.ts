@@ -2,7 +2,7 @@
 // line of encouragement, what is overdue or due soon, how net worth moved
 // yesterday, and spending against the week before. Pure.
 import {income} from './finance';
-import {formatDate,formatMoney} from './format';
+import {formatDate,formatMoney,formatNumber} from './format';
 import {locales,translate,type Language} from './i18n';
 import type {DueItem} from './planning';
 import {escapeHtml} from './telegram';
@@ -14,6 +14,9 @@ export type DigestExtras={
  /** Spending over the last seven days and over the seven before. */
  spending?:{current:number;previous:number};
 };
+/** Characters of payment lines one message can hold beside the digest's greeting and figures. */
+export const paymentsSectionBudget=3200;
+const overdueShown=10;
 /** The overdue and upcoming payments, grouped by day; null when there are none. Also the bot's Upcoming payments answer. */
 export function paymentsSection(items:DueItem[],language:Language,today:string):string|null{
  if(!items.length)return null;
@@ -23,13 +26,23 @@ export function paymentsSection(items:DueItem[],language:Language,today:string):
   const kind=item.type==='repayment'||item.type==='installment'?t('repayment'):item.type==='maturity'?t(item.record.kind==='Treasury bill'?'Treasury bill maturity':'deposit maturity'):income.includes(item.record.kind)?t('income'):null;
   return `• ${escapeHtml(item.record.name)} · ${income.includes(item.record.kind)?'+':''}${amount}${kind?' · '+kind:''}`;
  };
- const sections:string[]=[];
+ const groups:{title:string;lines:string[]}[]=[];
  const overdue=items.filter(item=>item.overdue);
- if(overdue.length)sections.push(`<b>${t('Overdue')}</b>\n${overdue.map(item=>`${line(item)} · ${formatDate(item.date,locale)}`).join('\n')}`);
+ // The most recent ten overdue items, newest first, so a long backlog never hides what is due next.
+ if(overdue.length)groups.push({title:t('Overdue'),lines:[...overdue].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,overdueShown).map(item=>`${line(item)} · ${formatDate(item.date,locale)}`)});
  const byDay=new Map<string,DueItem[]>();
  for(const item of items.filter(item=>!item.overdue))byDay.set(item.date,[...(byDay.get(item.date)??[]),item]);
- for(const [date,dayItems] of byDay)sections.push(`<b>${date===today?t('Today'):formatDate(date,locale)}</b>\n${dayItems.map(line).join('\n')}`);
- return `<b>${t('Upcoming payments')}</b> · ${formatDate(today,locale)}\n\n${sections.join('\n\n')}`;
+ for(const [date,dayItems] of byDay)groups.push({title:date===today?t('Today'):formatDate(date,locale),lines:dayItems.map(line)});
+ // Telegram refuses messages over 4,096 characters, so a long list stops early and says how many items are left.
+ const sections:string[]=[];let length=0,shown=0;
+ for(const group of groups){
+  const lines:string[]=[];
+  for(const text of group.lines){if(length+text.length+group.title.length>paymentsSectionBudget)break;lines.push(text);length+=text.length+1;shown++;}
+  if(!lines.length)break;
+  sections.push(`<b>${group.title}</b>\n${lines.join('\n')}`);length+=group.title.length+2;
+ }
+ const hidden=items.length-shown;
+ return `<b>${t('Upcoming payments')}</b> · ${formatDate(today,locale)}\n\n${sections.join('\n\n')}${hidden?`\n• ${t('{count} more',{count:formatNumber(hidden,locale,0)})}`:''}`;
 }
 export function digestMessage(items:DueItem[],language:Language,today:string,extras:DigestExtras={}):string{
  const locale=locales[language],t=(key:string,params?:Record<string,string|number>)=>translate(language,key,params);
