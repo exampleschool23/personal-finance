@@ -10,7 +10,7 @@ Cases marked `[bug 2026-10-02]` reproduce a defect found in the 2 October QA pas
 
 | Date | Commit tested | Scope | Notes |
 |---|---|---|---|
-| 2026-10-03 | 693a6b6 (+ local fixes) | 500 actions on localhost against the shared database: salary, business income, expenses, forecasts, benchmarks, plus a January 2023 – October 2026 monthly backfill and cross-page checks | Telegram not run (bot needs the deploy); pane hidden for much of the run, so the budget History popover, Radix menus and typing were blocked and API routes were used instead; fixes for CF-036, REP-036 and REC-028 not deployed yet |
+| 2026-10-03 | 693a6b6 (+ local fixes) | 500 actions on localhost against the shared database: salary, business income, expenses, forecasts, benchmarks, plus a January 2023 – October 2026 monthly backfill and cross-page checks | Telegram not run (bot needs the deploy); pane hidden for much of the run, so the budget History popover, Radix menus and typing were blocked and API routes were used instead; fixes for CF-036, REP-036 and REC-028 deployed in f5886c8; follow-up the same day ran the bot (BOT-148 fixed in d60ea90), downloads, uploads and click-only Budget and menu checks |
 | 2026-10-03 | 4d7d417 → bef3873 | 100 bot actions and 100 app actions, cross-checked (app actions through the app's API routes, not clicks) | Pane hidden twice, so the last ~15 bot actions, BOT-074/110 sign-out and UI clicking were not run; per-save action messages removed in bef3873 by design; fixes for BOT-143–146 and LOAN-024 not deployed yet |
 | 2026-10-02 | 6eb533f | Retest of every 2 October finding, live | Dashboard fixes and design-review fixes in 9c08db8 not yet retested live; ACC-010 not run live |
 | 2026-10-02 | 2c91d67…4f27bdb | Full app + bot on user1@gmail.com | Deposits, T-bills, crypto, Business income, watchlists, Monthly review, downloads and crons not tested |
@@ -728,6 +728,9 @@ currencies (USD primary). Compute every expected figure yourself first.
 | BOT-145 | P1 | Refused typed save can be corrected | Type `QA tv 5000 QA Card` (Card holds less) → Save | "Insufficient balance…" with Change account, Change category and Cancel; Change account → pick a funded account → Save works `[bug 2026-10-03]` |
 | BOT-146 | P2 | Debt name example | More actions → Add loan or debt → Debt | "Name it, for example Credit card." (Loan keeps "Car loan", Mortgage "Home mortgage") `[bug 2026-10-03]` |
 | BOT-147 | P1 | App saves stay quiet | Save an expense, a transfer and a goal contribution under 25% in the app | No Telegram message; a contribution passing a quarter still celebrates (BOT-140) |
+| BOT-148 | P1 | Long upcoming list | Account with 90+ overdue occurrences (a back-dated monthly schedule); send "Upcoming payments" | The bot answers within 10 s: the ten most recent overdue items, the days ahead, then "• N more"; the reply and the morning digest stay under 4,096 characters `[bug 2026-10-03]` |
+| BOT-149 | P2 | Money lent coming back | Money lent with a due date within 31 days; "Upcoming payments" | The repayment shows as money in ("+$300 · repayment"), like other income `[bug 2026-10-03]` |
+| BOT-150 | P1 | Comma decimal matches the app | Type "QA lunch 12,50" in the bot, then 49,99 in the app's Add expense | Both store 12.50 / 49.99 the same way (the bot already reads 12,50 as 12.50; the app read 49,99 as 4,999 on 2026-10-03, see TX-043) |
 
 ## XAPP — cross-page consistency (run after money-moving actions)
 
