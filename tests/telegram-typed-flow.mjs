@@ -171,3 +171,20 @@ test('a loan or mortgage can be paid from an account in another currency at the 
  // Same currency stays the plain planning action.
  assert.equal(run([{text:'Pay loan or debt'},{callback:'f:tgt:'+id(10)},{callback:'f:acc:'+id(2)},{text:'100'},{callback:'f:date:today'},{callback:'f:save'}]).commit.type,'planning');
 });
+
+test('without a same-name record the card picks the account last used for that category, then for that direction',()=>{
+ // Live QA 2026-10-03: "+1500 QA salary" went to the alphabetically first account, not the one salaries are paid into.
+ const accounts=[entry(1,'Wallet','Cash',900000),entry(2,'Card','Cash',300,'USD'),entry(3,'Alpha','Cash',5,'UZS')];
+ const records=[entry(30,'September pay','Salary',1500,'UZS',{account_id:id(1),date:'2026-09-01'}),entry(31,'Lunch','Living expense',20,'USD',{account_id:id(2),date:'2026-09-20'}),entry(32,'Plan','Living expense',20,'UZS',{account_id:id(3),date:'2026-09-25',frequency:'Monthly'})];
+ assert.equal(run([{text:'+1500 bonus salary'}],ctx({accounts,records})).draft.data.account_id,id(1),'last salary account');
+ assert.equal(run([{text:'taxi 12'}],ctx({accounts,records})).draft.data.account_id,id(2),'last one-time living expense, never a schedule');
+ assert.equal(run([{text:'gift 12'}],ctx({accounts,records})).draft.data.account_id,id(2),'last expense account');
+ assert.equal(run([{text:'gift 12'}],ctx({accounts})).draft.data.account_id,id(1),'no history: the primary currency account');
+});
+
+test('a refused typed save offers Change account and Change category again',()=>{
+ const {retryKeyboard}=loadTS('lib/telegram-flow.ts');
+ const card=run([{text:'coffee 4500'}]);
+ assert.deepEqual(retryKeyboard(card.draft,ctx()).inline.flat().map(button=>button.callback_data),['f:chacc','f:chcat','f:cancel']);
+ const moved=advance(card.draft,{callback:'f:chacc'},ctx(),chat);assert.equal(moved.draft.step,'account');
+});

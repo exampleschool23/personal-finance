@@ -1693,6 +1693,7 @@
   "Add loan or debt": "Añadir préstamo o deuda",
   "Is it a loan, a debt or a mortgage?": "¿Es un préstamo, una deuda o una hipoteca?",
   "Name it, for example Car loan.": "Ponle nombre, por ejemplo Préstamo del coche.",
+  "Name it, for example Credit card.": "Ponle nombre, por ejemplo Tarjeta de crédito.",
   "Which currency is it in?": "¿En qué moneda está?",
   "Type the outstanding amount in {currency}": "Escribe el saldo pendiente en {currency}",
   "When is it due? Type a date like {date}": "¿Cuándo vence? Escribe una fecha como {date}",

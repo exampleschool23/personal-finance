@@ -337,3 +337,19 @@ test('business income asks which business, and is offered only when one exists',
  // Business income cannot stay personal.
  assert.equal(advance(business.draft,{callback:'f:biz:none'},withBusiness,chat).draft.step,'business');
 });
+
+test('typed amounts follow the typed-entry rules: 12,75 is never 1275, and a refused amount asks again',()=>{
+ // Live QA 2026-10-03: "12,75" in an English chat was read as 1,275.
+ const amount=(text,language='en')=>{const result=run([{text:'Expense'},{callback:'f:cat:Living expense'},{callback:'f:acc:'+id(2)},{text}],ctx(language));return result.draft.step==='name'?result.draft.data.amount:null;};
+ assert.equal(amount('12,75'),12.75);assert.equal(amount('12,75','ru'),12.75);
+ assert.equal(amount('1,250.50'),1250.5);assert.equal(amount('1 500'),1500);
+ assert.equal(amount('1.500'),1.5);assert.equal(amount('1.500','ru'),1500);assert.equal(amount('1,500'),1500);
+ for(const text of ['0','abc','-50','1000000000000001'])assert.equal(amount(text),null,text);
+});
+
+test('the name question gives an example that fits a loan, a debt and a mortgage',()=>{
+ const name=kind=>run([{text:'Add loan or debt'},{callback:'f:lkind:'+kind}]).reply.text;
+ assert.equal(name('Loan'),'Name it, for example Car loan.');
+ assert.equal(name('Debt'),'Name it, for example Credit card.');
+ assert.equal(name('Mortgage'),'Name it, for example Home mortgage.');
+});

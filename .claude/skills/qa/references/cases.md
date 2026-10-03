@@ -10,6 +10,7 @@ Cases marked `[bug 2026-10-02]` reproduce a defect found in the 2 October QA pas
 
 | Date | Commit tested | Scope | Notes |
 |---|---|---|---|
+| 2026-10-03 | 4d7d417 → bef3873 | 100 bot actions and 100 app actions, cross-checked (app actions through the app's API routes, not clicks) | Pane hidden twice, so the last ~15 bot actions, BOT-074/110 sign-out and UI clicking were not run; per-save action messages removed in bef3873 by design; fixes for BOT-143–146 and LOAN-024 not deployed yet |
 | 2026-10-02 | 6eb533f | Retest of every 2 October finding, live | Dashboard fixes and design-review fixes in 9c08db8 not yet retested live; ACC-010 not run live |
 | 2026-10-02 | 2c91d67…4f27bdb | Full app + bot on user1@gmail.com | Deposits, T-bills, crypto, Business income, watchlists, Monthly review, downloads and crons not tested |
 
@@ -463,6 +464,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | LOAN-021 | P2 | Interest field blank | Add Loan with Annual interest rate left blank | Saves; placeholder 0; reopening shows 0; planner and tiles show no "NaN" |
 | LOAN-022 | P1 | Start date fixed | Edit an existing QA Loan | Start date read-only with "The start date is fixed once the record is saved to preserve its history."; Due / maturity date cannot precede it |
 | LOAN-023 | P2 | Sample workspace debts | Sample workspace › Loans & debts | Loan/Debt "Record payment" disabled with "Available after you sign in."; Mortgage payment applies locally |
+| LOAN-024 | P2 | Repayment above balance named | Loans & debts › QA Owe Sam (€250, EUR) › Record payment €300 from a EUR account | "Repayment cannot exceed the outstanding balance.", never "Check the repayment and account currency." `[bug 2026-10-03]` |
 
 ## GOAL — goals
 
@@ -709,6 +711,11 @@ currencies (USD primary). Compute every expected figure yourself first.
 | BOT-140 | P1 | Goal milestones once | Savings goal QA Trip target $1,000: contribute $600, then $100, then $300 | One message "your QA Trip just passed 50% 🎉" (not 25%), then 75%, then "you reached your QA Trip goal 🏆"; repeating a contribution sends nothing more |
 | BOT-141 | P2 | Milestones respect the toggle | Untick "Milestones, like a goal reached", pass a goal threshold | No celebration; it is not sent later when the toggle is turned back on |
 | BOT-142 | P2 | Net-worth high | Only with user OK to run the snapshot cron: account with 8 or more days of snapshots, net worth 2% above the best earlier day | "New net-worth high: <amount> 📈" once; a rise under 2% sends nothing |
+| BOT-143 | P0 | Decimal comma in the button flow | English chat: Expense → Living expense → EUR account → `12,75` → name → Today | Summary shows €13 (12.75 saved), never €1,275; `1,250.50` saves 1,250.50 `[bug 2026-10-03]` |
+| BOT-144 | P2 | Typed entry account without name history | Type `+1500 QA new salary` (no record with that name) | Card offers the account salaries last went into, never simply the first account A to Z (e.g. `QA <b>&co`) `[bug 2026-10-03]` |
+| BOT-145 | P1 | Refused typed save can be corrected | Type `QA tv 5000 QA Card` (Card holds less) → Save | "Insufficient balance…" with Change account, Change category and Cancel; Change account → pick a funded account → Save works `[bug 2026-10-03]` |
+| BOT-146 | P2 | Debt name example | More actions → Add loan or debt → Debt | "Name it, for example Credit card." (Loan keeps "Car loan", Mortgage "Home mortgage") `[bug 2026-10-03]` |
+| BOT-147 | P1 | App saves stay quiet | Save an expense, a transfer and a goal contribution under 25% in the app | No Telegram message; a contribution passing a quarter still celebrates (BOT-140) |
 
 ## XAPP — cross-page consistency (run after money-moving actions)
 

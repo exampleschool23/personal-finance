@@ -1693,6 +1693,7 @@
   "Add loan or debt": "הוספת הלוואה או חוב",
   "Is it a loan, a debt or a mortgage?": "זו הלוואה, חוב או משכנתה?",
   "Name it, for example Car loan.": "תנו לזה שם, למשל הלוואת רכב.",
+  "Name it, for example Credit card.": "תנו לזה שם, למשל כרטיס אשראי.",
   "Which currency is it in?": "באיזה מטבע?",
   "Type the outstanding amount in {currency}": "הקלידו את היתרה לתשלום ב-{currency}",
   "When is it due? Type a date like {date}": "מתי מועד הפירעון? הקלידו תאריך כמו {date}",

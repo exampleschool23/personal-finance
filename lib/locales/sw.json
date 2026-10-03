@@ -1693,6 +1693,7 @@
   "Add loan or debt": "Ongeza mkopo au deni",
   "Is it a loan, a debt or a mortgage?": "Je, ni mkopo, deni au rehani?",
   "Name it, for example Car loan.": "Lipe jina, kwa mfano Mkopo wa gari.",
+  "Name it, for example Credit card.": "Lipe jina, kwa mfano Kadi ya mkopo.",
   "Which currency is it in?": "Kiko katika sarafu gani?",
   "Type the outstanding amount in {currency}": "Andika kiasi kilichosalia kwa {currency}",
   "When is it due? Type a date like {date}": "Kinalipwa lini? Andika tarehe kama {date}",

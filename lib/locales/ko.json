@@ -1693,6 +1693,7 @@
   "Add loan or debt": "대출 또는 부채 추가",
   "Is it a loan, a debt or a mortgage?": "대출, 부채, 주택담보대출 중 무엇인가요?",
   "Name it, for example Car loan.": "이름을 입력하세요. 예: 자동차 대출",
+  "Name it, for example Credit card.": "이름을 입력하세요. 예: 신용카드",
   "Which currency is it in?": "통화는 무엇인가요?",
   "Type the outstanding amount in {currency}": "{currency} 기준 미상환 금액을 입력하세요",
   "When is it due? Type a date like {date}": "만기는 언제인가요? {date} 형식으로 날짜를 입력하세요",

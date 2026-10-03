@@ -1693,6 +1693,7 @@
   "Add loan or debt": "लोन या कर्ज़ जोड़ें",
   "Is it a loan, a debt or a mortgage?": "क्या यह लोन, कर्ज़ या होम लोन है?",
   "Name it, for example Car loan.": "इसका नाम लिखें, जैसे कार लोन।",
+  "Name it, for example Credit card.": "इसका नाम लिखें, जैसे क्रेडिट कार्ड।",
   "Which currency is it in?": "यह किस मुद्रा में है?",
   "Type the outstanding amount in {currency}": "{currency} में बकाया राशि लिखें",
   "When is it due? Type a date like {date}": "यह कब देय है? तारीख लिखें, जैसे {date}",

@@ -1693,6 +1693,7 @@
   "Add loan or debt": "เพิ่มเงินกู้หรือหนี้",
   "Is it a loan, a debt or a mortgage?": "เป็นเงินกู้ หนี้ หรือสินเชื่อบ้าน",
   "Name it, for example Car loan.": "ตั้งชื่อ เช่น สินเชื่อรถยนต์",
+  "Name it, for example Credit card.": "ตั้งชื่อ เช่น บัตรเครดิต",
   "Which currency is it in?": "ใช้สกุลเงินอะไร",
   "Type the outstanding amount in {currency}": "พิมพ์ยอดคงค้างเป็น {currency}",
   "When is it due? Type a date like {date}": "ครบกำหนดเมื่อไร พิมพ์วันที่ เช่น {date}",

@@ -1693,6 +1693,7 @@
   "Add loan or debt": "إضافة قرض أو دين",
   "Is it a loan, a debt or a mortgage?": "هل هو قرض أم دين أم رهن عقاري؟",
   "Name it, for example Car loan.": "سمِّه، مثل قرض السيارة.",
+  "Name it, for example Credit card.": "سمِّه، مثل بطاقة الائتمان.",
   "Which currency is it in?": "بأي عملة؟",
   "Type the outstanding amount in {currency}": "اكتب المبلغ المتبقي بعملة {currency}",
   "When is it due? Type a date like {date}": "متى موعد الاستحقاق؟ اكتب تاريخًا مثل {date}",

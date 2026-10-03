@@ -1693,6 +1693,7 @@
   "Add loan or debt": "Kredit yoki qarz qo‘shish",
   "Is it a loan, a debt or a mortgage?": "Bu kredit, qarz yoki ipotekami?",
   "Name it, for example Car loan.": "Nom bering, masalan, Avtokredit.",
+  "Name it, for example Credit card.": "Nom bering, masalan, Kredit karta.",
   "Which currency is it in?": "Qaysi valyutada?",
   "Type the outstanding amount in {currency}": "{currency} valyutasida qoldiq summani kiriting",
   "When is it due? Type a date like {date}": "Muddati qachon? {date} kabi sana kiriting",

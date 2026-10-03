@@ -1693,6 +1693,7 @@
   "Add loan or debt": "افزودن وام یا بدهی",
   "Is it a loan, a debt or a mortgage?": "وام است، بدهی یا وام مسکن؟",
   "Name it, for example Car loan.": "نامی برایش بنویسید، مثلاً وام خودرو.",
+  "Name it, for example Credit card.": "نامی برایش بنویسید، مثلاً کارت اعتباری.",
   "Which currency is it in?": "به چه ارزی است؟",
   "Type the outstanding amount in {currency}": "مبلغ باقی‌مانده را به {currency} بنویسید",
   "When is it due? Type a date like {date}": "سررسید کی است؟ تاریخی مانند {date} بنویسید",

@@ -1693,6 +1693,7 @@
   "Add loan or debt": "ローンや借金を追加",
   "Is it a loan, a debt or a mortgage?": "ローン、借金、住宅ローンのどれですか？",
   "Name it, for example Car loan.": "名前を入力してください（例：自動車ローン）。",
+  "Name it, for example Credit card.": "名前を入力してください（例：クレジットカード）。",
   "Which currency is it in?": "通貨は何ですか？",
   "Type the outstanding amount in {currency}": "{currency}で残高を入力してください",
   "When is it due? Type a date like {date}": "期限はいつですか？{date} のように日付を入力してください",

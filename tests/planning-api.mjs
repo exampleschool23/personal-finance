@@ -85,3 +85,14 @@ test('multi-holding saves fail closed when the new save function is unavailable'
  const response=await api.POST(req({action:'goal',data}));assert.equal(response.status,409);assert.match((await response.json()).error,/migrations/);
  assert.deepEqual(calls,['/rest/v1/savings_goals?select=investment_targets&limit=0','/rest/v1/rpc/planning_investment_goal']);
 });
+
+test('a repayment above the outstanding balance names the reason before the database is asked',async()=>{
+ // Live QA 2026-10-03: the database answered "Check the repayment and account currency." for two EUR records.
+ const account='10000000-0000-4000-8000-0000000000a1',loan='10000000-0000-4000-8000-0000000000a2',calls=[];
+ const rows=[{id:account,kind:'Cash',currency:'EUR',amount:900},{id:loan,kind:'Debt',currency:'EUR',amount:250}];
+ const api=apiFunction('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts','planningReadFilters','currentReviewMonth','categoryNameTaken','duplicateCategoryMessage',compile('app/api/planning/route.ts')+';return {GET,POST};')(instrumentFor,z,async()=>({token:'owner'}),async(path,init={})=>{if(!init.method)return Response.json(rows);calls.push(path);return Response.json({ok:true});},()=>true,async()=>[],()=>true,async()=>[],planningReadFilters,currentReviewMonth,categoryNameTaken,duplicateCategoryMessage);
+ const repay=amount=>api.POST(req({action:'repayment',data:{id,account_id:account,target_id:loan,amount,received:0,fee:0,date:'2026-10-03',notes:''}}));
+ const refused=await repay(300);
+ assert.equal(refused.status,409);assert.equal((await refused.json()).error,'Repayment cannot exceed the outstanding balance.');assert.deepEqual(calls,[]);
+ assert.equal((await repay(250)).status,200);assert.deepEqual(calls,['/rest/v1/rpc/planning_action']);
+});

@@ -2,13 +2,13 @@
 // the draft so far and one input, it returns the next draft, the reply and,
 // at the end, what to save. The bot handler owns storage and the database.
 import {income,expenses,type Entry} from './finance';
-import {formatDate,formatMoney,formatNumber,formatNumberInput,formatPercent} from './format';
+import {formatDate,formatMoney,formatNumber,formatPercent} from './format';
 import {dictionaries,locales,translate,type Language} from './i18n';
 import type {Category} from './planning';
 import type {RecordInput} from './record-schema';
 import {escapeHtml,type TelegramButton,type TelegramKeyboard,type TelegramMessage} from './telegram';
 import {guessCategory,looseNumber,parseDay,parseTypedEntry,currencyCandidates} from './telegram-entry';
-import type {TransactionRule} from './transaction-rules';
+import {directionOf,type TransactionRule} from './transaction-rules';
 export {parseDay} from './telegram-entry';
 export type FlowKind='expense'|'income'|'transfer'|'repayment'|'mortgage'|'account'|'liability';
 export type Step='category'|'account'|'target'|'amount'|'received'|'interest'|'name'|'date'|'confirm'|'accname'|'currency'|'balance'|'lkind'|'lname'|'duedate'|'rate'|'payment'|'business'|'fxamount'|'fxrate';
@@ -143,7 +143,10 @@ const futureExample=(ctx:FlowContext)=>formatDate(`${Number(ctx.today.slice(0,4)
 /** Example amounts in the same way: grouped and with the language's decimal mark (250,000 or 12.5; 250 000 or 12,5). */
 const numberExamples=(language:Language)=>({large:formatNumber(250000,locales[language]),small:formatNumber(12.5,locales[language])});
 /** Back and Cancel for a draft kept after a refused save, so the answer can be corrected. */
-export const retryKeyboard=(draft:Draft,ctx:FlowContext):TelegramKeyboard=>({inline:[controls(ctx.language,canGoBack(draft,ctx))]});
+/** The buttons under a refused save. A typed entry's card has no Back, so it offers its Change buttons again to correct the account or category. */
+export const retryKeyboard=(draft:Draft,ctx:FlowContext):TelegramKeyboard=>draft.data.typed&&draft.step==='confirm'
+ ?{inline:[[{text:t(ctx.language,'Change account'),callback_data:'f:chacc'},{text:t(ctx.language,'Change category'),callback_data:'f:chcat'}],[cancelButton(ctx.language)]]}
+ :{inline:[controls(ctx.language,canGoBack(draft,ctx))]};
 /** The prompt for the draft's current step. */
 export function prompt(draft:Draft,ctx:FlowContext,chat:number,page=0):TelegramMessage{
  const language=ctx.language,account=find(ctx.accounts,draft.data.account_id),target=find(ctx.liabilities,draft.data.target_id);
@@ -186,7 +189,7 @@ export function prompt(draft:Draft,ctx:FlowContext,chat:number,page=0):TelegramM
    return choicePage(language,chat,t(language,'Choose a business'),options,page,'page',back);
   }
   case 'lkind':return {chat_id:chat,text:t(language,'Is it a loan, a debt or a mortgage?'),keyboard:{inline:[liabilityKinds.map(kind=>({text:t(language,kind),callback_data:'f:lkind:'+kind})),controlRow]}};
-  case 'lname':return {chat_id:chat,text:t(language,draft.data.lkind==='Mortgage'?'Name it, for example Home mortgage.':'Name it, for example Car loan.'),keyboard:{inline:[controlRow]}};
+  case 'lname':return {chat_id:chat,text:t(language,draft.data.lkind==='Mortgage'?'Name it, for example Home mortgage.':draft.data.lkind==='Debt'?'Name it, for example Credit card.':'Name it, for example Car loan.'),keyboard:{inline:[controlRow]}};
   case 'duedate':return {chat_id:chat,text:t(language,'When is it due? Type a date like {date}',{date:futureExample(ctx)}),keyboard:{inline:[controlRow]}};
   case 'rate':return {chat_id:chat,text:t(language,'Type the yearly interest rate in percent, or 0'),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
   case 'payment':return {chat_id:chat,text:t(language,'Type the monthly payment in {currency}, or 0',{currency:draft.data.currency??''}),keyboard:{inline:[[{text:'0',callback_data:'f:zero'}],controlRow]}};
@@ -233,11 +236,8 @@ export function summary(draft:Draft,ctx:FlowContext):string{
  }
  return lines.join('\n');
 }
-function parseAmount(text:string,language:Language){
- const parsed=formatNumberInput(text.trim(),locales[language])??formatNumberInput(text.trim(),'en-US');
- const value=parsed?.value??null;
- return value!==null&&value>0&&value<=1e15?value:null;
-}
+/** A positive amount read by the same rules as a typed entry, so 12,75 is 12.75 in every language and never 1275. */
+const parseAmount=(text:string,language:Language)=>looseNumber(text,language);
 /** A positive amount, or zero typed as 0. */
 const parseAmountOrZero=(text:string,language:Language)=>parseAmount(text,language)??(/^0+(?:[.,]0+)?$/.test(text.trim())?0:null);
 /** A yearly rate in percent: a trailing %, spaces and a comma decimal (7,5) are accepted. */
@@ -292,8 +292,12 @@ export function startTyped(text:string,ctx:FlowContext):{draft:Draft}|{error:'em
  if('error' in parsed)return parsed;
  const guess=guessCategory({name:parsed.name,amount:parsed.amount,account_id:parsed.account_id,direction:parsed.direction},{rules:ctx.rules,records:ctx.records??[],categories:ctx.categories,businesses:ctx.businesses});
  const cash=ctx.accounts.filter(isCash),has=(id?:string)=>cash.some(account=>account.id===id);
- // The account named in the text, else the one last used for this name, else one in the typed currency, else the primary currency's.
- const account=parsed.account_id??(has(guess.account_id)?guess.account_id:undefined)??(parsed.currency?cash.find(item=>item.currency===parsed.currency)?.id:undefined)??(cash.find(item=>item.currency===ctx.currencies?.[0])??cash[0])?.id;
+ // The account named in the text, else the one last used for this name, then for this category, then for any entry in the same direction
+ // (in the typed currency when one was typed), else one in the typed currency, else the primary currency's.
+ const lastUsed=(match:(record:Entry)=>boolean)=>(ctx.records??[]).filter(record=>record.frequency==='Once'&&!!record.account_id&&has(record.account_id)&&match(record)&&(!parsed.currency||cash.find(item=>item.id===record.account_id)?.currency===parsed.currency))
+  .sort((a,b)=>(b.date||'').localeCompare(a.date||''))[0]?.account_id??undefined;
+ const sameCategory=(record:Entry)=>guess.custom_category_id?record.custom_category_id===guess.custom_category_id:record.kind===guess.kind&&!record.custom_category_id;
+ const account=parsed.account_id??(has(guess.account_id)?guess.account_id:undefined)??lastUsed(sameCategory)??lastUsed(record=>directionOf(record.kind)===guess.direction)??(parsed.currency?cash.find(item=>item.currency===parsed.currency)?.id:undefined)??(cash.find(item=>item.currency===ctx.currencies?.[0])??cash[0])?.id;
  const custom=guess.custom_category_id?ctx.categories.find(category=>category.id===guess.custom_category_id):undefined;
  const name=parsed.name?parsed.name.charAt(0).toLocaleUpperCase(locales[ctx.language])+parsed.name.slice(1):'';
  const data:DraftData={typed:true,id:ctx.newId,category:custom?undefined:guess.kind,custom_category_id:custom?.id??null,category_name:custom?custom.name:t(ctx.language,guess.kind),amount:parsed.amount,name,date:parsed.date,...(account?{account_id:account}:{}),...(parsed.currency?{currency:parsed.currency}:{}),...(guess.business_id?{business_id:guess.business_id}:{})};

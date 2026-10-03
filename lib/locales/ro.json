@@ -1693,6 +1693,7 @@
   "Add loan or debt": "Adaugă împrumut sau datorie",
   "Is it a loan, a debt or a mortgage?": "Este un împrumut, o datorie sau un credit ipotecar?",
   "Name it, for example Car loan.": "Dă-i un nume, de exemplu Credit auto.",
+  "Name it, for example Credit card.": "Dă-i un nume, de exemplu Card de credit.",
   "Which currency is it in?": "În ce monedă este?",
   "Type the outstanding amount in {currency}": "Scrie suma rămasă în {currency}",
   "When is it due? Type a date like {date}": "Când este scadent? Scrie o dată precum {date}",

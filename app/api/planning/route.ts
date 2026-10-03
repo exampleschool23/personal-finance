@@ -64,6 +64,8 @@ export async function POST(req:Request){
   const records=await response.json() as Entry[];
   const account=records.find(record=>record.id===p.account_id&&record.kind==='Cash'),target=records.find(record=>record.id===p.target_id);
   if(!account||!target)return Response.json({error:'Choose one of your cash accounts.'},{status:400});
+  // The database refuses an over-repayment with a generic message; name the real reason, as the bot and the investment tracker do.
+  if(body.action==='repayment'&&account.currency===target.currency&&Number(p.amount)>Number(target.amount))return Response.json({error:'Repayment cannot exceed the outstanding balance.'},{status:409});
   if(account.currency!==target.currency){
    const prior=records.find(record=>record.id===p.id&&record.account_id===account.id&&record.currency===target.currency&&record.date===p.date&&record.account_currency===account.currency&&record.account_exchange_rate);
    let priorPayment:{exchange_rate:number;rate_date:string;account_id:string;account_currency:string;record_currency:string;investment_history:{balance:number|null}}|undefined;

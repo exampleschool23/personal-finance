@@ -1693,6 +1693,7 @@
   "Add loan or debt": "Додати кредит або борг",
   "Is it a loan, a debt or a mortgage?": "Це кредит, борг чи іпотека?",
   "Name it, for example Car loan.": "Назвіть його, наприклад Автокредит.",
+  "Name it, for example Credit card.": "Назвіть його, наприклад Кредитна картка.",
   "Which currency is it in?": "У якій валюті?",
   "Type the outstanding amount in {currency}": "Введіть залишок боргу в {currency}",
   "When is it due? Type a date like {date}": "Коли термін? Введіть дату, наприклад {date}",

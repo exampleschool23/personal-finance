@@ -1693,6 +1693,7 @@
   "Add loan or debt": "添加贷款或债务",
   "Is it a loan, a debt or a mortgage?": "这是贷款、债务还是房贷？",
   "Name it, for example Car loan.": "为它命名，例如“车贷”。",
+  "Name it, for example Credit card.": "为它命名，例如“信用卡”。",
   "Which currency is it in?": "使用哪种货币？",
   "Type the outstanding amount in {currency}": "输入以 {currency} 计的未还金额",
   "When is it due? Type a date like {date}": "何时到期？输入日期，例如 {date}",

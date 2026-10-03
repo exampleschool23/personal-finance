@@ -1693,6 +1693,7 @@
   "Add loan or debt": "Добавить кредит или долг",
   "Is it a loan, a debt or a mortgage?": "Это кредит, долг или ипотека?",
   "Name it, for example Car loan.": "Назовите его, например «Автокредит».",
+  "Name it, for example Credit card.": "Назовите его, например «Кредитная карта».",
   "Which currency is it in?": "В какой валюте?",
   "Type the outstanding amount in {currency}": "Введите остаток долга в {currency}",
   "When is it due? Type a date like {date}": "Когда срок? Введите дату, например {date}",

@@ -1693,6 +1693,7 @@
   "Add loan or debt": "Přidat půjčku nebo dluh",
   "Is it a loan, a debt or a mortgage?": "Je to půjčka, dluh nebo hypotéka?",
   "Name it, for example Car loan.": "Pojmenujte to, například Půjčka na auto.",
+  "Name it, for example Credit card.": "Pojmenujte to, například Kreditní karta.",
   "Which currency is it in?": "V jaké měně?",
   "Type the outstanding amount in {currency}": "Zadejte zbývající částku v {currency}",
   "When is it due? Type a date like {date}": "Kdy je splatnost? Zadejte datum jako {date}",
