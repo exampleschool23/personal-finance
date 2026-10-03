@@ -17,28 +17,10 @@ const wallet={id:id(3),name:'Wallet',kind:'Cash',currency:'UZS',amount:10000000,
 const loan={id:id(4),name:'Car loan',kind:'Loan',currency:'USD',amount:2000,quantity:0,cost:0,rate:0,date:'2027-12-31',opened_on:'2026-01-01',frequency:'Once',notes:''};
 
 test('the migration and the fresh-database script agree, and the wrapper is server-only',()=>{
- const migration=fs.readFileSync('migrations/095_telegram_timezone.sql','utf8'),setup=fs.readFileSync('database/setup.sql','utf8');
- for(const piece of ['ADD COLUMN IF NOT EXISTS timezone text','ADD COLUMN IF NOT EXISTS digest_sent_on date','ADD COLUMN IF NOT EXISTS recap_sent_on date','CREATE OR REPLACE FUNCTION public.telegram_payment_with_fx','FROM PUBLIC,anon,authenticated'])
-  {assert.ok(migration.includes(piece),piece);assert.ok(setup.includes(piece),piece);}
-});
-
-test('a time zone is an IANA-shaped name or empty, and the digest days are written by the server only',async()=>{
- const db=await database();try{
-  await db.exec(asOwner);
-  await db.exec(`INSERT INTO user_preferences(user_id,language,currencies,timezone) VALUES('${owner}','en',ARRAY['USD'],'America/Argentina/Buenos_Aires')`);
-  await db.exec(`UPDATE user_preferences SET timezone=NULL WHERE user_id='${owner}'`);
-  await db.exec(`UPDATE user_preferences SET timezone='Etc/GMT+5' WHERE user_id='${owner}'`);
-  for(const bad of ['','Asia/Tashkent; DROP','../etc','a/b/c/d','x'.repeat(65)])await assert.rejects(db.exec(`UPDATE user_preferences SET timezone='${bad}' WHERE user_id='${owner}'`),/check/i,bad);
-  await db.exec(`INSERT INTO telegram_subscriptions(user_id,link_code,link_code_expires_at) VALUES('${owner}','ABCDEFGH',now())`);
-  await assert.rejects(db.exec(`UPDATE telegram_subscriptions SET digest_sent_on='2026-09-30' WHERE user_id='${owner}'`),/permission denied/);
-  await assert.rejects(db.exec(`UPDATE telegram_subscriptions SET recap_sent_on='2026-09-30' WHERE user_id='${owner}'`),/permission denied/);
-  await db.exec(asServer);
-  // The claim succeeds once per day.
-  const claim=day=>db.query(`UPDATE telegram_subscriptions SET digest_sent_on=$1 WHERE user_id=$2 AND (digest_sent_on IS NULL OR digest_sent_on<$1) RETURNING user_id`,[day,owner]);
-  assert.equal((await claim('2026-09-30')).rows.length,1);
-  assert.equal((await claim('2026-09-30')).rows.length,0);
-  assert.equal((await claim('2026-10-01')).rows.length,1);
- }finally{await db.close();}
+ const migration=fs.readFileSync('migrations/095_telegram_fx_payments.sql','utf8'),setup=fs.readFileSync('database/setup.sql','utf8');
+ assert.ok(setup.includes(migration));
+ for(const piece of ['CREATE OR REPLACE FUNCTION public.telegram_payment_with_fx','FROM PUBLIC,anon,authenticated'])assert.ok(migration.includes(piece),piece);
+ for(const gone of ['timezone','digest_sent_on','recap_sent_on'])assert.ok(!migration.includes(gone),'the digest keeps its fixed daily time: '+gone);
 });
 
 test('the bot saves an expense in another currency with its dated rate, and pays a USD loan from a UZS account',async()=>{

@@ -155,23 +155,14 @@ Disconnect in Settings unlinks it. Chat links are not part of backups. Without
 the three variables, the Settings panel reports that Telegram is awaiting server
 setup and nothing is sent.
 
-The morning digest arrives at each owner's local morning. `vercel.json` runs
-`/api/cron/telegram-digest` every hour, protected by the same `CRON_SECRET`;
-each run sends to owners whose local time is between 08:00 and 12:00 and who
-have not had today's digest. The local day is claimed in
-`telegram_subscriptions.digest_sent_on` before sending (migration 095), so
-nobody gets two digests a day and a failed send is retried the next hour. The
-time zone is `user_preferences.timezone`, set in **Settings → About you**
-(filled from the browser the first time Settings opens); without one it is
-derived from the country, then from a language spoken mainly in one country,
-then UTC. Hourly cron jobs need a Vercel plan that allows them (Hobby runs cron
-jobs at most once a day). The digest
+The morning digest runs from `vercel.json` at 04:00 UTC (09:00 in Tashkent)
+through `/api/cron/telegram-digest`, protected by the same `CRON_SECRET`. The digest
 opens with a greeting by the name saved in Settings and one line of
 encouragement, then lists what is overdue or due in each owner's reminder window
 (snoozes from the Upcoming page apply), yesterday's net-worth change and the
 last seven days' spending against the seven before. It is sent every morning,
 and answers 503 when any owner could not be reached so monitoring notices.
-`/api/cron/telegram-recap` (also hourly) sends a weekly recap on Sunday between 18:00 and 22:00 local time, once per Sunday (`recap_sent_on`): money
+`/api/cron/telegram-recap` sends a weekly recap on Sundays at 15:00 UTC: money
 saved, the top spending category and the goals that received contributions, with
 a share button that carries no amounts. Celebrations (first record, a savings
 goal passing 25/50/75/100 percent, a new net-worth high found by the daily

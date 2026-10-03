@@ -203,7 +203,7 @@ test('spending more than earning is stated plainly, and optional lines and the b
  assert.match(recapMessage(recap(),'ru').text,/^📊 <b>Ваша неделя, Aziz<\/b>\n28 сентября 2026 – 4 октября 2026/);
 });
 
-function recapRoute({subscriptions,records={},categories={},events={},prefs={},snapshots={},sendResult=true,now='2026-10-04T18:30:00Z'}){
+function recapRoute({subscriptions,records={},categories={},events={},prefs={},snapshots={},sendResult=true}){
  const sent=[];
  const db={
   async read(path){
@@ -216,16 +216,12 @@ function recapRoute({subscriptions,records={},categories={},events={},prefs={},s
    if(path.startsWith('/rest/v1/portfolio_snapshots'))return snapshots[who]??[];
    throw Error('unexpected '+path);
   },
-  // The recap writes only its claim on the owner's local Sunday, and gives it back when sending failed.
-  async write(path,init){
-   assert.equal(init.method,'PATCH');assert.match(path,/^\/rest\/v1\/telegram_subscriptions\?user_id=eq\.\w+&(or=\(recap_sent_on\.is\.null,recap_sent_on\.lt\.2026-10-04\)|recap_sent_on=eq\.2026-10-04)$/);
-   return Response.json([{}]);
-  },
+  async write(){throw Error('the recap never writes');},
  };
  const route=loadTS('app/api/cron/telegram-recap/route.ts',{
   '@/lib/service-role':{serviceDatabase:()=>db},
   '@/lib/telegram':{telegramConfig:()=>config,sendTelegramMessage:async message=>{sent.push(message);return sendResult;},escapeHtml:text=>text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')},
-  '@/lib/timezones':{...loadTS('lib/timezones.ts'),currentInstant:()=>new Date(now)},
+  '@/lib/deposit-interest':{depositToday:()=>'2026-10-04'},
   '@/lib/account-access':{accountOrigin:()=>'https://hoggish.app'},
  });
  return {sent,GET:()=>route.GET(new Request('https://local',{headers:{authorization:'Bearer test-secret'}}))};
@@ -247,7 +243,7 @@ test('the recap cron sends each linked owner their own week, in their language, 
  assert.match(bob.text,/^📊 <b>Your week<\/b>/);assert.match(bob.text,/A quiet week/);
 });
 
-test('the recap cron refuses a wrong secret, reports unreachable owners, and runs hourly for each owner\'s Sunday evening',async()=>{
+test('the recap cron refuses a wrong secret, reports unreachable owners, and is scheduled for Sunday evening',async()=>{
  process.env.CRON_SECRET='test-secret';
  const route=loadTS('app/api/cron/telegram-recap/route.ts',{'@/lib/service-role':{serviceDatabase:()=>{throw Error('must not be called');}}});
  assert.equal((await route.GET(new Request('https://local'))).status,401);
@@ -256,7 +252,7 @@ test('the recap cron refuses a wrong secret, reports unreachable owners, and run
  const response=await failing.GET();
  assert.equal(response.status,503);assert.deepEqual(await response.json(),{sent:0,failed:1});
  const vercel=JSON.parse(fs.readFileSync('vercel.json','utf8'));
- assert.deepEqual(vercel.crons.find(cron=>cron.path==='/api/cron/telegram-recap'),{path:'/api/cron/telegram-recap',schedule:'0 * * * *'});
+ assert.deepEqual(vercel.crons.find(cron=>cron.path==='/api/cron/telegram-recap'),{path:'/api/cron/telegram-recap',schedule:'0 15 * * 0'});
  assert.match(fs.readFileSync('VERCEL.md','utf8'),/telegram-recap/);
 });
 

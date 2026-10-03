@@ -74,14 +74,14 @@ test('the bot\'s Upcoming answer is the payments block alone, with no greeting',
  assert.match(paymentsSection(items,'en',today),/^<b>Upcoming payments<\/b> · 30 September 2026\n\n<b>Overdue<\/b>/);
 });
 
-test('the digest cron runs hourly so each owner gets it in their own morning, and is documented',()=>{
+test('the digest cron is scheduled in the morning and documented',()=>{
  const vercel=JSON.parse(fs.readFileSync('vercel.json','utf8'));
- assert.deepEqual(vercel.crons.find(cron=>cron.path==='/api/cron/telegram-digest'),{path:'/api/cron/telegram-digest',schedule:'0 * * * *'});
+ assert.deepEqual(vercel.crons.find(cron=>cron.path==='/api/cron/telegram-digest'),{path:'/api/cron/telegram-digest',schedule:'0 4 * * *'});
  assert.match(fs.readFileSync('VERCEL.md','utf8'),/telegram-digest/);
 });
 
-function cronRoute({subscriptions,records={},occurrences={},languages={},names={},currencies={},timezones={},snapshots={},reminders={},sendResult=true,failFor='',now='2026-09-30T08:30:00Z'}){
- const sent=[],reads=[],claims=[],releases=[];
+function cronRoute({subscriptions,records={},occurrences={},languages={},names={},currencies={},snapshots={},reminders={},sendResult=true,failFor=''}){
+ const sent=[],reads=[];
  const db={
   async read(path){
    reads.push(path);
@@ -90,30 +90,20 @@ function cronRoute({subscriptions,records={},occurrences={},languages={},names={
    if(path.startsWith('/rest/v1/telegram_subscriptions'))return subscriptions;
    if(path.startsWith('/rest/v1/finance_records'))return records[owner]??[];
    if(path.startsWith('/rest/v1/payment_occurrences'))return occurrences[owner]??[];
-   if(path.startsWith('/rest/v1/user_preferences'))return owner in languages||owner in names||owner in currencies||owner in timezones?[{language:languages[owner],display_name:names[owner],currencies:currencies[owner],timezone:timezones[owner]}]:[];
+   if(path.startsWith('/rest/v1/user_preferences'))return owner in languages||owner in names||owner in currencies?[{language:languages[owner],display_name:names[owner],currencies:currencies[owner]}]:[];
    if(path.startsWith('/rest/v1/portfolio_snapshots'))return [...(snapshots[owner]??[])].reverse();
    if(path.startsWith('/rest/v1/workspace_preferences'))return owner in reminders?[{data:reminders[owner]}]:[];
    if(path.startsWith('/rest/v1/account_activity')||path.startsWith('/rest/v1/mortgage_payments'))return [];
    throw Error('unexpected '+path);
   },
-  // The digest writes only its claim on the owner's local day, and gives it back when sending failed.
-  async write(path,init){
-   const owner=/user_id=eq\.([\w-]+)/.exec(path)[1],body=JSON.parse(init.body);
-   assert.equal(init.method,'PATCH');assert.ok(path.startsWith('/rest/v1/telegram_subscriptions?'));
-   const row=subscriptions.find(item=>item.user_id===owner);
-   if(path.includes('&or=(')){
-    if(row.digest_sent_on&&row.digest_sent_on>=body.digest_sent_on)return Response.json([]);
-    claims.push([owner,body.digest_sent_on]);row.digest_sent_on=body.digest_sent_on;return Response.json([row]);
-   }
-   releases.push([owner,body.digest_sent_on]);row.digest_sent_on=body.digest_sent_on;return new Response(null,{status:204});
-  },
+  async write(){throw Error('digest never writes');},
  };
  const route=loadTS('app/api/cron/telegram-digest/route.ts',{
   '@/lib/service-role':{serviceDatabase:()=>db},
   '@/lib/telegram':{telegramConfig:()=>({token:'T',webhookSecret:'S',botUsername:'b'}),sendTelegramMessage:async message=>{sent.push(message);return sendResult;},escapeHtml:text=>text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')},
-  '@/lib/timezones':{...loadTS('lib/timezones.ts'),currentInstant:()=>new Date(now)},
+  '@/lib/deposit-interest':{...loadTS('lib/deposit-interest.ts'),depositToday:()=>'2026-09-30'},
  });
- return {sent,reads,claims,releases,GET:()=>route.GET(new Request('https://local',{headers:{authorization:'Bearer test-secret'}}))};
+ return {sent,reads,GET:()=>route.GET(new Request('https://local',{headers:{authorization:'Bearer test-secret'}}))};
 }
 const rent={id:'rent',name:'Rent',kind:'Rent expense',amount:3000000,currency:'UZS',date:'2026-09-01',frequency:'Monthly',quantity:0,cost:0,rate:0,notes:''};
 
@@ -151,66 +141,4 @@ test('the cron refuses a missing or wrong secret before touching the database',a
  assert.equal(cron.reads.length,0);
  const unconfigured=loadTS('app/api/cron/telegram-digest/route.ts',{'@/lib/service-role':{serviceDatabase:()=>null}});
  assert.equal((await unconfigured.GET(new Request('https://local',{headers:{authorization:'Bearer test-secret'}}))).status,503);
-});
-
-const zones=loadTS('lib/timezones.ts');
-test('time zones: saved names are checked, a missing one comes from the country, then the language, then UTC',()=>{
- for(const good of ['Asia/Tashkent','America/New_York','America/Argentina/Buenos_Aires','UTC','Etc/GMT+5'])assert.ok(zones.isTimezone(good),good);
- for(const bad of ['','Mars/Olympus','Asia/Tashkent; drop','../etc/passwd',null,42,'x'.repeat(70)])assert.ok(!zones.isTimezone(bad),String(bad));
- assert.equal(zones.ownerTimezone('Europe/Paris','UZ','uz'),'Europe/Paris','a saved zone wins');
- assert.equal(zones.ownerTimezone(null,'UZ','en'),'Asia/Tashkent');
- assert.equal(zones.ownerTimezone(null,'US','en'),'America/New_York','a country with several zones uses its most populous');
- assert.equal(zones.ownerTimezone(null,'JP','en'),'Asia/Tokyo','a country with one zone uses it');
- assert.equal(zones.ownerTimezone('Bogus/Zone',null,'ja'),'Asia/Tokyo');
- assert.equal(zones.ownerTimezone(null,null,'ru'),'Europe/Moscow');
- // English, Spanish, French, Portuguese and Arabic are spoken in many countries, so they suggest nothing.
- for(const language of ['en','es','fr','pt','ar'])assert.equal(zones.ownerTimezone(null,'',language),'UTC',language);
-});
-
-test('the digest is due from 08:00 to noon local time, once per local day; the recap on Sunday evening',()=>{
- const at=iso=>new Date(iso);
- assert.deepEqual(zones.localClock(at('2026-09-30T22:30:00Z'),'Asia/Tashkent'),{date:'2026-10-01',hour:3,weekday:4});
- assert.deepEqual(zones.localClock(at('2026-10-01T03:00:00Z'),'America/New_York'),{date:'2026-09-30',hour:23,weekday:3});
- assert.equal(zones.digestDue(at('2026-09-30T03:00:00Z'),'Asia/Tashkent',null),'2026-09-30','08:00 in Tashkent');
- assert.equal(zones.digestDue(at('2026-09-30T02:59:00Z'),'Asia/Tashkent',null),null,'07:59 is too early');
- assert.equal(zones.digestDue(at('2026-09-30T07:00:00Z'),'Asia/Tashkent',null),null,'noon is too late');
- assert.equal(zones.digestDue(at('2026-09-30T03:00:00Z'),'Asia/Tashkent','2026-09-30'),null,'already sent today');
- assert.equal(zones.digestDue(at('2026-09-30T03:00:00Z'),'Asia/Tashkent','2026-09-29'),'2026-09-30');
- assert.equal(zones.digestDue(at('2026-09-30T12:00:00Z'),'America/New_York',null),'2026-09-30','08:00 in New York');
- assert.equal(zones.digestDue(at('2026-09-30T02:30:00Z'),'Asia/Kolkata',null),'2026-09-30','half-hour zones get it at 08:00 too');
- assert.equal(zones.recapDue(at('2026-10-04T13:00:00Z'),'Asia/Tashkent',null),'2026-10-04','18:00 on Sunday');
- assert.equal(zones.recapDue(at('2026-10-04T12:59:00Z'),'Asia/Tashkent',null),null);
- assert.equal(zones.recapDue(at('2026-10-04T13:00:00Z'),'Asia/Tashkent','2026-10-04'),null);
- assert.equal(zones.recapDue(at('2026-10-03T13:00:00Z'),'Asia/Tashkent',null),null,'Saturday');
- // Sunday evening in Tashkent is already Monday in Auckland.
- assert.equal(zones.recapDue(at('2026-10-04T13:00:00Z'),'Pacific/Auckland',null),null);
- const options=zones.timezoneOptions(at('2026-09-30T00:00:00Z'));
- assert.ok(options.length>300);assert.ok(options.some(option=>option.value==='Asia/Tashkent'&&option.label==='Asia/Tashkent · UTC+05:00'));
- assert.ok(options.some(option=>option.label==='America/St Johns · UTC−02:30'));
- assert.ok(options.findIndex(option=>option.value==='America/New_York')<options.findIndex(option=>option.value==='Asia/Tashkent'),'ordered by offset');
-});
-
-test('the hourly cron sends only in each owner\'s morning, never twice a day, and retries a failed send next hour',async()=>{
- process.env.CRON_SECRET='test-secret';
- const subscriptions=()=>[{user_id:'anna',chat_id:1},{user_id:'bob',chat_id:2},{user_id:'cid',chat_id:3,digest_sent_on:'2026-09-30'}];
- // 03:30 UTC: 08:30 in Tashkent, 23:30 the evening before in New York.
- const options={languages:{anna:'en',bob:'en',cid:'en'},timezones:{anna:'Asia/Tashkent',bob:'America/New_York',cid:'Asia/Tashkent'},now:'2026-09-30T03:30:00Z'};
- const first=cronRoute({...options,subscriptions:subscriptions()});
- assert.deepEqual(await (await first.GET()).json(),{sent:1,failed:0});
- assert.deepEqual(first.sent.map(message=>message.chat_id),[1]);assert.deepEqual(first.claims,[['anna','2026-09-30']]);
- // Owners outside their window are not read beyond their profile.
- assert.ok(!first.reads.some(path=>path.includes('finance_records')&&path.includes('user_id=eq.bob')));
- const again=cronRoute({...options,subscriptions:subscriptions().map(row=>row.user_id==='anna'?{...row,digest_sent_on:'2026-09-30'}:row)});
- assert.deepEqual(await (await again.GET()).json(),{sent:0,failed:0},'a second run that day sends nothing');
- const failing=cronRoute({...options,subscriptions:subscriptions(),sendResult:false});
- assert.equal((await failing.GET()).status,503);
- assert.deepEqual(failing.releases,[['anna',null]],'the day is given back so the next hour retries');
- // Nine hours later it is New York's morning.
- const later=cronRoute({...options,subscriptions:subscriptions(),now:'2026-09-30T12:30:00Z'});
- assert.deepEqual(await (await later.GET()).json(),{sent:1,failed:0});
- assert.equal(later.sent[0].chat_id,2);assert.deepEqual(later.claims,[['bob','2026-09-30']]);
- // At 20:00 UTC on 30 September it is 09:00 on 1 October in Auckland: the digest uses the owner's own calendar day.
- const auckland=cronRoute({subscriptions:[{user_id:'dee',chat_id:4,digest_sent_on:'2026-09-30'}],timezones:{dee:'Pacific/Auckland'},records:{dee:[rent]},now:'2026-09-30T20:00:00Z'});
- assert.deepEqual(await (await auckland.GET()).json(),{sent:1,failed:0});
- assert.deepEqual(auckland.claims,[['dee','2026-10-01']]);assert.match(auckland.sent[0].text,/<b>Upcoming payments<\/b> · 1 October 2026\n[\s\S]*<b>Today<\/b>\n• Rent/);
 });

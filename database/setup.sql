@@ -5959,25 +5959,12 @@ END $$;
 NOTIFY pgrst,'reload schema';
 COMMIT;
 
--- Telegram at local time, and bot payments across currencies.
--- 1. user_preferences.timezone: the owner's IANA time zone, edited in Settings.
---    Empty means "derive it" (country, then language, then UTC), so existing
---    rows need no rewrite. Owner RLS already protects the row.
--- 2. telegram_subscriptions.digest_sent_on / recap_sent_on: the local day the
---    last digest and recap went out. The hourly crons claim the day before
---    sending, so nobody gets two in one day. Server-only: the column grants for
---    the app role (migration 081) do not include them.
--- 3. telegram_payment_with_fx: lets the bot pay a loan or mortgage from a cash
---    account in another currency through the app's own dated-rate functions,
---    as the linked owner, callable only by the service role.
+-- Bot payments across currencies.
+-- telegram_payment_with_fx lets the bot pay a loan or mortgage from a cash
+-- account in another currency through the app's own dated-rate functions,
+-- as the linked owner, callable only by the service role.
 -- Apply after 094.
 BEGIN;
-ALTER TABLE public.user_preferences ADD COLUMN IF NOT EXISTS timezone text
- CHECK (timezone IS NULL OR (length(timezone) BETWEEN 1 AND 64 AND timezone ~ '^[A-Za-z][A-Za-z0-9_+-]*(/[A-Za-z0-9_+-]+){0,2}$'));
-ALTER TABLE public.telegram_subscriptions
- ADD COLUMN IF NOT EXISTS digest_sent_on date,
- ADD COLUMN IF NOT EXISTS recap_sent_on date;
-
 CREATE OR REPLACE FUNCTION public.telegram_payment_with_fx(p_owner uuid,p_action text,p_data jsonb,p_rate numeric,p_rate_date date,p_account_currency text,p_record_currency text) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 DECLARE principal numeric:=(p_data->>'amount')::numeric; interest numeric:=coalesce((p_data->>'fee')::numeric,0);

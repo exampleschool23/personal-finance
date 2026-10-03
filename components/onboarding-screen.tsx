@@ -14,7 +14,6 @@ import { currencyLabel, fiatCurrencies, type Preferences } from '@/lib/currencie
 import { depositToday } from '@/lib/deposit-interest';
 import { formatDate, formatMoney } from '@/lib/format';
 import { isLanguage, languageCatalogue } from '@/lib/i18n';
-import { browserTimezone } from '@/lib/timezones';
 import { countryCurrency, currenciesForCountry, goalHorizons, goalTargetDate, horizonDate, makePrimary, onboardingGoalPayload, onboardingSteps, pickCurrency, startingCurrencies, suggestedCurrencies, trackingStartFor, type OnboardingGoal, type TrackingPreset } from '@/lib/onboarding';
 import styles from './onboarding-screen.module.css';
 
@@ -56,8 +55,7 @@ export function OnboardingScreen({ brand, initial, telegram, savePreferences, ap
   async function finish(skipAll = false) {
     setBusy(true); setError('');
     try {
-      // The browser's time zone times the Telegram digest until it is changed in Settings.
-      const preferences = { ...draft, display_name: name, timezone: draft.timezone ?? browserTimezone() ?? undefined };
+      const preferences = { ...draft, display_name: name };
       if (!skipAll) {
         const payload = onboardingGoalPayload(goal, primary, t('Net worth target'), today, goalId);
         if (payload) await saveGoal(payload);

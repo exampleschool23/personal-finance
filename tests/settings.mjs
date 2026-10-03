@@ -10,12 +10,11 @@ import { loadTS } from './helpers/load-ts.mjs';
 const { isLanguage, languageCodes } = loadTS('lib/i18n.ts');
 const { onboardedOn } = loadTS('lib/onboarding.ts');
 const { depositToday } = loadTS('lib/deposit-interest.ts');
-const { isTimezone } = loadTS('lib/timezones.ts');
 const source=fs.readFileSync(new URL('../app/api/settings/route.ts',import.meta.url),'utf8').replace(/^import .*;\n/gm,'').replace(/export async function/g,'async function');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-let authenticated=true, calls=[], rows=[], databaseFailure=false, timezoneMissing=false;
+let authenticated=true, calls=[], rows=[], databaseFailure=false;
 const menuCalls=[];
-const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry','fontIds','resolveFont','isLanguage','languageCodes','queueLanguageMenu','onboardedOn','isTimezone',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});if(timezoneMissing&&init?.body?.includes('"timezone"'))return Response.json({code:'PGRST204'},{status:400});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry,fontIds,resolveFont,isLanguage,languageCodes,(auth,language)=>menuCalls.push({auth,language}),onboardedOn,isTimezone);
+const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry','fontIds','resolveFont','isLanguage','languageCodes','queueLanguageMenu','onboardedOn',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry,fontIds,resolveFont,isLanguage,languageCodes,(auth,language)=>menuCalls.push({auth,language}),onboardedOn);
 const request=body=>new Request('https://app.local/api/settings',{method:'PUT',headers:{origin:'https://app.local','Content-Type':'application/json'},body:JSON.stringify(body)});
 test('persists validated preferences for the authenticated owner',async()=>{
  calls=[];const response=await api.PUT(request({language:'ru',currencies:['EUR','INR']}));
@@ -204,23 +203,4 @@ test('a saved language change refreshes the Telegram menu once, and nothing else
  assert.equal(menuCalls.length,0);
  assert.equal((await api.PUT(request({...defaultPreferences,language:'xx'}))).status,400);
  assert.equal(menuCalls.length,0);
-});
-
-test('the time zone is an IANA name saved for the owner; before its migration the rest still saves',async()=>{
- calls=[];
- const saved=await api.PUT(request({...defaultPreferences,timezone:'Asia/Tashkent'}));
- assert.equal(saved.status,200);assert.equal((await saved.json()).timezone,'Asia/Tashkent');
- assert.equal(JSON.parse(calls.at(-1).init.body).timezone,'Asia/Tashkent');
- for(const timezone of ['Mars/Olympus','Asia/Tashkent; drop','',42]){calls=[];assert.equal((await api.PUT(request({...defaultPreferences,timezone}))).status,400,String(timezone));assert.equal(calls.length,0);}
- // An empty saved zone loads as none, so Settings fills it from the browser.
- rows=[{...defaultPreferences,timezone:null}];
- assert.equal((await (await api.GET()).json()).timezone,undefined);
- rows=[{...defaultPreferences,timezone:'Europe/Paris'}];
- assert.equal((await (await api.GET()).json()).timezone,'Europe/Paris');
- rows=[];timezoneMissing=true;calls=[];
- try{
-  assert.equal((await api.PUT(request({...defaultPreferences,language:'ru',timezone:'Asia/Tashkent'}))).status,200);
-  const upserts=calls.filter(call=>call.init?.method==='POST');
-  assert.equal(upserts.length,2);assert.equal(JSON.parse(upserts[1].init.body).timezone,undefined);assert.equal(JSON.parse(upserts[1].init.body).language,'ru');
- }finally{timezoneMissing=false;}
 });

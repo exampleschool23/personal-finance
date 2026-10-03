@@ -2520,8 +2520,6 @@
   "Make it income": "এটিকে আয় করুন",
   "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "কী যোগ করবেন বেছে নিন, অথবা লিখুন, যেমন কফি 4.5 বা +1500 বেতন।",
   "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} আপনার মুদ্রাগুলোর মধ্যে নেই। পরিমাণ {own}-এ লিখুন, অথবা সেটিংসে {currency} যোগ করুন।",
-  "Time zone": "সময় অঞ্চল",
-  "Select your time zone": "আপনার সময় অঞ্চল বেছে নিন",
   "Only you and the people you invite can see your records. Every account is kept separate from the others.": "আপনার রেকর্ড শুধু আপনি ও আপনার আমন্ত্রিত ব্যক্তিরা দেখতে পারেন। প্রতিটি অ্যাকাউন্ট অন্যগুলো থেকে আলাদা রাখা হয়।",
   "Partner": "সঙ্গী",
   "Household sharing": "পরিবারের সাথে শেয়ার",

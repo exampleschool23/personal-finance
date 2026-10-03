@@ -2520,8 +2520,6 @@
   "Make it income": "改为收入",
   "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "选择要添加的内容，或直接输入，例如 咖啡 4.5 或 +1500 工资。",
   "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency} 不是你的货币之一。请以 {own} 输入金额，或在设置中添加 {currency}。",
-  "Time zone": "时区",
-  "Select your time zone": "选择你的时区",
   "Only you and the people you invite can see your records. Every account is kept separate from the others.": "只有您和您邀请的人能看到您的记录。每个账号都与其他账号相互隔离。",
   "Partner": "伴侣",
   "Household sharing": "家庭共享",

@@ -2520,8 +2520,6 @@
   "Make it income": "수입으로 바꾸기",
   "Choose what to add, or type it, like coffee 4.5 or +1500 salary.": "추가할 항목을 고르거나 입력하세요. 예: 커피 4.5 또는 +1500 월급.",
   "{currency} is not one of your currencies. Type the amount in {own}, or add {currency} in Settings.": "{currency}은(는) 내 통화가 아닙니다. {own}(으)로 금액을 입력하거나 설정에서 {currency}을(를) 추가하세요.",
-  "Time zone": "시간대",
-  "Select your time zone": "시간대 선택",
   "Only you and the people you invite can see your records. Every account is kept separate from the others.": "기록은 본인과 초대한 사람만 볼 수 있습니다. 각 계정은 다른 계정과 분리되어 있습니다.",
   "Partner": "파트너",
   "Household sharing": "가구 공유",
