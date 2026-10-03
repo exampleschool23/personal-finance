@@ -2309,6 +2309,8 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .account-businesses-dialog li>span{display:flex;flex-direction:column;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .account-businesses-dialog li small{color:var(--muted-foreground);font-size:var(--type-caption)}
 @media (max-width:520px){.account-businesses-dialog li{grid-template-columns:auto minmax(0,1fr)}.account-businesses-dialog li>[data-slot=native-select-wrapper]{grid-column:2}}
+/* Wide screens: a wider dialog with the accounts in a grid of bordered cells, so long lists need less scrolling. */
+@media (min-width:1024px){.record-dialog.account-businesses-dialog{max-width:min(1180px,calc(100vw - 96px))!important}.account-businesses-dialog ul{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px 12px}.account-businesses-dialog li{grid-template-columns:auto minmax(0,1fr) minmax(0,10rem);padding:8px 12px;border:1px solid var(--hairline);border-radius:var(--radius-control)}}
 .account-list-title{display:flex;align-items:center;gap:6px}
 .account-list-title>.business-mark{width:18px;height:18px;border-radius:5px;font-size:10px}
 .sankey-link{fill:none;stroke:color-mix(in srgb,var(--foreground) 13%,transparent);transition:stroke .15s}
