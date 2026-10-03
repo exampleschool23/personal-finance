@@ -147,3 +147,11 @@ test('the workspace shows receipts on the transaction drawer and marks rows that
  assert.match(fs.readFileSync('hooks/use-record-attachments.ts','utf8'),/const live = !!owner && !demo;/);
  assert.match(fs.readFileSync('app/api/deleted-items/route.ts','utf8'),/ownsAttachmentPath\(owner,path\)/,'permanent deletion removes only the owner\'s files');
 });
+
+test('row menus and popovers never open the transaction details behind them',()=>{
+ // QA 2026-10-03: Delete in a Cash flow row's ⋯ menu opened the details dialog first, because React
+ // bubbles clicks from portaled menu items to the row. Rows open details only for clicks inside themselves.
+ const read=path=>fs.readFileSync(new URL('../'+path,import.meta.url),'utf8');
+ assert.match(read('components/workspace/records-table.tsx'),/event\.currentTarget\.contains\(target\)&&!target\.closest\('button,a,input'\)\)setViewing/);
+ assert.match(read('components/workspace/screens/transactions-screen.tsx'),/!\(event\.currentTarget as HTMLElement\)\.contains\(event\.target as Node\) \|\|/);
+});

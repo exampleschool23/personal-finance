@@ -121,7 +121,8 @@ export function TransactionsScreen() {
  }
  const toggle = (id: string) => setSelected(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; });
  const open = (record: Entry) => (event: MouseEvent | KeyboardEvent) => {
-  if ((event.target as HTMLElement).closest('button,a,input,label')) return;
+  // Popovers and menus are portaled out of the row, but React still bubbles their events here.
+  if (!(event.currentTarget as HTMLElement).contains(event.target as Node) || (event.target as HTMLElement).closest('button,a,input,label')) return;
   if ('key' in event && event.key !== 'Enter' && event.key !== ' ') return;
   event.preventDefault();
   if (selecting) toggle(record.id); else setViewing(storedRecord(record));
