@@ -96,3 +96,19 @@ test('a repayment above the outstanding balance names the reason before the data
  assert.equal(refused.status,409);assert.equal((await refused.json()).error,'Repayment cannot exceed the outstanding balance.');assert.deepEqual(calls,[]);
  assert.equal((await repay(250)).status,200);assert.deepEqual(calls,['/rest/v1/rpc/planning_action']);
 });
+
+test('a second payment for an occurrence that is already paid is refused, while a retry of the same payment succeeds',async()=>{
+ // Live QA 2026-10-03: the database answered {ok:true} for a second payment and silently dropped it.
+ const account='10000000-0000-4000-8000-0000000000b1',schedule='10000000-0000-4000-8000-0000000000b2',paid='10000000-0000-4000-8000-0000000000b3',calls=[];
+ const rows=[{id:account,kind:'Cash',currency:'USD',amount:900},{id:schedule,kind:'Living expense',currency:'USD',amount:45,frequency:'Monthly'}];
+ const api=apiFunction('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts','planningReadFilters','currentReviewMonth','categoryNameTaken','duplicateCategoryMessage',compile('app/api/planning/route.ts')+';return {GET,POST};')(instrumentFor,z,async()=>({token:'owner'}),async(path,init={})=>{
+  if(path.startsWith('/rest/v1/payment_occurrences'))return Response.json(path.includes('due_on=eq.2026-09-05')?[{transaction_id:paid}]:[]);
+  if(!init.method)return Response.json(rows);calls.push(path);return Response.json({ok:true});
+ },()=>true,async()=>[],()=>true,async()=>[],planningReadFilters,currentReviewMonth,categoryNameTaken,duplicateCategoryMessage);
+ const pay=(id,date)=>api.POST(req({action:'occurrence',data:{id,account_id:account,target_id:schedule,amount:30,date,notes:''}}));
+ const refused=await pay(id,'2026-09-05');
+ assert.equal(refused.status,409);assert.equal((await refused.json()).error,'This scheduled payment is already recorded. Keep its transaction.');assert.deepEqual(calls,[]);
+ assert.equal((await pay(paid,'2026-09-05')).status,200);
+ assert.equal((await pay(id,'2026-08-05')).status,200);
+ assert.deepEqual(calls,['/rest/v1/rpc/planning_action_with_actual_amount','/rest/v1/rpc/planning_action_with_actual_amount']);
+});

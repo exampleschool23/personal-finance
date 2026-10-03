@@ -96,6 +96,14 @@ export async function POST(req:Request){
   const support=await supa('/rest/v1/savings_goals?select=investment_targets&limit=0',{},auth.token);
   if(!support.ok)return Response.json({error:'Goal holdings could not be saved. Please try again after the app database is updated.'},{status:503});
  }
+ // The database treats a second payment for a paid occurrence as a retry and reports success
+ // without saving it. Only a retry of the same transaction may succeed; another payment is refused.
+ if(body.action==='occurrence'){
+  const data=parsed.data as {id:string;target_id:string;date:string};
+  const prior=await supa('/rest/v1/payment_occurrences?select=transaction_id&status=eq.paid&record_id=eq.'+data.target_id+'&due_on=eq.'+data.date,{},auth.token);
+  if(!prior.ok)return Response.json({error:'Could not save the operation. Please try again.'},{status:503});
+  if((await prior.json() as {transaction_id:string|null}[]).some(row=>row.transaction_id!==data.id))return Response.json({error:'This scheduled payment is already recorded. Keep its transaction.'},{status:409});
+ }
  const multiGoal=body.action==='goal'&&'kind' in parsed.data&&parsed.data.kind==='investment'&&'investment_targets' in parsed.data&&Array.isArray(parsed.data.investment_targets);
  const result=await supa(multiGoal?'/rest/v1/rpc/planning_investment_goal':body.action==='occurrence'?'/rest/v1/rpc/planning_action_with_actual_amount':'/rest/v1/rpc/planning_action',{method:'POST',body:JSON.stringify(multiGoal?{p_data:parsed.data}:{p_action:body.action,p_data:paymentData})},auth.token);
  if(!result.ok){const error=await result.json() as {code?:string;message?:string};return Response.json({error:multiGoal&&error.code==='PGRST202'?'Could not save the goal. Check that the latest migrations are installed.':error.code==='P0001'?error.message:error.code==='23514'?'Insufficient balance or invalid amount.':error.code==='23505'?'This name or payment already exists.':'Could not save the operation. Please try again.'},{status:409});}

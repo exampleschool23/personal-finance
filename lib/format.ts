@@ -11,7 +11,7 @@ export function formatNumber(value: number, locale: string, maximumFractionDigit
 /** A share or rate as a percentage, using the locale digits and one decimal by default. Unknown values show an em dash. */
 /** Pass `minimumFractionDigits` when percentages sit in a column, so "2.0%" lines up under "12.2%". */
 export function formatPercent(value: number, locale: string, maximumFractionDigits = 1, minimumFractionDigits = 0) {
-  return Number.isFinite(value) ? new Intl.NumberFormat(locale, { minimumFractionDigits, maximumFractionDigits }).format(value) + "%" : "\u2014";
+  return Number.isFinite(value) ? trueMinus(new Intl.NumberFormat(locale, { minimumFractionDigits, maximumFractionDigits }).format(value)) + "%" : "\u2014";
 }
 export function formatMoney(value: number, currency: string, locale: string, unitPrice = false) {
   if (!Number.isFinite(value)) return '—';

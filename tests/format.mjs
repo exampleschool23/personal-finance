@@ -104,7 +104,10 @@ test('percentages use the locale digits, one decimal by default, and a dash for 
  assert.equal(formatPercent(12.345,'ru-RU'),'12,3%');
  assert.equal(formatPercent(1234.5,'uz-UZ'),'1 234,5%');
  assert.equal(formatPercent(8,'en-US',2),'8%');
- assert.equal(formatPercent(-3.14159,'en-US',2),'-3.14%');
+ assert.equal(formatPercent(-3.14159,'en-US',2),'\u22123.14%');
+ // A negative rate uses the same true minus as money (a savings rate below zero).
+ assert.equal(formatPercent(-466.8,'ru-RU'),'\u2212466,8%');
+ assert.equal(formatPercent(-466.8,'uz-UZ'),'\u2212466,8%');
  assert.equal(formatPercent(NaN,'en-US'),'—');
  assert.equal(formatPercent(Infinity,'en-US'),'—');
 });

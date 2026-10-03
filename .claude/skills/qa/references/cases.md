@@ -10,6 +10,7 @@ Cases marked `[bug 2026-10-02]` reproduce a defect found in the 2 October QA pas
 
 | Date | Commit tested | Scope | Notes |
 |---|---|---|---|
+| 2026-10-03 | 693a6b6 (+ local fixes) | 500 actions on localhost against the shared database: salary, business income, expenses, forecasts, benchmarks, plus a January 2023 – October 2026 monthly backfill and cross-page checks | Telegram not run (bot needs the deploy); pane hidden for much of the run, so the budget History popover, Radix menus and typing were blocked and API routes were used instead; fixes for CF-036, REP-036 and REC-028 not deployed yet |
 | 2026-10-03 | 4d7d417 → bef3873 | 100 bot actions and 100 app actions, cross-checked (app actions through the app's API routes, not clicks) | Pane hidden twice, so the last ~15 bot actions, BOT-074/110 sign-out and UI clicking were not run; per-save action messages removed in bef3873 by design; fixes for BOT-143–146 and LOAN-024 not deployed yet |
 | 2026-10-02 | 6eb533f | Retest of every 2 October finding, live | Dashboard fixes and design-review fixes in 9c08db8 not yet retested live; ACC-010 not run live |
 | 2026-10-02 | 2c91d67…4f27bdb | Full app + bot on user1@gmail.com | Deposits, T-bills, crypto, Business income, watchlists, Monthly review, downloads and crons not tested |
@@ -261,6 +262,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | TX-040 | P1 | Sample workspace transactions | Explore sample workspace; change a category, create a rule, Edit multiple | Each change shows at once with its toast; no POST to /api/records, /api/transaction-rules or /api/tags |
 | TX-041 | P1 | Phone width list | 375px; Edit multiple on | Filters wrap; each row shows the name with the category pill on a second line and the amount at the right; checkboxes tappable; no horizontal scroll |
 | TX-042 | P2 | Month end and time zone | Expense dated 30 September; view with the browser time zone set to America/Los_Angeles | Shown as "30 September 2026"; counted in September on Transactions (Last month), Cash flow and Budget |
+| TX-043 | P1 | Comma decimal in English | Add expense in English, type "49,99" in Amount | Not silently read as 4,999: either 49.99 or a visible correction before saving `[bug 2026-10-03]` |
 
 ## CF — cash flow
 
@@ -301,6 +303,10 @@ currencies (USD primary). Compute every expected figure yourself first.
 | CF-033 | P0 | Forecast view | Cash flow → Forecast; switch 30 / 90 / 180 / 365 days | Chart, Cash today, Lowest balance (with date) and "In N days" update; one point per day; amounts whole; month picker and monthly review hidden on this tab |
 | CF-034 | P1 | Forecast events and warning | Read "Cash movements ahead"; add a recurring expense on a cash account larger than its balance | Events grouped by month with signed month totals (currencies listed, never added without a rate); caution warning names the account and the first day below zero |
 | CF-035 | P1 | Forecast what-if | Add "−500 every month" from next month, then remove it; reload | Projection and events update at once; the change survives reload in this browser only; no record is created |
+| CF-036 | P2 | Header at tablet width | Cash flow with the sidebar open and the content column 760px or narrower | Title is one line high; month picker and Add income / Add expense sit right under it, no blank gap `[bug 2026-10-03]` |
+| CF-037 | P2 | Future occurrence paid early | Fixed QA salary source; POST a payment for next month's due date dated today | Refused like the form (which only offers the current occurrence); Recurring never shows next month as Received in advance `[bug 2026-10-03]` |
+| CF-038 | P2 | Deposit maturity in forecast | QA deposit 5,000 at 8% maturing within 365 days; Forecast 365 days | Maturity event shows the expected payout including interest, or a note that interest is added when recorded `[bug 2026-10-03]` |
+| CF-039 | P2 | Estimates for past months | Header month picker May 2025 with a deposit and mortgages added in 2026 | Monthly estimate tiles leave out assets, debts and sources that did not exist in that month `[bug 2026-10-03]` |
 
 ## REP — reports and business tracking
 
@@ -341,6 +347,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | REP-033 | P1 | Split parts in reports | Split a QA expense across two categories; Reports › Spending › Group by Category | Each part counts under its own category; the transactions list shows one row per part; Total spending includes the transaction once at its full amount |
 | REP-034 | P1 | Sample workspace reports | Explore sample workspace › Reports, every tab including Business tax prep; move a category to another line | Each tab shows sample data with its businesses (Coastal Candle Co., Lakeside Rentals LLC); the line move applies at once with no error; no request writes to the server |
 | REP-035 | P1 | Phone width reports | 375px; Cash flow Sankey and Profit & loss, Spending, Business tax prep | Sankey and P&L table scroll inside their card; controls wrap; no page horizontal scroll |
+| REP-036 | P2 | Negative savings rate sign | Reports, one business with a loss this month | Savings rate reads "−467%" with the same true minus as "−$5,765", in every language `[bug 2026-10-03]` |
 
 ## BUD — budget
 
@@ -368,6 +375,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | BUD-020 | P1 | Save failure | Block /api/budget, edit a plan and leave the field | Error toast; the field returns to the stored amount; no Saved toast |
 | BUD-021 | P1 | Sample workspace budget | Explore sample workspace › Budget; edit a plan | Salary, Other income, Living expense, Other expense and Charity are planned; Charity shows "{amount} rolled over"; the edit shows Saved and keeps for the visit |
 | BUD-022 | P2 | Phone width | 375px Month and Year views | Year view scrolls inside its card; Planned inputs and the History popover usable; no page horizontal scroll |
+| BUD-023 | P2 | Year total with future plans | Year view of this year with a plan applied to future months | The Total column separates actual from planned, or is labelled as a projection `[bug 2026-10-03]` |
 
 ## REC — recurring
 
@@ -399,6 +407,8 @@ currencies (USD primary). Compute every expected figure yourself first.
 | REC-024 | P1 | Subscriptions detected | Sample workspace, Recurring | Subscriptions panel lists Netflix (Price went up, caution pill), Spotify and Daily News digital (Possibly cancelled); totals per currency leave Daily News out; no day-to-day purchases listed |
 | REC-025 | P1 | Subscription decisions | ⋯ on a subscription: Not a subscription, Mark cancelled; then Restore under Hidden subscriptions | Row moves to Hidden with its reason and back; totals follow; survives reload on a signed-in account |
 | REC-026 | P1 | Track as recurring | ⋯ → Track as recurring, save | Record form opens with the name, amount and next charge date; once saved the plan is listed and the subscription row is gone |
+| REC-027 | P2 | Back-dated schedule | Monthly QA expense with start date three years ago | Overdue count does not jump by every past month (36+); past occurrences before the schedule was created are not overdue reminders `[bug 2026-10-03]` |
+| REC-028 | P1 | Second payment, different amount | Record payment 45 on a QA monthly expense; send a second Record payment for the same date with 30 from another account (second tab or API) | Refused with "This scheduled payment is already recorded. Keep its transaction."; a retry of the same payment (same id) still succeeds; one transaction `[bug 2026-10-03]` |
 
 ## INV — investments
 
@@ -436,6 +446,8 @@ currencies (USD primary). Compute every expected figure yourself first.
 | INV-030 | P0 | Delete and restore holding | QA stock with no trades or tracker updates › ⋯ › Delete › Recently deleted › Restore | Net worth falls by its value, then returns exactly; quantity and cost restored; a holding with trades refuses with "This record has saved tracker updates or transactions and cannot be deleted." |
 | INV-031 | P1 | Edit past purchase | QA stock › ⋯ › Edit › Purchase price per unit 250 → 300 › Save record | Total cost +50 × quantity and Gain/loss falls by the same; no cash account changes; Record history shows the revision |
 | INV-032 | P1 | Buy and sell | Accounts › Buy holding 2 QA stock for 500 from a QA cash account; Sell / convert 1 for 300 | Cash −500 then +300; quantity 2 then 1; average cost updated on buy; selling more than held gives "Insufficient balance or holding quantity." |
+| INV-033 | P1 | Ten stock benchmarks | Settings › Investment benchmarks: add 10 stocks (the maximum), open Overview | Every chosen line loads, or the card says prices are rate-limited and retries; never "Market history is unavailable" for a valid ticker `[bug 2026-10-03]` |
+| INV-034 | P2 | Holding bought before tracking | Add a stock with purchase date 3 January 2023, tracking since 3 January 2023, All history | Chart starts at the purchase, or "Tracking since" explains that history starts when the holding was added `[bug 2026-10-03]` |
 
 ## LOAN — loans and debts
 

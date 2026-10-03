@@ -1717,6 +1717,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
    1100px the open sidebar leaves far less room than viewport queries assume. */
 @container content (max-width:760px){
  .page-heading:has(.cashflow-action){flex-direction:column;align-items:stretch}
+ .page-heading:has(.cashflow-action)>div:first-child{flex:none}
  .workspace .content .entry-actions:has(.cashflow-action){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%}
  .entry-actions:has(.cashflow-action) .date-picker-trigger{grid-column:1/-1;width:100%}
  .workspace .content .entry-actions .cashflow-action{white-space:nowrap;height:44px;min-height:44px}
