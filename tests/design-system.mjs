@@ -152,4 +152,5 @@ test('Goals, Reports and Cash flow switch their views from tabs beside the title
  assert.match(bar,/\{roomy && !crowded && <div className="topbar-page-actions"/,'a bar that overflowed keeps only the title');
  assert.match(bar,/setCrowded\(previous => previous \? needed \+ 8 > room : needed > room\)/,'the same widths always give the same answer');
  assert.match(css,/\.segmented:not\(\.page-tabs\)\{display:flex;width:100%;flex-wrap:wrap/,'page tabs stay on one scrolling line on phones');
+ assert.match(css,/\.segmented\.page-tabs>button:focus-visible\{outline:2px solid var\(--ring\);outline-offset:-2px/,'focus shows inside the tab, never clipped to a line');
 });

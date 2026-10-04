@@ -245,12 +245,14 @@ input,select,textarea{min-height:44px!important;background:var(--field)!importan
 .topbar-page-title h1{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .topbar-page-title .page-eyebrow{margin:0;font-size:var(--type-caption);letter-spacing:0;text-transform:none;white-space:nowrap}
 /* A page's views as underlined tabs right after its title, as in a desktop app's title bar. */
-.segmented.page-tabs{gap:16px;padding:0;border:0;border-radius:0;background:none}
+.segmented.page-tabs{gap:8px;padding:0;border:0;border-radius:0;background:none}
 .topbar-page-title .page-tabs{align-self:stretch;margin-inline-start:12px}
 /* Without room in the bar the tabs open the page, above its own actions. */
 .page-heading .page-tabs>button{padding-block:8px}
-.segmented.page-tabs>button{height:auto;padding:0;border-radius:0;border-block-end:2px solid transparent;background:none;box-shadow:none;font-size:var(--type-small)}
+.segmented.page-tabs>button{height:auto;padding:0 4px;border-radius:0;border-block-end:2px solid transparent;background:none;box-shadow:none;font-size:var(--type-small)}
 .segmented.page-tabs>button[aria-pressed=true]{background:none;box-shadow:none;color:var(--primary);border-block-end-color:var(--primary)}
+/* The strip scrolls sideways and would clip an outer ring to a stray line, so focus is drawn inside each tab. */
+.segmented.page-tabs>button:focus-visible{outline:2px solid var(--ring);outline-offset:-2px;border-radius:6px}
 .topbar-page-actions{display:flex;align-items:center;gap:8px}
 .topbar-page-actions:not(:empty){padding-inline-end:10px;margin-inline-end:2px;border-inline-end:1px solid var(--hairline)}
 .topbar-page-actions .entry-actions{flex-wrap:nowrap;gap:8px}

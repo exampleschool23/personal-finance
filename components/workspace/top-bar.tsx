@@ -36,7 +36,7 @@ function barWidthNeeded(node: HTMLElement) {
  const extras = [...location?.children ?? []].filter(child => !child.matches('.topbar-page-title, .topbar-title'));
  const title = node.querySelector('.topbar-page-title h1')?.scrollWidth ?? 0;
  return rowWidth(extras, 12) + (extras.length ? 12 : 0) + title
-  + (tabs ? 22 + rowWidth([...tabs.children], 16) : 0)
+  + (tabs ? 22 + rowWidth([...tabs.children], 8) : 0)
   + 12 + (actions ? rowWidth([...actions.children], 8) + 21 : 0)
   + rowWidth([...own?.children ?? []].filter(child => !child.matches('.topbar-page-actions')), 8);
 }
