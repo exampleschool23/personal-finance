@@ -84,6 +84,8 @@ test('portfolio over time invites the first investment instead of a flat line at
  assert.doesNotMatch(empty,/Tracking since|comparison-legend/);
  assert.doesNotMatch(render([entry('btc','Crypto',60000,{quantity:.1})]),/No investments yet/);
  assert.doesNotMatch(render([entry('cash','Cash',500,{is_investment:true})]),/No investments yet/,'an investment cash account counts');
+ // Investments worth nothing and never paid into (a $0 business) also get the invitation once their history loads.
+ assert.match(fs.readFileSync('components/investment-comparison.tsx','utf8'),/nothingInvested=!history\.records\.some\(isInvestmentRecord\)\|\|\(!!decision&&chartPoints\.length>0&&chartPoints\.every\(point=>!point\.actual&&!point\.contributed\)\)/);
  // A start saved before the first investment shows the day the chart really starts from, and earlier days cannot be chosen.
  const chosen=renderToStaticMarkup(React.createElement(InvestmentComparison,{history:{records:[entry('btc','Crypto',60000,{quantity:.1,date:'2026-09-20'})],events:[]},today:'2026-10-01',currency:'USD',market:null,demo:false,windowStart:'2026-01-01',points:[],profile:null,profileError:'',trackingStart:'2026-01-01',onTrackingStartChange:()=>{}}));
  assert.match(chosen,/Tracking since.*1 October 2026/,'the picker matches the chart, which starts at the first investment activity');

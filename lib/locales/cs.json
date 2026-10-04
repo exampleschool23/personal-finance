@@ -2578,5 +2578,6 @@
   "No matching countries.": "Žádné odpovídající země.",
   "Country code": "Kód země",
   "At this amount, reached in {month}": "S touto částkou cíle dosáhnete v {month}",
-  "Export": "Export"
+  "Export": "Export",
+  "Updated {date}": "Aktualizováno {date}"
 }

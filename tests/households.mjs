@@ -182,7 +182,7 @@ test('the drawer offers the workspace switch only when there is a household to s
 
 test('the shell, top bar and screens show sharing only where it applies',()=>{
  const shell=fs.readFileSync('components/workspace/workspace-shell.tsx','utf8');
- assert.match(shell,/shared \? t\("Shared records · Visible to your household\."\) : t\("Private records · Only visible to your account\."\)/);
+ assert.doesNotMatch(shell,/workspace-privacy-footer|Private records/,'no text under the pages');
  const top=fs.readFileSync('components/workspace/top-bar.tsx','utf8');
  assert.doesNotMatch(top,/topbar-household|Household of \{name\}/,'the open household shows in the drawer only');
  assert.match(top,/\{!readOnly && section === 'Income & expenses' && <Button size="sm" className="quick-expense"/);

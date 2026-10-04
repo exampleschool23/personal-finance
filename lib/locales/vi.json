@@ -2578,5 +2578,6 @@
   "No matching countries.": "Không có quốc gia phù hợp.",
   "Country code": "Mã quốc gia",
   "At this amount, reached in {month}": "Với số tiền này, đạt mục tiêu vào {month}",
-  "Export": "Xuất dữ liệu"
+  "Export": "Xuất dữ liệu",
+  "Updated {date}": "Cập nhật {date}"
 }

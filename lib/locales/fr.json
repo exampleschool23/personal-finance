@@ -2578,5 +2578,6 @@
   "No matching countries.": "Aucun pays correspondant.",
   "Country code": "Indicatif du pays",
   "At this amount, reached in {month}": "À ce rythme, objectif atteint en {month}",
-  "Export": "Exporter"
+  "Export": "Exporter",
+  "Updated {date}": "Mis à jour le {date}"
 }

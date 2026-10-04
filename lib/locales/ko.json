@@ -2578,5 +2578,6 @@
   "No matching countries.": "일치하는 국가가 없습니다.",
   "Country code": "국가 번호",
   "At this amount, reached in {month}": "이 금액이면 {month}에 달성",
-  "Export": "내보내기"
+  "Export": "내보내기",
+  "Updated {date}": "{date} 업데이트"
 }

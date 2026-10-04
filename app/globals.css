@@ -264,8 +264,6 @@ input,select,textarea{min-height:44px!important;background:var(--field)!importan
 .workspace .content>*{flex-shrink:0;margin-block:0}
 .workspace .content:not(:has(*)){display:none}
 .workspace .review-content{padding-top:var(--space-page)}
-.bottom-note{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted-foreground);font-size:var(--type-caption)}
-.workspace .workspace-privacy-footer{padding-block:32px 28px}
 
 /* Page title block. */
 .page-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px 24px;min-height:40px}
@@ -1514,8 +1512,6 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .portfolio-editor-status p{margin:0}
 .portfolio-editor-status .error{padding:6px 10px}
 @media(max-width:600px){.portfolio-editor-dialog>[data-slot="dialog-header"]{padding:20px 44px 16px 16px}.portfolio-editor-body{padding:16px}.portfolio-editor-body .portfolio-asset-fields{grid-template-columns:minmax(0,1fr)}.portfolio-editor-body .portfolio-instrument-row{grid-template-columns:minmax(0,1fr) 44px}.portfolio-instrument-row>.instrument-field{grid-column:1/-1}.portfolio-editor-dialog .portfolio-editor-footer{padding:12px 16px;flex-wrap:wrap}.portfolio-editor-footer>button{width:100%}}
-.workspace-privacy-footer{padding-top:0;padding-bottom:24px}
-.workspace-privacy-footer .bottom-note{margin-bottom:0}
 .allocation-net-worth-target{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;grid-column:1/-1}
 .allocation-net-worth-target [data-slot="native-select-wrapper"]{width:100%}
 @media(max-width:600px){.allocation-net-worth-target{grid-template-columns:minmax(0,1fr)}}
@@ -1671,6 +1667,9 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .preferences-currency-list{padding:0;margin:10px 0 4px;list-style:none;border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .preferences-currency-list li{display:flex;align-items:center;gap:20px;min-height:43px;padding:4px 12px;border-bottom:1px solid var(--border);font-size:var(--type-caption)}
 .preferences-currency-list li:last-child{border-bottom:0}
+/* Where the exchange rates come from and how fresh they are, under the currencies they convert. */
+.preferences-rates-credit{display:flex;flex-wrap:wrap;gap:4px 10px;margin:8px 0 0;font-size:var(--type-caption);color:var(--muted-foreground)}
+.preferences-rates-credit a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 .preferences-currency-code{font-weight:600;width:52px;flex-shrink:0}
 .preferences-currency-name{color:var(--muted-foreground);flex:1;min-width:0;overflow-wrap:anywhere}
 .preferences-primary{background:var(--accent);color:var(--primary);border-radius:20px;padding:4px 12px;font-size:var(--type-micro)}

@@ -2578,5 +2578,6 @@
   "No matching countries.": "没有匹配的国家/地区。",
   "Country code": "国家/地区代码",
   "At this amount, reached in {month}": "按此金额，将于{month}达成",
-  "Export": "导出"
+  "Export": "导出",
+  "Updated {date}": "更新于 {date}"
 }

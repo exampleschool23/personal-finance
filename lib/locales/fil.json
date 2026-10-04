@@ -2578,5 +2578,6 @@
   "No matching countries.": "Walang tugmang bansa.",
   "Country code": "Country code",
   "At this amount, reached in {month}": "Sa halagang ito, maaabot sa {month}",
-  "Export": "I-export"
+  "Export": "I-export",
+  "Updated {date}": "Na-update noong {date}"
 }

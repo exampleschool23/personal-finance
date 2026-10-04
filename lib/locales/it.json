@@ -2578,5 +2578,6 @@
   "No matching countries.": "Nessun paese corrispondente.",
   "Country code": "Prefisso internazionale",
   "At this amount, reached in {month}": "Con questo importo, raggiunto a {month}",
-  "Export": "Esporta"
+  "Export": "Esporta",
+  "Updated {date}": "Aggiornato il {date}"
 }

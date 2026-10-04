@@ -2578,5 +2578,6 @@
   "No matching countries.": "কোনো মিল থাকা দেশ নেই।",
   "Country code": "দেশের কোড",
   "At this amount, reached in {month}": "এই পরিমাণে, লক্ষ্য পূরণ হবে {month}-এ",
-  "Export": "রপ্তানি"
+  "Export": "রপ্তানি",
+  "Updated {date}": "হালনাগাদ: {date}"
 }

@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 
 import { countryOptions } from '@/lib/countries';
 import { fonts, isFont, resolveFont } from '@/lib/fonts';
-import { formatMoney } from '@/lib/format';
+import { formatDate, formatMoney } from '@/lib/format';
 import { Plus, X } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { languageCatalogue } from '@/lib/i18n';
@@ -17,7 +17,7 @@ import { NativeSelect } from '@/components/ui/native-select';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { currencyLabel, fiatCurrencies, maxPreferredCurrencies, replacePreferredCurrency, togglePreferredCurrency, type Preferences } from '@/lib/currencies';
-export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRetry, onRestartSetup }: { initial: Preferences; demo: boolean; onSaved: (p: Preferences) => void; loading: boolean; loadError: string; onRetry:()=>void; onRestartSetup?:()=>Promise<void> }) {
+export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRetry, onRestartSetup, ratesDate }: { ratesDate?: string | null; initial: Preferences; demo: boolean; onSaved: (p: Preferences) => void; loading: boolean; loadError: string; onRetry:()=>void; onRestartSetup?:()=>Promise<void> }) {
   const { t, locale } = useLanguage();
   const [draft, setDraft] = useState(initial);
   const [saved,setSaved]=useState(initial);
@@ -73,6 +73,8 @@ export function SettingsPanel({ initial, demo, onSaved, loading, loadError, onRe
           <label className="preferences-setting-row">{t('Primary currency')}<NativeSelect value={draft.currencies[0]} onChange={event => setDraft({ ...draft, currencies: [event.target.value, ...draft.currencies.filter(c => c !== event.target.value)] })}>{draft.currencies.map(code => <option key={code} value={code}>{currencyLabel(code, locale)}</option>)}</NativeSelect></label>
           <div className="preferences-currency-section"><h4>{t('Preferred currencies')}<InfoHint>{t('Shown in the top bar and whenever you choose a currency. Choose one or two.')}</InfoHint></h4>
             <ul className="preferences-currency-list">{draft.currencies.map((code,index) => <li key={code}><span className="preferences-currency-code">{code}</span><span className="preferences-currency-name">{currencyLabel(code,locale).split(' · ').slice(1).join(' · ')}</span>{index===0?<span className="preferences-primary">{t('Primary')}</span>:<Button type="button" variant="ghost" size="icon" onClick={() => setDraft({ ...draft, currencies: draft.currencies.filter(c => c !== code) })} aria-label={t('Remove {currency}', { currency: code })}><X size={16} aria-hidden="true"/></Button>}</li>)}</ul>
+            {/* The rates’ source and date; the free rates service asks for this credit. */}
+            {!demo && ratesDate && <p className="preferences-rates-credit"><span suppressHydrationWarning>{t('Updated {date}', { date: formatDate(ratesDate, locale) })}</span><a href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">Rates By Exchange Rate API</a></p>}
             <Dialog open={currencySearchOpen} onOpenChange={open=>{setCurrencySearchOpen(open);if(!open)setQuery('');}}><DialogTrigger asChild><Button type="button" variant="ghost" className="currency-search-trigger"><Plus size={18} aria-hidden="true"/>{t(draft.currencies.length<maxPreferredCurrencies?'Add currency':'Change currencies')}</Button></DialogTrigger><DialogContent className="currency-search-dialog sm:max-w-xl" showCloseButton={false}><DialogHeader><DialogTitle>{t('Preferred currencies')}</DialogTitle><DialogDescription>{t('Choose one or two currencies. The primary currency opens by default.')}</DialogDescription></DialogHeader><Input aria-label={t('Search currencies')} placeholder={t('Search currencies')} value={query} onChange={e=>setQuery(e.target.value)}/><div className="currency-catalogue">{currencies.map(c => <label key={c.code}><input type="checkbox" checked={draft.currencies.includes(c.code)} onChange={() => toggleCurrency(c.code)}/><span>{currencyLabel(c.code, locale)}</span></label>)}{!currencies.length&&<p className="muted currency-search-empty" role="status">{t('No matching currencies.')}</p>}</div><div className="currency-search-footer"><DialogClose asChild><Button type="button">{t('Done')}</Button></DialogClose></div></DialogContent></Dialog>
             <AlertDialog open={!!currencyNotice} onOpenChange={open=>{if(!open)setCurrencyNotice(null);}}><AlertDialogContent>
               <AlertDialogTitle>{t(currencyNotice?.reason==='last'?'Keep at least one currency':'You already have two currencies')}</AlertDialogTitle>

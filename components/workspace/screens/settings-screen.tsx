@@ -35,7 +35,7 @@ export function SettingsScreen() {
   {/* Signing out (or leaving the sample workspace) lives here, beside the account's other settings. */}
   <SettingsLayout
    actions={<Button variant="outline" onClick={logout}><LogOut size={16} aria-hidden="true"/>{demo ? t('Exit demo') : t('Sign out')}</Button>}
-   preferences={<><SettingsPanel key={String(user) + settingsLoading} initial={preferencesData} demo={demo} onSaved={applyPreferences} loading={!demo && settingsLoading} loadError={settingsError} onRetry={retrySettings} onRestartSetup={demo?undefined:restartOnboarding}/><TelegramPanel demo={demo}/><PlanningError/></>}
+   preferences={<><SettingsPanel key={String(user) + settingsLoading} ratesDate={market?.ratesDate} initial={preferencesData} demo={demo} onSaved={applyPreferences} loading={!demo && settingsLoading} loadError={settingsError} onRetry={retrySettings} onRestartSetup={demo?undefined:restartOnboarding}/><TelegramPanel demo={demo}/><PlanningError/></>}
    household={<HouseholdPanel household={household} demo={demo}/>}
    benchmarks={<InvestmentComparisonSettings demo={demo} currencies={preferencesData.currencies}/>}
    security={<AccountAccessPanel settings onSignedOut={clearLocalSession}/>}

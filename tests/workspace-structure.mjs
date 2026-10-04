@@ -38,7 +38,7 @@ test('screens contain only their own page and leave the drawer, top bar and dial
  const shell=read('components/workspace/workspace-shell.tsx');
  for(const part of ['<AppDrawer ','<TopBar ','<WorkspaceDialogs/>'])assert.equal(shell.split(part).length,2,part);
  // Until a tapped destination's route arrives, its skeleton stands in for the routed screen.
- assert.match(shell,/<TopBar pendingSection=\{destination && sectionFor\(destination\)\}\/>\s*\{destination \? <PageSkeleton .*?\/> : children\}\s*<footer/);
+ assert.match(shell,/<TopBar pendingSection=\{destination && sectionFor\(destination\)\}\/>\s*\{destination \? <PageSkeleton .*?\/> : children\}\s*<\/main>/);
  for(const name of imports(shell))assert.ok(!name.includes('/screens/'),name);
 });
 

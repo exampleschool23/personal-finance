@@ -2578,5 +2578,6 @@
   "No matching countries.": "ไม่พบประเทศที่ตรงกัน",
   "Country code": "รหัสประเทศ",
   "At this amount, reached in {month}": "ด้วยจำนวนนี้ จะถึงเป้าหมายใน {month}",
-  "Export": "ส่งออก"
+  "Export": "ส่งออก",
+  "Updated {date}": "อัปเดตเมื่อ {date}"
 }

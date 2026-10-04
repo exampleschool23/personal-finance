@@ -2578,5 +2578,6 @@
   "No matching countries.": "Eşleşen ülke yok.",
   "Country code": "Ülke kodu",
   "At this amount, reached in {month}": "Bu tutarla {month} ayında ulaşılır",
-  "Export": "Dışa aktar"
+  "Export": "Dışa aktar",
+  "Updated {date}": "Güncellendi: {date}"
 }

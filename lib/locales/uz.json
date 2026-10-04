@@ -2578,5 +2578,6 @@
   "No matching countries.": "Mos davlat topilmadi.",
   "Country code": "Davlat kodi",
   "At this amount, reached in {month}": "Shu miqdorda maqsadga {month} oyida erishiladi",
-  "Export": "Eksport"
+  "Export": "Eksport",
+  "Updated {date}": "Yangilangan: {date}"
 }

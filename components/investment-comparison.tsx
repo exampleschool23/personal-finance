@@ -99,8 +99,10 @@ export function InvestmentComparison({history,today,currency,market,demo,windowS
  const chartPoints=(overviewResult?.points??[]).filter(point=>point.date>=windowStart);
  const chartSeries=visibleSeries;
  const detailPoint=chartPoints.find(point=>point.date===detailDate);
- // Without any investment there is nothing to compare: invite the first one instead of drawing a flat line at zero.
- if(scope==='investments'&&!history.records.some(isInvestmentRecord))return <>
+ // Without any investment, or with only ones worth nothing and never paid into (a $0 business), there is nothing to
+ // compare: invite the first one instead of drawing a flat line at zero.
+ const nothingInvested=!history.records.some(isInvestmentRecord)||(!!decision&&chartPoints.length>0&&chartPoints.every(point=>!point.actual&&!point.contributed));
+ if(scope==='investments'&&nothingInvested)return <>
   <div className="overview-chart-heading"><div className="overview-chart-title"><h3>{t('Portfolio over time')}</h3></div></div>
   <EmptyState icon={<ChartNoAxesCombined aria-hidden="true"/>} title={t('No investments yet')} description={t('Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.')}><Button asChild><Link href="/assets">{t('Add asset')}</Link></Button></EmptyState>
   {summary}

@@ -2578,5 +2578,6 @@
   "No matching countries.": "Nicio țară potrivită.",
   "Country code": "Prefixul țării",
   "At this amount, reached in {month}": "Cu această sumă, atins în {month}",
-  "Export": "Export"
+  "Export": "Export",
+  "Updated {date}": "Actualizat {date}"
 }

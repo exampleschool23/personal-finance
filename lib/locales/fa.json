@@ -2578,5 +2578,6 @@
   "No matching countries.": "کشوری مطابق نیست.",
   "Country code": "کد کشور",
   "At this amount, reached in {month}": "با این مبلغ، در {month} به هدف می‌رسید",
-  "Export": "خروجی گرفتن"
+  "Export": "خروجی گرفتن",
+  "Updated {date}": "به‌روزرسانی: {date}"
 }

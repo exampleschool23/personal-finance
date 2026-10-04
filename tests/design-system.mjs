@@ -128,6 +128,7 @@ test('the top bar switches between the two display currencies in place, and the 
  assert.match(bar,/preferencesData\.currencies\.length > 1 && <Segmented className="header-currency-switch"/,'a one-tap switch, shown only when there is a second currency');
  assert.doesNotMatch(bar,/Popover/,'no pop-up for the display currency');
  assert.doesNotMatch(shell,/Rates By Exchange Rate API|fx-note|Updated \{date\}/,'no exchange-rate date or credit under the pages');
+ assert.match(fs.readFileSync('components/settings-panel.tsx','utf8'),/\{!demo && ratesDate && <p className="preferences-rates-credit">[^\n]*formatDate\(ratesDate, locale\)[^\n]*Rates By Exchange Rate API/,'the rates credit sits with the currencies in Settings');
  assert.match(css,/\[data-slot=sidebar\]\[data-mobile=true\]::after\{[^}]*background:inherit/,'the phone drawer has no strip of backdrop under it');
 });
 

@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState, type ReactNode } from 'react';
-import { ShieldCheck } from 'lucide-react';
 import { Brand } from '@/components/presentation-foundation/brand';
 import { DatabaseStatus } from '@/components/database-status';
 import { LanguageProvider, useLanguage } from '@/components/language-provider';
@@ -65,7 +64,6 @@ function WorkspaceShell({ children }: { children: ReactNode }) {
    <DatabaseStatus owner={user} demo={demo}/>
    <TopBar pendingSection={destination && sectionFor(destination)}/>
    {destination ? <PageSkeleton label={t("Loading your workspace…")} section={sectionFor(destination)}/> : children}
-   <footer className="content workspace-privacy-footer"><p className="bottom-note"><ShieldCheck size={14}/>{demo ? t("Sample data for exploring the app.") : shared ? t("Shared records · Visible to your household.") : t("Private records · Only visible to your account.")}</p></footer>
   </main></TopBarSlotProvider>
   <WorkspaceDialogs/>
  </SidebarProvider>;

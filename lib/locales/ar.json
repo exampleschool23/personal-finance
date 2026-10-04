@@ -2578,5 +2578,6 @@
   "No matching countries.": "لا توجد دول مطابقة.",
   "Country code": "رمز الدولة",
   "At this amount, reached in {month}": "بهذا المبلغ، يتحقق الهدف في {month}",
-  "Export": "تصدير"
+  "Export": "تصدير",
+  "Updated {date}": "آخر تحديث {date}"
 }

@@ -2578,5 +2578,6 @@
   "No matching countries.": "Keine passenden Länder.",
   "Country code": "Ländervorwahl",
   "At this amount, reached in {month}": "Mit diesem Betrag erreicht im {month}",
-  "Export": "Exportieren"
+  "Export": "Exportieren",
+  "Updated {date}": "Aktualisiert {date}"
 }

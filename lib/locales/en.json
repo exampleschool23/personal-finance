@@ -2578,5 +2578,6 @@
   "No matching countries.": "No matching countries.",
   "Country code": "Country code",
   "At this amount, reached in {month}": "At this amount, reached in {month}",
-  "Export": "Export"
+  "Export": "Export",
+  "Updated {date}": "Updated {date}"
 }

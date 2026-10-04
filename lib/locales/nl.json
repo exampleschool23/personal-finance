@@ -2578,5 +2578,6 @@
   "No matching countries.": "Geen overeenkomende landen.",
   "Country code": "Landcode",
   "At this amount, reached in {month}": "Met dit bedrag bereikt in {month}",
-  "Export": "Exporteren"
+  "Export": "Exporteren",
+  "Updated {date}": "Bijgewerkt {date}"
 }

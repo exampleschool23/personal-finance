@@ -2578,5 +2578,6 @@
   "No matching countries.": "Немає відповідних країн.",
   "Country code": "Код країни",
   "At this amount, reached in {month}": "З цією сумою мету буде досягнуто в {month}",
-  "Export": "Експорт"
+  "Export": "Експорт",
+  "Updated {date}": "Оновлено {date}"
 }

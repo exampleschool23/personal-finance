@@ -2578,5 +2578,6 @@
   "No matching countries.": "一致する国がありません。",
   "Country code": "国番号",
   "At this amount, reached in {month}": "この金額なら{month}に達成",
-  "Export": "エクスポート"
+  "Export": "エクスポート",
+  "Updated {date}": "{date}更新"
 }
