@@ -119,7 +119,7 @@ test('page titles and actions sit in the top bar, as in a desktop app',()=>{
  assert.match(header,/createPortal\(<>\{heading\}/);
  assert.match(header,/slot\.actions \? actions && createPortal\(actions, slot\.actions\) : \(tabs \|\| actions\) && <header/,'actions stay on the page on phones');
  assert.match(css,/\.topbar-page-title:not\(:empty\)\+\.topbar-title\{display:none\}/);
- assert.match(css,/\.topbar-page-actions:has\(\[data-variant=default\]\)~\.quick-expense\{/,'one main action stands out');
+ assert.match(fs.readFileSync('components/workspace/top-bar.tsx','utf8'),/\{!readOnly && section === 'Income & expenses' && <Button size="sm" className="quick-expense"/,'Add expense sits in the bar on Cash flow only');
  assert.doesNotMatch(fs.readFileSync('components/presentation-foundation/loading-placeholder.tsx','utf8'),/className="page-heading"/,'no heading placeholder under a bar that already names the page');
 });
 
@@ -127,16 +127,19 @@ test('the top bar switches between the two display currencies in place, and the 
  const bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),shell=fs.readFileSync('components/workspace/workspace-shell.tsx','utf8'),css=fs.readFileSync('app/globals.css','utf8');
  assert.match(bar,/preferencesData\.currencies\.length > 1 && <Segmented className="header-currency-switch"/,'a one-tap switch, shown only when there is a second currency');
  assert.doesNotMatch(bar,/Popover/,'no pop-up for the display currency');
- assert.match(shell,/market\?\.ratesDate && <p className="bottom-note fx-note">[\s\S]*Rates By Exchange Rate API/,'the exchange-rate credit stays visible');
+ assert.doesNotMatch(shell,/Rates By Exchange Rate API|fx-note|Updated \{date\}/,'no exchange-rate date or credit under the pages');
  assert.match(css,/\[data-slot=sidebar\]\[data-mobile=true\]::after\{[^}]*background:inherit/,'the phone drawer has no strip of backdrop under it');
 });
 
 test('Goals, Reports and Cash flow switch their views from tabs beside the title, which fall back to the page when the bar is full',()=>{
- for(const [file,label] of [['components/workspace/screens/reports-screen.tsx','Reports'],['components/workspace/screens/cash-flow-screen.tsx','Cash flow'],['components/planning/goals-page.tsx','Goals'],['components/planning/accounts-page.tsx','Accounts']]){
+ for(const [file,label] of [['components/workspace/screens/reports-screen.tsx','Reports'],['components/workspace/screens/cash-flow-screen.tsx','Cash flow'],['components/planning/goals-page.tsx','Goals'],['components/planning/accounts-page.tsx','Accounts'],['components/workspace/screens/budget-screen.tsx','Budget'],['components/settings-layout.tsx','Settings']]){
   const source=fs.readFileSync(file,'utf8');
   assert.match(source,new RegExp(`<PageHeader title=\\{t\\('${label}'\\)\\} tabs=\\{<Segmented (as="nav" )?className="page-tabs"`),file);
   assert.doesNotMatch(source,/cashflow-tabs/,file);
  }
+ // Settings groups its nine areas into five views; old anchors (#rules, #tags…) still open the right one.
+ const {viewOf}=loadTS('components/settings-layout.tsx',{'@/components/language-provider':{useLanguage:()=>({t:text=>text})},'@/components/presentation-foundation/page-header':{PageHeader:()=>null},'@/components/presentation-foundation/segmented':{Segmented:()=>null}});
+ for(const [hash,view] of [['','account'],['preferences','account'],['security','account'],['benchmarks','account'],['household','household'],['rules','categories'],['tags','categories'],['categories','categories'],['businesses','businesses'],['data-tools','data-tools'],['unknown','account']])assert.equal(viewOf(hash),view,hash);
  // Accounts keeps its operations behind a Recent activity tab; Cash flow adds expenses from the bar's own Add expense.
  assert.match(fs.readFileSync('components/planning/accounts-page.tsx','utf8'),/\{view==='activity'&&<>\n  <section className="panel account-activity">/);
  assert.doesNotMatch(fs.readFileSync('components/workspace/screens/cash-flow-screen.tsx','utf8'),/addCashFlow\('Other expense'\)/);

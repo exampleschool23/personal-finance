@@ -1,5 +1,7 @@
 "use client";
 import { useMemo, useState } from 'react';
+import { LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { BusinessSettings, TagSettings } from '@/components/business-settings';
 import { useLanguage } from '@/components/language-provider';
 import { RuleDialog, RulesPanel, newRule } from '@/components/transactions-page';
@@ -21,7 +23,7 @@ import { PlanningError } from '@/components/workspace/screen-notices';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
 export function SettingsScreen() {
- const { household, user, demo, currency, market, reload, preferencesData, applyPreferences, settingsLoading, settingsError, retrySettings, planning, workspacePreferences, refreshRecords, clearLocalSession, restartOnboarding,
+ const { household, user, demo, logout, currency, market, reload, preferencesData, applyPreferences, settingsLoading, settingsError, retrySettings, planning, workspacePreferences, refreshRecords, clearLocalSession, restartOnboarding,
   businessList, tags, transactionTools, categorize, assignTransactionsBusiness, editRecord, requestDelete, setSettingUpBusinesses } = useWorkspace();
  const { t } = useLanguage();
  const tagMap = useMemo(() => tagsByRecord(tags.data.links), [tags.data.links]);
@@ -30,7 +32,9 @@ export function SettingsScreen() {
  const [rule, setRule] = useState<TransactionRule | null>(null);
  const createTag = async (name: string) => { const id = crypto.randomUUID(); await tags.save({ id, name, color: nextPaletteColor(tags.data.tags.map(tag => tag.color)) }); return id; };
  return <div data-page="Settings" className="content">
+  {/* Signing out (or leaving the sample workspace) lives here, beside the account's other settings. */}
   <SettingsLayout
+   actions={<Button variant="outline" onClick={logout}><LogOut size={16} aria-hidden="true"/>{demo ? t('Exit demo') : t('Sign out')}</Button>}
    preferences={<><SettingsPanel key={String(user) + settingsLoading} initial={preferencesData} demo={demo} onSaved={applyPreferences} loading={!demo && settingsLoading} loadError={settingsError} onRetry={retrySettings} onRestartSetup={demo?undefined:restartOnboarding}/><TelegramPanel demo={demo}/><PlanningError/></>}
    household={<HouseholdPanel household={household} demo={demo}/>}
    benchmarks={<InvestmentComparisonSettings demo={demo} currencies={preferencesData.currencies}/>}

@@ -193,7 +193,6 @@
   "Could not load settings.": "לא ניתן לטעון את ההגדרות.",
   "Could not save settings. Try again.": "לא ניתן לשמור את ההגדרות. נסו שוב.",
   "Some currencies could not be converted and are excluded from totals.": "לא ניתן היה להמיר חלק מהמטבעות והם אינם נכללים בסכומים.",
-  "Updated {date}": "עודכן {date}",
   "Business": "עסק",
   "Linked business (optional)": "עסק מקושר (אופציונלי)",
   "No linked business": "ללא עסק מקושר",
@@ -2578,5 +2577,6 @@
   "Search countries": "חיפוש מדינה",
   "No matching countries.": "אין מדינות תואמות.",
   "Country code": "קידומת מדינה",
-  "At this amount, reached in {month}": "בסכום הזה, היעד יושג ב{month}"
+  "At this amount, reached in {month}": "בסכום הזה, היעד יושג ב{month}",
+  "Export": "ייצוא"
 }

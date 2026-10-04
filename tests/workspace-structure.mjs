@@ -56,9 +56,9 @@ test('every destination has a unique path and unknown paths open Overview',()=>{
  for(const section of sections)assert.ok(fs.existsSync('app/(workspace)'+(section.path==='/'?'':section.path)+'/page.tsx'),section.path);
 });
 
-test('the drawer marks the current route, shows overdue payments and signs out through its prop',()=>{
+test('the drawer marks the current route and shows overdue payments; signing out lives in Settings',()=>{
  const sheet=[];
- let path='/upcoming',signedOut=0;
+ let path='/upcoming';
  // Stand-ins for the sidebar kit: plain elements that drop the kit-only props.
  const element=tag=>function Element(all){const props={...all};delete props.asChild;delete props.isActive;return React.createElement(tag,props);};
  const {AppDrawer}=loadTS('components/workspace/app-drawer.tsx',{
@@ -68,24 +68,25 @@ test('the drawer marks the current route, shows overdue payments and signs out t
   '@/components/ui/button':{Button:element('button')},
   '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),SidebarTrigger:element('button'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
  });
- const props={account:{initial:'H',title:'Personal account',detail:'owner@example.com'},overdueCount:1234,signOutLabel:'Sign out',onSignOut:()=>{signedOut++;}};
+ const props={account:{initial:'H',title:'Personal account',detail:'owner@example.com'},overdueCount:1234};
  const html=renderToStaticMarkup(React.createElement(AppDrawer,props));
  assert.equal((html.match(/aria-current="page"/g)||[]).length,1);
  assert.match(html,/href="\/upcoming" aria-current="page"[^>]*>.*?Recurring<\/span><span class="count">1,234<\/span>/);
  assert.match(html,/owner@example\.com/);
- assert.match(html,/aria-label="Sign out"/);
- // Recently deleted sits at the foot just above the account, and the account opens Settings.
- assert.match(html,/<footer[^>]*>.*href="\/recently-deleted".*href="\/settings"[^>]*>.*owner@example\.com.*aria-label="Sign out"/s);
+ assert.doesNotMatch(html,/Sign out/,'signing out lives in Settings, not the drawer');
+ assert.match(read('components/workspace/screens/settings-screen.tsx'),/actions=\{<Button variant="outline" onClick=\{logout\}>[^\n]*\{demo \? t\('Exit demo'\) : t\('Sign out'\)\}/);
+ // Recently deleted sits at the foot just above the account, and the account opens Settings with a › after it.
+ assert.match(html,/<footer[^>]*>.*href="\/recently-deleted".*href="\/settings"[^>]*>.*owner@example\.com.*lucide-chevron-right/s);
  assert.ok(!/<span>Settings<\/span>/.test(html));
- // The header holds the mark and the quick tools: Settings and the drawer's own collapse button.
- assert.match(html,/<header class="sidebar-brand">.*<div class="sidebar-tools">.*?href="\/settings"[^>]*aria-label="Settings".*aria-label="Toggle Sidebar".*<\/header>/s);
+ // The header holds the mark and the drawer's own collapse button; Settings opens from the account.
+ assert.match(html,/<header class="sidebar-brand">.*<div class="sidebar-tools"><button aria-label="Toggle Sidebar".*<\/header>/s);
+ assert.equal((html.match(/href="\/settings"/g)||[]).length,1);
  path='/settings';
  assert.match(renderToStaticMarkup(React.createElement(AppDrawer,props)),/href="\/settings" class="user-link" data-active="true" aria-current="page"/);
  path='/';
  const calm=renderToStaticMarkup(React.createElement(AppDrawer,{...props,overdueCount:0}));
  assert.match(calm,/href="\/" aria-current="page"/);
  assert.ok(!calm.includes('class="count"'));
- assert.equal(signedOut,0);
 });
 
 test('a drawer tap highlights and shows its destination before the route arrives',()=>{

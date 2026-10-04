@@ -193,7 +193,6 @@
   "Could not load settings.": "설정을 불러오지 못했어요.",
   "Could not save settings. Try again.": "설정을 저장하지 못했어요. 다시 시도해 주세요.",
   "Some currencies could not be converted and are excluded from totals.": "일부 통화는 환산하지 못해 합계에서 제외되었어요.",
-  "Updated {date}": "{date} 업데이트",
   "Business": "사업",
   "Linked business (optional)": "연결된 사업 (선택)",
   "No linked business": "연결된 사업 없음",
@@ -2578,5 +2577,6 @@
   "Search countries": "국가 검색",
   "No matching countries.": "일치하는 국가가 없습니다.",
   "Country code": "국가 번호",
-  "At this amount, reached in {month}": "이 금액이면 {month}에 달성"
+  "At this amount, reached in {month}": "이 금액이면 {month}에 달성",
+  "Export": "내보내기"
 }

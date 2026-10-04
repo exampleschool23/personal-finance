@@ -193,7 +193,6 @@
   "Could not load settings.": "Не вдалося завантажити налаштування.",
   "Could not save settings. Try again.": "Не вдалося зберегти налаштування. Спробуйте ще раз.",
   "Some currencies could not be converted and are excluded from totals.": "Деякі валюти не вдалося конвертувати, тому їх виключено із сум.",
-  "Updated {date}": "Оновлено {date}",
   "Business": "Бізнес",
   "Linked business (optional)": "Пов’язаний бізнес (необов’язково)",
   "No linked business": "Немає пов’язаного бізнесу",
@@ -2578,5 +2577,6 @@
   "Search countries": "Пошук країни",
   "No matching countries.": "Немає відповідних країн.",
   "Country code": "Код країни",
-  "At this amount, reached in {month}": "З цією сумою мету буде досягнуто в {month}"
+  "At this amount, reached in {month}": "З цією сумою мету буде досягнуто в {month}",
+  "Export": "Експорт"
 }

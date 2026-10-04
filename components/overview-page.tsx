@@ -11,7 +11,6 @@ import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { PartialTotal } from '@/components/presentation-foundation/partial-total';
 import { useLanguage } from '@/components/language-provider';
 import { categoryColor } from '@/lib/category-colors';
-import { depositToday } from '@/lib/deposit-interest';
 import { estimatedCashFlow, financialTotals, income, type Entry } from '@/lib/finance';
 import { formatDate, formatMoney, formatPercent } from '@/lib/format';
 import { assetAllocation, nextPayments } from '@/lib/overview';
@@ -19,9 +18,9 @@ import { upcomingPayments, type PlanningData } from '@/lib/planning';
 
 /** `firstVisit` greets a brand-new account with "Welcome" instead of "Welcome back". */
 export function OverviewHeading({ name, firstVisit = false, children }: { name?: string; firstVisit?: boolean; children?: ReactNode }) {
- const { t, locale } = useLanguage();
+ const { t } = useLanguage();
  const title = firstVisit ? (name ? t('Welcome, {name}!', { name }) : t('Welcome!')) : name ? t('Welcome back, {name}!', { name }) : t('Welcome back!');
- return <PageHeader eyebrow={formatDate(depositToday(), locale)} title={title}>{children}</PageHeader>;
+ return <PageHeader title={title}>{children}</PageHeader>;
 }
 
 type Props = { entries: Entry[]; currency: string; excludedCurrencies: string[]; forecast: ReturnType<typeof estimatedCashFlow>; forecastReady: boolean; planning: PlanningData | null };

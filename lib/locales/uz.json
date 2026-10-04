@@ -193,7 +193,6 @@
   "Could not load settings.": "Sozlamalarni yuklab bo‘lmadi.",
   "Could not save settings. Try again.": "Sozlamalarni saqlab bo‘lmadi. Qayta urinib ko‘ring.",
   "Some currencies could not be converted and are excluded from totals.": "Ayrim valyutalarni aylantirib bo‘lmadi, ular jami summaga kiritilmagan.",
-  "Updated {date}": "Yangilangan: {date}",
   "Business": "Biznes",
   "Linked business (optional)": "Bog‘langan biznes (ixtiyoriy)",
   "No linked business": "Biznesga bog‘lanmagan",
@@ -2578,5 +2577,6 @@
   "Search countries": "Davlatlarni qidirish",
   "No matching countries.": "Mos davlat topilmadi.",
   "Country code": "Davlat kodi",
-  "At this amount, reached in {month}": "Shu miqdorda maqsadga {month} oyida erishiladi"
+  "At this amount, reached in {month}": "Shu miqdorda maqsadga {month} oyida erishiladi",
+  "Export": "Eksport"
 }

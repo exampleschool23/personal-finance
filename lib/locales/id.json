@@ -193,7 +193,6 @@
   "Could not load settings.": "Tidak dapat memuat pengaturan.",
   "Could not save settings. Try again.": "Tidak dapat menyimpan pengaturan. Coba lagi.",
   "Some currencies could not be converted and are excluded from totals.": "Beberapa mata uang tidak dapat dikonversi dan dikecualikan dari total.",
-  "Updated {date}": "Diperbarui {date}",
   "Business": "Bisnis",
   "Linked business (optional)": "Bisnis terkait (opsional)",
   "No linked business": "Tidak ada bisnis terkait",
@@ -2578,5 +2577,6 @@
   "Search countries": "Cari negara",
   "No matching countries.": "Tidak ada negara yang cocok.",
   "Country code": "Kode negara",
-  "At this amount, reached in {month}": "Dengan jumlah ini, tercapai pada {month}"
+  "At this amount, reached in {month}": "Dengan jumlah ini, tercapai pada {month}",
+  "Export": "Ekspor"
 }

@@ -1,4 +1,5 @@
 "use client";
+import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { showSaved } from '@/lib/feedback';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
@@ -21,9 +22,8 @@ export function BackupRestore({demo,owner,onSaved}:{demo:boolean;owner:string|nu
   const response=await fetch('/api/backup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,backup:text,...(action==='restore'?{expected_state:preview?.expected_state,confirmed:true}:{})})});
   const data=await response.json() as T & {error?:string};if(!response.ok)throw Error(data.error);return data;
  }
- return <section className="data-backup-section"><h3>{t('Restore a backup')}</h3>
-  <p className="muted">{t('Restore replaces this account’s data with the selected backup. A recovery copy is saved automatically. Only unchanged verified backups from this account are accepted.')}</p>
-  <label>{t('Backup file')}<input type="file" accept=".json,application/json" disabled={demo||busy} onChange={async event=>{
+ return <section className="panel data-backup-section"><PanelTitle title={t('Restore a backup')} hint={t('Restore replaces this account’s data with the selected backup. A recovery copy is saved automatically. Only unchanged verified backups from this account are accepted.')}/>
+  <label className="data-file-field">{t('Backup file')}<input type="file" accept=".json,application/json" disabled={demo||busy} onChange={async event=>{
    const file=event.target.files?.[0],generation=++fileRequest.current;setPreview(null);setBackup('');setError('');setRecovery('');if(!file)return;
    if(file.size>28_000_000){setError('File is too large.');return;}
    setBusy(true);try{const text=await file.text();const result=await request<Preview>('preview',text);if(fileRequest.current===generation){setBackup(text);setPreview(result);}}catch(reason){if(fileRequest.current===generation)setError((reason as Error).message);}finally{if(fileRequest.current===generation)setBusy(false);}

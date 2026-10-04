@@ -193,7 +193,6 @@
   "Could not load settings.": "ไม่สามารถโหลดการตั้งค่าได้",
   "Could not save settings. Try again.": "ไม่สามารถบันทึกการตั้งค่าได้ โปรดลองอีกครั้ง",
   "Some currencies could not be converted and are excluded from totals.": "บางสกุลเงินไม่สามารถแปลงได้และถูกตัดออกจากยอดรวม",
-  "Updated {date}": "อัปเดตเมื่อ {date}",
   "Business": "ธุรกิจ",
   "Linked business (optional)": "ธุรกิจที่เชื่อมโยง (ไม่บังคับ)",
   "No linked business": "ไม่มีธุรกิจที่เชื่อมโยง",
@@ -2578,5 +2577,6 @@
   "Search countries": "ค้นหาประเทศ",
   "No matching countries.": "ไม่พบประเทศที่ตรงกัน",
   "Country code": "รหัสประเทศ",
-  "At this amount, reached in {month}": "ด้วยจำนวนนี้ จะถึงเป้าหมายใน {month}"
+  "At this amount, reached in {month}": "ด้วยจำนวนนี้ จะถึงเป้าหมายใน {month}",
+  "Export": "ส่งออก"
 }

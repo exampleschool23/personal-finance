@@ -193,7 +193,6 @@
   "Could not load settings.": "Không thể tải cài đặt.",
   "Could not save settings. Try again.": "Không thể lưu cài đặt. Hãy thử lại.",
   "Some currencies could not be converted and are excluded from totals.": "Một số tiền tệ không thể quy đổi và bị loại khỏi tổng.",
-  "Updated {date}": "Cập nhật {date}",
   "Business": "Doanh nghiệp",
   "Linked business (optional)": "Doanh nghiệp liên kết (tùy chọn)",
   "No linked business": "Không có doanh nghiệp liên kết",
@@ -2578,5 +2577,6 @@
   "Search countries": "Tìm quốc gia",
   "No matching countries.": "Không có quốc gia phù hợp.",
   "Country code": "Mã quốc gia",
-  "At this amount, reached in {month}": "Với số tiền này, đạt mục tiêu vào {month}"
+  "At this amount, reached in {month}": "Với số tiền này, đạt mục tiêu vào {month}",
+  "Export": "Xuất dữ liệu"
 }

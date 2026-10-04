@@ -21,12 +21,11 @@ import { awaitingSettings } from '@/lib/onboarding';
 import { signInPath } from '@/lib/sign-in-path';
 import { sharedWorkspace } from '@/lib/household';
 import { showError } from '@/lib/feedback';
-import { formatDate } from '@/lib/format';
 
 /** Frames the current screen with the drawer and top bar once the session is known. */
 function WorkspaceShell({ children }: { children: ReactNode }) {
- const { t, locale } = useLanguage();
- const { ready, user, demo, preview, market, pathname, busy, configured, error, login, logout, startDemo, overdueCount, onboardingNeeded, settingsLoading, preferencesData, savePreferences, applyPreferences, planning, saveTrackingStart, household } = useWorkspace();
+ const { t } = useLanguage();
+ const { ready, user, demo, preview, pathname, busy, configured, error, login, startDemo, overdueCount, onboardingNeeded, settingsLoading, preferencesData, savePreferences, applyPreferences, planning, saveTrackingStart, household } = useWorkspace();
  // A drawer tap shows its destination immediately; the routed screen replaces it once it arrives.
  const [pending, setPending] = useState<PendingNavigation | null>(null);
  const destination = pendingDestination(pending, pathname);
@@ -61,12 +60,12 @@ function WorkspaceShell({ children }: { children: ReactNode }) {
  const workspaces = homes ? [{ id: homes.me, label: t('My finances') }, ...homes.memberships.map(item => ({ id: item.owner_id, label: t('Household of {name}', { name: item.name ?? t('Partner') }) }))] : [];
  const shared = sharedWorkspace(homes);
  return <SidebarProvider>
-  <AppDrawer account={account} overdueCount={overdueCount} signOutLabel={demo ? t("Exit demo") : t("Sign out")} onSignOut={logout} pendingPath={destination} onNavigate={navigate} badge={demo ? t("Demo") : undefined} workspaces={workspaces} workspace={homes?.active} onWorkspace={id => household.open(id === homes?.me ? null : id).catch(reason => showError((reason as Error).message))}/>
+  <AppDrawer account={account} overdueCount={overdueCount} pendingPath={destination} onNavigate={navigate} badge={demo ? t("Demo") : undefined} workspaces={workspaces} workspace={homes?.active} onWorkspace={id => household.open(id === homes?.me ? null : id).catch(reason => showError((reason as Error).message))}/>
   <TopBarSlotProvider><main className="workspace">
    <DatabaseStatus owner={user} demo={demo}/>
    <TopBar pendingSection={destination && sectionFor(destination)}/>
    {destination ? <PageSkeleton label={t("Loading your workspace…")} section={sectionFor(destination)}/> : children}
-   <footer className="content workspace-privacy-footer"><p className="bottom-note"><ShieldCheck size={14}/>{demo ? t("Sample data for exploring the app.") : shared ? t("Shared records · Visible to your household.") : t("Private records · Only visible to your account.")}</p>{!demo && market?.ratesDate && <p className="bottom-note fx-note"><span suppressHydrationWarning>{t("Updated {date}", { date: formatDate(market.ratesDate, locale) })}</span><a href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">Rates By Exchange Rate API</a></p>}</footer>
+   <footer className="content workspace-privacy-footer"><p className="bottom-note"><ShieldCheck size={14}/>{demo ? t("Sample data for exploring the app.") : shared ? t("Shared records · Visible to your household.") : t("Private records · Only visible to your account.")}</p></footer>
   </main></TopBarSlotProvider>
   <WorkspaceDialogs/>
  </SidebarProvider>;

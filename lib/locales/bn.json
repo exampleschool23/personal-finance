@@ -193,7 +193,6 @@
   "Could not load settings.": "সেটিংস লোড করা যায়নি।",
   "Could not save settings. Try again.": "সেটিংস সংরক্ষণ করা যায়নি। আবার চেষ্টা করুন।",
   "Some currencies could not be converted and are excluded from totals.": "কিছু মুদ্রা রূপান্তর করা যায়নি এবং মোট থেকে বাদ দেওয়া হয়েছে।",
-  "Updated {date}": "হালনাগাদ: {date}",
   "Business": "ব্যবসা",
   "Linked business (optional)": "সংযুক্ত ব্যবসা (ঐচ্ছিক)",
   "No linked business": "কোনো সংযুক্ত ব্যবসা নেই",
@@ -2578,5 +2577,6 @@
   "Search countries": "দেশ খুঁজুন",
   "No matching countries.": "কোনো মিল থাকা দেশ নেই।",
   "Country code": "দেশের কোড",
-  "At this amount, reached in {month}": "এই পরিমাণে, লক্ষ্য পূরণ হবে {month}-এ"
+  "At this amount, reached in {month}": "এই পরিমাণে, লক্ষ্য পূরণ হবে {month}-এ",
+  "Export": "রপ্তানি"
 }

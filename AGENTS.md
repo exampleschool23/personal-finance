@@ -34,7 +34,7 @@ The drawer, the shell and the screens are separate. Keep them that way.
   `<div data-page="…" className="content">` blocks. It never imports the drawer,
   the top bar, the shell, the sidebar kit or another screen.
 - `AppDrawer` (`components/workspace/app-drawer.tsx`) is independent: it takes
-  the account, the overdue count and a sign-out callback as props and reads the
+  the account and the overdue count as props (signing out lives in Settings) and reads the
   route list from `components/workspace/navigation.ts`. It must not import
   workspace state or any screen. Add a destination by adding it to `sections`
   and creating its route and screen.

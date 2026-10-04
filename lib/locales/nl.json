@@ -193,7 +193,6 @@
   "Could not load settings.": "Kan instellingen niet laden.",
   "Could not save settings. Try again.": "Kan instellingen niet opslaan. Probeer het opnieuw.",
   "Some currencies could not be converted and are excluded from totals.": "Sommige valuta’s konden niet worden omgerekend en zijn van de totalen uitgesloten.",
-  "Updated {date}": "Bijgewerkt {date}",
   "Business": "Bedrijf",
   "Linked business (optional)": "Gekoppeld bedrijf (optioneel)",
   "No linked business": "Geen gekoppeld bedrijf",
@@ -2578,5 +2577,6 @@
   "Search countries": "Landen zoeken",
   "No matching countries.": "Geen overeenkomende landen.",
   "Country code": "Landcode",
-  "At this amount, reached in {month}": "Met dit bedrag bereikt in {month}"
+  "At this amount, reached in {month}": "Met dit bedrag bereikt in {month}",
+  "Export": "Exporteren"
 }

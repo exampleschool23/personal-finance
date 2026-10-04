@@ -218,7 +218,7 @@ input,select,textarea{min-height:44px!important;background:var(--field)!importan
 .sidebar-brand{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;padding:14px 10px 12px 18px}
 .sidebar-tools{display:flex;align-items:center;gap:2px}
 .sidebar-tools [data-slot]{width:32px;height:32px;border-radius:8px;color:var(--muted-foreground)}
-.sidebar-tools [data-slot]:hover,.sidebar-tools [data-active=true]{background:var(--sidebar-accent);color:var(--sidebar-foreground)}
+.sidebar-tools [data-slot]:hover{background:var(--sidebar-accent);color:var(--sidebar-foreground)}
 .sidebar-tools svg{width:17px;height:17px}
 [dir=rtl] .sidebar-tools [data-sidebar=trigger] svg{transform:scaleX(-1)}
 .sidebar-navigation{padding:2px 10px 16px;gap:0}
@@ -234,7 +234,7 @@ input,select,textarea{min-height:44px!important;background:var(--field)!importan
 .user-link>div{flex:1;min-width:0;line-height:1.35}
 .user-line strong{display:block;font-size:var(--type-small);font-weight:600}
 .user-line p{font-size:var(--type-caption);color:var(--muted-foreground);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.user-line>button{flex-shrink:0;color:var(--muted-foreground)}
+.user-link>svg{flex-shrink:0;color:var(--muted-foreground)}
 .avatar{display:grid;place-items:center;flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--sidebar-accent);color:var(--sidebar-accent-foreground);font-size:var(--type-small);font-weight:600}
 .topbar{position:sticky;top:0;z-index:30;container:topbar/inline-size;display:flex;align-items:center;justify-content:space-between;gap:12px;height:60px;padding:0 36px;background:color-mix(in srgb,var(--background) 84%,transparent);backdrop-filter:saturate(1.4) blur(14px);font-size:var(--type-small)}
 .topbar-location{display:flex;align-items:center;gap:12px;min-width:0}
@@ -255,9 +255,6 @@ input,select,textarea{min-height:44px!important;background:var(--field)!importan
 .topbar-page-actions:not(:empty){padding-inline-end:10px;margin-inline-end:2px;border-inline-end:1px solid var(--hairline)}
 .topbar-page-actions .entry-actions{flex-wrap:nowrap;gap:8px}
 .topbar-page-actions .date-picker-trigger{width:auto;min-width:0;height:38px;min-height:38px;padding-inline:10px}
-/* Beside a page's own main action the quick expense shrinks to a quiet + so only one main action stands out. */
-.topbar-page-actions:has([data-variant=default])~.quick-expense{width:38px;padding:0;background:var(--card);color:var(--foreground);border:1px solid var(--border)}
-.topbar-page-actions:has([data-variant=default])~.quick-expense>span{display:none}
 .topbar-location>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topbar-actions{display:flex;align-items:center;gap:8px}
 .topbar-actions [data-slot=button]{height:38px;min-height:38px}
@@ -1033,7 +1030,6 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 [data-slot=sidebar][data-mobile=true]::after{content:"";position:absolute;inset-inline:0;top:100%;height:100vh;background:inherit;border-inline-end:inherit}
 .header-currency-switch{flex-shrink:0;padding:3px}
 .header-currency-switch>button{min-width:48px;padding-inline:10px;font-weight:600}
-.fx-note{gap:6px;margin-top:4px}.fx-note a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 
 /* History filters align with the panel heading and share one control baseline. */
 .workspace .content .records .record-filters{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,3fr);align-items:end;gap:12px;padding:0 24px 20px;margin:0}
@@ -1349,12 +1345,8 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 
 /* Settings uses one navigation rail and a consistent content column. */
 .settings-layout{width:100%}
-.settings-layout .settings-navigation{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:start}
-.settings-layout .settings-navigation-list{display:flex;flex-direction:column;align-items:stretch;width:100%;height:auto;gap:6px;padding:8px;background:var(--card);border:1px solid var(--border);border-radius:14px;position:sticky;top:24px}
-.settings-layout .settings-navigation-list button{justify-content:flex-start;white-space:normal;text-align:left;min-height:44px;padding:8px 10px;gap:10px;flex:none}
-.settings-layout .settings-navigation-list button[data-state=active]{background:var(--accent);color:var(--accent-foreground);box-shadow:none}
-.settings-section-content{min-width:0}
-.settings-section-content [hidden]{display:none!important}
+.settings-view[hidden]{display:none}
+.settings-area{scroll-margin-top:84px}
 .settings-layout .settings-page{max-width:none;margin:0}
 .workspace .content .settings-layout .panel{width:100%;max-width:none;margin:0 0 16px}
 .settings-layout .settings-form{gap:12px}
@@ -1371,16 +1363,11 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .settings-layout .benchmark-stocks{gap:12px;margin-top:16px;padding:14px;border-radius:12px}
 .settings-layout .benchmark-settings-footer{margin-top:16px;padding-top:12px}
 .settings-layout .category-settings .category-group,
-.settings-layout .data-import-section{margin-top:16px;padding-top:16px}
 .settings-layout .data-import-fields{gap:12px;margin:16px 0}
-.settings-layout .data-settings>h2{margin-bottom:12px}
 .settings-layout .inline-tool-form,.settings-layout .tool-list{margin-block:12px}
 .settings-layout .tool-list li{gap:10px;padding-block:10px}
 .settings-layout .account-danger-zone{margin-top:16px;padding-top:16px}
 @media(max-width:800px){
- .settings-layout .settings-navigation{grid-template-columns:minmax(0,1fr);gap:16px}
- .settings-layout .settings-navigation-list{position:static;flex-direction:row;overflow-x:auto;border-radius:12px}
- .settings-layout .settings-navigation-list button{white-space:nowrap;flex-shrink:0}
  .workspace .content .settings-layout .panel{padding:16px}
 }
 
@@ -1394,16 +1381,15 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .category-settings .category-create-form :is(input,select,button){min-height:44px}
 @media(max-width:600px){.category-create-form{grid-template-columns:1fr}}
 
-.data-settings>h2{margin-bottom:20px}
-.data-backup-actions{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.data-backup-actions{display:flex;flex-wrap:wrap;gap:12px}
+/* A file field reads as a dashed drop area, whether it restores a backup or imports a statement. */
+.data-backup-section>.data-file-field{display:grid;gap:8px;margin:0 0 16px;font-size:var(--type-small);font-weight:500}
 .data-settings .data-backup-actions a{text-decoration:none;min-height:44px;height:auto;white-space:normal}
-.data-import-section{border-top:1px solid var(--border);margin-top:24px;padding-top:24px}
-.data-import-section h3{font-size:var(--type-title);font-weight:600;margin-bottom:8px}
 .data-import-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin:24px 0}
 .data-import-fields>label{display:grid;gap:8px;min-width:0;margin:0}
 .data-import-fields .data-file-field{grid-column:1/-1}
-.data-import-fields input[type=file]{width:100%;min-width:0;max-width:100%;padding:14px;background:var(--accent);border:1px dashed var(--border);border-radius:10px}
-.data-import-fields input[type=file]::file-selector-button{background:var(--card);color:var(--foreground);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-right:12px;cursor:pointer}
+.data-file-field input[type=file]{width:100%;min-width:0;max-width:100%;padding:14px;background:var(--accent);border:1px dashed var(--border);border-radius:10px}
+.data-file-field input[type=file]::file-selector-button{background:var(--card);color:var(--foreground);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-right:12px;cursor:pointer}
 .data-import-fields [data-slot=native-select-wrapper]{width:100%}
 .data-import-fields select{min-height:44px}
 @media(max-width:600px){.data-import-fields{grid-template-columns:1fr}.data-backup-actions{flex-direction:column}.data-backup-actions a{width:100%}}
@@ -1548,8 +1534,8 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
  .settings-layout .inline-tool-form{display:grid;grid-template-columns:minmax(0,1fr);align-items:stretch;gap:12px}
  .settings-layout .inline-tool-form>button{width:100%}
  .data-import-fields{gap:16px;margin:20px 0}
- .data-import-fields input[type=file]{padding:10px;font-size:var(--type-small)}
- .data-import-fields input[type=file]::file-selector-button{padding:8px;margin-right:8px;font:inherit}
+ .data-file-field input[type=file]{padding:10px;font-size:var(--type-small)}
+ .data-file-field input[type=file]::file-selector-button{padding:8px;margin-right:8px;font:inherit}
  .import-profiles>summary{font-size:var(--type-compact);line-height:1.4}
 }
 
@@ -1653,13 +1639,6 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 @container content (max-width:560px){.account-list-row,.account-group>summary{padding-inline:16px}.account-list-row{gap:10px}.account-activity .records-pagination{margin:12px -16px -20px}}
 
 /* Settings: quiet navigation and focused preference cards. */
-.settings-layout{max-width:1064px}
-.settings-layout .settings-navigation{grid-template-columns:216px minmax(0,1fr);gap:28px}
-.settings-layout .settings-navigation-list{border:0;background:transparent;padding:0;gap:4px;border-radius:0;top:84px}
-.settings-layout .settings-navigation-list button{border:0;border-radius:var(--radius-control);padding:10px 12px;min-height:42px;font-size:var(--type-small);font-weight:500;color:var(--muted-foreground);box-shadow:none;gap:12px}
-.settings-layout .settings-navigation-list button svg{width:18px;height:18px;flex-shrink:0}
-.settings-layout .settings-navigation-list button[data-state=active]{color:var(--accent-foreground);background:var(--accent);font-weight:600}
-.settings-layout .settings-navigation-list button:after{display:none}
 .settings-layout .page-heading{margin-bottom:24px}
 .preferences-heading{margin-bottom:18px}
 .workspace .content .preferences-heading h2{font-size:var(--type-heading);font-weight:650;line-height:1.25;letter-spacing:-.02em;margin:0 0 4px}
@@ -1697,7 +1676,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .preferences-primary{background:var(--accent);color:var(--primary);border-radius:20px;padding:4px 12px;font-size:var(--type-micro)}
 .preferences-currency-list button{width:32px;height:32px;min-height:32px;flex-shrink:0;color:var(--muted-foreground)}
 .preferences-card .currency-search-trigger{color:var(--primary);padding:6px 0;min-height:36px;height:auto;font-size:var(--type-small);margin-top:4px;box-shadow:none}
-@media(max-width:760px){.settings-layout .settings-navigation{grid-template-columns:1fr;gap:20px}.settings-layout .settings-navigation-list{position:static;flex-direction:row;overflow-x:auto;gap:6px}.settings-layout .settings-navigation-list button{white-space:nowrap;flex-shrink:0}.preferences-heading{margin-bottom:16px}}
+@media(max-width:760px){.preferences-heading{margin-bottom:16px}}
 @media(max-width:520px){.preferences-profile-grid{grid-template-columns:1fr;gap:14px}.settings-layout .preferences-card .preferences-setting-row{grid-template-columns:1fr;gap:6px}.workspace .content .settings-layout .preferences-card{padding:18px 16px}.preferences-save-bar>div{width:100%}.preferences-save-bar button{flex:1}.preferences-currency-list li{gap:10px}.workspace .content .preferences-card input,.workspace .content .preferences-card select{font-size:var(--type-body)}}
 
 /* Cash flow: month figures, then income and spending side by side. */
@@ -1742,13 +1721,6 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
  .workspace .content .entry-actions:has(.cashflow-action){display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%}
  .entry-actions:has(.cashflow-action) .date-picker-trigger{grid-column:1/-1;width:100%}
  .workspace .content .entry-actions .cashflow-action{white-space:nowrap;height:44px;min-height:44px}
-}
-/* A centred scrolling strip hides its first tabs off the left edge. */
-.settings-layout .settings-navigation-list{justify-content:flex-start}
-@container content (max-width:900px){
- .settings-layout .settings-navigation{grid-template-columns:minmax(0,1fr);gap:16px}
- .settings-layout .settings-navigation-list{position:static;flex-direction:row;overflow-x:auto;scrollbar-width:none;mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}
- .settings-layout .settings-navigation-list button{white-space:nowrap;flex-shrink:0}
 }
 @container content (max-width:640px){
  .preferences-profile-grid{grid-template-columns:minmax(0,1fr);gap:14px}
@@ -1866,7 +1838,8 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .overview-content-loading{display:flex;flex-direction:column;gap:20px}
 
 /* Budget: the Planned / Actual / Remaining table with the Left to budget card beside it. */
-.budget-month-nav{display:flex;gap:6px}
+.budget-month-nav{display:flex;align-items:center;gap:6px}
+.budget-period{min-width:8.5em;font-size:var(--type-compact);font-weight:600;text-align:center;white-space:nowrap}
 .budget-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start;width:100%}
 .budget-table{display:flex;flex-direction:column;gap:8px;min-width:0}
 .budget-row{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,minmax(92px,128px));align-items:center;gap:8px;padding:10px 16px;position:relative}

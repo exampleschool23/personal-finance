@@ -193,7 +193,6 @@
   "Could not load settings.": "Не удалось загрузить настройки.",
   "Could not save settings. Try again.": "Не удалось сохранить настройки. Повторите попытку.",
   "Some currencies could not be converted and are excluded from totals.": "Некоторые валюты не удалось пересчитать, они не включены в итоги.",
-  "Updated {date}": "Обновлено {date}",
   "Business": "Бизнес",
   "Linked business (optional)": "Связанный бизнес (необязательно)",
   "No linked business": "Без привязки к бизнесу",
@@ -2578,5 +2577,6 @@
   "Search countries": "Поиск страны",
   "No matching countries.": "Нет подходящих стран.",
   "Country code": "Код страны",
-  "At this amount, reached in {month}": "При этой сумме цель будет достигнута в {month}"
+  "At this amount, reached in {month}": "При этой сумме цель будет достигнута в {month}",
+  "Export": "Экспорт"
 }

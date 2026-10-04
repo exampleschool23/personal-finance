@@ -193,7 +193,6 @@
   "Could not load settings.": "設定を読み込めませんでした。",
   "Could not save settings. Try again.": "設定を保存できませんでした。もう一度お試しください。",
   "Some currencies could not be converted and are excluded from totals.": "換算できない通貨があり、合計から除外されています。",
-  "Updated {date}": "{date}更新",
   "Business": "事業",
   "Linked business (optional)": "関連する事業（任意）",
   "No linked business": "関連する事業なし",
@@ -2578,5 +2577,6 @@
   "Search countries": "国を検索",
   "No matching countries.": "一致する国がありません。",
   "Country code": "国番号",
-  "At this amount, reached in {month}": "この金額なら{month}に達成"
+  "At this amount, reached in {month}": "この金額なら{month}に達成",
+  "Export": "エクスポート"
 }

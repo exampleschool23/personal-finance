@@ -193,7 +193,6 @@
   "Could not load settings.": "Setările nu au putut fi încărcate.",
   "Could not save settings. Try again.": "Setările nu au putut fi salvate. Încearcă din nou.",
   "Some currencies could not be converted and are excluded from totals.": "Unele monede nu au putut fi convertite și sunt excluse din totaluri.",
-  "Updated {date}": "Actualizat {date}",
   "Business": "Afacere",
   "Linked business (optional)": "Afacere asociată (opțional)",
   "No linked business": "Nicio afacere asociată",
@@ -2578,5 +2577,6 @@
   "Search countries": "Caută țări",
   "No matching countries.": "Nicio țară potrivită.",
   "Country code": "Prefixul țării",
-  "At this amount, reached in {month}": "Cu această sumă, atins în {month}"
+  "At this amount, reached in {month}": "Cu această sumă, atins în {month}",
+  "Export": "Export"
 }

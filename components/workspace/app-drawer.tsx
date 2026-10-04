@@ -1,12 +1,11 @@
 "use client";
 import type { MouseEvent } from 'react';
 import { usePathname } from 'next/navigation';
-import { LogOut, PanelLeft, Settings } from 'lucide-react';
+import { ChevronRight, PanelLeft } from 'lucide-react';
 import { Brand } from '@/components/presentation-foundation/brand';
 import { DrawerLink } from '@/components/presentation-foundation/drawer-link';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { useLanguage } from '@/components/language-provider';
-import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { formatNumber } from '@/lib/format';
 import { directionOf } from '@/lib/i18n';
@@ -17,8 +16,6 @@ type Props = {
  account: { initial: string; title: string; detail: string };
  /** Overdue payments, shown beside Upcoming payments. */
  overdueCount: number;
- signOutLabel: string;
- onSignOut: () => void;
  /** The destination tapped but not open yet; it is highlighted straight away. */
  pendingPath?: string | null;
  /** Called when a tap will navigate this tab, before the route loads. */
@@ -33,7 +30,7 @@ type Props = {
 };
 
 /** The navigation drawer. It knows the routes and the signed-in account, and nothing about any screen. */
-export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pendingPath, onNavigate, badge, workspaces = [], workspace, onWorkspace }: Props) {
+export function AppDrawer({ account, overdueCount, pendingPath, onNavigate, badge, workspaces = [], workspace, onWorkspace }: Props) {
  const { t, locale, language } = useLanguage();
  const pathname = usePathname();
  const { setOpenMobile } = useSidebar();
@@ -54,11 +51,10 @@ export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pend
  const settings = sections.find(section => section.group === 'Account')!;
  // Right-to-left languages open the drawer from the right edge.
  return <Sidebar className="border-sidebar-border" side={language && directionOf(language) === 'rtl' ? 'right' : 'left'}>
-  {/* The mark on one side, quick tools on the other, as in a desktop app's title area. */}
+  {/* The mark on one side, the drawer's own collapse button on the other, as in a desktop app's title area. */}
   <SidebarHeader className="sidebar-brand">
    <Brand compact onClick={follow('/')} badge={badge}/>
    <div className="sidebar-tools">
-    <Button asChild variant="ghost" size="icon"><DrawerLink href={settings.path} data-active={active === settings.name} aria-label={t(settings.label)} title={t(settings.label)} onClick={follow(settings.path)}><Settings aria-hidden="true"/></DrawerLink></Button>
     <SidebarTrigger aria-label={t('Toggle Sidebar')} title={t('Toggle Sidebar')}><PanelLeft aria-hidden="true"/></SidebarTrigger>
    </div>
   </SidebarHeader>
@@ -68,13 +64,13 @@ export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pend
   <SidebarFooter className="sidebar-account">
    <nav aria-label={t('Manage')}><SidebarMenu>{sections.filter(section => section.group === 'Manage').map(item)}</SidebarMenu></nav>
    {workspaces.length > 1 && workspace && onWorkspace && <Segmented className="workspace-switch" label={t('Workspace')} options={workspaces.map(item => ({ value: item.id, label: item.label }))} value={workspace} onChange={onWorkspace}/>}
-   {/* The account opens Settings; sign out stays beside it. */}
+   {/* The account opens Settings, where signing out lives too. */}
    <div className="user-line">
     <DrawerLink href={settings.path} className="user-link" data-active={active === settings.name} aria-current={active === settings.name ? 'page' : undefined} aria-label={`${account.title}, ${t(settings.label)}`} title={t(settings.label)} onClick={follow(settings.path)}>
      <span className="avatar">{account.initial}</span>
      <div><strong>{account.title}</strong><p>{account.detail}</p></div>
+     <ChevronRight size={16} aria-hidden="true"/>
     </DrawerLink>
-    <Button variant="ghost" size="icon" onClick={onSignOut} aria-label={signOutLabel} title={signOutLabel}><LogOut size={17} aria-hidden="true"/></Button>
    </div>
   </SidebarFooter>
  </Sidebar>;

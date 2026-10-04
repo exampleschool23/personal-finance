@@ -184,7 +184,8 @@ test('the shell, top bar and screens show sharing only where it applies',()=>{
  const shell=fs.readFileSync('components/workspace/workspace-shell.tsx','utf8');
  assert.match(shell,/shared \? t\("Shared records · Visible to your household\."\) : t\("Private records · Only visible to your account\."\)/);
  const top=fs.readFileSync('components/workspace/top-bar.tsx','utf8');
- assert.match(top,/\{!readOnly && <Button size="sm" className="quick-expense"/);
+ assert.doesNotMatch(top,/topbar-household|Household of \{name\}/,'the open household shows in the drawer only');
+ assert.match(top,/\{!readOnly && section === 'Income & expenses' && <Button size="sm" className="quick-expense"/);
  const transactions=fs.readFileSync('components/workspace/screens/transactions-screen.tsx','utf8');
  // Owner filters and pickers appear only in a shared household.
  assert.match(transactions,/const owners = homes && sharedWorkspace\(homes\) \? ownerChoices\(/);
@@ -195,7 +196,7 @@ test('the shell, top bar and screens show sharing only where it applies',()=>{
  assert.match(accountsPage,/\{owners\.length>0&&<OwnerFilter owners=\{owners\} value=\{ownerFilter\} onChange=\{setOwnerFilter\}\/>\}/);
  assert.match(fs.readFileSync('components/workspace/screens/reports-screen.tsx','utf8'),/owners\.length > 0 && <OwnerFilter owners=\{owners\}/);
  const settings=fs.readFileSync('components/settings-layout.tsx','utf8');
- assert.match(settings,/\{id:'household',label:'Household sharing',icon:Users\}/);
+ assert.match(settings,/\{id:'household',label:'Household',areas:\['household'\]\}/);
  const panel=fs.readFileSync('components/household-panel.tsx','utf8');
  // The sample household lists its people and offers no invites.
  assert.match(panel,/\{!demo && state && <Button disabled=\{people \+ state\.invites\.length >= householdLimit\}/);

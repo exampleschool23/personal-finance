@@ -193,7 +193,6 @@
   "Could not load settings.": "ترتیبات لوڈ نہیں ہو سکیں۔",
   "Could not save settings. Try again.": "ترتیبات محفوظ نہیں ہو سکیں۔ دوبارہ کوشش کریں۔",
   "Some currencies could not be converted and are excluded from totals.": "کچھ کرنسیاں تبدیل نہیں ہو سکیں اور کل میں شامل نہیں ہیں۔",
-  "Updated {date}": "{date} کو اپ ڈیٹ کیا گیا",
   "Business": "کاروبار",
   "Linked business (optional)": "منسلک کاروبار (اختیاری)",
   "No linked business": "کوئی منسلک کاروبار نہیں",
@@ -2578,5 +2577,6 @@
   "Search countries": "ممالک تلاش کریں",
   "No matching countries.": "کوئی مماثل ملک نہیں۔",
   "Country code": "ملک کا کوڈ",
-  "At this amount, reached in {month}": "اس رقم سے، ہدف {month} میں پورا ہوگا"
+  "At this amount, reached in {month}": "اس رقم سے، ہدف {month} میں پورا ہوگا",
+  "Export": "برآمد"
 }

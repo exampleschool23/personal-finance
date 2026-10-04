@@ -193,7 +193,6 @@
   "Could not load settings.": "Imeshindwa kupakia mipangilio.",
   "Could not save settings. Try again.": "Imeshindwa kuhifadhi mipangilio. Jaribu tena.",
   "Some currencies could not be converted and are excluded from totals.": "Sarafu zingine hazikuweza kubadilishwa na hazijajumuishwa kwenye jumla.",
-  "Updated {date}": "Imesasishwa {date}",
   "Business": "Biashara",
   "Linked business (optional)": "Biashara iliyounganishwa (si lazima)",
   "No linked business": "Hakuna biashara iliyounganishwa",
@@ -2578,5 +2577,6 @@
   "Search countries": "Tafuta nchi",
   "No matching countries.": "Hakuna nchi zinazolingana.",
   "Country code": "Msimbo wa nchi",
-  "At this amount, reached in {month}": "Kwa kiasi hiki, lengo litafikiwa {month}"
+  "At this amount, reached in {month}": "Kwa kiasi hiki, lengo litafikiwa {month}",
+  "Export": "Hamisha"
 }

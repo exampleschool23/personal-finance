@@ -50,8 +50,7 @@ export function DisplayPreferences() {
 /** `pendingSection` names a destination tapped in the drawer whose route is still loading. */
 export function TopBar({ pendingSection }: { pendingSection?: string | null }) {
  const { t } = useLanguage();
- const { section: current, currency, setCurrency, preferencesData, quickExpense, household, readOnly } = useWorkspace();
- const homes = household.state;
+ const { section: current, currency, setCurrency, preferencesData, quickExpense, readOnly } = useWorkspace();
  // The drawer carries its own collapse button; the bar offers one only when the drawer is out of sight.
  const { state, isMobile } = useSidebar();
  const drawerHidden = isMobile || state === 'collapsed';
@@ -74,19 +73,18 @@ export function TopBar({ pendingSection }: { pendingSection?: string | null }) {
   check();
   return () => { resized.disconnect(); changed.disconnect(); };
  }, [roomy]);
- // Someone else's household is open: say whose, and that it is view-only when it is.
- const owner = homes && homes.active !== homes.me ? homes.people.find(person => person.role === 'owner') : null;
  const section = pendingSection ?? current;
  const currentLabel = t(sectionLabel(current));
  // Each screen names its browser tab, so history and tab switchers tell the pages apart.
  useEffect(() => { document.title = `${currentLabel} · Hoggish Finance`; }, [currentLabel]);
  return <header ref={bar} className="topbar">
-  <div className="topbar-location">{drawerHidden && <SidebarTrigger variant="outline" className="drawer-toggle" aria-label={t('Toggle Sidebar')}><DrawerIcon/></SidebarTrigger>}<div className="topbar-page-title" ref={slot?.titleRef}/><span className="topbar-title">{t(sectionLabel(section))}</span>{owner && <span className="status-badge topbar-household">{readOnly ? t('View only') : t('Household of {name}', { name: owner.name ?? t('Partner') })}</span>}</div>
+  <div className="topbar-location">{drawerHidden && <SidebarTrigger variant="outline" className="drawer-toggle" aria-label={t('Toggle Sidebar')}><DrawerIcon/></SidebarTrigger>}<div className="topbar-page-title" ref={slot?.titleRef}/><span className="topbar-title">{t(sectionLabel(section))}</span></div>
   <div className="topbar-actions">
    {roomy && !crowded && <div className="topbar-page-actions" ref={slot?.actionsRef}/>}
    {/* With two preferred currencies, one tap switches the display currency; with one there is nothing to choose. */}
    {preferencesData.currencies.length > 1 && <Segmented className="header-currency-switch" label={t('Display currency')} options={preferencesData.currencies.map(code => ({ value: code, label: code }))} value={currency} onChange={setCurrency}/>}
-   {!readOnly && <Button size="sm" className="quick-expense" aria-label={t('Add expense')} onClick={quickExpense}><Plus size={16} aria-hidden="true"/><span>{t('Add expense')}</span></Button>}
+   {/* Adding an expense belongs to Cash flow; other pages carry their own main action. */}
+   {!readOnly && section === 'Income & expenses' && <Button size="sm" className="quick-expense" aria-label={t('Add expense')} onClick={quickExpense}><Plus size={16} aria-hidden="true"/><span>{t('Add expense')}</span></Button>}
    <DisplayPreferences/>
   </div>
  </header>;

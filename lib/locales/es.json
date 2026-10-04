@@ -193,7 +193,6 @@
   "Could not load settings.": "No se pudieron cargar los ajustes.",
   "Could not save settings. Try again.": "No se pudieron guardar los ajustes. Inténtalo de nuevo.",
   "Some currencies could not be converted and are excluded from totals.": "Algunas monedas no se pudieron convertir y se excluyen de los totales.",
-  "Updated {date}": "Actualizado el {date}",
   "Business": "Negocio",
   "Linked business (optional)": "Negocio vinculado (opcional)",
   "No linked business": "Sin negocio vinculado",
@@ -2578,5 +2577,6 @@
   "Search countries": "Buscar países",
   "No matching countries.": "No hay países que coincidan.",
   "Country code": "Código de país",
-  "At this amount, reached in {month}": "Con este importe, lo alcanzas en {month}"
+  "At this amount, reached in {month}": "Con este importe, lo alcanzas en {month}",
+  "Export": "Exportar"
 }

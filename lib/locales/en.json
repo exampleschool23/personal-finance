@@ -193,7 +193,6 @@
   "Could not load settings.": "Could not load settings.",
   "Could not save settings. Try again.": "Could not save settings. Try again.",
   "Some currencies could not be converted and are excluded from totals.": "Some currencies could not be converted and are excluded from totals.",
-  "Updated {date}": "Updated {date}",
   "Business": "Business",
   "Linked business (optional)": "Linked business (optional)",
   "No linked business": "No linked business",
@@ -2578,5 +2577,6 @@
   "Search countries": "Search countries",
   "No matching countries.": "No matching countries.",
   "Country code": "Country code",
-  "At this amount, reached in {month}": "At this amount, reached in {month}"
+  "At this amount, reached in {month}": "At this amount, reached in {month}",
+  "Export": "Export"
 }

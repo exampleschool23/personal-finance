@@ -193,7 +193,6 @@
   "Could not load settings.": "Hindi ma-load ang mga setting.",
   "Could not save settings. Try again.": "Hindi ma-save ang mga setting. Subukang muli.",
   "Some currencies could not be converted and are excluded from totals.": "Hindi ma-convert ang ilang currency kaya hindi isinama sa mga kabuuan.",
-  "Updated {date}": "Na-update noong {date}",
   "Business": "Negosyo",
   "Linked business (optional)": "Naka-link na negosyo (opsyonal)",
   "No linked business": "Walang naka-link na negosyo",
@@ -2578,5 +2577,6 @@
   "Search countries": "Maghanap ng bansa",
   "No matching countries.": "Walang tugmang bansa.",
   "Country code": "Country code",
-  "At this amount, reached in {month}": "Sa halagang ito, maaabot sa {month}"
+  "At this amount, reached in {month}": "Sa halagang ito, maaabot sa {month}",
+  "Export": "I-export"
 }

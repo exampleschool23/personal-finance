@@ -91,13 +91,14 @@ export function BudgetScreen() {
  const error = budget.error || (live ? remote.error : planning.error);
 
  return <div data-page="Budget" className="content budget-content">
-  <PageHeader title={view === 'year' ? formatYear(Number(month.slice(0, 4)), locale) : formatMonthYear(month, locale)} hint={t(view === 'year' ? 'Past months show actual amounts with the plan below; later months show the plan.' : 'Plan what you expect to earn and spend each month. Actual amounts come from your transactions; remaining is the difference.')}>
+  <PageHeader title={t('Budget')} tabs={<Segmented className="page-tabs" as="nav" label={t('Budget view')} options={[{ value: 'month', label: t('Month') }, { value: 'year', label: t('Year') }] as const} value={view} onChange={setView}/>} hint={t(view === 'year' ? 'Past months show actual amounts with the plan below; later months show the plan.' : 'Plan what you expect to earn and spend each month. Actual amounts come from your transactions; remaining is the difference.')}>
    <div className="budget-month-nav">
     <Button variant="outline" size="icon" aria-label={t(view === 'year' ? 'Previous year' : 'Previous month')} onClick={() => setMonth(shiftMonth(month, view === 'year' ? -12 : -1))}><ChevronLeft size={16}/></Button>
+    {/* The period being planned, between the arrows that move it. */}
+    <strong className="budget-period" aria-live="polite">{view === 'year' ? formatYear(Number(month.slice(0, 4)), locale) : formatMonthYear(month, locale)}</strong>
     <Button variant="outline" size="icon" aria-label={t(view === 'year' ? 'Next year' : 'Next month')} onClick={() => setMonth(shiftMonth(month, view === 'year' ? 12 : 1))}><ChevronRight size={16}/></Button>
     <Button variant="outline" disabled={month === thisMonth} onClick={() => setMonth(thisMonth)}>{t('Today')}</Button>
    </div>
-   <Segmented label={t('Budget view')} options={[{ value: 'month', label: t('Month') }, { value: 'year', label: t('Year') }] as const} value={view} onChange={setView}/>
    <Button variant="outline" onClick={() => setSettingsOpen(true)}><Settings size={16} aria-hidden="true"/>{t('Settings')}</Button>
   </PageHeader>
   {error ? <InlineError message={t(error)} onRetry={() => { budget.retry(); remote.retry(); }}/> : loading ? <PanelSkeleton label={t('Loading records…')} rows={6}/> : view === 'year' ? <BudgetYear rows={categories} month={month} history={history} amounts={budget.state.amounts} currency={currency} rates={rates} today={today}/> : <div className="budget-layout">
