@@ -1,7 +1,7 @@
 "use client";
 import { RowMenu } from '@/components/presentation-foundation/row-menu';
 import { Fragment, useState } from 'react';
-import { CalendarCheck, ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
@@ -19,7 +19,9 @@ import { upcomingPayments, type PlanningData } from '@/lib/planning';
 import { calendarWeeks, daysFrom, monthOccurrences, recurringSummary, type RecurringItem } from '@/lib/recurring';
 import { AccountOperation, type Operation } from './account-operation';
 
-type Props = { data: PlanningData; save: (action: string, data: unknown) => Promise<void>; currency: string; rates?: number | Record<string, number> };
+/** The Recurring page's views, switched from tabs beside its title: the month as a list or a calendar, subscriptions and reminders. */
+export type RecurringView = 'list' | 'calendar' | 'subscriptions' | 'reminders';
+type Props = { data: PlanningData; save: (action: string, data: unknown) => Promise<void>; currency: string; rates?: number | Record<string, number>; view: RecurringView; onView: (view: RecurringView) => void };
 
 /** "in 3 days", "today", "2 days ago": how far a due date is from today. */
 function useDueLabel() {
@@ -43,12 +45,13 @@ function SummaryBar({ label, done, remaining, doneLabel, currency, tone }: { lab
  </div>;
 }
 
-export function UpcomingPage({ data, save, currency, rates }: Props) {
+export function UpcomingPage({ data, save, currency, rates, view, onView }: Props) {
  const { t, locale } = useLanguage(), today = depositToday();
  const dueLabel = useDueLabel();
  const [operation, setOperation] = useState<Operation | null>(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
  const [month, setMonth] = useState(today.slice(0, 7));
- const [view, setView] = useState<'list' | 'calendar'>('list');
+ // The month's payments show in the list and calendar views; the other views belong to the screen.
+ const scheduled = view === 'list' || view === 'calendar';
  const items = monthOccurrences(data.records, data.occurrences, month, today, data.debtPayments);
  const summary = recurringSummary(items, (amount, unit) => convertAmount(amount, unit, currency, rates));
  const reminders = upcomingPayments(data.records, data.occurrences, today, undefined, data.debtPayments).filter(item => item.type !== 'scheduled');
@@ -61,15 +64,15 @@ export function UpcomingPage({ data, save, currency, rates }: Props) {
   : item.status === 'skipped' ? <span className="status-badge">{t('Skipped')}</span>
   : <span className={item.status === 'overdue' ? 'status-badge is-overdue' : 'status-badge'}>{dueLabel(today, item.date)}</span>;
  return <>
-  <PageHeader title={t('Recurring')} hint={<><p>{t('Every scheduled income and bill, month by month. Record a payment only after it happens; a reminder never moves money.')}</p><p>{t('Debt amounts show the outstanding balance; enter the actual principal and interest when paying.')}</p></>}>
-   <div className="budget-month-nav">
+  <PageHeader title={t('Recurring')} tabs={<Segmented className="page-tabs" as="nav" label={t('Recurring view')} options={[{ value: 'list', label: t('List') }, { value: 'calendar', label: t('Calendar') }, { value: 'subscriptions', label: t('Subscriptions') }, { value: 'reminders', label: t('Reminders') }] as const} value={view} onChange={onView}/>} hint={<><p>{t('Every scheduled income and bill, month by month. Record a payment only after it happens; a reminder never moves money.')}</p><p>{t('Debt amounts show the outstanding balance; enter the actual principal and interest when paying.')}</p></>}>
+   {scheduled && <div className="budget-month-nav">
     <Button variant="outline" size="icon" aria-label={t('Previous month')} onClick={() => setMonth(shiftMonth(month, -1))}><ChevronLeft size={16}/></Button>
     <Button variant="outline" size="icon" aria-label={t('Next month')} onClick={() => setMonth(shiftMonth(month, 1))}><ChevronRight size={16}/></Button>
     <Button variant="outline" disabled={month === today.slice(0, 7)} onClick={() => setMonth(today.slice(0, 7))}>{t('Today')}</Button>
-   </div>
-   <Segmented label={t('Recurring view')} options={[{ value: 'list', label: t('List') }, { value: 'calendar', label: t('Calendar') }] as const} value={view} onChange={setView}/>
+   </div>}
   </PageHeader>
   <ErrorPopup message={error}/>
+  {scheduled && <>
   <section className="panel recurring-summary" aria-label={formatMonthYear(month, locale)}>
    <h2>{formatMonthYear(month, locale)}</h2>
    <SummaryBar label={t('Income')} done={summary.income.done} remaining={summary.income.remaining} doneLabel="{amount} received" currency={currency} tone="income"/>
@@ -89,18 +92,21 @@ export function UpcomingPage({ data, save, currency, rates }: Props) {
     </li>
    </Fragment>)}</ul> : <EmptyState icon={<Repeat aria-hidden="true"/>} description={t('Nothing is scheduled this month. Add a monthly or weekly income or expense to see it here.')}/>}
   </section> : <RecurringCalendar month={month} items={items} reminders={reminders} today={today}/>}
-  <section className="panel upcoming-section" aria-labelledby="upcoming-reminders">
+  {/* Only when a debt payment or deposit maturity is due this month; an empty card is just noise. */}
+  {reminders.length > 0 && <section className="panel upcoming-section" aria-labelledby="upcoming-reminders">
    <header className="upcoming-section-heading"><h2 id="upcoming-reminders">{t('Debt repayments and deposit maturities')}<Count value={reminders.length}/></h2></header>
-   {reminders.length > 0 ? <div className="table-scroll"><table><thead><tr><th>{t('Name')}</th><th>{t('Date')}</th><th>{t('Amount')}</th><th>{t('Actions')}</th></tr></thead><tbody>{reminders.map(item => <tr key={item.key}>
+   <div className="table-scroll"><table><thead><tr><th>{t('Name')}</th><th>{t('Date')}</th><th>{t('Amount')}</th><th>{t('Actions')}</th></tr></thead><tbody>{reminders.map(item => <tr key={item.key}>
     <td><div className="record-name"><CategoryIcon kind={item.record.kind}/><div><strong>{item.record.name}</strong><small>{t(item.record.kind)}</small></div></div></td>
     <td className={item.overdue ? 'negative' : 'muted'}>{formatDate(item.date, locale)}<small className="block">{dueLabel(today, item.date)}</small></td>
     <td className="amount">{formatMoney(item.amount, item.record.currency, locale)}</td>
     <td><div className="row-actions">{item.type === 'maturity'
      ? <Button size="sm" disabled={busy || item.date > today} variant="outline" onClick={() => run(() => save('dismiss', { id: crypto.randomUUID(), target_id: item.record.id, date: item.date }))}>{t('Dismiss reminder')}</Button>
      : <Button size="sm" variant="outline" onClick={() => payDebt(item.record)}>{t('Record payment')}</Button>}</div></td>
-   </tr>)}</tbody></table></div> : <EmptyState icon={<CalendarCheck aria-hidden="true"/>} description={t('No unpaid items in this period.')}/>}
-  </section>
-  <details className="panel tools-panel"><summary>{t('Skipped occurrences')}{skipped.length > 0 && <Count value={skipped.length}/>}</summary><ul className="tool-list">{skipped.map(o => <li key={o.id}><span>{data.records.find(r => r.id === o.record_id)?.name} · {formatDate(o.due_on, locale)}{o.notes && <> · {o.notes}</>}</span><Button size="sm" disabled={busy} variant="outline" onClick={() => run(() => save('exception', { target_id: o.record_id, date: o.due_on, skip: false }))}>{t('Restore occurrence')}</Button></li>)}</ul></details>
+   </tr>)}</tbody></table></div>
+  </section>}
+  {/* Only when something was skipped: an empty fold is just noise. */}
+  {skipped.length > 0 && <details className="panel tools-panel"><summary>{t('Skipped occurrences')}<Count value={skipped.length}/></summary><ul className="tool-list">{skipped.map(o => <li key={o.id}><span>{data.records.find(r => r.id === o.record_id)?.name} · {formatDate(o.due_on, locale)}{o.notes && <> · {o.notes}</>}</span><Button size="sm" disabled={busy} variant="outline" onClick={() => run(() => save('exception', { target_id: o.record_id, date: o.due_on, skip: false }))}>{t('Restore occurrence')}</Button></li>)}</ul></details>}
+  </>}
   {operation && <AccountOperation operation={operation} records={data.records} save={save} onClose={() => setOperation(null)}/>}
  </>;
 }
