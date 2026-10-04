@@ -133,7 +133,7 @@ test('the top bar switches between the two display currencies in place, and the 
 });
 
 test('Goals, Reports and Cash flow switch their views from tabs beside the title, which fall back to the page when the bar is full',()=>{
- for(const [file,label] of [['components/workspace/screens/reports-screen.tsx','Reports'],['components/workspace/screens/cash-flow-screen.tsx','Cash flow'],['components/planning/goals-page.tsx','Goals'],['components/planning/accounts-page.tsx','Accounts'],['components/workspace/screens/budget-screen.tsx','Budget'],['components/settings-layout.tsx','Settings'],['components/workspace/screens/assets-screen.tsx','Investments'],['components/workspace/screens/loans-debts-screen.tsx','Loans & debts'],['components/planning/upcoming-page.tsx','Recurring']]){
+ for(const [file,label] of [['components/workspace/screens/reports-screen.tsx','Reports'],['components/workspace/screens/cash-flow-screen.tsx','Cash flow'],['components/planning/goals-page.tsx','Goals'],['components/planning/accounts-page.tsx','Accounts'],['components/workspace/screens/budget-screen.tsx','Budget'],['components/settings-layout.tsx','Settings'],['components/workspace/screens/assets-screen.tsx','Investments'],['components/workspace/screens/loans-debts-screen.tsx','Loans & debts'],['components/planning/upcoming-page.tsx','Recurring'],['components/workspace/screens/transactions-screen.tsx','Transactions']]){
   const source=fs.readFileSync(file,'utf8');
   assert.match(source,new RegExp(`<PageHeader title=\\{t\\('${label}'\\)\\} tabs=\\{<Segmented (as="nav" )?className="page-tabs"`),file);
   assert.doesNotMatch(source,/cashflow-tabs/,file);

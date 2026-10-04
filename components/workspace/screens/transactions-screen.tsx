@@ -133,7 +133,7 @@ export function TransactionsScreen() {
  const error = live ? remote.error : planning.error;
 
  return <div data-page="Transactions" className="content transactions-content">
-  <PageHeader title={t('Transactions')} hint={t('Every income and spending record in one list, grouped by day. Click a category to change it.')}>
+  <PageHeader title={t('Transactions')} tabs={<Segmented className="page-tabs" as="nav" label={t('Type')} options={[{ value: 'all', label: t('All') }, { value: 'income', label: t('Income') }, { value: 'expense', label: t('Expenses') }] as const} value={filter.direction} onChange={direction => setFilter({ ...filter, direction })}/>} hint={t('Every income and spending record in one list, grouped by day. Click a category to change it.')}>
    <Button variant="outline" onClick={() => setRulesOpen(true)}><Wand2 size={16} aria-hidden="true"/>{t('Rules')}</Button>
    <Button variant="outline" disabled={readOnly} aria-pressed={selecting} onClick={() => { setSelecting(!selecting); setSelected(new Set()); }}><ListChecks size={16} aria-hidden="true"/>{t('Edit multiple')}</Button>
    <AddTransactionMenu onAdd={addCashFlow}/>
@@ -148,7 +148,6 @@ export function TransactionsScreen() {
    {businessList.length > 0 && <BusinessFilter businesses={businessList} value={filter.businesses} onChange={businesses => setFilter({ ...filter, businesses })}/>}
    {tags.data.tags.length > 0 && <TagFilter tags={tags.data.tags} value={filter.tags} match={filter.tagMatch} onChange={(chosen, tagMatch) => setFilter({ ...filter, tags: chosen, tagMatch })}/>}
    {owners.length > 0 && <OwnerFilter owners={owners} value={ownerFilter} onChange={setOwnerFilter}/>}
-   <Segmented label={t('Type')} options={[{ value: 'all', label: t('All') }, { value: 'income', label: t('Income') }, { value: 'expense', label: t('Expenses') }] as const} value={filter.direction} onChange={direction => setFilter({ ...filter, direction })}/>
   </div>
   {selecting && <BulkEditBar count={chosen.length} total={records.length} onAll={select => setSelected(new Set(select ? records.map(record => record.id) : []))} onEdit={() => setEditingMany(true)} onCancel={() => { setSelecting(false); setSelected(new Set()); }}/>}
   {error ? <InlineError message={t(error)} onRetry={live ? remote.retry : refreshRecords}/> : loading ? <PanelSkeleton label={t('Loading records…')} rows={6}/> : <div className="transactions-layout">
