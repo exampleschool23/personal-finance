@@ -1,3 +1,4 @@
+import { dayMs, isoDay } from './calendar-days';
 import { maxStatementRows, statementErrors, type StatementSheet } from './statement-rows';
 
 // Shared by the .xlsx and .xls readers: dates, numbers and the table a sheet becomes.
@@ -18,7 +19,7 @@ export function isDateFormat(id: number, code?: string) {
 export function serialDate(serial: number, date1904 = false) {
  if (!Number.isFinite(serial) || serial < 1 || serial > 2_958_465) return null;
  const day = Math.floor(serial) + (date1904 ? 1462 : 0);
- return new Date(Date.UTC(1899, 11, 30) + day * 86_400_000).toISOString().slice(0, 10);
+ return isoDay(Date.UTC(1899, 11, 30) + day * dayMs);
 }
 
 /** A number cell as plain text with `.` decimals, rounded to the 15 significant digits a spreadsheet shows. */

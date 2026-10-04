@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { signInPath } from './sign-in-path';
 
 export const GOOGLE_VERIFIER_COOKIE = 'hf_google_verifier';
-export const GOOGLE_CALLBACK_PATH = '/auth/callback';
+const GOOGLE_CALLBACK_PATH = '/auth/callback';
 export const googleCookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',

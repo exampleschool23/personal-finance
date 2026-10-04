@@ -16,6 +16,7 @@ import {useDiscardChanges} from '@/components/discard-changes';
 import {formatDate,formatMoney} from '@/lib/format';
 import {depositToday} from '@/lib/deposit-interest';
 import type {Entry} from '@/lib/finance';
+import {requestJson} from '@/lib/api-client';
 type Leg={key:string;date:string;name:string;amount:number};
 type Statement={id:string;account_id:string;start_date:string;end_date:string;opening_balance:number;closing_balance:number;cleared:string[];fingerprint:string;status:'draft'|'reconciled';revision:number|null};
 type State={entries:Leg[];fingerprint:string;saved:Statement[]};
@@ -37,7 +38,7 @@ function StatementForm({initial,account,from,to,state,onClose,onSaved}:{initial:
  const [draft,setDraft]=useState<Statement>(()=>initial?{...initial,opening_balance:Number(initial.opening_balance),closing_balance:Number(initial.closing_balance),cleared:initial.cleared.filter(k=>state.entries.some(e=>e.key===k)),fingerprint:state.fingerprint}:{id:crypto.randomUUID(),account_id:account.id,start_date:from,end_date:to,opening_balance:0,closing_balance:0,cleared:[],fingerprint:state.fingerprint,status:'draft',revision:null});
  const [busy,setBusy]=useState(false),[error,setError]=useState('');const [opened]=useState(()=>JSON.stringify(draft));const guard=useDiscardChanges(JSON.stringify(draft)!==opened,onClose,busy);
  const sum=state.entries.filter(e=>draft.cleared.includes(e.key)).reduce((n,e)=>n+Number(e.amount),draft.opening_balance),difference=draft.closing_balance-sum;
- async function save(status:Statement['status']){if(busy)return;setBusy(true);setError('');try{const r=await fetch('/api/reconciliation',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...draft,status})});const body=await r.json() as {error?:string};if(!r.ok)throw Error(body.error);showSaved();onSaved();}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+ async function save(status:Statement['status']){if(busy)return;setBusy(true);setError('');try{await requestJson('/api/reconciliation',{body:{...draft,status}});showSaved();onSaved();}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
  return <><fieldset className="record-form" disabled={busy}>
  {initial&&<p role="status">{t(initial.fingerprint!==state.fingerprint?'Account activity changed. Check the cleared entries again.':initial.status==='reconciled'?'This statement matched when last reviewed.':'Saved draft')}</p>}
  <div className="form-grid"><label>{t('Opening cleared balance')}<FormattedNumberInput value={draft.opening_balance} onValueChange={n=>setDraft({...draft,opening_balance:n})}/></label><label>{t('Statement closing balance')}<FormattedNumberInput value={draft.closing_balance} onValueChange={n=>setDraft({...draft,closing_balance:n})}/></label></div>

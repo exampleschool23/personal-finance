@@ -178,3 +178,18 @@ test('subscription decisions stay with their owner in the database',{skip:!proce
   assert.equal((await db.query('SELECT * FROM subscription_decisions')).rows.length,1);
  }finally{await db.close();}
 });
+
+test('detected cadences, gaps and overdue days do not depend on the runtime timezone',async()=>{
+ const {spawnSync}=await import('node:child_process');
+ // Charges around the US and European daylight-saving changes, where local-midnight parsing would gain or lose an hour.
+ const script=`import {loadTS} from './tests/helpers/load-ts.mjs';
+ const {detectSubscriptions}=loadTS('lib/recurring-insights.ts');
+ const rows=['2026-01-08','2026-02-08','2026-03-08','2026-04-08'].map((date,index)=>({id:'w'+index,name:'Gym',kind:'Living expense',currency:'USD',amount:40,quantity:1,cost:0,rate:0,date,frequency:'Once',notes:''}));
+ console.log(JSON.stringify(detectSubscriptions(rows,'2026-05-20').map(item=>[item.cadence,item.next,item.charges.length,item.overdueDays,item.missedCharges,item.confidence])));`;
+ const runs=['UTC','America/Los_Angeles','Europe/Berlin','Asia/Tokyo'].map(TZ=>{
+  const run=spawnSync(process.execPath,['--input-type=module','-e',script],{env:{...process.env,TZ},encoding:'utf8',cwd:new URL('..',import.meta.url)});
+  assert.equal(run.status,0,run.stderr);return run.stdout;
+ });
+ assert.deepEqual(JSON.parse(runs[0]),[['Monthly','2026-05-08',4,12,0,'high']]);
+ for(const output of runs)assert.equal(output,runs[0]);
+});

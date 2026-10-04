@@ -30,7 +30,6 @@ export const ruleChoice = (rule: Pick<TransactionRule, 'kind' | 'category_id'>):
 export const directionOf = (kind: string): Category['direction'] | null => income.includes(kind) ? 'income' : expenses.includes(kind) ? 'expense' : null;
 const sameChoice = (record: Pick<Entry, 'kind' | 'custom_category_id'>, choice: CategoryChoice) => record.kind === choice.kind && (record.custom_category_id ?? null) === choice.category_id;
 export const choiceKey = (choice: CategoryChoice) => choice.category_id ?? choice.kind;
-export const recordChoice = (record: Pick<Entry, 'kind' | 'custom_category_id'>): CategoryChoice => ({ kind: record.kind, category_id: record.custom_category_id ?? null });
 
 /** Every category of one direction: the built-in kinds, then custom categories on the general kind. */
 export function categoryChoices(categories: readonly Category[], direction: Category['direction']): Array<CategoryChoice & { name: string; custom: boolean }> {

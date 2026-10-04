@@ -19,7 +19,7 @@ export const sections = [
  { name: 'Settings', label: 'Settings', icon: Settings, path: '/settings', group: 'Account' },
 ] as const;
 
-export type SectionName = (typeof sections)[number]['name'];
+type SectionName = (typeof sections)[number]['name'];
 /** The drawer word for a section, which the top bar repeats. */
 export const sectionLabel = (name: string) => sections.find(section => section.name === name)?.label ?? name;
 

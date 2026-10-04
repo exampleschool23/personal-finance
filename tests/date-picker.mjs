@@ -1,6 +1,7 @@
 import fs from 'node:fs';import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildRangeCalendar, shiftCalendarMonth, calendarYearAnchor, openingCalendarDay, presetDay, availablePresets, defaultDatePresets, pastDatePresets, datePresetLabels } from '../lib/date-picker-calendar.ts';
+import { loadTS } from './helpers/load-ts.mjs';
+const { buildRangeCalendar, shiftCalendarMonth, calendarYearAnchor, openingCalendarDay, presetDay, availablePresets, defaultDatePresets, pastDatePresets, datePresetLabels } = loadTS('lib/date-picker-calendar.ts');
 test('POS calendar grid starts Monday and always has six weeks',()=>{
  const days=buildRangeCalendar('2026-09');
  assert.equal(days.length,42);assert.equal(days[0].date,'2026-08-31');

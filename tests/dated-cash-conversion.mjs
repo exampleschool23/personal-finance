@@ -1,3 +1,4 @@
+import { apiFunction } from './helpers/api-function.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -38,7 +39,7 @@ test('international pairs use ECB reference rates and fall back to the CBU cross
 });
 test('exchange payment API verifies rates server-side and reuses committed rates on retry during an outage',async()=>{
  let rate=12000,prior=[],calls=[],offline=false,authenticated=true;
- const post=new Function('z','session','supa','sameOrigin','loadDatedExchangeRate','depositToday',compile('app/api/investment-history/exchange/route.ts')+';return POST;')(z,async()=>authenticated?{token:'owner'}:null,async(path,init,token)=>{
+ const post=apiFunction('z','session','supa','sameOrigin','loadDatedExchangeRate','depositToday',compile('app/api/investment-history/exchange/route.ts')+';return POST;')(z,async()=>authenticated?{token:'owner'}:null,async(path,init,token)=>{
   assert.equal(token,'owner');if(path.includes('finance_records?'))return Response.json([{id:id(1),kind:'Debt',currency:'UZS'},{id:id(2),kind:'Cash',currency:'USD'}]);
   if(path.includes('investment_account_links?'))return Response.json(prior);
   calls.push(JSON.parse(init.body));return Response.json({ok:true});
@@ -92,7 +93,7 @@ test('converted debt, mortgage and transfers cannot spend more than the locked s
 
 test('transfer API requires the selected date rate and does not trust a submitted conversion rate',async()=>{
  let calls=[],offline=false,prior=[];
- const post=new Function('z','session','sameOrigin','supa','loadDatedExchangeRate','queueMilestoneCheck',compile('app/api/asset-movements/route.ts')+';return POST;')(z,async()=>({token:'owner'}),()=>true,async(path,init)=>{
+ const post=apiFunction('z','session','sameOrigin','supa','loadDatedExchangeRate','queueMilestoneCheck',compile('app/api/asset-movements/route.ts')+';return POST;')(z,async()=>({token:'owner'}),()=>true,async(path,init)=>{
   if(path.includes('finance_records?'))return Response.json([{id:id(2),currency:'USD'},{id:id(3),currency:'UZS'}]);
   if(path.includes('asset_movements?'))return Response.json(prior);
   calls.push({path,args:JSON.parse(init.body)});return Response.json({ok:true});

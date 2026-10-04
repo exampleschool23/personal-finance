@@ -2,6 +2,7 @@
 import { showSaved } from '@/lib/feedback';
 import { useEffect,useRef,useState } from 'react';
 import { refreshRead } from '@/lib/refresh-read';
+import { requestJson } from '@/lib/api-client';
 
 export function useOwnerResource<T>(url:string,owner:string|null,enabled:boolean,revision:number,empty:T){
  const request=useRef<AbortController|null>(null);
@@ -32,4 +33,5 @@ export function useOwnerResource<T>(url:string,owner:string|null,enabled:boolean
   invalidate:()=>{if(current.current===scope){request.current?.abort();setRetry(count=>count+1);}},
  };
 }
-export async function saveOwnerResource(url:string,action:string,data:unknown){const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,data})});const result=await response.json() as {error?:string};if(!response.ok)throw Object.assign(Error(result.error??'Could not save changes.'),{confirmedFailure:response.status<500});showSaved();return result;}
+/** Posts `{action,data}` and confirms the save; a failure keeps `confirmedFailure` from `requestJson`. */
+export async function saveOwnerResource<T=Record<string,never>>(url:string,action:string,data:unknown){const result=await requestJson<T>(url,{body:{action,data},fallback:'Could not save changes.'});showSaved();return result;}

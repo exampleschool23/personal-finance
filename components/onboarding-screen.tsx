@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { countryOptions } from '@/lib/countries';
-import { currencyLabel, fiatCurrencies, type Preferences } from '@/lib/currencies';
+import { currencyLabel, currencyMatches, type Preferences } from '@/lib/currencies';
 import { depositToday } from '@/lib/deposit-interest';
 import { formatDate, formatMoney } from '@/lib/format';
 import { isLanguage, languageCatalogue } from '@/lib/i18n';
@@ -49,7 +49,7 @@ export function OnboardingScreen({ brand, initial, telegram, savePreferences, ap
   const primary = draft.currencies[0];
   const name = (draft.display_name ?? '').trim();
   const targetDate = goalTargetDate(goal, today);
-  const catalogue = query.trim() ? fiatCurrencies.filter(item => currencyLabel(item.code, locale).toLowerCase().includes(query.trim().toLowerCase())).slice(0, 12) : [];
+  const catalogue = query.trim() ? currencyMatches(query, locale).slice(0, 12) : [];
   const cards = [...new Set([...draft.currencies, countryCurrency(draft.country ?? '') ?? [], ...suggestedCurrencies].flat())];
 
   async function finish(skipAll = false) {
@@ -99,7 +99,7 @@ export function OnboardingScreen({ brand, initial, telegram, savePreferences, ap
           {cards.map(code => <button key={code} type="button" className={styles.option} aria-pressed={draft.currencies.includes(code)} onClick={() => setDraft({ ...draft, currencies: pickCurrency(draft.currencies, code) })}><span className={styles.optionMark}><Check size={14} strokeWidth={3} aria-hidden="true"/></span><strong>{code}</strong><span>{currencyLabel(code, locale).split(' · ').slice(1).join(' · ')}</span>{code === primary && <em className={styles.primaryBadge}>{t('Primary')}</em>}</button>)}
         </div>
         <label className={styles.field} htmlFor="onboarding-currency-search">{t('Need another currency?')}<Input id="onboarding-currency-search" placeholder={t('Search currencies')} value={query} onChange={event => setQuery(event.target.value)}/></label>
-        {!!query.trim() && <div className={styles.chips}>{catalogue.map(item => <button key={item.code} type="button" className={styles.chip} aria-pressed={draft.currencies.includes(item.code)} onClick={() => { setDraft({ ...draft, currencies: pickCurrency(draft.currencies, item.code) }); setQuery(''); }}>{currencyLabel(item.code, locale)}</button>)}{!catalogue.length && <p className="muted" role="status">{t('No matching currencies.')}</p>}</div>}
+        {!!query.trim() && <div className={styles.chips}>{catalogue.map(code => <button key={code} type="button" className={styles.chip} aria-pressed={draft.currencies.includes(code)} onClick={() => { setDraft({ ...draft, currencies: pickCurrency(draft.currencies, code) }); setQuery(''); }}>{currencyLabel(code, locale)}</button>)}{!catalogue.length && <p className="muted" role="status">{t('No matching currencies.')}</p>}</div>}
         {draft.currencies.length > 1 && <p className={styles.hint}>{t('{primary} is primary.', { primary })} <button type="button" className={styles.linkButton} onClick={() => setDraft({ ...draft, currencies: makePrimary(draft.currencies, draft.currencies[1]) })}>{t('Make {code} primary', { code: draft.currencies[1] })}</button></p>}
       </>}
       {current === 'goal' && <>

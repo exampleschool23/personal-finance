@@ -1,5 +1,6 @@
 "use client";
 import { showSaved } from '@/lib/feedback';
+import { requestJson } from '@/lib/api-client';
 import { useOwnerResource } from './use-owner-resource';
 import { useCallback } from 'react';
 import { emptyPlanning,type Category,type PlanningData } from '@/lib/planning';
@@ -9,9 +10,7 @@ export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:
  const resource=useOwnerResource('/api/planning?scope='+scope+(scope==='review'&&month?'&month='+encodeURIComponent(month):''),user,!demo,revision,emptyPlanning);
  const save=useCallback(async(action:string,payload:unknown)=>{
   if(demo)throw Error('Sign in to save planning changes.');
-  const r=await fetch(action==='movement'?'/api/asset-movements':'/api/planning',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(action==='movement'?payload:{action,data:payload})});
-  const data=await r.json() as {error?:string};
-  if(!r.ok)throw Object.assign(Error(data.error),{confirmedFailure:r.status<500});
+  await requestJson(action==='movement'?'/api/asset-movements':'/api/planning',{body:action==='movement'?payload:{action,data:payload}});
   // A confirmed save supersedes any read that started before it.
   resource.invalidate();
   if((action==='occurrence'||action==='dismiss')&&payload&&typeof payload==='object'&&'id' in payload&&'target_id' in payload&&'date' in payload){

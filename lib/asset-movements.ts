@@ -8,7 +8,7 @@ export type AssetMovement = {
  fee: number; date: string; notes: string;
 };
 export const isHolding = (record: Pick<Entry, 'kind'>) => record.kind === 'Stock' || record.kind === 'Crypto';
-export const isBalanceAccount = (record: Pick<Entry, 'kind'>) => record.kind === 'Cash' || record.kind === 'Deposit';
+const isBalanceAccount = (record: Pick<Entry, 'kind'>) => record.kind === 'Cash' || record.kind === 'Deposit';
 export function movementSources(kind: MovementKind, records: Entry[]) {
  return records.filter(record => kind === 'transfer' ? isBalanceAccount(record) : kind === 'interest' ? record.kind === 'Deposit' : kind === 'sell' ? isHolding(record) : ['Cash','Deposit','Stock','Crypto'].includes(record.kind));
 }

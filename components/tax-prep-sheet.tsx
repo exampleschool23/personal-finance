@@ -17,6 +17,7 @@ import { NativeSelect } from '@/components/ui/native-select';
 import type { LedgerLine } from '@/lib/business-report';
 import { taxExportRows, taxFormLinks, taxLines, taxPeriods, taxSheet, taxTemplateLabels, taxTemplates, type TaxCategory, type TaxExportDetail, type TaxPeriod, type TaxSettings } from '@/lib/business-tax';
 import { exportCSV } from '@/lib/csv';
+import { depositToday } from '@/lib/deposit-interest';
 import { formatDate, formatMoney, formatNumber, formatYear } from '@/lib/format';
 import { pdfUnsupportedLanguages } from '@/lib/languages';
 
@@ -114,7 +115,7 @@ function TaxExportDialog({ sheet, template, title, names, currency, onClose }: {
    } else {
     const [fontResponse, pdf] = await Promise.all([fetch('/fonts/NotoSans-Regular.ttf'), import('@/lib/financial-report-pdf')]);
     if (!fontResponse.ok) throw Error('Could not create the PDF. Please try again.');
-    const report = { title, generated: formatDate(new Date().toISOString().slice(0, 10), locale), locale, blocks: [
+    const report = { title, generated: formatDate(depositToday(), locale), locale, blocks: [
      { kind: 'title' as const, text: title },
      { kind: 'text' as const, text: label('Hoggish is not a tax advisor. Consult a licensed tax professional for advice on filing your taxes.') },
      { kind: 'table' as const, text: label('Business tax prep'), headers, widths: [.08, .32, .25, .15, .2], numeric: [4], rows: rows.map(row => [row.line, row.description, row.category, row.date ? formatDate(row.date, locale) : '', formatMoney(row.amount, currency, locale)]) },

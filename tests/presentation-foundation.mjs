@@ -40,7 +40,7 @@ test('empty state renders the icon, heading, guidance and actions in order',()=>
 test('inline error is announced and only offers Retry when a retry exists',()=>{
  const {InlineError}=load('inline-error.tsx');
  assert.equal(render(InlineError,{message:'Could not load.'}),'<p role="alert" class="error">Could not load. </p>');
- assert.match(render(InlineError,{message:'Could not load.',onRetry:()=>{}}),/^<p role="alert" class="error">Could not load\. <button>Retry<\/button><\/p>$/);
+ assert.match(render(InlineError,{message:'Could not load.',onRetry:()=>{}}),/^<p role="alert" class="error">Could not load\. <button type="button">Retry<\/button><\/p>$/);
  assert.match(render(InlineError,{message:'x',as:'div',className:'wide'}),/^<div role="alert" class="error wide">/);
 });
 
@@ -48,7 +48,7 @@ test('resource state shows loading, then the error with retry, then the content'
  const {ResourceState}=load('resource-state.tsx',{'@/components/ui/skeleton':{Skeleton:element('span')}});
  const child=React.createElement('p',null,'ready');
  assert.match(render(ResourceState,{loading:true},child),/role="status" aria-busy="true".*Loading records…/);
- assert.match(render(ResourceState,{loading:false,error:'Planning failed.',onRetry:()=>{}},child),/^<p role="alert" class="error">Planning failed\. <button>Retry<\/button><\/p>$/);
+ assert.match(render(ResourceState,{loading:false,error:'Planning failed.',onRetry:()=>{}},child),/^<p role="alert" class="error">Planning failed\. <button type="button">Retry<\/button><\/p>$/);
  assert.equal(render(ResourceState,{loading:false,error:null},child),'<p>ready</p>');
  assert.equal(render(ResourceState,{loading:true,error:'x'},child).includes('ready'),false);
 });
@@ -86,6 +86,18 @@ test('segmented control presses exactly the current option and reports the chose
  const chosen=[];
  Segmented({label:'x',options,value:30,onChange:value=>chosen.push(value)}).props.children[1].props.onClick();
  assert.deepEqual(chosen,[null]);
+});
+
+test('series legend presses the visible series and toggles a key in or out of the hidden list',()=>{
+ const {SeriesLegend,toggleKey}=load('series-legend.tsx');
+ const items=[{key:'salary',label:'Salary',swatch:React.createElement('i')},{key:'estimate',label:'Estimate',swatch:React.createElement('i',{className:'income-estimate-key'})}];
+ assert.equal(render(SeriesLegend,{items,hidden:['estimate'],onToggle:()=>{}}),'<div class="comparison-legend"><button type="button" aria-pressed="true"><i></i>Salary</button><button type="button" aria-pressed="false"><i class="income-estimate-key"></i>Estimate</button></div>');
+ assert.match(render(SeriesLegend,{items,hidden:[],onToggle:()=>{},className:'goal-chart-legend'}),/^<div class="comparison-legend goal-chart-legend">/);
+ const toggled=[];
+ SeriesLegend({items,hidden:[],onToggle:key=>toggled.push(key)}).props.children[1].props.onClick();
+ assert.deepEqual(toggled,['estimate']);
+ const list=['a'];
+ assert.deepEqual(toggleKey(list,'b'),['a','b']);assert.deepEqual(toggleKey(['a','b'],'a'),['b']);assert.deepEqual(list,['a'],'the list is never changed in place');
 });
 
 test('panel title keeps the heading, count and hint on one line and the aside on the right',()=>{

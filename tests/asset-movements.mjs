@@ -1,3 +1,4 @@
+import { apiFunction } from './helpers/api-function.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -8,7 +9,7 @@ const id=n=>`60000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 
 test('movement API checks origin, authentication, dates and finite amounts',async()=>{
  let signedIn=true,calls=[];
- const post=new Function('z','session','sameOrigin','supa','queueMilestoneCheck',compile('app/api/asset-movements/route.ts')+';return POST;')(z,async()=>signedIn?{token:'owner'}:null,req=>req.headers.get('origin')==='https://local',async(path,init,token)=>{calls.push({path,data:JSON.parse(init.body),token});return Response.json({ok:true});},()=>{});
+ const post=apiFunction('z','session','sameOrigin','supa','queueMilestoneCheck',compile('app/api/asset-movements/route.ts')+';return POST;')(z,async()=>signedIn?{token:'owner'}:null,req=>req.headers.get('origin')==='https://local',async(path,init,token)=>{calls.push({path,data:JSON.parse(init.body),token});return Response.json({ok:true});},()=>{});
  const data={id:id(1),kind:'sell',source_id:id(2),target_id:id(3),sent:.01,received:600,source_value:600,target_value:600,fee:1,date:'2026-09-17',notes:''};
  const req=(body,origin='https://local')=>new Request('https://local',{method:'POST',headers:{origin},body:JSON.stringify(body)});
  assert.equal((await post(req(data,'https://evil'))).status,403);

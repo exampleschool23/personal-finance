@@ -17,7 +17,7 @@ export function TelegramPanel({demo}:{demo:boolean}){
  const {status,loadError,error,busy,waiting}=link;
  const [confirmUnlink,setConfirmUnlink]=useState(false);
  return <section className="panel preferences-card telegram-panel"><header><h3>{t('Telegram notifications')}<InfoHint>{t('Get a morning digest of upcoming payments and milestone messages, and add records from Telegram.')}</InfoHint></h3></header>
-  {loadError&&<InlineError message={t(loadError)}><Button type="button" variant="outline" onClick={link.retry}>{t('Retry')}</Button></InlineError>}
+  {loadError&&<InlineError message={t(loadError)} onRetry={link.retry}/>}
   {!loadError&&!status&&<LoadingPlaceholder label={t('Loading Telegram settings…')}/>}
   {status&&!status.configured&&<p className="muted">{t(demo?'Sign in to connect Telegram to your own workspace.':'Telegram notifications are awaiting server setup.')}</p>}
   {status?.configured&&!status.linked&&<div className="telegram-connect">

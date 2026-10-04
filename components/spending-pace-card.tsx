@@ -15,7 +15,8 @@ import { formatCompactMoney, formatDate, formatMoney, formatNumber } from '@/lib
 import type { MarketData } from '@/lib/market';
 import { emptyPlanning, type PlanningData } from '@/lib/planning';
 import type { PortfolioSnapshot } from '@/lib/portfolio-snapshots';
-import { daysIn, spendingOnDay, spendingPace, type SpendingItem, type SpendingPacePoint } from '@/lib/spending-pace';
+import { spendingOnDay, spendingPace, type SpendingItem, type SpendingPacePoint } from '@/lib/spending-pace';
+import { monthDays } from '@/lib/calendar-days';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import type { TransactionSplit } from '@/lib/transaction-tools';
 
@@ -57,7 +58,7 @@ export function SpendingPaceCard({ owner = null, demo = false, revision = 0, dat
       if (!active || !point) return null;
       const day = (month: string) => `${month}-${String(point.day).padStart(2, '0')}`;
       // A shorter month has no such day, so nothing new was spent on it.
-      const items = (month: string) => point.day > daysIn(month) ? [] : spendingOnDay(data.records, day(month), currency, rates);
+      const items = (month: string) => point.day > monthDays(month) ? [] : spendingOnDay(data.records, day(month), currency, rates);
       return <div className="portfolio-tooltip spending-pace-tooltip">
        <header><span>{t('Day {day}', { day: formatNumber(point.day, locale, 0) })}</span>
         {point.current !== null && <div className="portfolio-tooltip-row"><i className="current"/><div><strong>{t('This month')}</strong></div><b>{money(point.current)}</b></div>}
@@ -65,7 +66,7 @@ export function SpendingPaceCard({ owner = null, demo = false, revision = 0, dat
        </header>
        <div className="portfolio-tooltip-body">
         {point.current !== null && <SpentOn title={formatDate(day(pace.month), locale)} items={items(pace.month)} currency={currency}/>}
-        {point.day <= daysIn(pace.previousMonth) && <SpentOn title={formatDate(day(pace.previousMonth), locale)} items={items(pace.previousMonth)} currency={currency}/>}
+        {point.day <= monthDays(pace.previousMonth) && <SpentOn title={formatDate(day(pace.previousMonth), locale)} items={items(pace.previousMonth)} currency={currency}/>}
        </div>
       </div>;
      }}/>

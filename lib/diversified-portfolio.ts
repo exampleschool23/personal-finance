@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const legacyAllocationKinds = ['crypto','stock','deposit','business','cash'] as const;
 export const allocationKinds = [...legacyAllocationKinds,'property','custom'] as const;
-export const portfolioAssetSchema = z.object({
+const portfolioAssetSchema = z.object({
  id:z.string().regex(/^[a-zA-Z0-9_-]{1,50}$/),
  kind:z.enum(allocationKinds),
  currency:z.string().regex(/^[A-Z]{3}$/).optional(),

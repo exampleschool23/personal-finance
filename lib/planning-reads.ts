@@ -1,12 +1,11 @@
+import { shiftMonth } from './calendar-days';
 import { depositToday } from './deposit-interest';
 import { income,expenses } from './finance';
 
 /** `review` reads the month and the one before it; `budget` reads from `first` (a month) through `month`. */
 export function planningReadFilters(scope:string,month:string,first?:string):Record<'records'|'activity'|'investmentLinks',Record<string,string>> {
- const start=new Date((scope==='budget'&&first?first:month)+'-01T00:00:00Z');if(scope!=='budget'||!first)start.setUTCMonth(start.getUTCMonth()-1);
- const from=start.toISOString().slice(0,10);
- const end=new Date(month+'-01T00:00:00Z');end.setUTCMonth(end.getUTCMonth()+1);
- const to=end.toISOString().slice(0,10);
+ const from=(scope==='budget'&&first?first:shiftMonth(month,-1))+'-01';
+ const to=shiftMonth(month,1)+'-01';
  const cashflow=[...income,...expenses].join(',');
  // Holdings and schedules remain complete. Only actual transaction history is
  // period-limited; every settled occurrence remains available for overdue logic.

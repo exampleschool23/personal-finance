@@ -1,22 +1,15 @@
 import { accountRepaymentEvents, type AccountRepayment, type BenchmarkMovement } from '@/lib/investment-benchmarks';
+import { signInAgain } from '@/lib/api-route';
+import { pagePath, readAllPages } from '@/lib/owner-rows';
 import { session, supa } from '@/lib/supabase';
 import { income, type Entry } from '@/lib/finance';
 import { trackedKinds, type HistoryEvent } from '@/lib/investment-history';
 
-async function readAll<T>(path: string, token: string): Promise<T[]> {
- const rows: T[] = [];
- for (let offset = 0; ; offset += 500) {
-  const response = await supa(`${path}&limit=500&offset=${offset}`, {}, token);
-  if (!response.ok) throw new Error('History unavailable');
-  const page = await response.json() as T[];
-  rows.push(...page);
-  if (page.length < 500) return rows;
- }
-}
+function readAll<T>(path: string, token: string) { return readAllPages<T>(range => supa(pagePath(path, range), {}, token), 'History unavailable'); }
 export async function GET() {
  try {
   const auth = await session();
-  if (!auth) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
+  if (!auth) return signInAgain();
   // Both reads use the signed-in owner's RLS. Only current records enter the chart.
   const records = await readAll<Entry>(`/rest/v1/finance_records?kind=in.(${trackedKinds.map(encodeURIComponent).join(',')})&select=*&order=id.asc`, auth.token);
   // The remaining reads are independent: run them together rather than one after another.

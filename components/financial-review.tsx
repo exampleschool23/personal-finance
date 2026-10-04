@@ -17,6 +17,7 @@ import { monthlyReview } from '@/lib/transaction-tools';
 import type { ToolsController } from '@/components/transaction-tools-panel';
 import { emptyPlanning,type PlanningData } from '@/lib/planning';
 import { depositToday } from '@/lib/deposit-interest';
+import { shiftMonth } from '@/lib/calendar-days';
 import { formatDate, formatMoney, formatMonthYear } from '@/lib/format';
 import type { PortfolioSnapshot } from '@/lib/portfolio-snapshots';
 /** The compact Cash flow summary while its month loads: same tiles and note line, so nothing below it moves. */
@@ -33,8 +34,7 @@ export function MonthlyReview({data:providedData,owner,demo=false,revision=0,too
  const remote=useOwnerResource('/api/planning?scope=review&month='+month,owner??null,!!owner&&!demo,revision,emptyPlanning);
  const data=owner&&!demo?{...remote.data,records:remote.data.records.map(normalizeEntry)}:providedData;
  const result=monthlyReview(data.records,tools.data.splits,snapshots,month,currency,today,data.activity,market?.rates??market?.fx?.rate,data.investmentLinks);
- const priorDate=new Date(month+'-01T00:00:00Z');priorDate.setUTCMonth(priorDate.getUTCMonth()-1);
- const previous=monthlyReview(data.records,tools.data.splits,snapshots,priorDate.toISOString().slice(0,7),currency,today,data.activity,market?.rates??market?.fx?.rate,data.investmentLinks);
+ const previous=monthlyReview(data.records,tools.data.splits,snapshots,shiftMonth(month,-1),currency,today,data.activity,market?.rates??market?.fx?.rate,data.investmentLinks);
  const money=(amount:number)=>formatMoney(amount,currency,locale);
  if(compact&&owner&&!demo&&remote.loading)return <CashflowSummarySkeleton/>;
  if(owner&&!demo&&(remote.loading||remote.error))return <section className="panel tools-panel monthly-review"><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2>{remote.error?<InlineError message={t(remote.error)} onRetry={remote.retry}/>:<LoadingPlaceholder label={t('Loading records…')} rows={3}/>}</section>;

@@ -7,7 +7,8 @@ import { compareInvestments, convertHistorical, type CashFlow, type WealthPoint 
 import { isInvestmentRecord } from './comparison-profile';
 import { expenses, liabilities, value } from './finance';
 import { convertAmount, marketEntry } from './market';
-import { shiftDay, validDay } from './benchmark-data';
+import { validDay } from './benchmark-data';
+import { shiftDay } from './calendar-days';
 import { spendingAmount } from './spending';
 
 export type FundingScope='investments'|'expenses';

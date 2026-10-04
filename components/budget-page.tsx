@@ -31,7 +31,7 @@ export function useCategoryName() {
 }
 
 /** Remaining money as a pill: green when money is left, red when overspent, grey at zero. */
-export function RemainingPill({ value, direction, currency }: { value: number | null; direction: BudgetRow['direction']; currency: string }) {
+function RemainingPill({ value, direction, currency }: { value: number | null; direction: BudgetRow['direction']; currency: string }) {
  const { locale } = useLanguage();
  if (value === null) return <span className="budget-pill">—</span>;
  return <span className="budget-pill" data-tone={remainingTone(value, direction)}>{formatMoney(value, currency, locale)}</span>;

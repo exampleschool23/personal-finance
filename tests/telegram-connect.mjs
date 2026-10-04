@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {loadTS} from './helpers/load-ts.mjs';
 import {botDb,ownerId,subscription} from './helpers/bot-db.mjs';
-const {createConnectRequest,findConnectRequest,consumeConnectRequest,cancelConnectRequest,linkChat,connectCookie,connectPage}=loadTS('lib/telegram-connect.ts');
+const {createConnectRequest,findConnectRequest,consumeConnectRequest,cancelConnectRequest,linkChat,linkRefusal,unlinkChat,connectCookie,connectPage}=loadTS('lib/telegram-connect.ts');
+const {unlinkedChat}=loadTS('lib/telegram-link.ts');
 const {hashToken}=loadTS('lib/telegram-account.ts');
 const now=new Date('2026-10-01T09:00:00Z'),later=minutes=>new Date(now.getTime()+minutes*60000);
 const other='33333333-3333-4333-8333-333333333333';
@@ -131,4 +133,44 @@ test('signing in with any method returns to a waiting Telegram connection',async
  assert.deepEqual(await (await auth(new Map([[connectCookie,cookie]]),false).GET()).json(),{configured:true,user:null},'signed out stays on the sign-in page');
  assert.deepEqual(await (await auth(new Map(),true).GET()).json(),{configured:true,user:{email:'me@example.com'}});
  assert.deepEqual(await (await auth(new Map([[connectCookie,'junk']]),true).GET()).json(),{configured:true,user:{email:'me@example.com'}});
+});
+
+test('an account created in Telegram is never linked to another Telegram user\'s chat, and a stale identity is cleared on linking',async()=>{
+ const made=()=>subscription({chat_id:null,linked_at:null,telegram_user_id:555,phone:'+998901234567',consented_at:'x'});
+ const db=botDb({telegram_subscriptions:[made()]});
+ assert.equal(await linkRefusal(db,ownerId,person),'other_telegram');
+ assert.equal(await linkChat(db,ownerId,person,now),'other_telegram');
+ assert.equal(db.tables.telegram_subscriptions[0].chat_id,null);assert.equal(db.tables.telegram_subscriptions[0].telegram_user_id,555,'its sign-in codes keep going to its own chat');
+ assert.equal(db.writes.length,0);
+ // Its own Telegram user may link it again, and a web account may link any chat.
+ assert.equal(await linkChat(db,ownerId,{...person,telegramUserId:555},now),'linked');
+ assert.equal(db.tables.telegram_subscriptions[0].chat_id,777);
+ assert.equal(await linkRefusal(botDb({telegram_subscriptions:[subscription({telegram_user_id:555})]}),ownerId,person),null);
+ // A web account that kept an identity from an earlier chat drops it when a person whose identity is held elsewhere links it.
+ const stale=botDb({telegram_subscriptions:[subscription({chat_id:null,linked_at:null,telegram_user_id:555}),subscription({user_id:other,chat_id:null,telegram_user_id:777,phone:'+998900000000',consented_at:'x'})]});
+ assert.equal(await linkChat(stale,ownerId,person,now),'linked');
+ assert.deepEqual([stale.tables.telegram_subscriptions[0].chat_id,stale.tables.telegram_subscriptions[0].telegram_user_id],[777,null]);
+});
+
+test('unlinking a chat is one change shared by Sign out, linking and Disconnect',async()=>{
+ assert.deepEqual(unlinkedChat('t',false),{chat_id:null,linked_at:null,updated_at:'t'});
+ assert.deepEqual(unlinkedChat('t',true),{chat_id:null,linked_at:null,updated_at:'t',telegram_user_id:null,first_name:null});
+ const db=botDb({telegram_subscriptions:[subscription({telegram_user_id:777,phone:'+998901234567'})]});
+ await unlinkChat(db,db.tables.telegram_subscriptions[0],now);
+ assert.deepEqual(db.writes[0].body,unlinkedChat(now.toISOString(),false),'an account with a number keeps its identity');
+ await assert.rejects(unlinkChat(botDb({__fail:['telegram_subscriptions']}),subscription(),now),/Database request failed/);
+});
+
+test('the confirmation page refuses to hand an account made in Telegram to another Telegram user, before and after Connect',async()=>{
+ const db=botDb({telegram_subscriptions:[subscription({chat_id:555,telegram_user_id:555,phone:'+998901234567',consented_at:'x'})]});
+ const token=await createConnectRequest(db,person,new Date());
+ const page=route({db,cookie:token});
+ assert.deepEqual(await (await page.post('preview')).json(),{state:'other_telegram',bot:'hoggish_bot'});
+ assert.deepEqual(await (await page.post('confirm')).json(),{state:'other_telegram',bot:'hoggish_bot'});
+ assert.equal(db.tables.telegram_subscriptions[0].chat_id,555);assert.equal(page.sent.length,0);
+ // The page explains the refusal and warns before every Connect that the chat gets the whole account and the name proves nothing.
+ const source=fs.readFileSync('app/connect/telegram/page.tsx','utf8');
+ assert.match(source,/view\.state === 'other_telegram'/);
+ assert.match(source,/Connecting lets this Telegram chat see and change everything in this account\. Only connect if you pressed Sign in in your own Telegram just now/);
+ assert.match(source,/<bdi>\{view\.telegram/);
 });

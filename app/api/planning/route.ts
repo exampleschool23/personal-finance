@@ -5,6 +5,7 @@ import { interestKinds, type Entry } from '@/lib/finance';
 import { isoDate } from '@/lib/api-validation';
 import { planningSchemas } from '@/lib/planning-schemas';
 import { debtPaymentsFrom } from '@/lib/planning';
+import { crossSite,parseAction,postgrestFailure,readJson,signInAgain } from '@/lib/api-route';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { readOwnerRows } from '@/lib/server-records';
 import { categoryNameTaken, duplicateCategoryMessage } from '@/lib/category-names';
@@ -12,7 +13,7 @@ import type { Category } from '@/lib/planning';
 import { queueMilestoneCheck } from '@/lib/notify-action';
 import type { ActionEvent } from '@/lib/action-messages';
 export async function GET(req?:Request){
- try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
+ try{const auth=await session();if(!auth)return signInAgain();
  const scope=req?new URL(req.url).searchParams.get('scope')??'full':'full';
  if(!['full','review','workspace','insights','budget'].includes(scope))return Response.json({error:'Invalid planning scope.'},{status:400});
  const month=req?new URL(req.url).searchParams.get('month')??currentReviewMonth():currentReviewMonth();
@@ -32,46 +33,45 @@ export async function GET(req?:Request){
  }catch{return Response.json({error:'Could not load planning data. Check that the latest migrations are installed.'},{status:503});}
 }
 export async function POST(req:Request){
- if(!sameOrigin(req))return new Response(null,{status:403});
- try{const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
- const body=await req.json() as {action:keyof typeof planningSchemas;data:unknown};
- if(!Object.hasOwn(planningSchemas,body.action))return Response.json({error:'Check the account fields.'},{status:400});
- const parsed=planningSchemas[body.action].safeParse(body.data);if(!parsed.success)return Response.json({error:'Check the account fields.'},{status:400});
- if(body.action==='delete_goal'){
+ if(!sameOrigin(req))return crossSite();
+ try{const auth=await session();if(!auth)return signInAgain();
+ const input=parseAction(await readJson(req),planningSchemas);if(!input)return Response.json({error:'Check the account fields.'},{status:400});
+ const action=input.action,value=input.data;
+ if(action==='delete_goal'){
   // Moves the goal and its activity to Recently deleted; retries are harmless.
-  const response=await supa('/rest/v1/rpc/delete_savings_goal',{method:'POST',body:JSON.stringify({p_id:(parsed.data as {id:string}).id})},auth.token);
-  if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='PGRST202'?'Goal deletion needs the latest database update.':error.code==='P0001'?error.message:'Could not delete the goal. Please try again.'},{status:error.code==='PGRST202'?503:409});}
+  const response=await supa('/rest/v1/rpc/delete_savings_goal',{method:'POST',body:JSON.stringify({p_id:(value as {id:string}).id})},auth.token);
+  if(!response.ok)return postgrestFailure(response,'Could not delete the goal. Please try again.',{codes:{PGRST202:['Goal deletion needs the latest database update.',503]}});
   queueMilestoneCheck(auth,{type:'goal_deleted'});
   return Response.json({ok:true});
  }
- if(body.action==='exception'&&'skip' in parsed.data){
+ if(action==='exception'&&'skip' in value){
   // A note travels only when there is one, so a skip still works before migration 104 is applied.
-  const note=parsed.data.skip?parsed.data.notes.trim():'';
-  const response=await supa('/rest/v1/rpc/set_schedule_exception',{method:'POST',body:JSON.stringify({p_record:parsed.data.target_id,p_day:parsed.data.date,p_skip:parsed.data.skip,...(note?{p_notes:note}:{})})},auth.token);
-  if(!response.ok){const error=await response.json() as {code?:string;message?:string};if(error.code==='PGRST202')return Response.json({error:'The app database needs an update. Ask the administrator to apply the latest migrations.'},{status:503});return Response.json({error:error.code==='P0001'?error.message:'Could not update the scheduled occurrence.'},{status:409});}
-  queueMilestoneCheck(auth,{type:'exception',target_id:parsed.data.target_id,date:parsed.data.date,skip:parsed.data.skip});
+  const note=value.skip?value.notes.trim():'';
+  const response=await supa('/rest/v1/rpc/set_schedule_exception',{method:'POST',body:JSON.stringify({p_record:value.target_id,p_day:value.date,p_skip:value.skip,...(note?{p_notes:note}:{})})},auth.token);
+  if(!response.ok)return postgrestFailure(response,'Could not update the scheduled occurrence.',{codes:{PGRST202:['The app database needs an update. Ask the administrator to apply the latest migrations.',503]}});
+  queueMilestoneCheck(auth,{type:'exception',target_id:value.target_id,date:value.date,skip:value.skip});
   return Response.json({ok:true});
  }
- if(body.action==='category'){
+ if(action==='category'){
   // Letter case alone does not make a new category; the database repeats this check for every writer.
-  const category=parsed.data as {id:string;name:string;direction:Category['direction']};
+  const category=value as {id:string;name:string;direction:Category['direction']};
   const existing=await readOwnerRows<Category>('transaction_categories',auth.token);
   if(categoryNameTaken(category.name,category.direction,existing,[],category.id))return Response.json({error:duplicateCategoryMessage},{status:409});
  }
- let paymentData=parsed.data;
- if(['occurrence','repayment','mortgage'].includes(body.action)&&'account_id' in parsed.data&&'target_id' in parsed.data){
-  const p=parsed.data as unknown as {id:string;account_id:string;target_id:string;date:string;exchange_rate?:number;amount?:number;fee?:number;notes?:string};
+ let paymentData:unknown=value;
+ if(['occurrence','repayment','mortgage'].includes(action)&&'account_id' in value&&'target_id' in value){
+  const p=value as unknown as {id:string;account_id:string;target_id:string;date:string;exchange_rate?:number;amount?:number;fee?:number;notes?:string};
   const response=await supa(`/rest/v1/finance_records?select=*&id=in.(${p.account_id},${p.target_id},${p.id})`,{},auth.token);
   if(!response.ok)return Response.json({error:'Could not load accounts or exchange history.'},{status:503});
   const records=await response.json() as Entry[];
   const account=records.find(record=>record.id===p.account_id&&record.kind==='Cash'),target=records.find(record=>record.id===p.target_id);
   if(!account||!target)return Response.json({error:'Choose one of your cash accounts.'},{status:400});
   // The database refuses an over-repayment with a generic message; name the real reason, as the bot and the investment tracker do.
-  if(body.action==='repayment'&&account.currency===target.currency&&Number(p.amount)>Number(target.amount))return Response.json({error:'Repayment cannot exceed the outstanding balance.'},{status:409});
+  if(action==='repayment'&&account.currency===target.currency&&Number(p.amount)>Number(target.amount))return Response.json({error:'Repayment cannot exceed the outstanding balance.'},{status:409});
   if(account.currency!==target.currency){
    const prior=records.find(record=>record.id===p.id&&record.account_id===account.id&&record.currency===target.currency&&record.date===p.date&&record.account_currency===account.currency&&record.account_exchange_rate);
    let priorPayment:{exchange_rate:number;rate_date:string;account_id:string;account_currency:string;record_currency:string;investment_history:{balance:number|null}}|undefined;
-   if(body.action!=='occurrence'){
+   if(action!=='occurrence'){
     const history=await supa(`/rest/v1/investment_account_links?select=*,investment_history(balance)&id=eq.${p.id}`,{},auth.token);
     if(!history.ok)return Response.json({error:'Could not load accounts or exchange history.'},{status:503});
     [priorPayment]=await history.json();
@@ -82,34 +82,34 @@ export async function POST(req:Request){
    else if(prior){rate=Number(prior.account_exchange_rate);rateDate=prior.account_rate_date!;}
    else{try{const quote=await loadDatedExchangeRate(account.currency,target.currency,p.date);rate=quote.rate;rateDate=quote.effective_date;}catch{return Response.json({error:'Historical exchange rates are unavailable.'},{status:422});}}
    if(rate!==p.exchange_rate)return Response.json({error:'The exchange rate changed. Refresh the rate and review the amounts.'},{status:409});
-   if(body.action==='occurrence')paymentData={...parsed.data,account_exchange_rate:rate,account_rate_date:rateDate,account_currency:account.currency} as typeof parsed.data;
+   if(action==='occurrence')paymentData={...value,account_exchange_rate:rate,account_rate_date:rateDate,account_currency:account.currency};
    else{
     // Use the same atomic dated-payment function as Tracker and mortgage payments.
-    const result=await supa(body.action==='repayment'?'/rest/v1/rpc/record_repayment_with_fx':'/rest/v1/rpc/record_investment_with_fx',{method:'POST',body:JSON.stringify(body.action==='repayment'?{p_data:p,p_rate:rate,p_rate_date:rateDate,p_account_currency:account.currency,p_record_currency:target.currency}:{p_id:p.id,p_record_id:target.id,p_type:body.action==='mortgage'?'mortgage_payment':'withdrawal',p_date:p.date,p_amount:Number(p.amount)+Number(p.fee??0),p_balance:null,p_notes:p.notes??'',p_account:account.id,p_rate:rate,p_rate_date:rateDate,p_account_currency:account.currency,p_record_currency:target.currency,p_principal:body.action==='mortgage'?p.amount:0,p_interest:body.action==='mortgage'?p.fee:0})},auth.token);
-    if(!result.ok){const failure=await result.json() as {code?:string;message?:string};return Response.json({error:failure.code==='P0001'?failure.message:'Could not save the operation. Please try again.'},{status:409});}
-    const fxEvent=planningEvent(body.action,parsed.data);if(fxEvent)queueMilestoneCheck(auth,fxEvent);
+    const result=await supa(action==='repayment'?'/rest/v1/rpc/record_repayment_with_fx':'/rest/v1/rpc/record_investment_with_fx',{method:'POST',body:JSON.stringify(action==='repayment'?{p_data:p,p_rate:rate,p_rate_date:rateDate,p_account_currency:account.currency,p_record_currency:target.currency}:{p_id:p.id,p_record_id:target.id,p_type:action==='mortgage'?'mortgage_payment':'withdrawal',p_date:p.date,p_amount:Number(p.amount)+Number(p.fee??0),p_balance:null,p_notes:p.notes??'',p_account:account.id,p_rate:rate,p_rate_date:rateDate,p_account_currency:account.currency,p_record_currency:target.currency,p_principal:action==='mortgage'?p.amount:0,p_interest:action==='mortgage'?p.fee:0})},auth.token);
+    if(!result.ok)return postgrestFailure(result,'Could not save the operation. Please try again.');
+    const fxEvent=planningEvent(action,value);if(fxEvent)queueMilestoneCheck(auth,fxEvent);
     return Response.json(await result.json());
    }
   }
  }
  // Older planning_action versions accept unknown JSON keys and silently discard
  // additional holdings. Check schema support before allowing any such write.
- if(body.action==='goal'&&'investment_targets' in parsed.data&&Array.isArray(parsed.data.investment_targets)&&parsed.data.investment_targets.length){
+ if(action==='goal'&&'investment_targets' in value&&Array.isArray(value.investment_targets)&&value.investment_targets.length){
   const support=await supa('/rest/v1/savings_goals?select=investment_targets&limit=0',{},auth.token);
   if(!support.ok)return Response.json({error:'Goal holdings could not be saved. Please try again after the app database is updated.'},{status:503});
  }
  // The database treats a second payment for a paid occurrence as a retry and reports success
  // without saving it. Only a retry of the same transaction may succeed; another payment is refused.
- if(body.action==='occurrence'){
-  const data=parsed.data as {id:string;target_id:string;date:string};
+ if(action==='occurrence'){
+  const data=value as {id:string;target_id:string;date:string};
   const prior=await supa('/rest/v1/payment_occurrences?select=transaction_id&status=eq.paid&record_id=eq.'+data.target_id+'&due_on=eq.'+data.date,{},auth.token);
   if(!prior.ok)return Response.json({error:'Could not save the operation. Please try again.'},{status:503});
   if((await prior.json() as {transaction_id:string|null}[]).some(row=>row.transaction_id!==data.id))return Response.json({error:'This scheduled payment is already recorded. Keep its transaction.'},{status:409});
  }
- const multiGoal=body.action==='goal'&&'kind' in parsed.data&&parsed.data.kind==='investment'&&'investment_targets' in parsed.data&&Array.isArray(parsed.data.investment_targets);
- const result=await supa(multiGoal?'/rest/v1/rpc/planning_investment_goal':body.action==='occurrence'?'/rest/v1/rpc/planning_action_with_actual_amount':'/rest/v1/rpc/planning_action',{method:'POST',body:JSON.stringify(multiGoal?{p_data:parsed.data}:{p_action:body.action,p_data:paymentData})},auth.token);
- if(!result.ok){const error=await result.json() as {code?:string;message?:string};return Response.json({error:multiGoal&&error.code==='PGRST202'?'Could not save the goal. Check that the latest migrations are installed.':error.code==='P0001'?error.message:error.code==='23514'?'Insufficient balance or invalid amount.':error.code==='23505'?'This name or payment already exists.':'Could not save the operation. Please try again.'},{status:409});}
- const event=planningEvent(body.action,parsed.data);if(event)queueMilestoneCheck(auth,event);
+ const multiGoal=action==='goal'&&'kind' in value&&value.kind==='investment'&&'investment_targets' in value&&Array.isArray(value.investment_targets);
+ const result=await supa(multiGoal?'/rest/v1/rpc/planning_investment_goal':action==='occurrence'?'/rest/v1/rpc/planning_action_with_actual_amount':'/rest/v1/rpc/planning_action',{method:'POST',body:JSON.stringify(multiGoal?{p_data:value}:{p_action:action,p_data:paymentData})},auth.token);
+ if(!result.ok)return postgrestFailure(result,'Could not save the operation. Please try again.',{codes:{...(multiGoal?{PGRST202:'Could not save the goal. Check that the latest migrations are installed.'}:{}),'23514':'Insufficient balance or invalid amount.','23505':'This name or payment already exists.'}});
+ const event=planningEvent(action,value);if(event)queueMilestoneCheck(auth,event);
  return Response.json(await result.json());
  }catch{return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
 }

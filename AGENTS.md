@@ -198,6 +198,24 @@ database, never by the app.
 
 Reuse shared components, hooks, validators, and calculation helpers instead of duplicating behavior (DRY: Don’t Repeat Yourself). Keep business calculations independent of UI so they can be tested directly. Before introducing an abstraction, check for an existing helper; extract shared behavior when it has multiple real callers. Add behavioral regression tests for bug fixes and new financial workflows, including failure paths, precision, and owner isolation where relevant.
 
+Shared modules to reach for first:
+
+- API routes: `lib/api-route.ts` (`sameOrigin`, `reply`, `readJson`, `parseAction`,
+  `postgrestFailure`, the standard 401/403/429 replies) and the validators in
+  `lib/api-validation.ts` (`uuid`, `isoDate`, `fiatCurrency`). Paged PostgREST reads
+  go through `readAllPages` (`lib/owner-rows.ts`) or `readOwnerRows`
+  (`lib/server-records.ts`).
+- Abuse limits: `rateLimited` from `lib/rate-limit.ts` (Postgres-backed, migration
+  106). Every new sign-in, code-sending or paid-API route needs one.
+- Day and month arithmetic: `lib/calendar-days.ts` (`shiftDay`, `daysBetween`,
+  `shiftMonth`, `monthEnd`); "today" is `depositToday()`, never
+  `new Date().toISOString()`.
+- Client requests: `requestJson` from `lib/api-client.ts`; owner resources load
+  through `useOwnerResource`.
+- Telegram messages: `lib/telegram-kit.ts` (`messageKit`, `keyboardRows`,
+  `backButton`); typed amounts through `parseTypedAmount`. The bot answers private
+  chats only, and only the Telegram user linked to the subscription.
+
 # Languages and audience
 
 This is an international app, not an Uzbek one. It offers thirty interface

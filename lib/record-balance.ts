@@ -1,7 +1,7 @@
 import { income, expenses, type Entry } from './finance';
 
 // A transaction's account delta is independent of its display currency/rounding.
-export function recordCashEffect(record: Entry): number {
+function recordCashEffect(record: Entry): number {
  if (!record.account_id || record.frequency !== 'Once') return 0;
  if (![...income, ...expenses].includes(record.kind)) return 0;
  const rate = record.account_exchange_rate ?? 1;

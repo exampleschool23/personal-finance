@@ -1,4 +1,5 @@
-import { monthsBetween, shiftMonth } from './budget';
+import { monthsBetween } from './budget';
+import { monthEnd, shiftMonth } from './calendar-days';
 import { HOUSEHOLD, inBusinessFilter, type BusinessFilter } from './business';
 import { expenses, income, liabilities, value, type Entry } from './finance';
 import { convertAmount } from './market';
@@ -17,7 +18,6 @@ export const reportRangeLabels: Record<ReportRangePreset, string> = {
 };
 /** Inclusive ISO dates. Reports read at most 24 months of transactions. */
 export type ReportRange = { from: string; to: string };
-const monthEnd = (month: string) => new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).toISOString().slice(0, 10);
 export function rangeFor(preset: ReportRangePreset, today: string): ReportRange {
  const month = today.slice(0, 7), year = Number(today.slice(0, 4));
  if (preset === 'this_month') return { from: month + '-01', to: today };

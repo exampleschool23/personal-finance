@@ -10,7 +10,6 @@ const {categoryNameTaken,duplicateCategoryMessage}=loadTS('lib/category-names.ts
 const {signBackup}=loadTS('lib/backup-signature.ts');
 const {debtPaymentsFrom}=loadTS('lib/planning.ts');
 import {instrumentFor} from '../lib/market.ts';
-import {timingSafeEqual} from 'node:crypto';
 import {exportCSV,parseCSV,mapCSV,FINANCE_RECORD_CSV_COLUMNS} from '../lib/csv.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const id='10000000-0000-4000-8000-000000000001';

@@ -3,14 +3,16 @@ import { isCountry } from '@/lib/countries';
 import { fontIds, resolveFont } from '@/lib/fonts';
 import { isLanguage, languageCodes } from '@/lib/i18n';
 import { queueLanguageMenu } from '@/lib/notify-action';
+import { fiatCurrency } from '@/lib/api-validation';
+import { crossSite, readJson, signInAgain } from '@/lib/api-route';
 import { session, supa, sameOrigin } from '@/lib/supabase';
-import { defaultPreferences, isCurrency, maxPreferredCurrencies } from '@/lib/currencies';
+import { defaultPreferences, maxPreferredCurrencies } from '@/lib/currencies';
 import { onboardedOn } from '@/lib/onboarding';
-const schema = z.object({ country: z.string().refine(value => value === '' || isCountry(value)).nullable().transform(value => value ?? '').optional(), display_name: z.string().trim().max(80).optional(), language: z.enum(languageCodes), currencies: z.array(z.string().refine(isCurrency)).min(1).max(maxPreferredCurrencies).refine(list => new Set(list).size === list.length), font: z.enum(fontIds).nullish().transform(resolveFont), onboarded: z.boolean().optional() });
+const schema = z.object({ country: z.string().refine(value => value === '' || isCountry(value)).nullable().transform(value => value ?? '').optional(), display_name: z.string().trim().max(80).optional(), language: z.enum(languageCodes), currencies: z.array(fiatCurrency).min(1).max(maxPreferredCurrencies).refine(list => new Set(list).size === list.length), font: z.enum(fontIds).nullish().transform(resolveFont), onboarded: z.boolean().optional() });
 export async function GET() {
   try {
     const s = await session();
-    if (!s) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
+    if (!s) return signInAgain();
     const response = await supa('/rest/v1/user_preferences?select=*&user_id=eq.' + s.user.id, {}, s.token);
     if (!response.ok) return Response.json({ error: 'Settings are unavailable. Check the database setup.' }, { status: 503 });
     const rows = await response.json() as unknown[];
@@ -24,11 +26,11 @@ export async function GET() {
   } catch { return Response.json({ error: 'Could not load settings.' }, { status: 503 }); }
 }
 export async function PUT(req: Request) {
-  if (!sameOrigin(req)) return new Response(null, { status: 403 });
+  if (!sameOrigin(req)) return crossSite();
   try {
     const s = await session();
-    if (!s) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
-    const parsed = schema.safeParse(await req.json());
+    if (!s) return signInAgain();
+    const parsed = schema.safeParse(await readJson(req));
     if (!parsed.success) return Response.json({ error: 'Choose a language, one or two currencies, a font, a valid country, and a name of up to 80 characters.' }, { status: 400 });
     const { onboarded, ...preferences } = parsed.data;
     // The saved language before this save, so a change can refresh the Telegram menu afterwards.

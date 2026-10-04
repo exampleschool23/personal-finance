@@ -1,3 +1,4 @@
+import { apiFunction } from './helpers/api-function.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -23,7 +24,7 @@ test('mortgage payments show principal and interest without inventing a historic
 const source=fs.readFileSync('app/api/investment-history/route.ts','utf8').replace(/^import .*;\n/gm,'').replace(/export async function/g,'async function');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let signedIn=true,calls=[],rpcError=null;
-const api=new Function('z','session','supa','sameOrigin',js+';return {GET,POST};')(z,async()=>signedIn?{token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return rpcError&&path.includes('/rpc/')?Response.json({message:rpcError},{status:400}):Response.json(path.includes('/rpc/')?{ok:true}:[]);},req=>req.headers.get('origin')==='https://local');
+const api=apiFunction('z','session','supa','sameOrigin',js+';return {GET,POST};')(z,async()=>signedIn?{token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return rpcError&&path.includes('/rpc/')?Response.json({message:rpcError},{status:400}):Response.json(path.includes('/rpc/')?{ok:true}:[]);},req=>req.headers.get('origin')==='https://local');
 const body={id:'10000000-0000-4000-8000-000000000001',record_id:'10000000-0000-4000-8000-000000000002',type:'income',date:'2026-01-01',amount:400,balance:null,notes:'Rent'};
 const request=patch=>new Request('https://local/api/investment-history',{method:'POST',headers:{origin:'https://local','Content-Type':'application/json'},body:JSON.stringify({...body,...patch})});
 test('saves a cash receipt through the owner-scoped atomic RPC with a stable request id',async()=>{

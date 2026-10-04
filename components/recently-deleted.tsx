@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { Pagination } from '@/components/presentation-foundation/pagination';
 import { formatDate, formatDateTime, formatMoney, formatNumber } from '@/lib/format';
+import { requestJson } from '@/lib/api-client';
 import { deletedItemColorKind, deletedItemLabel, type DeletedItem } from '@/lib/deleted-items';
 
 export function RecentlyDeleted({demo,demoItems,onRestore,onDelete,onSaved}:{demo:boolean;demoItems:DeletedItem[];onRestore:(item:DeletedItem)=>void;onDelete:(item:DeletedItem)=>void;onSaved:()=>void}) {
@@ -42,7 +43,7 @@ export function RecentlyDeleted({demo,demoItems,onRestore,onDelete,onSaved}:{dem
 
  <Pagination label={t('Record pages')} summary={t('Page {page}',{page:formatNumber(page,locale,0)})} page={page} hasNext={demo?demoItems.length>page*10:hasMore} disabled={loading||busy} onPage={setPage}/>
  </section><ConfirmDialog open={!!restoring} onClose={()=>{setRestoring(null);setError('');}} busy={busy} destructive={permanent} error={error} title={t(permanent?'Permanently delete {name}?':'Restore {name}?',{name:restoring?.data.name||''})} description={t(permanent?'This permanently removes the saved item and its recovery data from the database. This cannot be undone.':'This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.')} confirmLabel={t(busy?'Saving…':permanent?'Delete permanently':'Restore')} onConfirm={async()=>{if(!restoring)return;setBusy(true);setError('');try{
- if(demo){if(permanent)onDelete(restoring);else onRestore(restoring);if(visible.length===1&&page>1)setPage(n=>n-1);}else{const response=await fetch('/api/deleted-items',{method:permanent?'DELETE':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:restoring.id})});const data=await response.json() as {error?:string};if(!response.ok)throw Error(data.error);}
+ if(demo){if(permanent)onDelete(restoring);else onRestore(restoring);if(visible.length===1&&page>1)setPage(n=>n-1);}else await requestJson('/api/deleted-items',{method:permanent?'DELETE':'POST',body:{id:restoring.id}});
  setRestoring(null);setReload(n=>n+1);onSaved();
  }catch(error){setError((error as Error).message);}finally{setBusy(false);}}}/></>;
 }

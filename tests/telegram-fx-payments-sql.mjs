@@ -30,7 +30,7 @@ test('the bot saves an expense in another currency with its dated rate, and pays
   await db.exec(asOwner);
   await db.query('SELECT save_finance_record($1,NULL)',[wallet]);
   await db.query('SELECT save_finance_record($1,NULL)',[loan]);
-  await db.exec(`INSERT INTO telegram_subscriptions(user_id,chat_id,linked_at) VALUES('${owner}',500,now());`);
+  await db.exec(`RESET ROLE;INSERT INTO telegram_subscriptions(user_id,chat_id,linked_at) VALUES('${owner}',500,now());SET ROLE authenticated;`);
   await assert.rejects(db.query('SELECT telegram_payment_with_fx($1,$2,$3,$4,$5,$6,$7)',[owner,'repayment',{},0.00008,day,'UZS','USD']),/permission denied/);
   await db.exec(asServer);
   // 12 USD at 1 UZS = 0.00008 USD takes 150,000 UZS.

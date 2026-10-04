@@ -2,12 +2,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import {createRequire} from 'node:module';
+import {pathToFileURL} from 'node:url';
+import vm from 'node:vm';
 const require=createRequire(import.meta.url);
 // Load the same pure helpers as production, retaining their dependency graph.
 export function loadTS(file,overrides={},cache=new Map()){
  const absolute=path.resolve(file);if(cache.has(absolute))return cache.get(absolute).exports;
  const loaded={exports:{}};cache.set(absolute,loaded);
- const source=ts.transpileModule(fs.readFileSync(absolute,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,esModuleInterop:true,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+ // An inline source map and the file's own address let coverage reports count these lines against the .ts source.
+ const source=ts.transpileModule(fs.readFileSync(absolute,'utf8'),{fileName:absolute,compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,esModuleInterop:true,jsx:ts.JsxEmit.ReactJSX,inlineSourceMap:true,inlineSources:true}}).outputText;
  const localRequire=name=>{
   if(name in overrides)return overrides[name];
   if(!name.startsWith('.')&&!name.startsWith('@/'))return require(name);
@@ -16,5 +19,5 @@ export function loadTS(file,overrides={},cache=new Map()){
   if(!resolved)throw Error('Missing dependency '+root);
   return resolved.endsWith('.json')?JSON.parse(fs.readFileSync(resolved,'utf8')):loadTS(resolved,overrides,cache);
  };
- new Function('require','module','exports',source)(localRequire,loaded,loaded.exports);return loaded.exports;
+ vm.compileFunction(source,['require','module','exports'],{filename:pathToFileURL(absolute).href})(localRequire,loaded,loaded.exports);return loaded.exports;
 }

@@ -24,7 +24,7 @@ export function AppPreview({ path = '/', tour, interval = 4200, eager = false, s
  const box = useRef<HTMLDivElement>(null), frame = useRef<HTMLIFrameElement>(null);
  // Rendered only in a browser that is not itself a preview, so the server sends no frame and frames never nest.
  const [show, setShow] = useState(false), [ready, setReady] = useState(false), [scale, setScale] = useState(0), [step, setStep] = useState(0);
- useEffect(() => { if (window.self === window.top) setShow(true); }, []);
+ useEffect(() => { if (window.self === window.top) queueMicrotask(() => setShow(true)); }, []);
  useEffect(() => {
   const node = box.current;
   if (!show || !node) return;

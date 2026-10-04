@@ -1,11 +1,10 @@
+import { daysBetween, monthDays, monthEnd } from './calendar-days';
 import { scheduleDates, income, type Entry } from './finance';
 import { installmentDates, installmentsFrom, isRecurringCashFlow, paidInstallmentMonths, scheduleAssets, scheduleStart, settledOccurrences, type DebtPayment, type Occurrence } from './planning';
 
 export type RecurringStatus = 'paid' | 'skipped' | 'due' | 'overdue';
 /** `installment` is a loan's monthly payment; it is paid by a repayment or mortgage payment in its month. */
 export type RecurringItem = { key: string; record: Entry; date: string; status: RecurringStatus; direction: 'income' | 'expense'; amount: number; installment?: boolean };
-
-const monthEnd = (month: string) => new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).toISOString().slice(0, 10);
 
 /** Every scheduled income and expense in a month and, when the loan payments are known, each loan's monthly payment, with whether it was paid, skipped, is still due or is overdue. */
 export function monthOccurrences(records: Entry[], occurrences: Occurrence[], month: string, today: string, debtPayments?: DebtPayment[]): RecurringItem[] {
@@ -45,11 +44,12 @@ export function recurringSummary(items: RecurringItem[], convert: (amount: numbe
 }
 
 /** Whole days from today to a date: positive ahead, negative behind. */
-export const daysFrom = (today: string, date: string) => Math.round((Date.parse(date + 'T00:00:00Z') - Date.parse(today + 'T00:00:00Z')) / 86400000);
+// Kept for components/planning/upcoming-page.tsx, which imports `daysFrom` from here.
+export const daysFrom = (today: string, date: string) => daysBetween(today, date);
 
 /** The weeks of a month for a Monday-first calendar; days outside the month are null. */
 export function calendarWeeks(month: string) {
- const first = new Date(month + '-01T00:00:00Z'), days = Number(monthEnd(month).slice(8));
+ const first = new Date(month + '-01T00:00:00Z'), days = monthDays(month);
  const offset = (first.getUTCDay() + 6) % 7;
  const cells: Array<string | null> = [...Array(offset).fill(null), ...Array.from({ length: days }, (_, index) => `${month}-${String(index + 1).padStart(2, '0')}`)];
  while (cells.length % 7) cells.push(null);

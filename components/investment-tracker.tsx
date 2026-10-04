@@ -24,6 +24,7 @@ import { AssetMovementDialog, type MovementDraft } from '@/components/planning/a
 import type { AssetMovement } from '@/lib/asset-movements';
 import { interestCompounding, interestKinds, type Entry } from '@/lib/finance';
 import { categoryColor } from '@/lib/category-colors';
+import { requestJson, type RequestError } from '@/lib/api-client';
 
 type Draft={exchange_rate?:number;account_id?:string;id:string;record_id:string;type:HistoryUpdateType;date:string;amount:number;balance:number|null;notes:string};
 export function InvestmentTracker({inline=false,onDraftState,initialType,record,accounts=[],accountsReady=true,onClose,onSaved,onPayment}:{inline?:boolean;onDraftState?:(dirty:boolean,busy:boolean)=>void;initialType?:HistoryUpdateType;accounts?:Entry[];accountsReady?:boolean;record:Entry;onClose:()=>void;onSaved:()=>void;onPayment:()=>void}){
@@ -33,8 +34,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
  async function deleteUpdate(){
   if(!deleting||busy)return;setBusy(true);setError('');
   try{
-   const response=await fetch('/api/investment-history',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deleting.id,record_id:record.id})});
-   const result=await response.json() as {error?:string};if(!response.ok)throw Error(result.error);
+   await requestJson('/api/investment-history',{method:'DELETE',body:{id:deleting.id,record_id:record.id}});
    setDeleting(null);setLoading(true);setReload(n=>n+1);onSaved();
   }catch(reason){setError((reason as Error).message);setDeleting(null);}finally{setBusy(false);}
  }
@@ -60,9 +60,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
  const projection=depositProjection(events,record.rate,undefined,interestCompounding(record));
  const movementRecords=accounts.some(account=>account.id===record.id)?accounts:[...accounts,record];
  async function saveMovement(payload:AssetMovement){
-  const response=await fetch('/api/asset-movements',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  const result=await response.json() as {error?:string};
-  if(!response.ok)throw Object.assign(Error(result.error),{confirmedFailure:response.status<500});
+  await requestJson('/api/asset-movements',{body:payload});
   showSaved();onSaved();onClose();
  }
  const eventLabel=(type:HistoryEvent['event_type'])=>historyEventLabel(record.kind,type);
@@ -93,10 +91,9 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
   try{
    const payload=submitted?draft:{...draft,...(crossCurrency?{exchange_rate:fx.rate!}:{})};
    setDraft(payload);
-   const response=await fetch(payload.exchange_rate!==undefined?'/api/investment-history/exchange':'/api/investment-history',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-   const result=await response.json() as {error?:string};if(!response.ok){if(response.status>=400&&response.status<500){setSubmitted(false);if(crossCurrency)fx.retry();}throw Error(result.error);}
+   await requestJson(payload.exchange_rate!==undefined?'/api/investment-history/exchange':'/api/investment-history',{body:payload});
    showSaved();setDraft(makeDraft());setBalanceBlank(true);setSubmitted(false);setLoading(true);setReload(n=>n+1);onSaved();if(inline)onClose();
-  }catch(e){setError((e as Error).message);}finally{setBusy(false);}
+  }catch(e){if((e as RequestError).confirmedFailure){setSubmitted(false);if(crossCurrency)fx.retry();}setError((e as Error).message);}finally{setBusy(false);}
  }
  const paymentFields=<div className="record-form">
    {!inline&&<h3>{t('Add a dated update')}</h3>}{inline&&<p className="muted">{t('Enter any amount up to the outstanding balance. You can repay the rest later.')}</p>}

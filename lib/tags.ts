@@ -27,8 +27,7 @@ export function tagCounts(links: readonly TagLink[]) {
  return counts;
 }
 /** How a filter with several tags matches: a transaction with any of them, or only those with all of them. */
-export const tagMatches = ['any', 'all'] as const;
-export type TagMatch = typeof tagMatches[number];
+export type TagMatch = 'any' | 'all';
 /** Whether a transaction's tags pass a tag filter. No chosen tags lets everything through. */
 export function matchesTags(recordTags: readonly string[], chosen: readonly string[], match: TagMatch) {
  if (!chosen.length) return true;

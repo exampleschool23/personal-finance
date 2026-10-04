@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, leftToBudget, flexBucketBudget, budgetRowsForMode, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, demoBudget, shiftMonth } = loadTS('lib/budget.ts');
+const { budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, leftToBudget, flexBucketBudget, budgetRowsForMode, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, demoBudget } = loadTS('lib/budget.ts');
+const { shiftMonth } = loadTS('lib/calendar-days.ts');
 const { demoRecords } = loadTS('lib/demo-finance.ts');
 
 const amount = (category_key, month, value, applies_forward = false, currency = 'USD') => ({ category_key, month, amount: value, currency, applies_forward });

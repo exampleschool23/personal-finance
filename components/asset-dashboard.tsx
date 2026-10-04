@@ -18,6 +18,7 @@ import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/form
 import { assetRecordKinds, interestKinds, value, totalValue, type Entry, type estimatedCashFlow } from '@/lib/finance';
 import { sortAssetsByWorth } from '@/lib/asset-sort';
 import { marketEntry, type MarketData } from '@/lib/market';
+import { Segmented } from '@/components/presentation-foundation/segmented';
 
 type Props = {
  excludedCurrencies?:string[];
@@ -85,7 +86,7 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
   <section className="asset-holdings" aria-label={t('Assets & investments')}>
    <div className="asset-holdings-heading"><h2>{t('Other assets')}<Count value={otherHoldings.length}/></h2><div className="asset-layout-switch" role="group" aria-label={t('Asset layout')}><Button variant="ghost" size="icon" aria-label={t('Card view')} aria-pressed={layout === 'grid'} onClick={() => setLayout('grid')}><LayoutGrid size={17}/></Button><Button variant="ghost" size="icon" aria-label={t('Compact view')} aria-pressed={layout === 'list'} onClick={() => setLayout('list')}><List size={18}/></Button></div></div>
 
-   <div className="segmented asset-category-filters" role="group" aria-label={t('Filter assets by category')}><button type="button" aria-pressed={category === 'all'} onClick={() => selectCategory('all')}>{t('All assets')}<span>{formatNumber(otherHoldings.length, locale, 0)}</span></button>{otherCategories.map(group => <button key={group.kind} type="button" aria-pressed={category === group.kind} onClick={() => selectCategory(group.kind)} style={{ '--asset-color': categoryColor(group.kind) } as CSSProperties}><i/>{t(group.kind)}<span>{formatNumber(group.count, locale, 0)}</span></button>)}</div>
+   <Segmented className="asset-category-filters" label={t('Filter assets by category')} value={category} onChange={selectCategory} options={[{ value: 'all', label: <>{t('All assets')}<span>{formatNumber(otherHoldings.length, locale, 0)}</span></> }, ...otherCategories.map(group => ({ value: group.kind, label: <><i style={{ '--asset-color': categoryColor(group.kind) } as CSSProperties}/>{t(group.kind)}<span>{formatNumber(group.count, locale, 0)}</span></> }))]}/>
    {(category !== 'all' || filtered.length > limit) && <p className="asset-result-count" role="status">{t('{shown} of {total} assets', { shown: formatNumber(Math.min(limit, filtered.length), locale, 0), total: formatNumber(filtered.length, locale, 0) })}{(category !== 'all') && <button onClick={clearFilters}>{t('Clear filters')}</button>}</p>}
    {loading ? <LoadingPlaceholder label={t('Loading records…')}/> : !filtered.length ? <EmptyState icon={<Search size={26}/>} title={t(otherHoldings.length ? 'No matching assets' : 'A fresh start')} description={t(otherHoldings.length ? 'Try another category.' : 'Add your first asset to start building your portfolio.')}><Button variant="outline" onClick={otherHoldings.length ? clearFilters : onAdd}>{t(otherHoldings.length ? 'Clear filters' : 'Add your first record')}</Button></EmptyState> : <div className={'asset-card-grid asset-layout-' + layout}>{visible.map(renderCard)}</div>}
    {!loading && filtered.length > limit && <div className="asset-load-more"><Button variant="outline" onClick={() => setLimit(previous => previous + 12)}>{t('Show more assets')}<ChevronDown size={16}/></Button></div>}

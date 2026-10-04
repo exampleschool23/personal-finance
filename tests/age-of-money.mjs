@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { ageOfMoney, ageOfMoneyTrend, ageOfMoneyOutflows, daysBefore } = loadTS('lib/age-of-money.ts');
+const { ageOfMoney, ageOfMoneyTrend, ageOfMoneyOutflows } = loadTS('lib/age-of-money.ts');
+const { shiftDay } = loadTS('lib/calendar-days.ts');
 
 let next = 0;
 const row = (kind, amount, date, extra = {}) => ({ id: 'r' + String(++next).padStart(3, '0'), kind, amount, currency: 'USD', date, frequency: 'Once', account_id: 'cash', ...extra });
@@ -63,7 +64,7 @@ test('amounts convert to the primary currency with explicit rates; records witho
 });
 
 test('the trend compares today with 30 days earlier in whole days', () => {
- assert.equal(daysBefore('2026-03-01', 30), '2026-01-30');
+ assert.equal(shiftDay('2026-03-01', -30), '2026-01-30');
  const records = [pay(1000, '2026-01-01'), spend(10, '2026-01-21'), spend(10, '2026-02-25')];
  const trend = ageOfMoneyTrend(records, 'USD', '2026-03-01', rates, cash);
  // 30 days earlier only the Jan 21 expense (20 days) existed; now the average is (20 + 55) / 2.

@@ -4,7 +4,7 @@ import { serviceDatabase } from '@/lib/service-role';
 import { sameOrigin, session } from '@/lib/supabase';
 import { sendTelegramMessage, telegramConfig } from '@/lib/telegram';
 import { connectedReply } from '@/lib/telegram-bot';
-import { cancelConnectRequest, connectCookie, connectMinutes, connectPage, consumeConnectRequest, findConnectRequest, isConnectToken, linkChat } from '@/lib/telegram-connect';
+import { cancelConnectRequest, connectCookie, connectMinutes, connectPage, consumeConnectRequest, findConnectRequest, isConnectToken, linkChat, linkRefusal } from '@/lib/telegram-connect';
 const cookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/' };
 const headers = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' };
 const reply = (data: unknown, status = 200) => Response.json(data, { status, headers });
@@ -36,11 +36,13 @@ export async function POST(req: Request) {
     const signedIn = await session();
     if (!signedIn) return reply({ state: 'sign_in', telegram: request.first_name, bot });
     const account = signedIn.user.email || signedIn.user.phone || '';
+    // An account made in Telegram stays with the Telegram user who made it; the page says so before anything is spent.
+    if (await linkRefusal(db, signedIn.user.id, { telegramUserId: request.telegram_user_id })) return reply({ state: 'other_telegram', bot });
     if (parsed.data.action === 'preview') return reply({ state: 'confirm', telegram: request.first_name, account, bot });
     const spent = await consumeConnectRequest(db, token, now);
     jar.delete(connectCookie);
     if (!spent) return reply({ state: 'expired', bot });
-    await linkChat(db, signedIn.user.id, { chatId: spent.chat_id, telegramUserId: spent.telegram_user_id, firstName: spent.first_name ?? '' }, now);
+    if (await linkChat(db, signedIn.user.id, { chatId: spent.chat_id, telegramUserId: spent.telegram_user_id, firstName: spent.first_name ?? '' }, now) !== 'linked') return reply({ state: 'other_telegram', bot });
     // The chat hears about it straight away, so returning to Telegram shows the menu.
     await sendTelegramMessage(await connectedReply(db, signedIn.user.id, spent.chat_id), config);
     return reply({ state: 'connected', bot });

@@ -4,9 +4,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
 import {assets,liabilities,income,expenses} from '../lib/finance.ts';
-import * as dates from '../lib/benchmark-data.ts';
+import {loadTS} from './helpers/load-ts.mjs';
+const dates=loadTS('lib/benchmark-data.ts');
+import * as days from '../lib/calendar-days.ts';
 const compile = path => ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const deps={portfolioAssets,portfolioAssetKey,portfolioAssetCurrency,assets,liabilities,income,expenses,...dates};
+const deps={portfolioAssets,portfolioAssetKey,portfolioAssetCurrency,assets,liabilities,income,expenses,...dates,...days};
 const {compareInvestments}=new Function(...Object.keys(deps),compile('lib/investment-comparison.ts')+';return {compareInvestments};')(...Object.values(deps));
 const near=(actual,expected)=>assert.ok(Math.abs(actual-expected)<.00001,`${actual} != ${expected}`);
 const fx=[{date:'2025-01-01',rates:{USD:1,UZS:10000,EUR:.9}},{date:'2026-01-01',rates:{USD:1,UZS:12100,EUR:.95}}];
@@ -51,6 +53,9 @@ test('comparison chart shows monetary values from the purchase-based comparison,
  const chart=fs.readFileSync('components/investment-value-chart.tsx','utf8');
  assert.ok(chart.includes('tickFormatter={amount=>formatCompactMoney(Number(amount),currency,locale)}'));
  assert.ok(chart.includes('money(Number(amount))'));
+ // On phones a tap opens the details window, so no tooltip is drawn under the finger to flash through it.
+ assert.ok(chart.includes('const tapOpensDetails=mobile&&!!onPointSelect;'));
+ assert.ok(chart.includes('content={tapOpensDetails?noTooltip:tooltip}'));
  for(const text of [source,chart]){
   assert.ok(!text.includes('percentagePerformance'));
   assert.ok(!text.includes('tickFormatter={percent}'));

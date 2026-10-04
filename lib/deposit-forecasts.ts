@@ -2,18 +2,10 @@ import { interestCompounding, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import { depositInterest } from './deposit-interest';
 import { supa } from './supabase';
+import { pagePath, readAllPages } from './owner-rows';
 
 // Read through owner RLS and paginate explicitly; never silently use partial histories.
-async function readAll<T>(path: string, token: string): Promise<T[]> {
- const rows: T[] = [];
- for (let offset = 0; ; offset += 500) {
-  const response = await supa(`${path}&limit=500&offset=${offset}`, {}, token);
-  if (!response.ok) throw new Error('Could not load deposit estimates.');
-  const page = await response.json() as T[];
-  rows.push(...page);
-  if (page.length < 500) return rows;
- }
-}
+function readAll<T>(path:string,token:string){return readAllPages<T>(range=>supa(pagePath(path,range),{},token),'Could not load deposit estimates.');}
 export async function depositForecasts(token: string): Promise<Entry[]> {
  const deposits = await readAll<Entry>('/rest/v1/finance_records?kind=in.(Deposit,%22Treasury%20bill%22)&select=*&order=id.asc', token);
  for (let offset = 0; offset < deposits.length; offset += 100) {

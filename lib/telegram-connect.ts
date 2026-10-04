@@ -5,7 +5,7 @@
 import {randomBytes} from 'node:crypto';
 import type {ServiceDatabase} from './service-role';
 import {hashToken} from './telegram-account';
-import type {TelegramSubscription} from './telegram-link';
+import {createdInTelegram,unlinkedChat,type TelegramSubscription} from './telegram-link';
 export const connectMinutes=15;
 /** Holds the token while the person signs in, so every sign-in method can return to the confirmation page. */
 export const connectCookie='hf_telegram_connect';
@@ -46,13 +46,30 @@ export async function cancelConnectRequest(db:ServiceDatabase,token:unknown){
  if(!isConnectToken(token))return;
  await db.write(`${table}?token_hash=eq.${hashToken(token)}&used_at=is.null`,{method:'DELETE'});
 }
-/** Make `owner` the owner of the chat. An earlier owner of the chat is signed out first, as the Sign out button would, and the Telegram user is recorded only when no other account already holds it, so one person is never tied to two owners. */
-export async function linkChat(db:ServiceDatabase,owner:string,person:{chatId:number;telegramUserId?:number;firstName?:string},now:Date){
+/** Unlink a chat from its owner, as Sign out in the bot does. An account without a number also gives up its Telegram identity. */
+export async function unlinkChat(db:ServiceDatabase,subscription:Pick<TelegramSubscription,'user_id'|'phone'>,now:Date){
+ const cleared=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+subscription.user_id,{method:'PATCH',body:JSON.stringify(unlinkedChat(now.toISOString(),!subscription.phone))});
+ if(!cleared.ok)failed();
+}
+/** Why `owner` cannot take this chat, or null when it can. An account created in Telegram belongs to the Telegram user who made it:
+ * its sign-in codes travel to its chat, so a chat of anyone else must never become that chat. */
+export async function linkRefusal(db:ServiceDatabase,owner:string,person:{telegramUserId?:number}):Promise<'other_telegram'|null>{
+ const [own]=await db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&user_id=eq.'+owner);
+ return createdInTelegram(own)&&own.telegram_user_id!==person.telegramUserId?'other_telegram':null;
+}
+/** Make `owner` the owner of the chat, unless {@link linkRefusal} refuses it. An earlier owner of the chat is signed out first, as the Sign out button would.
+ * The Telegram user is recorded only when no other account already holds it, so one person is never tied to two owners; otherwise an identity left
+ * from an earlier chat is cleared, so the bot never mistakes the person now in the chat for someone else. */
+export async function linkChat(db:ServiceDatabase,owner:string,person:{chatId:number;telegramUserId?:number;firstName?:string},now:Date):Promise<'linked'|'other_telegram'>{
+ const refused=await linkRefusal(db,owner,person);
+ if(refused)return refused;
  const at=now.toISOString();
  const [earlier]=await db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&chat_id=eq.'+person.chatId);
- if(earlier&&earlier.user_id!==owner){const cleared=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+earlier.user_id,{method:'PATCH',body:JSON.stringify({chat_id:null,linked_at:null,updated_at:at,...(earlier.phone?{}:{telegram_user_id:null,first_name:null})})});if(!cleared.ok)failed();}
+ if(earlier&&earlier.user_id!==owner)await unlinkChat(db,earlier,now);
  const taken=person.telegramUserId?await db.read<Array<{user_id:string}>>('/rest/v1/telegram_subscriptions?select=user_id&telegram_user_id=eq.'+person.telegramUserId):[];
- const identity=person.telegramUserId&&!taken.some(row=>row.user_id!==owner)?{telegram_user_id:person.telegramUserId,first_name:(person.firstName??'').trim().slice(0,80)||null}:{};
+ const free=!!person.telegramUserId&&!taken.some(row=>row.user_id!==owner);
+ const identity=free?{telegram_user_id:person.telegramUserId,first_name:(person.firstName??'').trim().slice(0,80)||null}:{telegram_user_id:null,first_name:null};
  const saved=await db.write('/rest/v1/telegram_subscriptions?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({user_id:owner,chat_id:person.chatId,linked_at:at,updated_at:at,...identity})});
  if(!saved.ok)failed();
+ return 'linked';
 }

@@ -4,11 +4,10 @@ import { replacePreferredCurrency, togglePreferredCurrency, type Preferences } f
 
 /** The welcome setup shown once after the first sign-in, one question per step. */
 export const onboardingSteps = ['profile', 'currencies', 'goal', 'connect'] as const;
-export type OnboardingStep = (typeof onboardingSteps)[number];
 /** Offered first on the currency step; the full fiat catalogue stays behind the search. */
 export const suggestedCurrencies = ['USD', 'EUR', 'GBP', 'RUB', 'TRY', 'AED'];
 /** The currencies every account started with before the welcome setup. Untouched, they are not a choice the owner made. */
-export const legacyDefaultCurrencies = ['USD', 'UZS'];
+const legacyDefaultCurrencies = ['USD', 'UZS'];
 export const startingCurrencies = (saved: string[]) => saved.length === legacyDefaultCurrencies.length && saved.every((code, index) => code === legacyDefaultCurrencies[index]) ? ['USD'] : saved;
 export const goalHorizons = [1, 3, 5] as const;
 export type TrackingPreset = 'today' | 'year' | 'custom' | 'later';

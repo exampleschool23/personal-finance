@@ -1,18 +1,20 @@
 import { loadDatedExchangeRate } from '@/lib/dated-exchange-rate';
 import { z } from 'zod';
+import { isoDate, nonnegativeAmount, uuid } from '@/lib/api-validation';
+import { crossSite, postgrestFailure, readJson, signInAgain } from '@/lib/api-route';
 import { session, sameOrigin, supa } from '@/lib/supabase';
 import { queueMilestoneCheck } from '@/lib/notify-action';
-const amount = z.number().finite().min(0).max(1e15);
+const amount = nonnegativeAmount;
 const schema = z.object({
- exchange_rate:z.number().finite().positive().max(1e15).optional(),id:z.string().uuid(), kind:z.enum(['transfer','buy','sell','interest']), source_id:z.string().uuid(), target_id:z.string().uuid(),
+ exchange_rate:z.number().finite().positive().max(1e15).optional(),id:uuid, kind:z.enum(['transfer','buy','sell','interest']), source_id:uuid, target_id:uuid,
  sent:amount, received:amount.positive(), source_value:amount, target_value:amount.positive(), fee:amount,
- date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(date=>Number.isFinite(Date.parse(date))&&new Date(date).toISOString().slice(0,10)===date), notes:z.string().max(2000),
+ date:isoDate, notes:z.string().max(2000),
 }).refine(data=>data.kind==='interest'?data.source_id===data.target_id&&data.sent===0:data.source_id!==data.target_id&&data.sent>0);
 export async function POST(req:Request) {
- if(!sameOrigin(req))return new Response(null,{status:403});
+ if(!sameOrigin(req))return crossSite();
  try {
-  const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
-  const parsed=schema.safeParse(await req.json());if(!parsed.success)return Response.json({error:'Check the movement fields.'},{status:400});
+  const auth=await session();if(!auth)return signInAgain();
+  const parsed=schema.safeParse(await readJson(req));if(!parsed.success)return Response.json({error:'Check the movement fields.'},{status:400});
   const p=parsed.data;
   let rpc='record_asset_movement',args:Record<string,unknown>={p_data:p};
   if(p.kind==='transfer'){
@@ -34,7 +36,7 @@ export async function POST(req:Request) {
    }
   }
   const response=await supa('/rest/v1/rpc/'+rpc,{method:'POST',body:JSON.stringify(args)},auth.token);
-  if(!response.ok){const error=await response.json() as {code?:string;message?:string};return Response.json({error:error.code==='P0001'?error.message:'Could not save the movement. Check that the latest migrations are installed.'},{status:409});}
+  if(!response.ok)return postgrestFailure(response,'Could not save the movement. Check that the latest migrations are installed.');
   queueMilestoneCheck(auth,{type:'movement',kind:p.kind,source_id:p.source_id,target_id:p.target_id,sent:p.sent,received:p.received,date:p.date});
   return Response.json({ok:true});
  }catch{return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}

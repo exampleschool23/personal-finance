@@ -46,3 +46,28 @@ test('portfolio history is discarded on logout even when the next account uses t
  const run=harness('hooks/use-portfolio-snapshots.ts','usePortfolioSnapshots',{fetch});const render=owner=>run(owner,null,false,0);
  render('same@example.com');requests[0].reply({snapshots:[{occurred_on:'2026-09-18',assets:100,debt:0,rates:{USD:1},updated_at:'2026-09-18T00:00:00Z'}]});await flush();assert.equal(render('same@example.com').snapshots.length,1);assert.deepEqual(render(null).snapshots,[]);assert.deepEqual(render('same@example.com').snapshots,[]);
 });
+test('the JSON client sends the body, returns the reply and shapes failures with their translation key',async()=>{
+ const original=globalThis.fetch,calls=[];let reply=()=>Response.json({ok:true});
+ globalThis.fetch=async(url,options)=>{calls.push({url,options});return reply();};
+ try{
+  const {requestJson}=loadTS('lib/api-client.ts');
+  assert.deepEqual(await requestJson('/api/example',{body:{action:'save',data:{id:1}}}),{ok:true});
+  assert.equal(calls[0].options.method,'POST');assert.equal(calls[0].options.headers['Content-Type'],'application/json');assert.deepEqual(JSON.parse(calls[0].options.body),{action:'save',data:{id:1}});
+  await requestJson('/api/example',{method:'DELETE',body:{id:2}});assert.equal(calls[1].options.method,'DELETE');
+  reply=()=>Response.json({error:'Name is taken.'},{status:409});
+  await assert.rejects(requestJson('/api/example',{body:{},fallback:'Could not save changes.'}),error=>error.message==='Name is taken.'&&error.confirmedFailure===true&&error.status===409);
+  reply=()=>new Response('Bad gateway',{status:502});
+  await assert.rejects(requestJson('/api/example',{body:{},fallback:'Could not save changes.'}),error=>error.message==='Could not save changes.'&&error.confirmedFailure===false,'a reply without JSON uses the fallback, and a server failure may have saved');
+ }finally{globalThis.fetch=original;}
+});
+test('the Telegram link shows a load failure, retries, and keeps a later answer from a save',async()=>{
+ const requests=[];const fetch=(url,options={})=>new Promise(resolve=>requests.push({url,options,reply:(data,status=200)=>resolve(Response.json(data,{status}))}));
+ const run=harness('hooks/use-telegram-link.ts','useTelegramLink',{fetch,telegramBotUrl:name=>'https://t.me/'+name});
+ assert.equal(run(false).status,null);requests[0].reply({error:'Could not load data.'},503);await flush();
+ assert.equal(run(false).loadError,'Could not load data.');run(false).retry();assert.equal(run(false).loadError,'');
+ const linked={configured:true,linked:true,digest_enabled:true,actions_enabled:true,bot_username:'bot'};
+ requests[1].reply(linked);await flush();assert.deepEqual(run(false).status,linked);
+ const saving=run(false).setToggles(false,true);requests[2].reply({...linked,digest_enabled:false});await saving;
+ assert.equal(JSON.parse(requests[2].options.body).action,'settings');assert.equal(run(false).status.digest_enabled,false);
+ assert.equal(run(true).status.configured,false,'the sample workspace shows the sample status');
+});

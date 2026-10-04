@@ -2,16 +2,28 @@
 // Supabase user with the phone already confirmed. Nothing here sends SMS: the
 // sign-in code travels through the Telegram chat, and the password below is
 // derived from a server secret so "Open in browser" and the Mini App can sign
-// the same person in without ever storing or showing a credential.
+// the same person in without ever storing or showing a credential. That secret
+// is TELEGRAM_LOGIN_SECRET; before it is set, the webhook secret stands in, and
+// accounts made then move to the login secret on their next sign-in.
 import {createHash,createHmac,randomBytes} from 'node:crypto';
 import {serviceKeyHeaders,type ServiceDatabase} from './service-role';
 export const loginTokenMinutes=5;
 /** The password of an account created in Telegram. Derived, never stored or shown, and recomputed whenever the server signs that person in. */
 export const derivedPassword=(secret:string,telegramUserId:number)=>createHmac('sha256',secret).update('hoggish-telegram-login:'+telegramUserId).digest('hex');
+/** The secret new derived passwords use, and the earlier one accounts may still have. */
+export type LoginSecrets={current:string;legacy:string|null};
+/** TELEGRAM_LOGIN_SECRET when set, with the webhook secret as the legacy one; until then the webhook secret alone, as before.
+ * The webhook secret travels in a header on every webhook call, so it should not stay the key of everyone's password. */
+export function loginSecrets(env:Record<string,string|undefined>=process.env):LoginSecrets|null{
+ const login=env.TELEGRAM_LOGIN_SECRET?.trim()||null,webhook=env.TELEGRAM_WEBHOOK_SECRET?.trim()||null;
+ if(login)return {current:login,legacy:webhook&&webhook!==login?webhook:null};
+ return webhook?{current:webhook,legacy:null}:null;
+}
 export type NewPhoneUser={phone:string;password:string;metadata:Record<string,unknown>};
 export type AdminAccounts={
  createPhoneUser:(input:NewPhoneUser)=>Promise<{id:string}|{exists:true}>;
- setUserPhone:(userId:string,phone:string)=>Promise<boolean>;
+ /** Replace the password, as moving an account to a new derived password does. */
+ setUserPassword:(userId:string,password:string)=>Promise<void>;
  deleteUser:(userId:string)=>Promise<void>;
 };
 const failureCode=async(response:Response)=>(await response.json().catch(()=>({})) as {error_code?:string}).error_code;
@@ -28,11 +40,9 @@ export function adminAccounts(env:Record<string,string|undefined>=process.env,fe
    if(response.status===422&&await failureCode(response)==='phone_exists')return {exists:true as const};
    throw Error('Account creation failed.');
   },
-  async setUserPhone(userId,phone){
-   const response=await call('/auth/v1/admin/users/'+userId,'PUT',{phone,phone_confirm:true});
-   if(response.ok)return true;
-   if(response.status===422&&await failureCode(response)==='phone_exists')return false;
-   throw Error('Could not save the phone number.');
+  async setUserPassword(userId,password){
+   const response=await call('/auth/v1/admin/users/'+userId,'PUT',{password});
+   if(!response.ok)throw Error('Could not update the password.');
   },
   async deleteUser(userId){await call('/auth/v1/admin/users/'+userId,'DELETE').catch(()=>null);},
  };
@@ -67,4 +77,23 @@ export async function consumeLoginToken(db:ServiceDatabase,token:unknown,now:Dat
  if(!response.ok)throw Error('Database request failed.');
  const rows=await response.json() as Array<{user_id:string}>;
  return rows[0]?.user_id??null;
+}
+export type PasswordSignIn=(phone:string,password:string)=>Promise<Response>;
+export type TelegramSignIn={ok:true;session:unknown}|{ok:false;code?:string};
+/** Sign in an account created in Telegram with its derived password: the one sign-in every one-tap link and the Mini App use.
+ * An account still on the legacy secret is signed in with it and then moved to the current one, so the webhook secret stops
+ * being a password key one sign-in at a time. A failed move never fails the sign-in; it is tried again next time. */
+export async function signInTelegramAccount(deps:{secrets:LoginSecrets;signIn:PasswordSignIn;admin:AdminAccounts|null},account:{user_id:string;phone:string;telegram_user_id:number}):Promise<TelegramSignIn>{
+ const attempt=async(secret:string):Promise<TelegramSignIn>=>{
+  const response=await deps.signIn(account.phone,derivedPassword(secret,account.telegram_user_id));
+  if(response.ok)return {ok:true,session:await response.json().catch(()=>null)};
+  return {ok:false,code:await failureCode(response)};
+ };
+ const first=await attempt(deps.secrets.current);
+ // A switched-off phone provider fails every password alike, so there is nothing to fall back to.
+ if(first.ok||!deps.secrets.legacy||first.code==='phone_provider_disabled')return first;
+ const legacy=await attempt(deps.secrets.legacy);
+ if(!legacy.ok)return first;
+ await deps.admin?.setUserPassword(account.user_id,derivedPassword(deps.secrets.current,account.telegram_user_id)).catch(()=>undefined);
+ return legacy;
 }

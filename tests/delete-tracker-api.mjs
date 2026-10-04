@@ -1,7 +1,8 @@
+import { apiFunction } from './helpers/api-function.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import ts from 'typescript';import {z} from 'zod';
 let auth=true,calls=[],fail=null;
 const source=ts.transpileModule(fs.readFileSync('app/api/investment-history/route.ts','utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const api=new Function('z','session','supa','sameOrigin',source+';return DELETE;')(z,async()=>auth?{token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,body:JSON.parse(init.body),token});return fail?Response.json({message:fail},{status:400}):Response.json({ok:true});},req=>req.headers.get('origin')==='https://local');
+const api=apiFunction('z','session','supa','sameOrigin',source+';return DELETE;')(z,async()=>auth?{token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,body:JSON.parse(init.body),token});return fail?Response.json({message:fail},{status:400}):Response.json({ok:true});},req=>req.headers.get('origin')==='https://local');
 const id='e0000000-0000-4000-8000-000000000001',record_id='e0000000-0000-4000-8000-000000000010';
 const request=(body={id,record_id},origin='https://local')=>new Request('https://local/api/investment-history',{method:'DELETE',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)});
 test('delete endpoint authenticates, checks origin and identifiers, passes owner token and hides unexpected database errors',async()=>{

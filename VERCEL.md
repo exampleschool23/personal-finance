@@ -142,8 +142,14 @@ Apply `migrations/075_telegram_subscriptions.sql` and
 with [@BotFather](https://t.me/BotFather) (`/newbot`), and set three server-only
 variables on Vercel: `TELEGRAM_BOT_TOKEN` (from BotFather),
 `TELEGRAM_BOT_USERNAME` (the bot's handle without `@`) and
-`TELEGRAM_WEBHOOK_SECRET` (any long random string). Deploy, then register the
-webhook once, substituting your values:
+`TELEGRAM_WEBHOOK_SECRET` (any long random string). Also set
+`TELEGRAM_LOGIN_SECRET`, another long random string: it keys the derived
+passwords of accounts created in Telegram, so the webhook secret, which Telegram
+sends in a header on every call, is not also a password key. Without it the
+webhook secret is used as before; once it is set, accounts made earlier move to
+it on their next one-tap or Mini App sign-in. In BotFather, send `/setjoingroups`
+and choose **Disable**, so the bot cannot be added to groups (it ignores group
+chats anyway). Deploy, then register the webhook once, substituting your values:
 
 ```bash
 curl -sS "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook" -d "url=https://<your-domain>/api/telegram/webhook" -d "secret_token=<TELEGRAM_WEBHOOK_SECRET>" -d "allowed_updates=[\"message\",\"callback_query\"]"
@@ -196,3 +202,30 @@ currencies ask for the amount received. Saving goes through
 app's own save functions as the linked owner and are callable only by the
 service role, so validation, revisions, undo and Recently deleted behave as in
 the app. A half-finished entry lives in `telegram_drafts` for thirty minutes.
+
+## Rate limits and security headers
+
+Apply `migrations/106_rate_limits.sql` in the Supabase SQL Editor after 105.
+It adds `public.rate_limits` (row security on, no policies, no grants to
+`anon` or `authenticated`) and `public.hit_rate_limit(bucket, max_hits,
+window_seconds)`, a fixed-window counter callable only by the service role.
+`lib/rate-limit.ts` counts with `SUPABASE_SERVICE_ROLE_KEY`; nothing new needs
+configuring. Keys are the visitor's address (`x-real-ip`, set by Vercel) and,
+where it applies, the email, phone number or user id, hashed with that key
+before they reach the database. The limits (`limits` in that file) cover
+password sign-in, phone code sending and checking (separately), sign-up,
+recovery and credential changes, the Assistant (per person, 30 an hour and 100
+a day), comparison loads, and market prices for visitors who are not signed in.
+Over a limit the answer is 429 "Too many attempts. Please try again later."
+Without the service key, or before the migration is applied, requests are let
+through and the server logs "Rate limit unavailable" with a status only.
+
+Supabase Auth still sees every sign-in from the server's address, so its own
+per-address limits apply to the app as a whole; the app's limits above are what
+separate one visitor from another.
+
+Production responses send `Strict-Transport-Security: max-age=63072000;
+includeSubDomains`. The Content Security Policy is still report-only (nothing
+is blocked; violations appear in the browser console) and allows
+`connect-src` to the `SUPABASE_URL` origin read at build time, because
+attachment uploads go straight to Supabase Storage.

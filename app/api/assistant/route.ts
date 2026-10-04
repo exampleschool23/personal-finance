@@ -1,11 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { assistantContext, assistantInstructions, assistantRequestSchema, assistantUnavailable } from '@/lib/assistant';
-import { shiftMonth } from '@/lib/budget';
+import { shiftMonth } from '@/lib/calendar-days';
 import { depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry, type Entry } from '@/lib/finance';
 import { planningReadFilters } from '@/lib/planning-reads';
 import type { PlanningData } from '@/lib/planning';
 import { readOwnerRows } from '@/lib/server-records';
+import { crossSite, readJson, signInAgain, tooManyAttempts } from '@/lib/api-route';
+import { limits, rateLimited } from '@/lib/rate-limit';
 import { session, sameOrigin } from '@/lib/supabase';
 
 /** Whether the assistant can answer at all, so the screen can say so before anyone types. Reveals nothing but a yes or no. */
@@ -18,11 +20,13 @@ const assistantAvailable = () => !!process.env.ANTHROPIC_API_KEY;
 /** Answers a question about the signed-in user's money with Claude. The request carries the conversation;
  * the server adds a snapshot built from the user's own records, read with their token. */
 export async function POST(req: Request) {
- if (!sameOrigin(req)) return new Response(null, { status: 403 });
+ if (!sameOrigin(req)) return crossSite();
  if (!assistantAvailable()) return Response.json({ error: assistantUnavailable }, { status: 503 });
- const auth = await session(); if (!auth) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
- const parsed = assistantRequestSchema.safeParse(await req.json().catch(() => null));
+ const auth = await session(); if (!auth) return signInAgain();
+ const parsed = assistantRequestSchema.safeParse(await readJson(req));
  if (!parsed.success) return Response.json({ error: 'Check your question and try again.' }, { status: 400 });
+ // Each answer costs money: a person gets a fair share per hour and per day, wherever they ask from.
+ if (await rateLimited(req, 'assistant', limits.assistant, auth.user.id, { perIp: false })) return tooManyAttempts();
  const { messages, currency, rates, language } = parsed.data;
  const today = depositToday(), month = today.slice(0, 7);
  let snapshot: string;
@@ -39,7 +43,8 @@ export async function POST(req: Request) {
   const client = new Anthropic();
   const response = await client.beta.messages.create({
    model: 'claude-opus-5-5',
-   max_tokens: 8000,
+   // Answers are brief by instruction; this bounds the cost of one that is not.
+   max_tokens: 4000,
    betas: ['server-side-fallback-2026-07-01'],
    fallbacks: 'default',
    output_config: { effort: 'low' },

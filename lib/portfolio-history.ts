@@ -1,3 +1,4 @@
+import { shiftDay } from './calendar-days';
 import { assets, liabilities, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import { convertAmount } from './market';
@@ -42,7 +43,7 @@ export function portfolioHistory(records: Entry[], events: HistoryEvent[], curre
 // The first day a history period shows: the period's own start, or the owner's
 // tracking start when that is later. '0000-01-01' shows every recorded day.
 export function trackingWindowStart(days: number | null, today: string, origin?: string | null) {
- const period = days === null ? '0000-01-01' : new Date(Date.parse(today + 'T00:00:00Z') - days * 86400000).toISOString().slice(0,10);
+ const period = days === null ? '0000-01-01' : shiftDay(today, -days);
  return origin && origin > period ? origin : period;
 }
 export function portfolioWindow(points: PortfolioPoint[], days: number | null, today: string, origin?: string | null) {

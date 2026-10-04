@@ -1,5 +1,6 @@
 "use client";
 import { showSaved } from '@/lib/feedback';
+import { requestJson } from '@/lib/api-client';
 import { refreshRead } from '@/lib/refresh-read';
 import { useEffect, useState, useRef } from 'react';
 import type { Entry } from '@/lib/finance';
@@ -31,8 +32,7 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
    if(rows.some(r=>r.expense_plan_id===plan.id&&(r.currency!==plan.currency||r.date<plan.start_date||(plan.end_date&&r.date>plan.end_date))))throw Error('Keep the currency and dates compatible with recorded spending.');
    setDemoPlans(prev=>[...prev.filter(p=>p.id!==plan.id),plan]);
   } else {
-   const response=await fetch('/api/expense-plans',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...plan,amount:plan.amount||plan.base_amount,month:month<plan.start_date.slice(0,7)?plan.start_date.slice(0,7):month})});
-   const result=await response.json() as {error?:string};if(!response.ok)throw Error(result.error);
+   await requestJson('/api/expense-plans',{body:{...plan,amount:plan.amount||plan.base_amount,month:month<plan.start_date.slice(0,7)?plan.start_date.slice(0,7):month}});
   }
   showSaved();
   onSaved();
@@ -44,7 +44,7 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
  }
  async function remove(id:string) {
   if(demo){if(rows.some(r=>r.expense_plan_id===id))throw Error('This plan has spending. Set an end date instead of deleting it.');setDemoPlans(prev=>prev.filter(p=>p.id!==id));}
-  else {const response=await fetch('/api/expense-plans',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});const result=await response.json() as {error?:string};if(!response.ok)throw Error(result.error);}
+  else await requestJson('/api/expense-plans',{method:'DELETE',body:{id}});
   onSaved();
  }
  return {seedDemo,restoreDemo,plans,month,loading:!!user&&!demo&&loadedScope!==scope,refreshing:!!user&&!demo&&loading,error:!demo&&user&&loadedScope===scope?error:'',save,remove};

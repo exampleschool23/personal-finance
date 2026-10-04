@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fiatCurrencies, isCurrency, replacePreferredCurrency, togglePreferredCurrency } from '../lib/currencies.ts';
+import { currencyFromText, currencyMatches, fiatCurrencies, isCurrency, replacePreferredCurrency, togglePreferredCurrency } from '../lib/currencies.ts';
 import { formatMoney } from '../lib/format.ts';
 import { convertAmount, marketEntry } from '../lib/market.ts';
 test('fiat catalogue excludes metals and supports common and minor currencies',()=>{
@@ -28,4 +28,18 @@ test('preferred currency taps explain the limit instead of being ignored',()=>{
  assert.deepEqual(togglePreferredCurrency(['USD'],'USD'),{blocked:'last'});
  assert.deepEqual(replacePreferredCurrency(['USD','UZS'],'USD','AUD'),['AUD','UZS']);
  assert.deepEqual(replacePreferredCurrency(['USD','UZS'],'UZS','AUD'),['USD','AUD']);
+});
+
+test('currency search matches codes and names in the chosen language or English, ignoring case and accents',()=>{
+ assert.equal(currencyMatches('',  'en-US').length,fiatCurrencies.length);
+ assert.deepEqual(currencyMatches('  ','en-US'),fiatCurrencies.map(c=>c.code));
+ assert.ok(currencyMatches('eur','en-US').includes('EUR'),'by code, ignoring case');
+ assert.ok(currencyMatches('yen','en-US').includes('JPY'),'by English name');
+ assert.ok(currencyMatches('cordoba','en-US').includes('NIO'),'accents are folded');
+ assert.ok(currencyMatches('zloty','en-US').includes('PLN'),'ł folds to l');
+ assert.ok(currencyMatches('Euro','ru-RU').includes('EUR'),'the English name still matches in another language');
+ assert.ok(currencyMatches('евро','ru-RU').includes('EUR'),'the localized name matches');
+ assert.deepEqual(currencyMatches('no such money','en-US'),[]);
+ assert.equal(currencyFromText('EUR · Euro'),'EUR');assert.equal(currencyFromText(' usd '),'USD');
+ assert.equal(currencyFromText('BTC'),null);assert.equal(currencyFromText('Euro'),null);
 });

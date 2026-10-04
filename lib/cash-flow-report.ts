@@ -1,4 +1,5 @@
-import { monthActuals, monthsBetween, shiftMonth } from './budget';
+import { monthActuals, monthsBetween } from './budget';
+import { shiftMonth } from './calendar-days';
 import { expenses, income, type Entry } from './finance';
 import { convertAmount } from './market';
 import type { Category, PlanningData } from './planning';

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {loadTS} from './helpers/load-ts.mjs';
-import * as dates from '../lib/benchmark-data.ts';
+const dates=loadTS('lib/benchmark-data.ts');
 
 // The Workers runtime rejects any use of a response body from a request other
 // than the one that created it. Node allows it, so emulate that ownership rule.

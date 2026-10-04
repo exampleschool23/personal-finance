@@ -7,7 +7,7 @@ const { investmentGoalProgress } = loadTS('lib/investment-goals.ts');
 const { investmentDecisionComparison } = loadTS('lib/investment-benchmarks.ts');
 const { investmentPeriodTotals } = loadTS('lib/investment-period.ts');
 const { portfolioHistory, portfolioWindow } = loadTS('lib/portfolio-history.ts');
-const { shiftDay } = loadTS('lib/benchmark-data.ts');
+const { shiftDay } = loadTS('lib/calendar-days.ts');
 const today = '2026-09-24';
 // Mock feed data belongs only in tests; production demo requests the real API.
 const benchmarkFixture = day => {

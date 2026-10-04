@@ -745,16 +745,13 @@ tbody tr:last-child td{border-bottom:0}
 }
 
 /* Planning pages reuse the finance panel, form and table styles. */
-.planning-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:20px; margin:20px 0; }
-.planning-cards .panel { min-width:0; padding:24px; }
-.planning-cards progress { width:100%; height:10px; accent-color:var(--primary); }
 .planning-check { display:flex; align-items:center; gap:10px; padding:10px 0; }
 .planning-check input { width:auto; }
 .import-preview { max-height:360px; overflow:auto; }
 .record-filters { display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin:18px 0; }
 .record-filters > label { display:grid; gap:6px; flex:1; min-width:150px; }
 .record-filters > input { flex:2; min-width:200px; }
-@media(max-width:640px){.planning-cards{grid-template-columns:1fr}.record-filters>label{min-width:130px;}}
+@media(max-width:640px){.record-filters>label{min-width:130px;}}
 
 .goal-card-values{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:24px;margin:0}
 .goal-card-values>div{min-width:0;display:flex;flex-direction:column;justify-content:end;gap:8px}
@@ -963,15 +960,11 @@ tbody tr:last-child td{border-bottom:0}
 .planning-check [data-slot="checkbox"]{width:18px;height:18px;min-width:18px;min-height:18px;flex:0 0 18px;padding:0;border-radius:4px}
 .investment-goal-fields{max-width:520px;margin-block:24px}
 
-.investment-target-editor,.investment-target-plans,.investment-target-summaries{display:grid;gap:16px;min-width:0}
+.investment-target-editor,.investment-target-plans{display:grid;gap:16px;min-width:0}
 .investment-target-row{display:grid;gap:16px;min-width:0;border:1px solid var(--border);border-radius:14px;padding:18px;margin:0}
 .investment-target-row legend{padding:0 6px;font-weight:600}
 .investment-target-row>button{justify-self:start}
 .investment-target-row h3{margin:0;overflow-wrap:anywhere}
-.investment-target-summary{display:grid;gap:6px;border-bottom:1px solid var(--border);padding-bottom:12px}
-.investment-target-summary>div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.investment-target-summary p{margin:0}
-.investment-target-summary progress{width:100%;height:8px;accent-color:var(--primary)}
 .investment-target-row .goal-card-values{margin:0}
 
 /* Keep goal actions reachable while additional holdings scroll independently. */
@@ -1043,20 +1036,14 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .workspace .content .record-filters>button,.record-filter-options>button{height:46px;white-space:nowrap}
 
 /* Separate scheduled cash flow from balance and maturity reminders. */
-.upcoming-sections{display:grid;gap:var(--space-page)}
 .upcoming-section-heading{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px 20px;margin-bottom:16px}
 .upcoming-section-heading h2{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:var(--type-title);font-weight:600;letter-spacing:-.01em}
 .upcoming-section-heading h2 .count{margin:0}
-.upcoming-totals{text-align:right}
-.upcoming-totals p{font-size:var(--type-caption)}
-.upcoming-totals>div{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px 24px}
-.upcoming-totals strong{font-size:var(--type-stat);font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .upcoming-section td:nth-child(2){white-space:nowrap}
 @container content (min-width:721px){.upcoming-section :is(th:not([colspan]),td):last-child{width:1%;text-align:right}}
 .status-badge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;background:var(--muted);color:var(--muted-foreground);font-size:var(--type-caption);font-weight:500;line-height:1.6;white-space:nowrap}
 .status-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .status-badge.is-overdue{background:color-mix(in srgb,var(--negative) 12%,transparent);color:var(--pill-negative)}
-@container content (max-width:640px){.upcoming-totals{text-align:left}.upcoming-totals>div{justify-content:flex-start}}
 
 .expense-plan-choice{display:grid;gap:10px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--accent)}
 .expense-plan-choice p{font-size:var(--type-small);line-height:1.5;margin:0}
@@ -1678,7 +1665,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .preferences-currency-list button{width:32px;height:32px;min-height:32px;flex-shrink:0;color:var(--muted-foreground)}
 .preferences-card .currency-search-trigger{color:var(--primary);padding:6px 0;min-height:36px;height:auto;font-size:var(--type-small);margin-top:4px;box-shadow:none}
 @media(max-width:760px){.preferences-heading{margin-bottom:16px}}
-@media(max-width:520px){.preferences-profile-grid{grid-template-columns:1fr;gap:14px}.settings-layout .preferences-card .preferences-setting-row{grid-template-columns:1fr;gap:6px}.workspace .content .settings-layout .preferences-card{padding:18px 16px}.preferences-save-bar>div{width:100%}.preferences-save-bar button{flex:1}.preferences-currency-list li{gap:10px}.workspace .content .preferences-card input,.workspace .content .preferences-card select{font-size:var(--type-body)}}
+@media(max-width:520px){.preferences-profile-grid{grid-template-columns:1fr;gap:14px}.settings-layout .preferences-card .preferences-setting-row{grid-template-columns:1fr;gap:6px}.workspace .content .settings-layout .preferences-card{padding:18px 16px}.preferences-currency-list li{gap:10px}.workspace .content .preferences-card input,.workspace .content .preferences-card select{font-size:var(--type-body)}}
 
 /* Cash flow: month figures, then income and spending side by side. */
 .cashflow-summary{display:grid;gap:10px}

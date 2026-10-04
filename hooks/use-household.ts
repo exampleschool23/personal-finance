@@ -1,18 +1,14 @@
 "use client";
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { showSaved } from '@/lib/feedback';
+import { requestJson } from '@/lib/api-client';
 import { demoHousehold, ownerMember, type HouseholdAction, type HouseholdState } from '@/lib/household';
 
 const empty: HouseholdState | null = null;
 // A full page load, so nothing from the previous workspace stays in memory.
 const reloadHome = () => window.location.replace(new URL('/', window.location.href).href);
 
-async function post<T>(action: HouseholdAction, data: unknown) {
- const response = await fetch('/api/household', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, data }) });
- const result = await response.json().catch(() => ({})) as T & { error?: string };
- if (!response.ok) throw Error(result.error ?? 'Could not load your household. Check that database update 100 is installed.');
- return result;
-}
+const post = <T>(action: HouseholdAction, data: unknown) => requestJson<T>('/api/household', { body: { action, data }, fallback: 'Could not load your household. Check that database update 100 is installed.' });
 
 /**
  * The household of the signed-in person: who shares the open workspace, their role in it,

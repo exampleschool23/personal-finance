@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
+import { requestJson } from '@/lib/api-client';
 import type { Entry } from '@/lib/finance';
 import { showNotice, showSaved } from '@/lib/feedback';
 import type { TransactionSplit } from '@/lib/transaction-tools';
@@ -8,7 +9,7 @@ import { openCriteria, ruleChoice, ruleTargets, type CategoryChoice, type Transa
 
 const emptyRules: { rules: TransactionRule[] } = { rules: [] };
 /** What applying a rule in the sample workspace does to its own records. */
-export type RuleActions = {
+type RuleActions = {
  categorize: (ids: string[], choice: CategoryChoice) => Promise<number>;
  assignBusiness: (ids: string[], business: string | null) => Promise<number>;
  changeTags: (ids: string[], add: string[], remove: string[]) => Promise<number>;
@@ -24,10 +25,7 @@ export function useTransactionRules(owner: string | null, demo: boolean, revisio
  const remote = useOwnerResource('/api/transaction-rules', owner, live, revision, emptyRules);
  const [sample, setSample] = useState<TransactionRule[]>([]);
  async function post(action: string, data: unknown) {
-  const response = await fetch('/api/transaction-rules', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, data }) });
-  const result = await response.json() as { changed?: number; error?: string };
-  if (!response.ok) throw Error(result.error ?? 'Could not save changes.');
-  return result.changed ?? 0;
+  return (await requestJson<{ changed?: number }>('/api/transaction-rules', { body: { action, data }, fallback: 'Could not save changes.' })).changed ?? 0;
  }
  return {
   rules: (demo ? sample : remote.data.rules).map(normalize),

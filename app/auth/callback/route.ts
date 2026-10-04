@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import { uuid } from '@/lib/api-validation';
 import { saveSession, supa } from '@/lib/supabase';
 import { GOOGLE_VERIFIER_COOKIE, googleCookieOptions, loginRedirect } from '@/lib/google-auth';
 
@@ -7,7 +8,7 @@ const authSession = z.object({
   access_token: z.string().min(1),
   refresh_token: z.string().min(1),
   expires_in: z.number().int().positive(),
-  user: z.object({ id: z.string().uuid(), email: z.string().email() }),
+  user: z.object({ id: uuid, email: z.string().email() }),
 });
 
 export async function GET(req: Request) {

@@ -72,7 +72,7 @@ function useWorkspaceState() {
     }, []);
     // Inside a public page's app preview the app opens its sample workspace by itself and shows the screen the page asks for.
     const [preview, setPreview] = useState(false);
-    useEffect(() => { if (isPreviewFrame(window.location.search, window.self !== window.top)) setPreview(true); }, []);
+    useEffect(() => { if (isPreviewFrame(window.location.search, window.self !== window.top)) queueMicrotask(() => setPreview(true)); }, []);
     useEffect(() => { if (preview && ready && !user && !demo) void startDemo(); }, [preview, ready, user, demo]); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!preview || !demo) return;

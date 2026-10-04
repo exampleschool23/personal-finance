@@ -1,4 +1,4 @@
-import { shiftDay } from './benchmark-data';
+import { shiftDay, shiftMonth } from './calendar-days';
 import { defaultComparisonPreferences, isInvestmentRecord } from './comparison-profile';
 import { assets, expenses, income, interestKinds, liabilities, scheduleDates, value, type Entry } from './finance';
 import { withAssetIncomePlans } from './earning-sources';
@@ -16,7 +16,7 @@ export const demoMarket: MarketData = { rates: { USD: 1, UZS: 12500 }, fx: null,
 export const demoBenchmarkKeys = [...defaultComparisonPreferences.benchmarks, 'BIL'] as const;
 
 // The sample household: the brokerage is Alex's, the crypto wallet Sam's; holdings follow their account.
-export const demoHoldingAccounts: HoldingAccount[] = [
+const demoHoldingAccounts: HoldingAccount[] = [
  { id: 'demo-brokerage', name: 'Brokerage account', kind: 'Stock', currency: 'USD', member_id: demoPeople.me },
  { id: 'demo-crypto-wallet', name: 'Crypto wallet', kind: 'Crypto', currency: 'USD', member_id: demoPeople.partner },
 ];
@@ -88,7 +88,7 @@ export function demoRecords(today: string): Entry[] {
  ];
 }
 
-export function demoExpensePlans(today: string): ExpensePlan[] {
+function demoExpensePlans(today: string): ExpensePlan[] {
  const start = previousMonth(today.slice(0, 7), 3) + '-01';
  return [
   { id: 'demo-plan-groceries', name: 'Groceries', category: 'Groceries', currency: 'USD', amount: 1100, start_date: start, end_date: null },
@@ -107,14 +107,14 @@ export function demoGoals(today: string): Goal[] {
 }
 
 /** Recurring bills and pay already settled before today, so only what is still due shows as upcoming. */
-export function demoOccurrences(records: Entry[], today: string): Occurrence[] {
+function demoOccurrences(records: Entry[], today: string): Occurrence[] {
  const yesterday = shiftDay(today, -1);
  return records.filter(record => [...income, ...expenses].includes(record.kind) && record.frequency !== 'Once' && record.date <= yesterday)
   .flatMap(record => scheduleDates(record, record.date, yesterday).map(date => ({ id: `${record.id}:${date}`, record_id: record.id, due_on: date, status: 'paid' as const })));
 }
 
 /** Categories the sample businesses use, beside the built-in ones. */
-export const demoCategories: Category[] = [
+const demoCategories: Category[] = [
  { id: 'demo-cat-sales', name: 'Product sales', direction: 'income' },
  { id: 'demo-cat-supplies', name: 'Supplies', direction: 'expense' },
  { id: 'demo-cat-shipping', name: 'Shipping', direction: 'expense' },
@@ -151,7 +151,7 @@ function demoBusinessActivity(today: string, record: (id: string, name: string, 
 }
 
 /** Tags in the sample workspace: business purchases to keep for taxes, and one trip. */
-export function demoTags(records: Entry[]): TagData {
+function demoTags(records: Entry[]): TagData {
  const tags: TagData['tags'] = [{ id: 'demo-tag-receipts', name: 'Keep receipt', color: 'green' }, { id: 'demo-tag-trip', name: 'Summer trip', color: 'blue' }];
  const links = [
   ...records.filter(item => item.business_id && expenses.includes(item.kind) && item.frequency === 'Once' && item.custom_category_id === 'demo-cat-supplies').map(item => ({ record_id: item.id, tag_id: 'demo-tag-receipts' })),
@@ -168,10 +168,7 @@ export function demoWorkspace(today: string) {
 }
 export type DemoWorkspace = ReturnType<typeof demoWorkspace>;
 
-function previousMonth(month: string, count: number) {
- const date = new Date(month + '-01T00:00:00Z'); date.setUTCMonth(date.getUTCMonth() - count);
- return date.toISOString().slice(0, 7);
-}
+const previousMonth = (month: string, count: number) => shiftMonth(month, -count);
 
 /** Day-to-day purchases over the last six months and so far this month, so spending charts and budget history have something real to compare. */
 function demoSpending(today: string, record: (id: string, name: string, kind: Entry['kind'], amount: number, extra?: Partial<Entry>) => Entry): Entry[] {

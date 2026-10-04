@@ -10,6 +10,7 @@ import type { BusinessOption } from '@/components/presentation-foundation/busine
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
+import { toggleKey } from '@/components/presentation-foundation/series-legend';
 import { Button } from '@/components/ui/button';
 import { paletteColor } from '@/lib/business';
 import { measureLabel, sankeyLabelMargins } from '@/lib/sankey-labels';
@@ -24,7 +25,7 @@ import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMo
 export type ReportNames = { category: (key: string) => string; icon: (key: string) => string; group: (key: string) => string; business: (id: string | null) => string; businessRecord: (id: string | null) => BusinessOption | undefined };
 
 /** An interval key as a chart label: a short month, a quarter or a year. */
-export function useIntervalLabel(interval: Interval, long = false) {
+function useIntervalLabel(interval: Interval, long = false) {
  const { t, locale } = useLanguage();
  return (period: string) => interval === 'month' ? (long ? formatMonthYear(period, locale) : formatMonthShort(period, locale)) : interval === 'year' ? formatYear(Number(period), locale)
   : t('Q{quarter} {year}', { quarter: period.slice(-1), year: formatYear(Number(period.slice(0, 4)), locale) });
@@ -132,7 +133,7 @@ export function TrendChart({ rows, series, stacked, interval, currency }: { rows
    <XAxis dataKey="period" tickFormatter={value => label(String(value))} axisLine={false} tickLine={false} tickMargin={10}/>
    <YAxis width="auto" tickFormatter={value => formatCompactMoney(Number(value), currency, locale)} axisLine={false} tickLine={false} tickMargin={8}/>
    <Tooltip cursor={{ fill: 'var(--accent)', fillOpacity: .45 }} labelFormatter={value => longLabel(String(value))} formatter={(value, name) => [formatMoney(Number(value), currency, locale), String(name)]}/>
-   <Legend iconType="circle" iconSize={8} onClick={entry => { const key = String((entry as { dataKey?: unknown }).dataKey ?? ''); setHidden(list => list.includes(key) ? list.filter(item => item !== key) : [...list, key]); }} formatter={(value, entry) => <span className="trend-legend" data-hidden={hidden.includes(String((entry as { dataKey?: unknown }).dataKey)) || undefined}>{value}</span>}/>
+   <Legend iconType="circle" iconSize={8} onClick={entry => { const key = String((entry as { dataKey?: unknown }).dataKey ?? ''); setHidden(list => toggleKey(list, key)); }} formatter={(value, entry) => <span className="trend-legend" data-hidden={hidden.includes(String((entry as { dataKey?: unknown }).dataKey)) || undefined}>{value}</span>}/>
    {series.map((item, index) => <Bar key={item.key} dataKey={item.key} name={item.label} hide={hidden.includes(item.key)} stackId={stacked ? 'total' : undefined} fill={item.color} radius={stacked ? (index === series.length - 1 ? [4, 4, 0, 0] : 0) : [4, 4, 0, 0]} maxBarSize={stacked ? 28 : 18}/>)}
   </BarChart>
  </ResponsiveContainer></div>;

@@ -12,4 +12,3 @@ export function useRecordAttachments(owner: string | null, demo: boolean, revisi
  const counts = useMemo(() => attachmentCounts(remote.data.attachments), [remote.data.attachments]);
  return { available: live, counts, refresh: remote.invalidate };
 }
-export type AttachmentsResource = ReturnType<typeof useRecordAttachments>;

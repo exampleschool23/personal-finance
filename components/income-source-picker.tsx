@@ -9,7 +9,7 @@ import { CategoryBadge } from '@/components/presentation-foundation/category-bad
 import { useLanguage } from '@/components/language-provider';
 import { formatNumber, formatMoney, formatDate } from '@/lib/format';
 import { income } from '@/lib/finance';
-export type IncomeSourceOption={id:string;name:string;kind:string;categoryLabel?:string;disabled?:boolean;estimate?:number|null;currency?:string;frequency?:Frequency|null;payment?:{due:string;paid:boolean}|null};
+type IncomeSourceOption={id:string;name:string;kind:string;categoryLabel?:string;disabled?:boolean;estimate?:number|null;currency?:string;frequency?:Frequency|null;payment?:{due:string;paid:boolean}|null};
 export function IncomeSourcePicker({options,value,disabled,onChange}:{options:IncomeSourceOption[];value:string;disabled?:boolean;onChange:(id:string)=>void}){
  const {t,locale}=useLanguage();
  const [open,setOpen]=useState(false),[search,setSearch]=useState(''),[category,setCategory]=useState('all');

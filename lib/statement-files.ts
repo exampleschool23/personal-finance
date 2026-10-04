@@ -13,8 +13,6 @@ import { isZip } from './zip';
 export type StatementFormat = 'csv' | 'xlsx' | 'xls' | 'ofx' | 'qif';
 export type StatementFile = { format: 'csv'; text: string } | { format: Exclude<StatementFormat, 'csv'>; sheets: StatementSheet[] };
 
-/** The file picker's filter. */
-export const statementFileTypes = '.csv,.tsv,.txt,.xlsx,.xls,.ofx,.qfx,.qif,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/x-ofx,application/vnd.intu.qfx,application/qif';
 export const maxStatementFileSize = 2_000_000;
 
 const extension = (name: string) => /\.([a-z0-9]+)$/i.exec(name)?.[1].toLowerCase() ?? '';

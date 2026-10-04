@@ -1,4 +1,6 @@
 import { unwrapSignedBackup } from '@/lib/backup-envelope';
+import { dayMs, monthEnd, shiftMonth } from './calendar-days';
+import { depositToday } from './deposit-interest';
 import { projectGoal } from './goal-projection';
 import { convertAmount, instrumentFor, instrumentKey, type MarketData } from './market';
 import { assets, interestKinds, liabilities, income, expenses, value, normalizeEntry, monthly, type Entry } from './finance';
@@ -45,8 +47,8 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
  const tables:Record<string,ReportRow[]>={...backup.tables,...(backup.income_sources?{income_sources:backup.income_sources}:{})};
  const raw=tables.finance_records,byId=new Map(raw.map(row=>[row.id,row]));
  const records=([...new Map(raw.map(r=>[r.id,r])).values()] as Entry[]).map(normalizeEntry);
- const today=new Date(Date.parse(backup.exported_at)+5*60*60*1000).toISOString().slice(0,10),month=today.slice(0,7),start=month+'-01';
- const end=new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7)),0)).toISOString().slice(0,10);
+ const today=depositToday(new Date(backup.exported_at)),month=today.slice(0,7),start=month+'-01';
+ const end=monthEnd(month);
  const preferred=tables.user_preferences?.[0]?.currencies;
  const reporting=options.currency??(Array.isArray(preferred)?String(preferred[0]):'USD');
  if(!isCurrency(reporting))throw Error('Choose a valid reporting currency.');
@@ -64,7 +66,7 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
   const basis=quoted!==null?`${t('Market quote')} · ${quote!.source}`:t('Saved/manual value');
   if(amount===null)issues.add(`${record.name}: ${t('Missing amount or currency')}`);
   if(!valuation||!Number.isFinite(Date.parse(String(valuation))))issues.add(`${record.name}: ${t('Valuation date not recorded')}`);
-  else if(Date.parse(String(valuation))<Date.parse(today)-(quoted!==null?7:90)*86400000)issues.add(`${record.name}: ${t('Valuation may be outdated')}`);
+  else if(Date.parse(String(valuation))<Date.parse(today)-(quoted!==null?7:90)*dayMs)issues.add(`${record.name}: ${t('Valuation may be outdated')}`);
   return {record,amount,valuation,basis};
  });
  const total=(kind:'assets'|'debt',currency:string,native=false)=>sum(wealth.filter(w=>(kind==='assets'?assets:liabilities).includes(w.record.kind)&&(!native||w.record.currency===currency)).map(w=>w.amount===null?null:convertAmount(w.amount,w.record.currency,currency,rates)));
@@ -132,7 +134,7 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
   return [`${c} -> ${reporting}`,rate===null?na:formatNumber(rate,locale,8),source,rate===null?na:rateDate];
  }),[.22,.2,.3,.28],[1]);
  add('text',t('Conversions use the rates below, not historical transaction rates. Missing rates mean no consolidated total.'));
- const prevEnd=new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7))-1,0)).toISOString().slice(0,10),prevMonth=prevEnd.slice(0,7);
+ const prevMonth=shiftMonth(month,-1),prevEnd=monthEnd(prevMonth);
  const previousRows:string[][]=[];
  for(const c of currencies){
   const hasHistory=records.some(r=>r.currency===c&&r.frequency==='Once'&&inPeriod(r.date,prevMonth,prevEnd)&&(income.includes(r.kind)||expenses.includes(r.kind)))||activity.some(a=>byId.get(a.account_id)?.currency===c&&inPeriod(a.occurred_on,prevMonth,prevEnd));
@@ -146,7 +148,7 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
  table(['Name / type','Current value','Valuation / source'],assets.flatMap(kind=>wealth.filter(w=>w.record.kind===kind).map(w=>[`${w.record.name} · ${t(kind)}`,money(w.amount,w.record.currency),`${date(w.valuation)} · ${w.basis}`])),[.35,.25,.4],[1]);
  add('text',t('Cash includes bank balances. Investments use units × price; businesses use your ownership share.'));
  add('heading',t('Debts and deposits'));
- for(const w of wealth.filter(w=>liabilities.includes(w.record.kind))){const r=w.record,o=byId.get(r.id)!;add('subheading',`${r.name} · ${t(r.kind)}`);table(['Outstanding principal','Annual interest rate','Scheduled payment','Due / remaining term'],[[money(w.amount,r.currency),percent(o.rate),money(Number(o.estimated_monthly_payment)>0?number(o.estimated_monthly_payment):null,r.currency),`${date(o.date)}\n${t('Remaining term')}: ${typeof o.end_date==='string'&&Number.isFinite(Date.parse(o.end_date))?formatNumber(Math.max(0,Math.ceil((Date.parse(o.end_date)-Date.parse(today))/86400000)),locale)+' '+t('days'):na}`]],[.25,.2,.25,.3],[0,1,2]);if(number(o.rate)===null||!(Number(o.estimated_monthly_payment)>0))issues.add(`${r.name}: ${t('Interest rate or scheduled payment not recorded')}`);}
+ for(const w of wealth.filter(w=>liabilities.includes(w.record.kind))){const r=w.record,o=byId.get(r.id)!;add('subheading',`${r.name} · ${t(r.kind)}`);table(['Outstanding principal','Annual interest rate','Scheduled payment','Due / remaining term'],[[money(w.amount,r.currency),percent(o.rate),money(Number(o.estimated_monthly_payment)>0?number(o.estimated_monthly_payment):null,r.currency),`${date(o.date)}\n${t('Remaining term')}: ${typeof o.end_date==='string'&&Number.isFinite(Date.parse(o.end_date))?formatNumber(Math.max(0,Math.ceil((Date.parse(o.end_date)-Date.parse(today))/dayMs)),locale)+' '+t('days'):na}`]],[.25,.2,.25,.3],[0,1,2]);if(number(o.rate)===null||!(Number(o.estimated_monthly_payment)>0))issues.add(`${r.name}: ${t('Interest rate or scheduled payment not recorded')}`);}
  add('text',t('Debt dates are saved deadlines; scheduled payments are estimates. Missing loan terms are not inferred.'));
  table(['Deposit','Balance','Annual interest rate','Maturity date'],wealth.filter(w=>interestKinds.includes(w.record.kind)).map(w=>[w.record.kind==='Deposit'?w.record.name:`${w.record.name} · ${t(w.record.kind)}`,money(w.amount,w.record.currency),percent(byId.get(w.record.id)?.rate),date(byId.get(w.record.id)?.date)]),[.3,.25,.2,.25],[1,2]);
  add('heading',t('Income'));

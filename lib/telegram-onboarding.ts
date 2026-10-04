@@ -2,12 +2,14 @@
 // language, main currency and a first cash account. Pure, like the record
 // flow: given the draft and one input it returns the next draft, the reply and
 // what the bot should save. The bot handler owns storage.
-import {currencyLabel,fiatCurrencies,isCurrency} from './currencies';
-import {formatNumber,formatNumberInput} from './format';
-import {languageCatalogue,locales,translate,type Language} from './i18n';
+import {currencyFromText,currencyLabel,currencyMatches,isCurrency} from './currencies';
+import {formatNumber} from './format';
+import {languageCatalogue,locales,type Language} from './i18n';
 import {suggestedCurrencies} from './onboarding';
 import type {TelegramMessage} from './telegram';
+import {parseTypedAmount} from './telegram-entry';
 import {mainMenu} from './telegram-flow';
+import {backLabel,keyboardRows as rows,t} from './telegram-kit';
 export type OnboardStep='language'|'currency'|'currency_other'|'account'|'balance';
 export type OnboardData={currency?:string;account_name?:string;search?:string};
 export type OnboardDraft={kind:'onboard';step:OnboardStep;data:OnboardData};
@@ -15,24 +17,8 @@ export type OnboardEffects={language?:Language;currency?:string;account?:{name:s
 export type OnboardResult={draft:OnboardDraft|null;reply:TelegramMessage|null;effects:OnboardEffects};
 export type OnboardContext={language:Language;currency?:string};
 const checkMark='✓ ';
-const t=(language:Language,key:string,params?:Record<string,string|number>)=>translate(language,key,params);
-const rows=<T,>(buttons:T[],perRow:number)=>{const out:T[][]=[];for(let index=0;index<buttons.length;index+=perRow)out.push(buttons.slice(index,index+perRow));return out;};
 const searchLimit=30;
-// Accents are dropped so "cordoba" finds Córdoba; ł and ø do not decompose, so they are mapped by hand.
-const fold=(value:string)=>value.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().replace(/ł/g,'l').replace(/ø/g,'o').trim();
-/** Every fiat currency, or those whose code or name (in the chat language or English) contains the query. */
-export function currencyMatches(query:string,language:Language):string[]{
- const wanted=fold(query);
- if(!wanted)return fiatCurrencies.map(item=>item.code);
- return fiatCurrencies.filter(item=>[item.code,item.name,currencyLabel(item.code,locales[language])].some(text=>fold(text).includes(wanted))).map(item=>item.code);
-}
-/** The code a keyboard tap stands for: a label such as "EUR · Euro" or a bare code. */
-export function currencyFromText(text:string):string|null{
- const code=/^([A-Za-z]{3})(?:\s·\s.+)?$/.exec(text.trim())?.[1].toUpperCase();
- return code&&isCurrency(code)?code:null;
-}
 const currencyKeyboard=(codes:string[],language:Language)=>rows(codes.map(code=>currencyLabel(code,locales[language])),2);
-const backLabel=(language:Language)=>'‹ '+t(language,'Back');
 // The question before each one, for the Back button. Going back forgets the answers given after it.
 const previous:Record<OnboardStep,OnboardStep|null>={language:null,currency:'language',currency_other:'currency',account:'currency',balance:'account'};
 const forget:Record<OnboardStep,Array<keyof OnboardData>>={language:['currency','account_name','search'],currency:['currency','account_name','search'],currency_other:['currency','account_name','search'],account:['account_name'],balance:[]};
@@ -50,7 +36,7 @@ export function onboardPrompt(draft:OnboardDraft,language:Language,chat:number):
   case 'currency':return {chat_id:chat,text:t(language,'Which currency do you use most?'),keyboard:{reply:[...rows(suggestedCurrencies,3),[t(language,'Other currency')],[backLabel(language)]]}};
   case 'currency_other':{
    // The whole list scrolls like the languages; typing part of a name or code narrows it, since a keyboard cannot hold a search box.
-   const query=draft.data.search??'',codes=currencyMatches(query,language);
+   const query=draft.data.search??'',codes=currencyMatches(query,locales[language]);
    const text=!query?t(language,'Choose your currency, or type part of its name or code to search, such as peso or EUR.'):codes.length?t(language,'Currencies matching “{query}”',{query}):t(language,'No currency matches “{query}”. Try another word or a code such as USD.',{query});
    return {chat_id:chat,text,keyboard:{reply:[...currencyKeyboard(codes.slice(0,query?searchLimit:codes.length),language),[backLabel(language)]]}};
   }
@@ -61,11 +47,6 @@ export function onboardPrompt(draft:OnboardDraft,language:Language,chat:number):
 export function startOnboarding(language:Language,chat:number):OnboardResult{
  const draft:OnboardDraft={kind:'onboard',step:'language',data:{}};
  return {draft,reply:onboardPrompt(draft,language,chat),effects:{}};
-}
-function amountOf(text:string,language:Language){
- const parsed=formatNumberInput(text.trim(),locales[language])??formatNumberInput(text.trim(),'en-US');
- const value=parsed?.value??null;
- return value!==null&&value>=0&&value<=1e15?value:null;
 }
 /** Advance by one input. A null draft means the chat is set up and returns to the menu. */
 export function advanceOnboarding(draft:OnboardDraft,input:{text?:string;callback?:string},ctx:OnboardContext,chat:number):OnboardResult{
@@ -113,7 +94,7 @@ export function advanceOnboarding(draft:OnboardDraft,input:{text?:string;callbac
    return move(chosen(draft,'balance',{account_name:name}),ctx.language);
   }
   case 'balance':{
-   const amount=text?amountOf(text,ctx.language):null;
+   const amount=text?parseTypedAmount(text,ctx.language,{allowZero:true}):null;
    if(amount===null)return again(t(ctx.language,'Type an amount, such as {large}, or 0 if it is empty.',{large:formatNumber(250000,locales[ctx.language])}));
    const currency=draft.data.currency??ctx.currency??'USD';
    return {draft:null,reply:{chat_id:chat,text:t(ctx.language,'You are all set. Use the buttons below to add your first expense.'),keyboard:mainMenu(ctx.language)},effects:{account:{name:draft.data.account_name??t(ctx.language,'Cash'),amount,currency},finished:true}};

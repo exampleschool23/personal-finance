@@ -1,5 +1,6 @@
 import { portfolioAssets, portfolioAssetKey, portfolioAssetCurrency, type DiversifiedPortfolio } from './diversified-portfolio';
-import { dateMillis, dayMillis, historicalRate, latestOn, shiftDay, type BenchmarkData, type FxPoint, type PricePoint } from './benchmark-data';
+import { historicalRate, latestOn, type BenchmarkData, type FxPoint, type PricePoint } from './benchmark-data';
+import { daysBetween, shiftDay } from './calendar-days';
 
 export type CashFlow = { date: string; amount: number };
 export type WealthPoint = { date: string; amount: number | null };
@@ -13,7 +14,7 @@ export function convertHistorical(amount: number, from: string, to: string, date
 export function benchmarkUnitPrice(prices: PricePoint[], date: string, currency: string, fx: FxPoint[]) {
  const quote = latestOn(prices,date);
  // Weekend/holiday closes may carry forward briefly; do not hide long feed gaps.
- if (!quote || !Number.isFinite(quote.close) || quote.close<=0 || dateMillis(date) - dateMillis(quote.date) > 7 * dayMillis) return null;
+ if (!quote || !Number.isFinite(quote.close) || quote.close<=0 || daysBetween(quote.date, date) > 7) return null;
  return convertHistorical(quote.close,'USD',currency,date,fx);
 }
 export function compareInvestments(starting: number, flows: CashFlow[], actual: WealthPoint[], data: BenchmarkData, currency: string, includeStartFlows = false, portfolio?: DiversifiedPortfolio | null) {

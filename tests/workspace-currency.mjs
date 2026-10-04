@@ -239,7 +239,7 @@ test('income receipt has one source choice, hides category and linked selectors,
  tree=render.tree({...props,editing,earningSources:{...props.earningSources,sources:[],error:'Could not load income sources.'}});
  assert.equal(label(tree,'Category'),undefined);assert.equal(label(tree,'Linked salary'),undefined);
  assert.ok(find(tree,node=>node.props?.children==='Save income').props.disabled);
- find(tree,node=>node.props?.children==='Retry').props.onClick();assert.equal(retries,1);
+ find(tree,node=>node.type?.name==='InlineError'&&node.props.message==='Could not load income sources.').props.onRetry();assert.equal(retries,1);
  find(tree,node=>node.type?.name==='IncomeSourcePicker').props.onChange('');
  tree=render.tree({...props,editing,earningSources:{...props.earningSources,sources:[],error:'Could not load income sources.'}});
  assert.equal(editing.kind,'Other income');assert.equal(editing.earning_source_id,null);assert.equal(editing.earning_due_on,null);assert.equal(editing.frequency,'Once');assert.equal(editing.amount,400.125);

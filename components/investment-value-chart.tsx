@@ -9,9 +9,15 @@ import { historyChartDate } from '@/lib/investment-history';
 
 type Series={key:string;label:string;color:string;dash?:string;primary?:boolean};
 type Point={date:string;[key:string]:string|number|null};
+/** Renders nothing: the tooltip keeps tracking the touched day without drawing over the details window. */
+const noTooltip=()=>null;
+
 export function InvestmentValueChart({points,series,currency,tooltip,onPointSelect,height=310,label='Investment value'}:{points:Point[];series:Series[];currency:string;tooltip?:ReactElement;onPointSelect?:(date:string)=>void;height?:number;label?:string}){
  const {locale,t}=useLanguage(),id=useId();
  const mobile=useIsMobile();
+ // On phones a tap opens the point's details window; a tooltip drawn under the same finger would show through it
+ // as the window fades in and look like a flash, so there the tooltip stays empty (its cursor line still marks the day).
+ const tapOpensDetails=mobile&&!!onPointSelect;
  const data=points.map(point=>({...point,timestamp:Date.parse(point.date+'T00:00:00Z')}));
  const first=data[0]?.timestamp,last=data.at(-1)?.timestamp;
  const single=data.length===1;
@@ -30,7 +36,7 @@ export function InvestmentValueChart({points,series,currency,tooltip,onPointSele
   <CartesianGrid stroke="var(--border)" strokeOpacity={.6} strokeDasharray="2 6" vertical={false}/>
   <XAxis dataKey="timestamp" type="number" scale="time" domain={first===undefined?['dataMin','dataMax']:[first,single?first+86400000:last!]} ticks={single?[first!]:undefined} tickFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} minTickGap={80} axisLine={false} tickLine={false} tickMargin={14}/>
   <YAxis width="auto" domain={axis.domain} ticks={axis.ticks} allowDataOverflow tickFormatter={amount=>formatCompactMoney(Number(amount),currency,locale)} axisLine={false} tickLine={false} tickMargin={12}/>
-  <Tooltip position={mobile?{x:0,y:40}:undefined} offset={{x:0,y:20}} allowEscapeViewBox={{x:false,y:true}} isAnimationActive={false} content={tooltip} labelFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} formatter={amount=>money(Number(amount))} wrapperStyle={{zIndex:20,pointerEvents:'auto',maxWidth:'100%',...(mobile?{width:'100%',whiteSpace:'normal' as const}:{})}} contentStyle={{background:'var(--background)',borderColor:'var(--border)',borderRadius:16}}/>
+  <Tooltip position={mobile?{x:0,y:40}:undefined} offset={{x:0,y:20}} allowEscapeViewBox={{x:false,y:true}} isAnimationActive={false} content={tapOpensDetails?noTooltip:tooltip} labelFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} formatter={amount=>money(Number(amount))} wrapperStyle={{zIndex:20,pointerEvents:'auto',maxWidth:'100%',...(mobile?{width:'100%',whiteSpace:'normal' as const}:{})}} contentStyle={{background:'var(--background)',borderColor:'var(--border)',borderRadius:16}}/>
   {series.map(item=><Area key={item.key} type="monotone" dataKey={item.key} name={item.label} baseValue="dataMin" fill={item.primary?`url(#${id})`:'none'} stroke={item.color} strokeDasharray={item.dash} strokeWidth={item.primary?3:2} strokeLinecap="round" strokeLinejoin="round" isAnimationActive={false} connectNulls={false} dot={false} activeDot={false}/>)}
  </ComposedChart></ResponsiveContainer></div>;
 }

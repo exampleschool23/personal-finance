@@ -1,13 +1,15 @@
 // The button conversation the Telegram bot runs. Pure: given the owner's data,
 // the draft so far and one input, it returns the next draft, the reply and,
 // at the end, what to save. The bot handler owns storage and the database.
+import {shiftDay} from './calendar-days';
 import {income,expenses,type Entry} from './finance';
-import {formatDate,formatMoney,formatNumber,formatPercent} from './format';
-import {dictionaries,locales,translate,type Language} from './i18n';
+import {formatDate,formatNumber,formatPercent} from './format';
+import {dictionaries,locales,type Language} from './i18n';
 import type {Category} from './planning';
 import type {RecordInput} from './record-schema';
 import {escapeHtml,type TelegramButton,type TelegramKeyboard,type TelegramMessage} from './telegram';
-import {guessCategory,looseNumber,parseDay,parseTypedEntry,currencyCandidates} from './telegram-entry';
+import {guessCategory,looseNumber,parseDay,parseTypedAmount,parseTypedEntry,currencyCandidates} from './telegram-entry';
+import {backButton as back,keyboardRows,moneyIn as money,t} from './telegram-kit';
 import {directionOf,type TransactionRule} from './transaction-rules';
 export {parseDay} from './telegram-entry';
 export type FlowKind='expense'|'income'|'transfer'|'repayment'|'mortgage'|'account'|'liability';
@@ -27,7 +29,6 @@ export type Commit={type:'record';record:RecordInput;resume?:Draft;fx?:{account_
 export type FlowResult={draft:Draft|null;reply:TelegramMessage|null;commit?:Commit;menu?:'upcoming'};
 const menuItems:Array<{kind:FlowKind|'upcoming'|'signout';label:string}>=[{kind:'expense',label:'Expense'},{kind:'income',label:'Income'},{kind:'transfer',label:'Transfer'},{kind:'repayment',label:'Pay loan or debt'},{kind:'mortgage',label:'Mortgage payment'},{kind:'upcoming',label:'Upcoming payments'},{kind:'account',label:'Add cash account'},{kind:'liability',label:'Add loan or debt'},{kind:'signout',label:'Sign out'}];
 const pageSize=8;
-const t=(language:Language,key:string,params?:Record<string,string|number>)=>translate(language,key,params);
 /** The persistent keyboard under the text box: the two everyday entries, and everything else one tap away. */
 export function mainMenu(language:Language):TelegramKeyboard{
  const label=(kind:string)=>t(language,menuItems.find(item=>item.kind===kind)!.label);
@@ -38,9 +39,7 @@ const moreKinds:MenuKind[]=['transfer','repayment','mortgage','upcoming','accoun
 /** The actions behind More actions, as buttons in the chat. Each sends m:<kind>, which works like typing its label. */
 export function moreMenu(language:Language,chat:number):TelegramMessage{
  const button=(kind:MenuKind):TelegramButton=>({text:t(language,menuItems.find(item=>item.kind===kind)!.label),callback_data:'m:'+kind});
- const rows:TelegramButton[][]=[];
- for(let index=0;index<moreKinds.length;index+=2)rows.push(moreKinds.slice(index,index+2).map(button));
- return {chat_id:chat,text:t(language,'What else would you like to do?'),keyboard:{inline:rows}};
+ return {chat_id:chat,text:t(language,'What else would you like to do?'),keyboard:{inline:keyboardRows(moreKinds.map(button),2)}};
 }
 /** Which menu item a typed label or a More actions button means, in any of the app languages. */
 export function menuChoice(text:string):MenuKind|'more'|null{
@@ -54,7 +53,7 @@ export function menuChoice(text:string):MenuKind|'more'|null{
 const cancelButton=(language:Language):TelegramButton=>({text:t(language,'Cancel'),callback_data:'f:cancel'});
 const newAccountButton=(language:Language):TelegramButton=>({text:'+ '+t(language,'Add cash account'),callback_data:'f:newacc'});
 const newLiabilityButton=(language:Language):TelegramButton=>({text:'+ '+t(language,'Add loan or debt'),callback_data:'f:newliab'});
-const backButton=(language:Language):TelegramButton=>({text:'‹ '+t(language,'Back'),callback_data:'f:back'});
+const backButton=(language:Language):TelegramButton=>back(language,'f:back');
 /** The bottom row of every prompt: Back to the previous question when there is one, and Cancel. */
 const controls=(language:Language,canGoBack:boolean):TelegramButton[]=>canGoBack?[backButton(language),cancelButton(language)]:[cancelButton(language)];
 // The questions each conversation asks, in order. Currency-dependent steps are skipped when they do not apply.
@@ -85,7 +84,7 @@ const presetLiabilityKind=(draft:Draft):LiabilityKind|undefined=>draft.kind==='l
 /** Whether Back has somewhere to go: an earlier question, or the conversation a dead end interrupted. */
 const canGoBack=(draft:Draft,ctx:Pick<FlowContext,'accounts'|'liabilities'|'businesses'>)=>backToCard(draft)||backStep(draft,ctx)!==null||!!draft.data.resume;
 /** The question asked before the current one, or null at the first question. */
-export function backStep(draft:Draft,ctx:Pick<FlowContext,'accounts'|'liabilities'|'businesses'>):Step|null{
+function backStep(draft:Draft,ctx:Pick<FlowContext,'accounts'|'liabilities'|'businesses'>):Step|null{
  if(draft.data.typed)return null;
  // A missing exchange rate is asked after the date, so Back returns to the date.
  if(draft.step==='fxamount'||draft.step==='fxrate')return 'date';
@@ -99,16 +98,14 @@ function rewind(draft:Draft,step:Step):Draft{
  for(const later of order.slice(order.indexOf(step)))for(const field of stepFields[later])delete data[field];
  return {...draft,step,data};
 }
-const rows=(buttons:TelegramButton[],perRow=2)=>{const out:TelegramButton[][]=[];for(let index=0;index<buttons.length;index+=perRow)out.push(buttons.slice(index,index+perRow));return out;};
 function choicePage(language:Language,chat:number,text:string,options:TelegramButton[],page:number,pageField:string,canGoBack:boolean,extra:TelegramButton[][]=[]):TelegramMessage{
  const start=page*pageSize,slice=options.slice(start,start+pageSize);
  const nav:TelegramButton[]=[];
  if(page>0)nav.push({text:'‹',callback_data:`f:${pageField}:${page-1}`});
  if(start+pageSize<options.length)nav.push({text:'›',callback_data:`f:${pageField}:${page+1}`});
- return {chat_id:chat,text,keyboard:{inline:[...rows(slice),...(nav.length?[nav]:[]),...extra,controls(language,canGoBack)]}};
+ return {chat_id:chat,text,keyboard:{inline:[...keyboardRows(slice,2),...(nav.length?[nav]:[]),...extra,controls(language,canGoBack)]}};
 }
 const currencyList=(ctx:FlowContext)=>ctx.currencies?.length?ctx.currencies:['USD'];
-const money=(value:number,currency:string,language:Language)=>formatMoney(value,currency,locales[language]);
 const isCash=(entry:Entry)=>entry.kind==='Cash';
 function categoryOptions(kind:'expense'|'income',ctx:FlowContext):TelegramButton[]{
  const defaults=kind==='expense'?expenses:income;
@@ -208,7 +205,7 @@ export function prompt(draft:Draft,ctx:FlowContext,chat:number,page=0):TelegramM
    // A typed entry is checked on one card: every guess can be changed before saving.
    const changes:TelegramButton[]=[{text:t(language,'Change category'),callback_data:'f:chcat'},{text:t(language,'Change account'),callback_data:'f:chacc'}];
    if(ctx.businesses?.length)changes.push({text:t(language,'Change business'),callback_data:'f:chbiz'});
-   return {chat_id:chat,text:summary(draft,ctx),keyboard:{inline:[[{text:t(language,'Save'),callback_data:'f:save'}],...rows(changes),[cancelButton(language)]]}};
+   return {chat_id:chat,text:summary(draft,ctx),keyboard:{inline:[[{text:t(language,'Save'),callback_data:'f:save'}],...keyboardRows(changes,2),[cancelButton(language)]]}};
   }
  }
 }
@@ -237,11 +234,11 @@ export function summary(draft:Draft,ctx:FlowContext):string{
  return lines.join('\n');
 }
 /** A positive amount read by the same rules as a typed entry, so 12,75 is 12.75 in every language and never 1275. */
-const parseAmount=(text:string,language:Language)=>looseNumber(text,language);
+const parseAmount=(text:string,language:Language)=>parseTypedAmount(text,language);
 /** A positive amount, or zero typed as 0. */
-const parseAmountOrZero=(text:string,language:Language)=>parseAmount(text,language)??(/^0+(?:[.,]0+)?$/.test(text.trim())?0:null);
+const parseAmountOrZero=(text:string,language:Language)=>parseTypedAmount(text,language,{allowZero:true});
 /** A yearly rate in percent: a trailing %, spaces and a comma decimal (7,5) are accepted. */
-export function parseRate(text:string,language:Language):number|null{
+function parseRate(text:string,language:Language):number|null{
  const bare=text.trim().replace(/\s*%$/,'').replace(/\s+/g,'');
  // A comma followed by one or two digits is a decimal comma; rates never need thousands grouping there.
  return parseAmountOrZero(/^\d+,\d{1,2}$/.test(bare)?bare.replace(',','.'):bare,language);
@@ -287,7 +284,7 @@ function amountWithCurrency(text:string,draft:Draft,ctx:FlowContext):{amount:num
  return own.length===1?{amount,currency:own[0]}:{refused:list[0]};
 }
 /** A typed message as an entry waiting on its confirmation card, or why it could not be read. Nothing is saved here. */
-export function startTyped(text:string,ctx:FlowContext):{draft:Draft}|{error:'empty'|'amount'|'date'}{
+function startTyped(text:string,ctx:FlowContext):{draft:Draft}|{error:'empty'|'amount'|'date'}{
  const parsed=parseTypedEntry(text,{language:ctx.language,today:ctx.today,accounts:ctx.accounts,currencies:ctx.currencies});
  if('error' in parsed)return parsed;
  const guess=guessCategory({name:parsed.name,amount:parsed.amount,account_id:parsed.account_id,direction:parsed.direction},{rules:ctx.rules,records:ctx.records??[],categories:ctx.categories,businesses:ctx.businesses});
@@ -440,7 +437,7 @@ export function advance(draft:Draft|null,input:FlowInput,ctx:FlowContext,chat:nu
   }
   case 'date':{
    const chosen=value('f:date:');
-   const date=chosen==='today'?ctx.today:chosen==='yesterday'?new Date(Date.parse(ctx.today+'T00:00:00Z')-86400000).toISOString().slice(0,10):input.text?parseDay(input.text,ctx.today,false,language):null;
+   const date=chosen==='today'?ctx.today:chosen==='yesterday'?shiftDay(ctx.today,-1):input.text?parseDay(input.text,ctx.today,false,language):null;
    if(!date)return invalid(t(language,'Type a past or present date like {date}',{date:pastExample(ctx)}));
    // The id is fixed here so a redelivered update saves the same record once.
    const moved=next(draft,'confirm',{date,id:draft.data.id??ctx.newId});return {draft:moved,reply:prompt(moved,ctx,chat)};

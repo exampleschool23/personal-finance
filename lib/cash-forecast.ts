@@ -1,4 +1,5 @@
-import { shiftDay, validDay } from './benchmark-data';
+import { validDay } from './benchmark-data';
+import { shiftDay, shiftMonth } from './calendar-days';
 import { expensePlanTotals, type ExpensePlan } from './expense-plans';
 import { income, liabilities, scheduleDates, type Entry } from './finance';
 import { convertAmount } from './market';
@@ -25,7 +26,6 @@ type Input = {
  today: string; days: number; currency: string; rates?: number | Record<string, number>;
 };
 
-const nextMonth = (month: string) => { const date = new Date(month + '-01T00:00:00Z'); date.setUTCMonth(date.getUTCMonth() + 1); return date.toISOString().slice(0, 7); };
 
 /** A loan, debt or mortgage with a monthly payment is paid by that payment every month until its balance (with monthly interest) is repaid.
  * The months already paid are skipped, as on the Recurring screen. */
@@ -49,7 +49,7 @@ function installmentEvents(record: Entry, today: string, end: string, paid: Set<
 /** Each plan's allowance leaves at the start of its month; this month only what is still unspent leaves, today. */
 function planEvents(plan: ExpensePlan, today: string, end: string, plansMonth?: string): ForecastEvent[] {
  const result: ForecastEvent[] = [];
- for (let month = today.slice(0, 7); month <= end.slice(0, 7); month = nextMonth(month)) {
+ for (let month = today.slice(0, 7); month <= end.slice(0, 7); month = shiftMonth(month, 1)) {
   const totals = expensePlanTotals(plan, month);
   if (!totals.active) continue;
   const current = month === today.slice(0, 7);

@@ -1,12 +1,12 @@
 import { cookies } from 'next/headers';
 import { accountOrigin } from '@/lib/account-access';
-import { householdSchemas, inviteLink, knownHouseholdMessage, workspaceCookie, workspaceHeader, type HouseholdAction, type HouseholdPerson, type HouseholdState } from '@/lib/household';
+import { crossSite, parseAction, postgrestError, readJson, reply, signInAgain } from '@/lib/api-route';
+import { householdSchemas, inviteLink, knownHouseholdMessage, workspaceCookie, workspaceHeader, workspaceOwner, type HouseholdPerson, type HouseholdState } from '@/lib/household';
 import { session, supa, sameOrigin } from '@/lib/supabase';
 
 // Every check happens in the database (migration 100): household_state lists only the
 // caller's own household and memberships, and the open workspace is honoured there
 // only for someone who belongs to it. The cookie merely remembers the choice.
-const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 const unavailable = () => reply({ error: 'Could not load your household. Check that database update 100 is installed.' }, 503);
 const cookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/', maxAge: 60 * 60 * 24 * 30 };
 type Stored = Omit<HouseholdState, 'active' | 'role' | 'people'>;
@@ -15,8 +15,7 @@ async function rpc<T>(name: string, args: Record<string, unknown>, token: string
  // The workspace is always named explicitly: personal calls send none, household_people the one being checked.
  const response = await supa('/rest/v1/rpc/' + name, { method: 'POST', body: JSON.stringify(args), headers: { [workspaceHeader]: workspace } }, token);
  if (response.ok) return { ok: true, data: await response.json() as T };
- const failure = await response.json().catch(() => ({})) as { message?: string };
- return { ok: false, error: knownHouseholdMessage(failure.message) };
+ return { ok: false, error: knownHouseholdMessage((await postgrestError(response)).message) };
 }
 const failed = (result: { error: string | null }) => result.error ? reply({ error: result.error }, 409) : unavailable();
 
@@ -34,23 +33,21 @@ async function state(token: string, wanted: string): Promise<HouseholdState | nu
 
 export async function GET() {
  try {
-  const auth = await session(); if (!auth) return reply({ error: 'Please sign in again.' }, 401);
-  const wanted = auth.owner ?? auth.user.id;
+  const auth = await session(); if (!auth) return signInAgain();
+  const wanted = workspaceOwner(auth);
   const result = await state(auth.token, wanted);
   return result ? reply(result.active === wanted ? result : { ...result, reset: true }) : unavailable();
  } catch { return unavailable(); }
 }
 
 export async function POST(req: Request) {
- if (!sameOrigin(req)) return new Response(null, { status: 403 });
+ if (!sameOrigin(req)) return crossSite();
  try {
-  const auth = await session(); if (!auth) return reply({ error: 'Please sign in again.' }, 401);
-  const body = await req.json().catch(() => ({})) as { action?: string; data?: unknown };
-  if (!body.action || !Object.hasOwn(householdSchemas, body.action)) return reply({ error: 'Check the household details.' }, 400);
-  const action = body.action as HouseholdAction;
-  const parsed = householdSchemas[action].safeParse(body.data);
-  if (!parsed.success) return reply({ error: 'Check the household details.' }, 400);
-  const data = parsed.data as unknown as Record<string, string | null>;
+  const auth = await session(); if (!auth) return signInAgain();
+  const input = parseAction(await readJson(req), householdSchemas);
+  if (!input) return reply({ error: 'Check the household details.' }, 400);
+  const { action } = input;
+  const data = input.data as unknown as Record<string, string | null>;
   const jar = await cookies();
   const me = auth.user.id;
   if (action === 'invite') {
@@ -77,9 +74,8 @@ export async function POST(req: Request) {
   if (action === 'attribute' || action === 'account_owner') {
    // The open workspace is named explicitly, so the database checks the caller may change it.
    const workspace = auth.owner && auth.owner !== me ? auth.owner : '';
-   const input = parsed.data as unknown as { ids: string[]; account: string; member: string | null };
-   const result = action === 'attribute' ? await rpc<number>('set_record_owner', { p_ids: input.ids, p_member: input.member }, auth.token, workspace)
-    : await rpc<number>('set_account_owner', { p_account: input.account, p_member: input.member }, auth.token, workspace);
+   const result = input.action === 'attribute' ? await rpc<number>('set_record_owner', { p_ids: input.data.ids, p_member: input.data.member }, auth.token, workspace)
+    : await rpc<number>('set_account_owner', { p_account: input.data.account, p_member: input.data.member }, auth.token, workspace);
    return result.ok ? reply({ changed: Number(result.data) || 0 }) : failed(result);
   }
   const call = action === 'revoke' ? rpc('revoke_household_invite', { p_id: data.id }, auth.token)

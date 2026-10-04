@@ -11,6 +11,19 @@ export function currencyLabel(code: string, locale: string) {
   try { return `${code} · ${new Intl.DisplayNames([locale], { type: 'currency' }).of(code) || code}`; }
   catch { return `${code} · ${catalogue.find(c => c.code === code)?.name || code}`; }
 }
+// Accents are dropped so "cordoba" finds Córdoba; ł and ø do not decompose, so they are mapped by hand.
+const fold = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/ł/g, 'l').replace(/ø/g, 'o').trim();
+/** Every fiat currency code, or those whose code or name (in `locale` or English) contains the query, ignoring case and accents. */
+export function currencyMatches(query: string, locale: string): string[] {
+  const wanted = fold(query);
+  if (!wanted) return catalogue.map(item => item.code);
+  return catalogue.filter(item => [item.code, item.name, currencyLabel(item.code, locale)].some(text => fold(text).includes(wanted))).map(item => item.code);
+}
+/** The code a label stands for: a `currencyLabel` such as "EUR · Euro", or a bare code. */
+export function currencyFromText(text: string): string | null {
+  const code = /^([A-Za-z]{3})(?:\s·\s.+)?$/.exec(text.trim())?.[1].toUpperCase();
+  return code && isCurrency(code) ? code : null;
+}
 export type Preferences = { display_name?: string; country?: string; language: Language; currencies: string[]; font?: Font; onboarded?: boolean;
   /** The calendar day (Asia/Tashkent) the welcome setup was finished; read-only, never saved from the client. */
   onboarded_on?: string };

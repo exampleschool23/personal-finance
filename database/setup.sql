@@ -6522,3 +6522,115 @@ BEGIN
 END $$;
 NOTIFY pgrst,'reload schema';
 COMMIT;
+
+-- Rate limits shared by every server instance: sign-in, phone codes, account changes, the assistant and
+-- the public market reads (lib/rate-limit.ts). A fixed-window counter per bucket; buckets name a limit and
+-- a hashed client address, email, phone or user, never the raw value. Only the server-only key may count:
+-- the table has row security and no policies, and nobody else may read it or call the function.
+-- Apply after 105. Nothing existing changes.
+BEGIN;
+CREATE TABLE IF NOT EXISTS public.rate_limits(
+ bucket text NOT NULL CHECK(length(bucket) BETWEEN 1 AND 200),
+ window_seconds integer NOT NULL CHECK(window_seconds BETWEEN 1 AND 604800),
+ window_start timestamptz NOT NULL,
+ hits integer NOT NULL DEFAULT 1,
+ expires_at timestamptz NOT NULL,
+ PRIMARY KEY(bucket,window_seconds,window_start)
+);
+CREATE INDEX IF NOT EXISTS rate_limits_expires_at ON public.rate_limits(expires_at);
+ALTER TABLE public.rate_limits ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.rate_limits FROM PUBLIC,anon,authenticated;
+
+-- Counts one hit and answers whether it is within the limit: true while the window has at most max_hits.
+-- Expired windows are pruned on the way.
+CREATE OR REPLACE FUNCTION public.hit_rate_limit(bucket text,max_hits integer,window_seconds integer) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE started timestamptz; counted integer;
+BEGIN
+ IF bucket IS NULL OR length(bucket) NOT BETWEEN 1 AND 200 OR max_hits IS NULL OR max_hits<1 OR window_seconds IS NULL OR window_seconds NOT BETWEEN 1 AND 604800 THEN
+  RAISE EXCEPTION 'Check the rate limit.' USING ERRCODE='22023';
+ END IF;
+ started:=pg_catalog.to_timestamp(pg_catalog.floor(pg_catalog.date_part('epoch',pg_catalog.now())/window_seconds)*window_seconds);
+ DELETE FROM public.rate_limits r WHERE r.expires_at<=pg_catalog.now();
+ INSERT INTO public.rate_limits AS r(bucket,window_seconds,window_start,hits,expires_at)
+  VALUES(hit_rate_limit.bucket,hit_rate_limit.window_seconds,started,1,started+pg_catalog.make_interval(secs=>hit_rate_limit.window_seconds))
+  ON CONFLICT ON CONSTRAINT rate_limits_pkey DO UPDATE SET hits=least(r.hits+1,2147483646)
+  RETURNING r.hits INTO counted;
+ RETURN counted<=max_hits;
+END $$;
+REVOKE ALL ON FUNCTION public.hit_rate_limit(text,integer,integer) FROM PUBLIC,anon,authenticated;
+DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN
+ GRANT EXECUTE ON FUNCTION public.hit_rate_limit(text,integer,integer) TO service_role;
+END IF; END $$;
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+-- Launch hardening from the pre-launch database review. Apply after 106.
+-- * A signed-in person could still write any chat_id into their own Telegram
+--   row (column grants left from the link-code era), and so take over another
+--   person's bot chat. Chats are now linked only by the server; the app may
+--   still change notification switches and unlink (chat_id back to null).
+-- * Tables written only through functions lose direct write grants, and anon
+--   loses the grants Supabase's defaults gave it. RLS already refused these
+--   writes; this removes the second line of reliance on policies.
+-- * Attachment uploads must use the exact path the server hands out
+--   (owner/record/file.ext), so storage cannot be filled with stray files.
+-- * An investment account's owner (member_id) must be the workspace owner or
+--   one of its household members, as finance_records already enforces.
+-- * finance_restore_context gets RLS like every other table (all grants were
+--   already revoked).
+-- No rows are rewritten.
+BEGIN;
+
+REVOKE INSERT, UPDATE ON public.telegram_subscriptions FROM authenticated;
+GRANT UPDATE (digest_enabled, actions_enabled, chat_id, linked_at, updated_at) ON public.telegram_subscriptions TO authenticated;
+CREATE OR REPLACE FUNCTION public.guard_telegram_link() RETURNS trigger
+LANGUAGE plpgsql SET search_path=public AS $$
+BEGIN
+ -- Only the server (service role) links a chat. People may unlink their own.
+ IF current_user IN ('authenticated','anon')
+  AND ((NEW.chat_id IS NOT NULL AND NEW.chat_id IS DISTINCT FROM OLD.chat_id)
+   OR (NEW.linked_at IS NOT NULL AND NEW.linked_at IS DISTINCT FROM OLD.linked_at)) THEN
+  RAISE EXCEPTION 'Telegram chats are linked from the bot.' USING ERRCODE='42501';
+ END IF;
+ RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public.guard_telegram_link() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS guard_telegram_link ON public.telegram_subscriptions;
+CREATE TRIGGER guard_telegram_link BEFORE UPDATE ON public.telegram_subscriptions FOR EACH ROW EXECUTE FUNCTION public.guard_telegram_link();
+
+REVOKE ALL ON public.forecast_assignments, public.goal_events, public.goal_operations, public.import_batches,
+ public.import_batch_items, public.transaction_splits, public.workspace_preferences FROM anon;
+REVOKE INSERT, UPDATE, DELETE ON public.goal_events, public.goal_operations, public.import_batches,
+ public.import_batch_items, public.transaction_splits, public.forecast_assignments FROM authenticated;
+REVOKE TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA public FROM anon, authenticated;
+
+DO $storage$
+BEGIN
+ IF to_regclass('storage.objects') IS NULL THEN RETURN; END IF;
+ DROP POLICY IF EXISTS "Owners upload attachments to their records" ON storage.objects;
+ CREATE POLICY "Owners upload attachments to their records" ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (bucket_id='attachments'
+   AND name ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp|heic|pdf)$'
+   AND public.attachment_record_writable((storage.foldername(name))[1],(storage.foldername(name))[2]));
+END $storage$;
+
+CREATE OR REPLACE FUNCTION public.attribute_holding_account() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ IF public.finance_restore_active() THEN RETURN NEW; END IF;
+ IF NEW.member_id IS NOT NULL AND NEW.member_id<>NEW.user_id AND (TG_OP='INSERT' OR NEW.member_id IS DISTINCT FROM OLD.member_id)
+  AND NOT EXISTS(SELECT 1 FROM public.household_members WHERE owner_id=NEW.user_id AND member_id=NEW.member_id) THEN
+  -- Someone outside the household is not named.
+  NEW.member_id:=NULL;
+ END IF;
+ RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public.attribute_holding_account() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS attribute_holding_account ON public.holding_accounts;
+CREATE TRIGGER attribute_holding_account BEFORE INSERT OR UPDATE OF member_id,user_id ON public.holding_accounts FOR EACH ROW EXECUTE FUNCTION public.attribute_holding_account();
+
+ALTER TABLE public.finance_restore_context ENABLE ROW LEVEL SECURITY;
+
+NOTIFY pgrst,'reload schema';
+COMMIT;

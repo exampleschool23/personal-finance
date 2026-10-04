@@ -6,7 +6,7 @@ import {botDb,ownerId} from './helpers/bot-db.mjs';
 const {normalizePhone}=loadTS('lib/phone.ts');
 const {verifyStandardWebhook}=loadTS('lib/standard-webhook.ts');
 const {verifyInitData}=loadTS('lib/telegram-webapp.ts');
-const {derivedPassword,adminAccounts,createTelegramAccount,createLoginToken,consumeLoginToken,loginTokenMinutes}=loadTS('lib/telegram-account.ts');
+const {derivedPassword,adminAccounts,createTelegramAccount,createLoginToken,consumeLoginToken,loginTokenMinutes,loginSecrets,signInTelegramAccount}=loadTS('lib/telegram-account.ts');
 const now=new Date('2026-10-01T09:00:00Z');
 
 test('phone numbers become international form, with or without the plus Telegram leaves out',()=>{
@@ -67,7 +67,7 @@ function adminHarness(responses){
  const fetcher=async(url,init)=>{calls.push({url,init:{...init,body:init.body?JSON.parse(init.body):undefined}});return responses.shift();};
  return {calls,admin:adminAccounts({SUPABASE_URL:'https://project.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'sb_secret_abc'},fetcher)};
 }
-test('the admin client creates confirmed phone users with the secret key in apikey alone, and reports taken numbers',async()=>{
+test('the admin client creates confirmed phone users with the secret key in apikey alone, reports taken numbers and replaces passwords',async()=>{
  assert.equal(adminAccounts({SUPABASE_URL:'https://x'}),null);assert.equal(adminAccounts({SUPABASE_SERVICE_ROLE_KEY:'k'}),null);
  const created=adminHarness([Response.json({id:ownerId})]);
  assert.deepEqual(await created.admin.createPhoneUser({phone:'+998901234567',password:'pw',metadata:{telegram_user_id:777}}),{id:ownerId});
@@ -75,23 +75,22 @@ test('the admin client creates confirmed phone users with the secret key in apik
  assert.equal(created.calls[0].init.method,'POST');
  assert.deepEqual(created.calls[0].init.body,{phone:'+998901234567',password:'pw',phone_confirm:true,user_metadata:{telegram_user_id:777}});
  assert.equal(created.calls[0].init.headers.apikey,'sb_secret_abc');assert.ok(!('Authorization' in created.calls[0].init.headers));
- const taken=adminHarness([Response.json({error_code:'phone_exists'},{status:422}),Response.json({error_code:'phone_exists'},{status:422})]);
+ const taken=adminHarness([Response.json({error_code:'phone_exists'},{status:422})]);
  assert.deepEqual(await taken.admin.createPhoneUser({phone:'+1',password:'p',metadata:{}}),{exists:true});
- assert.equal(await taken.admin.setUserPhone(ownerId,'+998901234567'),false);
  const broken=adminHarness([new Response(null,{status:500}),Response.json({}),new Response(null,{status:500})]);
  await assert.rejects(broken.admin.createPhoneUser({phone:'+1',password:'p',metadata:{}}),/Account creation failed/);
  await assert.rejects(broken.admin.createPhoneUser({phone:'+1',password:'p',metadata:{}}),/Account creation failed/);
- await assert.rejects(broken.admin.setUserPhone(ownerId,'+1'),/Could not save/);
+ await assert.rejects(broken.admin.setUserPassword(ownerId,'pw'),/Could not update the password/);
  const set=adminHarness([new Response(null,{status:200}),new Response(null,{status:200})]);
- assert.equal(await set.admin.setUserPhone(ownerId,'+998901234567'),true);
- assert.equal(set.calls[0].url,'https://project.supabase.co/auth/v1/admin/users/'+ownerId);assert.deepEqual(set.calls[0].init.body,{phone:'+998901234567',phone_confirm:true});
+ await set.admin.setUserPassword(ownerId,'new-password');
+ assert.equal(set.calls[0].url,'https://project.supabase.co/auth/v1/admin/users/'+ownerId);assert.equal(set.calls[0].init.method,'PUT');assert.deepEqual(set.calls[0].init.body,{password:'new-password'});
  await set.admin.deleteUser(ownerId);assert.equal(set.calls[1].init.method,'DELETE');
 });
 
 const person={chatId:777,telegramUserId:777,phone:'+998901234567',firstName:'  Aziz ',language:'en',now};
 test('creating an account stores preferences and a linked chat with the consent time, and uses the derived password',async()=>{
  const db=botDb();const sent=[];
- const admin={createPhoneUser:async input=>{sent.push(input);return {id:ownerId};},setUserPhone:async()=>true,deleteUser:async()=>{}};
+ const admin={createPhoneUser:async input=>{sent.push(input);return {id:ownerId};},setUserPassword:async()=>{},deleteUser:async()=>{}};
  assert.deepEqual(await createTelegramAccount({db,admin,secret:'s'},person),{userId:ownerId});
  assert.deepEqual(sent[0],{phone:'+998901234567',password:derivedPassword('s',777),metadata:{telegram_user_id:777,first_name:'  Aziz '.slice(0,80)}});
  assert.deepEqual(db.tables.user_preferences,[{user_id:ownerId,language:'en',currencies:['USD'],display_name:'Aziz'}]);
@@ -101,11 +100,11 @@ test('creating an account stores preferences and a linked chat with the consent 
 });
 test('a taken number creates nothing, and a failed write removes the new user again',async()=>{
  const db=botDb(),deleted=[];
- assert.deepEqual(await createTelegramAccount({db,admin:{createPhoneUser:async()=>({exists:true}),setUserPhone:async()=>true,deleteUser:async id=>deleted.push(id)},secret:'s'},person),{exists:true});
+ assert.deepEqual(await createTelegramAccount({db,admin:{createPhoneUser:async()=>({exists:true}),setUserPassword:async()=>{},deleteUser:async id=>deleted.push(id)},secret:'s'},person),{exists:true});
  assert.equal(db.writes.length,0);assert.equal(deleted.length,0);
  for(const failing of ['user_preferences','telegram_subscriptions']){
   const broken=botDb({__fail:[failing]});
-  await assert.rejects(createTelegramAccount({db:broken,admin:{createPhoneUser:async()=>({id:ownerId}),setUserPhone:async()=>true,deleteUser:async id=>deleted.push(id)},secret:'s'},person),/Database request failed/);
+  await assert.rejects(createTelegramAccount({db:broken,admin:{createPhoneUser:async()=>({id:ownerId}),setUserPassword:async()=>{},deleteUser:async id=>deleted.push(id)},secret:'s'},person),/Database request failed/);
  }
  assert.deepEqual(deleted,[ownerId,ownerId]);
 });
@@ -126,4 +125,45 @@ test('login tokens are random, stored only as hashes, valid for minutes and spen
  for(const bad of ['',null,undefined,'zz','A'.repeat(64),'0'.repeat(64),42])assert.equal(await consumeLoginToken(db,bad,later),null,String(bad));
  await assert.rejects(consumeLoginToken(botDb({__fail:['telegram_login_tokens']}),token,later),/Database request failed/);
  await assert.rejects(createLoginToken(botDb({__fail:['telegram_login_tokens']}),ownerId,now),/Database request failed/);
+});
+
+test('the login secret replaces the webhook secret as the password key, with the webhook secret kept only as the legacy one',()=>{
+ assert.equal(loginSecrets({}),null);
+ assert.deepEqual(loginSecrets({TELEGRAM_WEBHOOK_SECRET:'hook'}),{current:'hook',legacy:null},'before the login secret is set nothing changes');
+ assert.deepEqual(loginSecrets({TELEGRAM_WEBHOOK_SECRET:'hook',TELEGRAM_LOGIN_SECRET:'login'}),{current:'login',legacy:'hook'});
+ assert.deepEqual(loginSecrets({TELEGRAM_LOGIN_SECRET:'login'}),{current:'login',legacy:null});
+ assert.deepEqual(loginSecrets({TELEGRAM_WEBHOOK_SECRET:'same',TELEGRAM_LOGIN_SECRET:'same'}),{current:'same',legacy:null});
+ assert.deepEqual(loginSecrets({TELEGRAM_WEBHOOK_SECRET:'hook',TELEGRAM_LOGIN_SECRET:'  '}),{current:'hook',legacy:null},'a blank login secret counts as unset');
+});
+
+test('signing in tries the current derived password, falls back to the legacy one and moves the account to the current one',async()=>{
+ const account={user_id:ownerId,phone:'+998901234567',telegram_user_id:777};
+ const harness=(passwords,{moveFails=false}={})=>{
+  const tried=[],moved=[];
+  const signIn=async(phone,password)=>{tried.push(password);return passwords.includes(password)?Response.json({access_token:'a'}):Response.json({error_code:'invalid_credentials'},{status:400});};
+  const admin={setUserPassword:async(id,password)=>{if(moveFails)throw Error('down');moved.push([id,password]);}};
+  return {tried,moved,run:secrets=>signInTelegramAccount({secrets,signIn,admin},account)};
+ };
+ const current=derivedPassword('login',777),legacy=derivedPassword('hook',777);
+ // Already on the login secret: one attempt, nothing moved.
+ const fresh=harness([current]);
+ assert.deepEqual(await fresh.run({current:'login',legacy:'hook'}),{ok:true,session:{access_token:'a'}});
+ assert.deepEqual(fresh.tried,[current]);assert.deepEqual(fresh.moved,[]);
+ // Made before the login secret: the legacy password signs in, then the account is moved to the current one.
+ const old=harness([legacy]);
+ assert.equal((await old.run({current:'login',legacy:'hook'})).ok,true);
+ assert.deepEqual(old.tried,[current,legacy]);assert.deepEqual(old.moved,[[ownerId,current]]);
+ // A failed move still signs the person in; the next sign-in tries again.
+ const flaky=harness([legacy],{moveFails:true});
+ assert.equal((await flaky.run({current:'login',legacy:'hook'})).ok,true);
+ // Neither works (the person set their own password): the first failure is reported and nothing is moved.
+ const neither=harness([]);
+ assert.deepEqual(await neither.run({current:'login',legacy:'hook'}),{ok:false,code:'invalid_credentials'});
+ assert.deepEqual(neither.moved,[]);
+ // Without a legacy secret there is a single attempt.
+ const single=harness([]);await single.run({current:'hook',legacy:null});assert.deepEqual(single.tried,[derivedPassword('hook',777)]);
+ // A switched-off phone provider is reported at once, without a second attempt.
+ const off={tried:0};
+ const disabled=await signInTelegramAccount({secrets:{current:'login',legacy:'hook'},admin:null,signIn:async()=>{off.tried++;return Response.json({error_code:'phone_provider_disabled'},{status:422});}},account);
+ assert.deepEqual(disabled,{ok:false,code:'phone_provider_disabled'});assert.equal(off.tried,1);
 });

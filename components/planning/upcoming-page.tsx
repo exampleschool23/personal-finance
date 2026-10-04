@@ -13,7 +13,7 @@ import { useLanguage } from '@/components/language-provider';
 import { formatDate, formatMoney, formatMonthYear, formatNumber, weekdayLabels } from '@/lib/format';
 import { frequencyLabels, income } from '@/lib/finance';
 import { depositToday } from '@/lib/deposit-interest';
-import { shiftMonth } from '@/lib/budget';
+import { shiftMonth } from '@/lib/calendar-days';
 import { convertAmount } from '@/lib/market';
 import { upcomingPayments, type PlanningData } from '@/lib/planning';
 import { calendarWeeks, daysFrom, monthOccurrences, recurringSummary, type RecurringItem } from '@/lib/recurring';

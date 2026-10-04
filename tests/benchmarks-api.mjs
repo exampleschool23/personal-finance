@@ -5,10 +5,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
-import * as dates from '../lib/benchmark-data.ts';
+import {loadTS} from './helpers/load-ts.mjs';
+const dates=loadTS('lib/benchmark-data.ts');
 const source=ts.transpileModule(fs.readFileSync('app/api/benchmarks/route.ts','utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-let auth=true;
-const deps={isCurrency,portfolioAssets,portfolioAssetKey,diversifiedPortfolioSchema,benchmarkSelectionSchema,stockBenchmarks,...dates,session:async()=>auth?{token:'owner'}:null,depositToday:()=> '2026-09-17'};
+let auth=true,limited=false;const counted=[];
+const {signInAgain,tooManyAttempts}=loadTS('lib/api-route.ts');
+const deps={isCurrency,portfolioAssets,portfolioAssetKey,diversifiedPortfolioSchema,benchmarkSelectionSchema,stockBenchmarks,...dates,signInAgain,tooManyAttempts,limits:{benchmarks:[]},rateLimited:async(req,name,limits,key)=>{counted.push([name,key]);return limited;},session:async()=>auth?{token:'owner',user:{id:'owner-id'}}:null,depositToday:()=> '2026-09-17'};
 const GET=new Function(...Object.keys(deps),source+';return GET;')(...Object.values(deps));
 const request=(params='start=2026-09-14&end=2026-09-17')=>new Request('https://local/api/benchmarks?'+params);
 test('rejects anonymous users, invalid dates, future or reversed periods, and arbitrary symbols',async()=>{
@@ -283,4 +285,11 @@ test('a day the exchange-rate feed misses uses the closest earlier published day
   const down=await(await GET(request('start=2026-09-14&end=2026-09-17&benchmarks=depositUSD'))).json();
   assert.ok(down.errors.fx);assert.deepEqual(down.fx,[]);
  }finally{globalThis.fetch=original;if(key!==undefined)process.env.TWELVE_DATA_API_KEY=key;}
+});
+
+test('signed-in comparison loads are counted per person and refused over the limit',async()=>{
+ counted.length=0;limited=true;
+ try{const response=await GET(request());assert.equal(response.status,429);assert.equal((await response.json()).error,'Too many attempts. Please try again later.');}
+ finally{limited=false;}
+ assert.deepEqual(counted,[['benchmarks','owner-id']]);
 });

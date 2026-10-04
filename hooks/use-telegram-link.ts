@@ -1,31 +1,25 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import { showSaved } from '@/lib/feedback';
+import { useOwnerResource } from '@/hooks/use-owner-resource';
+import { requestJson } from '@/lib/api-client';
 import { telegramBotUrl, type TelegramStatus } from '@/lib/telegram-link';
 // The bot's web sign-in link lasts fifteen minutes (connectMinutes in telegram-connect.ts).
 const pollMs=3000,pollMinutes=15;
-export const demoStatus:TelegramStatus={configured:false,linked:false,digest_enabled:true,actions_enabled:true,bot_username:null};
-async function call(body:unknown){
- const response=await fetch('/api/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
- const result=await response.json() as {error?:string};
- if(!response.ok)throw Error(result.error??'Could not save the Telegram settings. Try again.');
- return result;
-}
+const demoStatus:TelegramStatus={configured:false,linked:false,digest_enabled:true,actions_enabled:true,bot_username:null};
+const call=(body:unknown)=>requestJson<TelegramStatus>('/api/telegram',{body,fallback:'Could not save the Telegram settings. Try again.'});
+const noStatus:TelegramStatus|null=null;
 /** The owner's Telegram link: its status, a Connect that opens the bot and waits until the chat signs in, and the two toggles. Shared by Settings and the Overview nudge. */
 export function useTelegramLink(demo:boolean){
- const [status,setStatus]=useState<TelegramStatus|null>(demo?demoStatus:null);
- const [loadError,setLoadError]=useState('');
+ // The link belongs to the signed-in person, not the open workspace.
+ const remote=useOwnerResource('/api/telegram','session',!demo,0,noStatus);
+ // A later answer from a save or the link watch replaces the loaded status.
+ const [changed,setStatus]=useState<TelegramStatus|null>(null);
+ const status=demo?demoStatus:changed??remote.data;
  const [error,setError]=useState('');
  const [busy,setBusy]=useState(false);
  const [waiting,setWaiting]=useState(false);
- const [attempt,setAttempt]=useState(0);
  const waitingSince=useRef(0);
- useEffect(()=>{
-  if(demo)return;
-  const controller=new AbortController();
-  fetch('/api/telegram',{signal:controller.signal,cache:'no-store'}).then(async response=>{const result=await response.json() as TelegramStatus&{error?:string};if(!response.ok)throw Error(result.error);setStatus(result);setLoadError('');}).catch(reason=>{if(!controller.signal.aborted)setLoadError((reason as Error).message);});
-  return()=>controller.abort();
- },[demo,attempt]);
  // After the owner opens the bot, watch for the link until it lands or the bot's sign-in link would have expired.
  useEffect(()=>{
   if(!waiting)return;
@@ -37,7 +31,7 @@ export function useTelegramLink(demo:boolean){
  },[waiting]);
  async function run(body:unknown,after:(result:TelegramStatus)=>void){
   setBusy(true);setError('');
-  try{after(await call(body) as TelegramStatus);}catch(reason){setError((reason as Error).message);}
+  try{after(await call(body));}catch(reason){setError((reason as Error).message);}
   finally{setBusy(false);}
  }
  function connect(){
@@ -47,8 +41,8 @@ export function useTelegramLink(demo:boolean){
   waitingSince.current=Date.now();setWaiting(true);
  }
  return {
-  status,loadError,error,busy,waiting,
-  retry:()=>{setLoadError('');setAttempt(count=>count+1);},
+  status,loadError:remote.error,error,busy,waiting,
+  retry:remote.retry,
   connect,
   stopWaiting:()=>setWaiting(false),
   setToggles:(digest_enabled:boolean,actions_enabled:boolean)=>run({action:'settings',digest_enabled,actions_enabled},result=>{setStatus(result);showSaved();}),

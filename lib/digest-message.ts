@@ -2,10 +2,11 @@
 // line of encouragement, what is overdue or due soon, how net worth moved
 // yesterday, and spending against the week before. Pure.
 import {income} from './finance';
-import {formatDate,formatMoney,formatNumber} from './format';
-import {locales,translate,type Language} from './i18n';
+import {formatDate,formatNumber} from './format';
+import type {Language} from './i18n';
 import type {DueItem} from './planning';
 import {escapeHtml} from './telegram';
+import {messageKit} from './telegram-kit';
 const motivation=['Small steps add up to big results.','A clear view of your money is the first step to calm.','Every record you add makes tomorrow easier to plan.','Progress beats perfection. Keep going.'];
 export type DigestExtras={
  name?:string;currency?:string;
@@ -15,14 +16,14 @@ export type DigestExtras={
  spending?:{current:number;previous:number};
 };
 /** Characters of payment lines one message can hold beside the digest's greeting and figures. */
-export const paymentsSectionBudget=3200;
+const paymentsSectionBudget=3200;
 const overdueShown=10;
 /** The overdue and upcoming payments, grouped by day; null when there are none. Also the bot's Upcoming payments answer. */
 export function paymentsSection(items:DueItem[],language:Language,today:string):string|null{
  if(!items.length)return null;
- const locale=locales[language],t=(key:string,params?:Record<string,string|number>)=>translate(language,key,params);
+ const {locale,t,money}=messageKit(language);
  const line=(item:DueItem)=>{
-  const amount=formatMoney(item.amount,item.record.currency,locale);
+  const amount=money(item.amount,item.record.currency);
   const kind=item.type==='repayment'||item.type==='installment'?t('repayment'):item.type==='maturity'?t(item.record.kind==='Treasury bill'?'Treasury bill maturity':'deposit maturity'):income.includes(item.record.kind)?t('income'):null;
   return `• ${escapeHtml(item.record.name)} · ${income.includes(item.record.kind)?'+':''}${amount}${kind?' · '+kind:''}`;
  };
@@ -45,8 +46,8 @@ export function paymentsSection(items:DueItem[],language:Language,today:string):
  return `<b>${t('Upcoming payments')}</b> · ${formatDate(today,locale)}\n\n${sections.join('\n\n')}${hidden?`\n• ${t('{count} more',{count:formatNumber(hidden,locale,0)})}`:''}`;
 }
 export function digestMessage(items:DueItem[],language:Language,today:string,extras:DigestExtras={}):string{
- const locale=locales[language],t=(key:string,params?:Record<string,string|number>)=>translate(language,key,params);
- const currency=extras.currency??'USD',money=(value:number)=>formatMoney(value,currency,locale);
+ const kit=messageKit(language),{t}=kit;
+ const currency=extras.currency??'USD',money=(value:number)=>kit.money(value,currency);
  const signed=(value:number)=>(value<0?'−':'+')+money(Math.abs(value));
  const name=extras.name?.trim();
  const greeting=`☀️ <b>${name?t('Good morning, {name}',{name:escapeHtml(name)}):t('Good morning')}</b>\n<i>${t(motivation[Math.floor(Date.parse(today)/86400000)%motivation.length])}</i>`;

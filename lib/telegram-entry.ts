@@ -4,7 +4,7 @@
 // the bot shows on a confirmation card. Nothing is saved until the owner presses Save.
 import {isoDate} from './api-validation';
 import {isCurrency} from './currencies';
-import {expenses,income,type Entry} from './finance';
+import type {Entry} from './finance';
 import {formatDate,numberSymbols} from './format';
 import {dictionaries,locales,translate,type Language} from './i18n';
 import {shiftDay} from './period-summary';
@@ -52,6 +52,12 @@ export function looseNumber(raw:string,language:Language):number|null{
  }
  const value=Number(normalized);
  return Number.isFinite(value)&&value>0&&value<=1e15?value:null;
+}
+/** An amount typed in answer to a question, read like a typed entry ({@link looseNumber}). `allowZero` also accepts 0 (or 0,00),
+ * for an empty account or no interest. The one parser for every amount the bot asks for, so setup and records agree. */
+export function parseTypedAmount(text:string,language:Language,{allowZero=false}:{allowZero?:boolean}={}):number|null{
+ const trimmed=text.trim();
+ return looseNumber(trimmed,language)??(allowZero&&/^0+(?:[.,]0+)?$/.test(trimmed)?0:null);
 }
 // Symbols and words for currencies. A symbol several currencies share is resolved by the owner's own currencies.
 const currencyWords:Record<string,string[]>={
@@ -184,5 +190,3 @@ export function guessCategory(entry:{name:string;amount:number;account_id?:strin
  const direction=forced??'expense';
  return {direction,kind:generalKind(direction),custom_category_id:null,source:'default'};
 }
-/** Whether a kind is one of the built-in income or expense categories. */
-export const isEntryKind=(kind:string)=>income.includes(kind)||expenses.includes(kind);

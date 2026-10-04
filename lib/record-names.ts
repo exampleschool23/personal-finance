@@ -1,5 +1,5 @@
 import type { Entry } from './finance';
-export const normalizeName = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase();
+const normalizeName = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase();
 export function matchingNames(rows: Entry[], entry: Pick<Entry, 'id' | 'kind' | 'name'>, original?: Entry) {
   const query = normalizeName(entry.name);
   if (!query) return [];

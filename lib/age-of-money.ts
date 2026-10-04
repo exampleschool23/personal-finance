@@ -1,3 +1,4 @@
+import { daysBetween, shiftDay } from './calendar-days';
 import { expenses, income, type Entry } from './finance';
 import { convertAmount } from './market';
 import { spendingAmount } from './spending';
@@ -17,8 +18,6 @@ export type AgeOfMoney = {
  skipped: number;
 };
 
-const dayMs = 86400000;
-const daysBetween = (from: string, to: string) => Math.round((Date.parse(to + 'T00:00:00Z') - Date.parse(from + 'T00:00:00Z')) / dayMs);
 
 /**
  * Age of Money: how long money sits in your cash accounts before it is spent.
@@ -65,13 +64,10 @@ export function ageOfMoney(records: readonly MoneyRow[], currency: string, asOf:
  return { days: latest.length ? latest.reduce((sum, age) => sum + age, 0) / latest.length : null, outflows: latest.length, skipped };
 }
 
-/** The date `days` before an ISO date. */
-export const daysBefore = (date: string, days: number) => new Date(Date.parse(date + 'T00:00:00Z') - days * dayMs).toISOString().slice(0, 10);
-
 /** Today's Age of Money and its change against 30 days earlier, in whole days. */
 export function ageOfMoneyTrend(records: readonly MoneyRow[], currency: string, today: string, rates: Rates, cashAccounts?: ReadonlySet<string>) {
  const now = ageOfMoney(records, currency, today, rates, cashAccounts);
- const before = ageOfMoney(records, currency, daysBefore(today, 30), rates, cashAccounts);
+ const before = ageOfMoney(records, currency, shiftDay(today, -30), rates, cashAccounts);
  const change = now.days === null || before.days === null ? null : Math.round(now.days) - Math.round(before.days);
  return { ...now, change };
 }

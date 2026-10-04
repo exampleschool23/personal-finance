@@ -11,6 +11,7 @@ import { FormattedNumberInput } from '@/components/presentation-foundation/forma
 import { niceAxis } from '@/lib/chart-scale';
 import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { Segmented } from '@/components/presentation-foundation/segmented';
+import { SeriesLegend, toggleKey } from '@/components/presentation-foundation/series-legend';
 import { useLanguage } from '@/components/language-provider';
 import { formatDate, formatMoney, formatMonthYear, formatNumber, formatPercent } from '@/lib/format';
 import { projectGoal } from '@/lib/goal-projection';
@@ -130,7 +131,7 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
   {result && <section className="goal-chart-section" aria-labelledby={`${id}-chart-title`}>
    <div className="goal-chart-heading"><h3 id={`${id}-chart-title`}>{t('Your path to the goal')}<InfoHint><p>{t('Both future paths start from today’s value. They overlap when your planned monthly investment matches the contribution needed to reach the goal.')}</p>{compact&&<p>{t('Tap the chart for exact amounts, or open Monthly milestones.')}</p>}</InfoHint></h3><Segmented label={t('Projection view')} options={[{ value: 'chart', label: t('Chart') }, { value: 'table', label: t('Monthly milestones') }]} value={view} onChange={setView}/></div>
    {view === 'chart' ? <>
-    <div className="comparison-legend goal-chart-legend">{lines.map(line => <button key={line.key} type="button" aria-pressed={!hidden.includes(line.key)} onClick={() => setHidden(previous => previous.includes(line.key) ? previous.filter(key => key !== line.key) : [...previous, line.key])}><svg width="24" height="12" viewBox="0 0 24 12" aria-hidden="true">{line.key === 'actual' ? <circle cx="12" cy="6" r="4" fill={line.color} /> : <line x1="0" y1="6" x2="24" y2="6" stroke={line.color} strokeWidth="2" strokeDasharray={line.dash} />}</svg>{t(line.label)}</button>)}</div>
+    <SeriesLegend className="goal-chart-legend" items={lines.map(line => ({ key: line.key, label: t(line.label), swatch: <svg width="24" height="12" viewBox="0 0 24 12" aria-hidden="true">{line.key === 'actual' ? <circle cx="12" cy="6" r="4" fill={line.color} /> : <line x1="0" y1="6" x2="24" y2="6" stroke={line.color} strokeWidth="2" strokeDasharray={line.dash} />}</svg> }))} hidden={hidden} onToggle={key => setHidden(previous => toggleKey(previous, key))} />
     {goal.kind === 'net_worth' && <p className="goal-help">{t('Actual net worth today: {amount}. Actual values stop at today; future values are forecasts.', { amount: starting === null ? '—' : money(starting) })}</p>}
     <div className="goal-projection-chart" role="region" aria-label={t('Your path to the goal')} tabIndex={0}><div className="goal-chart-canvas"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={points} accessibilityLayer margin={{ top: 24, right: compact?8:24, left: compact?0:8, bottom: 12 }}>
      <defs><linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity={0.18} /><stop offset="100%" stopColor="var(--primary)" stopOpacity={0.01} /></linearGradient></defs>

@@ -15,9 +15,9 @@ const buttons=reply=>reply.keyboard.inline.flat();
 const callbacks=reply=>buttons(reply).filter(button=>button.callback_data).map(button=>button.callback_data);
 
 function setup({admin=true,secret='server-secret',seed={}}={}){
- const db=botDb(seed),created=[],phones=[];
- const env={appOrigin:'https://app.example',loginSecret:secret,admin:admin?{createPhoneUser:async input=>{created.push(input);return {id:ownerId};},setUserPhone:async(id,phone)=>{phones.push([id,phone]);return !phones.taken;},deleteUser:async()=>{}}:null};
- return {db,env,created,phones};
+ const db=botDb(seed),created=[],passwords=[];
+ const env={appOrigin:'https://app.example',loginSecret:secret,admin:admin?{createPhoneUser:async input=>{created.push(input);return {id:ownerId};},setUserPassword:async(id,password)=>{passwords.push([id,password]);},deleteUser:async()=>{}}:null};
+ return {db,env,created,passwords};
 }
 const from=(over={})=>({id:777,first_name:'Aziz',language_code:'ru',...over});
 const chat=(id=777)=>({id});
@@ -202,29 +202,42 @@ test('someone who pressed stop signs back in with the same number, and with no o
  assert.match((await run(contact(),linked)).replies[0].text,/^Welcome, Aziz! You are connected and will get a morning digest/);
 });
 
-test('a linked email account can add its number from the chat, once and only if it is free',async()=>{
- const seed=()=>({telegram_subscriptions:[subscription({chat_id:777})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]});
+test('a chat linked from the web never gets a phone number attached, so a chat linked by deceit cannot become a way to sign in',async()=>{
+ // Linked from the web: the Telegram identity of the chat, but no number and no consent.
+ const seed=()=>({telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]});
+ const refusal=t('en','Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.');
  const context=setup({seed:seed()});
+ // /phone explains instead of offering a number button, and keeps the menu.
  const asked=(await run(text('/phone'),context)).replies[0];
- assert.deepEqual(asked,{chat_id:777,text:t('en','Share your phone number so you can also sign in on the web with it.'),keyboard:{contact:t('en','Share my number'),cancel:t('en','Cancel')}});
- // Cancel under the number button brings the main menu back.
- const cancelled=(await run(text('Cancel'),context)).replies[0];
- assert.equal(cancelled.text,t('en','Cancelled.'));assert.deepEqual(cancelled.keyboard.reply,[['Expense','Income'],['More actions']]);
- const saved=await run(contact(),context);
- assert.deepEqual(context.phones,[[ownerId,'+998901234567']]);
- assert.equal(context.db.tables.telegram_subscriptions[0].phone,'+998901234567');assert.equal(context.db.tables.telegram_subscriptions[0].telegram_user_id,777);
- assert.equal(saved.replies[0].text,t('en','Your number is saved. You can now sign in on the web with it.'));assert.ok(saved.replies[0].keyboard.reply);
+ assert.deepEqual(asked,{chat_id:777,text:refusal,keyboard:{reply:[['Expense','Income'],['More actions']]}});
+ // A contact shared anyway is refused the same way: no Auth call, nothing stored.
+ const shared=await run(contact(),context);
+ assert.equal(shared.replies[0].text,refusal);assert.ok(shared.replies[0].keyboard.reply);
+ const storesPhone=context=>context.db.writes.some(write=>write.body&&'phone' in write.body);
+ assert.ok(!storesPhone(context),'no number is written');assert.deepEqual(context.passwords,[]);
+ assert.equal(context.db.tables.telegram_subscriptions[0].phone,null);
  assert.equal(context.created.length,0);
+ // The attack: someone else's chat linked to this account from the web, without a known Telegram identity, sharing their own number.
+ const attacker=setup({seed:{...seed(),telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:null})]}});
+ assert.equal((await run(contact(),attacker)).replies[0].text,refusal);
+ assert.ok(!storesPhone(attacker));assert.equal(attacker.db.tables.telegram_subscriptions[0].phone,null);
+ assert.equal(attacker.db.writes.filter(write=>write.method==='PATCH').length,0);
+ // Even without the admin keys the answer stays the same, rather than "not available yet".
+ assert.equal((await run(contact(),setup({seed:seed(),admin:false}))).replies[0].text,refusal);
+});
+
+test('an account created in Telegram keeps its number flow: the same number is welcomed, another is refused, and /phone offers the web',async()=>{
+ const seed=()=>({telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:'Aziz'}]});
+ const context=setup({seed:seed()});
+ assert.match((await run(contact(),context)).replies[0].text,/^Welcome, Aziz! You are connected/);
  assert.equal((await run(contact({},'998900000000'),context)).replies[0].text,t('en','This chat is already linked to a different number.'));
- assert.equal(context.phones.length,1);
- const taken=setup({seed:seed()});taken.phones.taken=true;
- assert.equal((await run(contact(),taken)).replies[0].text,t('en','This number is already used with another Telegram account.'));
- assert.equal(taken.db.tables.telegram_subscriptions[0].phone,null);
- const other=setup({seed:{...seed(),telegram_subscriptions:[...seed().telegram_subscriptions,subscription({user_id:'33333333-3333-4333-8333-333333333333',chat_id:1,phone:'+998901234567'})]}});
- assert.equal((await run(contact(),other)).replies[0].text,t('en','This number is already used with another Telegram account.'));
- assert.equal(other.phones.length,0);
- const noAdmin=setup({seed:seed(),admin:false});
- assert.equal((await run(contact(),noAdmin)).replies[0].text,t('en','Registration is not available yet. Please try again later.'));
+ assert.equal(context.db.tables.telegram_subscriptions[0].phone,'+998901234567');
+ const web=(await run(text('/phone'),context)).replies[0];
+ assert.equal(web.text,t('en','Your account also works on the web.'));
+ assert.equal(buttons(web)[0].web_app.url,'https://app.example/auth/telegram');
+ // Without an address there is no web button to offer, so the chat is told it is connected.
+ const offline=setup({seed:seed()});offline.env.appOrigin=null;
+ assert.match((await run(text('/phone'),offline)).replies[0].text,/^Welcome, Aziz!/);
 });
 
 test('the app command gives one-tap buttons to accounts made here and a plain link to the rest',async()=>{
@@ -381,4 +394,50 @@ test('the More actions buttons reach every action from a linked chat, including 
  assert.equal(upcoming.callbackId,'cb-m:upcoming');assert.equal(upcoming.replies[0].text,t('en','No payments due in the next 31 days.'));
  const out=await run(press('m:signout'),context);
  assert.match(out.replies[0].text,/^You are signed out\./);assert.equal(context.db.tables.telegram_subscriptions[0].chat_id,null);
+});
+
+test('the bot works only in a private chat: groups, supergroups and channels are ignored, button presses are still answered',async()=>{
+ const linked=()=>setup({seed:{telegram_subscriptions:[subscription({chat_id:-100777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'}),subscription({user_id:'33333333-3333-4333-8333-333333333333',chat_id:777,telegram_user_id:777})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]}});
+ for(const type of ['group','supergroup','channel']){
+  const group={id:-100777,type};
+  const context=linked();
+  for(const update of [{message:{chat:group,text:'/start',from:from()}},{message:{chat:group,text:'coffee 4',from:from()}},{message:{chat:group,from:from(),contact:{phone_number:'998901234567',user_id:777}}}]){
+   assert.deepEqual(await run(update,context),{replies:[]},type);
+  }
+  assert.deepEqual(await run({callback_query:{id:'cb-1',data:'o:signin',message:{chat:group},from:from()}},context),{replies:[],callbackId:'cb-1'},type);
+  assert.deepEqual(await run({callback_query:{id:'cb-2',data:'m:signout',message:{chat:group},from:from()}},context),{replies:[],callbackId:'cb-2'},type);
+  assert.equal(context.db.writes.length,0,'nothing is created, linked or signed out from a group');
+  assert.equal(context.db.tables.telegram_connect_requests.length,0);
+ }
+ // A private chat, with or without the type Telegram sends, is served as before.
+ const context=setup();
+ assert.equal((await run({message:{chat:{id:777,type:'private'},text:'/start',from:from()}},context)).replies.length,2);
+ assert.equal((await run(text('/start'),context)).replies.length,2);
+});
+
+test('a linked chat answers only the Telegram user it belongs to',async()=>{
+ const seed=()=>({telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD']}]});
+ const context=setup({seed:seed()});
+ const stranger={id:888,first_name:'Eve'};
+ for(const update of [{message:{chat:chat(),text:'Expense',from:stranger}},{message:{chat:chat(),text:'/app',from:stranger}},{message:{chat:chat(),from:stranger,contact:{phone_number:'998900000000',user_id:888}}}])assert.deepEqual(await run(update,context),{replies:[]});
+ assert.deepEqual(await run({callback_query:{id:'cb',data:'m:signout',message:{chat:chat()},from:stranger}},context),{replies:[],callbackId:'cb'});
+ assert.equal(context.db.tables.telegram_subscriptions[0].chat_id,777,'a stranger cannot sign the owner out');
+ assert.equal(context.db.tables.telegram_login_tokens.length,0,'nor get a sign-in link');
+ // The owner is served, and so is the person in a chat whose stored identity an older link left stale.
+ assert.equal((await run(text('Expense',{language_code:'en'}),context)).replies[0].text,t('en','Choose an expense category'));
+ const stale=setup({seed:{...seed(),telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:555})]}});
+ assert.equal((await run(text('Expense',{language_code:'en'}),stale)).replies[0].text,t('en','Choose an expense category'));
+});
+
+test('new accounts get their password from TELEGRAM_LOGIN_SECRET once it is set, and from the webhook secret until then',()=>{
+ const {botEnvFromProcess}=loadTS('lib/telegram-bot.ts');
+ const saved={login:process.env.TELEGRAM_LOGIN_SECRET,webhook:process.env.TELEGRAM_WEBHOOK_SECRET};
+ try{
+  process.env.TELEGRAM_WEBHOOK_SECRET='webhook-secret';delete process.env.TELEGRAM_LOGIN_SECRET;
+  assert.equal(botEnvFromProcess().loginSecret,'webhook-secret');
+  process.env.TELEGRAM_LOGIN_SECRET='login-secret';
+  assert.equal(botEnvFromProcess().loginSecret,'login-secret');
+ }finally{
+  for(const [name,value] of [['TELEGRAM_LOGIN_SECRET',saved.login],['TELEGRAM_WEBHOOK_SECRET',saved.webhook]])if(value===undefined)delete process.env[name];else process.env[name]=value;
+ }
 });

@@ -18,7 +18,6 @@ import { WorkspaceDialogs } from '@/components/workspace/workspace-dialogs';
 import { useWorkspace, WorkspaceProvider } from '@/components/workspace/workspace-provider';
 import { awaitingSettings } from '@/lib/onboarding';
 import { signInPath } from '@/lib/sign-in-path';
-import { sharedWorkspace } from '@/lib/household';
 import { showError } from '@/lib/feedback';
 
 /** Frames the current screen with the drawer and top bar once the session is known. */
@@ -57,7 +56,6 @@ function WorkspaceShell({ children }: { children: ReactNode }) {
  // Your own finances first, then each household you belong to.
  const homes = household.state;
  const workspaces = homes ? [{ id: homes.me, label: t('My finances') }, ...homes.memberships.map(item => ({ id: item.owner_id, label: t('Household of {name}', { name: item.name ?? t('Partner') }) }))] : [];
- const shared = sharedWorkspace(homes);
  return <SidebarProvider>
   <AppDrawer account={account} overdueCount={overdueCount} pendingPath={destination} onNavigate={navigate} badge={demo ? t("Demo") : undefined} workspaces={workspaces} workspace={homes?.active} onWorkspace={id => household.open(id === homes?.me ? null : id).catch(reason => showError((reason as Error).message))}/>
   <TopBarSlotProvider><main className="workspace">

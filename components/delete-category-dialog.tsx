@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { useLanguage } from '@/components/language-provider';
 import { formatNumber } from '@/lib/format';
+import { requestJson } from '@/lib/api-client';
 import type { Category } from '@/lib/planning';
 
 type Usage={records:number;deleted:number;watchlists:number};
@@ -29,10 +30,14 @@ export function DeleteCategoryDialog({category,categories,onClose,onDeleted}:{ca
   if(!valid||submitting.current)return;
   submitting.current=true;setBusy(true);setError('');
   try{
-   const response=await fetch('/api/categories',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:category.id,...(inUse?(replacement==='new'?{new_name:name.trim()}:{replacement_id:replacement}):{})})});
-   const data=await response.json() as {error?:string};if(!response.ok){if(data.error==='This category is in use. Choose a replacement category.'){setUsage(null);setRetry(value=>value+1);}throw Error(data.error);}
+   await requestJson('/api/categories',{method:'DELETE',body:{id:category.id,...(inUse?(replacement==='new'?{new_name:name.trim()}:{replacement_id:replacement}):{})}});
    onDeleted();onClose();
-  }catch(reason){setError((reason as Error).message);}finally{submitting.current=false;setBusy(false);}
+  }catch(reason){
+   const message=(reason as Error).message;
+   // The category gained records since the preview: read its usage again so a replacement can be chosen.
+   if(message==='This category is in use. Choose a replacement category.'){setUsage(null);setRetry(value=>value+1);}
+   setError(message);
+  }finally{submitting.current=false;setBusy(false);}
  }
  return <AlertDialog open onOpenChange={open=>{if(!open&&!busy)onClose();}}><AlertDialogContent onEscapeKeyDown={event=>{if(busy)event.preventDefault();}}>
   <AlertDialogTitle>{t('Delete {name}?',{name:category.name})}</AlertDialogTitle>

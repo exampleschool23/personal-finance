@@ -33,7 +33,6 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
  const list = drafts.map(draft => draft.goal);
  const ready = name === 'select' ? Object.values(counts).some(count => count > 0) : canContinue(list, name, today);
  const money = (amount: number, code: string | undefined) => formatMoney(amount, code || currency, locale);
- const account = (goal: Goal) => accounts.find(item => item.id === goal.account_id);
  const update = (id: string, patch: Partial<Goal>) => setDrafts(previous => previous.map(draft => draft.goal.id === id ? { ...draft, goal: { ...draft.goal, ...patch } } : draft));
  const current = (goal: Goal) => goal.kind === 'net_worth' ? netWorth(goal.currency ?? currency) : Number(goal.allocated);
 

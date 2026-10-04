@@ -2,7 +2,7 @@ import { sections } from '@/components/workspace/navigation';
 
 /** The public pages show the real app in a frame: the app opened at `previewSource` starts its sample workspace by
  * itself, says when it is ready, and then shows whichever workspace screen the page asks for. */
-export const previewParam = 'preview';
+const previewParam = 'preview';
 export const previewSource = `/?${previewParam}=1`;
 /** The size the framed app is laid out at before it is scaled to fit: a laptop window, so it shows the desktop layout. */
 export const previewSize = { width: 1280, height: 800 } as const;

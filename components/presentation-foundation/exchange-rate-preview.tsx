@@ -5,7 +5,7 @@ import { InlineError } from '@/components/presentation-foundation/inline-error';
 import type { DatedExchangeRate } from '@/lib/dated-exchange-rate';
 
 /** The shape `useDatedExchangeRate` returns; typed structurally so this stays a pure display piece. */
-export type ExchangeRateState={loading:boolean;error?:string;quote?:DatedExchangeRate;retry:()=>void};
+type ExchangeRateState={loading:boolean;error?:string;quote?:DatedExchangeRate;retry:()=>void};
 
 export function ExchangeRatePreview({fx}:{fx:ExchangeRateState}){
  const {t,locale}=useLanguage();

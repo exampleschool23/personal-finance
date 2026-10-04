@@ -1,9 +1,10 @@
+import {signInAgain} from '@/lib/api-route';
 import {session,supa} from '@/lib/supabase';
 import {uuid} from '@/lib/api-validation';
 import {z} from 'zod';
 export async function GET(req:Request){
  try{
-  const auth=await session();if(!auth)return Response.json({error:'Please sign in again.'},{status:401});
+  const auth=await session();if(!auth)return signInAgain();
   const query=new URL(req.url).searchParams;
   const parsed=z.object({id:uuid,page:z.coerce.number().int().min(1).max(1000000)}).safeParse({id:query.get('id'),page:query.get('page')??1});
   if(!parsed.success)return Response.json({error:'Invalid history request.'},{status:400});

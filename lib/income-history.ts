@@ -1,3 +1,4 @@
+import { shiftMonth } from './calendar-days';
 import { monthly, income, interestKinds, interestCompounding, duplicatesAssetEstimate, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import { convertAmount } from './market';
@@ -36,9 +37,9 @@ export function receivedIncome(records:Entry[],events:HistoryEvent[],incomeRecor
  return receipts.sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
 }
 export function incomeHistory(records:Entry[],events:HistoryEvent[],incomeRecords:Entry[],currency:string,rates:number|Record<string,number>|undefined,today:string,months=6){
- const end=today.slice(0,7), startDate=new Date(end+'-01T00:00:00Z');startDate.setUTCMonth(startDate.getUTCMonth()-months+1);
+ const end=today.slice(0,7), start=shiftMonth(end,1-months);
  const points:IncomePoint[]=[];
- for(let index=0;index<months;index++){const date=new Date(startDate);date.setUTCMonth(date.getUTCMonth()+index);points.push({month:date.toISOString().slice(0,7),...blank(),estimate:null});}
+ for(let index=0;index<months;index++)points.push({month:shiftMonth(start,index),...blank(),estimate:null});
  const byMonth=new Map(points.map(point=>[point.month,point]));
  let missing=0;
  const recordedMonths=new Set<string>();
@@ -68,8 +69,7 @@ export function incomeHistory(records:Entry[],events:HistoryEvent[],incomeRecord
  const firstRecorded=points.findIndex(point=>recordedMonths.has(point.month));
  points.splice(0,firstRecorded<0?points.length-1:firstRecorded);
  while(points.length<months){
-  const next=new Date(points.at(-1)!.month+'-01T00:00:00Z');next.setUTCMonth(next.getUTCMonth()+1);
-  points.push({month:next.toISOString().slice(0,7),...blank(),estimate:null});
+  points.push({month:shiftMonth(points.at(-1)!.month,1),...blank(),estimate:null});
  }
  const {expected,estimatedTotal,estimateMissing}=estimateForMonth(end);
  let forecastMissing=0;

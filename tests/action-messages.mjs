@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
-const {actionMessage,referencedIds}=loadTS('lib/action-messages.ts');
+const {actionMessage}=loadTS('lib/action-messages.ts');
 const lookup={
  records:{cash:{name:'Wallet <main>',kind:'Cash',currency:'UZS'},card:{name:'Card',kind:'Cash',currency:'USD'},loan:{name:'Car loan',kind:'Loan',currency:'USD'},house:{name:'Flat',kind:'Mortgage',currency:'UZS'},rent:{name:'Rent',kind:'Rent expense',currency:'UZS'},btc:{name:'Bitcoin',kind:'Crypto',currency:'USD'}},
  goals:{trip:{name:'Trip',currency:'USD'}},
@@ -25,14 +25,12 @@ assert.match(actionMessage(event,lookup,'uz'),/^Qo‘shildi: Kundalik xarajatlar
 test('deleted records are described from the recycle bin copy, or generically when it is missing',()=>{
  assert.equal(actionMessage({type:'record_deleted',id:'gone'},lookup,'en'),'Deleted Other expense\n<b>Old phone</b> · UZS 1,500,001');
  assert.equal(actionMessage({type:'record_deleted',id:'missing'},lookup,'en'),'Deleted a record');
- assert.deepEqual(referencedIds({type:'record_deleted',id:'gone'}),{records:[],goals:[],deleted:['gone']});
 });
 
 test('payments, repayments and mortgage payments use the target currency and name the account',()=>{
  assert.equal(actionMessage({type:'occurrence',account_id:'cash',target_id:'rent',amount:3000000,date:'2026-10-01'},lookup,'en'),'Payment recorded\n<b>Rent</b> · UZS 3,000,000 · 1 October 2026 · from Wallet &lt;main&gt;');
  assert.equal(actionMessage({type:'repayment',account_id:'card',target_id:'loan',amount:400,date:'2026-10-01'},lookup,'en'),'Repayment recorded\n<b>Car loan</b> · $400 · 1 October 2026 · from Card');
  assert.equal(actionMessage({type:'mortgage',account_id:'cash',target_id:'house',principal:5000000,interest:1200000,date:'2026-10-01'},lookup,'en'),'Mortgage payment recorded\n<b>Flat</b> · principal UZS 5,000,000 · interest UZS 1,200,000 · 1 October 2026 · from Wallet &lt;main&gt;');
- assert.deepEqual(referencedIds({type:'mortgage',account_id:'cash',target_id:'house',principal:1,interest:0,date:'2026-10-01'}),{records:['cash','house'],goals:[],deleted:[]});
  assert.match(actionMessage({type:'occurrence',account_id:'nope',target_id:'nope',amount:1,date:'2026-10-01'},lookup,'en'),/Unknown record/);
 });
 
@@ -52,7 +50,6 @@ test('goal messages resolve the goal name and currency',()=>{
  assert.equal(actionMessage({type:'goal_activity',goal_id:'trip',activity:'withdrawal',amount:50,date:'2026-10-01'},lookup,'en'),'Goal withdrawal\n<b>Trip</b> · $50 · 1 October 2026');
  assert.equal(actionMessage({type:'goal_funding',goal_id:'trip',monthly:200,enabled:true},lookup,'en'),'Goal funding updated\n<b>Trip</b> · $200 per month');
  assert.equal(actionMessage({type:'goal_funding',goal_id:'trip',monthly:200,enabled:false},lookup,'en'),'Goal funding updated\n<b>Trip</b> · Funding paused');
- assert.deepEqual(referencedIds({type:'goal_funding',goal_id:'trip',monthly:null,enabled:true}),{records:[],goals:['trip'],deleted:[]});
 });
 
 test('asset movements show units for holdings and money for cash',()=>{

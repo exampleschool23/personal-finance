@@ -8,7 +8,7 @@ export const businessStructureLabels: Record<BusinessStructure, string> = {
 };
 
 /** Business and tag colours: one hue each, rendered through `paletteColor` so light and dark mode stay in step. */
-export const paletteHues = { teal: 175, blue: 215, indigo: 240, violet: 270, pink: 330, red: 0, orange: 25, amber: 42, green: 140, slate: 215 } as const;
+const paletteHues = { teal: 175, blue: 215, indigo: 240, violet: 270, pink: 330, red: 0, orange: 25, amber: 42, green: 140, slate: 215 } as const;
 export type PaletteColor = keyof typeof paletteHues;
 export const paletteColors = Object.keys(paletteHues) as PaletteColor[];
 export const paletteLabels: Record<PaletteColor, string> = { teal: 'Teal', blue: 'Blue', indigo: 'Indigo', violet: 'Violet', pink: 'Pink', red: 'Red', orange: 'Orange', amber: 'Amber', green: 'Green', slate: 'Grey' };
@@ -25,7 +25,7 @@ export const HOUSEHOLD = 'household';
 export const businessesIn = (records: readonly Entry[]) => records.filter(record => record.kind === 'Business');
 
 /** Records that can belong to a business as its accounts and assets: everything held or owed except the Business record itself. */
-export const businessAccountKinds: readonly string[] = ['Cash', 'Stock', 'Crypto', 'Deposit', 'Treasury bill', 'Property', 'Valuables', 'Money lent', ...liabilities];
+const businessAccountKinds: readonly string[] = ['Cash', 'Stock', 'Crypto', 'Deposit', 'Treasury bill', 'Property', 'Valuables', 'Money lent', ...liabilities];
 export const isBusinessAccount = (record: Pick<Entry, 'kind'>) => businessAccountKinds.includes(record.kind);
 /** Those records by type, as lists that assign accounts to businesses show them. */
 export const businessAccountGroups: ReadonlyArray<readonly [label: string, matches: (record: Pick<Entry, 'kind'>) => boolean]> = [

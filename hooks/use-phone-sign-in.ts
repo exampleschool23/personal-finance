@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 
-export type PhoneSignInStatus = { enabled: boolean; botUsername: string | null };
+type PhoneSignInStatus = { enabled: boolean; botUsername: string | null };
 
 /** Whether the server has phone sign-in set up, and which Telegram bot serves it. Off until the server answers. */
 export function usePhoneSignIn(): PhoneSignInStatus {

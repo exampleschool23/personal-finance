@@ -1,3 +1,4 @@
+import { apiFunction } from './helpers/api-function.mjs';
 import { benchmarkSelectionSchema, stockBenchmarks } from '../lib/benchmark-selection.ts';
 import { diversifiedPortfolioSchema, defaultDiversifiedPortfolio } from '../lib/diversified-portfolio.ts';
 import test from 'node:test';
@@ -7,13 +8,14 @@ import ts from 'typescript';
 import {z} from 'zod';
 import {isCurrency} from '../lib/currencies.ts';
 import {benchmarkKeys,investmentKinds,defaultComparisonPreferences} from '../lib/comparison-profile.ts';
-import {validDay} from '../lib/benchmark-data.ts';
+import {loadTS} from './helpers/load-ts.mjs';
+const {validDay}=loadTS('lib/benchmark-data.ts');
 const benchmarkHistoryStart='2016-01-01';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let authenticated=true,calls=[],rows=[],updated=[];
 const supa=async(path,init,token)=>{calls.push({path,init,token});return Response.json(path.includes('mark_app_started')?{started_at:'2026-09-01T00:00:00Z',source:'first_visit'}:init?.method==='PATCH'?updated:path.includes('preferences?select')?rows:[]);};
 const deps={workspaceOwner:auth=>auth.owner??auth.user.id,validDay,benchmarkHistoryStart,benchmarkSelectionSchema,stockBenchmarks,diversifiedPortfolioSchema,z,isCurrency,benchmarkKeys,investmentKinds,defaultComparisonPreferences,session:async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,supa,sameOrigin:req=>req.headers.get('origin')==='https://local'};
-const api=new Function(...Object.keys(deps),compile('app/api/comparison-profile/route.ts')+';return {GET,PUT,POST,PATCH};')(...Object.values(deps));
+const api=apiFunction(...Object.keys(deps),compile('app/api/comparison-profile/route.ts')+';return {GET,PUT,POST,PATCH};')(...Object.values(deps));
 const req=body=>new Request('https://local',{method:'POST',headers:{origin:'https://local','Content-Type':'application/json'},body:JSON.stringify(body)});
 test('owner-scoped settings default to Bitcoin and first-use timestamp comes from the database',async()=>{
  calls=[];const response=await api.GET();assert.equal(response.status,200);const data=await response.json();assert.deepEqual(data.preferences,defaultComparisonPreferences);assert.equal(data.activity.source,'first_visit');assert.equal(data.baseline,null);assert.ok(calls.every(call=>call.token==='owner-token'));assert.equal(response.headers.get('cache-control'),'no-store');

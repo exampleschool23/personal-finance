@@ -1,6 +1,7 @@
 import { cronAuthorized } from '@/lib/cron-auth';
 import { loadMarket } from '@/lib/server-market';
-import { serviceKeyHeaders } from '@/lib/service-role';
+import { readAllPages } from '@/lib/owner-rows';
+import { serviceDatabase } from '@/lib/service-role';
 import { announceNetWorthHigh } from '@/lib/telegram-milestones';
 import { instrumentFor,type MarketData } from '@/lib/market';
 import { snapshotTotals } from '@/lib/portfolio-snapshots';
@@ -9,13 +10,11 @@ import type { Entry } from '@/lib/finance';
 export const maxDuration=60;
 export async function GET(req:Request){
  if(!cronAuthorized(req))return new Response(null,{status:401});
- const key=process.env.SUPABASE_SERVICE_ROLE_KEY,url=process.env.SUPABASE_URL;
- if(!key||!url)return Response.json({error:'Background capture is not configured.'},{status:503});
- const headers={...serviceKeyHeaders(key),'Content-Type':'application/json'};
- async function read(path:string,init:RequestInit={}){const r=await fetch(url+path,{...init,headers:{...headers,...init.headers},cache:'no-store',signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('Snapshot database request failed.');return r;}
+ const db=serviceDatabase();
+ if(!db)return Response.json({error:'Background capture is not configured.'},{status:503});
  try{
- const records:Array<Entry&{user_id:string}>=[];
- for(let offset=0;;offset+=500){const r=await read('/rest/v1/finance_records?select=*&order=id.asc&limit=500&offset='+offset);const batch=await r.json() as Array<Entry&{user_id:string}>;records.push(...batch);if(batch.length<500)break;}
+ // Every owner's records: a failed page stops the run rather than capturing a partial portfolio.
+ const records=await readAllPages<Entry&{user_id:string}>(range=>db.read(`/rest/v1/finance_records?select=*&order=id.asc&${range}`));
  const instruments=records.map(instrumentFor).filter(i=>i!==null);
  const crypto=[...new Set(instruments.filter(i=>i?.kind==='Crypto').map(i=>i!.symbol))];
  const stocks=[...new Set(instruments.filter(i=>i?.kind==='Stock').map(i=>i!.symbol))];
@@ -24,7 +23,8 @@ export async function GET(req:Request){
  const owners=new Map<string,Entry[]>();for(const r of records)owners.set(r.user_id,[...(owners.get(r.user_id)??[]),r]);
  let captured=0,skipped=0,celebrated=0;
  for(const [owner,holdings] of owners){const total=snapshotTotals(holdings,market);if(!total){skipped++;continue;}
-  await read('/rest/v1/rpc/capture_owner_portfolio_snapshot',{method:'POST',body:JSON.stringify({p_owner:owner,p_day:depositToday(),p_totals:total})});captured++;
+  const saved=await db.write('/rest/v1/rpc/capture_owner_portfolio_snapshot',{method:'POST',body:JSON.stringify({p_owner:owner,p_day:depositToday(),p_totals:total})});
+  if(!saved.ok)throw Error('Snapshot database request failed.');captured++;
   // A celebration that cannot be sent never fails the capture.
   if(await announceNetWorthHigh(owner).catch(()=>false))celebrated++;
  }

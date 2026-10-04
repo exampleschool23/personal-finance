@@ -1,6 +1,8 @@
 import { isCurrency } from '@/lib/currencies';
 import { diversifiedPortfolioSchema, portfolioAssets, portfolioAssetKey } from '@/lib/diversified-portfolio';
 import { benchmarkSelectionSchema, stockBenchmarks } from '@/lib/benchmark-selection';
+import { signInAgain, tooManyAttempts } from '@/lib/api-route';
+import { limits, rateLimited } from '@/lib/rate-limit';
 import { session } from '@/lib/supabase';
 import { depositToday } from '@/lib/deposit-interest';
 import { checkpointDates, loadFxCheckpoints, dateMillis, dayMillis, shiftDay, validDay, type BenchmarkData, type PricePoint, type FxPoint } from '@/lib/benchmark-data';
@@ -181,7 +183,9 @@ export async function GET(req: Request) {
   } catch { return Response.json({ error: 'Could not load comparisons.' }, { status: 503 }); }
  }
  try {
-  if (!(await session())) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
+  const auth = await session(); if (!auth) return signInAgain();
+  // Each load reads paid market feeds; the sample workspace above shares one cached load instead.
+  if (await rateLimited(req, 'benchmarks', limits.benchmarks, auth.user.id, { perIp: false })) return tooManyAttempts();
   return await loadBenchmarks(req);
  } catch { return Response.json({ error: 'Could not load comparisons.' }, { status: 503 }); }
 }

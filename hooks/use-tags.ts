@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
+import { requestJson } from '@/lib/api-client';
 import { showNotice, showSaved } from '@/lib/feedback';
 import type { Entry } from '@/lib/finance';
 import { changeTags, emptyTags, type Tag, type TagData } from '@/lib/tags';
@@ -13,10 +14,7 @@ export function useTags(owner: string | null, demo: boolean, revision: number, r
  if (sample.seed !== seed) setSample({ seed, data: seed });
  const data = demo ? sample.data : remote.data;
  async function post(url: string, action: string, payload: unknown) {
-  const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, data: payload }) });
-  const result = await response.json() as { changed?: number; error?: string };
-  if (!response.ok) throw Error(result.error ?? 'Could not save changes.');
-  return result.changed ?? 0;
+  return (await requestJson<{ changed?: number }>(url, { body: { action, data: payload }, fallback: 'Could not save changes.' })).changed ?? 0;
  }
  return {
   data, loading: live && remote.initialLoading, error: live ? remote.error : '', retry: remote.retry,

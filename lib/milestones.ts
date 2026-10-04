@@ -1,10 +1,11 @@
 // One-time Telegram celebrations: a first record, savings goals passing 25, 50,
 // 75 and 100 percent, and a new net-worth high. The decisions and the wording
 // are pure; telegram-milestones.ts reads and writes what they need.
-import {formatMoney,formatPercent} from './format';
-import {locales,translate,type Language} from './i18n';
+import {formatPercent} from './format';
+import type {Language} from './i18n';
 import {escapeHtml} from './telegram';
-export const goalThresholds=[25,50,75,100];
+import {messageKit} from './telegram-kit';
+const goalThresholds=[25,50,75,100];
 export const firstRecordKey='first_record';
 export const netWorthKey='net_worth_high';
 export const goalKey=(goalId:string,threshold:number)=>`goal:${goalId}:${threshold}`;
@@ -35,12 +36,12 @@ export type Milestone=
  |{type:'net_worth';amount:number;currency:string};
 /** The celebration text; without a name it drops the address instead of leaving a gap. */
 export function milestoneMessage(milestone:Milestone,language:Language,name=''):string{
- const t=(key:string,params?:Record<string,string|number>)=>translate(language,key,params);
+ const {locale,t,money}=messageKit(language);
  const who=name.trim()?{name:escapeHtml(name.trim())}:null,pick=(named:string,plain:string,params:Record<string,string|number>={})=>who?t(named,{...params,...who}):t(plain,params);
  switch(milestone.type){
   case 'first_record':return pick('{name}, you saved your first record 🎉 Your money story starts here.','You saved your first record 🎉 Your money story starts here.');
-  case 'goal':return pick('{name}, your {goal} just passed {percent} 🎉','Your {goal} just passed {percent} 🎉',{goal:`<b>${escapeHtml(milestone.goal)}</b>`,percent:formatPercent(milestone.percent,locales[language])});
+  case 'goal':return pick('{name}, your {goal} just passed {percent} 🎉','Your {goal} just passed {percent} 🎉',{goal:`<b>${escapeHtml(milestone.goal)}</b>`,percent:formatPercent(milestone.percent,locale)});
   case 'goal_complete':return pick('{name}, you reached your {goal} goal 🏆','You reached your {goal} goal 🏆',{goal:`<b>${escapeHtml(milestone.goal)}</b>`});
-  case 'net_worth':return pick('{name}, new net-worth high: {amount} 📈','New net-worth high: {amount} 📈',{amount:formatMoney(milestone.amount,milestone.currency,locales[language])});
+  case 'net_worth':return pick('{name}, new net-worth high: {amount} 📈','New net-worth high: {amount} 📈',{amount:money(milestone.amount,milestone.currency)});
  }
 }

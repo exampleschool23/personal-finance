@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
-const {spendingPace,previousMonthOf,spendingOnDay}=loadTS('lib/spending-pace.ts');
+const {spendingPace,spendingOnDay}=loadTS('lib/spending-pace.ts');
+const {shiftMonth}=loadTS('lib/calendar-days.ts');
 const {monthlyReview}=loadTS('lib/transaction-tools.ts');
 const record=(id,kind,amount,date,extra={})=>({id,name:id,kind,amount,quantity:1,cost:0,rate:0,currency:'USD',frequency:'Once',date,notes:'',...extra});
 const records=[
@@ -25,7 +26,7 @@ test('spending pace is the Monthly review total with each day as the cut-off, fo
 });
 
 test('spending pace handles year boundaries, February and missing exchange rates',()=>{
- assert.equal(previousMonthOf('2026-01'),'2025-12');assert.equal(previousMonthOf('2028-03'),'2028-02');
+ assert.equal(shiftMonth('2026-01',-1),'2025-12');assert.equal(shiftMonth('2028-03',-1),'2028-02');
  const march=spendingPace({records:[record('x','Living expense',5,'2028-02-29')],splits:[],snapshots:[]},'2028-03-31','USD',{USD:1});
  assert.equal(march.points.length,31);assert.equal(march.points[28].previous,5);assert.equal(march.points[30].previous,5);
  const foreign=spendingPace({records:[record('y','Living expense',50000,'2026-10-01',{currency:'UZS'})],splits:[],snapshots:[]},'2026-10-01','USD',{USD:1});

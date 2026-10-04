@@ -2,9 +2,10 @@
 // happened with ids, the caller resolves the names, and this turns both into
 // text in the owner's language with the shared formatters.
 import type {Kind} from './finance';
-import {formatDate,formatMoney,formatNumber} from './format';
-import {locales,translate,type Language} from './i18n';
+import {formatDate,formatNumber} from './format';
+import type {Language} from './i18n';
 import {escapeHtml} from './telegram';
+import {messageKit} from './telegram-kit';
 export type ActionEvent=
  |{type:'record';created:boolean;kind:Kind;name:string;amount:number;currency:string;date:string|null;frequency:string;category_id?:string|null}
  |{type:'record_deleted';id:string}
@@ -25,22 +26,11 @@ export type NamedRecord={name:string;kind:string;currency:string};
 export type NamedGoal={name:string;currency:string};
 /** Names the caller must look up before the message can be written. `categories` maps a custom category id to its name. */
 export type ActionLookup={records:Record<string,NamedRecord>;goals:Record<string,NamedGoal>;deleted:Record<string,NamedRecord&{amount:number}>;categories?:Record<string,string>};
-export function referencedIds(event:ActionEvent):{records:string[];goals:string[];deleted:string[]}{
- switch(event.type){
-  case 'occurrence':case 'repayment':case 'mortgage':case 'transfer':return {records:[event.account_id,event.target_id],goals:[],deleted:[]};
-  case 'reconcile':return {records:[event.account_id],goals:[],deleted:[]};
-  case 'exception':case 'dismiss':return {records:[event.target_id],goals:[],deleted:[]};
-  case 'movement':return {records:[event.source_id,event.target_id],goals:[],deleted:[]};
-  case 'goal_activity':case 'goal_funding':return {records:[],goals:[event.goal_id],deleted:[]};
-  case 'record_deleted':return {records:[],goals:[],deleted:[event.id]};
-  default:return {records:[],goals:[],deleted:[]};
- }
-}
 const unitKinds=['Stock','Crypto'];
 export function actionMessage(event:ActionEvent,lookup:ActionLookup,language:Language):string{
- const locale=locales[language],t=(key:string,params?:Record<string,string|number>)=>translate(language,key,params);
+ const kit=messageKit(language),{locale,t}=kit;
  // A record the lookup could not find has no currency; the amount still shows as a plain number.
- const money=(value:number,currency:string)=>currency?formatMoney(value,currency,locale):formatNumber(value,locale),day=(value:string|null)=>formatDate(value??'',locale);
+ const money=(value:number,currency:string)=>currency?kit.money(value,currency):formatNumber(value,locale),day=(value:string|null)=>formatDate(value??'',locale);
  const record=(id:string)=>lookup.records[id]??{name:t('Unknown record'),kind:'',currency:''},goal=(id:string)=>lookup.goals[id]??{name:t('Unknown goal'),currency:''};
  const name=(value:string)=>`<b>${escapeHtml(value)}</b>`;
  const line=(title:string,...parts:Array<string|null|undefined>)=>`${title}\n${parts.filter(Boolean).join(' · ')}`;

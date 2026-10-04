@@ -77,5 +77,5 @@ export function mapCSV(rows:string[][],mapping:ColumnMapping):ImportRow[]{
   return {date,name,amount,notes,...(sourceId?{sourceId}:{})};
  });
 }
-export function csvCell(value:unknown){let text=String(value??'');if(/^[\s]*[=+@-]/.test(text)&&typeof value!=='number')text="'"+text;return '"'+text.replace(/"/g,'""')+'"';}
+function csvCell(value:unknown){let text=String(value??'');if(/^[\s]*[=+@-]/.test(text)&&typeof value!=='number')text="'"+text;return '"'+text.replace(/"/g,'""')+'"';}
 export function exportCSV(rows:Record<string,unknown>[],columns:readonly string[]){return [columns.map(csvCell).join(','),...rows.map(row=>columns.map(c=>csvCell(row[c])).join(','))].join('\r\n');}

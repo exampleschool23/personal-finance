@@ -20,6 +20,7 @@ import { FormattedNumberInput } from '@/components/presentation-foundation/forma
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { shiftDay } from '@/lib/calendar-days';
 import { income, type Entry } from '@/lib/finance';
 import { formatDate, formatMoney, formatNumber, formatSignedMoney } from '@/lib/format';
 import { isMortgagePayment, spendingAmount, transferAmount } from '@/lib/spending';
@@ -37,7 +38,7 @@ export function useChoiceName(categories: readonly Category[]) {
 }
 
 /** A searchable list of one direction's categories. */
-export function CategoryList({ categories, direction, selected, onSelect }: { categories: readonly Category[]; direction: Category['direction']; selected?: string; onSelect: (choice: Choice) => void }) {
+function CategoryList({ categories, direction, selected, onSelect }: { categories: readonly Category[]; direction: Category['direction']; selected?: string; onSelect: (choice: Choice) => void }) {
  const { t } = useLanguage();
  const [query, setQuery] = useState('');
  const name = (choice: Choice) => choice.custom ? choice.name : t(choice.name);
@@ -83,7 +84,7 @@ export function BulkEditBar({ count, total, onAll, onEdit, onCancel }: { count: 
 }
 
 /** A business choice: one business, or the household (none). */
-export function BusinessList({ businesses, selected, onSelect, household = true }: { businesses: readonly BusinessOption[]; selected?: string | null; onSelect: (business: string | null) => void; household?: boolean }) {
+function BusinessList({ businesses, selected, onSelect, household = true }: { businesses: readonly BusinessOption[]; selected?: string | null; onSelect: (business: string | null) => void; household?: boolean }) {
  const { t } = useLanguage();
  return <ul className="category-picker business-picker" role="listbox" aria-label={t('Business')}>
   {household && <li role="option" aria-selected={selected === null}><button type="button" onClick={() => onSelect(null)}><span className="business-mark" data-size="sm" aria-hidden="true">🏠</span><span>{t('Household')}</span>{selected === null && <Check size={15} aria-hidden="true"/>}</button></li>}
@@ -107,7 +108,7 @@ export function BusinessPicker({ record, businesses, disabled, onChange }: { rec
 }
 
 /** The household's owners to choose from, the current one ticked. */
-export function OwnerList({ owners, selected, onSelect }: { owners: readonly OwnerOption[]; selected?: string; onSelect: (owner: string) => void }) {
+function OwnerList({ owners, selected, onSelect }: { owners: readonly OwnerOption[]; selected?: string; onSelect: (owner: string) => void }) {
  const { t } = useLanguage();
  return <ul className="category-picker business-picker" role="listbox" aria-label={t('Owner')}>
   {owners.map(owner => <li key={owner.id} role="option" aria-selected={owner.id === selected}><button type="button" onClick={() => onSelect(owner.id)}><OwnerAvatar owner={owner} size="sm"/><span>{owner.name}</span>{owner.id === selected && <Check size={15} aria-hidden="true"/>}</button></li>)}
@@ -220,7 +221,7 @@ export function BulkEditSheet({ records, categories, businesses, owners = [], ta
 /** One day: its date and net total in the heading, its transactions below. */
 export function DayGroup({ date, total, currency, today, children }: { date: string; total: number | null; currency: string; today: string; children: ReactNode }) {
  const { t, locale } = useLanguage();
- const yesterday = new Date(Date.parse(today + 'T00:00:00Z') - 86400000).toISOString().slice(0, 10);
+ const yesterday = shiftDay(today, -1);
  const label = date === today ? t('Today') : date === yesterday ? t('Yesterday') : formatDate(date, locale);
  return <section className="transaction-day" aria-label={label}>
   <div className="transaction-day-heading"><h3>{label}</h3><span className={total !== null && total > 0 ? 'positive' : undefined}>{total === null ? '—' : formatSignedMoney(total, currency, locale)}</span></div>

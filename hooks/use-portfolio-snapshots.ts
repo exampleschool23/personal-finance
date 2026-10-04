@@ -1,34 +1,32 @@
 "use client";
-import { useCallback,useEffect,useState } from 'react';
+import { useCallback,useEffect,useMemo,useState } from 'react';
+import { useOwnerResource } from '@/hooks/use-owner-resource';
+import { requestJson } from '@/lib/api-client';
 import type { MarketData } from '@/lib/market';
 import type { PortfolioSnapshot } from '@/lib/portfolio-snapshots';
 
+const noSnapshots:{snapshots:PortfolioSnapshot[]}={snapshots:[]};
+// One point per day; the most recently updated version of a day wins.
+function mergeByDate(...lists:PortfolioSnapshot[][]){
+ const byDate=new Map<string,PortfolioSnapshot>();
+ for(const point of lists.flat()){const saved=byDate.get(point.occurred_on);if(!saved||point.updated_at>=saved.updated_at)byDate.set(point.occurred_on,point);}
+ return [...byDate.values()].sort((a,b)=>a.occurred_on.localeCompare(b.occurred_on));
+}
+/** The owner's saved daily totals, plus today's, recorded once prices and records have loaded. */
 export function usePortfolioSnapshots(account:string|null,market:MarketData|null,ready:boolean,revision:number){
- const [state,setState]=useState<{account:string|null;snapshots:PortfolioSnapshot[]}>({account:null,snapshots:[]});
- const [failure,setFailure]=useState<{account:string;message:string}|null>(null);
- const [retry,setRetry]=useState(0);
- const refresh=useCallback(()=>setRetry(value=>value+1),[]);
- const merge=useCallback((owner:string,incoming:PortfolioSnapshot[])=>setState(previous=>{
-  const byDate=new Map((previous.account===owner?previous.snapshots:[]).map(point=>[point.occurred_on,point]));
-  for(const point of incoming){const saved=byDate.get(point.occurred_on);if(!saved||point.updated_at>=saved.updated_at)byDate.set(point.occurred_on,point);}
-  return {account:owner,snapshots:[...byDate.values()].sort((a,b)=>a.occurred_on.localeCompare(b.occurred_on))};
- }),[]);
- useEffect(()=>{
-  if(!account)return;const controller=new AbortController();
-  fetch('/api/portfolio-snapshots',{signal:controller.signal,cache:'no-store'}).then(async response=>{
-   const data=await response.json() as {snapshots:PortfolioSnapshot[];error:string};if(!response.ok)throw Error(data.error);
-   if(!controller.signal.aborted){merge(account,data.snapshots);setFailure(null);}
-  }).catch(reason=>{if(!controller.signal.aborted)setFailure({account,message:reason.message});});
-  return()=>controller.abort();
- },[account,retry,merge]);
+ const [attempt,setAttempt]=useState(0);
+ const refresh=useCallback(()=>setAttempt(value=>value+1),[]);
+ const remote=useOwnerResource('/api/portfolio-snapshots',account,true,attempt,noSnapshots);
+ const [recorded,setRecorded]=useState<{account:string|null;snapshots:PortfolioSnapshot[];error:string}>({account:null,snapshots:[],error:''});
  useEffect(()=>{
   if(!account||!ready||!market)return;const controller=new AbortController();
-  fetch('/api/portfolio-snapshots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({}),signal:controller.signal}).then(async response=>{
-   const data=await response.json() as {snapshot:PortfolioSnapshot;error:string};if(!response.ok)throw Error(data.error);
-   if(!controller.signal.aborted){merge(account,[data.snapshot]);setFailure(null);}
-  }).catch(reason=>{if(!controller.signal.aborted)setFailure({account,message:reason.message});});
+  requestJson<{snapshot:PortfolioSnapshot}>('/api/portfolio-snapshots',{body:{},signal:controller.signal}).then(data=>{
+   if(!controller.signal.aborted)setRecorded(previous=>({account,snapshots:mergeByDate(previous.account===account?previous.snapshots:[],[data.snapshot]),error:''}));
+  }).catch(reason=>{if(!controller.signal.aborted)setRecorded(previous=>({...(previous.account===account?previous:{snapshots:[]}),account,error:reason.message}));});
   return()=>controller.abort();
- },[account,market,ready,revision,retry,merge]);
- if(!account&&state.account!==null){setState({account:null,snapshots:[]});setFailure(null);}
- return {snapshots:state.account===account?state.snapshots:[],error:failure?.account===account?failure?.message??'':'',retry:refresh};
+ },[account,market,ready,revision,attempt]);
+ if(!account&&recorded.account!==null)setRecorded({account:null,snapshots:[],error:''});
+ const own=recorded.account===account,posted=own?recorded.snapshots:noSnapshots.snapshots,saved=remote.data.snapshots;
+ const snapshots=useMemo(()=>posted.length?mergeByDate(saved,posted):saved,[saved,posted]);
+ return {snapshots:account?snapshots:[],error:remote.error||(own?recorded.error:''),retry:refresh};
 }

@@ -16,8 +16,8 @@ needed.
    (Telegram reports the contact's user, which must equal the sender).
 2. **Account.** The server creates a Supabase user with the phone already
    confirmed, a preferences row, and a linked Telegram chat. Its password is
-   derived from `TELEGRAM_WEBHOOK_SECRET` and the Telegram user id, never stored
-   or shown.
+   derived from `TELEGRAM_LOGIN_SECRET` (the webhook secret until that is set)
+   and the Telegram user id, never stored or shown.
 3. **Setup in the chat.** Language, main currency, then a first cash account
    (name and balance). Finishing marks the account as set up, so the web welcome
    setup is skipped.
@@ -45,14 +45,23 @@ chat and Telegram user (`lib/telegram-connect.ts`, table
    button. After connecting, the page returns straight to the Telegram chat.
 4. **Connect** spends the request atomically, links the chat (an earlier owner
    of the chat is signed out first), and the bot sends "Connected" with the menu.
+   The page says plainly that connecting gives that chat the whole account, and
+   that the Telegram name shown is chosen by whoever owns the chat.
+5. An account created in Telegram can only be connected from the Telegram user
+   who created it; any other chat gets "This account was created in a different
+   Telegram account", because its sign-in codes travel to its chat.
 
 Nothing is linked without that confirmation, so a link someone else sends cannot
 silently attach a victim's account to the sender's chat. The link opens in a
 normal browser rather than the Mini App, because Google refuses sign-in inside
 embedded web views.
 
-Existing email accounts can also connect from Settings, and can send `/phone` to the bot from a linked chat
-to add a number to an email account. An account created with a phone number can
+Existing email accounts can also connect from Settings. A number is never added
+to an account linked from the web: `/phone`, or sharing a contact, in such a chat
+explains that signing in by number is for accounts created in Telegram, and the
+account keeps its own web sign-in. Otherwise someone who tricked an owner into
+confirming their link could add their own number and receive the sign-in codes.
+In an account created in Telegram, `/phone` offers the web buttons. An account created with a phone number can
 add an email and password in Settings. It can delete itself in Settings by
 typing DELETE (it never had a password to re-enter); a linked chat is then told
 the account was deleted and loses its menu, and `/start` offers sign-up again.
@@ -77,6 +86,13 @@ app's Settings then shows Telegram as not connected.
   released. The same person can then share a number to start a new account, or
   connect any web account from its Settings.
 
+## Private chats only
+
+The bot answers only in a private chat. Updates from groups, supergroups and
+channels are ignored (button presses are still acknowledged), and a linked chat
+answers only the Telegram user its account belongs to. The digest and recap go
+only to linked private chats. In BotFather, `/setjoingroups` → **Disable**.
+
 ## Setup
 
 1. Apply `migrations/081_telegram_accounts.sql` after 080, and
@@ -91,7 +107,8 @@ app's Settings then shows Telegram as not connected.
 4. In Vercel, add `SEND_SMS_HOOK_SECRET` with that secret. The other variables
    the feature needs are already used by Telegram: `TELEGRAM_BOT_TOKEN`,
    `TELEGRAM_BOT_USERNAME`, `TELEGRAM_WEBHOOK_SECRET`, `SUPABASE_URL`,
-   `SUPABASE_SERVICE_ROLE_KEY` and `APP_ORIGIN`. Redeploy.
+   `SUPABASE_SERVICE_ROLE_KEY` and `APP_ORIGIN`. Add `TELEGRAM_LOGIN_SECRET` (a
+   long random string, different from the webhook secret). Redeploy.
 5. Write your terms of use and privacy policy. The bot's agreement text refers to
    them, and phone numbers are personal data.
 
@@ -111,8 +128,14 @@ not available yet.
 - Telegram bot chats are not end-to-end encrypted. Say so in your privacy policy.
 - If the derived password stops working (the person set their own), one-tap
   links fall back to the phone code.
-- Rotating `TELEGRAM_WEBHOOK_SECRET` also changes every derived password, so
-  one-tap sign-in stops until people sign in once with a code.
+- Derived passwords use `TELEGRAM_LOGIN_SECRET`. Before it is set they use
+  `TELEGRAM_WEBHOOK_SECRET`; after it is set, a sign-in that fails with the new
+  password tries the webhook-derived one and, on success, re-sets the account's
+  password to the new one through the Supabase admin API
+  (`signInTelegramAccount` in `lib/telegram-account.ts`). Keep the webhook secret
+  unchanged until the accounts have moved. Rotating the login secret changes
+  every derived password, so one-tap sign-in stops until people sign in once
+  with a code.
 
 ## Troubleshooting
 

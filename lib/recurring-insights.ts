@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { isoDate } from './api-validation';
-import { shiftDay } from './benchmark-data';
+import { addMonths, daysBetween, shiftDay } from './calendar-days';
 import { expenses, income, type Entry } from './finance';
 
 /**
@@ -26,10 +26,8 @@ const cadenceOrder = Object.keys(cadences) as Cadence[];
 export const cadenceLabels: Record<Cadence, string> = { Weekly: 'Every week', Fortnightly: 'Every two weeks', Monthly: 'Every month', Quarterly: 'Every quarter', Yearly: 'Every year' };
 
 /** Changes smaller than this share of the price are drift or rounding, not a new price. */
-export const priceChangeThreshold = 0.02;
+const priceChangeThreshold = 0.02;
 
-const dayMs = 86400000;
-const daysBetween = (from: string, to: string) => Math.round((Date.parse(to) - Date.parse(from)) / dayMs);
 const cashflow = [...expenses, ...income];
 
 /**
@@ -56,9 +54,7 @@ const groupKey = (row: Pick<Entry, 'name' | 'kind' | 'currency'>) => JSON.string
 export function nextCharge(date: string, cadence: Cadence) {
  const months = cadences[cadence].months;
  if (!months) return shiftDay(date, cadences[cadence].days);
- const [year, month, day] = date.split('-').map(Number), target = month - 1 + months;
- const last = new Date(Date.UTC(year, target + 1, 0)).getUTCDate();
- return new Date(Date.UTC(year, target, Math.min(day, last))).toISOString().slice(0, 10);
+ return addMonths(date, months);
 }
 
 /** How many periods a gap spans for a cadence: 1, 2 (one missed charge) or 0 (does not fit). */
@@ -139,7 +135,7 @@ function patternOf(id: string, rows: Entry[], today: string): RecurringPattern |
 }
 
 /** Every merchant whose charges repeat on a cadence, except those already scheduled as a recurring plan. */
-export function detectRecurring(records: Entry[], today: string) {
+function detectRecurring(records: Entry[], today: string) {
  const scheduled = new Set(records.filter(r => cashflow.includes(r.kind) && !r.source_paused && r.frequency !== 'Once' && (!r.end_date || r.end_date >= today)).map(groupKey));
  const groups = new Map<string, Entry[]>();
  for (const row of records) {

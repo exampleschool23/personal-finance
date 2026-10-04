@@ -1,3 +1,4 @@
+import { monthEnd } from './calendar-days';
 import { convertAmount } from './market';
 import { income, expenses, type Entry } from './finance';
 import type { Activity, PlanningData } from './planning';
@@ -55,7 +56,7 @@ export function monthlyReview(records:Entry[],splits:TransactionSplit[],snapshot
   spent+=amount;categories.set('Other expense',(categories.get('Other expense')??0)+amount);
  }
  const start=month+'-01';
- const end=new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7)),0)).toISOString().slice(0,10);
+ const end=monthEnd(month);
  const points=snapshotPoints(snapshots,currency).sort((a,b)=>a.date.localeCompare(b.date));
  const before=points.filter(point=>point.date<start).at(-1),after=points.filter(point=>point.date>=start&&point.date<=end&&point.date<=today).at(-1);
  return {received,spent,missing,saved:received-spent,categories:[...categories].map(([id,amount])=>({id,amount})).sort((a,b)=>b.amount-a.amount),netWorthChange:before&&after?after.net-before.net:null,from:before?.date,to:after?.date};

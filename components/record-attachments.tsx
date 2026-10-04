@@ -6,6 +6,8 @@ import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dial
 import { Button } from '@/components/ui/button';
 import { showError, showSaved } from '@/lib/feedback';
 import { formatNumber } from '@/lib/format';
+import { InlineError } from '@/components/presentation-foundation/inline-error';
+import { requestJson, type RequestError } from '@/lib/api-client';
 import { attachmentAccept, attachmentErrors, canPreviewAttachment, uploadAttachment, type AttachmentView } from '@/lib/record-attachments';
 
 // Signed links last five minutes; the list renews them before they lapse.
@@ -54,9 +56,8 @@ export function RecordAttachments({ recordId, available, onChange }: { recordId:
  async function remove(item: AttachmentView) {
   setBusy(true);
   try {
-   const response = await fetch('/api/record-attachments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete', data: { id: item.id } }) });
-   const result = await response.json().catch(() => ({})) as { error?: string };
-   if (!response.ok && response.status !== 404) throw Error(result.error ?? 'Could not save changes.');
+   // An attachment that is already gone counts as removed.
+   await requestJson('/api/record-attachments', { body: { action: 'delete', data: { id: item.id } }, fallback: 'Could not save changes.' }).catch((reason: RequestError) => { if (reason.status !== 404) throw reason; });
    setItems(previous => previous.filter(entry => entry.id !== item.id));
    setRemoving(null); onChange();
   } catch (reason) { showError((reason as Error).message || 'Could not save changes.'); }
@@ -65,7 +66,7 @@ export function RecordAttachments({ recordId, available, onChange }: { recordId:
 
  const size = (bytes: number) => bytes >= 1048576 ? t('{size} MB', { size: formatNumber(bytes / 1048576, locale, 1) }) : t('{size} KB', { size: formatNumber(Math.max(1, Math.round(bytes / 1024)), locale, 0) });
  return <div className="record-attachments">
-  {state === 'failed' ? <p className="muted">{t('Could not load attachments.')} <Button type="button" variant="link" size="sm" onClick={() => { setState('loading'); load(); }}>{t('Retry')}</Button></p>
+  {state === 'failed' ? <InlineError message={t('Could not load attachments.')} onRetry={() => { setState('loading'); load(); }}/>
    : items.length > 0 && <ul className="attachment-grid" aria-label={t('Attachments')}>
     {items.map(item => <li key={item.id} className="attachment-tile">
      <a href={item.url} target="_blank" rel="noopener noreferrer" aria-label={t('Open {name}', { name: item.file_name })} aria-disabled={!item.url || undefined}>

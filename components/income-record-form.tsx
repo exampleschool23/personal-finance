@@ -75,7 +75,7 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
   }}/>
   <Button asChild variant="outline" className="mt-3 min-h-11 w-full" disabled={busy}><Link href="/income-expenses#income-sources" aria-disabled={busy} onNavigate={event=>{if(busy){event.preventDefault();return;}if(onNavigateToSources)onNavigateToSources(event);else setEditing(null);}}><Settings2 aria-hidden="true"/>{t('Manage income sources')}<ArrowRight aria-hidden="true"/></Link></Button>
    {earningSources.loading&&<p className="muted" role="status">{t('Loading income sources…')}</p>}
-   {earningSources.error&&<div className="error" role="alert">{t(earningSources.error)} <Button type="button" variant="outline" disabled={busy} onClick={earningSources.retry}>{t('Retry')}</Button></div>}
+   {earningSources.error&&<InlineError as="div" message={t(earningSources.error)} onRetry={earningSources.retry}/>}
   </div>}
   <Link className="panel-link" href="/settings#categories">{t('Manage categories in Settings')}</Link>
   {reusable&&<label>{t('Payment type')}<NativeSelect value={editing.payment_type??'regular'} disabled={busy} onChange={event=>update(selectEarningSource(editing,reusable,event.target.value==='bonus'))}><option value="regular">{t('Regular income')}</option><option value="bonus">{t('Bonus')}</option></NativeSelect></label>}

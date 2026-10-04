@@ -1,3 +1,4 @@
+import { shiftMonth } from './calendar-days';
 import { expenses, income, type Entry } from './finance';
 import { convertAmount } from './market';
 import type { Category, Goal, PlanningData } from './planning';
@@ -27,15 +28,11 @@ export const flexBucketKey = 'flex:flexible';
 const fixedKinds = ['Rent expense'];
 export const defaultGroups: Record<BudgetDirection | BudgetType, string> = { income: 'Income', expense: 'Everyday spending', fixed: 'Bills & recurring', flexible: 'Everyday spending', non_monthly: 'Future spending' };
 export const budgetTypeLabels: Record<BudgetType, string> = { fixed: 'Fixed', flexible: 'Flexible', non_monthly: 'Non-monthly' };
-export const historyMonths = 6;
+const historyMonths = 6;
 
 export type RolloverFund = { rollover: boolean; rolloverStart: string | null; rolloverBalance: number; rolloverCurrency: string | null; rolloverNegative: boolean };
 export type BudgetCategory = RolloverFund & { key: string; name: string; custom: boolean; direction: BudgetDirection; type: BudgetType; group: string; excluded: boolean };
 
-export function shiftMonth(month: string, by: number) {
- const date = new Date(month + '-01T00:00:00Z'); date.setUTCMonth(date.getUTCMonth() + by);
- return date.toISOString().slice(0, 7);
-}
 export function monthsBetween(from: string, to: string) {
  const months: string[] = [];
  for (let month = from; month <= to && months.length < 600; month = shiftMonth(month, 1)) months.push(month);
@@ -43,7 +40,7 @@ export function monthsBetween(from: string, to: string) {
 }
 
 /** A saved setting's rollover fields. Overspending carries as a negative amount unless the person turned that off. */
-export function rolloverFund(setting: BudgetCategorySetting | undefined): RolloverFund {
+function rolloverFund(setting: BudgetCategorySetting | undefined): RolloverFund {
  const rollover = !!setting?.rollover;
  return { rollover, rolloverStart: rollover ? setting?.rollover_start?.slice(0, 7) ?? null : null, rolloverBalance: rollover ? Math.max(0, Number(setting?.rollover_balance ?? 0)) || 0 : 0, rolloverCurrency: rollover ? setting?.rollover_currency ?? null : null, rolloverNegative: setting?.rollover_negative ?? true };
 }
@@ -113,7 +110,7 @@ export function monthActuals(data: Pick<PlanningData, 'records' | 'activity' | '
 }
 
 /** The budget in display currency; null when its currency cannot be converted. */
-export function budgetedIn(amounts: readonly BudgetAmount[], key: string, month: string, currency: string, rates: Rates) {
+function budgetedIn(amounts: readonly BudgetAmount[], key: string, month: string, currency: string, rates: Rates) {
  const saved = budgetAmountFor(amounts, key, month);
  if (!saved) return 0;
  return convertAmount(Number(saved.amount), saved.currency, currency, rates);

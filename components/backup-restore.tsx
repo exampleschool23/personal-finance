@@ -9,6 +9,7 @@ import { formatDateTime,formatNumber } from '@/lib/format';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { ResourceState } from '@/components/presentation-foundation/resource-state';
+import { requestJson } from '@/lib/api-client';
 
 const emptyRecoveries={items:[] as Array<{id:string;created_at:string}>,hasMore:false};
 type Preview={id:string;exported_at:string;counts:Record<string,number>;current_records:number;expected_state:string};
@@ -19,8 +20,7 @@ export function BackupRestore({demo,owner,onSaved}:{demo:boolean;owner:string|nu
  const [historyOpen,setHistoryOpen]=useState(false),[historyPage,setHistoryPage]=useState(1),[revision,setRevision]=useState(0);
  const copies=useOwnerResource('/api/backup?recoveries=1&page='+historyPage,owner,!demo&&historyOpen,revision,emptyRecoveries);
  async function request<T>(action:'preview'|'restore',text=backup){
-  const response=await fetch('/api/backup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,backup:text,...(action==='restore'?{expected_state:preview?.expected_state,confirmed:true}:{})})});
-  const data=await response.json() as T & {error?:string};if(!response.ok)throw Error(data.error);return data;
+  return requestJson<T>('/api/backup',{body:{action,backup:text,...(action==='restore'?{expected_state:preview?.expected_state,confirmed:true}:{})}});
  }
  return <section className="panel data-backup-section"><PanelTitle title={t('Restore a backup')} hint={t('Restore replaces this account’s data with the selected backup. A recovery copy is saved automatically. Only unchanged verified backups from this account are accepted.')}/>
   <label className="data-file-field">{t('Backup file')}<input type="file" accept=".json,application/json" disabled={demo||busy} onChange={async event=>{

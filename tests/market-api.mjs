@@ -6,7 +6,7 @@ import { coins } from '../lib/market.ts';
 let source=fs.readFileSync(new URL('../app/api/market/route.ts',import.meta.url),'utf8');
 source=fs.readFileSync(new URL('../lib/server-market.ts',import.meta.url),'utf8')+'\n'+source;
 source=source.replace(/import .* from .*;\n/g,'');
-source='const coins = '+JSON.stringify(coins)+'; const session=async()=>globalThis.marketTestSession;\n'+source;
+source='const coins = '+JSON.stringify(coins)+'; const session=async()=>globalThis.marketTestSession; const limits={publicMarket:[]}; const rateLimited=async(...args)=>globalThis.marketTestLimited?.(...args)??false; const tooManyAttempts=()=>Response.json({error:\'Too many attempts. Please try again later.\'},{status:429});\n'+source;
 const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
 const {GET}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
 test('market endpoint validates symbols, isolates failures, and protects stock access',async()=>{
@@ -79,4 +79,18 @@ test('coins Coinbase cannot price are quoted from Kraken, never from a lookalike
   assert.ok(!asked.some(url=>url.includes('JUP-USD')));
   assert.ok(!asked.some(url=>url.startsWith('api.kraken.com')&&url.includes('BTC')));
  }finally{globalThis.fetch=original;}
+});
+test('anonymous market reads are rate limited per visitor, signed-in reads are not counted',async()=>{
+ const original=globalThis.fetch;const counted=[];
+ try{
+  globalThis.fetch=async()=>Response.json({data:{base:'BTC',currency:'USD',amount:'60000'}});
+  globalThis.marketTestLimited=async(req,name)=>{counted.push(name);return true;};
+  globalThis.marketTestSession=null;
+  const limited=await GET(new Request('http://localhost/api/market?crypto=BTC'));
+  assert.equal(limited.status,429);assert.equal((await limited.json()).error,'Too many attempts. Please try again later.');
+  assert.deepEqual(counted,['market']);
+  globalThis.marketTestSession={user:{id:'test'}};
+  assert.equal((await GET(new Request('http://localhost/api/market?crypto=BTC'))).status,200);
+  assert.deepEqual(counted,['market']);
+ }finally{globalThis.fetch=original;delete globalThis.marketTestLimited;delete globalThis.marketTestSession;}
 });

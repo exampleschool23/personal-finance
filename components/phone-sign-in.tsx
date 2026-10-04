@@ -8,14 +8,11 @@ import { showNotice } from '@/lib/feedback';
 import { formatNumber } from '@/lib/format';
 import { browserPhoneCountry, internationalPhone } from '@/lib/phone-countries';
 import { PhoneNumberField } from '@/components/phone-number-field';
+import { requestJson } from '@/lib/api-client';
 import styles from './sign-in-screen.module.css';
 
-async function call(body: { action: 'send'; phone: string } | { action: 'verify'; phone: string; code: string }) {
-  const response = await fetch('/api/auth/phone', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  const result = await response.json().catch(() => ({})) as { error?: string; message?: string };
-  if (!response.ok) throw Error(result.error ?? 'Account service is unavailable. Please try again.');
-  return result;
-}
+const call = (body: { action: 'send'; phone: string } | { action: 'verify'; phone: string; code: string }) =>
+  requestJson<{ message?: string }>('/api/auth/phone', { body, fallback: 'Account service is unavailable. Please try again.' });
 
 /** Supabase sends at most one code a minute to a number; the resend button waits the same time. */
 export const resendSeconds = 60;

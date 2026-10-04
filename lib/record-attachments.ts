@@ -6,13 +6,13 @@
 import { z } from 'zod';
 import { uuid } from './api-validation';
 
-export const attachmentBucket = 'attachments';
-export const maxAttachmentBytes = 10 * 1024 * 1024;
-export const maxAttachmentsPerRecord = 20;
+const attachmentBucket = 'attachments';
+const maxAttachmentBytes = 10 * 1024 * 1024;
+const maxAttachmentsPerRecord = 20;
 /** Signed links to view a file last five minutes. */
-export const attachmentLinkSeconds = 300;
+const attachmentLinkSeconds = 300;
 /** Accepted types and the extension each is stored under. */
-export const attachmentTypes = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic', 'image/heif': 'heic', 'application/pdf': 'pdf' } as const;
+const attachmentTypes = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/heic': 'heic', 'image/heif': 'heic', 'application/pdf': 'pdf' } as const;
 export type AttachmentMime = keyof typeof attachmentTypes;
 /** What the file picker offers. */
 export const attachmentAccept = [...Object.keys(attachmentTypes), '.heic', '.heif'].join(',');
@@ -21,7 +21,7 @@ export type RecordAttachment = { id: string; user_id: string; record_id: string;
 /** What the browser sees: never the owner or the storage path. */
 export type AttachmentView = Pick<RecordAttachment, 'id' | 'record_id' | 'file_name' | 'mime' | 'size' | 'created_at'> & { url?: string };
 
-export const isAttachmentMime = (mime: string): mime is AttachmentMime => Object.hasOwn(attachmentTypes, mime);
+const isAttachmentMime = (mime: string): mime is AttachmentMime => Object.hasOwn(attachmentTypes, mime);
 /** Browsers draw these as thumbnails; HEIC photos and PDFs show a file icon. */
 export const canPreviewAttachment = (mime: string) => mime === 'image/jpeg' || mime === 'image/png' || mime === 'image/webp';
 /** Browsers report HEIC photos with an empty type; the extension decides then. */
@@ -117,10 +117,6 @@ export function attachmentStore(request: SupabaseRequest) {
    if (!response.ok) throw Error('unavailable');
    return ((await response.json()) as RecordAttachment[])[0] ?? null;
   },
-  async upload(path: string, bytes: Uint8Array, mime: string) {
-   const response = await request(`/storage/v1/object/${attachmentBucket}/${encodePath(path)}`, { method: 'POST', headers: { 'Content-Type': mime, 'x-upsert': 'false' }, body: bytes as BodyInit });
-   if (!response.ok) throw Error('unavailable');
-  },
   /** A one-time link the browser uploads the file to directly, so large files skip the app server. */
   async uploadLink(path: string) {
    const response = await request(`/storage/v1/object/upload/sign/${attachmentBucket}/${encodePath(path)}`, { method: 'POST', headers: json, body: '{}' });
@@ -191,24 +187,6 @@ export async function finishAttachment(store: AttachmentStore, owner: string, fi
  } catch (error) {
   return discard((error as Error).message === 'rejected' ? failure(409, attachmentErrors.record) : failure(503, attachmentErrors.unavailable));
  }
-}
-
-/**
- * Stores a file the server already holds, such as a photo sent to the Telegram
- * bot, and attaches it to one of the owner's records.
- */
-export async function saveRecordAttachment(store: AttachmentStore, owner: string, recordId: string, bytes: Uint8Array, mime: string, name: string, id: string = crypto.randomUUID()): Promise<SaveResult> {
- const checked = validateAttachment({ mime, size: bytes.length });
- if (!checked.ok) return failure(400, attachmentProblemMessages[checked.problem]);
- if (!uuidPattern.test(owner) || !uuidPattern.test(recordId)) return failure(404, attachmentErrors.record);
- const type = mime as AttachmentMime;
- if (!contentMatches(bytes, type)) return failure(400, attachmentErrors.content);
- try {
-  const blocked = await checkAttachmentRecord(store, owner, recordId);
-  if (blocked) return blocked;
-  await store.upload(attachmentPath(owner, recordId, id, type), bytes, type);
- } catch { return failure(503, attachmentErrors.unavailable); }
- return finishAttachment(store, owner, { id, record_id: recordId, name, mime: type }, { bytes, size: bytes.length });
 }
 
 /** Removes every file an owner has, before the account itself is deleted. */

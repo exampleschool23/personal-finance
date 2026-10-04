@@ -353,3 +353,21 @@ test('the name question gives an example that fits a loan, a debt and a mortgage
  assert.equal(name('Debt'),'Name it, for example Credit card.');
  assert.equal(name('Mortgage'),'Name it, for example Home mortgage.');
 });
+
+test('every Telegram message is written with one kit: translation, money, keyboard rows and Back',()=>{
+ const kit=loadTS('lib/telegram-kit.ts');
+ const {translate}=loadTS('lib/i18n.ts');
+ assert.deepEqual(kit.keyboardRows([1,2,3,4,5],2),[[1,2],[3,4],[5]]);assert.deepEqual(kit.keyboardRows([],3),[]);
+ assert.deepEqual(kit.backButton('ru','f:back'),{text:'‹ '+translate('ru','Back'),callback_data:'f:back'});
+ assert.equal(kit.backLabel('de'),'‹ '+translate('de','Back'));
+ const {locale,t,money}=kit.messageKit('ru');
+ assert.equal(locale,'ru-RU');assert.equal(t('Back'),translate('ru','Back'));assert.equal(t('{count} more',{count:3}),translate('ru','{count} more',{count:3}));
+ assert.equal(money(1500,'USD'),kit.moneyIn(1500,'USD','ru'));assert.equal(kit.t('en','Back'),'Back');
+ // No bot module keeps its own copy.
+ for(const file of ['lib/telegram-bot.ts','lib/telegram-flow.ts','lib/telegram-onboarding.ts','lib/digest-message.ts','lib/recap-message.ts','lib/action-messages.ts','lib/milestones.ts']){
+  const source=fs.readFileSync(file,'utf8');
+  assert.doesNotMatch(source,/=>translate\(language,key,params\)/,file);
+  assert.doesNotMatch(source,/out\.push\(buttons\.slice/,file);
+  assert.doesNotMatch(source,/'‹ '\+t\(/,file);
+ }
+});

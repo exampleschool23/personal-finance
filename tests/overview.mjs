@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {loadTS} from './helpers/load-ts.mjs';
-const {assetAllocation,overviewIndicators,changePercent,nextPayments}=loadTS('lib/overview.ts');
+const {assetAllocation,changePercent,nextPayments}=loadTS('lib/overview.ts');
 const entry=(id,kind,amount,extra={})=>({id,name:id,kind,amount,quantity:1,cost:0,rate:0,currency:'USD',frequency:'Once',date:'2026-09-01',...extra});
 
 test('allocation lists only owned asset kinds, largest first, with precise shares',()=>{
@@ -12,18 +12,6 @@ test('allocation lists only owned asset kinds, largest first, with precise share
  assert.equal(result.reduce((sum,item)=>sum+item.share,0),100);
  assert.equal(result[1].share,25);
  assert.deepEqual(assetAllocation([entry('loan','Loan',4000)]),[]);
-});
-
-test('indicators use a dash-ready null when a ratio has no base',()=>{
- assert.deepEqual(overviewIndicators([entry('loan','Loan',4000)]),{cash:0,cashShare:null,debtToAssets:null,investmentGain:null,investmentReturn:null});
- const result=overviewIndicators([entry('cash','Cash',2000),entry('stock','Stock',150,{quantity:20,cost:100}),entry('gift','Crypto',5000,{cost:0}),entry('loan','Debt',2500)]);
- assert.equal(result.cash,2000);
- assert.equal(result.cashShare,20);
- assert.equal(result.debtToAssets,25);
- // Holdings without a purchase price cannot produce a gain.
- assert.equal(result.investmentGain,1000);
- assert.equal(result.investmentReturn,50);
- assert.equal(overviewIndicators([entry('stock','Stock',80,{quantity:10,cost:100})]).investmentGain,-200);
 });
 
 test('period change compares against the opening value',()=>{

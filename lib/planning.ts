@@ -1,6 +1,7 @@
 import { scheduleDates, income, expenses, interestKinds, type Entry } from './finance';
 import type { AssetMovement } from './asset-movements';
 import type { HoldingAccount } from './holding-accounts';
+import { shiftDay } from './calendar-days';
 import { depositToday } from './deposit-interest';
 export type Category = {id:string;name:string;direction:'income'|'expense'};
 export type InvestmentTarget = {holding_account_id:string;asset_kind:'Stock'|'Crypto';asset_symbol:string;target:number;monthly_contribution?:number|null};
@@ -20,10 +21,10 @@ const liabilityKinds=['Loan','Debt','Mortgage'];
 /** A loan, debt or mortgage with an outstanding balance and a positive monthly payment is due every month. */
 export const hasMonthlyInstallment=(record:Entry)=>liabilityKinds.includes(record.kind)&&record.amount>0&&Number(record.estimated_monthly_payment??0)>0;
 /** The calendar day in Tashkent of a creation timestamp. */
-const tashkentDay=(timestamp:string)=>{const time=Date.parse(timestamp);return Number.isFinite(time)?new Date(time+5*3600000).toISOString().slice(0,10):null;};
+const createdDay=(timestamp:string)=>{const time=Date.parse(timestamp);return Number.isFinite(time)?depositToday(new Date(time)):null;};
 /** The day a loan's monthly payments count from: its start date, else the day the record was created, else its due date. */
 export function installmentAnchor(record:Entry&{created_at?:string|null}):string|null{
- return record.opened_on||(record.created_at?tashkentDay(record.created_at):null)||record.date||null;
+ return record.opened_on||(record.created_at?createdDay(record.created_at):null)||record.date||null;
 }
 /** Monthly payment days of a loan between two days: on the start date's day of month, after the start and up to the due date. */
 export function installmentDates(record:Entry,from:string,through:string):string[]{
@@ -33,7 +34,7 @@ export function installmentDates(record:Entry,from:string,through:string):string
  return scheduleDates({date:anchor,frequency:'Monthly'} as Entry,from,last).filter(date=>date>anchor);
 }
 /** Installments are owed from the day the record was added, so months before tracking began are never overdue. */
-export const installmentsFrom=(record:Entry&{created_at?:string|null})=>(record.created_at?tashkentDay(record.created_at):null)??'0000-01-01';
+export const installmentsFrom=(record:Entry&{created_at?:string|null})=>(record.created_at?createdDay(record.created_at):null)??'0000-01-01';
 /** Loan months already paid: a repayment or mortgage payment for the loan in that month settles that month's installment. */
 export const paidInstallmentMonths=(payments:DebtPayment[])=>new Set(payments.map(payment=>payment.record_id+':'+payment.date.slice(0,7)));
 /** Schedule occurrences already settled: paid or skipped occurrences, and salary receipts recorded against an income source. */
@@ -48,7 +49,7 @@ export function scheduleStart(record:Entry,assetsById:Map<string,Entry>){
  return asset?.date&&asset.date>record.date?asset.date:record.date;
 }
 export function upcomingPayments(records:Entry[],occurrences:Occurrence[],today=depositToday(),through?:string,debtPayments?:DebtPayment[]):DueItem[] {
- const end=through??new Date(Date.parse(today+'T00:00:00Z')+31*86400000).toISOString().slice(0,10);
+ const end=through??shiftDay(today,31);
  const settled=settledOccurrences(records,occurrences),paid=debtPayments&&paidInstallmentMonths(debtPayments);
  const result:DueItem[]=[];
  const assetsById=scheduleAssets(records);

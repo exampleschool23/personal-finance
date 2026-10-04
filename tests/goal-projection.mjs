@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {loadTS} from './helpers/load-ts.mjs';
 import ts from 'typescript';
+import * as days from '../lib/calendar-days.ts';
 import * as finance from '../lib/finance.ts';
 import * as market from '../lib/market.ts';
 import * as budgets from '../lib/expense-plans.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const dependencies={...finance,...market,...budgets};
+const dependencies={...finance,...market,...budgets,...days};
 const {projectGoal,goalFinancials}=new Function(...Object.keys(dependencies),compile('lib/goal-projection.ts')+';return {projectGoal,goalFinancials};')(...Object.values(dependencies));
 
 test('million-dollar goal compounds new monthly surplus and required path hits exact deadline',()=>{

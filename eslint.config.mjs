@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Local build output, agent worktrees and scratch folders.
+    "dist/**",
+    ".claude/**",
+    ".wrangler/**",
+    "outputs/**",
+    "work/**",
   ]),
   {
     files: ["components/ui/**/*.{ts,tsx}", "hooks/use-mobile.ts"],

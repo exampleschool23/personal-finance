@@ -1,12 +1,11 @@
 import { cookies } from 'next/headers';
+import { requestRejected } from '@/lib/api-route';
 import { config, sameOrigin, supa } from '@/lib/supabase';
 import { GOOGLE_VERIFIER_COOKIE, googleAuthorization, googleCookieOptions, loginRedirect } from '@/lib/google-auth';
 
 export async function POST(req: Request) {
   const origin = new URL(req.url).origin;
-  if (!sameOrigin(req) || req.headers.get('sec-fetch-site') === 'cross-site') {
-    return Response.json({ error: 'Request rejected.' }, { status: 403 });
-  }
+  if (!sameOrigin(req)) return requestRejected();
 
   try {
     // Avoid sending visitors to an unconfigured provider's raw error page.

@@ -157,3 +157,18 @@ test('a long payment list stays within one Telegram message and says how many it
  // A short list is unchanged: no "more" line.
  assert.doesNotMatch(paymentsSection(items,'en',today),/more/);
 });
+
+test('the digest and the recap share one subscriber loop: only linked private chats with the digest on, each owner counted on its own',async()=>{
+ const {deliverToSubscribers,digestSubscribersPath}=loadTS('lib/telegram-owner.ts');
+ assert.match(digestSubscribersPath,/chat_id=not\.is\.null/);assert.match(digestSubscribersPath,/digest_enabled=is\.true/);
+ assert.match(digestSubscribersPath,/chat_id=gt\.0/,'a group chat (negative id) never receives a digest');
+ const reads=[],delivered=[];
+ const db={read:async path=>{reads.push(path);return [{user_id:'a',chat_id:1},{user_id:'b',chat_id:2},{user_id:'c',chat_id:3}];}};
+ const counts=await deliverToSubscribers(db,async subscriber=>{delivered.push(subscriber.chat_id);if(subscriber.user_id==='b')throw Error('boom');return subscriber.user_id==='a';});
+ assert.deepEqual(counts,{sent:1,failed:2});assert.deepEqual(delivered,[1,2,3]);assert.deepEqual(reads,[digestSubscribersPath]);
+ await assert.rejects(deliverToSubscribers({read:async()=>{throw Error('down');}},async()=>true),/down/);
+ for(const file of ['app/api/cron/telegram-digest/route.ts','app/api/cron/telegram-recap/route.ts']){
+  const source=fs.readFileSync(file,'utf8');
+  assert.match(source,/deliverToSubscribers\(db,/,file);assert.doesNotMatch(source,/telegram_subscriptions/,file);
+ }
+});

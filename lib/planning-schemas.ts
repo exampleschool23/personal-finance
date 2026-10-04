@@ -28,4 +28,3 @@ export const planningSchemas={
   return v.kind==='net_worth'?v.account_id===null&&v.allocated===0&&!!v.currency&&!!v.target_date:!!v.account_id;
  }),
 };
-export type PlanningAction=keyof typeof planningSchemas;

@@ -4,7 +4,7 @@ export type HistoryEvent = {
  occurred_on:string; amount:number; balance:number|null; ownership_percentage:number; principal:number; interest:number; notes:string; created_at:string;
  account_link?:{account_id:string;amount:number;account_currency?:string|null;record_currency?:string|null;exchange_rate?:number|null;rate_date?:string|null}|null;
 };
-export const historyLabels: Record<HistoryEvent['event_type'],string> = {
+const historyLabels: Record<HistoryEvent['event_type'],string> = {
  baseline:'Starting snapshot',valuation:'Value update',contribution:'Money invested',withdrawal:'Sale / withdrawal',income:'Income received',expense:'Expense paid',mortgage_payment:'Mortgage payment',
 };
 export type HistoryUpdateType = Exclude<HistoryEvent['event_type'], 'baseline'|'mortgage_payment'>;

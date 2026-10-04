@@ -110,3 +110,19 @@ test('business income is guessed only with a business the owner still has',()=>{
  assert.equal(guessCategory({name:'cafe sales',amount:5},{records:past,categories:[],businesses:[{id:'gone'}]}).kind,'Business income');
  assert.equal(guessCategory({name:'cafe',amount:5},{rules:[rule({pattern:'cafe',direction:'income',kind:'Business income',category_id:null,business_id:null})],records:[],categories:[]}).source,'keyword');
 });
+
+test('every amount the bot asks for is read by one parser, in setup and in records alike',()=>{
+ const {parseTypedAmount}=loadTS('lib/telegram-entry.ts');
+ // 1.000 is a thousand where the dot groups digits and one where it is the decimal mark; 1,5 is one and a half everywhere.
+ assert.equal(parseTypedAmount('1.000','ru'),1000);assert.equal(parseTypedAmount('1.000','de'),1000);assert.equal(parseTypedAmount('1.000','en'),1);
+ for(const language of ['en','ru','de','fr'])assert.equal(parseTypedAmount('1,5',language),1.5,language);
+ for(const text of ['1 000',' 1 000 ','1 000','1 000'])assert.equal(parseTypedAmount(text,'ru'),1000,JSON.stringify(text));
+ // Zero only where an empty account or no interest is a real answer.
+ assert.equal(parseTypedAmount('0','en'),null);
+ for(const text of ['0','0,00','0.0'])assert.equal(parseTypedAmount(text,'en',{allowZero:true}),0,text);
+ for(const text of ['','abc','-5','1e99','12.','1,2,3'])assert.equal(parseTypedAmount(text,'en',{allowZero:true}),null,text);
+ // The setup's opening balance and the record flow agree on the same text.
+ const {advanceOnboarding}=loadTS('lib/telegram-onboarding.ts');
+ const balance={kind:'onboard',step:'balance',data:{currency:'EUR',account_name:'Wallet'}};
+ for(const [text,language,amount] of [['1.000','ru',1000],['1,5','en',1.5],['1 000','en',1000],['0','en',0]])assert.equal(advanceOnboarding(balance,{text},{language},1).effects.account.amount,amount,text);
+});

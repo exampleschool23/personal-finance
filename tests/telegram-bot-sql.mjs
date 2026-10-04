@@ -18,7 +18,8 @@ test('the bot wrappers save as the linked owner through the app functions and re
  const db=await database();try{
   await db.exec(`SET request.jwt.claim.sub='${owner}';SET ROLE authenticated;`);
   await db.query('SELECT save_finance_record($1,NULL)',[cash]);
-  await db.exec(`INSERT INTO telegram_subscriptions(user_id,chat_id,linked_at) VALUES('${owner}',500,now());`);
+  // Chats are linked by the server.
+  await db.exec(`RESET ROLE;INSERT INTO telegram_subscriptions(user_id,chat_id,linked_at) VALUES('${owner}',500,now());SET ROLE authenticated;`);
   await db.exec(`RESET ROLE;RESET request.jwt.claim.sub;SET ROLE service_role;`);
   const saved=(await db.query('SELECT telegram_save_finance_record($1,$2) AS result',[owner,expense])).rows[0].result[0];
   assert.equal(saved.name,'Groceries');assert.equal(saved.user_id,owner);assert.equal(saved.revision,1);
@@ -37,7 +38,8 @@ test('planning actions run as the owner too, and app roles cannot call the wrapp
   await db.exec(`SET request.jwt.claim.sub='${owner}';SET ROLE authenticated;`);
   await db.query('SELECT save_finance_record($1,NULL)',[cash]);
   await db.query('SELECT save_finance_record($1,NULL)',[{...cash,id:id(6),name:'Savings',amount:0}]);
-  await db.exec(`INSERT INTO telegram_subscriptions(user_id,chat_id,linked_at) VALUES('${owner}',500,now());`);
+  // Chats are linked by the server.
+  await db.exec(`RESET ROLE;INSERT INTO telegram_subscriptions(user_id,chat_id,linked_at) VALUES('${owner}',500,now());SET ROLE authenticated;`);
   await assert.rejects(db.query('SELECT telegram_save_finance_record($1,$2)',[owner,expense]),/permission denied/);
   await assert.rejects(db.query('SELECT * FROM telegram_drafts'),/permission denied/);
   await db.exec(`RESET ROLE;RESET request.jwt.claim.sub;SET ROLE service_role;`);
@@ -55,11 +57,12 @@ test('owners manage their notification settings but never the identity columns, 
   const phone='+998901234567';
   await db.exec(`INSERT INTO auth.users(id) VALUES('${owner}'),('${other}') ON CONFLICT DO NOTHING;`);
   await db.exec(`SET request.jwt.claim.sub='${owner}';SET ROLE authenticated;`);
-  // Settings still work for the owner.
-  await db.exec(`INSERT INTO telegram_subscriptions(user_id) VALUES('${owner}');`);
+  // Settings and unlinking still work for the owner; the row and its chat come from the server.
+  await db.exec(`RESET ROLE;INSERT INTO telegram_subscriptions(user_id,chat_id,linked_at) VALUES('${owner}',500,now());SET ROLE authenticated;`);
   await db.exec(`UPDATE telegram_subscriptions SET digest_enabled=false,actions_enabled=false,chat_id=NULL,linked_at=NULL WHERE user_id='${owner}';`);
+  await assert.rejects(db.exec(`UPDATE telegram_subscriptions SET chat_id=600 WHERE user_id='${owner}'`),/linked from the bot/,'nobody links a chat from the app');
   // Identity columns are written only by the server.
-  for(const statement of [`UPDATE telegram_subscriptions SET phone='${phone}' WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET telegram_user_id=777 WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET consented_at=now() WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET first_name='x' WHERE user_id='${owner}'`,`INSERT INTO telegram_subscriptions(user_id,phone) VALUES('${other}','${phone}')`])
+  for(const statement of [`INSERT INTO telegram_subscriptions(user_id) VALUES('${owner}')`,`UPDATE telegram_subscriptions SET phone='${phone}' WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET telegram_user_id=777 WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET consented_at=now() WHERE user_id='${owner}'`,`UPDATE telegram_subscriptions SET first_name='x' WHERE user_id='${owner}'`,`INSERT INTO telegram_subscriptions(user_id,phone) VALUES('${other}','${phone}')`])
    await assert.rejects(db.exec(statement),/permission denied/,statement);
   await assert.rejects(db.query('SELECT * FROM telegram_login_tokens'),/permission denied/);
   await assert.rejects(db.exec(`INSERT INTO telegram_login_tokens(token_hash,user_id,expires_at) VALUES('${'a'.repeat(64)}','${owner}',now())`),/permission denied/);

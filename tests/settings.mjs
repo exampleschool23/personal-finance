@@ -1,3 +1,4 @@
+import { apiFunction } from './helpers/api-function.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -14,7 +15,7 @@ const source=fs.readFileSync(new URL('../app/api/settings/route.ts',import.meta.
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let authenticated=true, calls=[], rows=[], databaseFailure=false;
 const menuCalls=[];
-const api=new Function('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry','fontIds','resolveFont','isLanguage','languageCodes','queueLanguageMenu','onboardedOn',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry,fontIds,resolveFont,isLanguage,languageCodes,(auth,language)=>menuCalls.push({auth,language}),onboardedOn);
+const api=apiFunction('z','session','supa','sameOrigin','defaultPreferences','isCurrency','maxPreferredCurrencies','isCountry','fontIds','resolveFont','isLanguage','languageCodes','queueLanguageMenu','onboardedOn',js+';return {GET,PUT};')(z,async()=>authenticated?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return databaseFailure ? new Response(null,{status:503}) : Response.json(rows);},req=>req.headers.get('origin')==='https://app.local',defaultPreferences,isCurrency,maxPreferredCurrencies,isCountry,fontIds,resolveFont,isLanguage,languageCodes,(auth,language)=>menuCalls.push({auth,language}),onboardedOn);
 const request=body=>new Request('https://app.local/api/settings',{method:'PUT',headers:{origin:'https://app.local','Content-Type':'application/json'},body:JSON.stringify(body)});
 test('persists validated preferences for the authenticated owner',async()=>{
  calls=[];const response=await api.PUT(request({language:'ru',currencies:['EUR','INR']}));

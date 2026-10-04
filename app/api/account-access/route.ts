@@ -1,25 +1,28 @@
 import { personalRequest, workspaceCookie } from '@/lib/household';
 import {cookies} from 'next/headers';
-import {z} from 'zod';
 import {accountAccessSchema,recoveryCookie,recoveryOptions,accountOrigin,signupError} from '@/lib/account-access';
+import {authSession} from '@/lib/api-validation';
+import {readJson,reply as answer,tooManyAttempts} from '@/lib/api-route';
+import {limits,rateLimited} from '@/lib/rate-limit';
 import {config,supa,session,saveSession,sameOrigin} from '@/lib/supabase';
 import {serviceDatabase,serviceKeyHeaders} from '@/lib/service-role';
 import {sendTelegramMessage} from '@/lib/telegram';
 import {deletionNotice} from '@/lib/telegram-bot';
 import {attachmentStore,removeOwnerAttachments} from '@/lib/record-attachments';
-const authSession=z.object({access_token:z.string().min(1),refresh_token:z.string().min(1),expires_in:z.number().positive(),user:z.object({id:z.string().uuid()})});
-const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
+const reply=(body:unknown,status=200)=>answer(body,status,{noReferrer:true});
 export async function GET(){
  // An account created with a phone number has no email, so Settings offers to add one instead of asking for a password it never had.
  const auth=await session().catch(()=>null);
  return reply({signup:process.env.PUBLIC_SIGNUP_ENABLED==='true',deletion:!!process.env.SUPABASE_SERVICE_ROLE_KEY,phoneOnly:!!auth&&!auth.user.email});
 }
 export async function POST(req:Request){
- if(!sameOrigin(req)||req.headers.get('sec-fetch-site')==='cross-site')return reply({error:'Request rejected.'},403);
+ if(!sameOrigin(req))return reply({error:'Request rejected.'},403);
  try{
- const parsed=accountAccessSchema.safeParse(await req.json().catch(()=>null));if(!parsed.success)return reply({error:'Check the account fields. Passwords need at least 8 characters.'},400);
+ const parsed=accountAccessSchema.safeParse(await readJson(req));if(!parsed.success)return reply({error:'Check the account fields. Passwords need at least 8 characters.'},400);
  const data=parsed.data;const origin=accountOrigin();
  if((data.action==='signup'||data.action==='recover')&&!origin)return reply({error:'Account service is unavailable. Please try again.'},503);
+ // Sign-up and recovery emails are counted per address and per email, so nobody can flood an inbox.
+ if((data.action==='signup'||data.action==='recover')&&await rateLimited(req,'account-'+data.action,limits.account,data.email))return tooManyAttempts(true);
  if(data.action==='signup'){
  if(process.env.PUBLIC_SIGNUP_ENABLED!=='true')return reply({error:'Registration is by invitation.'},403);
  const response=await supa('/auth/v1/signup?redirect_to='+encodeURIComponent(origin+'/auth/confirm'),{method:'POST',body:JSON.stringify({email:data.email,password:data.password})});
@@ -55,6 +58,8 @@ export async function POST(req:Request){
  jar.delete('hf_access');jar.delete('hf_refresh');return reply({message:'Password changed. Sign in with your new password.'});
  }
  const auth=await session();if(!auth)return reply({error:'Please sign in again.'},401);
+ // Password checks, credential changes and deletion are counted per address and per account.
+ if(await rateLimited(req,'account-credentials',limits.account,auth.user.id))return tooManyAttempts(true);
  if(data.action==='add_email'){
   if(auth.user.email)return reply({error:'This account already has an email.'},400);
   const added=await supa('/auth/v1/user',{method:'PUT',body:JSON.stringify({email:data.email,password:data.password})},auth.token);

@@ -3,7 +3,7 @@ export type Frequency = typeof frequencies[number];
 export type Schedule = {date:string;frequency:Frequency;recurrence_days?:number|null;end_date?:string|null};
 const dayMs=86400000;
 const timestamp=(date:string)=>Date.parse(date+'T00:00:00Z');
-export function intervalDays(schedule:Schedule):number|null {
+function intervalDays(schedule:Schedule):number|null {
  if(schedule.frequency==='Weekly')return 7;
  if(schedule.frequency==='Fortnightly')return 14;
  if(schedule.frequency==='Custom')return Number.isInteger(schedule.recurrence_days)&&schedule.recurrence_days!>=1&&schedule.recurrence_days!<=366?schedule.recurrence_days!:null;
@@ -60,7 +60,7 @@ export const monthly=(e:Entry,month?:string)=>e.source_paused?0:month && ((e.dat
 
 // Salary is pay for work, even when its employer is a business the user owns.
 // Only linked business distributions replace the business income estimate.
-export const duplicatesBusinessEstimate = (entry: Entry, businessIds: Set<string>) => ['Other income','Business income'].includes(entry.kind) && !!entry.business_id && businessIds.has(entry.business_id);
+const duplicatesBusinessEstimate = (entry: Entry, businessIds: Set<string>) => ['Other income','Business income'].includes(entry.kind) && !!entry.business_id && businessIds.has(entry.business_id);
 export const duplicatesAssetEstimate = (entry:Entry,businessIds:Set<string>,propertyIds:Set<string>) => duplicatesBusinessEstimate(entry,businessIds)||(entry.kind==='Rent income'&&!!entry.income_source_id&&propertyIds.has(entry.income_source_id));
 
 export function estimatedCashFlow(entries: Entry[], expensePlanProjection = 0, month?: string) {

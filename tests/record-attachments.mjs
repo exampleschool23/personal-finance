@@ -54,31 +54,15 @@ function fakeSupabase({records={[id(2)]:id(1),[id(5)]:id(4)},rows=[],failInsert=
   if(path.startsWith('/storage/v1/object/sign/'))return Response.json(JSON.parse(init.body).paths.map(item=>({path:item,signedURL:'/object/sign/attachments/'+item+'?token=s'})));
   if(path.startsWith('/storage/v1/object/authenticated/')){const bytes=files.get(path.slice('/storage/v1/object/authenticated/attachments/'.length));if(!bytes)return new Response(null,{status:404});return new Response(bytes.subarray(0,32),{status:206,headers:{'content-range':`bytes 0-31/${bytes.length}`}});}
   if(path==='/storage/v1/object/attachments'&&method==='DELETE'){for(const item of JSON.parse(init.body).prefixes)files.delete(item);return Response.json([]);}
-  if(path.startsWith('/storage/v1/object/attachments/')&&method==='POST'){files.set(path.slice('/storage/v1/object/attachments/'.length),new Uint8Array(init.body));return Response.json({});}
   throw Error('Unexpected request '+method+' '+path);
  };
  return {request,files,rows,calls};
 }
 
-test('saveRecordAttachment stores a checked file under the owner and only for their own record',async()=>{
+test('removing an account\'s files touches only that owner\'s folder',async()=>{
  const db=fakeSupabase(),store=lib.attachmentStore(db.request);
- const saved=await lib.saveRecordAttachment(store,id(1),id(2),jpeg(2000),'image/jpeg','../Receipt.jpg',id(3));
- assert.equal(saved.ok,true);assert.equal(saved.attachment.path,`${id(1)}/${id(2)}/${id(3)}.jpg`);assert.equal(saved.attachment.file_name,'Receipt.jpg');assert.equal(saved.attachment.size,2000);
- assert.ok(db.files.has(`${id(1)}/${id(2)}/${id(3)}.jpg`));
- // Another owner's record, a missing record, a wrong type or a disguised file store nothing.
- for(const [owner,record,bytes,mime,status] of [[id(4),id(2),jpeg(10),'image/jpeg',404],[id(1),id(9),jpeg(10),'image/jpeg',404],[id(1),id(2),jpeg(10),'image/gif',400],[id(1),id(2),new TextEncoder().encode('<svg onload=alert(1)>'),'image/png',400],[id(1),id(2),jpeg(10*1024*1024+1),'image/jpeg',400],[id(1),'not-an-id',jpeg(10),'image/jpeg',404]]){
-  const result=await lib.saveRecordAttachment(store,owner,record,bytes,mime,'x');assert.equal(result.ok,false);assert.equal(result.status,status);
- }
- assert.equal(db.files.size,1);assert.equal(db.rows.length,1);
- // The twentieth file is the last.
- for(let n=0;n<19;n++)assert.equal((await lib.saveRecordAttachment(store,id(1),id(2),pdf,'application/pdf','scan.pdf')).ok,true);
- const full=await lib.saveRecordAttachment(store,id(1),id(2),pdf,'application/pdf','scan.pdf');assert.deepEqual([full.ok,full.status],[false,409]);
- // A row the database refuses leaves no file behind.
- const refused=fakeSupabase({failInsert:true});const result=await lib.saveRecordAttachment(lib.attachmentStore(refused.request),id(1),id(2),png,'image/png','a.png');
- assert.equal(result.ok,false);assert.equal(refused.files.size,0);
- // Removing an account's files touches only that owner's folder.
- db.rows.push({id:id(7),user_id:id(4),record_id:id(5),path:`${id(4)}/${id(5)}/${id(7)}.jpg`});db.files.set(`${id(4)}/${id(5)}/${id(7)}.jpg`,jpeg(4));
- assert.equal(await lib.removeOwnerAttachments(store,id(1)),20);assert.deepEqual([...db.files.keys()],[`${id(4)}/${id(5)}/${id(7)}.jpg`]);
+ for(const [owner,record,file] of [[id(1),id(2),id(3)],[id(1),id(2),id(6)],[id(4),id(5),id(7)]]){const path=`${owner}/${record}/${file}.jpg`;db.rows.push({id:file,user_id:owner,record_id:record,path});db.files.set(path,jpeg(4));}
+ assert.equal(await lib.removeOwnerAttachments(store,id(1)),2);assert.deepEqual([...db.files.keys()],[`${id(4)}/${id(5)}/${id(7)}.jpg`]);
 });
 
 function api({auth=id(1),origin=true,db=fakeSupabase()}={}){

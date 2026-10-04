@@ -11,7 +11,7 @@ import { Segmented } from '@/components/presentation-foundation/segmented';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
-import { shiftMonth } from '@/lib/budget';
+import { shiftMonth } from '@/lib/calendar-days';
 import { businessNetAssets, cashFlowTrend, rangeFor, reportLedger, reportRangeLabels, type ReportRangePreset } from '@/lib/business-report';
 import { depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry, type Entry } from '@/lib/finance';

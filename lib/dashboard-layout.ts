@@ -1,5 +1,5 @@
 /** Dashboard cards and where they start: two columns. Any card can be dragged to either column or hidden. */
-export const dashboardCards = {
+const dashboardCards = {
  left: ['net_worth', 'spending', 'budget', 'commitments', 'allocation', 'business'],
  right: ['goals', 'transactions', 'upcoming', 'forecast', 'income'],
 } as const;

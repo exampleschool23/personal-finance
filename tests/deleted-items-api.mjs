@@ -1,3 +1,4 @@
+import { apiFunction } from './helpers/api-function.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -6,7 +7,7 @@ import {z} from 'zod';
 const source=fs.readFileSync('app/api/deleted-items/route.ts','utf8').replace(/^import .*;\n/gm,'').replace(/export /g,'');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 let auth=true,fail=false,calls=[];
-const api=new Function('z','session','supa','sameOrigin',js+';return {GET,POST};')(z,async()=>auth?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return fail?Response.json({}, {status:409}):Response.json(Array.from({length:11},(_,id)=>({id})));},req=>req.headers.get('origin')==='https://local');
+const api=apiFunction('z','session','supa','sameOrigin',js+';return {GET,POST};')(z,async()=>auth?{user:{id:'owner'},token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return fail?Response.json({}, {status:409}):Response.json(Array.from({length:11},(_,id)=>({id})));},req=>req.headers.get('origin')==='https://local');
 const id='10000000-0000-4000-8000-000000000001';
 const request=(body,origin='https://local')=>new Request('https://local',{method:'POST',headers:{origin},body:JSON.stringify(body)});
 test('deleted items are read with the owner token and bounded pagination',async()=>{

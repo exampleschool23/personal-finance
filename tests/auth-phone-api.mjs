@@ -7,7 +7,8 @@ const {derivedPassword,createLoginToken}=loadTS('lib/telegram-account.ts');
 const config={token:'123456:TEST-TOKEN',webhookSecret:'server-secret',botUsername:'hoggish_bot'};
 const hookSecret='v1,whsec_'+Buffer.from('hook-signing-secret').toString('base64');
 const session={access_token:'access',refresh_token:'refresh',expires_in:3600,user:{id:ownerId}};
-const sameOrigin=req=>req.headers.get('origin')==='https://app.local';
+// The production check: the Origin header and, from browsers, Sec-Fetch-Site.
+const {sameOrigin}=loadTS('lib/api-route.ts');
 process.env.SEND_SMS_HOOK_SECRET=hookSecret;process.env.TELEGRAM_WEBHOOK_SECRET='server-secret';
 
 // --- the Supabase hook
@@ -155,4 +156,23 @@ test('one-tap sign-in refuses accounts that were not made in Telegram, wrong pas
  assert.equal((await telegramRoute(botDb(),async()=>Response.json(session)).POST(tgRequest({token:'0'.repeat(64)}))).status,401);
  const broken=telegramRoute(botDb({__fail:['telegram_login_tokens']}),async()=>Response.json(session));
  assert.equal((await broken.POST(tgRequest({token:'0'.repeat(64)}))).status,503);
+});
+
+test('with TELEGRAM_LOGIN_SECRET set, an account on the webhook-derived password signs in once with it and is moved to the login secret',async()=>{
+ const account=loadTS('lib/telegram-account.ts'),moved=[];
+ const route=(db,supa,saved)=>loadTS('app/api/auth/telegram/route.ts',{'@/lib/service-role':{serviceDatabase:()=>db},'@/lib/telegram':{telegramConfig:()=>config},'@/lib/supabase':{supa,sameOrigin,saveSession:async value=>saved.push(value)},'@/lib/telegram-account':{...account,adminAccounts:()=>({setUserPassword:async(id,password)=>{moved.push([id,password]);}})}});
+ process.env.TELEGRAM_LOGIN_SECRET='login-secret';
+ try{
+  let password=derivedPassword('server-secret',777);
+  const db=botDb({telegram_subscriptions:[here()]}),saved=[],calls=[];
+  const supa=async(path,init)=>{const body=JSON.parse(init.body);calls.push(body.password);return body.password===password?Response.json(session):Response.json({error_code:'invalid_credentials'},{status:400});};
+  const api=route(db,supa,saved);
+  assert.equal((await api.POST(tgRequest({token:await createLoginToken(db,ownerId,new Date())}))).status,200);
+  assert.deepEqual(calls,[derivedPassword('login-secret',777),derivedPassword('server-secret',777)]);
+  assert.deepEqual(moved,[[ownerId,derivedPassword('login-secret',777)]]);assert.deepEqual(saved,[session]);
+  // Supabase now holds the new password: the next sign-in, here from the Mini App, needs one attempt.
+  password=derivedPassword('login-secret',777);calls.length=0;
+  assert.equal((await api.POST(tgRequest({initData:initData(777)}))).status,200);
+  assert.deepEqual(calls,[derivedPassword('login-secret',777)]);assert.equal(moved.length,1);
+ }finally{delete process.env.TELEGRAM_LOGIN_SECRET;}
 });

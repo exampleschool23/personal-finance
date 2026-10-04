@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { shiftMonth } from './budget';
+import { shiftMonth } from './calendar-days';
 import { cashFlowReport } from './cash-flow-report';
 import { assets, liabilities, value, type Entry } from './finance';
 import { formatDate, formatMoney, formatMonthYear } from './format';
@@ -8,14 +8,23 @@ import { convertAmount } from './market';
 import { upcomingPayments, type PlanningData } from './planning';
 import { monthOccurrences } from './recurring';
 
+/** Characters of conversation sent to the model with one question; older turns beyond it are left out. */
+export const assistantHistoryLimit = 12000;
+type Turn = { role: 'user' | 'assistant'; content: string };
+/** The newest turns that fit the limit, still starting with a question. */
+export function recentTurns(list: Turn[], limit = assistantHistoryLimit) {
+ let start = 0, size = list.reduce((total, turn) => total + turn.content.length, 0);
+ while (size > limit && start < list.length - 1) { size -= list[start].content.length; start++; }
+ while (start < list.length - 1 && list[start].role !== 'user') start++;
+ return list.slice(start);
+}
 /** A chat turn sent to /api/assistant. History is capped so one request stays small. */
 export const assistantRequestSchema = z.object({
- messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().trim().min(1).max(4000) })).min(1).max(20).refine(list => list[0]?.role === 'user' && list.at(-1)?.role === 'user'),
+ messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().trim().min(1).max(4000) })).min(1).max(20).refine(list => list[0]?.role === 'user' && list.at(-1)?.role === 'user').transform(list => recentTurns(list)),
  currency: z.string().regex(/^[A-Z]{3}$/),
  rates: z.record(z.string().regex(/^[A-Z]{3}$/), z.number().finite().positive()).refine(value => Object.keys(value).length <= 200),
  language: z.string().max(20),
 });
-export type AssistantRequest = z.infer<typeof assistantRequestSchema>;
 
 /** The server's answer while no model key is configured; the screen then shows the assistant as unavailable. */
 export const assistantUnavailable = 'The assistant is not set up yet.';

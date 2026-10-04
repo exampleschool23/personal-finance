@@ -1,3 +1,4 @@
+import { apiFunction } from './helpers/api-function.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -6,7 +7,7 @@ const source=ts.transpileModule(fs.readFileSync('app/api/portfolio-history/route
 import {loadTS} from './helpers/load-ts.mjs';
 const {trackedKinds}=await import('../lib/investment-history.ts');
 const {accountRepaymentEvents}=loadTS('lib/investment-benchmarks.ts');
-const api=(session,supa)=>new Function('session','supa','income','trackedKinds','accountRepaymentEvents',source+';return GET;')(session,supa,['Salary','Rent income','Other income'],trackedKinds,accountRepaymentEvents);
+const api=(session,supa)=>apiFunction('session','supa','income','trackedKinds','accountRepaymentEvents',source+';return GET;')(session,supa,['Salary','Rent income','Other income'],trackedKinds,accountRepaymentEvents);
 test('history and actual cash flows remain owner-scoped and cash-flow pagination is complete',async()=>{
  const calls=[];
  const GET=api(async()=>({token:'owner-token'}),async(path,init,token)=>{

@@ -14,7 +14,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm test
+      # Every test, plus a coverage floor and the list of files no test runs yet (scripts/coverage-floor.json).
+      - run: npm run test:coverage
       - run: npm run lint
       - run: npm run build:production
       - run: npm run typecheck

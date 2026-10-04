@@ -1,11 +1,9 @@
 import { supa } from '@/lib/supabase';
+import { pagePath, readAllPages } from '@/lib/owner-rows';
 // Every request uses the caller's token; RLS applies to every page.
-export async function readOwnerRows<T>(table:string,token:string,extra:Record<string,string>={}) {
- const rows:T[]=[];
- for(let offset=0;;offset+=500){
-  const params=new URLSearchParams({select:'*',order:'id.asc',limit:'500',offset:String(offset),...extra});
-  const response=await supa('/rest/v1/'+table+'?'+params,{},token);
-  if(!response.ok)throw Error('Could not load planning data. Check that the latest migrations are installed.');
-  const batch=await response.json() as T[];rows.push(...batch);if(batch.length<500)return rows;
- }
+export function readOwnerRows<T>(table:string,token:string,extra:Record<string,string>={}) {
+ const params=new URLSearchParams({select:'*',order:'id.asc',...extra});
+ return readAllPages<T>(range=>supa(pagePath('/rest/v1/'+table+'?'+params,range),{},token),'Could not load planning data. Check that the latest migrations are installed.');
 }
+/** Every row of a ready-made query path, read with the caller's token. */
+export function readPathRows<T>(path:string,token:string,error?:string){return readAllPages<T>(range=>supa(pagePath(path,range),{},token),error);}

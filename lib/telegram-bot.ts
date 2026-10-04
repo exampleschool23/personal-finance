@@ -10,34 +10,35 @@ import {loadDatedExchangeRate} from './dated-exchange-rate';
 import {depositToday} from './deposit-interest';
 import {paymentsSection} from './digest-message';
 import {expenses,type Entry} from './finance';
-import {formatMoney} from './format';
-import {translate,isLanguage,detectLanguage,locales,type Language} from './i18n';
+import {isLanguage,detectLanguage,type Language} from './i18n';
 import {debtPaymentsFrom,upcomingPayments,type Category,type Occurrence} from './planning';
 import {planningSchemas} from './planning-schemas';
 import {legalPaths} from './legal';
 import {normalizePhone} from './phone';
 import {recordSchema} from './record-schema';
 import type {ServiceDatabase} from './service-role';
-import {adminAccounts,createLoginToken,createTelegramAccount,type AdminAccounts} from './telegram-account';
+import {adminAccounts,createLoginToken,createTelegramAccount,loginSecrets,type AdminAccounts} from './telegram-account';
 import {advance,mainMenu,menuChoice,needsRate,prompt,retryKeyboard,withRate,type Commit,type Draft,type FlowContext,type FlowKind,type Step} from './telegram-flow';
 import type {TransactionRule} from './transaction-rules';
-import {connectMinutes,connectStartPath,createConnectRequest} from './telegram-connect';
-import type {TelegramSubscription} from './telegram-link';
+import {connectMinutes,connectStartPath,createConnectRequest,unlinkChat} from './telegram-connect';
+import {moneyIn,t} from './telegram-kit';
+import {createdInTelegram,type TelegramSubscription} from './telegram-link';
 import {advanceOnboarding,isOnboardDraft,startOnboarding,type OnboardDraft} from './telegram-onboarding';
 import {escapeHtml,type TelegramMessage} from './telegram';
 type TelegramFrom={id?:number;first_name?:string;language_code?:string};
-export type TelegramUpdate={update_id?:number;message?:{message_id?:number;chat:{id:number};text?:string;from?:TelegramFrom;contact?:{phone_number?:string;user_id?:number;first_name?:string}};callback_query?:{id:string;data?:string;message?:{chat:{id:number}};from?:TelegramFrom}};
+/** `type` is private, group, supergroup or channel. The bot only ever works in a private chat with one person. */
+type TelegramChat={id:number;type?:string};
+export type TelegramUpdate={update_id?:number;message?:{message_id?:number;chat:TelegramChat;text?:string;from?:TelegramFrom;contact?:{phone_number?:string;user_id?:number;first_name?:string}};callback_query?:{id:string;data?:string;message?:{chat:TelegramChat};from?:TelegramFrom}};
 /** What the bot needs beyond the database to create accounts and sign people in, and the app's dated exchange rates
  * (ECB, with the Central Bank of Uzbekistan as fallback) for entries in another currency than their account. Missing pieces switch those features off. */
 export type RateLookup=(from:string,to:string,date:string)=>Promise<{rate:number;effective_date:string}>;
 export type BotEnv={appOrigin:string|null;loginSecret:string|null;admin:AdminAccounts|null;rates?:RateLookup};
-export const botEnvFromProcess=():BotEnv=>({appOrigin:accountOrigin(),loginSecret:process.env.TELEGRAM_WEBHOOK_SECRET??null,admin:adminAccounts(),rates:loadDatedExchangeRate});
+export const botEnvFromProcess=():BotEnv=>({appOrigin:accountOrigin(),loginSecret:loginSecrets()?.current??null,admin:adminAccounts(),rates:loadDatedExchangeRate});
 export type BotOutcome={replies:TelegramMessage[];callbackId?:string};
 export type BotClock={now:Date;today:string;newId:()=>string};
 const draftMinutes=30;
 const languageOf=(value:unknown):Language=>isLanguage(value)?value:'en';
 const fromHint=(code:string|undefined):Language=>detectLanguage(code?[code]:[]);
-const t=(language:Language,key:string,params?:Record<string,string|number>)=>translate(language,key,params);
 export async function ownerLanguage(db:ServiceDatabase,userId:string){
  const rows=await db.read<Array<{language?:string}>>('/rest/v1/user_preferences?select=language&user_id=eq.'+userId);
  return languageOf(rows[0]?.language);
@@ -72,8 +73,7 @@ async function webSignIn(db:ServiceDatabase,chatId:number,from:TelegramFrom|unde
 /** Sign the chat out. An account that signs in with its number keeps its Telegram identity, so sharing the number returns to it; an account linked from the app is released completely, so the same person can use another account. */
 async function signOut(db:ServiceDatabase,subscription:TelegramSubscription,now:Date):Promise<TelegramMessage>{
  const language=await ownerLanguage(db,subscription.user_id);
- const cleared=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+subscription.user_id,{method:'PATCH',body:JSON.stringify({chat_id:null,linked_at:null,updated_at:now.toISOString(),...(subscription.phone?{}:{telegram_user_id:null,first_name:null})})});
- if(!cleared.ok)throw Error('Database request failed.');
+ await unlinkChat(db,subscription,now);
  await db.write('/rest/v1/telegram_drafts?user_id=eq.'+subscription.user_id,{method:'DELETE'});
  return {chat_id:subscription.chat_id!,text:t(language,'You are signed out. Sad to see you go! 👋 Come back any time: send /start and sign in with your phone number or on the web.'),keyboard:{remove:true}};
 }
@@ -141,7 +141,7 @@ async function commitDraft(db:ServiceDatabase,owner:string,commit:Commit,ctx:Flo
   // The same wording the app gives: named refusals are relayed, an overdrawn balance and a duplicate are explained.
   const short=overdrawn(commit,ctx.accounts);
   const insufficient=failure.code==='23514'||(failure.code==='P0001'&&/insufficient balance/i.test(failure.message??''));
-  const reason=insufficient&&short?t(language,'Insufficient balance: {account} has {amount}.',{account:escapeHtml(short.name),amount:formatMoney(short.amount,short.currency,locales[language])}):failure.code==='P0001'&&failure.message?t(language,failure.message):failure.code==='23514'?t(language,'Insufficient balance or invalid amount.'):failure.code==='23505'?t(language,'This name or payment already exists.'):t(language,'Please try again.');
+  const reason=insufficient&&short?t(language,'Insufficient balance: {account} has {amount}.',{account:escapeHtml(short.name),amount:moneyIn(short.amount,short.currency,language)}):failure.code==='P0001'&&failure.message?t(language,failure.message):failure.code==='23514'?t(language,'Insufficient balance or invalid amount.'):failure.code==='23505'?t(language,'This name or payment already exists.'):t(language,'Please try again.');
   return failed(t(language,'Could not save. {reason}',{reason}));
  }
  const lookup:ActionLookup={records:Object.fromEntries(ctx.records.map(record=>[record.id,{name:record.name,kind:record.kind,currency:record.currency}])),goals:{},deleted:{},categories:Object.fromEntries(ctx.categories.map(category=>[category.id,category.name]))};
@@ -160,7 +160,7 @@ async function upcomingReply(db:ServiceDatabase,owner:string,language:Language,t
 async function openAppReply(db:ServiceDatabase,subscription:TelegramSubscription,chatId:number,language:Language,now:Date,env:BotEnv):Promise<TelegramMessage|null>{
  if(!env.appOrigin)return null;
  const text=t(language,'Your account also works on the web.');
- const createdHere=!!subscription.consented_at&&!!subscription.telegram_user_id&&!!env.loginSecret;
+ const createdHere=createdInTelegram(subscription)&&!!env.loginSecret;
  if(!createdHere)return {chat_id:chatId,text,keyboard:{inline:[[{text:t(language,'Open in browser'),url:env.appOrigin}]]}};
  const token=await createLoginToken(db,subscription.user_id,now);
  return {chat_id:chatId,text,keyboard:{inline:[[{text:t(language,'Open app'),web_app:{url:env.appOrigin+'/auth/telegram'}}],[{text:t(language,'Open in browser'),url:`${env.appOrigin}/auth/telegram?t=${token}`}]]}};
@@ -224,10 +224,12 @@ const welcome=(chatId:number,language:Language,env:BotEnv):TelegramMessage[]=>[
  {chat_id:chatId,text:t(language,'Welcome to Hoggish. Track your money here in Telegram and in the app.'),keyboard:{remove:true}},
  {chat_id:chatId,text:t(language,'By creating an account you agree to the terms of use and privacy policy of Hoggish.'),keyboard:{inline:[[{text:t(language,'Create an account'),callback_data:'o:agree'}],[{text:t(language,'I already have an account'),callback_data:'o:signin'}],...(env.appOrigin?[[{text:t(language,'Terms of use'),url:env.appOrigin+legalPaths.terms},{text:t(language,'Privacy policy'),url:env.appOrigin+legalPaths.privacy}]]:[])]}},
 ];
-/** The number button, worded for signing up, signing back in, or adding a number to an account linked from the web. */
-const contactPrompts={signup:'Share your phone number to create your account. It is also how you sign in on the web.',return:'Share your phone number to sign in again.',add:'Share your phone number so you can also sign in on the web with it.'};
-// A linked chat adding its number can change its mind: Cancel brings the main menu back.
-const contactRequest=(chatId:number,language:Language,purpose:keyof typeof contactPrompts):TelegramMessage=>({chat_id:chatId,text:t(language,contactPrompts[purpose]),keyboard:{contact:t(language,'Share my number'),...(purpose==='add'?{cancel:t(language,'Cancel')}:{})}});
+/** The number button, worded for signing up or signing back in. A number is never added to an account linked from the web: whoever holds
+ * the chat would then receive that account's sign-in codes, and a chat can be linked by someone who tricked the owner into confirming it. */
+const contactPrompts={signup:'Share your phone number to create your account. It is also how you sign in on the web.',return:'Share your phone number to sign in again.'};
+const contactRequest=(chatId:number,language:Language,purpose:keyof typeof contactPrompts):TelegramMessage=>({chat_id:chatId,text:t(language,contactPrompts[purpose]),keyboard:{contact:t(language,'Share my number')}});
+/** Why an account linked from the web gets no number: signing in by number belongs to accounts made here, and its own web sign-in keeps working. */
+const webAccountNumber='Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.';
 const subscriptionsWhere=(db:ServiceDatabase,filter:string)=>db.read<TelegramSubscription[]>('/rest/v1/telegram_subscriptions?select=*&'+filter);
 /** Who an unlinked chat belongs to. Someone who signed out of an account made here returns to it, so they are spoken to in its language and never asked to create an account again. */
 async function stranger(db:ServiceDatabase,from:TelegramFrom|undefined,hint:Language):Promise<{returning:boolean;language:Language}>{
@@ -243,7 +245,7 @@ async function invite(db:ServiceDatabase,chatId:number,from:TelegramFrom|undefin
   {chat_id:chatId,text:t(language,'Sign in with your number, or with an account you use on the web.'),keyboard:{inline:[[{text:t(language,'Sign in with my number'),callback_data:'o:agree'}],[{text:t(language,'Sign in on the web'),callback_data:'o:signin'}]]}},
  ];
 }
-/** A contact the person shared with the button: sign up, sign back in, or add the number to a linked account. */
+/** A contact the person shared with the button: sign up or sign back in. A linked chat is only told whether the number is already its own. */
 async function handleContact(db:ServiceDatabase,message:NonNullable<TelegramUpdate['message']>,hint:Language,clock:BotClock,env:BotEnv):Promise<BotOutcome>{
  const chatId=message.chat.id,contact=message.contact!,from=message.from,now=clock.now;
  const say=(language:Language,key:string,keyboard?:TelegramMessage['keyboard']):BotOutcome=>({replies:[{chat_id:chatId,text:t(language,key),...(keyboard?{keyboard}:{})}]});
@@ -253,15 +255,12 @@ async function handleContact(db:ServiceDatabase,message:NonNullable<TelegramUpda
  const taken='This number is already used with another Telegram account.';
  const existing=await subscriptionByChat(db,chatId);
  if(existing){
+  if(!sameSender(chatId,from))return {replies:[]};
   const language=await ownerLanguage(db,existing.user_id),menu=mainMenu(language);
   if(existing.phone===phone)return {replies:[{chat_id:chatId,text:connectedText(language,await ownerName(db,existing.user_id)),keyboard:menu}]};
   if(existing.phone)return say(language,'This chat is already linked to a different number.',menu);
-  if(!env.admin)return say(language,'Registration is not available yet. Please try again later.',menu);
-  if((await subscriptionsWhere(db,'phone=eq.'+encodeURIComponent(phone))).length||!await env.admin.setUserPhone(existing.user_id,phone))return say(language,taken,menu);
-  const free=!(await subscriptionsWhere(db,'telegram_user_id=eq.'+from.id)).some(row=>row.user_id!==existing.user_id);
-  const saved=await db.write('/rest/v1/telegram_subscriptions?user_id=eq.'+existing.user_id,{method:'PATCH',body:JSON.stringify({phone,updated_at:now.toISOString(),...(free?{telegram_user_id:from.id}:{})})});
-  if(!saved.ok)throw Error('Database request failed.');
-  return say(language,'Your number is saved. You can now sign in on the web with it.',menu);
+  // Linked from the web: the number is never attached, so a chat linked by deceit cannot turn into a way to sign in to the account.
+  return say(language,webAccountNumber,menu);
  }
  const [byPhone,byTelegram]=await Promise.all([subscriptionsWhere(db,'phone=eq.'+encodeURIComponent(phone)),subscriptionsWhere(db,'telegram_user_id=eq.'+from.id)]);
  let own:TelegramSubscription|undefined=byTelegram[0];
@@ -287,13 +286,19 @@ async function handleContact(db:ServiceDatabase,message:NonNullable<TelegramUpda
  return {replies:[{chat_id:chatId,text:t(hint,'Account created. Let us set up a few things.'),keyboard:{remove:true}},...(started.reply?[started.reply]:[])]};
 }
 const defaultClock=():BotClock=>({now:new Date(),today:depositToday(),newId:()=>globalThis.crypto.randomUUID()});
+/** Only a private chat is served; a group, supergroup or channel is ignored, so nobody else in it sees or changes the account. */
+const privateChat=(chat:TelegramChat|undefined)=>!chat?.type||chat.type==='private';
+/** In a private chat the sender is the chat itself; anything else (a group without its type, a forwarded update) is ignored.
+ * Compared with the chat rather than the stored identity, which an older link may have left stale. */
+const sameSender=(chatId:number,from:TelegramFrom|undefined)=>!from?.id||from.id===chatId;
 /** Decide the replies for one update. Throws only on database failure, so the webhook can ask Telegram to retry. */
 export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatabase,clock:BotClock=defaultClock(),env:BotEnv=botEnvFromProcess()):Promise<BotOutcome>{
  const {now}=clock;
  if(update.callback_query){
   const chatId=update.callback_query.message?.chat.id;
-  if(chatId===undefined)return {replies:[],callbackId:update.callback_query.id};
+  if(chatId===undefined||!privateChat(update.callback_query.message?.chat))return {replies:[],callbackId:update.callback_query.id};
   const subscription=await subscriptionByChat(db,chatId),hint=fromHint(update.callback_query.from?.language_code);
+  if(subscription&&!sameSender(chatId,update.callback_query.from))return {replies:[],callbackId:update.callback_query.id};
   if(!subscription){
    const data=update.callback_query.data,from=update.callback_query.from;
    if(data!=='o:agree'&&data!=='o:signin')return {callbackId:update.callback_query.id,replies:await invite(db,chatId,from,hint,env)};
@@ -304,15 +309,21 @@ export async function handleTelegramUpdate(update:TelegramUpdate,db:ServiceDatab
   return {callbackId:update.callback_query.id,replies:await converse(db,subscription,chatId,{callback:update.callback_query.data??''},clock,env)};
  }
  const message=update.message;
- if(!message)return {replies:[]};
+ if(!message||!privateChat(message.chat))return {replies:[]};
  const chatId=message.chat.id,text=(message.text??'').trim(),hint=fromHint(message.from?.language_code);
  if(message.contact)return handleContact(db,message,hint,clock,env);
  const subscription=await subscriptionByChat(db,chatId);
  // A chat nobody has linked is invited to create an account.
  if(!subscription)return {replies:await invite(db,chatId,message.from,hint,env)};
+ if(!sameSender(chatId,message.from))return {replies:[]};
  if(/^\/(?:stop|signout)(?:@\w+)?$/.test(text)||menuChoice(text)==='signout')return {replies:[await signOut(db,subscription,now)]};
  const language=await ownerLanguage(db,subscription.user_id);
- if(/^\/phone(?:@\w+)?$/.test(text))return {replies:[contactRequest(chatId,language,'add')]};
+ // An account made here already signs in with its number, so /phone offers the web; an account from the web keeps its own sign-in.
+ if(/^\/phone(?:@\w+)?$/.test(text)){
+  if(!createdInTelegram(subscription))return {replies:[{chat_id:chatId,text:t(language,webAccountNumber),keyboard:mainMenu(language)}]};
+  const open=await openAppReply(db,subscription,chatId,language,now,env);
+  return {replies:[open??await connectedReply(db,subscription.user_id,chatId)]};
+ }
  if(/^\/app(?:@\w+)?$/.test(text)){const open=await openAppReply(db,subscription,chatId,language,now,env);return {replies:open?[open]:[]};}
  // Anything after /start, such as an old deep-link code, is ignored: chats link only by phone number or web sign-in.
  if(/^\/start(?:@\w+)?(?:\s.*)?$/.test(text)){

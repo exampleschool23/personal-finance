@@ -35,7 +35,8 @@ test('migration 105 lifts the refusal in place and is safe to run again',{skip:!
  const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
  try{
   const migration=fs.readFileSync('migrations/105_allow_over_allocated_goals.sql','utf8'),setup=fs.readFileSync('database/setup.sql','utf8');
-  assert.ok(setup.trimEnd().endsWith(migration.trimEnd()),'database/setup.sql ends with migration 105');
+  // Later migrations follow 105 in the setup; the database before 105 is everything ahead of it.
+  assert.ok(setup.includes(migration.trimEnd()),'database/setup.sql includes migration 105');
   await prepare(db,id(1),setup.slice(0,setup.lastIndexOf(migration.trimEnd())));
   await assert.rejects(db.query("SELECT planning_action('goal',$1)",[goal(20,{allocated:1500})]),/Allocations exceed/);
   await db.exec('RESET ROLE');await db.exec(migration);await db.exec(migration);await db.exec('SET ROLE authenticated');

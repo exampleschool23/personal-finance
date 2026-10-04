@@ -117,7 +117,7 @@ test('an app preview opens only the sample workspace and only drawer screens',()
  assert.match(provider,/window\.parent\.postMessage\(previewReady, window\.location\.origin\)/);
  assert.match(fs.readFileSync('components/workspace/workspace-shell.tsx','utf8'),/if \(preview && user\) return null;/,'a signed-in account never shows in a preview');
  const preview=fs.readFileSync('components/app-preview.tsx','utf8');
- assert.match(preview,/if \(window\.self === window\.top\) setShow\(true\)/,'previews never nest');
+ assert.match(preview,/if \(window\.self === window\.top\) (?:queueMicrotask\(\(\) => )?setShow\(true\)/,'previews never nest');
  assert.match(preview,/aria-hidden="true"/);assert.match(preview,/tabIndex=\{-1\}/);
  assert.match(preview,/prefers-reduced-motion: reduce/,'the tour stands still for reduced motion');
  assert.match(fs.readFileSync('components/app-preview.module.css','utf8'),/\.frame\{[^}]*pointer-events:none/);

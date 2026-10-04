@@ -10,7 +10,7 @@ export const householdLimit = 6;
 export const workspaceCookie = 'hf_workspace';
 /** The header the database reads to scope a request to that workspace. */
 export const workspaceHeader = 'x-workspace-owner';
-export const householdRoles = ['member', 'viewer'] as const;
+const householdRoles = ['member', 'viewer'] as const;
 export type HouseholdRole = (typeof householdRoles)[number];
 export type PersonRole = HouseholdRole | 'owner';
 export type HouseholdPerson = { id: string; name: string | null; role: PersonRole };
@@ -30,7 +30,6 @@ export type HouseholdState = {
  /** Set when the household asked for was no longer available and the person's own workspace opened instead. */
  reset?: boolean;
 };
-export type InvitePreview = { owner_id: string; name: string | null; role: HouseholdRole; expires_at: string; own: boolean; joined: boolean };
 
 const uuid = z.string().uuid();
 const token = z.string().regex(/^[0-9a-f]{64}$/);
@@ -52,7 +51,7 @@ export const householdSchemas = {
 export type HouseholdAction = keyof typeof householdSchemas;
 
 /** Messages the database raises that the person can act on; anything else is a generic failure. */
-export const householdMessages = [
+const householdMessages = [
  'A household has up to six people.',
  'Choose what they can do.',
  'This invite link is no longer valid. Ask for a new one.',

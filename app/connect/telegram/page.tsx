@@ -7,7 +7,7 @@ import { Brand } from '@/components/presentation-foundation/brand';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { Button } from '@/components/ui/button';
 import { signInPath } from '@/lib/sign-in-path';
-type Result = { state: 'sign_in' | 'confirm' | 'expired' | 'cancelled' | 'connected'; telegram?: string | null; account?: string; bot?: string };
+type Result = { state: 'sign_in' | 'confirm' | 'expired' | 'cancelled' | 'connected' | 'other_telegram'; telegram?: string | null; account?: string; bot?: string };
 type View = { state: 'loading' } | { state: 'error'; message: string } | Result;
 async function request(action: 'preview' | 'confirm' | 'cancel'): Promise<Result> {
   const response = await fetch('/api/telegram/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }) });
@@ -45,15 +45,20 @@ function ConnectTelegram() {
       <div className="entry-actions"><Button onClick={() => router.push(signInPath)}>{t('Continue to sign in')}</Button><Button variant="outline" disabled={busy} onClick={() => void run('cancel')}>{t('Cancel')}</Button></div>
     </>}
     {view.state === 'confirm' && <>
+      {/* The Telegram name is whatever the chat's owner typed into Telegram: shown as plain text, isolated from the page's direction, never as proof of who it is. */}
       <dl className="connect-facts">
-        <div><dt>{t('Telegram')}</dt><dd>{view.telegram || '—'}</dd></div>
+        <div><dt>{t('Telegram')}</dt><dd><bdi>{view.telegram || '—'}</bdi></dd></div>
         <div><dt>{t('Account')}</dt><dd>{view.account || '—'}</dd></div>
       </dl>
-      <p>{t('Only connect if you pressed Sign in in the Hoggish bot yourself.')}</p>
+      <p role="note">{t('Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.')}</p>
       <div className="entry-actions"><Button disabled={busy} onClick={() => void run('confirm')}>{t('Connect')}</Button></div>
     </>}
     {view.state === 'connected' && <>
       <p role="status">{t('Telegram is connected. Go back to the chat to continue.')}</p>
+      <div className="entry-actions">{openTelegram}<Button variant="outline" asChild><Link href="/">{t('Open app')}</Link></Button></div>
+    </>}
+    {view.state === 'other_telegram' && <>
+      <p role="alert">{t('This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.')}</p>
       <div className="entry-actions">{openTelegram}<Button variant="outline" asChild><Link href="/">{t('Open app')}</Link></Button></div>
     </>}
     {(view.state === 'expired' || view.state === 'cancelled') && <>

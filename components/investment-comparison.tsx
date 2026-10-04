@@ -2,7 +2,7 @@
 import { pastDatePresets } from '@/lib/date-picker-calendar';
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { NativeSelect } from '@/components/ui/native-select';
-import { benchmarkHistoryStart, benchmarkMethodStorageKey, readBenchmarkScope, investmentComparisonCoverage, investmentDecisionComparison, purchaseComparisonStart, comparisonMethod, type ComparisonMethod, type BenchmarkMovement, type FundingScope } from '@/lib/investment-benchmarks';
+import { benchmarkMethodStorageKey, readBenchmarkScope, investmentComparisonCoverage, investmentDecisionComparison, purchaseComparisonStart, comparisonMethod, type ComparisonMethod, type BenchmarkMovement, type FundingScope } from '@/lib/investment-benchmarks';
 import { showError } from '@/lib/feedback';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { BenchmarkTooltip } from '@/components/benchmark-tooltip';
