@@ -17,6 +17,7 @@ import { formatCompactMoney, formatMoney, formatMonthShort, formatMonthYear, for
 import type { MarketData } from '@/lib/market';
 import { emptyPlanning, type PlanningData } from '@/lib/planning';
 import type { TransactionSplit } from '@/lib/transaction-tools';
+import { measureLabel, sankeyLabelMargins } from '@/lib/sankey-labels';
 
 const periodLabels: Record<ReportPeriod, string> = { month: 'Month', quarter: 'Quarter', year: 'Year' };
 type Props = { owner: string | null; demo: boolean; revision: number; data: PlanningData; splits: TransactionSplit[]; month: string; currency: string; market: MarketData | null };
@@ -55,6 +56,9 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
  const label = grouping === 'category' ? categoryName : (key: string) => key;
  const colorKey = (key: string) => grouping === 'category' ? categoryColor(data.categories.find(category => category.id === key)?.name ?? key) : 'var(--foreground)';
  const flows = sankeyFlows(report, categoryName);
+ const sankeyLabel = (name: string, value: number) => `${name} · ${formatCompactMoney(value, currency, locale)}`;
+ // Each side gets exactly the room its longest label needs.
+ const room = sankeyLabelMargins(flows, sankeyLabel, measureLabel);
  if (live && remote.initialLoading) return <section className="panel cash-flow-report"><ChartSkeleton label={t('Loading records…')}/></section>;
  if (live && remote.error) return <section className="panel cash-flow-report"><InlineError message={t(remote.error)} onRetry={remote.retry}/></section>;
  return <section className="cash-flow-report" aria-label={t('Cash flow')}>
@@ -93,11 +97,11 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
     <div><h3>{t('Income')}</h3><ShareBars items={report[grouping === 'category' ? 'categories' : 'merchants'].income} label={label} colorKey={() => 'var(--positive)'} currency={currency}/></div>
     <div><h3>{t('Expenses')}</h3><ShareBars items={report[grouping === 'category' ? 'categories' : 'merchants'].expense} label={label} colorKey={colorKey} currency={currency}/></div>
    </div> : flows.links.length ? <div className="cash-flow-sankey"><ResponsiveContainer width="100%" height={Math.max(280, flows.nodes.length * 34)}>
-    <Sankey data={flows} nodePadding={18} nodeWidth={10} margin={{ top: 8, right: 160, bottom: 8, left: 120 }} link={{ stroke: 'var(--border)', strokeOpacity: .9 }} node={({ x, y, width, height, index, payload }: { x: number; y: number; width: number; height: number; index: number; payload: { name: string; value: number } }) => {
+    <Sankey data={flows} nodePadding={18} nodeWidth={10} margin={{ top: 8, right: room.right, bottom: 8, left: room.left }} link={{ stroke: 'var(--border)', strokeOpacity: .9 }} node={({ x, y, width, height, index, payload }: { x: number; y: number; width: number; height: number; index: number; payload: { name: string; value: number } }) => {
      const kind = flows.nodes[index]?.kind;
      const fill = kind === 'income' || kind === 'savings' ? 'var(--positive)' : kind === 'total' ? 'var(--mark-bg)' : 'color-mix(in srgb, var(--foreground) 55%, transparent)';
      const left = kind === 'income';
-     return <g><rect x={x} y={y} width={width} height={Math.max(2, height)} rx={3} fill={fill}/><text x={left ? x - 8 : x + width + 8} y={y + height / 2} dy="0.35em" textAnchor={left ? 'end' : 'start'} className="sankey-label">{payload.name} · {formatCompactMoney(payload.value, currency, locale)}</text></g>;
+     return <g><rect x={x} y={y} width={width} height={Math.max(2, height)} rx={3} fill={fill}/><text x={left ? x - 8 : x + width + 8} y={y + height / 2} dy="0.35em" textAnchor={left ? 'end' : 'start'} className="sankey-label">{sankeyLabel(payload.name, payload.value)}</text></g>;
     }}>
      <Tooltip formatter={value => money(Number(value))}/>
     </Sankey>

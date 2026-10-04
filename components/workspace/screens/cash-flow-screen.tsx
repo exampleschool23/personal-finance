@@ -39,12 +39,11 @@ export function CashFlowScreen() {
  const watchlists = !transactionTools.loading&&!transactionTools.error ? <SpendingWatchlists data={planning.data} splits={transactionTools.data.splits} today={depositToday()} currency={currency} currencies={preferencesData.currencies} preferences={workspacePreferences}/> : null;
  return <>
   <div data-page="Income & expenses" className="content">
-   <PageHeader title={t('Cash flow')}>
+   <PageHeader title={t('Cash flow')} tabs={<Segmented as="nav" className="page-tabs" label={t('Cash flow')} options={tabs.map(name=>({value:name,label:t(name)}))} value={tab} onChange={name=>{setTab(name);if(name==='Overview')showFirstPage();}}/>}>
     {tab!=='Forecast'&&<DatePicker mode="month" value={forecastMonth} max={depositToday()} onChange={setForecastMonth}/>}
     <Button variant="outline" className="cashflow-action" onClick={() => addCashFlow('Other income')}><Plus size={17} aria-hidden="true"/>{t("Add income")}</Button>
-    <Button className="cashflow-action" onClick={() => addCashFlow('Other expense')}><Plus size={17} aria-hidden="true"/>{t("Add expense")}</Button>
+    {/* Expenses are added from the top bar's Add expense, the same form on every page. */}
    </PageHeader>
-   <Segmented as="nav" className="cashflow-tabs" label={t('Cash flow')} options={tabs.map(name=>({value:name,label:t(name)}))} value={tab} onChange={name=>{setTab(name);if(name==='Overview')showFirstPage();}}/>
    <ScreenNotices planErrors={false}/>
    {workspaceLoading ? <WorkspaceSkeleton label={t("Loading your workspace…")} section="Income & expenses"/> : <>
     {tab!=='Forecast'&&(planning.loading?<CashflowSummarySkeleton/>:!planning.error&&<MonthlyReview compact selectedMonth={forecastMonth} estimates={forecastReady?{income:forecast.plannedIncome,spending:forecast.monthlyExpenses+forecast.mortgagePayments+forecast.loanPayments,net:forecast.forecast}:null} owner={user} demo={demo} revision={reload} market={market} data={planning.data} tools={transactionTools} snapshots={snapshots.snapshots} historyError={snapshots.error} currency={currency}/>)}

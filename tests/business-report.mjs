@@ -152,3 +152,16 @@ test('the tax export closes with totals only when asked, and names the form a te
  assert.equal(taxFormLinks.general, undefined, 'the general template follows no country’s form');
  assert.match(taxFormLinks.schedule_c.href, /^https:\/\/www\.irs\.gov\//);
 });
+
+test('a Sankey leaves room for its longest label on each side, no more',()=>{
+ const {sankeyLabelMargins,sankeyNodeValue,estimateLabelWidth}=loadTS('lib/sankey-labels.ts');
+ // Business income -> Shop -> Household income -> Savings; Salary -> Household income; Shop -> Other expense.
+ const flows={nodes:[{name:'Business income'},{name:'Salary'},{name:'Shop'},{name:'Household income'},{name:'Savings'},{name:'Other expense'}],links:[{source:0,target:2,value:44400},{source:2,target:3,value:27200},{source:2,target:5,value:17200},{source:1,target:3,value:70300},{source:3,target:4,value:97500}]};
+ assert.equal(sankeyNodeValue(flows,2),44400);
+ assert.equal(sankeyNodeValue(flows,3),97500);
+ const label=(name,value)=>`${name} · ${value}`;
+ const measure=text=>text.length*10;
+ // Sources sit on the left, sinks on the right; the middle columns label inside the chart and never widen a margin.
+ assert.deepEqual(sankeyLabelMargins(flows,label,measure),{left:'Business income · 44400'.length*10+14,right:'Other expense · 17200'.length*10+14});
+ assert.ok(estimateLabelWidth('工资 · $1K')>estimateLabelWidth('ab · $1K'),'wide scripts take more room');
+});

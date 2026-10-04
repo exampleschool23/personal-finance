@@ -65,6 +65,8 @@
   --type-stat: clamp(22px, 2vw, 26px);
   --type-hero: clamp(30px, 3vw, 40px);
   --type-page: clamp(22px, 2vw, 26px);
+  /* Card and dialog titles: a large serif, as on the landing page's product window. */
+  --type-display: clamp(24px, 2.2vw, 30px);
   --radius-control: 10px;
   --space-page: 20px;
   --positive: #4cc38a;
@@ -74,6 +76,7 @@
   --hairline: color-mix(in srgb, var(--border) 60%, transparent);
   --font-system: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-ui: "Inter Variable", var(--font-system);
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
   /* One card shape and one brand mark in both themes; only the colours change. */
   --radius-card: 12px;
   --mark-bg: #0f766e;
@@ -162,12 +165,14 @@ small{font-size:var(--type-caption)}
 .brand-badge{padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--primary) 12%,var(--card));color:var(--primary);font-size:var(--type-micro);font-weight:700;letter-spacing:.04em;line-height:18px}
 .brand small.block{display:block;white-space:nowrap;margin-top:2px;font-size:var(--type-micro);font-weight:500;letter-spacing:.12em;color:var(--muted-foreground)}
 .mark{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;padding-right:2px;border-radius:12px;background:var(--mark-bg);color:var(--mark-fg);font-size:26px;letter-spacing:-.08em}
+.brand-compact{gap:8px;min-width:0}
+.brand-compact .mark{width:30px;height:30px;border-radius:9px;font-size:20px}
 
 /* Account access pages: the brand above one centred card. */
 .auth-page{display:flex;flex-direction:column;align-items:center;gap:24px;min-height:100svh;padding:24px 16px 48px}
 .auth-page-header{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;max-width:1120px}
 .auth-page>.panel{width:100%;max-width:440px;margin-top:min(10vh,88px);padding:28px}
-.auth-page .panel h2{font-size:var(--type-stat);font-weight:650;letter-spacing:-.02em}
+.auth-page .panel h2{font-family:var(--font-display);font-size:var(--type-display);font-weight:500;letter-spacing:-.02em}
 .auth-page .panel .entry-actions{margin:16px 0 4px}
 .auth-page .panel .entry-actions [data-slot=button]{flex:1}
 .auth-page .panel form>[data-slot=button]{width:100%;height:44px;margin-top:4px}
@@ -210,10 +215,15 @@ input,select,textarea{min-height:44px!important;background:var(--field)!importan
 
 /* Workspace shell: navigation rail, sticky top bar and one content column. */
 .workspace{width:100%;min-width:0}
-.sidebar-brand{padding:22px 20px 18px}
-.sidebar-navigation{padding:6px 12px 16px;gap:0}
-.nav-item{height:36px!important;padding:0 12px!important;gap:12px!important;border-radius:8px!important;font-size:var(--type-small)!important;font-weight:500;color:var(--sidebar-foreground);transition:background .15s,color .15s}
-.nav-item svg{width:18px!important;height:18px!important;opacity:.75}
+.sidebar-brand{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;padding:14px 10px 12px 18px}
+.sidebar-tools{display:flex;align-items:center;gap:2px}
+.sidebar-tools [data-slot]{width:32px;height:32px;border-radius:8px;color:var(--muted-foreground)}
+.sidebar-tools [data-slot]:hover,.sidebar-tools [data-active=true]{background:var(--sidebar-accent);color:var(--sidebar-foreground)}
+.sidebar-tools svg{width:17px;height:17px}
+[dir=rtl] .sidebar-tools [data-sidebar=trigger] svg{transform:scaleX(-1)}
+.sidebar-navigation{padding:2px 10px 16px;gap:0}
+.nav-item{height:34px!important;padding:0 10px!important;gap:10px!important;border-radius:8px!important;font-size:var(--type-small)!important;font-weight:500;color:var(--sidebar-foreground);transition:background .15s,color .15s}
+.nav-item svg{width:17px!important;height:17px!important;opacity:.7}
 .nav-item[data-active=true]{background:var(--sidebar-accent);color:var(--sidebar-accent-foreground)}
 .nav-item[data-active=true] svg{opacity:1}
 .nav-item>span.count:last-child{flex:0 0 auto;min-width:max-content;margin-left:auto;background:color-mix(in srgb,var(--negative) 18%,transparent);color:var(--negative)}
@@ -225,13 +235,33 @@ input,select,textarea{min-height:44px!important;background:var(--field)!importan
 .user-line strong{display:block;font-size:var(--type-small);font-weight:600}
 .user-line p{font-size:var(--type-caption);color:var(--muted-foreground);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .user-line>button{flex-shrink:0;color:var(--muted-foreground)}
-.avatar{display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--sidebar-accent);color:var(--sidebar-accent-foreground);font-size:var(--type-small);font-weight:600}
-.topbar{position:sticky;top:0;z-index:30;container:topbar/inline-size;display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px;padding:0 36px;border-bottom:1px solid var(--hairline);background:color-mix(in srgb,var(--background) 84%,transparent);backdrop-filter:saturate(1.4) blur(14px);font-size:var(--type-small)}
-.topbar-location{display:flex;align-items:center;gap:12px;min-width:0;font-weight:500;color:var(--muted-foreground)}
+.avatar{display:grid;place-items:center;flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--sidebar-accent);color:var(--sidebar-accent-foreground);font-size:var(--type-small);font-weight:600}
+.topbar{position:sticky;top:0;z-index:30;container:topbar/inline-size;display:flex;align-items:center;justify-content:space-between;gap:12px;height:60px;padding:0 36px;background:color-mix(in srgb,var(--background) 84%,transparent);backdrop-filter:saturate(1.4) blur(14px);font-size:var(--type-small)}
+.topbar-location{display:flex;align-items:center;gap:12px;min-width:0}
+.topbar-title,.topbar-page-title h1{font-size:var(--type-compact);font-weight:600;color:var(--foreground)}
+.topbar-page-title{display:flex;align-items:baseline;gap:10px;min-width:0}
+.topbar-page-title:empty{display:none}
+.topbar-page-title:not(:empty)+.topbar-title{display:none}
+.topbar-page-title h1{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.topbar-page-title .page-eyebrow{margin:0;font-size:var(--type-caption);letter-spacing:0;text-transform:none;white-space:nowrap}
+/* A page's views as underlined tabs right after its title, as in a desktop app's title bar. */
+.segmented.page-tabs{gap:16px;padding:0;border:0;border-radius:0;background:none}
+.topbar-page-title .page-tabs{align-self:stretch;margin-inline-start:12px}
+/* Without room in the bar the tabs open the page, above its own actions. */
+.page-heading .page-tabs>button{padding-block:8px}
+.segmented.page-tabs>button{height:auto;padding:0;border-radius:0;border-block-end:2px solid transparent;background:none;box-shadow:none;font-size:var(--type-small)}
+.segmented.page-tabs>button[aria-pressed=true]{background:none;box-shadow:none;color:var(--primary);border-block-end-color:var(--primary)}
+.topbar-page-actions{display:flex;align-items:center;gap:8px}
+.topbar-page-actions:not(:empty){padding-inline-end:10px;margin-inline-end:2px;border-inline-end:1px solid var(--hairline)}
+.topbar-page-actions .entry-actions{flex-wrap:nowrap;gap:8px}
+.topbar-page-actions .date-picker-trigger{width:auto;min-width:0;height:38px;min-height:38px;padding-inline:10px}
+/* Beside a page's own main action the quick expense shrinks to a quiet + so only one main action stands out. */
+.topbar-page-actions:has([data-variant=default])~.quick-expense{width:38px;padding:0;background:var(--card);color:var(--foreground);border:1px solid var(--border)}
+.topbar-page-actions:has([data-variant=default])~.quick-expense>span{display:none}
 .topbar-location>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topbar-actions{display:flex;align-items:center;gap:8px}
 .topbar-actions [data-slot=button]{height:38px;min-height:38px}
-@media(max-width:640px){.topbar{gap:8px}.topbar-location>span:not(.topbar-household){display:none}.topbar-actions{gap:6px}.quick-expense{width:38px;padding:0}@media(pointer:coarse){.quick-expense{width:44px}}.quick-expense>span{display:none}}
+@media(max-width:640px){.topbar{gap:8px}.topbar-page-title .page-eyebrow{display:none}.topbar-actions{gap:6px}.quick-expense{width:38px;padding:0}@media(pointer:coarse){.quick-expense{width:44px}}.quick-expense>span{display:none}}
 .content{padding:32px 36px;max-width:1640px;margin:auto}
 .workspace .content{container:content/inline-size;display:flex;flex-direction:column;gap:var(--space-page);width:100%;max-width:1440px;margin-inline:auto;padding:28px 36px 0}
 .workspace .content>*{flex-shrink:0;margin-block:0}
@@ -252,8 +282,10 @@ input,select,textarea{min-height:44px!important;background:var(--field)!importan
 /* Surfaces. */
 .panel{min-width:0;padding:20px;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card);box-shadow:var(--shadow-card)}
 .panel-title{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 16px;margin-bottom:16px}
-.panel-title h2{display:flex;align-items:center;gap:6px;font-size:var(--type-title);font-weight:600;letter-spacing:-.01em;line-height:1.35}
-.panel-title h2 .count{margin-inline-start:2px}
+.panel-title h2{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;font-family:var(--font-display);font-size:var(--type-display);font-weight:500;letter-spacing:-.02em;line-height:1.15}
+.panel-title h2 .count{margin-inline-start:2px;align-self:center;font-family:var(--font-ui);letter-spacing:0}
+/* Dialog titles share the card titles' serif. */
+[data-slot=dialog-title]{font-family:var(--font-display);font-size:var(--type-display);font-weight:500;letter-spacing:-.02em;line-height:1.15}
 .panel-link{display:inline-flex;align-items:center;gap:6px;min-height:24px;font-size:var(--type-caption);font-weight:500;color:var(--primary);white-space:nowrap}
 /* Links and link buttons in a panel heading keep at least a 24px target. */
 .panel-title :is(a,[data-variant=link]){display:inline-flex;align-items:center;min-height:24px}
@@ -294,7 +326,7 @@ h2:has(>.info-hint){display:flex;align-items:center;gap:6px}
 .segmented>button[aria-pressed=true]{background:var(--card);color:var(--foreground);box-shadow:0 1px 2px rgb(0 0 0 / 20%)}
 .segmented>button:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
 /* On narrow pages a switch fills the row and wraps rather than hiding options off-screen. */
-@container content (max-width:520px){.segmented{display:flex;width:100%;flex-wrap:wrap;overflow:visible}.segmented>button{flex:1 1 auto;padding-inline:10px}}
+@container content (max-width:520px){.segmented:not(.page-tabs){display:flex;width:100%;flex-wrap:wrap;overflow:visible}.segmented:not(.page-tabs)>button{flex:1 1 auto;padding-inline:10px}}
 
 /* Rows of overview figures. */
 .allocation-bar{display:flex;gap:3px;height:10px;border-radius:999px;overflow:hidden}
@@ -313,7 +345,8 @@ tbody tr:last-child td{border-bottom:0}
 .workspace .content tbody tr:is(:hover,:focus-within){background:color-mix(in srgb,var(--accent) 35%,transparent)}
 .records :is(th,td):first-child{padding-left:24px}
 .records :is(th,td):last-child{padding-right:24px}
-.panel:not(.records) .table-scroll :is(th,td):first-child{padding-left:0}
+/* The profit and loss table indents its rows by level, so it keeps its own start padding. */
+.panel:not(.records) .table-scroll table:not(.pnl-table) :is(th,td):first-child{padding-left:0}
 .panel:not(.records) .table-scroll :is(th,td):last-child{padding-right:0}
 @container content (min-width:721px){.records td:first-child{width:36%;max-width:0}}
 .record-name{display:flex;gap:12px;align-items:center;min-width:0}
@@ -342,13 +375,15 @@ tbody tr:last-child td{border-bottom:0}
 /* Touch screens: every control the thumb aims at is at least 44px; small icons grow an invisible hit area instead of a bigger glyph. */
 @media(pointer:coarse){
  /* One floor for every tappable control; screen-specific sizes above it only ever make controls larger. */
- :is(button,[role=button],[role=tab],summary,.date-picker-trigger,a[data-slot=button],input[type=range]):not(.pos-day,.drag-handle,.info-hint,.recurring-chip){min-height:44px!important}
+ :is(button,[role=button],[role=tab],summary,.date-picker-trigger,a[data-slot=button],input[type=range]):not(.pos-day,.drag-handle,.info-hint,.recurring-chip,.switch){min-height:44px!important}
  :is(button,a)[data-size^=icon]:not(.drag-handle,.info-hint){min-width:44px!important}
  .topbar-actions :is(button,a),.theme-toggle,[data-sidebar=trigger]{min-width:44px}
  .nav-item,.user-link{min-height:44px!important}
  .panel-title a,.panel-link{display:inline-flex;align-items:center;min-height:44px}
  .info-hint::after{inset:-11px}
  .drag-handle{min-width:32px;min-height:44px}
+ /* Switches keep their shape; an invisible area around them takes the tap. */
+ .switch{position:relative}.switch::after{content:"";position:absolute;inset:-12px -6px}
 }
 /* Narrow columns: each record becomes a small card instead of a sideways-scrolling row. */
 @container content (max-width:720px){
@@ -456,7 +491,7 @@ tbody tr:last-child td{border-bottom:0}
 
 /* Consistent record form rhythm, independent of global label margins. */
 .record-dialog{width:calc(100vw - 32px);max-width:560px!important;border-radius:18px;padding:28px;gap:10px;max-height:calc(100dvh - 32px);overflow-y:auto}
-.record-dialog [data-slot=dialog-title]{font-size:var(--type-stat);font-weight:650;letter-spacing:-.4px;padding-right:28px}
+.record-dialog [data-slot=dialog-title]{padding-right:28px}
 .record-dialog [data-slot=dialog-description]{font-size:var(--type-compact);line-height:1.6;margin:0 0 12px;max-width:440px}
 .record-dialog .record-form{display:grid;gap:20px;margin:0}
 .record-dialog .record-form label{margin:0;gap:8px;font-size:var(--type-compact);font-weight:500}
@@ -884,7 +919,7 @@ tbody tr:last-child td{border-bottom:0}
 .account-card-actions>button{width:100%;height:42px;min-height:42px}
 .account-card .account-details-trigger{align-self:stretch;margin-top:auto;color:var(--muted-foreground)}
 .account-holdings{list-style:none;padding:0;margin:12px 0 0}
-.account-holding-row{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(170px,240px) auto auto;align-items:center;gap:8px 14px;padding:14px 0;border-top:1px solid var(--hairline);font-size:var(--type-small)}
+.account-holding-row{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(170px,240px) minmax(max-content,.4fr) auto;align-items:center;gap:8px 14px;padding:14px 0;border-top:1px solid var(--hairline);font-size:var(--type-small)}
 .account-holding-row>div:nth-child(2){min-width:0}
 .account-holding-row>div:nth-child(2)>strong{font-weight:600;overflow-wrap:anywhere}
 .account-holding-row p{margin-top:2px;font-size:var(--type-caption);overflow-wrap:anywhere}
@@ -993,18 +1028,12 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .record-dialog .planning-check>span {line-height:1.5;font-weight:400}
 
 /* Keep display preferences in the header instead of a full-width panel. */
-.header-currency-trigger{flex-shrink:0;gap:8px}
-.header-currency-popover{width:min(320px,calc(100vw - 32px));padding:0;border-radius:var(--radius-card);box-shadow:var(--shadow-card)}
-.header-currency-section{display:grid;gap:10px;padding:16px}
-.header-currency-section+.header-currency-section{border-top:1px solid var(--hairline)}
-.header-currency-section h2{margin:0;font-size:var(--type-caption);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted-foreground)}
-.header-currency-section p{margin:0;font-size:var(--type-small);line-height:1.45;color:var(--muted-foreground)}
-.header-currency-section .segmented{display:flex;width:100%}
-.header-currency-section .segmented>button{flex:1}
-.header-currency-rates{grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:12px}
-.header-currency-rates>div{display:grid;gap:4px;min-width:0}
-.header-currency-rates>div p{color:var(--foreground)}
-.header-currency-rates .fx-attribution{grid-column:1/-1;font-size:var(--type-caption);color:var(--muted-foreground);text-decoration:underline;text-underline-offset:3px;justify-self:start}
+/* Phones: the drawer sheet stops at the small viewport, but the backdrop runs under the browser's bottom toolbar.
+   Its background continues below so no strip of backdrop shows under the drawer. */
+[data-slot=sidebar][data-mobile=true]::after{content:"";position:absolute;inset-inline:0;top:100%;height:100vh;background:inherit;border-inline-end:inherit}
+.header-currency-switch{flex-shrink:0;padding:3px}
+.header-currency-switch>button{min-width:48px;padding-inline:10px;font-weight:600}
+.fx-note{gap:6px;margin-top:4px}.fx-note a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 
 /* History filters align with the panel heading and share one control baseline. */
 .workspace .content .records .record-filters{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,3fr);align-items:end;gap:12px;padding:0 24px 20px;margin:0}
@@ -1243,7 +1272,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .monthly-review-help:hover{color:var(--primary);background:var(--accent)}
 .monthly-review-help-dialog{border-radius:24px;padding:28px;gap:16px;max-height:calc(100dvh - 32px);overflow-y:auto}
 .monthly-review-help-icon{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--accent);color:var(--primary)}
-.monthly-review-help-dialog [data-slot="dialog-title"]{font-size:var(--type-stat);line-height:1.3;padding-right:16px}
+.monthly-review-help-dialog [data-slot="dialog-title"]{padding-right:16px}
 .monthly-review-help-dialog [data-slot="dialog-description"]{line-height:1.6}
 .monthly-review-help-note{display:flex;align-items:flex-start;gap:12px;padding:16px;border:1px solid var(--border);border-radius:16px;background:var(--muted)}
 .monthly-review-help-note>svg{flex-shrink:0;margin-top:2px;color:var(--primary)}
@@ -1333,7 +1362,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .settings-layout .settings-form>button{justify-self:start;min-width:144px}
 .settings-layout .comparison-settings-options{gap:10px}
 .settings-layout .panel label{gap:6px;margin-bottom:0}
-.workspace .content .settings-layout .panel h2{font-size:var(--type-title);line-height:1.4;margin:0 0 8px;font-weight:600;letter-spacing:-.01em}
+.workspace .content .settings-layout .panel h2{font-family:var(--font-display);font-size:var(--type-display);line-height:1.15;margin:0 0 12px;font-weight:500;letter-spacing:-.02em}
 .workspace .content .settings-layout .settings-form h2{margin:0}
 .settings-layout .settings-form>h2{padding-top:4px}
 .settings-layout .panel>p:not(.error){margin:0 0 12px;line-height:1.5}
@@ -1672,7 +1701,6 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 @media(max-width:520px){.preferences-profile-grid{grid-template-columns:1fr;gap:14px}.settings-layout .preferences-card .preferences-setting-row{grid-template-columns:1fr;gap:6px}.workspace .content .settings-layout .preferences-card{padding:18px 16px}.preferences-save-bar>div{width:100%}.preferences-save-bar button{flex:1}.preferences-currency-list li{gap:10px}.workspace .content .preferences-card input,.workspace .content .preferences-card select{font-size:var(--type-body)}}
 
 /* Cash flow: month figures, then income and spending side by side. */
-.cashflow-tabs{align-self:flex-start}
 .cashflow-summary{display:grid;gap:10px}
 .cashflow-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
 .cashflow-preview-grid>.tools-panel{grid-column:1/-1}
@@ -1711,7 +1739,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 @container content (max-width:760px){
  .page-heading:has(.cashflow-action){flex-direction:column;align-items:stretch}
  .page-heading:has(.cashflow-action)>div:first-child{flex:none}
- .workspace .content .entry-actions:has(.cashflow-action){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%}
+ .workspace .content .entry-actions:has(.cashflow-action){display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%}
  .entry-actions:has(.cashflow-action) .date-picker-trigger{grid-column:1/-1;width:100%}
  .workspace .content .entry-actions .cashflow-action{white-space:nowrap;height:44px;min-height:44px}
 }
@@ -1732,7 +1760,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .workspace .content .overview-hero{padding:24px;box-shadow:var(--shadow-card);background:var(--card)}
 .overview-hero-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px 20px;flex-wrap:wrap}
 .overview-hero-value{display:grid;gap:4px;min-width:0}
-.overview-hero-value h2{font-size:var(--type-body);font-weight:600;letter-spacing:-.01em}
+.overview-hero-value h2{font-family:var(--font-display);font-size:var(--type-display);font-weight:500;letter-spacing:-.02em;line-height:1.15}
 .overview-hero-value>strong{font-size:var(--type-page);font-weight:500;letter-spacing:-.03em;line-height:1.15;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .overview-hero-value>p{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px;font-size:var(--type-small);color:var(--muted-foreground)}
 .overview-delta{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:600;font-variant-numeric:tabular-nums;background:color-mix(in srgb,currentColor 10%,transparent)}
@@ -1780,11 +1808,10 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .progress-track>*{display:block;height:100%;border-radius:6px;background:var(--positive)}
 .workspace .content .overview-panel{padding:24px;min-width:0;box-shadow:var(--shadow-card)}
 .workspace .content .overview-panel .panel-title{margin-bottom:20px;align-items:baseline}
-.workspace .content .overview-panel .panel-title h2{font-size:var(--type-body);font-weight:600;letter-spacing:-.01em}
 .overview-panel .panel-title a{font-size:var(--type-caption);font-weight:500;color:var(--primary);white-space:nowrap}
 .overview-panel .panel-title a:hover{text-decoration:underline;text-underline-offset:3px}
 /* A card's headline figure sits in its title: "Spending $3,960 this month". */
-.panel-title h2 .panel-figure{font-weight:500;color:var(--muted-foreground)}
+.panel-title h2 .panel-figure{font-family:var(--font-ui);font-size:var(--type-compact);font-weight:500;letter-spacing:0;color:var(--muted-foreground)}
 .spending-pace-delta{margin:-12px 0 12px;font-size:var(--type-caption);color:var(--muted-foreground)}
 .spending-pace-chart{min-width:0}
 .spending-pace-legend{display:flex;gap:16px;margin:8px 0 0;padding:0;list-style:none;font-size:var(--type-caption);color:var(--muted-foreground)}
@@ -1960,8 +1987,8 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .transaction-day-heading{display:flex;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--muted);font-size:var(--type-caption);font-weight:500;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
 .transaction-day-heading h3{margin:0;font-size:var(--type-caption);font-weight:500}
 .transaction-day ul{margin:0;padding:0;list-style:none}
-.transaction-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;font-size:var(--type-small)}
-.transaction-row:has(>input){grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr) auto}
+.transaction-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(max-content,.45fr);align-items:center;gap:12px;padding:10px 16px;cursor:pointer;font-size:var(--type-small)}
+.transaction-row:has(>input){grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr) minmax(max-content,.45fr)}
 .transaction-row+.transaction-row{border-top:1px solid var(--hairline)}
 .transaction-row:hover{background:color-mix(in srgb,var(--muted) 60%,transparent)}
 .transaction-row:focus-visible{outline:2px solid var(--ring);outline-offset:-2px}
@@ -2008,7 +2035,10 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .recurring-bar[data-tone=income] .progress-track>div{background:var(--positive)}
 .recurring-list{width:100%;padding:0;overflow:hidden}
 .recurring-list>ul{margin:0;padding:0;list-style:none}
-.recurring-row{display:grid;grid-template-columns:minmax(0,1.6fr) auto minmax(90px,auto) minmax(150px,auto);align-items:center;gap:12px;padding:10px 16px;font-size:var(--type-small)}
+/* One set of columns for the whole list: each row is a subgrid, so status, amount and actions line up on every row. */
+.recurring-list>ul,.subscription-list{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto}
+.recurring-list>ul>li,.subscription-list>li{grid-column:1/-1}
+.recurring-row{display:grid;grid-template-columns:subgrid;align-items:center;gap:12px;padding:10px 16px;font-size:var(--type-small)}
 .recurring-row+.recurring-row{border-top:1px solid var(--hairline)}
 .recurring-row[data-status=paid],.recurring-row[data-status=skipped],.recurring-row[data-status=missed]{color:var(--muted-foreground)}
 .recurring-row .row-actions{justify-content:flex-end}
@@ -2034,7 +2064,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .recurring-chip[data-direction=income]{background:color-mix(in srgb,var(--positive) 12%,transparent);color:var(--positive)}
 .recurring-chip[data-status=overdue]{background:color-mix(in srgb,var(--negative) 12%,transparent);color:var(--negative)}
 .recurring-chip[data-status=paid],.recurring-chip[data-status=skipped]{opacity:.55}
-@container content (max-width:720px){.recurring-summary{grid-template-columns:minmax(0,1fr)}.recurring-row{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}.recurring-row .row-actions{grid-column:1/-1;justify-content:flex-start}.recurring-calendar-day{min-height:64px;padding:4px}.recurring-chip>strong{display:none}}
+@container content (max-width:720px){.recurring-summary{grid-template-columns:minmax(0,1fr)}.recurring-list>ul,.subscription-list{grid-template-columns:minmax(0,1fr) auto}.recurring-row{row-gap:6px}.recurring-row .row-actions{grid-column:1/-1;justify-content:flex-start}.recurring-calendar-day{min-height:64px;padding:4px}.recurring-chip>strong{display:none}}
 
 /* Dashboard extras: budget at a glance and the Customize dialog. */
 .dashboard-budget-total{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
@@ -2107,7 +2137,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .cash-flow-breakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
 .cash-flow-breakdown h3{margin:0 0 10px;font-size:var(--type-small);font-weight:600}
 .share-bars{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;font-size:var(--type-small)}
-.share-bars>li{display:grid;grid-template-columns:minmax(0,1fr) auto 52px;align-items:center;gap:10px}
+.share-bars>li{display:grid;grid-template-columns:minmax(0,1fr) minmax(max-content,.3fr) 52px;align-items:center;gap:10px}
 .share-bar{display:flex;align-items:center;min-width:max-content;height:28px;padding-inline:10px;border-radius:6px}
 .share-bar>span{white-space:nowrap}
 .share-bars strong{font-weight:500;font-variant-numeric:tabular-nums;text-align:end}
@@ -2134,9 +2164,10 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .assistant-note{margin:0;color:var(--muted-foreground);font-size:var(--type-caption);text-align:center}
 
 /* Savings goals: one ordered list of goals beside what is free for goals. */
-.goals-layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:16px;align-items:start;width:100%}
-.goals-side{display:flex;flex-direction:column;gap:16px;min-width:0}
-@container content (max-width:900px){.goals-layout{grid-template-columns:minmax(0,1fr)}}
+/* The chosen goal and what is free for goals sit side by side and end together. */
+.goals-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:stretch;width:100%}
+.goal-planner-pick{display:flex;align-items:center;gap:10px;font-size:var(--type-small);font-weight:500}
+.goal-planner-pick [data-slot=native-select-wrapper]{width:auto;min-width:220px}
 .goal-rows{display:flex;flex-direction:column;margin:4px 0 0;padding:0;list-style:none}
 .goal-row{display:flex;align-items:center;gap:4px;margin-inline:-12px;padding-inline:4px;border-radius:var(--radius-control);background:var(--card)}
 .goal-row+.goal-row{border-top:1px solid var(--hairline)}
@@ -2358,7 +2389,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .report-drill>button{display:grid;place-items:center;width:20px;height:20px;border-radius:50%}
 .report-drill>button:hover{background:color-mix(in srgb,var(--mark-bg) 20%,transparent)}
 .report-transaction-list{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
-.report-transaction-list>li>*{display:grid;grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr) auto;align-items:center;gap:12px;width:100%;padding:9px 0;font-size:var(--type-small);text-align:start}
+.report-transaction-list>li>*{display:grid;grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr) minmax(max-content,.45fr);align-items:center;gap:12px;width:100%;padding:9px 0;font-size:var(--type-small);text-align:start}
 .report-transaction-list>li>button:hover,.report-transaction-list>li>button:focus-visible{background:color-mix(in srgb,var(--muted) 60%,transparent)}
 .report-transaction-list>li+li{border-top:1px solid var(--hairline)}
 .report-transaction-list>li>*>span:nth-child(2){display:flex;flex-direction:column;min-width:0}
@@ -2368,7 +2399,8 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 @container content (max-width:600px){.report-transaction-list>li>*{grid-template-columns:auto minmax(0,1fr) auto}.report-transaction-list .report-business-name{grid-column:2;grid-row:2}.report-transaction-list>li>*>strong{grid-row:1/3;grid-column:3}}
 .dashboard-business{display:flex;flex-direction:column;gap:12px}
 .dashboard-business>[data-slot=native-select-wrapper]{width:auto;align-self:flex-start}
-.business-card-list li{grid-template-columns:auto minmax(0,1fr) auto auto}
+.business-card-list li{grid-template-columns:auto minmax(0,1fr) auto minmax(max-content,.35fr)}
+.business-card-list li>:last-child{justify-self:end}
 .business-card-name{display:flex;flex-direction:column;min-width:0;font-weight:500;overflow-wrap:anywhere}
 .business-card-name small{min-width:0;color:var(--muted-foreground);font-size:var(--type-caption);font-weight:400;text-align:start}
 .business-card-name:hover,.business-card-net:hover small{text-decoration:underline;text-underline-offset:3px}
@@ -2435,7 +2467,7 @@ summary.tax-line-heading>svg{flex-shrink:0;color:var(--muted-foreground);transit
 .tax-transactions[open]>summary>svg{transform:rotate(180deg)}
 .tax-transactions>ul{margin:6px 0 0;padding:0;list-style:none}
 .tax-transactions li+li{border-top:1px solid var(--hairline)}
-.tax-transactions li>button{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(5rem,auto);align-items:center;gap:12px;width:100%;padding:7px 0;font-size:var(--type-caption);text-align:start}
+.tax-transactions li>button{display:grid;grid-template-columns:minmax(0,1fr) minmax(max-content,.4fr) minmax(max-content,.35fr);align-items:center;gap:12px;width:100%;padding:7px 0;font-size:var(--type-caption);text-align:start}
 .tax-transactions li>button:not(:disabled):hover{background:color-mix(in srgb,var(--muted) 60%,transparent)}
 .tax-transactions li>button>strong{font-weight:500;font-variant-numeric:tabular-nums;text-align:end}
 .tax-net{display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:var(--type-small)}

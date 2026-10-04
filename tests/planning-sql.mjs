@@ -31,7 +31,8 @@ assert.equal(await balance(10),895);assert.equal(await balance(11),200);
  await assert.rejects(action('mortgage',{...transfer,id:id(38),target_id:id(13),amount:10,received:0,fee:1}),/Mortgage not found/);
  await action('reconcile',{id:id(37),account_id:id(10),amount:900,date:today});assert.equal(await balance(10),900);
  await action('goal',{id:id(40),name:'Emergency',account_id:id(10),target:1000,allocated:800,target_date:null,archived:false});assert.equal(await balance(10),900);
- await assert.rejects(action('goal',{id:id(41),name:'Holiday',account_id:id(10),target:500,allocated:200,target_date:null}),/exceed/);
+ // Goals may set aside more than the account holds (800 + 200 of 900); setting money aside never moves it.
+ await action('goal',{id:id(41),name:'Holiday',account_id:id(10),target:500,allocated:200,target_date:null});assert.equal(await balance(10),900);
  await action('category',{id:id(42),name:'Travel',direction:'expense'});
  await record(50,'Salary',100,'USD',{frequency:'Monthly'});
  await action('occurrence',{id:id(51),account_id:id(10),target_id:id(50),date:today});await action('occurrence',{id:id(52),account_id:id(10),target_id:id(50),date:today});assert.equal(await balance(10),1000);

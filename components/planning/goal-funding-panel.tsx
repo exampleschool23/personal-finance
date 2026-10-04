@@ -25,9 +25,11 @@ import { emptyPlanning,type Goal,type PlanningData } from '@/lib/planning';
 import { useOwnerResource, saveOwnerResource } from '@/hooks/use-owner-resource';
 
 const empty = { events: [] as GoalEvent[] };
-type Props = { data: PlanningData; currency: string; surplus: number | null; today: string; rates?: Record<string, number>; owner: string | null; demo: boolean; revision: number; onSaved: () => void };
+type Props = { data: PlanningData; currency: string; surplus: number | null; today: string; rates?: Record<string, number>; owner: string | null; demo: boolean; revision: number; onSaved: () => void;
+ /** One of the two panels: what is free for goals (on the page) or the cash goal activity (in the History window). Both when left out. */
+ part?: 'funding' | 'activity' };
 
-export function GoalFundingPanel({ data, currency, surplus, today, rates, owner, demo, revision, onSaved }: Props) {
+export function GoalFundingPanel({ data, currency, surplus, today, rates, owner, demo, revision, onSaved, part }: Props) {
  const { t, locale } = useLanguage();
  const savingsGoals = data.goals.filter(goal => (goal.kind ?? 'savings') === 'savings');
  const activeSavings = savingsGoals.filter(goal => !goal.archived);
@@ -50,9 +52,14 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
  }
 
  if (!activeGoals.length && !savingsGoals.length) return null;
+ // One activity row; the panel and the full history share it.
+ const activityRow = (event: (typeof events)[number]) => {
+  const goal = savingsGoals.find(item => item.id === event.goal_id);
+  return <li key={event.id}><div><strong>{goal?.name ?? t('Goal')}</strong><small>{formatDate(event.occurred_on, locale)} · {t(event.event_type)}{event.source_name && ` · ${event.source_name}`}</small>{event.notes && <small>{event.event_type === 'opening' ? t(event.notes) : event.notes}</small>}</div><strong className="goal-activity-amount">{formatMoney(Number(event.delta), goal?.currency ?? currency, locale)}</strong></li>;
+ };
  // Goals sidebar: what is free for goals this month, the plan that uses it, and the money moved in and out of goals.
  return <>
-  {activeGoals.length > 0 && <section className="panel goal-funding-panel" aria-labelledby={`${activityId}-funding`}>
+  {part !== 'activity' && activeGoals.length > 0 && <section className="panel goal-funding-panel" aria-labelledby={`${activityId}-funding`}>
    <PanelTitle title={<span id={`${activityId}-funding`}>{t('Available for goals')}</span>} hint={t('Plan how to divide your monthly surplus between goals. Money stays in your accounts until you move it.')}/>
    <div className="goal-available"><strong>{money(plan.remaining)}</strong><span>{t('Unassigned monthly surplus')}</span></div>
    <dl className="goal-funding-figures">
@@ -70,7 +77,7 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
     <div className="goal-funding-editors">{activeGoals.map(goal => <FundingEditor key={JSON.stringify(goal)} goal={goal} today={today} busy={busy || demo} save={save}/>)}</div>
    </DialogContent></Dialog>
   </section>}
-  {savingsGoals.length > 0 && <section className="panel goal-cash-activity" aria-labelledby={activityId}>
+  {part !== 'funding' && savingsGoals.length > 0 && <section className="panel goal-cash-activity" aria-labelledby={activityId}>
    <PanelTitle title={<span id={activityId}>{t('Cash goal activity')}</span>} hint={t('Contributions, withdrawals and transfers for your cash savings goals.')}>
     {activeSavings.length > 0 && <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => setActivityOpen(true)}><Plus size={16} aria-hidden="true"/>{t('Record')}</Button>}
    </PanelTitle>
@@ -81,15 +88,13 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
    </DialogContent></Dialog>}
    {activity.error ? <InlineError as="div" className="goal-funding-notice" message={<p>{t('Goal activity could not be loaded. Please try again.')}</p>} onRetry={activity.retry}/>
     : activity.loading ? <LoadingPlaceholder label={t('Loading goal activity…')} rows={2}/>
-    : events.length > 0 ? <ul className="goal-activity-list">{events.slice(0, 6).map(event => {
-      const goal = savingsGoals.find(item => item.id === event.goal_id);
-      return <li key={event.id}><div><strong>{goal?.name ?? t('Goal')}</strong><small>{formatDate(event.occurred_on, locale)} · {t(event.event_type)}{event.source_name && ` · ${event.source_name}`}</small>{event.notes && <small>{event.event_type === 'opening' ? t(event.notes) : event.notes}</small>}</div><strong className="goal-activity-amount">{formatMoney(Number(event.delta), goal?.currency ?? currency, locale)}</strong></li>;
-     })}</ul>
+    : events.length > 0 ? <ul className="goal-activity-list">{events.map(activityRow)}</ul>
     : <EmptyState icon={<History aria-hidden="true"/>} description={t('Cash contributions, withdrawals and transfers will appear here when recorded.')}/>}
   </section>}
   <ErrorPopup message={error}/>
  </>;
 }
+
 
 function FundingEditor({ goal, today, busy, save }: { goal: Goal; today: string; busy: boolean; save: (action: string, data: unknown) => Promise<void> }) {
  const { t, locale } = useLanguage(); const id = useId();

@@ -24,7 +24,11 @@ export function SignInScreen({ brand, preferences, busy, configured, error, onLo
   const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   return <AuthPage brand={brand} preferences={preferences} title="Welcome back." subtitle="Sign in to your financial overview.">
-    <ProviderChoices disabled={busy || !configured} emailDivider="or sign in with email">
+    <ProviderChoices disabled={busy || !configured} footer={<>
+      <p className={styles.register}>{t('New to Hoggish?')} <Link href={signUpPath}>{t('Create an account')}</Link></p>
+      {/* The sample workspace is offered here only while accounts cannot be used yet; otherwise it lives on the landing page. */}
+      {!configured && <SampleInvite busy={busy} onDemo={onDemo}/>}
+    </>}>
       <form className={styles.form} onSubmit={onLogin} aria-busy={busy}>
         <label htmlFor="signin-email">{t('Email address')}</label><Input id="signin-email" name="email" type="email" placeholder="you@example.com" required autoComplete="username" autoCapitalize="none" spellCheck={false}/>
         <div className={styles.passwordLabel}><label htmlFor="signin-password">{t('Password')}</label><Link href={recoverPath}>{t('Forgot password?')}</Link></div>
@@ -33,8 +37,6 @@ export function SignInScreen({ brand, preferences, busy, configured, error, onLo
         {!configured && <p className={styles.notice} role="status">{t('Account connection is awaiting setup. You can explore the sample workspace below.')}</p>}
         <Button type="submit" className={styles.submit} disabled={busy || !configured}>{t(busy ? 'Signing in…' : 'Sign in')}</Button>
       </form>
-      <p className={styles.register}>{t('New to Hoggish?')} <Link href={signUpPath}>{t('Create an account')}</Link></p>
-      <SampleInvite busy={busy} onDemo={onDemo}/>
     </ProviderChoices>
   </AuthPage>;
 }

@@ -52,3 +52,11 @@ test('dashboard cards move only in rearrange mode, which wiggles them until Done
  assert.match(board, /onClick=\{onRearrange\}.*Rearrange cards/);
  assert.match(screen, /arranging \? <Button onClick=\{\(\) => setArranging\(false\)\}>.*'Done'/, 'Done ends rearrange mode');
 });
+
+test('Customize switches keep their shape on phones and quick toggles save after a background refresh', async () => {
+ const { readFileSync } = await import('node:fs');
+ const css = readFileSync('app/globals.css', 'utf8'), hook = readFileSync('hooks/use-workspace-preferences.ts', 'utf8');
+ assert.match(css, /:not\(\.pos-day,\.drag-handle,\.info-hint,\.recurring-chip,\.switch\)\{min-height:44px!important\}/, 'the 44px floor skips switches');
+ assert.match(css, /\.switch::after\{content:"";position:absolute;inset:-12px -6px\}/, 'a switch still gets a thumb-sized tap area');
+ assert.match(hook, /if\(resource\.initialLoading\|\|resource\.error\)throw Error\('Load saved preferences before making changes\.'\)/, 'a refresh after a save does not block the next change');
+});

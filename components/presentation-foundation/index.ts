@@ -8,6 +8,7 @@
  * substitute one piece at a time; this index is the module's table of contents.
  */
 export { PageHeader } from './page-header';
+export { TopBarSlotProvider, useTopBarSlot } from './top-bar-slot';
 export { StatTile, StatTiles, type StatTone } from './stat-tile';
 export { PanelTitle } from './panel-title';
 export { InfoHint } from './info-hint';

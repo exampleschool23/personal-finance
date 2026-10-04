@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { Button } from '@/components/ui/button';
 import { paletteColor } from '@/lib/business';
+import { measureLabel, sankeyLabelMargins } from '@/lib/sankey-labels';
 import { ledgerExportRows, summarizeLines, type BusinessSankey, type Drill, type Interval, type LedgerLine, type PnlLine, type ProfitAndLoss } from '@/lib/business-report';
 import type { Share } from '@/lib/cash-flow-report';
 import { categoryColor } from '@/lib/category-colors';
@@ -98,8 +99,11 @@ export function BusinessSankeyChart({ data, currency, onDrill }: { data: Busines
  const fill = (kind: BusinessSankey['nodes'][number]['kind']) => kind === 'income' || kind === 'savings' ? 'var(--positive)' : kind === 'total' ? 'var(--mark-bg)' : kind === 'business' ? 'var(--caution)' : kind === 'loss' ? 'var(--negative)' : 'color-mix(in srgb, var(--foreground) 55%, transparent)';
  const drillOf = (index: number) => data.nodes[index]?.drill;
  const columns = new Set(data.nodes.map(node => node.kind)).size;
+ const label = (name: string, value: number) => `${name} · ${formatCompactMoney(value, currency, locale)}`;
+ // Each side gets exactly the room its longest label needs.
+ const room = sankeyLabelMargins(data, label, measureLabel);
  return <div className="cash-flow-sankey"><ResponsiveContainer width="100%" minWidth={columns > 3 ? 720 : 480} height={Math.max(300, data.nodes.length * 30)}>
-  <Sankey data={data} nodePadding={16} nodeWidth={10} margin={{ top: 8, right: 220, bottom: 8, left: 150 }}
+  <Sankey data={data} nodePadding={16} nodeWidth={10} margin={{ top: 8, right: room.right, bottom: 8, left: room.left }}
    link={({ sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, index }: LinkProps) => {
     const link = data.links[index], drill = link && (drillOf(link.target) ?? drillOf(link.source));
     return <path className="sankey-link" d={`M${sourceX},${sourceY} C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`} strokeWidth={Math.max(1, linkWidth)} onClick={drill ? () => onDrill(drill) : undefined} data-clickable={!!drill || undefined}/>;
@@ -109,7 +113,7 @@ export function BusinessSankeyChart({ data, currency, onDrill }: { data: Busines
     const drill = node?.drill;
     return <g className="sankey-node" onClick={drill ? () => onDrill(drill) : undefined} data-clickable={!!drill || undefined}>
      <rect x={x} y={y} width={width} height={Math.max(2, height)} rx={3} fill={fill(node?.kind ?? 'expense')}/>
-     <text x={left ? x - 8 : x + width + 8} y={y + height / 2} dy="0.35em" textAnchor={left ? 'end' : 'start'} className="sankey-label">{payload.name} · {formatCompactMoney(payload.value, currency, locale)}</text>
+     <text x={left ? x - 8 : x + width + 8} y={y + height / 2} dy="0.35em" textAnchor={left ? 'end' : 'start'} className="sankey-label">{label(payload.name, payload.value)}</text>
     </g>;
    }}>
    <Tooltip formatter={value => formatMoney(Number(value), currency, locale)}/>

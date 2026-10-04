@@ -1,13 +1,13 @@
 "use client";
 import type { MouseEvent } from 'react';
 import { usePathname } from 'next/navigation';
-import { LogOut } from 'lucide-react';
+import { LogOut, PanelLeft, Settings } from 'lucide-react';
 import { Brand } from '@/components/presentation-foundation/brand';
 import { DrawerLink } from '@/components/presentation-foundation/drawer-link';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { formatNumber } from '@/lib/format';
 import { directionOf } from '@/lib/i18n';
 import { sectionFor, sections } from '@/components/workspace/navigation';
@@ -54,7 +54,14 @@ export function AppDrawer({ account, overdueCount, signOutLabel, onSignOut, pend
  const settings = sections.find(section => section.group === 'Account')!;
  // Right-to-left languages open the drawer from the right edge.
  return <Sidebar className="border-sidebar-border" side={language && directionOf(language) === 'rtl' ? 'right' : 'left'}>
-  <SidebarHeader className="sidebar-brand"><Brand onClick={follow('/')} badge={badge}/></SidebarHeader>
+  {/* The mark on one side, quick tools on the other, as in a desktop app's title area. */}
+  <SidebarHeader className="sidebar-brand">
+   <Brand compact onClick={follow('/')} badge={badge}/>
+   <div className="sidebar-tools">
+    <Button asChild variant="ghost" size="icon"><DrawerLink href={settings.path} data-active={active === settings.name} aria-label={t(settings.label)} title={t(settings.label)} onClick={follow(settings.path)}><Settings aria-hidden="true"/></DrawerLink></Button>
+    <SidebarTrigger aria-label={t('Toggle Sidebar')} title={t('Toggle Sidebar')}><PanelLeft aria-hidden="true"/></SidebarTrigger>
+   </div>
+  </SidebarHeader>
   <SidebarContent className="sidebar-navigation"><nav aria-label={t('WORKSPACE')}>
    <SidebarMenu>{sections.filter(section => section.group === 'WORKSPACE').map(item)}</SidebarMenu>
   </nav></SidebarContent>

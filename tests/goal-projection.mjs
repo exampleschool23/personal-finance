@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {loadTS} from './helpers/load-ts.mjs';
 import ts from 'typescript';
 import * as finance from '../lib/finance.ts';
 import * as market from '../lib/market.ts';
@@ -71,4 +72,28 @@ test('milestones mark the months that receive an investment and show both monthl
  assert.match(planner,/\{index === 0 \? t\('Today'\) : point\.contributes \? formatMonthYear\(point\.date, locale\) : formatDate\(point\.date, locale\)\}/);
  // The needed amount is the same whole figure as the summary tile, never an exact calculation tail.
  assert.match(planner,/point\.contributes && requiredContribution !== null \? money\(requiredContribution\) : '—'/);
+});
+
+test('a goal without a target date shows the month it is reached at the amount typed',()=>{
+ const {reachedIn}=loadTS('lib/goal-projection.ts');
+ // Retirement 2: $22,874 target, $2,287 saved, $500 a month from October 2026 is 42 months: April 2030.
+ assert.equal(reachedIn(22874-2287,500,'2026-10-04'),'2030-04');
+ assert.equal(reachedIn(1200,100,'2026-12-15'),'2027-12','counts across the year end');
+ assert.equal(reachedIn(1,100,'2026-10-04'),'2026-11');
+ for(const [left,monthly] of [[0,100],[null,100],[500,0],[500,-5],[500,Number.NaN],[1e9,1]])assert.equal(reachedIn(left,monthly,'2026-10-04'),null,`${left} at ${monthly}`);
+ const flow=fs.readFileSync('components/planning/goal-setup-flow.tsx','utf8');
+ assert.match(flow,/t\('At this amount, reached in \{month\}', \{ month: formatMonthYear\(reached, locale\) \}\)/,'the month goes through the shared formatter');
+ assert.doesNotMatch(flow,/Your goal allocations exceed the current account balance/,'already saved may exceed the account balance in setup');
+ assert.doesNotMatch(fs.readFileSync('components/planning/goals-page.tsx','utf8'),/allocations exceed|overAllocated/,'goal rows never flag allocations over the balance');
+});
+
+test('the Goals page switches Overview, Goal planner and History from the top bar',()=>{
+ const css=fs.readFileSync('app/globals.css','utf8'),page=fs.readFileSync('components/planning/goals-page.tsx','utf8'),panel=fs.readFileSync('components/planning/goal-funding-panel.tsx','utf8');
+ assert.match(page,/<PageHeader title=\{t\('Goals'\)\} tabs=\{<Segmented className="page-tabs"[^\n]*value:'overview'[^\n]*value:'planner'[^\n]*value:'history'/);
+ // Overview: the list, then the chosen goal beside what is free for goals; the other views stand alone.
+ assert.match(page,/\{view==='overview'&&<>[\s\S]*goals-list[\s\S]*<div className="goals-split">[\s\S]*<GoalDetail[\s\S]*part="funding"\/>/);
+ assert.match(page,/\{view==='planner'&&\(active\?/);assert.match(page,/\{view==='history'&&<GoalFundingPanel[^\n]*part="activity"\/>\}/);
+ assert.match(panel,/part !== 'activity' && activeGoals\.length > 0/);assert.match(panel,/part !== 'funding' && savingsGoals\.length > 0/);
+ assert.match(css,/\.goals-split\{[^}]*align-items:stretch/);
+ assert.match(css,/\.segmented\.page-tabs>button\[aria-pressed=true\]\{[^}]*border-block-end-color:var\(--primary\)/);
 });

@@ -61,6 +61,16 @@ export function goalSummary(goal: { target: number; target_date: string | null; 
  return { percent, left, monthsLeft, needed, monthly: Math.max(0, Number(goal.funding_monthly ?? goal.monthly_contribution ?? 0)) };
 }
 
+/** The month (`YYYY-MM`) a goal without a target date is reached when `monthly` goes in each month, counting from
+ * today's month; null when nothing is left, nothing goes in, or it would take more than a century. */
+export function reachedIn(left: number | null, monthly: number, today: string) {
+ if (left === null || left <= 0 || !(monthly > 0)) return null;
+ const months = Math.ceil(left / monthly);
+ if (months > 1200) return null;
+ const index = Number(today.slice(0, 4)) * 12 + Number(today.slice(5, 7)) - 1 + months;
+ return `${Math.floor(index / 12)}-${String(index % 12 + 1).padStart(2, '0')}`;
+}
+
 export type GoalStatus = 'completed' | 'on_track' | 'at_risk';
 /** Translation keys for the status pill. */
 export const goalStatusLabels: Record<GoalStatus, string> = { completed: 'Completed', on_track: 'On track', at_risk: 'At risk' };

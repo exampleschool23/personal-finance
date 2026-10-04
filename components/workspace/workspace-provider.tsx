@@ -47,6 +47,7 @@ import { useRecordAttachments } from '@/hooks/use-record-attachments';
 import { emptyTags, type TagData } from '@/lib/tags';
 import { useHousehold } from '@/hooks/use-household';
 import { assignOwner, canEdit, demoHousehold, inviteToken, moveAccountToOwner } from '@/lib/household';
+import { isPreviewFrame, previewPath, previewReady } from '@/lib/app-preview';
 
 const today = depositToday;
 const fresh = (): Entry => ({ id: crypto.randomUUID(), name: '', kind: 'Cash', currency: 'USD', amount: 0, quantity: 1, cost: 0, rate: 0, date: today(), lent_date: today(), frequency: 'Once', notes: '', business_id: null, ownership_percentage: 100, estimated_monthly_income: 0, estimated_monthly_payment: 0 });
@@ -69,6 +70,17 @@ function useWorkspaceState() {
         if (token) { url.searchParams.delete('invite'); window.history.replaceState(null, '', url.pathname + url.search + url.hash); }
         if (stored) queueMicrotask(() => setPendingInvite(stored));
     }, []);
+    // Inside a public page's app preview the app opens its sample workspace by itself and shows the screen the page asks for.
+    const [preview, setPreview] = useState(false);
+    useEffect(() => { if (isPreviewFrame(window.location.search, window.self !== window.top)) setPreview(true); }, []);
+    useEffect(() => { if (preview && ready && !user && !demo) void startDemo(); }, [preview, ready, user, demo]); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => {
+        if (!preview || !demo) return;
+        const open = (event: MessageEvent) => { const path = event.origin === window.location.origin ? previewPath(event.data) : null; if (path) router.push(path); };
+        window.addEventListener('message', open);
+        window.parent.postMessage(previewReady, window.location.origin);
+        return () => window.removeEventListener('message', open);
+    }, [preview, demo, router]);
     const dismissInvite = () => { try { sessionStorage.removeItem('hf_invite'); } catch {} setPendingInvite(null); };
     useEffect(() => {
         // Signed out, only the product tour and the sign-in page are open; signed in, the sign-in page has nothing to show.
@@ -263,10 +275,6 @@ function useWorkspaceState() {
         setUser(d.user.email);
 
     } }).catch(e => setError(e.message)).finally(() => setReady(true)); }, []);
-    // Create account links to the sign-in page with ?sample=1 to open the sample workspace, which lives here.
-    useEffect(() => { if (!ready || user || demo) return; const url = new URL(window.location.href); if (url.searchParams.get('sample') !== '1') return;
-        url.searchParams.delete('sample'); window.history.replaceState(null, '', url.pathname + url.search + url.hash); void startDemo();
-    }, [ready, user, demo]); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => { const ctx = (document as unknown as {
         modelContext?: {
             registerTool: (t: unknown, o: unknown) => void;
@@ -566,7 +574,7 @@ function useWorkspaceState() {
     const newBusiness = (name = ''): Entry => ({ ...fresh(), name, kind: 'Business', currency, amount: 0 });
     return {
         // Session
-        ready, user, demo, pathname, section, sectionKey, cashFlowSection, busy, configured, error, login, logout, startDemo, clearLocalSession,
+        ready, user, demo, preview, pathname, section, sectionKey, cashFlowSection, busy, configured, error, login, logout, startDemo, clearLocalSession,
         // Household sharing
         household, readOnly, pendingInvite, dismissInvite, assignRecordOwner, setAccountOwner,
         // Preferences

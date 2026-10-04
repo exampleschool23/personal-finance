@@ -11,6 +11,7 @@ import { SignInScreen } from '@/components/sign-in-screen';
 import { TelegramPanel } from '@/components/telegram-panel';
 import { useVisitor } from '@/components/visitor-context';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { TopBarSlotProvider } from '@/components/presentation-foundation/top-bar-slot';
 import { AppDrawer } from '@/components/workspace/app-drawer';
 import { pendingDestination, sectionFor, type PendingNavigation } from '@/components/workspace/navigation';
 import { DisplayPreferences, TopBar } from '@/components/workspace/top-bar';
@@ -20,11 +21,12 @@ import { awaitingSettings } from '@/lib/onboarding';
 import { signInPath } from '@/lib/sign-in-path';
 import { sharedWorkspace } from '@/lib/household';
 import { showError } from '@/lib/feedback';
+import { formatDate } from '@/lib/format';
 
 /** Frames the current screen with the drawer and top bar once the session is known. */
 function WorkspaceShell({ children }: { children: ReactNode }) {
- const { t } = useLanguage();
- const { ready, user, demo, pathname, busy, configured, error, login, logout, startDemo, overdueCount, onboardingNeeded, settingsLoading, preferencesData, savePreferences, applyPreferences, planning, saveTrackingStart, household } = useWorkspace();
+ const { t, locale } = useLanguage();
+ const { ready, user, demo, preview, market, pathname, busy, configured, error, login, logout, startDemo, overdueCount, onboardingNeeded, settingsLoading, preferencesData, savePreferences, applyPreferences, planning, saveTrackingStart, household } = useWorkspace();
  // A drawer tap shows its destination immediately; the routed screen replaces it once it arrives.
  const [pending, setPending] = useState<PendingNavigation | null>(null);
  const destination = pendingDestination(pending, pathname);
@@ -43,6 +45,8 @@ function WorkspaceShell({ children }: { children: ReactNode }) {
   return <LandingPage brand={<Brand/>} preferences={<DisplayPreferences/>} busy={busy} error={error} onDemo={startDemo}/>;
  if (signedOut && pathname === signInPath)
   return <SignInScreen brand={<Brand/>} preferences={<DisplayPreferences/>} busy={busy} configured={configured} error={error} onLogin={login} onDemo={startDemo}/>;
+ // An app preview only ever shows the sample workspace, never a signed-in account's records.
+ if (preview && user) return null;
  // Everything else waits: for the session, for the redirect off a page this visitor cannot use, or for the account's settings.
  if (!ready || !signedIn || pathname === signInPath || awaitingSettings({ user, demo, loading: settingsLoading }))
   return <main className="session-loading" aria-busy="true"><Brand/><LoadingPlaceholder label={t("Loading your workspace…")} rows={3}/></main>;
@@ -58,12 +62,12 @@ function WorkspaceShell({ children }: { children: ReactNode }) {
  const shared = sharedWorkspace(homes);
  return <SidebarProvider>
   <AppDrawer account={account} overdueCount={overdueCount} signOutLabel={demo ? t("Exit demo") : t("Sign out")} onSignOut={logout} pendingPath={destination} onNavigate={navigate} badge={demo ? t("Demo") : undefined} workspaces={workspaces} workspace={homes?.active} onWorkspace={id => household.open(id === homes?.me ? null : id).catch(reason => showError((reason as Error).message))}/>
-  <main className="workspace">
+  <TopBarSlotProvider><main className="workspace">
    <DatabaseStatus owner={user} demo={demo}/>
    <TopBar pendingSection={destination && sectionFor(destination)}/>
    {destination ? <PageSkeleton label={t("Loading your workspace…")} section={sectionFor(destination)}/> : children}
-   <footer className="content workspace-privacy-footer"><p className="bottom-note"><ShieldCheck size={14}/>{demo ? t("Sample data for exploring the app.") : shared ? t("Shared records · Visible to your household.") : t("Private records · Only visible to your account.")}</p></footer>
-  </main>
+   <footer className="content workspace-privacy-footer"><p className="bottom-note"><ShieldCheck size={14}/>{demo ? t("Sample data for exploring the app.") : shared ? t("Shared records · Visible to your household.") : t("Private records · Only visible to your account.")}</p>{!demo && market?.ratesDate && <p className="bottom-note fx-note"><span suppressHydrationWarning>{t("Updated {date}", { date: formatDate(market.ratesDate, locale) })}</span><a href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">Rates By Exchange Rate API</a></p>}</footer>
+  </main></TopBarSlotProvider>
   <WorkspaceDialogs/>
  </SidebarProvider>;
 }

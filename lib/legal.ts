@@ -52,7 +52,7 @@ export const privacyPolicy:LegalDocument={kind:'privacy',sections:[
   'Telegram details, if you connect the bot: your Telegram user ID, chat ID and first name, and the messages you send to the bot.',
   'Profile and preferences: the name you choose, country, language, currencies, font and notification settings.',
   'Financial records you enter: accounts, balances, income, expenses, assets, loans, goals, plans, categories and notes, and imported bank statements.',
-  'Technical data: sign-in sessions kept in cookies, and server logs of requests that our hosting provider keeps for a short time for security.',
+  'Technical data: sign-in sessions kept in cookies, and server logs of requests that our hosting provider keeps for a short time for security. The phone sign-in form starts on the country our hosting provider estimates from your connection; that estimate is not stored.',
  ]},
  {heading:'How we use it',paragraphs:['We use your data to:'],items:[
   'provide Hoggish: store your records, calculate totals and forecasts, and show them back to you;',

@@ -26,8 +26,16 @@ export function PhoneSignIn({ botUsername, onBack }: { botUsername: string | nul
   const [phone, setPhone] = useState(''), [code, setCode] = useState('');
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [wait, setWait] = useState(0);
-  // The browser's region (en-US → United States) picks the starting country; the person can change it.
+  // The country the connection comes from picks the starting country, the browser's region (en-US → United States)
+  // until that answer arrives; once the person picks one themselves, it stays.
   const [country, setCountry] = useState(() => typeof navigator === 'undefined' ? '' : browserPhoneCountry(navigator.languages ?? [navigator.language]));
+  const [chosen, setChosen] = useState(false);
+  useEffect(() => {
+    if (chosen) return;
+    let live = true;
+    fetch('/api/visitor-country').then(response => response.ok ? response.json() as Promise<{ country?: string }> : null).then(result => { if (live && result?.country) setCountry(result.country); }).catch(() => undefined);
+    return () => { live = false; };
+  }, [chosen]);
   const number = country ? internationalPhone(country, phone) : '';
   useEffect(() => { if (wait <= 0) return; const timer = setTimeout(() => setWait(seconds => seconds - 1), 1000); return () => clearTimeout(timer); }, [wait]);
   async function resend() {
@@ -56,9 +64,9 @@ export function PhoneSignIn({ botUsername, onBack }: { botUsername: string | nul
   }
   return <form className={styles.form} onSubmit={submit} aria-busy={busy}>
     {step === 'phone'
-      ? <><label htmlFor="signin-phone">{t('Phone number')}</label><PhoneNumberField id="signin-phone" country={country} national={phone} onChange={(next, national) => { setCountry(next); setPhone(national); }}/>
+      ? <><label htmlFor="signin-phone">{t('Phone number')}</label><PhoneNumberField id="signin-phone" country={country} national={phone} onChange={(next, national) => { if (next !== country) setChosen(true); setCountry(next); setPhone(national); }}/>
         <p className={styles.notice}>{t('We send a code to your Telegram chat. No account yet? Open our bot to create one.')}{botUsername && <> <a href={`https://t.me/${botUsername}`} target="_blank" rel="noreferrer">{t('Open the bot')}</a></>}</p></>
-      : <><label htmlFor="signin-code">{t('Code')}</label><Input id="signin-code" name="code" inputMode="numeric" pattern="[0-9]{4,10}" maxLength={10} required autoComplete="one-time-code" autoFocus value={code} onChange={event => setCode(event.target.value.replace(/\D/g, ''))}/>
+      : <><label htmlFor="signin-code">{t('Code')}</label><Input id="signin-code" name="code" placeholder={t('Enter the code')} inputMode="numeric" pattern="[0-9]{4,10}" maxLength={10} required autoComplete="one-time-code" autoFocus value={code} onChange={event => setCode(event.target.value.replace(/\D/g, ''))}/>
         <p className={styles.notice}>{t('Enter the code we sent to your Telegram chat.')}</p></>}
     {error && <p className={styles.error} role="alert">{t(error)}</p>}
     <Button type="submit" className={styles.submit} disabled={busy}>{t(step === 'phone' ? 'Send code' : 'Verify')}<ArrowRight size={18}/></Button>

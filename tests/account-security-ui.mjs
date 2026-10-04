@@ -60,16 +60,16 @@ function renderCard(intent,sent=''){
   '@/components/ui/button':{Button:props=>React.createElement('button',props)},
   '@/components/ui/input':{Input:props=>React.createElement('input',props)},
   '@/components/presentation-foundation/error-popup':{ErrorPopup:()=>null},
-  '@/components/auth-card':{AuthPage:({title,children})=>React.createElement('main',null,React.createElement('h1',null,title),children),ProviderChoices:({emailDivider,children})=>React.createElement('div',null,'[Google][Phone]',emailDivider,children),SampleInvite:()=>React.createElement('aside',null,'[Sample workspace]')},
+  '@/components/auth-card':{AuthPage:({title,children})=>React.createElement('main',null,React.createElement('h1',null,title),children),ProviderChoices:({children,footer})=>React.createElement('div',null,children,'[Google][Phone]',footer),SampleInvite:()=>React.createElement('aside',null,'[Sample workspace]')},
   './sign-in-screen.module.css':new Proxy({},{get:(_,key)=>String(key)}),
  });
  return renderToStaticMarkup(React.createElement(AccountAccessCard,{brand:null,intent}));
 }
-test('Create account is the sign-in card: Google, phone, the email form, a way to sign in and the sample workspace',()=>{
+test('Create account is the sign-in card: Google, phone, the email form and a way to sign in, without the sample workspace',()=>{
  const signup=renderCard('signup');
  assert.ok(signup.includes('<h1>Create account</h1>'));
- assert.ok(signup.includes('[Google][Phone]or sign up with email'));
- assert.ok(signup.includes('[Sample workspace]'));
+ assert.match(signup,/<\/form>\[Google\]\[Phone\]<p[^>]*>By creating an account/,'the email form comes first, then Google and phone, then the terms');
+ assert.ok(!signup.includes('[Sample workspace]'));
  assert.ok(signup.includes('Already have an account? <a>Sign in</a>'));
  assert.ok(!signup.includes('Forgot password'));
  assert.equal((signup.match(/type="password"/g)||[]).length,2);
@@ -90,10 +90,8 @@ test('the sign-in links open the matching account page',()=>{
  const source=fs.readFileSync('components/sign-in-screen.tsx','utf8');
  assert.match(source,/<Link href=\{recoverPath\}>\{t\('Forgot password\?'\)\}/);
  assert.match(source,/<Link href=\{signUpPath\}>\{t\('Create an account'\)/);
- const {recoverPath,signUpPath,sampleWorkspacePath,signInPath}=loadTS('lib/sign-in-path.ts');
+ const {recoverPath,signUpPath}=loadTS('lib/sign-in-path.ts');
  assert.equal(recoverPath,'/auth/access?mode=recover');assert.equal(signUpPath,'/auth/access?mode=signup');
- assert.equal(sampleWorkspacePath,signInPath+'?sample=1');
- assert.match(fs.readFileSync('components/workspace/workspace-provider.tsx','utf8'),/searchParams\.get\('sample'\) !== '1'\) return;[\s\S]{0,200}void startDemo\(\);/);
  const page=fs.readFileSync('app/auth/access/page.tsx','utf8');
  assert.match(page,/intent=\{query\.get\('mode'\)==='signup'\?'signup':'recover'\}/);
 });
@@ -125,7 +123,7 @@ test('results are shown as popups, never as inline text, and the cards are trans
  for(const language of ['en','ru','uz']){
   const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));
   for(const key of ['We sent a confirmation link to {email}. Press it to finish creating your account.','If an account exists for {email}, we sent a link to reset your password.'])assert.ok(labels[key].includes('{email}'),`${language}: ${key}`);
-  for(const key of ['or sign up with email','Already have an account?','Search countries','No matching countries.','Country code'])assert.ok(labels[key],`${language}: ${key}`);
+  for(const key of ['or continue with','Already have an account?','Search countries','No matching countries.','Country code'])assert.ok(labels[key],`${language}: ${key}`);
  }
 });
 
@@ -150,4 +148,19 @@ test('settings for a phone-only account offers adding an email and password, and
  // Deleting asks only for DELETE: the account never had a password.
  const deleting=render('delete_account');
  assert.ok(deleting.includes('Type DELETE to confirm'));assert.ok(!deleting.includes('Current password'));assert.equal((deleting.match(/type="password"/g)||[]).length,0);
+});
+
+test('the account pages pair the card with the real app in its sample workspace',()=>{
+ const card=fs.readFileSync('components/auth-card.tsx','utf8'),showcase=fs.readFileSync('components/auth-showcase.tsx','utf8');
+ const english=JSON.parse(fs.readFileSync('lib/locales/en.json','utf8'));
+ assert.match(card,/<div className=\{styles\.formSide\}>[\s\S]*<\/div>\n    <AuthShowcase\/>/,'one frame for sign-in, create account and forgot password');
+ assert.match(showcase,/<AppPreview tour=\{showcaseTour\} size=\{showcaseSize\}\/>/,'the panel shows the app itself, not a drawing of it');
+ // Under it, two charts with sample figures through the shared formatters, then the features that set the app apart.
+ assert.match(showcase,/AppPreview[\s\S]*label=\{t\('Benchmarks'\)\}[\s\S]*label=\{t\('Lowest balance ahead'\)\}[\s\S]*className=\{styles\.features\}/);
+ assert.match(showcase,/formatMoney\(forecast\[dip\], sampleCurrency, locale\)/);assert.match(showcase,/formatPercent\(/);assert.match(showcase,/formatMonthShort\(/);
+ assert.doesNotMatch(showcase,/toLocaleString|toFixed|Intl\./);
+ for(const key of [...showcase.matchAll(/label: '([^']+)'/g)].map(match=>match[1]).filter(key=>!key.includes('·')))assert.ok(english[key],`translated: ${key}`);
+ for(const key of [...showcase.matchAll(/t\('([^']+)'\)/g)].map(match=>match[1]))assert.ok(english[key],`translated: ${key}`);
+ const css=fs.readFileSync('components/sign-in-screen.module.css','utf8');
+ assert.match(css,/@media\(max-width:959px\)\{[\s\S]*?\.showcase\{order:2;[^}]*background:none/,'narrow windows show the app below the card, on the page');assert.match(css,/@media\(max-width:599px\)\{[\s\S]*?\.showcase\{display:none\}/,'phones keep only the card');
 });

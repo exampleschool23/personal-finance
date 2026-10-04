@@ -1,0 +1,10 @@
+/* A desktop window around the real app: a title bar with three dots, then the app scaled to the window's width. */
+.window{width:100%;overflow:hidden;border:1px solid var(--border);border-radius:16px;background:var(--background);box-shadow:0 24px 60px -24px color-mix(in srgb,var(--foreground) 28%,transparent)}
+.bar{display:flex;gap:6px;padding:10px 14px;border-bottom:1px solid var(--hairline);background:var(--card)}
+.bar i{width:9px;height:9px;border-radius:50%;background:var(--border)}
+.screen{position:relative;overflow:hidden;background:var(--background)}
+/* Laid out at laptop size, scaled from the top corner; it fades in once the sample workspace is open. */
+.frame{position:absolute;inset-block-start:0;inset-inline-start:0;border:0;transform-origin:top left;pointer-events:none;opacity:0;transition:opacity .4s}
+.frame[data-ready]{opacity:1}
+[dir=rtl] .frame{transform-origin:top right}
+@media (prefers-reduced-motion:reduce){.frame{transition:none}}

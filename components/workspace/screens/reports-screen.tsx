@@ -101,7 +101,7 @@ export function ReportsScreen() {
  const rangeLabel = `${formatDate(range.from, locale)} – ${formatDate(range.to < today ? range.to : today, locale)}`;
 
  return <div data-page="Reports" className="content reports-content">
-  <PageHeader title={t('Reports')} hint={t('Cash flow, spending and income for your household and each business. Click any part of a chart or table to see its transactions.')}>
+  <PageHeader title={t('Reports')} tabs={<Segmented as="nav" className="page-tabs" label={t('Reports')} options={visibleTabs.map(value => ({ value, label: t(tabLabels[value]) }))} value={shownTab} onChange={value => { setTab(value); setDrill(null); }}/>} hint={t('Cash flow, spending and income for your household and each business. Click any part of a chart or table to see its transactions.')}>
    {shownTab !== 'tax' && businessList.length > 0 && <BusinessFilter businesses={businessList} value={businesses} onChange={value => { setBusinesses(value); setDrill(null); }}/>}
    {shownTab !== 'tax' && owners.length > 0 && <OwnerFilter owners={owners} value={ownerFilter} onChange={value => { setOwnerFilter(value); setDrill(null); }}/>}
    {shownTab !== 'tax' && <NativeSelect aria-label={t('Date range')} value={preset} onChange={event => { setPreset(event.currentTarget.value as ReportRangePreset | 'custom'); setDrill(null); }}>
@@ -114,7 +114,6 @@ export function ReportsScreen() {
    <DatePicker value={custom.to} min={custom.from} max={today} onChange={to => to && setCustom({ ...custom, to })}/>
    {rangeMonths(custom).length > 24 && <span className="bulk-bar-note">{t('Reports cover up to 24 months.')}</span>}
   </div>}
-  <Segmented as="nav" className="cashflow-tabs" label={t('Reports')} options={visibleTabs.map(value => ({ value, label: t(tabLabels[value]) }))} value={shownTab} onChange={value => { setTab(value); setDrill(null); }}/>
   {shownTab === 'tax' ? <TaxTab preferences={workspacePreferences.data.preferences} save={workspacePreferences.save} names={names} onOpen={line => line.record && setViewing(storedRecord(line.record))}/>
    : error ? <InlineError message={t(error)} onRetry={retry}/> : loading ? <PanelSkeleton label={t('Loading records…')} rows={6}/> : <>
    {shownTab === 'cash_flow' ? <CashFlowTab lines={lines} range={range} rangeLabel={rangeLabel} includeHousehold={!businesses.length || businesses.includes(HOUSEHOLD)} businessIds={businessList.map(item => item.id).filter(id => businesses.includes(id) || (!businesses.length && lines.some(line => line.business === id)))} names={names} groupOf={groupOf} currency={currency} view={cashView} onView={setCashView} mode={cashMode} onMode={setCashMode} onDrill={narrow}/>

@@ -12,9 +12,9 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import type { Entry } from '@/lib/finance';
-import { formatDate, formatMoney, formatNumber } from '@/lib/format';
+import { formatDate, formatMoney, formatMonthYear, formatNumber } from '@/lib/format';
 import { goalEmoji } from '@/lib/goal-emoji';
-import { goalStatus, goalSummary } from '@/lib/goal-projection';
+import { goalStatus, goalSummary, reachedIn } from '@/lib/goal-projection';
 import { alreadyAdded, canContinue, draftProblems, goalAccountOptions, goalSetupSteps, goalTemplates, maxPerTemplate, monthlyTotals, pickTemplate, savingsCurrencies, setupDrafts, withSavingsCurrency, type SetupDraft } from '@/lib/goal-setup';
 import type { Goal } from '@/lib/planning';
 import { GoalSummaryRow } from './goal-summary-row';
@@ -126,7 +126,7 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
         <label>{t('Cash account')}<NativeSelect required value={goal.account_id ?? ''} onChange={event => update(goal.id, { account_id: event.target.value || null })}>{goalAccountOptions(accounts, goal.currency).map(item => <option key={item.id} value={item.id}>{item.name} · {money(item.amount, item.currency)}</option>)}</NativeSelect></label>
         <label>{t('Already saved')} ({goal.currency})<FormattedNumberInput required={false} value={goal.allocated} max={goal.target || 1e15} onValueChange={allocated => update(goal.id, { allocated })}/></label>
        </div>}
-       {goal.kind === 'savings' && account(goal) && list.filter(item => item.account_id === goal.account_id).reduce((sum, item) => sum + item.allocated, 0) + goals.filter(item => item.account_id === goal.account_id && !item.archived).reduce((sum, item) => sum + Number(item.allocated), 0) > account(goal)!.amount && <p role="alert" className="goal-row-alert">{t('Your goal allocations exceed the current account balance. Update the allocations.')}</p>}
+       {/* Already saved may exceed the account balance; the Goals page points it out afterwards. */}
        {problems(goal).map(problem => <p key={problem} role="alert" className="goal-row-alert">{t(problem)}</p>)}
       </article>)}
      </section>
@@ -138,12 +138,14 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
       <h1>{t('How much will you put toward your goals each month?')}</h1>
       <p className="goal-setup-total"><span>{t('Monthly planned contributions')}</span><strong>{monthlyTotals(list).map(item => money(item.amount, item.currency)).join(' · ')}</strong></p>
       {list.map(goal => {
-       const needed = goalSummary(goal, current(goal), today).needed;
+       const { needed, left } = goalSummary(goal, current(goal), today);
+       // Without a target date there is no monthly amount to suggest; the amount typed shows when the goal is reached.
+       const reached = goal.target_date ? null : reachedIn(left, Number(goal.monthly_contribution ?? 0), today);
        return <article key={goal.id} className="panel goal-setup-card">
         <header><span className="goal-row-cover" aria-hidden="true">{goalEmoji(goal)}</span><strong>{goal.name}</strong></header>
         <div className="goal-setup-fields">
          <label>{t('Monthly contribution')} ({goal.currency})<FormattedNumberInput required={false} value={goal.monthly_contribution ?? 0} onValueChange={monthly => update(goal.id, { monthly_contribution: monthly })}/></label>
-         <div className="goal-setup-needed">{needed !== null && needed > 0 ? <><span>{t('{amount} a month needed', { amount: money(needed, goal.currency) })}</span><Button type="button" variant="outline" size="sm" onClick={() => update(goal.id, { monthly_contribution: needed })}>{t('Use this amount')}</Button></> : <span>{t(needed === 0 ? 'Target already reached' : 'Add a target date to see what is needed each month.')}</span>}</div>
+         <div className="goal-setup-needed">{needed !== null && needed > 0 ? <><span>{t('{amount} a month needed', { amount: money(needed, goal.currency) })}</span><Button type="button" variant="outline" size="sm" onClick={() => update(goal.id, { monthly_contribution: needed })}>{t('Use this amount')}</Button></> : <span>{reached ? t('At this amount, reached in {month}', { month: formatMonthYear(reached, locale) }) : t(needed === 0 ? 'Target already reached' : 'Add a target date to see what is needed each month.')}</span>}</div>
         </div>
        </article>;
       })}

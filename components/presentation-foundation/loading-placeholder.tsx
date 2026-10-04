@@ -24,10 +24,9 @@ export function PanelSkeleton({ label, rows = 3, className }: { label: string; r
   return <section className={className ? 'panel ' + className : 'panel'}><Skeleton aria-hidden="true" className="mb-4 h-5 w-1/3"/><LoadingPlaceholder label={label} rows={rows}/></section>;
 }
 
-/** A destination opened from the drawer while its route loads: a heading placeholder, then the page's own skeleton. */
+/** A destination opened from the drawer while its route loads: the page's own skeleton (the top bar already names it). */
 export function PageSkeleton({ label, section }: { label: string; section: string }) {
   return <div className="content page-loading">
-    <header aria-hidden="true" className="page-heading"><div><Skeleton className="h-9 w-64 max-w-full"/><Skeleton className="mt-3 h-4 w-80 max-w-full"/></div></header>
     <WorkspaceSkeleton label={label} section={section}/>
   </div>;
 }

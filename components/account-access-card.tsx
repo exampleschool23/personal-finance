@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage } from '@/components/language-provider';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
-import { AuthPage, ProviderChoices, SampleInvite } from '@/components/auth-card';
+import { AuthPage, ProviderChoices } from '@/components/auth-card';
 import { requestAccountAccess } from '@/lib/account-access-request';
 import { showNotice } from '@/lib/feedback';
 import { legalPaths } from '@/lib/legal';
@@ -42,19 +42,14 @@ export function AccountAccessCard({ brand, intent }: { brand: React.ReactNode; i
   const form = <form className={styles.form} onSubmit={submit} aria-busy={busy}>
     <label htmlFor="access-email">{t('Email address')}</label><Input id="access-email" type="email" placeholder="you@example.com" autoComplete="email" autoCapitalize="none" spellCheck={false} required value={email} onChange={event => setEmail(event.target.value)}/>
     {signup && <>
-      <div className={styles.passwordLabel}><label htmlFor="access-password">{t('New password')}</label></div><Input id="access-password" type="password" autoComplete="new-password" minLength={minPasswordLength} maxLength={maxPasswordLength} required value={password} onChange={event => setPassword(event.target.value)}/>
+      <div className={styles.passwordLabel}><label htmlFor="access-password">{t('New password')}</label></div><Input id="access-password" type="password" placeholder={t('Create a password')} autoComplete="new-password" minLength={minPasswordLength} maxLength={maxPasswordLength} required value={password} onChange={event => setPassword(event.target.value)}/>
       <p className={styles.hint}>{t('Use a unique password with at least 8 characters.')}</p>
-      <div className={styles.passwordLabel}><label htmlFor="access-repeat">{t('Confirm password')}</label></div><Input id="access-repeat" type="password" autoComplete="new-password" required value={repeat} onChange={event => setRepeat(event.target.value)}/>
+      <div className={styles.passwordLabel}><label htmlFor="access-repeat">{t('Confirm password')}</label></div><Input id="access-repeat" type="password" placeholder={t('Repeat your password')} autoComplete="new-password" required value={repeat} onChange={event => setRepeat(event.target.value)}/>
     </>}
     <Button type="submit" className={styles.submit} disabled={busy || (signup && password !== repeat)}>{t(busy ? 'Saving…' : 'Continue')}</Button>
   </form>;
   return <AuthPage brand={brand} title={signup ? 'Create account' : 'Forgot password'}>
-    {signup ? <ProviderChoices disabled={busy} emailDivider="or sign up with email">
-      {form}
-      <p className={styles.consent}>{t('By creating an account, you agree to the terms of use and privacy policy.')} <Link href={legalPaths.terms}>{t('Terms of use')}</Link> · <Link href={legalPaths.privacy}>{t('Privacy policy')}</Link></p>
-      {back}
-      <SampleInvite/>
-    </ProviderChoices> : <>{form}{back}</>}
+    {signup ? <ProviderChoices disabled={busy} footer={<><p className={styles.consent}>{t('By creating an account, you agree to the terms of use and privacy policy.')} <Link href={legalPaths.terms}>{t('Terms of use')}</Link> · <Link href={legalPaths.privacy}>{t('Privacy policy')}</Link></p>{back}</>}>{form}</ProviderChoices> : <>{form}{back}</>}
     <ErrorPopup message={error}/>
   </AuthPage>;
 }

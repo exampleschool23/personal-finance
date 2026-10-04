@@ -66,7 +66,7 @@ test('the drawer marks the current route, shows overdue payments and signs out t
   '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:text=>text})},
   '@/components/presentation-foundation/drawer-link':{DrawerLink:element('a')},
   '@/components/ui/button':{Button:element('button')},
-  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
+  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),SidebarTrigger:element('button'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
  });
  const props={account:{initial:'H',title:'Personal account',detail:'owner@example.com'},overdueCount:1234,signOutLabel:'Sign out',onSignOut:()=>{signedOut++;}};
  const html=renderToStaticMarkup(React.createElement(AppDrawer,props));
@@ -77,6 +77,8 @@ test('the drawer marks the current route, shows overdue payments and signs out t
  // Recently deleted sits at the foot just above the account, and the account opens Settings.
  assert.match(html,/<footer[^>]*>.*href="\/recently-deleted".*href="\/settings"[^>]*>.*owner@example\.com.*aria-label="Sign out"/s);
  assert.ok(!/<span>Settings<\/span>/.test(html));
+ // The header holds the mark and the quick tools: Settings and the drawer's own collapse button.
+ assert.match(html,/<header class="sidebar-brand">.*<div class="sidebar-tools">.*?href="\/settings"[^>]*aria-label="Settings".*aria-label="Toggle Sidebar".*<\/header>/s);
  path='/settings';
  assert.match(renderToStaticMarkup(React.createElement(AppDrawer,props)),/href="\/settings" class="user-link" data-active="true" aria-current="page"/);
  path='/';
@@ -101,7 +103,7 @@ test('a drawer tap highlights and shows its destination before the route arrives
   '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:text=>text})},
   '@/components/presentation-foundation/drawer-link':{DrawerLink:element('a')},
   '@/components/ui/button':{Button:element('button')},
-  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
+  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),SidebarTrigger:element('button'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
  },new Map());
  const props={account:{initial:'H',title:'Personal account',detail:'owner@example.com'},overdueCount:0,signOutLabel:'Sign out',onSignOut:()=>{},onNavigate:path=>navigated.push(path)};
  const html=renderToStaticMarkup(React.createElement(AppDrawer,{...props,pendingPath:'/goals'}));
@@ -129,13 +131,13 @@ test('the logo in the drawer goes to the main page, closing the phone drawer and
   '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:text=>text})},
   '@/components/presentation-foundation/drawer-link':{DrawerLink:element('a')},
   '@/components/ui/button':{Button:element('button')},
-  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
+  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),SidebarTrigger:element('button'),useSidebar:()=>({setOpenMobile:open=>sheet.push(open)})},
  },new Map());
  const props={account:{initial:'H',title:'Personal account',detail:'owner@example.com'},overdueCount:0,signOutLabel:'Sign out',onSignOut:()=>{},onNavigate:path=>navigated.push(path)};
  const html=renderToStaticMarkup(React.createElement(AppDrawer,props));
- assert.match(html,/<a href="\/" class="brand">/);
+ assert.match(html,/<a href="\/" class="brand brand-compact" aria-label="Hoggish">/);
  const logos=[];
- const walk=node=>{if(!node||typeof node!=='object')return;if(Array.isArray(node))return node.forEach(walk);if(typeof node.type==='function'&&node.type.name!=='Element'){walk(node.type(node.props));return;}if(node.props?.className==='brand')logos.push(node);walk(node.props?.children);};
+ const walk=node=>{if(!node||typeof node!=='object')return;if(Array.isArray(node))return node.forEach(walk);if(typeof node.type==='function'&&node.type.name!=='Element'){walk(node.type(node.props));return;}if(node.props?.className==='brand brand-compact')logos.push(node);walk(node.props?.children);};
  walk(AppDrawer(props));
  assert.equal(logos.length,1);
  const tap=(extra={})=>logos[0].props.onClick({button:0,shiftKey:false,metaKey:false,ctrlKey:false,altKey:false,defaultPrevented:false,...extra});

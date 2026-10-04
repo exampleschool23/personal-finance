@@ -14,6 +14,8 @@ test('page header shows its eyebrow, hint and actions only when they are provide
  // No subtitle line: explanations sit behind the ⓘ next to the title.
  assert.equal(render(PageHeader,{title:'Accounts'}),'<header class="page-heading"><div><h1>Accounts</h1></div></header>');
  assert.equal(render(PageHeader,{title:'Upcoming payments',hint:'Reminders never move money.'}),'<header class="page-heading"><div><h1>Upcoming payments<i>Reminders never move money.</i></h1></div></header>');
+ // Views of the page sit right after the title.
+ assert.equal(render(PageHeader,{title:'Goals',tabs:React.createElement('nav',{className:'segmented page-tabs'},'Overview')}),'<header class="page-heading"><div><h1>Goals</h1><nav class="segmented page-tabs">Overview</nav></div></header>');
  const full=render(PageHeader,{title:'Hi there!',eyebrow:'29 September 2026'},React.createElement('button',null,'Add'));
  assert.match(full,/<p class="page-eyebrow">29 September 2026<\/p><h1>Hi there!<\/h1>/);
  assert.match(full,/<div class="entry-actions"><button>Add<\/button><\/div>/);
@@ -87,10 +89,61 @@ test('the logo links to the main page from every screen that shows it',()=>{
  const {Brand}=loadTS('components/presentation-foundation/brand.tsx',{...{'@/components/language-provider':language},'@/components/presentation-foundation/drawer-link':{DrawerLink:element('a')}});
  const html=render(Brand,{});
  assert.match(html,/^<a href="\/" class="brand"><span class="mark">h\.<\/span><span>HOGGISH<small class="block">PERSONAL FINANCE<\/small><\/span><\/a>$/);
+ assert.match(render(Brand,{compact:true,badge:'Demo'}),/^<a href="\/" class="brand brand-compact" aria-label="Hoggish"><span class="mark">h\.<\/span><span class="brand-badge">Demo<\/span><\/a>$/,'the drawer shows the mark alone');
  assert.match(render(Brand,{badge:'Demo'}),/<\/span><span class="brand-badge">Demo<\/span><\/a>$/,'the sample workspace is labelled beside the logo');
  // The drawer, sign-in, loading, setup and account pages all render the same mark.
  for(const file of ['components/workspace/app-drawer.tsx','components/workspace/workspace-shell.tsx','app/auth/access/page.tsx','app/auth/confirm/page.tsx'])assert.match(fs.readFileSync(file,'utf8'),/<Brand/,file);
  const css=fs.readFileSync('app/globals.css','utf8');
  assert.equal(css.split('\n').filter(line=>line.startsWith('.brand{')).length,1);
  assert.match(css,/\.brand\{[^}]*text-decoration:none/);
+});
+
+test('row lists keep their columns lined up from row to row',()=>{
+ const css=fs.readFileSync('app/globals.css','utf8');
+ const template=selector=>css.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\>]/g,'\\$&')+'\\{[^}]*?grid-template-columns:([^;}]+)'))?.[1];
+ // Each of these rows is its own grid, so a bare `auto` column would size to that row's own amount and shift its neighbours.
+ for(const row of ['.report-transaction-list>li>*','.transaction-row','.account-holding-row','.share-bars>li','.business-card-list li','.tax-transactions li>button']){
+  const columns=template(row);
+  assert.ok(columns,`${row} has a column template`);
+  assert.match(columns,/minmax\(max-content,[\d.]+fr\)/,`${row}: its amount column takes a share of the row, not just its own width (${columns})`);
+ }
+ assert.match(css,/\.recurring-row\{display:grid;grid-template-columns:subgrid/,'recurring and subscription rows share one set of columns per list');
+ assert.match(css,/\.recurring-list>ul,\.subscription-list\{display:grid;grid-template-columns:/);
+});
+
+test('page titles and actions sit in the top bar, as in a desktop app',()=>{
+ const bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),shell=fs.readFileSync('components/workspace/workspace-shell.tsx','utf8'),header=fs.readFileSync('components/presentation-foundation/page-header.tsx','utf8'),css=fs.readFileSync('app/globals.css','utf8');
+ assert.match(shell,/<TopBarSlotProvider><main className="workspace">[\s\S]*<\/main><\/TopBarSlotProvider>/,'the bar and the routed screen share one slot');
+ assert.match(bar,/<div className="topbar-page-title" ref=\{slot\?\.titleRef\}\/><span className="topbar-title">/,'the section name stands in until the page puts its title there');
+ assert.match(bar,/\{roomy && !crowded && <div className="topbar-page-actions" ref=\{slot\?\.actionsRef\}\/>\}/,'actions join the bar only where it has room');
+ assert.match(header,/createPortal\(<>\{heading\}/);
+ assert.match(header,/slot\.actions \? actions && createPortal\(actions, slot\.actions\) : \(tabs \|\| actions\) && <header/,'actions stay on the page on phones');
+ assert.match(css,/\.topbar-page-title:not\(:empty\)\+\.topbar-title\{display:none\}/);
+ assert.match(css,/\.topbar-page-actions:has\(\[data-variant=default\]\)~\.quick-expense\{/,'one main action stands out');
+ assert.doesNotMatch(fs.readFileSync('components/presentation-foundation/loading-placeholder.tsx','utf8'),/className="page-heading"/,'no heading placeholder under a bar that already names the page');
+});
+
+test('the top bar switches between the two display currencies in place, and the rates credit sits in the footer',()=>{
+ const bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),shell=fs.readFileSync('components/workspace/workspace-shell.tsx','utf8'),css=fs.readFileSync('app/globals.css','utf8');
+ assert.match(bar,/preferencesData\.currencies\.length > 1 && <Segmented className="header-currency-switch"/,'a one-tap switch, shown only when there is a second currency');
+ assert.doesNotMatch(bar,/Popover/,'no pop-up for the display currency');
+ assert.match(shell,/market\?\.ratesDate && <p className="bottom-note fx-note">[\s\S]*Rates By Exchange Rate API/,'the exchange-rate credit stays visible');
+ assert.match(css,/\[data-slot=sidebar\]\[data-mobile=true\]::after\{[^}]*background:inherit/,'the phone drawer has no strip of backdrop under it');
+});
+
+test('Goals, Reports and Cash flow switch their views from tabs beside the title, which fall back to the page when the bar is full',()=>{
+ for(const [file,label] of [['components/workspace/screens/reports-screen.tsx','Reports'],['components/workspace/screens/cash-flow-screen.tsx','Cash flow'],['components/planning/goals-page.tsx','Goals'],['components/planning/accounts-page.tsx','Accounts']]){
+  const source=fs.readFileSync(file,'utf8');
+  assert.match(source,new RegExp(`<PageHeader title=\\{t\\('${label}'\\)\\} tabs=\\{<Segmented (as="nav" )?className="page-tabs"`),file);
+  assert.doesNotMatch(source,/cashflow-tabs/,file);
+ }
+ // Accounts keeps its operations behind a Recent activity tab; Cash flow adds expenses from the bar's own Add expense.
+ assert.match(fs.readFileSync('components/planning/accounts-page.tsx','utf8'),/\{view==='activity'&&<>\n  <section className="panel account-activity">/);
+ assert.doesNotMatch(fs.readFileSync('components/workspace/screens/cash-flow-screen.tsx','utf8'),/addCashFlow\('Other expense'\)/);
+ const header=fs.readFileSync('components/presentation-foundation/page-header.tsx','utf8'),bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),css=fs.readFileSync('app/globals.css','utf8');
+ assert.match(header,/\{slot\.actions && tabs\}<\/>, slot\.title\)/,'tabs join the title only when the actions do');
+ assert.match(header,/\(tabs \|\| actions\) && <header className=\{`\$\{classes\} page-heading-actions`\}>\{tabs\}\{actions\}<\/header>/,'otherwise they open the page');
+ assert.match(bar,/\{roomy && !crowded && <div className="topbar-page-actions"/,'a bar that overflowed keeps only the title');
+ assert.match(bar,/setCrowded\(previous => previous \? needed \+ 8 > room : needed > room\)/,'the same widths always give the same answer');
+ assert.match(css,/\.segmented:not\(\.page-tabs\)\{display:flex;width:100%;flex-wrap:wrap/,'page tabs stay on one scrolling line on phones');
 });

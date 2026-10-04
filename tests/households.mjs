@@ -169,7 +169,7 @@ test('the drawer offers the workspace switch only when there is a household to s
   '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:text=>text})},
   '@/components/presentation-foundation/drawer-link':{DrawerLink:element('a')},
   '@/components/ui/button':{Button:element('button')},
-  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),useSidebar:()=>({setOpenMobile:()=>{}})},
+  '@/components/ui/sidebar':{Sidebar:element('aside'),SidebarContent:element('div'),SidebarFooter:element('footer'),SidebarHeader:element('header'),SidebarMenu:element('ul'),SidebarMenuItem:element('li'),SidebarMenuButton:element('div'),SidebarTrigger:element('button'),useSidebar:()=>({setOpenMobile:()=>{}})},
  },new Map());
  const chosen=[];
  const props={account:{initial:'H',title:'Personal account',detail:'me@example.com'},overdueCount:0,signOutLabel:'Sign out',onSignOut:()=>{},onWorkspace:id=>chosen.push(id)};

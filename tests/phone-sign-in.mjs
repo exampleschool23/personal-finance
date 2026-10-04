@@ -45,7 +45,7 @@ test('the sign-in page shows phone sign-in only when the server reports it, and 
  assert.match(choices,/const phone = usePhoneSignIn\(\);/);assert.match(fs.readFileSync('hooks/use-phone-sign-in.ts','utf8'),/fetch\('\/api\/auth\/phone'/);assert.match(choices,/\{phone\.enabled && <Button/);
  // Choosing phone leaves only the phone form: no Google, divider, email form, sign-up link or sample workspace.
  assert.match(choices,/if \(byPhone\) return <PhoneSignIn botUsername=\{phone\.botUsername\} onBack=\{\(\) => setByPhone\(false\)\}\/>;/);
- for(const file of ['components/sign-in-screen.tsx','components/account-access-card.tsx']){const source=fs.readFileSync(file,'utf8');assert.match(source,/<SampleInvite[^>]*\/>\s*<\/ProviderChoices>/,file);}
+ assert.match(fs.readFileSync('components/sign-in-screen.tsx','utf8'),/footer=\{<>[\s\S]*\{!configured && <SampleInvite[^>]*\/>\}\s*<\/>\}>/,'sign-in offers the sample workspace only while accounts are not set up');assert.doesNotMatch(fs.readFileSync('components/account-access-card.tsx','utf8'),/SampleInvite/);
  const page=fs.readFileSync('app/auth/telegram/page.tsx','utf8');
  assert.match(page,/fetch\('\/api\/auth\/telegram'/);assert.match(page,/https:\/\/telegram\.org\/js\/telegram-web-app\.js/);
  assert.match(page,/started\.current/,'the sign-in runs once even if the effect repeats');
@@ -81,4 +81,24 @@ test('phone numbers take a country with its flag and dialing code, and a pasted 
  assert.equal(internationalPhone('GB','07700 900123'),'+447700900123','the domestic trunk zero is dropped');
  assert.equal(internationalPhone('IT','06 1234 5678'),'+390612345678','Italy keeps its leading zero');
  assert.equal(browserPhoneCountry(['en-US','fr']),'US');assert.equal(browserPhoneCountry(['uz','pt-BR']),'BR');assert.equal(browserPhoneCountry(['en','fr']),'','no region, no guess');
+});
+
+test('the phone country starts on the visitor\'s country, and the list opens full screen with search on phones',async()=>{
+ const {GET}=loadTS('app/api/visitor-country/route.ts');
+ const ask=async header=>(await GET(new Request('http://x/api/visitor-country',{headers:header?{'x-vercel-ip-country':header}:{}}))).json();
+ assert.deepEqual(await ask('uz'),{country:'UZ'});
+ assert.deepEqual(await ask('XX'),{country:''},'an unknown code is not a country');
+ assert.deepEqual(await ask(),{country:''});
+ const form=fs.readFileSync('components/phone-sign-in.tsx','utf8');
+ assert.match(form,/if \(chosen\) return;[\s\S]{0,120}fetch\('\/api\/visitor-country'\)/,'the estimate never overrides a country the person picked');
+ const field=fs.readFileSync('components/phone-number-field.tsx','utf8');
+ assert.match(field,/<Popover open=\{open && !mobile\}/);
+ assert.match(field,/\{mobile && <Dialog open=\{open\}[\s\S]{0,200}className=\{styles\.countrySheet\}/);
+ assert.match(field,/<CommandInput aria-label=\{t\('Search countries'\)\}/);
+ const css=fs.readFileSync('components/sign-in-screen.module.css','utf8');
+ assert.match(css,/\.countrySheet\{[^}]*height:100dvh/);assert.match(css,/\.countrySheet \.countryList\{flex:1;max-height:none/);
+ assert.match(fs.readFileSync('lib/legal.ts','utf8'),/estimates from your connection; that estimate is not stored/,'the privacy policy says so');
+ const card=fs.readFileSync('components/auth-card.tsx','utf8');
+ assert.match(card,/className=\{styles\.provider\}[^>]*aria-label=\{t\('Continue with Google'\)\}/,'Google is an icon button with a name');
+ assert.match(card,/className=\{styles\.provider\} aria-label=\{t\('Continue with phone'\)\}/,'so is phone');
 });

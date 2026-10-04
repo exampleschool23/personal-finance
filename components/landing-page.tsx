@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ArrowLeftRight, CalendarClock, ChartNoAxesCombined, ChartPie, Download, EyeOff, Globe, LayoutDashboard, LockKeyhole, Send, Target, Wallet, type LucideIcon } from 'lucide-react';
+import { ArrowRight, ArrowLeftRight, CalendarClock, ChartNoAxesCombined, ChartPie, Download, EyeOff, Globe, LockKeyhole, Send, Target, Wallet, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
+import { AppPreview } from '@/components/app-preview';
 import { usePhoneSignIn } from '@/hooks/use-phone-sign-in';
-import { formatMoney, formatPercent } from '@/lib/format';
+import { formatMoney } from '@/lib/format';
 import { directionOf } from '@/lib/i18n';
 import { languageCatalogue } from '@/lib/languages';
 import { legalPaths } from '@/lib/legal';
@@ -31,7 +32,7 @@ const pillars = [
   { key: 'track', label: 'Track', icon: ChartNoAxesCombined, title: 'Know where you stand', text: 'Net worth, cash flow and day-to-day spending, always up to date.' },
   { key: 'budget', label: 'Budget', icon: ChartPie, title: 'A budget that fits your life', text: 'Set monthly limits by category and see what is left before you spend.' },
   { key: 'plan', label: 'Goals', icon: Target, title: 'Goals with a real plan', text: 'Set a target and a date. Hoggish works out the monthly contribution and tracks your progress.' },
-  { key: 'invest', label: 'Invest', icon: Wallet, title: 'See how your investments are doing', text: 'Stocks, crypto, deposits and treasury bills, compared against a benchmark.' },
+  { key: 'invest', label: 'Invest', icon: Wallet, title: 'Compare your returns with other investments', text: 'See how your portfolio does against the S&P 500, Bitcoin, bonds, treasury bills and a bank deposit.' },
 ] as const;
 type Pillar = (typeof pillars)[number]['key'];
 const steps = [
@@ -44,13 +45,9 @@ const promises: { icon: LucideIcon; title: string; text: string }[] = [
   { icon: EyeOff, title: 'No ads, no selling data', text: 'We do not sell your data, show advertising or run tracking scripts in the app.' },
   { icon: Download, title: 'Leave whenever you like', text: 'Download a backup of your data or delete your account at any time.' },
 ];
-const budgetRows = [{ kind: 'Groceries', spent: 420, limit: 600 }, { kind: 'Household', spent: 180, limit: 250 }, { kind: 'Family support', spent: 300, limit: 300 }] as const;
-const goalRows = [{ name: 'Emergency fund', emoji: '🛟', saved: 6500, target: 10000 }, { name: 'Vacation', emoji: '🏝️', saved: 1200, target: 3000 }] as const;
-const holdingRows = [{ kind: 'Stock', value: 18400, change: 8.2 }, { kind: 'Deposit', value: 12000, change: 4 }, { kind: 'Crypto', value: 3150, change: -1.4 }] as const;
 const accountRows = [{ kind: 'Cash', value: 4300 }, { kind: 'Deposit', value: 12000 }, { kind: 'Stock', value: 18400 }, { kind: 'Mortgage', value: -96000 }] as const;
 const transactionRows = [{ kind: 'Salary', amount: 4200, income: true }, { kind: 'Groceries', amount: 86 }, { kind: 'Household', amount: 45 }, { kind: 'Charity', amount: 25 }] as const;
 const recurringRows = [{ kind: 'Rent expense', amount: 900 }, { kind: 'Mortgage', amount: 640 }, { kind: 'Family support', amount: 300 }] as const;
-const chartLine = 'M0 94 L40 83 L80 89 L120 62 L160 72 L200 45 L240 54 L280 29 L320 38 L360 18 L400 25 L440 9 L480 3';
 
 /** Fades its content in the first time it scrolls into view. */
 function Reveal({ children, className }: { children: ReactNode; className?: string }) {
@@ -66,9 +63,6 @@ function Reveal({ children, className }: { children: ReactNode; className?: stri
   return <div ref={ref} className={[styles.reveal, className].filter(Boolean).join(' ')} data-shown={shown}>{children}</div>;
 }
 
-function Progress({ value }: { value: number }) {
-  return <span className={styles.progress} aria-hidden="true"><span style={{ inlineSize: `${Math.min(100, Math.round(value * 100))}%` }} data-full={value >= 1}/></span>;
-}
 
 function SampleCard({ title, icon: Icon, children }: { title: string; icon: LucideIcon; children: ReactNode }) {
   const { t } = useLanguage();
@@ -76,50 +70,6 @@ function SampleCard({ title, icon: Icon, children }: { title: string; icon: Luci
     <div className={styles.sampleHeader}><span><Icon size={16} aria-hidden="true"/>{title}</span><span className={styles.samplePill}>{t('Sample data')}</span></div>
     {children}
   </div>;
-}
-
-function NetWorthSample({ id }: { id: string }) {
-  const { t, locale } = useLanguage();
-  const money = (value: number) => formatMoney(value, sampleCurrency, locale);
-  return <SampleCard title={t('Your financial overview')} icon={ChartNoAxesCombined}>
-    <div className={styles.balance}><p>{t('Net worth today')}</p><strong suppressHydrationWarning>{money(84250)}</strong><span className={styles.up} dir="ltr" suppressHydrationWarning>+{formatPercent(2.4, locale)}</span></div>
-    <svg className={styles.chart} viewBox="0 0 480 112" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="currentColor" stopOpacity=".2"/><stop offset="100%" stopColor="currentColor" stopOpacity="0"/></linearGradient></defs><path d={`${chartLine} V112 H0Z`} fill={`url(#${id})`}/><path d={chartLine} fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/></svg>
-    <div className={styles.pair}><div><span>{t('Income')}</span><strong className={styles.up} suppressHydrationWarning>{money(4200)}</strong></div><div><span>{t('Expenses')}</span><strong suppressHydrationWarning>{money(1850)}</strong></div></div>
-  </SampleCard>;
-}
-
-function BudgetSample() {
-  const { t, locale } = useLanguage();
-  const money = (value: number) => formatMoney(value, sampleCurrency, locale);
-  return <SampleCard title={t('Budget')} icon={ChartPie}>
-    <ul className={styles.rows}>{budgetRows.map(row => <li key={row.kind} className={styles.barRow}>
-      <CategoryIcon kind={row.kind} size="sm"/><span className={styles.rowName}>{t(row.kind)}</span>
-      <span className={styles.rowAmount} suppressHydrationWarning>{money(row.spent)} <small suppressHydrationWarning>{t('of {amount}', { amount: money(row.limit) })}</small></span>
-      <Progress value={row.spent / row.limit}/>
-    </li>)}</ul>
-  </SampleCard>;
-}
-
-function GoalsSample() {
-  const { t, locale } = useLanguage();
-  const money = (value: number) => formatMoney(value, sampleCurrency, locale);
-  return <SampleCard title={t('Goals')} icon={Target}>
-    <ul className={styles.rows}>{goalRows.map(goal => <li key={goal.name} className={styles.barRow}>
-      <span className={styles.cover} aria-hidden="true">{goal.emoji}</span><span className={styles.rowName}>{t(goal.name)}<small className={styles.onTrack}>{t('On track')}</small></span>
-      <span className={styles.rowAmount} suppressHydrationWarning>{money(goal.saved)} <small suppressHydrationWarning>{t('of {amount}', { amount: money(goal.target) })}</small></span>
-      <Progress value={goal.saved / goal.target}/>
-    </li>)}</ul>
-  </SampleCard>;
-}
-
-function HoldingsSample() {
-  const { t, locale } = useLanguage();
-  return <SampleCard title={t('Investments')} icon={Wallet}>
-    <ul className={styles.rows}>{holdingRows.map(row => <li key={row.kind} className={styles.row}>
-      <CategoryIcon kind={row.kind} size="sm"/><span className={styles.rowName}>{t(row.kind)}</span>
-      <span className={styles.rowAmount} suppressHydrationWarning>{formatMoney(row.value, sampleCurrency, locale)}<small className={row.change >= 0 ? styles.up : styles.down} dir="ltr" suppressHydrationWarning>{row.change >= 0 ? '+' : '−'}{formatPercent(Math.abs(row.change), locale)}</small></span>
-    </li>)}</ul>
-  </SampleCard>;
 }
 
 function AccountsSample() {
@@ -167,7 +117,10 @@ function TelegramSample() {
   </SampleCard>;
 }
 
-const pillarSamples: Record<Pillar, ReactNode> = { track: <NetWorthSample id="landing-chart-pillar"/>, budget: <BudgetSample/>, plan: <GoalsSample/>, invest: <HoldingsSample/> };
+// Each pillar opens its own screen of the real app, in the sample workspace.
+const pillarPaths: Record<Pillar, string> = { track: '/', budget: '/budget', plan: '/goals', invest: '/assets' };
+// The hero steps through the main screens, like a short video of the app.
+const heroTour = ['/', '/accounts', '/transactions', '/income-expenses', '/budget', '/goals', '/assets'] as const;
 
 function Feature({ eyebrow, title, text, sample, flip }: { eyebrow: string; title: string; text: string; sample: ReactNode; flip?: boolean }) {
   return <Reveal className={styles.feature}>
@@ -198,13 +151,7 @@ export function LandingPage({ brand, preferences, busy, error, onDemo }: Props) 
         <p className={styles.lead}>{t('From your next payday to your long-term investments.')} {t('Keep your financial life in one place.')}</p>
         <div className={styles.actions}>{getStarted}{demo}</div>
         {error ? <p className={styles.error} role="alert">{t(error)}</p> : <p className={styles.note}>{t('No account needed. Just sample data.')}</p>}
-        <div className={styles.window}>
-          <div className={styles.windowBar} aria-hidden="true"><span/><span/><span/></div>
-          <div className={styles.windowBody}>
-            <ul className={styles.rail} aria-hidden="true">{([[LayoutDashboard, 'Dashboard'], [Wallet, 'Accounts'], [ArrowLeftRight, 'Transactions'], [ChartPie, 'Budget'], [CalendarClock, 'Recurring'], [Target, 'Goals']] as const).map(([Icon, label], index) => <li key={label} data-current={index === 0}><Icon size={15}/>{t(label)}</li>)}</ul>
-            <div className={styles.board}><NetWorthSample id="landing-chart-hero"/><BudgetSample/><GoalsSample/><TransactionsSample/></div>
-          </div>
-        </div>
+        <div className={styles.heroReplay}><AppPreview eager tour={heroTour}/></div>
       </section>
 
       <Reveal className={styles.statement}>
@@ -220,7 +167,7 @@ export function LandingPage({ brand, preferences, busy, error, onDemo }: Props) 
           <div className={styles.pillarList}>{pillars.map((item, index) => <button key={item.key} type="button" aria-pressed={item.key === pillar} onClick={() => setPillar(item.key)} style={{ '--pillar-order': index * 2 } as CSSProperties}>
             <span className={styles.eyebrow}><item.icon size={15} aria-hidden="true"/>{t(item.label)}</span><strong>{t(item.title)}</strong><span>{t(item.text)}</span>
           </button>)}</div>
-          <div className={styles.pillarSample} key={active.key} style={{ '--pillar-order': pillars.indexOf(active) * 2 + 1 } as CSSProperties}>{pillarSamples[active.key]}</div>
+          <div className={styles.pillarSample} style={{ '--pillar-order': pillars.indexOf(active) * 2 + 1 } as CSSProperties}><AppPreview path={pillarPaths[active.key]}/></div>
         </Reveal>
       </section>
 
