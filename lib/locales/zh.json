@@ -2526,5 +2526,7 @@
   "Date is required.": "日期为必填项。",
   "Date lent is required.": "借出日期为必填项。",
   "Due date must not precede lending date.": "到期日不能早于借出日期。",
-  "Check the end date.": "请检查结束日期。"
+  "Check the end date.": "请检查结束日期。",
+  "Open from earlier months": "往月未结",
+  "You can record it from {date}.": "可从 {date} 起记录。"
 }

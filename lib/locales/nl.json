@@ -2526,5 +2526,7 @@
   "Date is required.": "Een datum is verplicht.",
   "Date lent is required.": "De uitleendatum is verplicht.",
   "Due date must not precede lending date.": "De vervaldatum mag niet vóór de uitleendatum liggen.",
-  "Check the end date.": "Controleer de einddatum."
+  "Check the end date.": "Controleer de einddatum.",
+  "Open from earlier months": "Nog open uit eerdere maanden",
+  "You can record it from {date}.": "Je kunt het vanaf {date} vastleggen."
 }

@@ -2526,5 +2526,7 @@
   "Date is required.": "נדרש תאריך.",
   "Date lent is required.": "נדרש תאריך ההלוואה.",
   "Due date must not precede lending date.": "תאריך הפירעון לא יכול להקדים את תאריך ההלוואה.",
-  "Check the end date.": "בדקו את תאריך הסיום."
+  "Check the end date.": "בדקו את תאריך הסיום.",
+  "Open from earlier months": "פתוחים מחודשים קודמים",
+  "You can record it from {date}.": "אפשר לרשום אותו החל מ-{date}."
 }

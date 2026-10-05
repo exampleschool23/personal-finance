@@ -2526,5 +2526,7 @@
   "Date is required.": "Укажите дату.",
   "Date lent is required.": "Укажите дату выдачи займа.",
   "Due date must not precede lending date.": "Срок возврата не может быть раньше даты выдачи займа.",
-  "Check the end date.": "Проверьте дату окончания."
+  "Check the end date.": "Проверьте дату окончания.",
+  "Open from earlier months": "Не закрыто с прошлых месяцев",
+  "You can record it from {date}.": "Записать платёж можно с {date}."
 }

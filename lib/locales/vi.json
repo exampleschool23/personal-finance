@@ -2526,5 +2526,7 @@
   "Date is required.": "Cần có ngày.",
   "Date lent is required.": "Cần có ngày cho vay.",
   "Due date must not precede lending date.": "Ngày đến hạn không được trước ngày cho vay.",
-  "Check the end date.": "Kiểm tra ngày kết thúc."
+  "Check the end date.": "Kiểm tra ngày kết thúc.",
+  "Open from earlier months": "Còn mở từ các tháng trước",
+  "You can record it from {date}.": "Bạn có thể ghi nhận từ {date}."
 }

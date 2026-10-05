@@ -2526,5 +2526,7 @@
   "Date is required.": "تاریخ الزامی است.",
   "Date lent is required.": "تاریخ قرض دادن الزامی است.",
   "Due date must not precede lending date.": "تاریخ سررسید نباید پیش از تاریخ قرض دادن باشد.",
-  "Check the end date.": "تاریخ پایان را بررسی کنید."
+  "Check the end date.": "تاریخ پایان را بررسی کنید.",
+  "Open from earlier months": "باز از ماه‌های قبل",
+  "You can record it from {date}.": "می‌توانید از {date} آن را ثبت کنید."
 }

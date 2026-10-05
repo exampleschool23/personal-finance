@@ -2526,5 +2526,7 @@
   "Date is required.": "Datum je povinné.",
   "Date lent is required.": "Datum zapůjčení je povinné.",
   "Due date must not precede lending date.": "Datum splatnosti nesmí předcházet datu zapůjčení.",
-  "Check the end date.": "Zkontrolujte datum ukončení."
+  "Check the end date.": "Zkontrolujte datum ukončení.",
+  "Open from earlier months": "Otevřené z předchozích měsíců",
+  "You can record it from {date}.": "Zaznamenat ji můžete od {date}."
 }

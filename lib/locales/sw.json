@@ -2526,5 +2526,7 @@
   "Date is required.": "Tarehe inahitajika.",
   "Date lent is required.": "Tarehe ya kukopesha inahitajika.",
   "Due date must not precede lending date.": "Tarehe ya kulipa haipaswi kutangulia tarehe ya kukopesha.",
-  "Check the end date.": "Kagua tarehe ya mwisho."
+  "Check the end date.": "Kagua tarehe ya mwisho.",
+  "Open from earlier months": "Bado wazi kutoka miezi iliyopita",
+  "You can record it from {date}.": "Unaweza kuirekodi kuanzia {date}."
 }

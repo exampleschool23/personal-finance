@@ -2526,5 +2526,7 @@
   "Date is required.": "تاریخ درکار ہے۔",
   "Date lent is required.": "قرض دینے کی تاریخ درکار ہے۔",
   "Due date must not precede lending date.": "واجب الادا تاریخ قرض دینے کی تاریخ سے پہلے نہیں ہو سکتی۔",
-  "Check the end date.": "اختتامی تاریخ چیک کریں۔"
+  "Check the end date.": "اختتامی تاریخ چیک کریں۔",
+  "Open from earlier months": "پچھلے مہینوں سے باقی",
+  "You can record it from {date}.": "آپ اسے {date} سے درج کر سکتے ہیں۔"
 }

@@ -2526,5 +2526,7 @@
   "Date is required.": "तिथि आवश्यक है।",
   "Date lent is required.": "उधार देने की तिथि आवश्यक है।",
   "Due date must not precede lending date.": "देय तिथि उधार देने की तिथि से पहले नहीं हो सकती।",
-  "Check the end date.": "समाप्ति तिथि जाँचें।"
+  "Check the end date.": "समाप्ति तिथि जाँचें।",
+  "Open from earlier months": "पिछले महीनों से बाकी",
+  "You can record it from {date}.": "आप इसे {date} से दर्ज कर सकते हैं।"
 }

@@ -1,4 +1,4 @@
-import { daysBetween, monthDays, monthEnd } from './calendar-days';
+import { daysBetween, monthDays, monthEnd, shiftDay } from './calendar-days';
 import { scheduleDates, income, type Entry } from './finance';
 import { installmentDates, installmentsFrom, isRecurringCashFlow, paidInstallmentMonths, scheduleAssets, scheduleStart, settledOccurrences, type DebtPayment, type Occurrence } from './planning';
 
@@ -8,24 +8,39 @@ export type RecurringItem = { key: string; record: Entry; date: string; status: 
 
 /** Every scheduled income and expense in a month and, when the loan payments are known, each loan's monthly payment, with whether it was paid, skipped, is still due or is overdue. */
 export function monthOccurrences(records: Entry[], occurrences: Occurrence[], month: string, today: string, debtPayments?: DebtPayment[]): RecurringItem[] {
+ return occurrencesBetween(records, occurrences, month + '-01', monthEnd(month), today, debtPayments);
+}
+
+/** Scheduled incomes and bills still open from the months before `month`: overdue, neither recorded (a recorded 0 counts) nor skipped, oldest first. They stay in sight in the current month until settled. Loan payments are left out: their reminders list them. */
+export function carriedOverdue(records: Entry[], occurrences: Occurrence[], month: string, today: string): RecurringItem[] {
+ return occurrencesBetween(records, occurrences, '', shiftDay(month + '-01', -1), today).filter(item => item.status === 'overdue');
+}
+
+/** The occurrences from `from` (inclusive; empty for each schedule's start) to `to`. */
+function occurrencesBetween(records: Entry[], occurrences: Occurrence[], from: string, to: string, today: string, debtPayments?: DebtPayment[]): RecurringItem[] {
  const settled = settledOccurrences(records, occurrences), paid = debtPayments && paidInstallmentMonths(debtPayments);
  const status = new Map(occurrences.map(item => [item.record_id + ':' + item.due_on, item.status]));
  const assets = scheduleAssets(records);
+ // A recorded occurrence shows what was actually recorded (0 when nothing came), not its scheduled amount.
+ const byId = new Map(records.map(record => [record.id, record]));
+ const recorded = new Map<string, number>();
+ for (const item of occurrences) { const transaction = item.status === 'paid' && item.transaction_id ? byId.get(item.transaction_id) : undefined; if (transaction) recorded.set(item.record_id + ':' + item.due_on, Number(transaction.amount)); }
+ for (const record of records) if (record.kind === 'Salary' && record.frequency === 'Once' && record.income_source_id) recorded.set(record.income_source_id + ':' + (record.income_due_on ?? record.date), Number(record.amount));
  const items: RecurringItem[] = [];
  for (const record of records) {
   if (!record.date || record.source_paused || !isRecurringCashFlow(record)) continue;
-  const start = scheduleStart(record, assets), from = month + '-01';
-  for (const date of scheduleDates(record, start > from ? start : from, monthEnd(month))) {
+  const start = scheduleStart(record, assets);
+  for (const date of scheduleDates(record, start > from ? start : from, to)) {
    const key = record.id + ':' + date;
    const done = status.get(key) === 'dismissed' ? 'skipped' : settled.has(key) ? 'paid' : null;
-   items.push({ key, record, date, status: done ?? (date < today ? 'overdue' : 'due'), direction: income.includes(record.kind) ? 'income' : 'expense', amount: Number(record.amount) });
+   items.push({ key, record, date, status: done ?? (date < today ? 'overdue' : 'due'), direction: income.includes(record.kind) ? 'income' : 'expense', amount: done === 'paid' ? recorded.get(key) ?? Number(record.amount) : Number(record.amount) });
   }
  }
  if (paid) for (const record of records) {
-  const from = installmentsFrom(record), first = month + '-01';
-  for (const date of installmentDates(record, from > first ? from : first, monthEnd(month))) {
+  const start = installmentsFrom(record);
+  for (const date of installmentDates(record, start > from ? start : from, to)) {
    if (date === record.date) continue;
-   items.push({ key: record.id + ':installment:' + date, record, date, status: paid.has(record.id + ':' + month) ? 'paid' : date < today ? 'overdue' : 'due', direction: 'expense', amount: Number(record.estimated_monthly_payment), installment: true });
+   items.push({ key: record.id + ':installment:' + date, record, date, status: paid.has(record.id + ':' + date.slice(0, 7)) ? 'paid' : date < today ? 'overdue' : 'due', direction: 'expense', amount: Number(record.estimated_monthly_payment), installment: true });
   }
  }
  return items.sort((a, b) => a.date.localeCompare(b.date) || a.record.name.localeCompare(b.record.name));

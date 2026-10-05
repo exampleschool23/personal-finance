@@ -1,5 +1,5 @@
 "use client";
-import { useLayoutEffect, useState, type CSSProperties, type DetailedHTMLProps, type HTMLAttributes } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties, type DetailedHTMLProps, type HTMLAttributes } from 'react';
 
 // The figure is drawn with its own tags rather than spans, so a page's broad `.panel span` rules
 // can never resize or space out the digit strips.
@@ -15,6 +15,8 @@ declare module 'react' {
  }
 }
 
+/** How long one roll takes; the stylesheet's roll-strip transition uses the same duration. */
+const rollMs = 900;
 const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 /** The characters of a formatted figure, keyed from the right so a digit keeps its column when the figure grows or shrinks. */
@@ -23,15 +25,37 @@ export function rollingColumns(text: string) {
  return chars.map((char, index) => ({ key: chars.length - index, char, digit: /[0-9]/.test(char) ? Number(char) : null }));
 }
 
-/** One digit as a strip of 0–9 that slides to its value: up from 0 when it appears, up or down when it changes. */
+/** One digit as a strip of 0–9 that slides to its value: up from 0 when it appears, up or down when it changes.
+ * Once it has arrived the strip is swapped for the plain digit, so a resting figure is drawn exactly like text
+ * (a strip moved by fractions of a pixel can leave its digit a hair above or below its neighbours). */
 function RollingDigit({ digit, column }: { digit: number; column: number }) {
  const [shown, setShown] = useState(0);
+ const [settled, setSettled] = useState(false);
+ const at = useRef(0);
+ const delay = Math.min(column, 8) * 35;
  useLayoutEffect(() => {
+  setSettled(false);
+  let timer: ReturnType<typeof setTimeout> | undefined;
   // Two frames: the browser must paint the strip where it is before a move can be animated.
-  let frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => setShown(digit)); });
-  return () => cancelAnimationFrame(frame);
- }, [digit]);
- return <roll-digit><roll-strip style={{ transform: `translateY(-${shown * 10}%)`, '--roll-delay': `${Math.min(column, 8) * 35}ms` } as CSSProperties}>{digits.map(item => <roll-char key={item}>{item}</roll-char>)}</roll-strip></roll-digit>;
+  let frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => {
+   const still = at.current === digit || globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+   at.current = digit;
+   setShown(digit);
+   // Nothing to roll (or no motion wanted): no transition will end, so rest now. Otherwise rest when the
+   // slide ends, or once its time is up: a slide cut short before it began never reports an end.
+   if (still) setSettled(true); else timer = setTimeout(() => setSettled(true), rollMs + delay + 100);
+  }); });
+  return () => { cancelAnimationFrame(frame); clearTimeout(timer); };
+ }, [digit, delay]);
+ // React names a custom element's events from the prop as written (`onTransitionEnd` would wait for "TransitionEnd"), so listen directly.
+ const strip = useRef<HTMLElement>(null);
+ useLayoutEffect(() => {
+  const node = strip.current, rest = () => setSettled(true);
+  node?.addEventListener('transitionend', rest);
+  return () => node?.removeEventListener('transitionend', rest);
+ }, [settled]);
+ if (settled) return <roll-digit><roll-char>{digit}</roll-char></roll-digit>;
+ return <roll-digit><roll-strip ref={strip} style={{ transform: `translateY(-${shown * 10}%)`, '--roll-delay': `${delay}ms` } as CSSProperties}>{digits.map(item => <roll-char key={item}>{item}</roll-char>)}</roll-strip></roll-digit>;
 }
 
 /** An already formatted figure (money, a percentage, a count) whose digits roll into place like an odometer and roll up or down when it changes. Signs and separators stay put; screen readers and reduced motion get the final text only. */

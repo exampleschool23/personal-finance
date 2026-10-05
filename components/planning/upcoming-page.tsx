@@ -16,7 +16,7 @@ import { depositToday } from '@/lib/deposit-interest';
 import { shiftMonth } from '@/lib/calendar-days';
 import { convertAmount } from '@/lib/market';
 import { upcomingPayments, type PlanningData } from '@/lib/planning';
-import { calendarWeeks, daysFrom, monthOccurrences, recurringSummary, type RecurringItem } from '@/lib/recurring';
+import { calendarWeeks, carriedOverdue, daysFrom, monthOccurrences, recurringSummary, type RecurringItem } from '@/lib/recurring';
 import { AccountOperation, type Operation } from './account-operation';
 
 /** The Recurring page's views, switched from tabs beside its title: the month as a list or a calendar, subscriptions and reminders. */
@@ -53,6 +53,8 @@ export function UpcomingPage({ data, save, currency, rates, view, onView }: Prop
  // The month's payments show in the list and calendar views; the other views belong to the screen.
  const scheduled = view === 'list' || view === 'calendar';
  const items = monthOccurrences(data.records, data.occurrences, month, today, data.debtPayments);
+ // Payments left open in earlier months stay at the top of the current month until they are recorded (0 counts) or skipped, so none is forgotten. They are not this month's totals.
+ const carried = month === today.slice(0, 7) ? carriedOverdue(data.records, data.occurrences, month, today) : [];
  const summary = recurringSummary(items, (amount, unit) => convertAmount(amount, unit, currency, rates));
  const reminders = upcomingPayments(data.records, data.occurrences, today, undefined, data.debtPayments).filter(item => item.type !== 'scheduled');
  const skipped = data.occurrences.filter(o => o.status === 'dismissed' && data.records.some(r => r.id === o.record_id && r.frequency !== 'Once'));
@@ -63,6 +65,19 @@ export function UpcomingPage({ data, save, currency, rates, view, onView }: Prop
  const status = (item: RecurringItem) => item.status === 'paid' ? <span className="status-badge is-paid">{t(item.direction === 'income' ? 'Received' : 'Paid')}</span>
   : item.status === 'skipped' ? <span className="status-badge">{t('Skipped')}</span>
   : <span className={item.status === 'overdue' ? 'status-badge is-overdue' : 'status-badge'}>{dueLabel(today, item.date)}</span>;
+  // A payment is recorded once it happens: before its date the button waits and says when.
+ const row = (item: RecurringItem, dated = false) => {
+  const early = !item.installment && item.date > today;
+  return <li key={item.key} className="recurring-row" data-status={item.status}>
+   <span className="transaction-merchant"><CategoryIcon kind={item.record.kind}/><span><strong>{item.record.name}</strong><small>{[t(frequencyLabels[item.installment ? 'Monthly' : item.record.frequency]), t(item.record.kind), dated ? formatDate(item.date, locale) : null].filter(Boolean).join(' · ')}</small></span></span>
+   {status(item)}
+   <strong className={income.includes(item.record.kind) ? 'transaction-amount positive' : 'transaction-amount'}>{formatMoney(item.amount, item.record.currency, locale)}</strong>
+   <div className="row-actions">{(item.status === 'due' || item.status === 'overdue') && <>
+    <span title={early ? t('You can record it from {date}.', { date: formatDate(item.date, locale) }) : undefined}><Button size="sm" variant="outline" disabled={busy || early} onClick={() => pay(item)}>{t('Record payment')}</Button></span>
+    {!item.installment && <RowMenu label={t('Actions for {name}', { name: item.record.name })} items={[{ label: t('Skip this occurrence'), disabled: busy, onSelect: () => skip(item) }]}/>}
+   </>}</div>
+  </li>;
+ };
  return <>
   <PageHeader title={t('Recurring')} tabs={<Segmented className="page-tabs" as="nav" label={t('Recurring view')} options={[{ value: 'list', label: t('List') }, { value: 'calendar', label: t('Calendar') }, { value: 'subscriptions', label: t('Subscriptions') }, { value: 'reminders', label: t('Reminders') }] as const} value={view} onChange={onView}/>} hint={<><p>{t('Every scheduled income and bill, month by month. Record a payment only after it happens; a reminder never moves money.')}</p><p>{t('Debt amounts show the outstanding balance; enter the actual principal and interest when paying.')}</p></>}>
    {scheduled && <div className="budget-month-nav">
@@ -79,18 +94,14 @@ export function UpcomingPage({ data, save, currency, rates, view, onView }: Prop
    <SummaryBar label={t('Expenses')} done={summary.expense.done} remaining={summary.expense.remaining} doneLabel="{amount} paid" currency={currency} tone="expense"/>
   </section>
   {view === 'list' ? <section className="panel recurring-list" aria-label={t('Recurring')}>
-   {items.length ? <ul>{items.map((item, index) => <Fragment key={item.key}>
-    {item.date !== items[index - 1]?.date && <li className="transaction-day-heading"><h3>{formatDate(item.date, locale)}</h3></li>}
-    <li className="recurring-row" data-status={item.status}>
-     <span className="transaction-merchant"><CategoryIcon kind={item.record.kind}/><span><strong>{item.record.name}</strong><small>{t(frequencyLabels[item.installment ? 'Monthly' : item.record.frequency])} · {t(item.record.kind)}</small></span></span>
-     {status(item)}
-     <strong className={income.includes(item.record.kind) ? 'transaction-amount positive' : 'transaction-amount'}>{formatMoney(item.amount, item.record.currency, locale)}</strong>
-     <div className="row-actions">{(item.status === 'due' || item.status === 'overdue') && <>
-      <Button size="sm" variant="outline" disabled={busy || (!item.installment && item.date > today)} onClick={() => pay(item)}>{t('Record payment')}</Button>
-      {!item.installment && <RowMenu label={t('Actions for {name}', { name: item.record.name })} items={[{ label: t('Skip this occurrence'), disabled: busy, onSelect: () => skip(item) }]}/>}
-     </>}</div>
-    </li>
-   </Fragment>)}</ul> : <EmptyState icon={<Repeat aria-hidden="true"/>} description={t('Nothing is scheduled this month. Add a monthly or weekly income or expense to see it here.')}/>}
+   {items.length || carried.length ? <ul>
+    {carried.length > 0 && <li className="transaction-day-heading"><h3>{t('Open from earlier months')}<Count value={carried.length}/></h3></li>}
+    {carried.map(item => row(item, true))}
+    {items.map((item, index) => <Fragment key={item.key}>
+     {item.date !== items[index - 1]?.date && <li className="transaction-day-heading"><h3>{formatDate(item.date, locale)}</h3></li>}
+     {row(item)}
+    </Fragment>)}
+   </ul> : <EmptyState icon={<Repeat aria-hidden="true"/>} description={t('Nothing is scheduled this month. Add a monthly or weekly income or expense to see it here.')}/>}
   </section> : <RecurringCalendar month={month} items={items} reminders={reminders} today={today}/>}
   {/* Only when a debt payment or deposit maturity is due this month; an empty card is just noise. */}
   {reminders.length > 0 && <section className="panel upcoming-section" aria-labelledby="upcoming-reminders">

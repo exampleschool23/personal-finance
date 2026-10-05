@@ -147,19 +147,28 @@ test('animated money rolls each digit on its own 0–9 strip and keeps the amoun
  assert.deepEqual(rollingColumns('€1,655').filter(item=>item.digit===null).map(item=>item.char),['€',',']);
 });
 
-test('a rolling digit moves to its value only after the strip has been drawn at its old one',()=>{
+test('a rolling digit moves only after its strip is drawn, then rests as plain text until it changes',()=>{
  const slots=[];let cursor=0,effects=[],frames=[];
  const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=initial;return [slots[i],value=>{slots[i]=value;}];},
+  // The strip's element: it reports the end of its slide the way a browser does.
+  useRef:initial=>{const i=cursor++;return slots[i]??(slots[i]={current:initial===null?node:initial});},
   useLayoutEffect:(effect,deps)=>{const i=cursor++;if(!slots[i]||deps.some((d,k)=>!Object.is(d,slots[i][k]))){slots[i]=deps;effects.push(effect);}}};
+ const listeners={},node={addEventListener:(name,listener)=>{listeners[name]=listener;},removeEventListener:(name,listener)=>{if(listeners[name]===listener)delete listeners[name];}};
  const saved={raf:globalThis.requestAnimationFrame,caf:globalThis.cancelAnimationFrame};
  globalThis.requestAnimationFrame=cb=>frames.push(cb);globalThis.cancelAnimationFrame=()=>{frames=[];};
  try{
   const {RollingText}=load('rolling-text.tsx',{react});
-  const digit=()=>RollingText({text:'7'}).props.children[0].props.children[0];
-  const offset=()=>{cursor=0;const element=digit();const tree=element.type(element.props);effects.splice(0).forEach(effect=>effect());return tree.props.children.props.style.transform;};
-  assert.equal(offset(),'translateY(-0%)');
-  frames.splice(0).forEach(cb=>cb());assert.equal(offset(),'translateY(-0%)','not on the first frame');
-  frames.splice(0).forEach(cb=>cb());assert.equal(offset(),'translateY(-70%)','rolls to 7 on the second');
+  let text='7';
+  const draw=()=>{cursor=0;const element=RollingText({text}).props.children[0].props.children[0];const tree=element.type(element.props);effects.splice(0).forEach(effect=>effect());return tree.props.children;};
+  const frame=()=>frames.splice(0).forEach(cb=>cb());
+  assert.equal(draw().props.style.transform,'translateY(-0%)');
+  frame();assert.equal(draw().props.style.transform,'translateY(-0%)','not on the first frame');
+  frame();const strip=draw();assert.equal(strip.props.style.transform,'translateY(-70%)','rolls to 7 on the second');
+  listeners.transitionend();
+  const rest=draw();assert.equal(rest.type,'roll-char','at rest the strip gives way to the plain digit');assert.equal(rest.props.children,7);
+  // React re-renders after the layout effect and before painting; the second draw is that render.
+  text='3';draw();assert.equal(draw().props.style.transform,'translateY(-70%)','a change rolls from where it rests');
+  frame();frame();assert.equal(draw().props.style.transform,'translateY(-30%)');
  }finally{globalThis.requestAnimationFrame=saved.raf;globalThis.cancelAnimationFrame=saved.caf;}
 });
 

@@ -2526,5 +2526,7 @@
   "Date is required.": "Tanggal wajib diisi.",
   "Date lent is required.": "Tanggal peminjaman wajib diisi.",
   "Due date must not precede lending date.": "Tanggal jatuh tempo tidak boleh sebelum tanggal peminjaman.",
-  "Check the end date.": "Periksa tanggal berakhir."
+  "Check the end date.": "Periksa tanggal berakhir.",
+  "Open from earlier months": "Masih terbuka dari bulan sebelumnya",
+  "You can record it from {date}.": "Anda dapat mencatatnya mulai {date}."
 }

@@ -2526,5 +2526,7 @@
   "Date is required.": "Date is required.",
   "Date lent is required.": "Date lent is required.",
   "Due date must not precede lending date.": "Due date must not precede lending date.",
-  "Check the end date.": "Check the end date."
+  "Check the end date.": "Check the end date.",
+  "Open from earlier months": "Open from earlier months",
+  "You can record it from {date}.": "You can record it from {date}."
 }

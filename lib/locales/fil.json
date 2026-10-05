@@ -2526,5 +2526,7 @@
   "Date is required.": "Kailangan ang petsa.",
   "Date lent is required.": "Kailangan ang petsa ng pagpapautang.",
   "Due date must not precede lending date.": "Hindi dapat mauna ang takdang petsa sa petsa ng pagpapautang.",
-  "Check the end date.": "Suriin ang petsa ng pagtatapos."
+  "Check the end date.": "Suriin ang petsa ng pagtatapos.",
+  "Open from earlier months": "Bukas pa mula sa mga nakaraang buwan",
+  "You can record it from {date}.": "Maitatala mo ito simula {date}."
 }

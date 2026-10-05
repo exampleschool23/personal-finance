@@ -64,3 +64,17 @@ test('due labels count whole days and the calendar starts weeks on Monday', () =
  assert.ok(weeks.every(week => week.length === 7));
  assert.equal(calendarWeeks('2027-02').flat().filter(Boolean).length, 28);
 });
+
+test('payments left open in earlier months are carried into the current month until recorded or skipped, and a recorded payment shows its actual amount',()=>{
+ const { carriedOverdue } = loadTS('lib/recurring.ts');
+ const solar = { id: 'solar', name: 'Solar panel', kind: 'Other income', currency: 'UZS', amount: 5000000, quantity: 1, cost: 0, rate: 0, date: '2026-08-25', frequency: 'Monthly', notes: '' };
+ const zero = { id: 'zero', name: 'Solar panel', kind: 'Other income', currency: 'UZS', amount: 0, quantity: 1, cost: 0, rate: 0, date: '2026-08-25', frequency: 'Once', notes: 'Nothing this month' };
+ const open = carriedOverdue([solar], [], '2026-10', '2026-10-05');
+ assert.deepEqual(open.map(item => [item.date, item.status]), [['2026-08-25', 'overdue'], ['2026-09-25', 'overdue']], 'oldest first, this month excluded');
+ // August recorded as 0, September skipped: nothing is left open.
+ const occurrences = [{ id: 'a', record_id: 'solar', due_on: '2026-08-25', status: 'paid', transaction_id: 'zero' }, { id: 'b', record_id: 'solar', due_on: '2026-09-25', status: 'dismissed' }];
+ assert.deepEqual(carriedOverdue([solar, zero], occurrences, '2026-10', '2026-10-05'), []);
+ const august = monthOccurrences([solar, zero], occurrences, '2026-08', '2026-10-05');
+ assert.deepEqual(august.map(item => [item.status, item.amount]), [['paid', 0]], 'a recorded 0 shows as 0, not the scheduled amount');
+ assert.equal(recurringSummary(august, amount => amount).income.done, 0);
+});

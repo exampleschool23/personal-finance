@@ -2526,5 +2526,7 @@
   "Date is required.": "Tarikh diperlukan.",
   "Date lent is required.": "Tarikh pinjaman diperlukan.",
   "Due date must not precede lending date.": "Tarikh matang tidak boleh mendahului tarikh pinjaman.",
-  "Check the end date.": "Semak tarikh tamat."
+  "Check the end date.": "Semak tarikh tamat.",
+  "Open from earlier months": "Masih terbuka dari bulan sebelumnya",
+  "You can record it from {date}.": "Anda boleh merekodkannya mulai {date}."
 }

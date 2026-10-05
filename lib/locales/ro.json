@@ -2526,5 +2526,7 @@
   "Date is required.": "Data este obligatorie.",
   "Date lent is required.": "Data împrumutului este obligatorie.",
   "Due date must not precede lending date.": "Data scadenței nu poate preceda data împrumutului.",
-  "Check the end date.": "Verificați data de încheiere."
+  "Check the end date.": "Verificați data de încheiere.",
+  "Open from earlier months": "Deschise din lunile anterioare",
+  "You can record it from {date}.": "O puteți înregistra începând cu {date}."
 }

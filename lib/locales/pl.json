@@ -2526,5 +2526,7 @@
   "Date is required.": "Data jest wymagana.",
   "Date lent is required.": "Data pożyczki jest wymagana.",
   "Due date must not precede lending date.": "Termin spłaty nie może być wcześniejszy niż data pożyczki.",
-  "Check the end date.": "Sprawdź datę zakończenia."
+  "Check the end date.": "Sprawdź datę zakończenia.",
+  "Open from earlier months": "Otwarte z poprzednich miesięcy",
+  "You can record it from {date}.": "Możesz to zapisać od {date}."
 }

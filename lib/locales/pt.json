@@ -2526,5 +2526,7 @@
   "Date is required.": "A data é obrigatória.",
   "Date lent is required.": "A data do empréstimo é obrigatória.",
   "Due date must not precede lending date.": "A data de vencimento não pode ser anterior à data do empréstimo.",
-  "Check the end date.": "Verifique a data de término."
+  "Check the end date.": "Verifique a data de término.",
+  "Open from earlier months": "Em aberto de meses anteriores",
+  "You can record it from {date}.": "Você pode registrá-lo a partir de {date}."
 }

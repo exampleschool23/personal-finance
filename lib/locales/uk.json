@@ -2526,5 +2526,7 @@
   "Date is required.": "Вкажіть дату.",
   "Date lent is required.": "Вкажіть дату надання позики.",
   "Due date must not precede lending date.": "Строк повернення не може бути раніше за дату надання позики.",
-  "Check the end date.": "Перевірте дату завершення."
+  "Check the end date.": "Перевірте дату завершення.",
+  "Open from earlier months": "Не закрито з попередніх місяців",
+  "You can record it from {date}.": "Записати платіж можна з {date}."
 }

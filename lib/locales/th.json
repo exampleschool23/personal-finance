@@ -2526,5 +2526,7 @@
   "Date is required.": "ต้องระบุวันที่",
   "Date lent is required.": "ต้องระบุวันที่ให้ยืม",
   "Due date must not precede lending date.": "วันครบกำหนดต้องไม่อยู่ก่อนวันที่ให้ยืม",
-  "Check the end date.": "ตรวจสอบวันที่สิ้นสุด"
+  "Check the end date.": "ตรวจสอบวันที่สิ้นสุด",
+  "Open from earlier months": "ค้างจากเดือนก่อนหน้า",
+  "You can record it from {date}.": "บันทึกได้ตั้งแต่ {date}"
 }

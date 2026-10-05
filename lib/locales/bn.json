@@ -2526,5 +2526,7 @@
   "Date is required.": "তারিখ প্রয়োজন।",
   "Date lent is required.": "ধার দেওয়ার তারিখ প্রয়োজন।",
   "Due date must not precede lending date.": "পরিশোধের তারিখ ধার দেওয়ার তারিখের আগে হতে পারে না।",
-  "Check the end date.": "শেষ তারিখ যাচাই করুন।"
+  "Check the end date.": "শেষ তারিখ যাচাই করুন।",
+  "Open from earlier months": "আগের মাস থেকে বাকি",
+  "You can record it from {date}.": "আপনি {date} থেকে এটি রেকর্ড করতে পারবেন।"
 }

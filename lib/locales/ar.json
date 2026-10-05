@@ -2526,5 +2526,7 @@
   "Date is required.": "التاريخ مطلوب.",
   "Date lent is required.": "تاريخ الإقراض مطلوب.",
   "Due date must not precede lending date.": "يجب ألا يسبق تاريخ الاستحقاق تاريخ الإقراض.",
-  "Check the end date.": "تحقق من تاريخ الانتهاء."
+  "Check the end date.": "تحقق من تاريخ الانتهاء.",
+  "Open from earlier months": "مفتوحة من الأشهر السابقة",
+  "You can record it from {date}.": "يمكنك تسجيلها اعتبارًا من {date}."
 }

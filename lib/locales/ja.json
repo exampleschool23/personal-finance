@@ -2526,5 +2526,7 @@
   "Date is required.": "日付は必須です。",
   "Date lent is required.": "貸付日は必須です。",
   "Due date must not precede lending date.": "返済期日は貸付日より前にできません。",
-  "Check the end date.": "終了日を確認してください。"
+  "Check the end date.": "終了日を確認してください。",
+  "Open from earlier months": "前の月から未処理",
+  "You can record it from {date}.": "{date}から記録できます。"
 }

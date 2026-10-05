@@ -2526,5 +2526,7 @@
   "Date is required.": "Sana kiritilishi shart.",
   "Date lent is required.": "Qarz berilgan sana kiritilishi shart.",
   "Due date must not precede lending date.": "Qaytarish muddati qarz berilgan sanadan oldin boʻlmasligi kerak.",
-  "Check the end date.": "Tugash sanasini tekshiring."
+  "Check the end date.": "Tugash sanasini tekshiring.",
+  "Open from earlier months": "Oldingi oylardan yopilmagan",
+  "You can record it from {date}.": "Uni {date} dan boshlab yozib qoʻyishingiz mumkin."
 }

@@ -2526,5 +2526,7 @@
   "Date is required.": "날짜는 필수입니다.",
   "Date lent is required.": "빌려준 날짜는 필수입니다.",
   "Due date must not precede lending date.": "만기일은 빌려준 날짜보다 앞설 수 없습니다.",
-  "Check the end date.": "종료일을 확인하세요."
+  "Check the end date.": "종료일을 확인하세요.",
+  "Open from earlier months": "이전 달에서 남은 항목",
+  "You can record it from {date}.": "{date}부터 기록할 수 있습니다."
 }
