@@ -27,6 +27,8 @@ export function createRenderer({ attach = () => null } = {}) {
    const state = instance.hooks[index];
    return [state.value, next => { const value = typeof next === 'function' ? next(state.value) : next; if (!Object.is(value, state.value)) { state.value = value; dirty = true; } }];
   },
+  // No providers here: a context reads its default value, as React does outside a provider.
+  useContext(context) { return context._currentValue; },
   useRef(initial) { const [instance, index] = slot(); return instance.hooks[index] ?? (instance.hooks[index] = { current: initial }); },
   useId() { const [instance, index] = slot(); return (instance.hooks[index] ??= { id: ':r' + (ids++) + ':' }).id; },
   useMemo(factory, deps) { const [instance, index] = slot(); if (changed(instance.hooks[index]?.deps, deps)) instance.hooks[index] = { deps, value: factory() }; return instance.hooks[index].value; },

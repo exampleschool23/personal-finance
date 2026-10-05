@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Xóa, giữ lịch sử",
   "Delete with history": "Xóa cùng lịch sử",
   "Could not delete this schedule. Please try again.": "Không thể xóa lịch này. Hãy thử lại.",
-  "Only repeating income and expenses are deleted here.": "Ở đây chỉ xóa thu nhập và chi tiêu định kỳ."
+  "Only repeating income and expenses are deleted here.": "Ở đây chỉ xóa thu nhập và chi tiêu định kỳ.",
+  "Home": "Nhà cửa",
+  "Food and drink": "Ăn uống",
+  "Transport": "Đi lại",
+  "Shopping": "Mua sắm",
+  "Health": "Sức khỏe",
+  "Leisure": "Giải trí",
+  "Family and people": "Gia đình và mọi người",
+  "Money and work": "Tiền và công việc",
+  "Change icon for {name}": "Đổi biểu tượng của {name}",
+  "Choose an icon": "Chọn biểu tượng",
+  "Use the default icon": "Dùng biểu tượng mặc định"
 }

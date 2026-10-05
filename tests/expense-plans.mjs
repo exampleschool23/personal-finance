@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {expensePlanTotals,expensePlanMonth} from '../lib/expense-plans.ts';
+import {expensePlanTotals,expensePlanMonth,previewPlans} from '../lib/expense-plans.ts';
 import {estimatedCashFlow} from '../lib/finance.ts';
 import {convertAmount} from '../lib/market.ts';
 const plan={id:'p',amount:500,start_date:'2026-09-17',end_date:null,spent:100,currency:'USD'};
@@ -56,4 +56,10 @@ test('the plan form saves a new plan, hands it back to be chosen, and keeps its 
  assert.deepEqual(saved.map(value=>[value.name,value.amount]),[['Groceries',400]]);
  assert.equal(chosen[0].id,plan.id,'the new plan is handed back to be chosen');
  assert.equal(closed,1);
+});
+
+test('the month preview lists plans in every currency, only those running that month, five at most',()=>{
+ const plans=[{...plan,id:'usd'},{...plan,id:'uzs',currency:'UZS',amount:9e6},{...plan,id:'later',start_date:'2026-11-01'},{...plan,id:'ended',start_date:'2026-01-01',end_date:'2026-08-31'},...['a','b','c','d'].map(id=>({...plan,id,currency:'UZS'}))];
+ assert.deepEqual(previewPlans(plans,'2026-09').map(item=>item.id),['usd','uzs','a','b','c'],'a plan in another currency is not hidden');
+ assert.deepEqual(previewPlans(plans,'2026-09',10).map(item=>item.id),['usd','uzs','a','b','c','d']);
 });

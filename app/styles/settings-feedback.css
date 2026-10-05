@@ -33,10 +33,23 @@
 .category-settings .category-group h3,.category-settings .category-group h2{font-size:var(--type-title);font-weight:600;margin:0 0 12px}
 .category-settings .category-group h4{font-size:var(--type-small);font-weight:500;margin:0 0 12px;color:var(--muted-foreground)}
 .category-settings .category-badges{display:flex;flex-wrap:wrap;gap:10px;list-style:none;padding:0;margin:0}
-.category-create-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin-top:16px}
+.category-create-form{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:end;margin-top:16px}
 .category-settings .category-create-form>label{display:grid;gap:8px;margin:0;min-width:0}
 .category-settings .category-create-form :is(input,select,button){min-height:44px}
-@media(max-width:600px){.category-create-form{grid-template-columns:1fr}}
+@media(max-width:600px){.category-create-form{grid-template-columns:auto minmax(0,1fr)}.category-create-form>button:last-child{grid-column:1/-1}}
+/* A category's icon is a button: on a pill it opens the icon choices; beside a new category's name it picks the icon to start with. */
+.category-icon-button{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:24px;height:24px;margin:0 0 0 -4px;padding:0;border:0;border-radius:999px;background:transparent;font-size:var(--type-small);line-height:1;cursor:pointer}
+.category-icon-button:hover:not(:disabled){background:hsl(var(--category-hue,150) 40% 50% / .18)}
+.category-icon-button:focus-visible{outline:2px solid currentColor;outline-offset:1px}
+.category-icon-button:disabled{cursor:default}
+.category-settings .category-create-form>.category-icon-button{width:44px;height:44px;margin:0;border:1px solid var(--input);border-radius:var(--radius-control);background:var(--field);font-size:var(--type-title)}
+.category-icon-picker{width:min(332px,calc(100vw - 32px));max-height:min(380px,60vh);overflow-y:auto;display:grid;gap:12px;padding:12px}
+.category-icon-picker h4{margin:0 0 6px;font-size:var(--type-caption);font-weight:500;color:var(--muted-foreground)}
+.category-icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:2px}
+.category-icon-grid button{display:inline-flex;align-items:center;justify-content:center;height:34px;padding:0;border:1px solid transparent;border-radius:var(--radius-control);background:transparent;font-size:var(--type-title);cursor:pointer}
+.category-icon-grid button:hover{background:var(--muted)}
+.category-icon-grid button[aria-pressed="true"]{border-color:var(--primary);background:color-mix(in oklab,var(--primary) 14%,transparent)}
+.category-icon-grid button:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
 
 .data-backup-actions{display:flex;flex-wrap:wrap;gap:12px}
 /* A file field reads as a dashed drop area, whether it restores a backup or imports a statement. */

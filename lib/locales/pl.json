@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Usuń, zachowaj historię",
   "Delete with history": "Usuń z historią",
   "Could not delete this schedule. Please try again.": "Nie udało się usunąć harmonogramu. Spróbuj ponownie.",
-  "Only repeating income and expenses are deleted here.": "Tutaj usuwa się tylko cykliczne przychody i wydatki."
+  "Only repeating income and expenses are deleted here.": "Tutaj usuwa się tylko cykliczne przychody i wydatki.",
+  "Home": "Dom",
+  "Food and drink": "Jedzenie i napoje",
+  "Transport": "Transport",
+  "Shopping": "Zakupy",
+  "Health": "Zdrowie",
+  "Leisure": "Rozrywka",
+  "Family and people": "Rodzina i ludzie",
+  "Money and work": "Pieniądze i praca",
+  "Change icon for {name}": "Zmień ikonę dla {name}",
+  "Choose an icon": "Wybierz ikonę",
+  "Use the default icon": "Użyj domyślnej ikony"
 }

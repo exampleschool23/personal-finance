@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Burahin, itago ang history",
   "Delete with history": "Burahin kasama ang history",
   "Could not delete this schedule. Please try again.": "Hindi mabura ang iskedyul na ito. Subukan muli.",
-  "Only repeating income and expenses are deleted here.": "Dito, paulit-ulit na kita at gastos lang ang binubura."
+  "Only repeating income and expenses are deleted here.": "Dito, paulit-ulit na kita at gastos lang ang binubura.",
+  "Home": "Bahay",
+  "Food and drink": "Pagkain at inumin",
+  "Transport": "Transportasyon",
+  "Shopping": "Pamimili",
+  "Health": "Kalusugan",
+  "Leisure": "Libangan",
+  "Family and people": "Pamilya at tao",
+  "Money and work": "Pera at trabaho",
+  "Change icon for {name}": "Palitan ang icon ng {name}",
+  "Choose an icon": "Pumili ng icon",
+  "Use the default icon": "Gamitin ang default na icon"
 }

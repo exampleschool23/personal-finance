@@ -2532,5 +2532,16 @@
   "Delete, keep history": "हटाएँ, इतिहास रखें",
   "Delete with history": "इतिहास सहित हटाएँ",
   "Could not delete this schedule. Please try again.": "यह शेड्यूल हटाया नहीं जा सका। फिर से कोशिश करें।",
-  "Only repeating income and expenses are deleted here.": "यहाँ केवल आवर्ती आय और खर्च हटाए जाते हैं।"
+  "Only repeating income and expenses are deleted here.": "यहाँ केवल आवर्ती आय और खर्च हटाए जाते हैं।",
+  "Home": "घर",
+  "Food and drink": "खाना-पीना",
+  "Transport": "परिवहन",
+  "Shopping": "खरीदारी",
+  "Health": "स्वास्थ्य",
+  "Leisure": "मनोरंजन",
+  "Family and people": "परिवार और लोग",
+  "Money and work": "पैसा और काम",
+  "Change icon for {name}": "{name} का आइकन बदलें",
+  "Choose an icon": "एक आइकन चुनें",
+  "Use the default icon": "डिफ़ॉल्ट आइकन इस्तेमाल करें"
 }

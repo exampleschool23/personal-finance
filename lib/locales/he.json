@@ -2532,5 +2532,16 @@
   "Delete, keep history": "מחיקה, השארת ההיסטוריה",
   "Delete with history": "מחיקה כולל ההיסטוריה",
   "Could not delete this schedule. Please try again.": "לא ניתן היה למחוק את התזמון. נסו שוב.",
-  "Only repeating income and expenses are deleted here.": "כאן נמחקות רק הכנסות והוצאות חוזרות."
+  "Only repeating income and expenses are deleted here.": "כאן נמחקות רק הכנסות והוצאות חוזרות.",
+  "Home": "בית",
+  "Food and drink": "אוכל ושתייה",
+  "Transport": "תחבורה",
+  "Shopping": "קניות",
+  "Health": "בריאות",
+  "Leisure": "פנאי",
+  "Family and people": "משפחה ואנשים",
+  "Money and work": "כסף ועבודה",
+  "Change icon for {name}": "שינוי הסמל של {name}",
+  "Choose an icon": "בחירת סמל",
+  "Use the default icon": "שימוש בסמל ברירת המחדל"
 }

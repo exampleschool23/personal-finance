@@ -128,6 +128,15 @@ it instead of styling a page on its own.
 - Size layouts with `@container content (...)` queries, because the sidebar
   changes the room a page really has. Record and upcoming tables turn into
   stacked cards below 720px; keep new tables compatible with that.
+- Never stack a row while it still has room. A breakpoint guessed for the widest
+  possible row (long UZS amounts, a progress line) stacks every ordinary row too
+  early and leaves a gap with the date on a second line. Row lists that line up
+  trailing columns (status, amount, actions) beside a name decide with
+  `useColumnsFit` (`hooks/use-columns-fit.ts`): it measures what is on screen and
+  sets `data-layout="columns"` or `"stacked"`, which the stylesheet lays out.
+  Prefer `flex-wrap` / `auto-fit` grids that wrap by themselves; keep fixed
+  `@container` widths for page-level layout (columns of panels), not for rows.
+  `/dr` Audit L finds rows that wrapped while their first line had room.
 - Define each shared selector once. Change the existing rule instead of adding a
   later override, and delete rules when their class is no longer rendered.
 - Cover shared UI pieces and label translations in `tests/design-system.mjs`.

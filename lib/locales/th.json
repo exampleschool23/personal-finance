@@ -2532,5 +2532,16 @@
   "Delete, keep history": "ลบ แต่เก็บประวัติ",
   "Delete with history": "ลบพร้อมประวัติ",
   "Could not delete this schedule. Please try again.": "ลบกำหนดการนี้ไม่ได้ ลองอีกครั้ง",
-  "Only repeating income and expenses are deleted here.": "ที่นี่ลบได้เฉพาะรายรับและรายจ่ายที่เกิดซ้ำ"
+  "Only repeating income and expenses are deleted here.": "ที่นี่ลบได้เฉพาะรายรับและรายจ่ายที่เกิดซ้ำ",
+  "Home": "บ้าน",
+  "Food and drink": "อาหารและเครื่องดื่ม",
+  "Transport": "การเดินทาง",
+  "Shopping": "ช้อปปิ้ง",
+  "Health": "สุขภาพ",
+  "Leisure": "พักผ่อน",
+  "Family and people": "ครอบครัวและผู้คน",
+  "Money and work": "เงินและงาน",
+  "Change icon for {name}": "เปลี่ยนไอคอนของ {name}",
+  "Choose an icon": "เลือกไอคอน",
+  "Use the default icon": "ใช้ไอคอนเริ่มต้น"
 }

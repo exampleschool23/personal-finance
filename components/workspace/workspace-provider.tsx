@@ -10,6 +10,8 @@ import { upcomingPayments } from '@/lib/planning';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney } from '@/lib/format';
 import { useExpensePlans } from '@/hooks/use-expense-plans';
+import { useCategoryIcons } from '@/hooks/use-category-icons';
+import { CategoryIconsContext } from '@/components/category-icons-context';
 import { expensePlanMonth, monthlyBudgetTotals } from '@/lib/expense-plans';
 import { useEarningSources } from '@/hooks/use-earning-sources';
 import { withAssetIncomePlans, legacyEarningSources, sourceSchedule } from '@/lib/earning-sources';
@@ -86,6 +88,7 @@ function useWorkspaceState() {
     const planning={...basePlanning,data:{...basePlanning.data,occurrences:demo?[...basePlanning.data.occurrences,...rows.filter(row=>row.earning_source_id&&row.earning_due_on).flatMap(row=>{const source=earningSources.sources.find(source=>source.id===row.earning_source_id);return source?.schedule_id?[{id:row.id,record_id:source.schedule_id,due_on:row.earning_due_on!,status:'paid' as const}]:[];})]:basePlanning.data.occurrences}};
     const transactionTools=useTransactionTools(user,demo,reload,refreshRecords);
     const workspacePreferences=useWorkspacePreferences(user,demo,reload);
+    const categoryIcons=useCategoryIcons(workspacePreferences,user,demo,planning.data.categories);
     const tagResource=useTags(user,demo,reload,planning.data.records,sample.demoTags);
     const attachments=useRecordAttachments(user,demo,reload);
     // Tags in the person's own order (Settings), wherever they are listed.
@@ -155,7 +158,7 @@ function useWorkspaceState() {
         // Preferences
         currency, setCurrency: settings.setCurrency, preferencesData, applyPreferences: settings.applyPreferences, savePreferences: settings.savePreferences, settingsLoading, settingsError: settings.settingsError, retrySettings: settings.retrySettings, workspacePreferences, onboardingNeeded: settings.onboardingNeeded, restartOnboarding: settings.restartOnboarding, saveTrackingStart: saveTrackingStartRequest,
         // Records and market data
-        rows, summary, current, market, marketLoading, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, expensePlans, snapshots,
+        rows, summary, current, categoryIcons, market, marketLoading, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, expensePlans, snapshots,
         reload, refreshRecords, budget, forecast, forecastReady, forecastMonth, setForecastMonth, excludedCurrencies, netWorth, totalDebt, monthlyIncomeEntries,
         availableBusinesses, businessList, tags, attachments, overdueCount, workspaceLoading: loading, deletedItems: bin.deletedItems, restoreDemoItem: bin.restoreDemoItem, discardDeletedItem: bin.discardDeletedItem,
         // Record table
@@ -174,7 +177,8 @@ const WorkspaceContext = createContext<Workspace | null>(null);
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const workspace = useWorkspaceState();
-    return <WorkspaceContext.Provider value={workspace}>{children}</WorkspaceContext.Provider>;
+    // Every category icon in the workspace shows the icon chosen for it in Settings.
+    return <WorkspaceContext.Provider value={workspace}><CategoryIconsContext.Provider value={workspace.categoryIcons.emojiOf}>{children}</CategoryIconsContext.Provider></WorkspaceContext.Provider>;
 }
 
 export function useWorkspace() {

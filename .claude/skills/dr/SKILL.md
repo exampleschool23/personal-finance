@@ -149,6 +149,24 @@ const bg=e=>{for(;e;e=e.parentElement){const l=L(getComputedStyle(e).backgroundC
 // K. Page frame: title position and tab title (compare across screens)
 const h=document.querySelector('main h1')?.getBoundingClientRect();({top:h&&Math.round(h.top),left:h&&Math.round(h.left),h1:document.querySelector('main h1')?.textContent.trim(),title:document.title})
 ```
+```js
+// L. Wrapped with room: a row whose items went onto a second line although the first line had space for them
+// (a breakpoint guessed for the widest row). Measures each item's content, not its stretched box; full-width rows and column stacks are skipped.
+const px=(s,...k)=>k.reduce((t,p)=>t+(parseFloat(s[p])||0),0),id=e=>e.tagName.toLowerCase()+'.'+String(e.className).split(' ').filter(Boolean).slice(0,2).join('.');
+const content=k=>{const box=k.getBoundingClientRect(),range=document.createRange();range.selectNodeContents(k);const r=range.getBoundingClientRect();if(!r.width)return box.width;const s=getComputedStyle(k);return Math.min(box.width,r.width+px(s,'paddingLeft','paddingRight','borderLeftWidth','borderRightWidth'))};
+const hits=[];for(const box of document.querySelectorAll('main *')){const c=getComputedStyle(box),grid=c.display.includes('grid'),flex=c.display.includes('flex');if(!grid&&!flex||flex&&c.flexDirection.startsWith('column')||grid&&c.gridTemplateColumns.split(' ').length<2)continue;
+ const inner=box.getBoundingClientRect().width-px(c,'paddingLeft','paddingRight'),kids=[...box.children].filter(k=>k.getBoundingClientRect().width>0&&getComputedStyle(k).position!=='absolute');if(kids.length<2||kids.some(k=>k.getBoundingClientRect().width>=inner*.95))continue;
+ const lines=[];for(const k of kids){const r=k.getBoundingClientRect(),w=content(k)+px(getComputedStyle(k),'marginLeft','marginRight'),line=lines.find(l=>r.top<l.bottom-4&&r.bottom>l.top+4);if(line){line.w.push(w);line.bottom=Math.max(line.bottom,r.bottom)}else lines.push({top:r.top,bottom:r.bottom,w:[w]})}
+ if(lines.length<2)continue;const gap=parseFloat(c.columnGap)||0,sum=l=>l.w.reduce((s,w)=>s+w,0)+(l.w.length-1)*gap,free=inner-sum(lines[0]),need=Math.min(...lines.slice(1).map(sum));
+ if(free>inner*.3&&need+gap<=free)hits.push(id(box)+' free '+Math.round(free)+' of '+Math.round(inner)+'px, line 2 needs '+Math.round(need))}
+[...new Set(hits)].slice(0,15)
+```
+Run it at 1185, 1024 and 768 with the sidebar open (the widths between the
+phone and wide desktop, where guessed breakpoints misfire). A hit is a RESP-022
+failure unless the second line is deliberate (a wrapped chip list that
+fills its first line, a chart legend); fix it with `useColumnsFit` or a layout
+that wraps by itself (AGENTS.md, Interface design system).
+
 
 Source checks (Bash, read-only): inline `Intl.`/`toLocaleString`/`toFixed` in
 `components/`, native `type="date"`, literal hex colours or px font sizes in new

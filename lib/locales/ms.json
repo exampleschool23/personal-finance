@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Padam, simpan sejarah",
   "Delete with history": "Padam bersama sejarah",
   "Could not delete this schedule. Please try again.": "Jadual ini tidak dapat dipadam. Cuba lagi.",
-  "Only repeating income and expenses are deleted here.": "Di sini hanya pendapatan dan perbelanjaan berulang dipadam."
+  "Only repeating income and expenses are deleted here.": "Di sini hanya pendapatan dan perbelanjaan berulang dipadam.",
+  "Home": "Rumah",
+  "Food and drink": "Makanan dan minuman",
+  "Transport": "Pengangkutan",
+  "Shopping": "Membeli-belah",
+  "Health": "Kesihatan",
+  "Leisure": "Riadah",
+  "Family and people": "Keluarga dan orang",
+  "Money and work": "Wang dan kerja",
+  "Change icon for {name}": "Tukar ikon {name}",
+  "Choose an icon": "Pilih ikon",
+  "Use the default icon": "Guna ikon lalai"
 }

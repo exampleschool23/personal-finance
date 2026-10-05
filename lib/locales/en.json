@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Delete, keep history",
   "Delete with history": "Delete with history",
   "Could not delete this schedule. Please try again.": "Could not delete this schedule. Please try again.",
-  "Only repeating income and expenses are deleted here.": "Only repeating income and expenses are deleted here."
+  "Only repeating income and expenses are deleted here.": "Only repeating income and expenses are deleted here.",
+  "Home": "Home",
+  "Food and drink": "Food and drink",
+  "Transport": "Transport",
+  "Shopping": "Shopping",
+  "Health": "Health",
+  "Leisure": "Leisure",
+  "Family and people": "Family and people",
+  "Money and work": "Money and work",
+  "Change icon for {name}": "Change icon for {name}",
+  "Choose an icon": "Choose an icon",
+  "Use the default icon": "Use the default icon"
 }

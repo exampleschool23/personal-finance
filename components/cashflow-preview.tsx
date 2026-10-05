@@ -11,7 +11,7 @@ import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney } from '@/lib/format';
 import { monthlyIncomeCards } from '@/lib/monthly-income-cards';
-import { expensePlanTotals, type ExpensePlan } from '@/lib/expense-plans';
+import { expensePlanTotals, previewPlans, type ExpensePlan } from '@/lib/expense-plans';
 import type { Entry } from '@/lib/finance';
 import type { EarningSource } from '@/lib/earning-sources';
 import { ExpensePlanChart } from '@/components/expense-plan-chart';
@@ -19,7 +19,8 @@ import { ExpensePlanChart } from '@/components/expense-plan-chart';
 export function CashflowPreview({entries,sources,plans,month,currency,loading,error,onRetry,onIncome,onSpending,mortgages,watchlists}:{entries:Entry[];sources:EarningSource[];plans:ExpensePlan[];month:string;currency:string;loading:boolean;error:string;onRetry:()=>void;onIncome:()=>void;onSpending:()=>void;mortgages:ReactNode;watchlists:ReactNode}){
  const {t,locale}=useLanguage();
  const cards=monthlyIncomeCards(entries,month,sources).slice(0,5);
- const selectedPlans=plans.filter(plan=>plan.currency===currency&&expensePlanTotals(plan,month).active).slice(0,3);
+ // Plans in any currency count; each shows in its own. Five at most, as income does; View all opens the rest.
+ const selectedPlans=previewPlans(plans,month);
  if(error)return <InlineError message={t(error)} onRetry={onRetry}/>;
  if(loading)return <CashflowPreviewSkeleton label={t('Loading records…')}/>;
  return <div className="cashflow-preview-grid">
@@ -28,7 +29,7 @@ export function CashflowPreview({entries,sources,plans,month,currency,loading,er
    {!cards.length&&<p className="muted">{t('No income is included for this month. Add a monthly salary or another income source below.')}</p>}
    <footer><Button variant="ghost" onClick={onIncome}><Plus size={18} aria-hidden="true"/>{t('Add income source')}</Button></footer>
   </section>
-  <div className="cashflow-spending-preview"><section className="panel"><PanelTitle title={t('Spending plans')}><Button variant="link" onClick={onSpending}>{t('Manage')}</Button></PanelTitle>
+  <div className="cashflow-spending-preview"><section className="panel"><PanelTitle title={t('Spending plans')}><Button variant="link" onClick={onSpending}>{t('View all')}</Button></PanelTitle>
    <div className="table-scroll"><table className="stack-table"><thead><tr><th>{t('Plan')}</th><th>{t('Spent / Planned')}</th><th>{t('Progress')}</th></tr></thead><tbody>{selectedPlans.map(plan=>{const totals=expensePlanTotals(plan,month);return <tr key={plan.id}><td><div className="record-name"><CategoryIcon kind={plan.category}/><div><strong>{plan.name}</strong><small>{t(plan.category)}</small></div></div></td><td>{formatMoney(totals.spent,plan.currency,locale)} / {formatMoney(totals.planned,plan.currency,locale)}</td><td><ExpensePlanChart name={plan.name} category={plan.category} planned={totals.planned} spent={totals.spent}/></td></tr>;})}</tbody></table></div>
    {!selectedPlans.length&&<p className="muted">{t('No monthly plans yet. Add groceries, Mum’s allowance or another regular expense.')}</p>}
    {mortgages}

@@ -2532,5 +2532,16 @@
   "Delete, keep history": "মুছুন, ইতিহাস রাখুন",
   "Delete with history": "ইতিহাসসহ মুছুন",
   "Could not delete this schedule. Please try again.": "এই সময়সূচি মোছা যায়নি। আবার চেষ্টা করুন।",
-  "Only repeating income and expenses are deleted here.": "এখানে শুধু পুনরাবৃত্ত আয় ও খরচ মোছা যায়।"
+  "Only repeating income and expenses are deleted here.": "এখানে শুধু পুনরাবৃত্ত আয় ও খরচ মোছা যায়।",
+  "Home": "বাড়ি",
+  "Food and drink": "খাবার ও পানীয়",
+  "Transport": "যাতায়াত",
+  "Shopping": "কেনাকাটা",
+  "Health": "স্বাস্থ্য",
+  "Leisure": "অবসর",
+  "Family and people": "পরিবার ও মানুষ",
+  "Money and work": "টাকা ও কাজ",
+  "Change icon for {name}": "{name}-এর আইকন বদলান",
+  "Choose an icon": "একটি আইকন বেছে নিন",
+  "Use the default icon": "ডিফল্ট আইকন ব্যবহার করুন"
 }

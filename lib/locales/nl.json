@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Verwijderen, geschiedenis houden",
   "Delete with history": "Verwijderen met geschiedenis",
   "Could not delete this schedule. Please try again.": "Deze planning kon niet worden verwijderd. Probeer het opnieuw.",
-  "Only repeating income and expenses are deleted here.": "Hier worden alleen terugkerende inkomsten en uitgaven verwijderd."
+  "Only repeating income and expenses are deleted here.": "Hier worden alleen terugkerende inkomsten en uitgaven verwijderd.",
+  "Home": "Thuis",
+  "Food and drink": "Eten en drinken",
+  "Transport": "Vervoer",
+  "Shopping": "Winkelen",
+  "Health": "Gezondheid",
+  "Leisure": "Vrije tijd",
+  "Family and people": "Familie en mensen",
+  "Money and work": "Geld en werk",
+  "Change icon for {name}": "Pictogram van {name} wijzigen",
+  "Choose an icon": "Kies een pictogram",
+  "Use the default icon": "Standaardpictogram gebruiken"
 }

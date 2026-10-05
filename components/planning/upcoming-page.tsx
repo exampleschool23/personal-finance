@@ -19,6 +19,7 @@ import type { ExpensePlan } from '@/lib/expense-plans';
 import { AccountOperation, type Operation } from './account-operation';
 import { ArchivedFold, OccurrenceRow, PlanRows, useDueLabel } from './recurring-rows';
 import { useScheduleDeletion } from './delete-schedule-dialog';
+import { useColumnsFit } from '@/hooks/use-columns-fit';
 
 /** The Recurring page's views, switched from tabs beside its title: the month as a list or a calendar, subscriptions and reminders. */
 export type RecurringView = 'list' | 'calendar' | 'subscriptions' | 'reminders';
@@ -69,6 +70,8 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
  const archive = onArchive && ((target: ArchiveTarget, archived = true) => run(() => onArchive(target, archived)));
  const archived = archivedSchedules(data.records);
  const deletion = useScheduleDeletion(data, onDelete);
+ // Rows stay on one line while their name keeps room beside status, amount and actions; two lines only when this month's content needs it.
+ const rows = useColumnsFit<HTMLUListElement>('.recurring-row');
  const skip = (item: RecurringItem) => run(() => save('exception', { target_id: item.record.id, date: item.date, skip: true }));
  const row = (item: RecurringItem, dated = false) => <OccurrenceRow key={item.key} item={item} dated={dated} today={today} busy={busy} onEdit={onEdit} onPay={pay} onSkip={skip} onArchive={archive && (() => archive({ source: 'record', record: item.record }))} onDelete={deletion.open}/>;
  return <>
@@ -89,7 +92,7 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
    <SummaryBar label={t('Expenses')} done={summary.expense.done} remaining={summary.expense.remaining} doneLabel="{amount} paid" currency={currency} tone="expense" pressed={only === 'expense'} onPress={() => toggle('expense')}/>
   </section>
   {view === 'list' ? <section className="panel recurring-list" aria-label={t('Recurring')}>
-   {shown.length || shownCarried.length || shownPlans.length ? <ul>
+   {shown.length || shownCarried.length || shownPlans.length ? <ul ref={rows}>
     {shownCarried.length > 0 && <li className="transaction-day-heading"><h3>{t('Open from earlier months')}<Count value={shownCarried.length}/></h3></li>}
     {shownCarried.map(item => row(item, true))}
     {shown.map((item, index) => <Fragment key={item.key}>

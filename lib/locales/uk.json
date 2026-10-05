@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Видалити, зберегти історію",
   "Delete with history": "Видалити разом з історією",
   "Could not delete this schedule. Please try again.": "Не вдалося видалити розклад. Спробуйте ще раз.",
-  "Only repeating income and expenses are deleted here.": "Тут видаляються лише регулярні доходи й витрати."
+  "Only repeating income and expenses are deleted here.": "Тут видаляються лише регулярні доходи й витрати.",
+  "Home": "Дім",
+  "Food and drink": "Їжа та напої",
+  "Transport": "Транспорт",
+  "Shopping": "Покупки",
+  "Health": "Здоровʼя",
+  "Leisure": "Дозвілля",
+  "Family and people": "Родина й люди",
+  "Money and work": "Гроші й робота",
+  "Change icon for {name}": "Змінити значок для {name}",
+  "Choose an icon": "Виберіть значок",
+  "Use the default icon": "Значок за замовчуванням"
 }

@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Elimina, mantieni cronologia",
   "Delete with history": "Elimina con cronologia",
   "Could not delete this schedule. Please try again.": "Impossibile eliminare questa programmazione. Riprova.",
-  "Only repeating income and expenses are deleted here.": "Qui si eliminano solo entrate e spese ricorrenti."
+  "Only repeating income and expenses are deleted here.": "Qui si eliminano solo entrate e spese ricorrenti.",
+  "Home": "Casa",
+  "Food and drink": "Cibo e bevande",
+  "Transport": "Trasporti",
+  "Shopping": "Shopping",
+  "Health": "Salute",
+  "Leisure": "Tempo libero",
+  "Family and people": "Famiglia e persone",
+  "Money and work": "Denaro e lavoro",
+  "Change icon for {name}": "Cambia icona di {name}",
+  "Choose an icon": "Scegli un’icona",
+  "Use the default icon": "Usa l’icona predefinita"
 }

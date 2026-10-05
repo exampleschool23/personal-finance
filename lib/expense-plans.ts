@@ -31,3 +31,6 @@ export function monthlyBudgetTotals(plans: readonly ExpensePlan[], month: string
  const complete = missingCurrencies.size === 0;
  return { planned: complete ? partial.planned : null, spent: complete ? partial.spent : null, remaining: complete ? partial.remaining : null, projected: complete ? partial.projected : null, partial, missingCurrencies: [...missingCurrencies] };
 }
+
+/** The spending plans a month's preview lists: every plan running that month, in its own currency, at most `limit`; View all shows the rest. */
+export const previewPlans = (plans: readonly ExpensePlan[], month: string, limit = 5) => plans.filter(plan => expensePlanTotals(plan, month).active).slice(0, limit);

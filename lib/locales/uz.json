@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Oʻchirish, tarixni saqlash",
   "Delete with history": "Tarixi bilan oʻchirish",
   "Could not delete this schedule. Please try again.": "Bu jadvalni oʻchirib boʻlmadi. Qayta urinib koʻring.",
-  "Only repeating income and expenses are deleted here.": "Bu yerda faqat takroriy daromad va xarajatlar oʻchiriladi."
+  "Only repeating income and expenses are deleted here.": "Bu yerda faqat takroriy daromad va xarajatlar oʻchiriladi.",
+  "Home": "Uy",
+  "Food and drink": "Ovqat va ichimliklar",
+  "Transport": "Transport",
+  "Shopping": "Xaridlar",
+  "Health": "Salomatlik",
+  "Leisure": "Dam olish",
+  "Family and people": "Oila va odamlar",
+  "Money and work": "Pul va ish",
+  "Change icon for {name}": "{name} belgisini oʻzgartirish",
+  "Choose an icon": "Belgi tanlang",
+  "Use the default icon": "Standart belgidan foydalanish"
 }

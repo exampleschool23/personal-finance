@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Sil, geçmişi tut",
   "Delete with history": "Geçmişiyle sil",
   "Could not delete this schedule. Please try again.": "Bu plan silinemedi. Tekrar deneyin.",
-  "Only repeating income and expenses are deleted here.": "Burada yalnızca tekrarlayan gelir ve giderler silinir."
+  "Only repeating income and expenses are deleted here.": "Burada yalnızca tekrarlayan gelir ve giderler silinir.",
+  "Home": "Ev",
+  "Food and drink": "Yiyecek ve içecek",
+  "Transport": "Ulaşım",
+  "Shopping": "Alışveriş",
+  "Health": "Sağlık",
+  "Leisure": "Eğlence",
+  "Family and people": "Aile ve insanlar",
+  "Money and work": "Para ve iş",
+  "Change icon for {name}": "{name} simgesini değiştir",
+  "Choose an icon": "Bir simge seçin",
+  "Use the default icon": "Varsayılan simgeyi kullan"
 }

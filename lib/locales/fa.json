@@ -2532,5 +2532,16 @@
   "Delete, keep history": "حذف، با حفظ تاریخچه",
   "Delete with history": "حذف همراه با تاریخچه",
   "Could not delete this schedule. Please try again.": "حذف این برنامه ممکن نشد. دوباره تلاش کنید.",
-  "Only repeating income and expenses are deleted here.": "اینجا فقط درآمدها و هزینه‌های تکراری حذف می‌شوند."
+  "Only repeating income and expenses are deleted here.": "اینجا فقط درآمدها و هزینه‌های تکراری حذف می‌شوند.",
+  "Home": "خانه",
+  "Food and drink": "غذا و نوشیدنی",
+  "Transport": "حمل‌ونقل",
+  "Shopping": "خرید",
+  "Health": "سلامت",
+  "Leisure": "اوقات فراغت",
+  "Family and people": "خانواده و مردم",
+  "Money and work": "پول و کار",
+  "Change icon for {name}": "تغییر نماد {name}",
+  "Choose an icon": "یک نماد انتخاب کنید",
+  "Use the default icon": "استفاده از نماد پیش‌فرض"
 }

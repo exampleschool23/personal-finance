@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Futa, baki na historia",
   "Delete with history": "Futa pamoja na historia",
   "Could not delete this schedule. Please try again.": "Ratiba hii haikuweza kufutwa. Jaribu tena.",
-  "Only repeating income and expenses are deleted here.": "Hapa hufutwa mapato na matumizi yanayojirudia pekee."
+  "Only repeating income and expenses are deleted here.": "Hapa hufutwa mapato na matumizi yanayojirudia pekee.",
+  "Home": "Nyumbani",
+  "Food and drink": "Chakula na vinywaji",
+  "Transport": "Usafiri",
+  "Shopping": "Ununuzi",
+  "Health": "Afya",
+  "Leisure": "Burudani",
+  "Family and people": "Familia na watu",
+  "Money and work": "Pesa na kazi",
+  "Change icon for {name}": "Badilisha ikoni ya {name}",
+  "Choose an icon": "Chagua ikoni",
+  "Use the default icon": "Tumia ikoni chaguo-msingi"
 }

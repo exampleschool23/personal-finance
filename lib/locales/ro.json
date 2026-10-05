@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Șterge, păstrează istoricul",
   "Delete with history": "Șterge cu istoric",
   "Could not delete this schedule. Please try again.": "Programarea nu a putut fi ștearsă. Încearcă din nou.",
-  "Only repeating income and expenses are deleted here.": "Aici se șterg doar veniturile și cheltuielile recurente."
+  "Only repeating income and expenses are deleted here.": "Aici se șterg doar veniturile și cheltuielile recurente.",
+  "Home": "Casă",
+  "Food and drink": "Mâncare și băutură",
+  "Transport": "Transport",
+  "Shopping": "Cumpărături",
+  "Health": "Sănătate",
+  "Leisure": "Timp liber",
+  "Family and people": "Familie și oameni",
+  "Money and work": "Bani și muncă",
+  "Change icon for {name}": "Schimbă pictograma pentru {name}",
+  "Choose an icon": "Alege o pictogramă",
+  "Use the default icon": "Folosește pictograma implicită"
 }

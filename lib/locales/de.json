@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Löschen, Verlauf behalten",
   "Delete with history": "Mit Verlauf löschen",
   "Could not delete this schedule. Please try again.": "Dieser Plan konnte nicht gelöscht werden. Bitte versuche es erneut.",
-  "Only repeating income and expenses are deleted here.": "Hier werden nur wiederkehrende Einnahmen und Ausgaben gelöscht."
+  "Only repeating income and expenses are deleted here.": "Hier werden nur wiederkehrende Einnahmen und Ausgaben gelöscht.",
+  "Home": "Zuhause",
+  "Food and drink": "Essen und Trinken",
+  "Transport": "Verkehr",
+  "Shopping": "Einkaufen",
+  "Health": "Gesundheit",
+  "Leisure": "Freizeit",
+  "Family and people": "Familie und Menschen",
+  "Money and work": "Geld und Arbeit",
+  "Change icon for {name}": "Symbol für {name} ändern",
+  "Choose an icon": "Symbol wählen",
+  "Use the default icon": "Standardsymbol verwenden"
 }

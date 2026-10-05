@@ -2532,5 +2532,16 @@
   "Delete, keep history": "削除して履歴を残す",
   "Delete with history": "履歴ごと削除",
   "Could not delete this schedule. Please try again.": "このスケジュールを削除できませんでした。もう一度お試しください。",
-  "Only repeating income and expenses are deleted here.": "ここで削除できるのは定期的な収入と支出だけです。"
+  "Only repeating income and expenses are deleted here.": "ここで削除できるのは定期的な収入と支出だけです。",
+  "Home": "住まい",
+  "Food and drink": "食べ物と飲み物",
+  "Transport": "交通",
+  "Shopping": "買い物",
+  "Health": "健康",
+  "Leisure": "レジャー",
+  "Family and people": "家族と人",
+  "Money and work": "お金と仕事",
+  "Change icon for {name}": "{name}のアイコンを変更",
+  "Choose an icon": "アイコンを選択",
+  "Use the default icon": "既定のアイコンを使う"
 }

@@ -12,6 +12,9 @@ import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { CategoryBadge } from '@/components/presentation-foundation/category-badge';
+import { CategoryIconPicker } from '@/components/category-icon-picker';
+import type { CategoryIconsController } from '@/hooks/use-category-icons';
+import { categoryEmoji } from '@/lib/category-icons';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useDiscardChanges, useUnsavedNavigation } from '@/components/discard-changes';
 import { formatMoney } from '@/lib/format';
@@ -26,20 +29,23 @@ import { categoryNameTaken, duplicateCategoryMessage } from '@/lib/category-name
 import { categoryChoices } from '@/lib/transaction-rules';
 export type ToolsController={data:TransactionTools;loading:boolean;error:string;save:(action:string,data:unknown)=>Promise<void>;retry:()=>void};
 type CategoryItem={id:string;name:string;direction:Category['direction'];category?:Category};
-export function TransactionToolsPanel({categories,saveCategory,loading,error,onRetry,onDeleted,preferences,owner,demo}:{categories:Category[];saveCategory:(name:string,direction:Category['direction'])=>Promise<void>;loading:boolean;error:string;onRetry:()=>void;onDeleted:()=>void;preferences:PreferenceResource;owner:string|null;demo:boolean}){
+export function TransactionToolsPanel({categories,saveCategory,icons,loading,error,onRetry,onDeleted,preferences,owner,demo}:{categories:Category[];saveCategory:(name:string,direction:Category['direction'])=>Promise<string>;icons:CategoryIconsController;loading:boolean;error:string;onRetry:()=>void;onDeleted:()=>void;preferences:PreferenceResource;owner:string|null;demo:boolean}){
  const {t}=useLanguage();const [deleting,setDeleting]=useState<Category|null>(null);
  // Built-in categories are listed by name and added ones by id, in the order the person drags them into.
  const items:CategoryItem[]=[...income.map(kind=>({id:kind,name:kind,direction:'income' as const})),...expenses.map(kind=>({id:kind,name:kind,direction:'expense' as const})),...categories.map(category=>({id:category.id,name:category.name,direction:category.direction,category}))];
  const order=useDisplayOrder('category_order',items,preferences,owner,demo);
  return <section id="categories" className="panel tools-panel category-settings"><h2>{t('Categories')}<InfoHint>{t('Add income and expense categories to use when recording transactions.')}</InfoHint></h2>
  {error&&<InlineError message={t(error)} onRetry={onRetry}/>}
- {(['income','expense'] as const).map(direction=><CategoryGroup key={direction} direction={direction} items={order.items.filter(item=>item.direction===direction)} categories={categories} onMove={order.reorder} moveDisabled={order.disabled||loading||!!error} saveCategory={saveCategory} disabled={loading||!!error} onDelete={setDeleting}/>)}
+ {(['income','expense'] as const).map(direction=><CategoryGroup key={direction} direction={direction} items={order.items.filter(item=>item.direction===direction)} categories={categories} onMove={order.reorder} moveDisabled={order.disabled||loading||!!error} saveCategory={saveCategory} icons={icons} disabled={loading||!!error} onDelete={setDeleting}/>)}
  <ErrorPopup message={order.error}/>
  {deleting&&<DeleteCategoryDialog key={deleting.id} category={deleting} categories={categories} onClose={()=>setDeleting(null)} onDeleted={onDeleted}/>}
  </section>;
 }
-function CategoryGroup({direction,items,categories,onMove,moveDisabled,saveCategory,disabled,onDelete}:{direction:Category['direction'];items:CategoryItem[];categories:Category[];onMove:(id:string,target:string,visible:string[])=>void;moveDisabled:boolean;saveCategory:(name:string,direction:Category['direction'])=>Promise<void>;disabled:boolean;onDelete:(category:Category)=>void}){
- const {t}=useLanguage();const [name,setName]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
+function CategoryGroup({direction,items,categories,onMove,moveDisabled,saveCategory,icons,disabled,onDelete}:{direction:Category['direction'];items:CategoryItem[];categories:Category[];onMove:(id:string,target:string,visible:string[])=>void;moveDisabled:boolean;saveCategory:(name:string,direction:Category['direction'])=>Promise<string>;icons:CategoryIconsController;disabled:boolean;onDelete:(category:Category)=>void}){
+ const {t}=useLanguage();const [name,setName]=useState(''),[icon,setIcon]=useState<string|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ // A chosen icon applies at once; a failed save names why and puts the previous icon back.
+ const choose=(id:string,next:string|null)=>icons.choose(id,next).catch((reason:Error)=>setError(reason.message));
+ const picker=(item:CategoryItem)=><CategoryIconPicker icon={icons.emojiOf(item.category?item.name:item.id)} label={t('Change icon for {name}',{name:label(item)})} chosen={Object.hasOwn(icons.icons,item.id)} disabled={disabled||icons.disabled} onChoose={next=>void choose(item.id,next)}/>;
  const confirmation=useUnsavedNavigation(!!name.trim());
  const label=(item:CategoryItem)=>item.category?item.name:t(item.name);
  const ids=items.map(item=>item.id);
@@ -47,9 +53,10 @@ function CategoryGroup({direction,items,categories,onMove,moveDisabled,saveCateg
  const taken=categoryNameTaken(name,direction,categories,items.filter(item=>!item.category).map(label));
  return <section className="category-group"><h3>{t(direction==='income'?'Income categories':'Expense categories')}</h3>
  <SortableList id={`categories-${direction}`} layout="grid" items={ids} nameOf={id=>{const item=items.find(entry=>entry.id===id);return item?label(item):'';}} onMove={(moved,over)=>onMove(moved,over,ids)} disabled={moveDisabled}>
- <ul className="category-badges">{items.map(item=><SortableItem as="li" key={item.id} id={item.id} label={label(item)}><CategoryBadge kind={item.id} label={label(item)}>{item.category&&<button type="button" className="category-remove" disabled={disabled||busy} aria-label={t('Delete {name}',{name:item.name})} onClick={()=>onDelete(item.category!)}><X size={12} aria-hidden="true"/></button>}</CategoryBadge></SortableItem>)}</ul>
+ <ul className="category-badges">{items.map(item=><SortableItem as="li" key={item.id} id={item.id} label={label(item)}><CategoryBadge kind={item.id} label={label(item)} icon={picker(item)}>{item.category&&<button type="button" className="category-remove" disabled={disabled||busy} aria-label={t('Delete {name}',{name:item.name})} onClick={()=>onDelete(item.category!)}><X size={12} aria-hidden="true"/></button>}</CategoryBadge></SortableItem>)}</ul>
  </SortableList>
- <form className="category-create-form" onSubmit={async event=>{event.preventDefault();if(disabled||busy||!name.trim()||taken)return;setBusy(true);setError('');try{await saveCategory(name.trim(),direction);setName('');}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}>
+ <form className="category-create-form" onSubmit={async event=>{event.preventDefault();if(disabled||busy||!name.trim()||taken)return;setBusy(true);setError('');try{const id=await saveCategory(name.trim(),direction);if(icon)await icons.choose(id,icon);setName('');setIcon(null);}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}>
+ <CategoryIconPicker icon={icon??categoryEmoji(name)} label={t('Choose an icon')} chosen={!!icon} disabled={busy||icons.disabled} onChoose={setIcon}/>
  <label>{t(direction==='income'?'New income category':'New expense category')}<Input required maxLength={80} value={name} disabled={busy} aria-invalid={taken||undefined} placeholder={t(direction==='income'?'e.g. Freelance':'e.g. Leisure')} onChange={event=>setName(event.target.value)}/></label>
  <Button disabled={disabled||busy||!name.trim()||taken}>{t(busy?'Saving…':direction==='income'?'Add income category':'Add expense category')}</Button></form>
  {taken&&<p className="error" role="alert">{t(duplicateCategoryMessage)}</p>}

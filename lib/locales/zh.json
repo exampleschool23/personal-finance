@@ -2532,5 +2532,16 @@
   "Delete, keep history": "删除，保留历史",
   "Delete with history": "连同历史删除",
   "Could not delete this schedule. Please try again.": "无法删除此计划，请重试。",
-  "Only repeating income and expenses are deleted here.": "这里只能删除定期收入和支出。"
+  "Only repeating income and expenses are deleted here.": "这里只能删除定期收入和支出。",
+  "Home": "居家",
+  "Food and drink": "餐饮",
+  "Transport": "交通",
+  "Shopping": "购物",
+  "Health": "健康",
+  "Leisure": "休闲",
+  "Family and people": "家人与他人",
+  "Money and work": "金钱与工作",
+  "Change icon for {name}": "更改 {name} 的图标",
+  "Choose an icon": "选择图标",
+  "Use the default icon": "使用默认图标"
 }

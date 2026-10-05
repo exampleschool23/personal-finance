@@ -2532,5 +2532,16 @@
   "Delete, keep history": "حذف مع إبقاء السجل",
   "Delete with history": "حذف مع السجل",
   "Could not delete this schedule. Please try again.": "تعذّر حذف هذا الجدول. حاول مرة أخرى.",
-  "Only repeating income and expenses are deleted here.": "يُحذف هنا الدخل والمصروفات المتكررة فقط."
+  "Only repeating income and expenses are deleted here.": "يُحذف هنا الدخل والمصروفات المتكررة فقط.",
+  "Home": "المنزل",
+  "Food and drink": "الطعام والشراب",
+  "Transport": "المواصلات",
+  "Shopping": "التسوق",
+  "Health": "الصحة",
+  "Leisure": "الترفيه",
+  "Family and people": "العائلة والناس",
+  "Money and work": "المال والعمل",
+  "Change icon for {name}": "تغيير أيقونة {name}",
+  "Choose an icon": "اختر أيقونة",
+  "Use the default icon": "استخدام الأيقونة الافتراضية"
 }

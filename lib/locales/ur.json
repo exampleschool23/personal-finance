@@ -2532,5 +2532,16 @@
   "Delete, keep history": "حذف کریں، تاریخ رکھیں",
   "Delete with history": "تاریخ سمیت حذف کریں",
   "Could not delete this schedule. Please try again.": "یہ شیڈول حذف نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
-  "Only repeating income and expenses are deleted here.": "یہاں صرف بار بار ہونے والی آمدنی اور اخراجات حذف ہوتے ہیں۔"
+  "Only repeating income and expenses are deleted here.": "یہاں صرف بار بار ہونے والی آمدنی اور اخراجات حذف ہوتے ہیں۔",
+  "Home": "گھر",
+  "Food and drink": "کھانا پینا",
+  "Transport": "آمد و رفت",
+  "Shopping": "خریداری",
+  "Health": "صحت",
+  "Leisure": "تفریح",
+  "Family and people": "خاندان اور لوگ",
+  "Money and work": "پیسہ اور کام",
+  "Change icon for {name}": "{name} کا آئیکن بدلیں",
+  "Choose an icon": "ایک آئیکن منتخب کریں",
+  "Use the default icon": "ڈیفالٹ آئیکن استعمال کریں"
 }

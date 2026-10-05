@@ -2532,5 +2532,16 @@
   "Delete, keep history": "Smazat, ponechat historii",
   "Delete with history": "Smazat i s historií",
   "Could not delete this schedule. Please try again.": "Plán se nepodařilo smazat. Zkuste to znovu.",
-  "Only repeating income and expenses are deleted here.": "Zde se mažou jen opakované příjmy a výdaje."
+  "Only repeating income and expenses are deleted here.": "Zde se mažou jen opakované příjmy a výdaje.",
+  "Home": "Domov",
+  "Food and drink": "Jídlo a pití",
+  "Transport": "Doprava",
+  "Shopping": "Nákupy",
+  "Health": "Zdraví",
+  "Leisure": "Volný čas",
+  "Family and people": "Rodina a lidé",
+  "Money and work": "Peníze a práce",
+  "Change icon for {name}": "Změnit ikonu pro {name}",
+  "Choose an icon": "Vyberte ikonu",
+  "Use the default icon": "Použít výchozí ikonu"
 }

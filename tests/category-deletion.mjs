@@ -50,10 +50,33 @@ test('delete dialog requires a loaded preview and explicit same-type replacement
 });
 test('added category badges expose named delete buttons; text fields stay editable during loading',()=>{
  const h=harness('components/transaction-tools-panel.tsx','TransactionToolsPanel');const category={id:id(1),name:'Leisure',direction:'expense'};
- const props={categories:[category],saveCategory:async()=>{},loading:true,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true};
+ const props={categories:[category],saveCategory:async()=>{},icons:{icons:{},disabled:false,choose:async()=>{},emojiOf:kind=>kind==='food'?'🍕':'🏷️'},loading:true,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true};
  const panel=h.render(props);const group=find(panel,node=>node.type?.name==='CategoryGroup'&&node.props.direction==='expense');
  // The group uses hooks from the same mocked React module.
  const tree=group.type(group.props);
  assert.equal(find(tree,node=>node.type?.name==='Input').props.disabled,false);
  const remove=find(tree,node=>node.props?.className==='category-remove');assert.equal(remove.props['aria-label'],'Delete Leisure');assert.equal(remove.props.disabled,true);
+});
+test('every category pill opens its icon picker, and a new category is saved with the icon chosen beside its name',async()=>{
+ const h=harness('components/transaction-tools-panel.tsx','TransactionToolsPanel');const category={id:id(1),name:'Leisure',direction:'expense'};
+ const calls=[];
+ const icons={icons:{[id(1)]:'🎬'},disabled:false,choose:async(key,icon)=>{calls.push(['icon',key,icon]);},emojiOf:kind=>kind==='Leisure'?'🎬':'🏷️'};
+ const props={categories:[category],saveCategory:async(name,direction)=>{calls.push(['save',name,direction]);return id(5);},icons,loading:false,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true};
+ const group=()=>{const panel=h.render(props);const node=find(panel,item=>item.type?.name==='CategoryGroup'&&item.props.direction==='expense');return node.type(node.props);};
+ let tree=group();
+ const badges=[];(function walk(node){if(!node||typeof node!=='object')return;if(node.type?.name==='CategoryBadge')badges.push(node);for(const child of React.Children.toArray(node.props?.children))walk(child);})(tree);
+ const pickers=badges.map(badge=>badge.props.icon.props);
+ assert.equal(pickers.length,5,'built-in and added categories alike');
+ const leisure=pickers.find(picker=>picker.label==='Change icon for Leisure');
+ assert.deepEqual([leisure.icon,leisure.chosen],['🎬',true]);
+ assert.equal(pickers.find(picker=>picker.label==='Change icon for Charity').chosen,false);
+ leisure.onChoose('🎨');await new Promise(resolve=>setImmediate(resolve));
+ assert.deepEqual(calls.at(-1),['icon',id(1),'🎨']);
+ // A new category: the name, then its icon.
+ find(tree,node=>node.type?.name==='Input').props.onChange({target:{value:'Travel'}});tree=group();
+ const start=find(tree,node=>node.props?.label==='Choose an icon');assert.deepEqual([start.props.icon,start.props.chosen],['🏷️',false]);
+ start.props.onChoose('✈️');tree=group();
+ assert.equal(find(tree,node=>node.props?.label==='Choose an icon').props.icon,'✈️');
+ await find(tree,node=>node.type==='form').props.onSubmit({preventDefault(){}});
+ assert.deepEqual(calls.slice(-2),[['save','Travel','expense'],['icon',id(5),'✈️']]);
 });
