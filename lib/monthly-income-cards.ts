@@ -45,7 +45,8 @@ export function monthlyIncomeCards(entries: Entry[], month: string, sources: Ear
  for (const entry of recurring.filter(entry => !included.includes(entry))) {
   // Undated summary rows and receipts from other months are not monthly income.
   if (entry.frequency === 'Once' && entry.date?.slice(0, 7) !== month) continue;
-  const received = entry.frequency === 'Once' && entry.amount > 0 && entry.date.slice(0, 7) === month && entry.date <= today;
+  // A recorded 0 ("nothing came this month") is a receipt too: the card shows $0 rather than a dash.
+  const received = entry.frequency === 'Once' && entry.amount >= 0 && entry.date.slice(0, 7) === month && entry.date <= today;
   const source = sources.find(source => source.id === entry.earning_source_id);
   // Reusable-source receipts link to the source, whose schedule is already folded
   // into its property/business card. Resolve that asset before the schedule.

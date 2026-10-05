@@ -37,7 +37,10 @@ function postgrest(){
    if(key==='select'){
     for(const column of split(value)){
      const embed=/^investment_history(!inner)?\((.*)\)$/.exec(column);
+     // A to-one embed through a foreign key column, as PostgREST reads `alias:table!column(fields)`: the row it points to, or null.
+     const toOne=/^(\w+):(\w+)!(\w+)\((.*)\)$/.exec(column);
      if(column==='*')columns.push('t.*');
+     else if(toOne)columns.push(`(SELECT json_build_object(${toOne[4].split(',').map(name=>`'${name}',x."${name}"`).join(',')}) FROM public."${toOne[2]}" x WHERE x.id=t."${toOne[3]}") AS "${toOne[1]}"`);
      else if(embed){
       const filter=embedded?' AND '+condition('h','and'+embedded,values):'';
       columns.push(`(SELECT json_build_object(${embed[2].split(',').map(name=>`'${name}',h."${name}"`).join(',')}) FROM public.investment_history h WHERE h.id=t.id${filter}) AS investment_history`);

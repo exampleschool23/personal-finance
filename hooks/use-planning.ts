@@ -15,7 +15,7 @@ export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:
   resource.invalidate();
   if((action==='occurrence'||action==='dismiss')&&payload&&typeof payload==='object'&&'id' in payload&&'target_id' in payload&&'date' in payload){
    const {id,target_id,date}=payload;
-   if(typeof id==='string'&&typeof target_id==='string'&&typeof date==='string')resource.update(data=>({...data,occurrences:[...data.occurrences.filter(item=>item.record_id!==target_id||item.due_on!==date),{id,record_id:target_id,due_on:date,status:action==='occurrence'?'paid':'dismissed'}]}));
+   if(typeof id==='string'&&typeof target_id==='string'&&typeof date==='string')resource.update(data=>({...data,occurrences:[...data.occurrences.filter(item=>item.record_id!==target_id||item.due_on!==date),{id,record_id:target_id,due_on:date,status:action==='occurrence'?'paid':'dismissed',...(action==='occurrence'&&'amount' in payload&&typeof payload.amount==='number'?{transaction_id:id,transaction:{amount:payload.amount,date:'paid_on' in payload&&typeof payload.paid_on==='string'?payload.paid_on:date}}:{})}]}));
   }
   if(action==='category'){const category=payload as Category;resource.update(data=>({...data,categories:[...data.categories.filter(item=>item.id!==category.id),category]}));}
   showSaved();

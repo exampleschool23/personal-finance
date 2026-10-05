@@ -78,3 +78,12 @@ test('payments left open in earlier months are carried into the current month un
  assert.deepEqual(august.map(item => [item.status, item.amount, item.recorded]), [['paid', 5000000, 0]], 'the scheduled amount, and the 0 that was recorded');
  assert.equal(recurringSummary(august, amount => amount).income.done, 0);
 });
+
+test('a recorded payment shows its amount even when the page did not load its transaction', () => {
+ // Recurring reads a limited scope without one-time income and expenses; the occurrence carries what was recorded.
+ const shop = { id: 'shop', name: 'Algorithm Game Club', kind: 'Other income', currency: 'USD', amount: 1500, quantity: 1, cost: 0, rate: 0, date: '2026-09-01', frequency: 'Monthly', notes: '' };
+ const occurrences = [{ id: 'o', record_id: 'shop', due_on: '2026-10-01', status: 'paid', transaction_id: 'gone', transaction: { amount: 1600, date: '2026-10-02' } }];
+ const [october] = monthOccurrences([shop], occurrences, '2026-10', '2026-10-05');
+ assert.deepEqual([october.status, october.amount, october.recorded], ['paid', 1500, 1600]);
+ assert.equal(recurringSummary([october], amount => amount).income.done, 1600, 'the month counts what came in');
+});

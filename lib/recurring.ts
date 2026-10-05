@@ -25,7 +25,7 @@ function occurrencesBetween(records: Entry[], occurrences: Occurrence[], from: s
  // What was actually recorded for each settled occurrence (0 when nothing came).
  const byId = new Map(records.map(record => [record.id, record]));
  const recorded = new Map<string, number>();
- for (const item of occurrences) { const transaction = item.status === 'paid' && item.transaction_id ? byId.get(item.transaction_id) : undefined; if (transaction) recorded.set(item.record_id + ':' + item.due_on, Number(transaction.amount)); }
+ for (const item of occurrences) { const transaction = item.status !== 'paid' ? undefined : item.transaction ?? (item.transaction_id ? byId.get(item.transaction_id) : undefined); if (transaction) recorded.set(item.record_id + ':' + item.due_on, Number(transaction.amount)); }
  for (const record of records) if (record.kind === 'Salary' && record.frequency === 'Once' && record.income_source_id) recorded.set(record.income_source_id + ':' + (record.income_due_on ?? record.date), Number(record.amount));
  const items: RecurringItem[] = [];
  for (const record of records) {

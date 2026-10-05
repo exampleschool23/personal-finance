@@ -44,13 +44,15 @@ test('reusable business receipts also resolve to their existing asset', () => {
  const cards=monthlyIncomeCards([entry('business','Business',{estimated_monthly_income:100}),entry('paid','Business income',{frequency:'Once',earning_source_id:'source'})],'2026-09',[{id:'source',schedule_id:'plan',linked_record_id:'business'}]);
  assert.equal(cards.length,1);assert.equal(cards[0].amount,100);
 });
-test('receipt indicators require a positive actual receipt in the selected month through today', () => {
+test('receipt indicators require an actual receipt (a recorded 0 counts) in the selected month through today', () => {
  const plan=entry('salary','Salary');
- for(const [extra,expected] of [[{},true],[{date:'2026-08-31'},false],[{date:'2026-09-19'},false],[{amount:0},false],[{frequency:'Monthly'},false]]) {
+ for(const [extra,expected] of [[{},true],[{date:'2026-08-31'},false],[{date:'2026-09-19'},false],[{amount:0},true],[{frequency:'Monthly'},false]]) {
   const cards=monthlyIncomeCards([plan,entry('paid','Salary',{frequency:'Once',...extra})],'2026-09',[],'2026-09-18');
   assert.equal(cards[0].received,expected);
  }
  assert.equal(monthlyIncomeCards([plan],'2026-09',[],'2026-09-18')[0].received,false);
+ const zero=monthlyIncomeCards([plan,entry('nothing','Salary',{frequency:'Once',amount:0,date:'2026-09-01'})],'2026-09',[],'2026-09-18')[0];
+ assert.deepEqual([zero.received,zero.receivedAmount,zero.amount],[true,0,5700],'a recorded 0 shows as received $0 beside the estimate');
 });
 test('rental receipt marks only its own property and leaves estimates unchanged', () => {
  const rows=[entry('home','Property',{estimated_monthly_income:450}),entry('other','Property',{estimated_monthly_income:400}),entry('paid','Rent income',{amount:100,frequency:'Once',earning_source_id:'source'})];
