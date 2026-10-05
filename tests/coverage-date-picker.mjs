@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRenderer,hostModule,language,text,byLabel,byText,event} from './helpers/coverage-render.mjs';
+import {createRenderer,hostModule,language,text,byLabel,byText,event} from './helpers/component-tree.mjs';
 
 // Today is 30 September 2026 for every test here.
 const now=new Date('2026-09-30T07:00:00Z');

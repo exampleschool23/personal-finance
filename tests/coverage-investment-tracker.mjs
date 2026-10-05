@@ -2,12 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
 import { loadTS } from './helpers/load-ts.mjs';
-import { createHarness, stubs, text } from './helpers/coverage-component-harness.mjs';
+import { byType, createRenderer, stubs, text } from './helpers/component-tree.mjs';
 
 const h = React.createElement;
 const { formatMoney, formatDate, formatMonthYear } = loadTS('lib/format.ts');
 const { depositToday, depositInterest, depositProjection } = loadTS('lib/deposit-interest.ts');
-const harness = createHarness();
+const r = createRenderer();
+// Each view renders its component from scratch; the view is the renderer, holding that tree.
+const mount = (Component, props) => (r.mount(React.createElement(Component, props)), r);
 const ui = stubs();
 const named = (name, render) => Object.assign(render, { displayName: name });
 const pass = name => named(name, ({ children }) => h('div', { 'data-part': name }, children));
@@ -22,8 +24,7 @@ const AssetMovementDialog = named('AssetMovementDialog', ({ initial }) => h('div
 const fx = { rates: {}, retries: 0 };
 const api = { calls: [], handler: async () => ({}) };
 const feedback = { saved: 0 };
-const { InvestmentTracker } = loadTS('components/investment-tracker.tsx', {
- react: harness.react,
+const { InvestmentTracker } = r.load('components/investment-tracker.tsx', {
  ...ui.modules,
  recharts: { ...chart, Line },
  '@/lib/feedback': { showSaved: () => feedback.saved++ },
@@ -53,31 +54,31 @@ function serve(response) {
 async function open(entry, events = [], props = {}) {
  serve(events);
  const calls = { closed: 0, saved: 0, payments: 0, draft: [] };
- const view = harness.mount(InvestmentTracker, { record: entry, accounts: [wallet, euro, broker], onClose: () => calls.closed++, onSaved: () => calls.saved++, onPayment: () => calls.payments++, onDraftState: (dirty, busy) => calls.draft.push([dirty, busy]), ...props });
- await view.settle();
+ const view = mount(InvestmentTracker, { record: entry, accounts: [wallet, euro, broker], onClose: () => calls.closed++, onSaved: () => calls.saved++, onPayment: () => calls.payments++, onDraftState: (dirty, busy) => calls.draft.push([dirty, busy]), ...props });
+ await view.flush();
  const selects = () => view.all(element => element.type === ui.NativeSelect);
  const accountSelect = () => selects().find(element => element.props.required);
  const typeSelect = () => selects().find(element => !element.props.required);
- const setType = type => { typeSelect().props.onChange({ target: { value: type } }); view.render(); };
- const setAccount = id => { accountSelect().props.onChange({ target: { value: id } }); view.render(); };
+ const setType = type => { typeSelect().props.onChange({ target: { value: type } }); view.update(); };
+ const setAccount = id => { accountSelect().props.onChange({ target: { value: id } }); view.update(); };
  const inputs = () => view.all(element => element.type === ui.FormattedNumberInput);
  const label = prefix => view.find(element => element.type === 'label' && text(element).startsWith(prefix));
- const setNumber = (prefix, value, blank = false) => { label(prefix).props.children.find(child => child?.type === ui.FormattedNumberInput).props.onValueChange(value, blank); view.render(); };
- const saveButton = () => view.byType(ui.FormFooter).props.children;
- const save = async () => { await saveButton().props.onClick(); view.render(); };
- const button = name => view.byType(ui.Button, name);
+ const setNumber = (prefix, value, blank = false) => { label(prefix).props.children.find(child => child?.type === ui.FormattedNumberInput).props.onValueChange(value, blank); view.update(); };
+ const saveButton = () => view.find(byType(ui.FormFooter)).props.children;
+ const save = async () => { await saveButton().props.onClick(); view.update(); };
+ const button = name => view.find(byType(ui.Button, name));
  return { view, calls, selects, accountSelect, typeSelect, setType, setAccount, inputs, label, setNumber, saveButton, save, button };
 }
 
 test('the tracker loads the record history and shows a loading placeholder until it arrives', async () => {
  let resolve;
  serve(() => new Promise(done => { resolve = done; }));
- const view = harness.mount(InvestmentTracker, { record: record('Cash'), onClose() {}, onSaved() {}, onPayment() {} });
+ const view = mount(InvestmentTracker, { record: record('Cash'), onClose() {}, onSaved() {}, onPayment() {} });
  assert.equal(requests[0].url, '/api/investment-history?record=r');
  assert.match(view.html(), /<p class="loading">Loading history…<\/p>/);
- assert.equal(view.byType('fieldset').props.disabled, true);
+ assert.equal(view.find(byType('fieldset')).props.disabled, true);
  resolve({ ok: true, json: async () => [] });
- await view.settle();
+ await view.flush();
  const html = view.html();
  assert.doesNotMatch(html, /Loading history/);
  assert.match(html, /<p>No history yet.<\/p>/);
@@ -87,19 +88,19 @@ test('the tracker loads the record history and shows a loading placeholder until
 
 test('a failed history request shows its error, and responses after closing are ignored', async () => {
  serve(() => Promise.resolve({ ok: false, json: async () => ({ error: 'History unavailable' }) }));
- const view = harness.mount(InvestmentTracker, { record: record('Property'), onClose() {}, onSaved() {}, onPayment() {} });
- await view.settle();
+ const view = mount(InvestmentTracker, { record: record('Property'), onClose() {}, onSaved() {}, onPayment() {} });
+ await view.flush();
  assert.match(view.html(), /role="alert">History unavailable</);
  assert.doesNotMatch(view.html(), /Loading history/);
 
  for (const outcome of ['resolve', 'reject']) {
   let settle;
   serve(() => new Promise((done, fail) => { settle = outcome === 'resolve' ? done : fail; }));
-  const closed = harness.mount(InvestmentTracker, { record: record('Property'), onClose() {}, onSaved() {}, onPayment() {} });
+  const closed = mount(InvestmentTracker, { record: record('Property'), onClose() {}, onSaved() {}, onPayment() {} });
   closed.unmount();
   assert.equal(requests[0].signal.aborted, true);
   settle(outcome === 'resolve' ? { ok: true, json: async () => [event('late', 'valuation', '2026-01-01', { balance: 5 })] } : Error('aborted'));
-  await closed.settle();
+  await closed.flush();
   assert.match(closed.html(), /Loading history…/);
   assert.doesNotMatch(closed.html(), /role="alert"/);
  }
@@ -133,18 +134,18 @@ test('a cash balance update needs an entered value, saves it, reloads history an
  assert.equal(calls.saved, 1);
  assert.equal(calls.closed, 0);
  assert.match(view.html(), /Loading history…/);
- await view.settle();
+ await view.flush();
  html = view.html();
  assert.equal(requests.length, 1);
  assert.ok(html.includes(`<strong>${money(950)}</strong>`));
  assert.equal(saveButton().props.disabled, true);
  button('Transfer money').props.onClick();
- view.render();
- const movement = view.byType(AssetMovementDialog);
+ view.update();
+ const movement = view.find(byType(AssetMovementDialog));
  assert.deepEqual(movement.props.initial, { kind: 'transfer', source_id: 'r' });
  assert.deepEqual(movement.props.records.map(entry => entry.id), ['cash', 'eur', 'brk', 'r']);
  movement.props.onClose();
- view.render();
+ view.update();
  assert.equal(view.all(element => element.type === AssetMovementDialog).length, 0);
 });
 
@@ -170,13 +171,13 @@ test('a property contribution from a foreign-currency account converts the cash 
  assert.ok(html.includes(`Cash balance after update: ${money(600, 'EUR')}`));
  assert.equal(saveButton().props.disabled, false);
 
- const toggle = () => view.byType(ToggleGroup);
+ const toggle = () => view.find(byType(ToggleGroup));
  toggle().props.onValueChange('');
  toggle().props.onValueChange('keep');
- view.render();
+ view.update();
  assert.equal(toggle().props.value, 'keep');
  toggle().props.onValueChange('change');
- view.render();
+ view.update();
  assert.equal(toggle().props.value, 'change');
  assert.match(view.html(), /Full asset value after update/);
  assert.equal(saveButton().props.disabled, true);
@@ -184,10 +185,10 @@ test('a property contribution from a foreign-currency account converts the cash 
  assert.equal(saveButton().props.disabled, false);
  toggle().props.onValueChange('change');
  toggle().props.onValueChange('keep');
- view.render();
+ view.update();
  assert.equal(toggle().props.value, 'keep');
  toggle().props.onValueChange('change');
- view.render();
+ view.update();
  setNumber('Full asset value after update', 91000);
 
  api.calls = [];
@@ -204,7 +205,7 @@ test('a property contribution from a foreign-currency account converts the cash 
  await save();
  assert.equal(text(saveButton()), 'Retry update');
  assert.match(view.html(), /Retry with the same details to avoid duplicates./);
- assert.equal(view.byType('fieldset').props.disabled, true);
+ assert.equal(view.find(byType('fieldset')).props.disabled, true);
  assert.equal(fx.retries, 1);
  api.handler = async () => ({});
  serve([]);
@@ -222,7 +223,7 @@ test('an outgoing payment larger than the cash balance is refused, and changing 
  assert.match(view.html(), /<p class="inline-error">Not enough money in the selected cash account.<\/p>/);
  assert.equal(saveButton().props.disabled, true);
  setType('income');
- assert.equal(view.byType(ui.NativeSelect, 'Choose a cash account').props.value, '');
+ assert.equal(view.find(byType(ui.NativeSelect, 'Choose a cash account')).props.value, '');
  assert.equal(view.all(element => element.type === ui.FormattedNumberInput)[0].props.value, 0);
  setAccount('cash');
  setNumber('Cash amount', 1500);
@@ -255,7 +256,7 @@ test('money lent tracks additions and repayments against the outstanding balance
  assert.ok(html.includes(`Principal amount: ${money(200)}`));
  assert.ok(html.includes(`<time>${formatDate('2026-03-01', 'en-US')}</time><p>Opening</p>`));
  assert.equal(view.all(element => element.type === ui.Button && text(element) === 'Delete update').length, 2);
- assert.equal(view.byType(ui.DatePicker).props.min, '2026-05-01');
+ assert.equal(view.find(byType(ui.DatePicker)).props.min, '2026-05-01');
  assert.match(text(label('Pay from cash account')), /Pay from cash account/);
  assert.ok(html.includes(`Outstanding balance after update: ${money(1100)}`));
  setType('withdrawal');
@@ -267,8 +268,8 @@ test('money lent tracks additions and repayments against the outstanding balance
  assert.equal(saveButton().props.disabled, true);
  setNumber('Principal amount', 300);
  assert.equal(saveButton().props.disabled, false);
- view.byType(ui.DatePicker).props.onChange('2026-04-15');
- view.render();
+ view.find(byType(ui.DatePicker)).props.onChange('2026-04-15');
+ view.update();
  assert.equal(saveButton().props.disabled, true);
  html = view.html();
  assert.ok(html.includes(`Outstanding balance after update: ${money(800)}`));
@@ -301,7 +302,7 @@ test('debts and loans name the outstanding balance, and waiting or missing cash 
  html = loan.view.html();
  assert.match(html, /Add a cash account to record this transaction./);
  assert.match(html, /<small>Outstanding balance<\/small><strong>—<\/strong>/);
- assert.equal(loan.view.byType(ui.DatePicker).props.min, '');
+ assert.equal(loan.view.find(byType(ui.DatePicker)).props.min, '');
 });
 
 test('deposits show the interest estimate and open top-up, withdrawal and interest movements', async () => {
@@ -320,17 +321,17 @@ test('deposits show the interest estimate and open top-up, withdrawal and intere
   if (compounding) continue;
   for (const [name, initial] of [['Top-up', { kind: 'transfer', target_id: 'r' }], ['Withdraw', { kind: 'transfer', source_id: 'r' }], ['Record capitalized interest', { kind: 'interest', source_id: 'r' }]]) {
    button(name).props.onClick();
-   view.render();
-   const movement = view.byType(AssetMovementDialog);
+   view.update();
+   const movement = view.find(byType(AssetMovementDialog));
    assert.deepEqual(movement.props.initial, initial);
    assert.deepEqual(movement.props.records.map(item => item.id), ['cash', 'r']);
    movement.props.onClose();
-   view.render();
+   view.update();
   }
   button('Top-up').props.onClick();
-  view.render();
+  view.update();
   api.calls = []; feedback.saved = 0;
-  await view.byType(AssetMovementDialog).props.save({ id: 'm', kind: 'transfer' });
+  await view.find(byType(AssetMovementDialog)).props.save({ id: 'm', kind: 'transfer' });
   assert.deepEqual(api.calls[0], { url: '/api/asset-movements', body: { id: 'm', kind: 'transfer' } });
   assert.equal(feedback.saved, 1);
   assert.equal(calls.saved, 1);
@@ -356,17 +357,17 @@ test('stocks plot value, contributions and income, and format chart axes through
  assert.ok(html.includes(`<strong>${money(1000)}</strong><span>`) || html.includes(`<strong>${money(1000)}</strong></div>`));
  assert.equal(view.all(element => element.type === ui.Button && text(element) === 'Delete update').length, 0);
  const timestamp = Date.parse('2026-03-10T00:00:00Z');
- assert.equal(view.byType(chart.XAxis).props.tickFormatter(timestamp), formatDate('2026-03-10', 'en-US'));
- assert.equal(view.byType(chart.YAxis).props.tickFormatter(1234.4), money(1234));
- const tooltip = view.byType(chart.Tooltip).props;
+ assert.equal(view.find(byType(chart.XAxis)).props.tickFormatter(timestamp), formatDate('2026-03-10', 'en-US'));
+ assert.equal(view.find(byType(chart.YAxis)).props.tickFormatter(1234.4), money(1234));
+ const tooltip = view.find(byType(chart.Tooltip)).props;
  assert.equal(tooltip.labelFormatter(String(timestamp)), formatDate('2026-03-10', 'en-US'));
  assert.equal(tooltip.formatter('99.6'), money(100));
  for (const [name, initial] of [['Buy', { kind: 'buy', target_id: 'r' }], ['Sell / convert', { kind: 'sell', source_id: 'r' }]]) {
   button(name).props.onClick();
-  view.render();
-  assert.deepEqual(view.byType(AssetMovementDialog).props.initial, initial);
-  view.byType(AssetMovementDialog).props.onClose();
-  view.render();
+  view.update();
+  assert.deepEqual(view.find(byType(AssetMovementDialog)).props.initial, initial);
+  view.find(byType(AssetMovementDialog)).props.onClose();
+  view.update();
  }
 });
 
@@ -390,28 +391,28 @@ test('business updates can be deleted after confirmation, and a failed delete re
  const events = [event('b', 'baseline', '2026-01-01', { balance: 5000 }), event('v', 'valuation', '2026-02-01', { balance: 6000, amount: 250 })];
  const { view, calls } = await open(record('Business'), events);
  assert.match(view.html(), /Business valuations use the current ownership share./);
- const confirm = () => view.byType(ConfirmDialog);
+ const confirm = () => view.find(byType(ConfirmDialog));
  await confirm().props.onConfirm();
  assert.equal(api.calls.filter(call => call.method === 'DELETE').length, 0);
- const remove = () => view.byType(ui.Button, 'Delete update');
+ const remove = () => view.find(byType(ui.Button, 'Delete update'));
  assert.equal(remove().props.disabled, false);
  remove().props.onClick();
- view.render();
+ view.update();
  let html = view.html();
  assert.match(html, /<h3>Delete this tracker update\?<\/h3>/);
  assert.ok(html.includes(`Value update · ${formatDate('2026-02-01', 'en-US')} · ${money(250)}`));
  confirm().props.onClose();
- view.render();
+ view.update();
  assert.equal(confirm().props.open, false);
 
  remove().props.onClick();
- view.render();
+ view.update();
  api.calls = [];
  let finish;
  api.handler = () => new Promise(resolve => { finish = resolve; });
  serve([events[0]]);
  const pending = confirm().props.onConfirm();
- view.render();
+ view.update();
  assert.equal(confirm().props.confirmLabel, 'Deleting…');
  assert.equal(confirm().props.busy, true);
  await confirm().props.onConfirm();
@@ -419,31 +420,31 @@ test('business updates can be deleted after confirmation, and a failed delete re
  finish(); await pending;
  assert.deepEqual(api.calls[0], { url: '/api/investment-history', method: 'DELETE', body: { id: 'v', record_id: 'r' } });
  assert.equal(calls.saved, 1);
- view.render();
+ view.update();
  assert.equal(confirm().props.open, false);
- await view.settle();
+ await view.flush();
  assert.equal(requests.length, 1);
  assert.equal(view.all(element => element.type === ui.Button && text(element) === 'Delete update').length, 0);
 
  const second = await open(record('Valuables'), [event('v', 'valuation', '2026-02-01', { balance: 10 })]);
- second.view.byType(ui.Button, 'Delete update').props.onClick();
- second.view.render();
+ second.view.find(byType(ui.Button, 'Delete update')).props.onClick();
+ second.view.update();
  assert.ok(second.view.html().includes(`Value update · ${formatDate('2026-02-01', 'en-US')}</p>`));
  api.handler = async () => { throw Error('Newer updates exist'); };
- await second.view.byType(ConfirmDialog).props.onConfirm();
- second.view.render();
+ await second.view.find(byType(ConfirmDialog)).props.onConfirm();
+ second.view.update();
  assert.match(second.view.html(), /role="alert">Newer updates exist</);
- assert.equal(second.view.byType(ConfirmDialog).props.open, false);
+ assert.equal(second.view.find(byType(ConfirmDialog)).props.open, false);
  assert.equal(second.calls.saved, 0);
 });
 
 test('an edited draft locks deletes, and the dialog closes through the guard unless saving', async () => {
  const { view, calls, setType, save, setAccount, setNumber } = await open(record('Property', { amount: 100 }), [event('v', 'valuation', '2026-02-01', { balance: 100 })], { initialType: 'withdrawal' });
- assert.equal(view.byType(ToggleGroup).props.value, 'keep');
- view.byType('textarea').props.onChange({ target: { value: 'Sold a room' } });
- view.render();
- assert.equal(view.byType('textarea').props.value, 'Sold a room');
- assert.equal(view.byType(ui.Button, 'Delete update').props.disabled, true);
+ assert.equal(view.find(byType(ToggleGroup)).props.value, 'keep');
+ view.find(byType('textarea')).props.onChange({ target: { value: 'Sold a room' } });
+ view.update();
+ assert.equal(view.find(byType('textarea')).props.value, 'Sold a room');
+ assert.equal(view.find(byType(ui.Button, 'Delete update')).props.disabled, true);
  setType('valuation');
  assert.equal(view.all(element => element.type === ToggleGroup).length, 0);
  setType('withdrawal');
@@ -452,15 +453,15 @@ test('an edited draft locks deletes, and the dialog closes through the guard unl
  let finish;
  api.handler = () => new Promise(resolve => { finish = resolve; });
  const pending = save();
- view.render();
- assert.equal(text(view.byType(ui.FormFooter).props.children), 'Saving…');
- view.byType(ui.Dialog).props.onOpenChange(false);
+ view.update();
+ assert.equal(text(view.find(byType(ui.FormFooter)).props.children), 'Saving…');
+ view.find(byType(ui.Dialog)).props.onOpenChange(false);
  assert.equal(calls.closed, 0);
  finish(); await pending;
- view.render();
- view.byType(ui.Dialog).props.onOpenChange(true);
+ view.update();
+ view.find(byType(ui.Dialog)).props.onOpenChange(true);
  assert.equal(calls.closed, 0);
- view.byType(ui.Dialog).props.onOpenChange(false);
+ view.find(byType(ui.Dialog)).props.onOpenChange(false);
  assert.equal(calls.closed, 1);
 });
 
@@ -475,7 +476,7 @@ test('an initial type the record does not support falls back to its first update
  assert.equal(cash.saveButton().props.disabled, true);
  // History may arrive newest first; the latest balance date still bounds lending updates.
  const lent = await open(record('Money lent'), [event('n', 'valuation', '2026-06-01', { balance: 50 }), event('o', 'baseline', '2026-03-01', { balance: 100 })]);
- assert.equal(lent.view.byType(ui.DatePicker).props.min, '2026-06-01');
+ assert.equal(lent.view.find(byType(ui.DatePicker)).props.min, '2026-06-01');
  const bill = await open(record('Treasury bill', { rate: 5 }), []);
  assert.match(bill.view.html(), /Estimated interest for/);
  assert.deepEqual(bill.typeSelect().props.children.map(text), ['Balance update', 'Interest received', 'Expense paid']);

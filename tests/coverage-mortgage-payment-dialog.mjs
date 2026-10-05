@@ -2,16 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
 import { loadTS } from './helpers/load-ts.mjs';
-import { createHarness, stubs, text } from './helpers/coverage-component-harness.mjs';
+import { byType, createRenderer, stubs, text } from './helpers/component-tree.mjs';
 
 const { formatMoney } = loadTS('lib/format.ts');
 const { depositToday } = loadTS('lib/deposit-interest.ts');
-const harness = createHarness();
+const r = createRenderer();
+// Each view renders its component from scratch; the view is the renderer, holding that tree.
+const mount = (Component, props) => (r.mount(React.createElement(Component, props)), r);
 const ui = stubs();
 const fx = { rates: {}, retries: 0 };
 const guard = { closes: [] };
-const { MortgagePaymentDialog } = loadTS('components/mortgage-payment-dialog.tsx', {
- react: harness.react,
+const { MortgagePaymentDialog } = r.load('components/mortgage-payment-dialog.tsx', {
  ...ui.modules,
  '@/hooks/use-dated-exchange-rate': { useDatedExchangeRate: (from, to) => ({ rate: !from || !to ? null : from === to ? 1 : fx.rates[from + to] ?? null, retry() { fx.retries++; } }) },
  '@/components/discard-changes': { useDiscardChanges: (dirty, onClose, busy) => ({ close: () => { guard.closes.push({ dirty, busy }); if (!busy) onClose(); }, confirmation: React.createElement('i', { 'data-dirty': String(dirty) }) }) },
@@ -24,12 +25,12 @@ const stock = { id: 's1', name: 'Shares', kind: 'Stock', currency: 'USD', amount
 
 function open(props = {}) {
  const calls = { saved: [], closed: 0, draft: [] };
- const view = harness.mount(MortgagePaymentDialog, { mortgage, accounts: [cash, euro, stock], onClose: () => calls.closed++, onSave: async payment => { calls.saved.push(payment); }, onDraftState: (dirty, busy) => calls.draft.push([dirty, busy]), ...props });
+ const view = mount(MortgagePaymentDialog, { mortgage, accounts: [cash, euro, stock], onClose: () => calls.closed++, onSave: async payment => { calls.saved.push(payment); }, onDraftState: (dirty, busy) => calls.draft.push([dirty, busy]), ...props });
  const number = index => view.all(element => element.type === ui.FormattedNumberInput)[index];
- const save = () => view.byType(ui.Button);
- const setPrincipal = value => { number(0).props.onValueChange(value); view.render(); };
- const setInterest = value => { number(1).props.onValueChange(value); view.render(); };
- const choose = id => { view.byType(ui.NativeSelect).props.onChange({ target: { value: id } }); view.render(); };
+ const save = () => view.find(byType(ui.Button));
+ const setPrincipal = value => { number(0).props.onValueChange(value); view.update(); };
+ const setInterest = value => { number(1).props.onValueChange(value); view.update(); };
+ const choose = id => { view.find(byType(ui.NativeSelect)).props.onChange({ target: { value: id } }); view.update(); };
  return { view, calls, save, number, setPrincipal, setInterest, choose };
 }
 
@@ -44,7 +45,7 @@ test('mortgage payment dialog opens empty with the outstanding balance and only 
  assert.deepEqual(options, ['Choose a cash account', `Wallet · ${formatMoney(5000, 'USD', 'en-US')}`, `Euro account · ${formatMoney(1000, 'EUR', 'en-US')}`]);
  assert.doesNotMatch(html, /Add a cash account to record this transaction/);
  assert.equal(number(0).props.max, 100000);
- const date = view.byType(ui.DatePicker);
+ const date = view.find(byType(ui.DatePicker));
  assert.equal(date.props.min, '2026-01-15');
  assert.equal(date.props.max, depositToday());
  assert.equal(date.props.value, depositToday());
@@ -83,20 +84,20 @@ test('a cross-currency payment converts the debit, sends the rate and retries th
  assert.ok(html.includes(`Cash deducted from Euro account: ${formatMoney(500, 'EUR', 'en-US')}`));
  assert.ok(html.includes(`Cash balance after update: ${formatMoney(500, 'EUR', 'en-US')}`));
  await save().props.onClick();
- view.render();
+ view.update();
  assert.equal(attempts[0].exchange_rate, 2);
  assert.equal(fx.retries, 1);
  html = view.html();
  assert.match(html, /role="alert" data-detail="Retry the same payment to avoid duplicates.">Bank rejected</);
  // The confirmed failure unlocks the form again so the person can change the details.
- assert.equal(view.byType('fieldset').props.disabled, false);
+ assert.equal(view.find(byType('fieldset')).props.disabled, false);
  assert.equal(calls.closed, 0);
 
  // An unknown outcome keeps the submitted payload locked, so the retry re-sends the same id and rate.
  fail = { message: 'Network lost', confirmedFailure: false };
  await save().props.onClick();
- view.render();
- assert.equal(view.byType('fieldset').props.disabled, true);
+ view.update();
+ assert.equal(view.find(byType('fieldset')).props.disabled, true);
  assert.match(view.html(), /Network lost/);
  assert.equal(fx.retries, 1);
  fail = null;
@@ -113,7 +114,7 @@ test('the save button shows progress and ignores a second press while the paymen
  const { view, save, setPrincipal, choose } = open({ onSave: payment => { saves.push(payment); return new Promise(resolve => { finish = resolve; }); } });
  setPrincipal(100); choose('c1');
  const pending = save().props.onClick();
- view.render();
+ view.update();
  assert.equal(text(save()), 'Saving…');
  assert.equal(save().props.disabled, true);
  save().props.onClick();
@@ -134,11 +135,11 @@ test('payments that overdraw the account, exceed the balance, predate the mortga
  assert.equal(save().props.disabled, true);
  setPrincipal(10);
  assert.equal(save().props.disabled, false);
- view.byType(ui.DatePicker).props.onChange('2026-01-01');
- view.render();
+ view.find(byType(ui.DatePicker)).props.onChange('2026-01-01');
+ view.update();
  assert.equal(save().props.disabled, true);
- view.byType(ui.DatePicker).props.onChange('2026-02-01');
- view.render();
+ view.find(byType(ui.DatePicker)).props.onChange('2026-02-01');
+ view.update();
  assert.equal(save().props.disabled, false);
  // Clearing the account selection stores no account and blocks saving again.
  choose('');
@@ -158,12 +159,12 @@ test('a cross-currency account without a quote shows no debit and cannot be save
 test('notes are kept, and closing goes through the discard guard unless saving', () => {
  const { view, calls } = open({ mortgage: { ...mortgage, opened_on: null }, accounts: [] });
  assert.match(view.html(), /Add a cash account to record this transaction./);
- assert.equal(view.byType(ui.DatePicker).props.min, undefined);
- view.byType('textarea').props.onChange({ target: { value: 'Statement 9' } });
- view.render();
- assert.equal(view.byType('textarea').props.value, 'Statement 9');
+ assert.equal(view.find(byType(ui.DatePicker)).props.min, undefined);
+ view.find(byType('textarea')).props.onChange({ target: { value: 'Statement 9' } });
+ view.update();
+ assert.equal(view.find(byType('textarea')).props.value, 'Statement 9');
  assert.match(view.html(), /data-dirty="true"/);
- const dialog = view.byType(ui.Dialog);
+ const dialog = view.find(byType(ui.Dialog));
  dialog.props.onOpenChange(true);
  assert.equal(calls.closed, 0);
  dialog.props.onOpenChange(false);
@@ -177,6 +178,6 @@ test('inline mode renders the payment form without its own dialog', () => {
  const html = view.html();
  assert.match(html, /Enter principal and interest from your bank statement/);
  assert.doesNotMatch(html, /Record mortgage payment/);
- view.byType(ui.FormFooter).props.onCancel();
+ view.find(byType(ui.FormFooter)).props.onCancel();
  assert.equal(guard.closes.at(-1).busy, false);
 });

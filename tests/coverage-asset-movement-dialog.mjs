@@ -2,16 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
 import { loadTS } from './helpers/load-ts.mjs';
-import { createHarness, stubs, text, walk } from './helpers/coverage-component-harness.mjs';
+import { byType, createRenderer, stubs, text, walk } from './helpers/component-tree.mjs';
 
 const { formatMoney, formatNumber } = loadTS('lib/format.ts');
 const { depositToday } = loadTS('lib/deposit-interest.ts');
-const harness = createHarness();
+const r = createRenderer();
+// Each view renders its component from scratch; the view is the renderer, holding that tree.
+const mount = (Component, props) => (r.mount(React.createElement(Component, props)), r);
 const ui = stubs();
 const fx = { rates: {}, retries: 0, calls: [] };
 const guard = { closes: [] };
-const { AssetMovementDialog } = loadTS('components/planning/asset-movement-dialog.tsx', {
- react: harness.react,
+const { AssetMovementDialog } = r.load('components/planning/asset-movement-dialog.tsx', {
  ...ui.modules,
  '@/hooks/use-dated-exchange-rate': { useDatedExchangeRate: (from, to, date) => { fx.calls.push([from, to, date]); return { rate: !from || !to ? null : from === to ? 1 : fx.rates[from + to] ?? null, retry() { fx.retries++; } }; } },
  '@/components/discard-changes': { useDiscardChanges: (dirty, onClose, busy) => ({ close: () => { guard.closes.push({ dirty, busy }); if (!busy) onClose(); }, confirmation: React.createElement('i', { 'data-dirty': String(dirty) }) }) },
@@ -29,13 +30,13 @@ const brokers = [{ id: 'broker', name: 'Broker' }];
 
 function open(initial, props = {}) {
  const calls = { saved: [], closed: 0 };
- const view = harness.mount(AssetMovementDialog, { initial, records, accounts: brokers, save: async movement => { calls.saved.push(movement); }, onClose: () => calls.closed++, ...props });
+ const view = mount(AssetMovementDialog, { initial, records, accounts: brokers, save: async movement => { calls.saved.push(movement); }, onClose: () => calls.closed++, ...props });
  const selects = () => view.all(element => element.type === ui.NativeSelect);
- const choose = (index, value) => { selects()[index].props.onChange({ target: { value } }); view.render(); };
+ const choose = (index, value) => { selects()[index].props.onChange({ target: { value } }); view.update(); };
  const field = label => view.find(element => element.type === 'label' && text(element).startsWith(label)).props.children.find(child => child?.type === ui.FormattedNumberInput);
- const enter = (label, value) => { field(label).props.onValueChange(value); view.render(); };
- const submit = async () => { await view.byType('form').props.onSubmit({ preventDefault() {} }); view.render(); };
- const save = () => view.byType(ui.Button);
+ const enter = (label, value) => { field(label).props.onValueChange(value); view.update(); };
+ const submit = async () => { await view.find(byType('form')).props.onSubmit({ preventDefault() {} }); view.update(); };
+ const save = () => view.find(byType(ui.Button));
  return { view, calls, selects, choose, field, enter, submit, save };
 }
 const optionTexts = select => [...walk(select)].filter(element => element.type === 'option').map(text);
@@ -81,7 +82,7 @@ test('a transfer fee at or above the amount sent is explained and blocks saving'
  // Choosing the destination as the new source clears the destination and the entered amounts.
  choose(0, 'dep');
  assert.equal(view.all(element => element.type === ui.NativeSelect)[1].props.value, '');
- assert.equal(view.byType(ui.FormattedNumberInput).props.value, 0);
+ assert.equal(view.find(byType(ui.FormattedNumberInput)).props.value, 0);
  choose(0, 'eur');
  assert.equal(view.all(element => element.type === ui.NativeSelect)[0].props.value, 'eur');
 });
@@ -101,15 +102,15 @@ test('a cross-currency transfer converts with the dated rate, retries the quote 
  assert.equal(attempts[0].received, 90);
  assert.equal(fx.retries, 1);
  assert.match(view.html(), /role="alert">Rate expired</);
- assert.equal(view.byType('fieldset').props.disabled, false);
+ assert.equal(view.find(byType('fieldset')).props.disabled, false);
  assert.equal(text(save()), 'Save');
 
  // An unconfirmed failure keeps the stored rate even if the live quote moves.
  failure = { message: 'Timed out', confirmedFailure: false };
  await submit();
  fx.rates.USDEUR = 0.5;
- view.render();
- assert.equal(view.byType('fieldset').props.disabled, true);
+ view.update();
+ assert.equal(view.find(byType('fieldset')).props.disabled, true);
  assert.equal(text(save()), 'Retry');
  assert.equal(save().props.disabled, false);
  assert.equal(fx.retries, 1);
@@ -238,23 +239,23 @@ test('future dates block saving, notes are kept, and saving locks the form and i
  const saved = [];
  const { view, calls, enter, submit, save } = open({ kind: 'transfer', source_id: 'cash', target_id: 'dep' }, { save: movement => { saved.push(movement); return new Promise(resolve => { finish = resolve; }); } });
  enter('Total amount debited', 10);
- view.byType(ui.DatePicker).props.onChange('2999-01-01');
- view.render();
+ view.find(byType(ui.DatePicker)).props.onChange('2999-01-01');
+ view.update();
  assert.equal(save().props.disabled, true);
- view.byType(ui.DatePicker).props.onChange('2026-01-02');
- view.render();
- view.byType('textarea').props.onChange({ target: { value: 'Moving savings' } });
- view.render();
- assert.equal(view.byType('textarea').props.value, 'Moving savings');
- assert.equal(view.byType(ui.DatePicker).props.max, depositToday());
- const pending = view.byType('form').props.onSubmit({ preventDefault() {} });
- view.render();
+ view.find(byType(ui.DatePicker)).props.onChange('2026-01-02');
+ view.update();
+ view.find(byType('textarea')).props.onChange({ target: { value: 'Moving savings' } });
+ view.update();
+ assert.equal(view.find(byType('textarea')).props.value, 'Moving savings');
+ assert.equal(view.find(byType(ui.DatePicker)).props.max, depositToday());
+ const pending = view.find(byType('form')).props.onSubmit({ preventDefault() {} });
+ view.update();
  assert.equal(text(save()), 'Saving…');
- assert.equal(view.byType(ui.FormFooter).props.busy, true);
+ assert.equal(view.find(byType(ui.FormFooter)).props.busy, true);
  await submit();
  assert.equal(saved.length, 1);
  // Closing is ignored while the movement is being saved.
- view.byType(ui.Dialog).props.onOpenChange(false);
+ view.find(byType(ui.Dialog)).props.onOpenChange(false);
  assert.equal(calls.closed, 0);
  finish(); await pending;
  assert.equal(saved[0].notes, 'Moving savings');
@@ -264,12 +265,12 @@ test('future dates block saving, notes are kept, and saving locks the form and i
 
 test('the dialog closes through the discard guard', () => {
  const { view, calls } = open({ kind: 'transfer' });
- view.byType(ui.Dialog).props.onOpenChange(true);
+ view.find(byType(ui.Dialog)).props.onOpenChange(true);
  assert.equal(calls.closed, 0);
- view.byType(ui.Dialog).props.onOpenChange(false);
+ view.find(byType(ui.Dialog)).props.onOpenChange(false);
  assert.equal(calls.closed, 1);
  assert.deepEqual(guard.closes.at(-1), { dirty: false, busy: false });
- view.byType(ui.FormFooter).props.onCancel();
+ view.find(byType(ui.FormFooter)).props.onCancel();
  assert.equal(calls.closed, 2);
  assert.match(view.html(), /Fee included in these amounts <span/);
 });

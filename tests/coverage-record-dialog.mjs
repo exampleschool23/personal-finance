@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRenderer,hostModule,language,text,byText,byType,event} from './helpers/coverage-render.mjs';
+import {createRenderer,hostModule,language,text,byText,byType,event} from './helpers/component-tree.mjs';
 import {loadTS} from './helpers/load-ts.mjs';
 
 const {formatMoney}=loadTS('lib/format.ts');

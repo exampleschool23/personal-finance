@@ -1,27 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {loadTS} from './helpers/load-ts.mjs';
-import {createRenderer,find,findAll,text,byText,settle,host} from './helpers/element-tree.mjs';
+import {createRenderer,text,byType,host} from './helpers/component-tree.mjs';
 
 // The translator marks every message, so the test can tell a translated error from a raw one.
 const t=message=>`«${message}»`;
 function setup(value={name:'Bakery',business_structure:null,business_color:null,business_logo:null},disabled){
  const clicks=[];
  const renderer=createRenderer({attach:element=>element.type==='input'?{click:()=>clicks.push('file')}:null});
- const {BusinessProfileFields}=loadTS('components/business-profile-fields.tsx',{
-  react:renderer.react,
+ const {BusinessProfileFields}=renderer.load('components/business-profile-fields.tsx',{
   '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t})},
   '@/components/ui/button':{Button:host('button')},'@/components/ui/native-select':{NativeSelect:host('select')},
  });
  const patches=[];
  const props={value,disabled,onChange:patch=>{patches.push(patch);props.value={...props.value,...patch};}};
- const view={patches,clicks,props,render:()=>(view.tree=renderer.render(BusinessProfileFields,props))};
+ const view={patches,clicks,props,renderer,find:renderer.find,all:renderer.all,render:()=>(view.tree=renderer.render(renderer.react.createElement(BusinessProfileFields,props)))};
  view.render();
  return view;
 }
 /** Picks `file` in the hidden input and waits for the logo to be read. */
 async function pick(view,file){
- const input=find(view.tree,node=>node.type==='input');
+ const input=view.find(node=>node.type==='input');
  const target={files:file?[file]:[],value:'C:\\fakepath\\logo'};
  await input.props.onChange({currentTarget:target});
  view.render();
@@ -38,9 +36,9 @@ globalThis.createImageBitmap=async()=>({width:256,height:128});
 
 test('the legal structure select lists every structure and clears to none',()=>{
  const view=setup();
- const select=find(view.tree,node=>node.type==='select');
+ const select=view.find(node=>node.type==='select');
  assert.equal(select.props.value,'');
- const options=findAll(select,node=>node.type==='option').map(option=>[option.props.value,text(option)]);
+ const options=view.all(node=>node.type==='option',select).map(option=>[option.props.value,text(option)]);
  assert.deepEqual(options,[['','«Not set»'],['sole_proprietorship','«Sole proprietorship»'],['llc','«Single-member LLC»'],['partnership','«Partnership»'],['rental_property','«Rental property»'],['other','«Other business»']]);
  select.props.onChange({currentTarget:{value:'llc'}});
  select.props.onChange({currentTarget:{value:''}});
@@ -49,38 +47,38 @@ test('the legal structure select lists every structure and clears to none',()=>{
 
 test('the colour radios default to grey and pick a colour',()=>{
  const view=setup();
- const radios=findAll(view.tree,node=>node.props.role==='radio');
+ const radios=view.all(node=>node.props.role==='radio');
  assert.equal(radios.length,10);
  assert.deepEqual(radios.filter(radio=>radio.props['aria-checked']).map(radio=>radio.props['aria-label']),['«Grey»']);
- assert.equal(find(view.tree,node=>node.props.role==='radiogroup').props['aria-label'],'«Colour»');
+ assert.equal(view.find(node=>node.props.role==='radiogroup').props['aria-label'],'«Colour»');
  const teal=radios.find(radio=>radio.props['aria-label']==='«Teal»');
  assert.match(teal.props.style['--swatch'],/175/);
  teal.props.onClick();view.render();
  assert.deepEqual(view.patches,[{business_color:'teal'}]);
- assert.equal(find(view.tree,node=>node.props['aria-label']==='«Teal»').props['aria-checked'],true);
+ assert.equal(view.find(node=>node.props['aria-label']==='«Teal»').props['aria-checked'],true);
 });
 
 test('Upload logo opens the file chooser; a chosen logo can be changed or removed',()=>{
  const view=setup();
- assert.equal(text(find(view.tree,node=>node.props.className==='business-mark')),'B');
- assert.equal(findAll(view.tree,node=>node.type==='button'&&text(node).includes('«Remove»')).length,0);
- byText(view.tree,'button','«Upload logo»').props.onClick();
+ assert.equal(text(view.find(node=>node.props.className==='business-mark')),'B');
+ assert.equal(view.all(node=>node.type==='button'&&text(node).includes('«Remove»')).length,0);
+ view.find(byType('button','«Upload logo»')).props.onClick();
  assert.deepEqual(view.clicks,['file']);
  const withLogo=setup({name:'',business_structure:'other',business_color:'red',business_logo:'data:image/webp;base64,AAA'});
- assert.equal(find(withLogo.tree,node=>node.type==='img').props.src,'data:image/webp;base64,AAA');
- assert.equal(find(withLogo.tree,node=>node.type==='select').props.value,'other');
- byText(withLogo.tree,'button','«Change logo»');
- byText(withLogo.tree,'button','«Remove»').props.onClick();withLogo.render();
+ assert.equal(withLogo.find(node=>node.type==='img').props.src,'data:image/webp;base64,AAA');
+ assert.equal(withLogo.find(node=>node.type==='select').props.value,'other');
+ withLogo.find(byType('button','«Change logo»'));
+ withLogo.find(byType('button','«Remove»')).props.onClick();withLogo.render();
  assert.deepEqual(withLogo.patches,[{business_logo:null}]);
- assert.equal(text(find(withLogo.tree,node=>node.props.className==='business-mark')),'?','no name shows a question mark');
+ assert.equal(text(withLogo.find(node=>node.props.className==='business-mark')),'?','no name shows a question mark');
 });
 
 test('disabled fields stay disabled',()=>{
  const view=setup({name:'Shop',business_structure:null,business_color:null,business_logo:'data:x'},true);
- assert.equal(find(view.tree,node=>node.type==='select').props.disabled,true);
- assert.equal(find(view.tree,node=>node.type==='fieldset').props.disabled,true);
+ assert.equal(view.find(node=>node.type==='select').props.disabled,true);
+ assert.equal(view.find(node=>node.type==='fieldset').props.disabled,true);
  // Colour swatches are disabled through their fieldset; the logo buttons on their own.
- const buttons=findAll(view.tree,node=>node.type==='button'&&node.props.role!=='radio');
+ const buttons=view.all(node=>node.type==='button'&&node.props.role!=='radio');
  assert.equal(buttons.length,2);
  for(const button of buttons)assert.equal(button.props.disabled,true);
 });
@@ -113,32 +111,32 @@ test('large images step down the quality, then fall back to JPEG, then fail',asy
  view=setup();
  await pick(view,image());
  assert.deepEqual(view.patches,[]);
- assert.equal(text(find(view.tree,node=>node.props.role==='alert')),'«This image is too large. Choose a smaller one.»');
+ assert.equal(text(view.find(node=>node.props.role==='alert')),'«This image is too large. Choose a smaller one.»');
 });
 
 test('unsupported files, unreadable images and no file at all are handled',async()=>{
  canvasReturning(()=>'data:image/webp;ok');
  let view=setup();
  await pick(view,image('image/gif'));
- assert.equal(text(find(view.tree,node=>node.props.role==='alert')),'«Choose a PNG, JPEG or WebP image.»');
+ assert.equal(text(view.find(node=>node.props.role==='alert')),'«Choose a PNG, JPEG or WebP image.»');
  // A later good pick clears the error.
  await pick(view,image());
- assert.equal(findAll(view.tree,node=>node.props.role==='alert').length,0);
+ assert.equal(view.all(node=>node.props.role==='alert').length,0);
  assert.deepEqual(view.patches,[{business_logo:'data:image/webp;ok'}]);
  canvasReturning(()=>'',{context:false});
  view=setup();
  await pick(view,image());
- assert.equal(text(find(view.tree,node=>node.props.role==='alert')),'«Could not read this image.»');
+ assert.equal(text(view.find(node=>node.props.role==='alert')),'«Could not read this image.»');
  const original=globalThis.createImageBitmap;
  globalThis.createImageBitmap=async()=>{throw Error('');};
  view=setup();
  await pick(view,image());
- assert.equal(text(find(view.tree,node=>node.props.role==='alert')),'«Could not read this image.»','an error without a message');
+ assert.equal(text(view.find(node=>node.props.role==='alert')),'«Could not read this image.»','an error without a message');
  globalThis.createImageBitmap=original;
  view=setup();
  const target=await pick(view,null);
  assert.equal(target.value,'');
  assert.deepEqual(view.patches,[]);
- assert.equal(findAll(view.tree,node=>node.props.role==='alert').length,0);
- await settle();
+ assert.equal(view.all(node=>node.props.role==='alert').length,0);
+ await view.renderer.flush();
 });

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
-import {createRenderer,find,findAll,text,host} from './helpers/element-tree.mjs';
+import {createRenderer,text,host} from './helpers/component-tree.mjs';
 
 // A minimal DOM: elements with classes, a measured width and children, matched by class and descendant selectors.
 function el(selector,{width=0,scrollWidth=0,children=[]}={}){
@@ -30,8 +30,7 @@ function setup({roomy=true,workspace={},sidebar={state:'expanded',isMobile:false
  const renderer=createRenderer({attach:element=>element.type==='header'?bar:null});
  const changes=[],quick=[];
  const state={section:'Overview',currency:'USD',setCurrency:code=>changes.push(code),preferencesData:{currencies:['USD']},quickExpense:()=>quick.push(1),readOnly:false,...workspace};
- const loaded=loadTS('components/workspace/top-bar.tsx',{
-  react:renderer.react,
+ const loaded=renderer.load('components/workspace/top-bar.tsx',{
   '@/components/language-provider':{useLanguage:()=>({locale:'en-US',t:message=>message})},
   '@/components/theme-provider':{ThemeToggle:host('theme-toggle')},
   '@/components/presentation-foundation/segmented':{Segmented:host('segmented')},
@@ -41,9 +40,9 @@ function setup({roomy=true,workspace={},sidebar={state:'expanded',isMobile:false
   '@/components/workspace/workspace-provider':{useWorkspace:()=>state},
  });
  let props={};
- const view={loaded,listeners,observers,changes,quick,renderer,
-  render:(next=props)=>(props=next,view.tree=renderer.render(loaded.TopBar,props)),
-  pageActions:()=>findAll(view.tree,node=>node.props.className==='topbar-page-actions'),
+ const view={loaded,listeners,observers,changes,quick,renderer,find:renderer.find,all:renderer.all,
+  render:(next=props)=>(props=next,view.tree=renderer.render(renderer.react.createElement(loaded.TopBar,props))),
+  pageActions:()=>view.all(node=>node.props.className==='topbar-page-actions'),
   fire:kind=>{for(const item of observers.filter(entry=>entry.kind===kind&&entry.connected))item.callback();return view.render();},
  };
  view.render();
@@ -63,13 +62,13 @@ function measuredBar({clientWidth=1000,padding=16,title=200,tabs=null,actions=nu
 test('the bar names the section, sets the browser tab title and shows only the controls that apply',()=>{
  const view=setup({roomy:false});
  assert.equal(document.title,'Dashboard · Hoggish Finance');
- assert.equal(text(find(view.tree,node=>node.props.className==='topbar-title')),'Dashboard');
- assert.equal(findAll(view.tree,node=>node.type==='sidebar-trigger').length,0,'the open drawer has its own button');
- assert.equal(findAll(view.tree,node=>node.type==='segmented').length,0,'one currency has nothing to switch');
- assert.equal(findAll(view.tree,node=>node.type==='button').length,0,'no quick expense outside Cash flow');
+ assert.equal(text(view.find(node=>node.props.className==='topbar-title')),'Dashboard');
+ assert.equal(view.all(node=>node.type==='sidebar-trigger').length,0,'the open drawer has its own button');
+ assert.equal(view.all(node=>node.type==='segmented').length,0,'one currency has nothing to switch');
+ assert.equal(view.all(node=>node.type==='button').length,0,'no quick expense outside Cash flow');
  assert.equal(view.pageActions().length,0,'narrow windows keep page actions on the page');
  assert.equal(view.observers.length,0,'nothing is measured on narrow windows');
- assert.equal(findAll(view.tree,node=>node.type==='theme-toggle').length,1);
+ assert.equal(view.all(node=>node.type==='theme-toggle').length,1);
  assert.equal(view.listeners.length,1,'the media query is watched');
  view.renderer.unmount();
  assert.equal(view.listeners.length,0);
@@ -78,25 +77,25 @@ test('the bar names the section, sets the browser tab title and shows only the c
 test('the drawer button, currency switch and quick expense follow the workspace state',()=>{
  for(const sidebar of [{state:'collapsed',isMobile:false},{state:'expanded',isMobile:true}]){
   const view=setup({sidebar,roomy:false});
-  const trigger=find(view.tree,node=>node.type==='sidebar-trigger');
+  const trigger=view.find(node=>node.type==='sidebar-trigger');
   assert.equal(trigger.props['aria-label'],'Toggle Sidebar');
  }
  const view=setup({roomy:false,workspace:{section:'Income & expenses',preferencesData:{currencies:['EUR','USD']},currency:'EUR'}});
  assert.equal(document.title,'Cash flow · Hoggish Finance');
- const currency=find(view.tree,node=>node.type==='segmented');
+ const currency=view.find(node=>node.type==='segmented');
  assert.deepEqual(currency.props.options,[{value:'EUR',label:'EUR'},{value:'USD',label:'USD'}]);
  assert.equal(currency.props.value,'EUR');assert.equal(currency.props.label,'Display currency');
  currency.props.onChange('USD');assert.deepEqual(view.changes,['USD']);
- const add=find(view.tree,node=>node.type==='button');
+ const add=view.find(node=>node.type==='button');
  assert.equal(add.props['aria-label'],'Add expense');assert.match(text(add),/Add expense/);
  add.props.onClick();assert.equal(view.quick.length,1);
  // A pending destination names the bar while its route loads; the tab title keeps the open page.
  view.render({pendingSection:'Budget'});
- assert.equal(text(find(view.tree,node=>node.props.className==='topbar-title')),'Budget');
- assert.equal(findAll(view.tree,node=>node.type==='button').length,0);
+ assert.equal(text(view.find(node=>node.props.className==='topbar-title')),'Budget');
+ assert.equal(view.all(node=>node.type==='button').length,0);
  assert.equal(document.title,'Cash flow · Hoggish Finance');
  const viewer=setup({roomy:false,workspace:{section:'Income & expenses',readOnly:true}});
- assert.equal(findAll(viewer.tree,node=>node.type==='button').length,0,'viewers cannot add');
+ assert.equal(viewer.all(node=>node.type==='button').length,0,'viewers cannot add');
 });
 
 test('without a slot the bar still renders, and a wide window without a measured node does not observe',()=>{
@@ -113,7 +112,7 @@ test('page tabs and actions join the bar while they fit and leave it, with slack
  const view=setup({bar:node,slot});
  assert.equal(view.pageActions().length,1);
  assert.equal(view.pageActions()[0].props.ref,slot.actionsRef);
- assert.equal(find(view.tree,node=>node.props.className==='topbar-page-title').props.ref,slot.titleRef);
+ assert.equal(view.find(node=>node.props.className==='topbar-page-title').props.ref,slot.titleRef);
  const resize=view.observers.find(item=>item.kind==='resize'),mutation=view.observers.find(item=>item.kind==='mutation');
  assert.equal(resize.observed[0].node,node);
  assert.deepEqual(mutation.observed[0],{node,options:{childList:true,subtree:true}});
@@ -156,9 +155,12 @@ test('a bare bar with no title, tabs, actions or extras only needs its own contr
 
 test('DisplayPreferences offers only the theme switch',()=>{
  const view=setup({roomy:false});
- const tree=view.renderer.render(view.loaded.DisplayPreferences,{});
- assert.equal(tree[0].props.className,'preferences');
- assert.equal(tree[0].props.children[0].type,'theme-toggle');
+ const [component]=view.renderer.render(view.renderer.react.createElement(view.loaded.DisplayPreferences,{}));
+ assert.equal(component.type,view.loaded.DisplayPreferences);
+ assert.equal(component.children.length,1);
+ const [preferences]=component.children;
+ assert.equal(preferences.props.className,'preferences');
+ assert.equal(preferences.children[0].type,'theme-toggle');
 });
 
 test('the server render assumes a narrow window, so page actions wait for the browser',async()=>{

@@ -91,7 +91,6 @@
   "components/sign-in-screen.tsx",
   "components/spending-pace-card.tsx",
   "components/spending-watchlists.tsx",
-  "components/stop-schedule-dialog.tsx",
   "components/tax-prep-sheet.tsx",
   "components/telegram-panel.tsx",
   "components/theme-provider.tsx",

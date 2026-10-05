@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRenderer,hostModule,cssModule,language,text,byText,byType,event} from './helpers/coverage-render.mjs';
+import {createRenderer,hostModule,cssModule,language,text,byText,byType,event} from './helpers/component-tree.mjs';
 
 const ui={'@/components/ui/button':hostModule(),'@/components/ui/input':hostModule(),'@/components/ui/popover':hostModule(),'@/components/ui/dialog':hostModule(),'@/components/ui/command':hostModule(),'lucide-react':hostModule(),'./sign-in-screen.module.css':cssModule()};
 

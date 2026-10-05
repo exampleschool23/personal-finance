@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
-import { loadTS } from './helpers/load-ts.mjs';
-import { createHarness, stubs, text } from './helpers/coverage-component-harness.mjs';
+import { byType, createRenderer, stubs, text } from './helpers/component-tree.mjs';
 
 const h = React.createElement;
-const harness = createHarness();
+const r = createRenderer();
+// Each view renders its component from scratch; the view is the renderer, holding that tree.
+const mount = (Component, props) => (r.mount(React.createElement(Component, props)), r);
 const ui = stubs();
 const pass = name => Object.assign(({ children }) => h('div', { 'data-part': name }, children), { displayName: name });
 const Popover = pass('Popover'), PopoverTrigger = pass('PopoverTrigger'), PopoverContent = pass('PopoverContent');
@@ -14,8 +15,7 @@ const CommandGroup = Object.assign(({ children, heading }) => h('div', { 'data-h
 const CommandItem = Object.assign(({ children, value }) => h('div', { role: 'option', 'data-value': value }, children), { displayName: 'CommandItem' });
 const CommandInput = Object.assign(({ value, placeholder }) => h('input', { value, placeholder, readOnly: true }), { displayName: 'CommandInput' });
 const icon = name => Object.assign(() => h('svg', { 'data-icon': name }), { displayName: name });
-const { InstrumentPicker } = loadTS('components/instrument-picker.tsx', {
- react: harness.react,
+const { InstrumentPicker } = r.load('components/instrument-picker.tsx', {
  ...ui.modules,
  'lucide-react': { Check: icon('check'), ChevronsUpDown: icon('chevrons'), Plus: icon('plus') },
  '@/components/ui/popover': { Popover, PopoverContent, PopoverTrigger },
@@ -24,16 +24,16 @@ const { InstrumentPicker } = loadTS('components/instrument-picker.tsx', {
 
 function open(props) {
  const changes = [];
- const view = harness.mount(InstrumentPicker, { kind: 'Stock', value: '', onChange: value => changes.push(value), ...props });
- const search = query => { view.byType(CommandInput).props.onValueChange(query); view.render(); };
- const setOpen = next => { view.byType(Popover).props.onOpenChange(next); view.render(); };
+ const view = mount(InstrumentPicker, { kind: 'Stock', value: '', onChange: value => changes.push(value), ...props });
+ const search = query => { view.find(byType(CommandInput)).props.onValueChange(query); view.update(); };
+ const setOpen = next => { view.find(byType(Popover)).props.onOpenChange(next); view.update(); };
  const options = () => view.all(element => element.type === CommandItem);
  return { view, changes, search, setOpen, options };
 }
 
 test('an empty stock picker prompts for a choice and labels the combobox for screen readers', () => {
  const { view } = open();
- const trigger = view.byType(ui.Button);
+ const trigger = view.find(byType(ui.Button));
  const id = trigger.props.id;
  assert.equal(trigger.props.role, 'combobox');
  assert.equal(trigger.props['aria-expanded'], false);
@@ -53,7 +53,7 @@ test('a selected coin shows its name and symbol, marks its option and closes aft
  assert.match(view.html(), /Prices depend on market-data availability/);
  assert.match(view.html(), />Coin<\/label>/);
  setOpen(true);
- const trigger = view.byType(ui.Button);
+ const trigger = view.find(byType(ui.Button));
  assert.equal(trigger.props['aria-expanded'], true);
  assert.equal(trigger.props['aria-controls'], trigger.props.id + '-list');
  search('ton');
@@ -64,10 +64,10 @@ test('a selected coin shows its name and symbol, marks its option and closes aft
  assert.equal(options().filter(option => option.props.children[1]).length, 1);
  const bitcoin = (search('bitcoin'), options().find(option => option.props.value === 'BTC'));
  bitcoin.props.onSelect();
- view.render();
+ view.update();
  assert.deepEqual(changes, ['Bitcoin (BTC)']);
- assert.equal(view.byType(ui.Button).props['aria-expanded'], false);
- assert.equal(view.byType(CommandInput).props.value, '');
+ assert.equal(view.find(byType(ui.Button)).props['aria-expanded'], false);
+ assert.equal(view.find(byType(CommandInput)).props.value, '');
 });
 
 test('closing the popover clears the search, while reopening keeps it', () => {
@@ -75,9 +75,9 @@ test('closing the popover clears the search, while reopening keeps it', () => {
  assert.match(view.html(), />Select a coin</);
  setOpen(true); search('eth');
  setOpen(true);
- assert.equal(view.byType(CommandInput).props.value, 'eth');
+ assert.equal(view.find(byType(CommandInput)).props.value, 'eth');
  setOpen(false);
- assert.equal(view.byType(CommandInput).props.value, '');
+ assert.equal(view.find(byType(CommandInput)).props.value, '');
 });
 
 test('an unknown crypto search shows the empty message and never offers a custom ticker', () => {
@@ -107,7 +107,7 @@ test('an unlisted stock ticker is offered as a custom choice unless it is exclud
 
 test('excluded symbols are hidden from matches, and the add variant shows its action label with a plus icon', () => {
  const { view, changes, search, options } = open({ actionLabel: 'Add holding', excludedSymbols: ['AAPL'], disabled: true });
- const trigger = view.byType(ui.Button);
+ const trigger = view.find(byType(ui.Button));
  assert.equal(trigger.props.disabled, true);
  assert.equal(trigger.props.className, 'instrument-trigger instrument-add-trigger');
  const html = view.html();

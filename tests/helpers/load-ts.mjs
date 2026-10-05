@@ -9,7 +9,9 @@ const require=createRequire(import.meta.url);
 export function loadTS(file,overrides={},cache=new Map()){
  const absolute=path.resolve(file);if(cache.has(absolute))return cache.get(absolute).exports;
  const loaded={exports:{}};cache.set(absolute,loaded);
- // An inline source map and the file's own address let coverage reports count these lines against the .ts source.
+ // An inline source map lets coverage count these lines against the .ts source. The copy gets its own address
+ // (`?vm`): a test that also imports the file directly would otherwise leave two scripts under one address, and the
+ // coverage report would keep whichever came last instead of combining them.
  const source=ts.transpileModule(fs.readFileSync(absolute,'utf8'),{fileName:absolute,compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,esModuleInterop:true,jsx:ts.JsxEmit.ReactJSX,inlineSourceMap:true,inlineSources:true}}).outputText;
  const localRequire=name=>{
   if(name in overrides)return overrides[name];
@@ -19,5 +21,5 @@ export function loadTS(file,overrides={},cache=new Map()){
   if(!resolved)throw Error('Missing dependency '+root);
   return resolved.endsWith('.json')?JSON.parse(fs.readFileSync(resolved,'utf8')):loadTS(resolved,overrides,cache);
  };
- vm.compileFunction(source,['require','module','exports'],{filename:pathToFileURL(absolute).href})(localRequire,loaded,loaded.exports);return loaded.exports;
+ vm.compileFunction(source,['require','module','exports'],{filename:pathToFileURL(absolute).href+'?vm'})(localRequire,loaded,loaded.exports);return loaded.exports;
 }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRenderer,hostModule,language,text,byType} from './helpers/coverage-render.mjs';
+import {createRenderer,hostModule,language,text,byType} from './helpers/component-tree.mjs';
 import {loadTS} from './helpers/load-ts.mjs';
 
 const benchmarks=loadTS('lib/investment-benchmarks.ts');
