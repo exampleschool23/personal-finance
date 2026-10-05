@@ -39,7 +39,7 @@ export function resolveEarningSource(entry:Entry,sources:EarningSource[],origina
 }
 
 export function legacyEarningSources(records:Entry[]):EarningSource[]{
- return records.filter(row=>!row.source_paused&&row.frequency!=='Once'&&row.amount>0&&(row.kind==='Salary'||row.kind==='Other income'||(row.kind==='Business income'&&row.business_id)||(row.kind==='Rent income'&&row.income_source_id))).map(row=>({id:row.id,schedule_id:row.id,name:row.name,kind:row.kind as EarningSource['kind'],currency:row.currency,mode:'fixed',archived:false,amount:row.amount,recurrence_days:row.recurrence_days,frequency:row.frequency as EarningSource['frequency'],start_date:row.date,end_date:row.end_date??null,linked_record_id:row.kind==='Business income'?row.business_id!:row.kind==='Rent income'?row.income_source_id!:null}));
+ return records.filter(row=>!row.source_paused&&!row.archived&&row.frequency!=='Once'&&row.amount>0&&(row.kind==='Salary'||row.kind==='Other income'||(row.kind==='Business income'&&row.business_id)||(row.kind==='Rent income'&&row.income_source_id))).map(row=>({id:row.id,schedule_id:row.id,name:row.name,kind:row.kind as EarningSource['kind'],currency:row.currency,mode:'fixed',archived:false,amount:row.amount,recurrence_days:row.recurrence_days,frequency:row.frequency as EarningSource['frequency'],start_date:row.date,end_date:row.end_date??null,linked_record_id:row.kind==='Business income'?row.business_id!:row.kind==='Rent income'?row.income_source_id!:null}));
 }
 
 // Demo equivalent of the atomic asset-plan trigger. The schedule is reused on later edits.

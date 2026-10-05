@@ -28,9 +28,14 @@ function occurrencesBetween(records: Entry[], occurrences: Occurrence[], from: s
  const recorded = new Map<string, number>();
  for (const item of occurrences) { const transaction = item.status !== 'paid' ? undefined : item.transaction ?? (item.transaction_id ? byId.get(item.transaction_id) : undefined); if (transaction) recorded.set(item.record_id + ':' + item.due_on, Number(transaction.amount)); }
  for (const record of records) if (record.kind === 'Salary' && record.frequency === 'Once' && record.income_source_id) recorded.set(record.income_source_id + ':' + (record.income_due_on ?? record.date), Number(record.amount));
+ // Later payments add to what the first one recorded: totalled by the read, or found among the loaded records.
+ const extras = new Map<string, number>();
+ for (const record of records) if (record.occurrence_record_id && record.occurrence_due_on) { const key = record.occurrence_record_id + ':' + record.occurrence_due_on; extras.set(key, (extras.get(key) ?? 0) + Number(record.amount)); }
+ for (const item of occurrences) { const key = item.record_id + ':' + item.due_on; if (item.extra !== undefined) extras.set(key, item.extra); }
+ for (const [key, extra] of extras) if (recorded.has(key)) recorded.set(key, recorded.get(key)! + extra);
  const items: RecurringItem[] = [];
  for (const record of records) {
-  if (!record.date || record.source_paused || !isRecurringCashFlow(record)) continue;
+  if (!record.date || record.source_paused || record.archived || !isRecurringCashFlow(record)) continue;
   const start = scheduleStart(record, assets);
   for (const date of scheduleDates(record, start > from ? start : from, to)) {
    const key = record.id + ':' + date;
@@ -48,6 +53,12 @@ function occurrencesBetween(records: Entry[], occurrences: Occurrence[], from: s
  return items.sort((a, b) => a.date.localeCompare(b.date) || a.record.name.localeCompare(b.record.name));
 }
 
+/** A repeating income or bill, or a spending plan, to archive or restore. */
+export type ArchiveTarget = { source: 'record'; record: Entry } | { source: 'plan'; plan: ExpensePlan };
+
+/** Repeating incomes and bills that were archived, by name; loan payments are never archived here. */
+export const archivedSchedules = (records: Entry[]) => records.filter(record => record.archived && !record.source_paused && isRecurringCashFlow(record)).sort((a, b) => a.name.localeCompare(b.name));
+
 /** A monthly spending plan (groceries, family support) beside the month's bills: what it allows and what was spent from it. */
 export type RecurringPlan = { plan: ExpensePlan; planned: number; spent: number };
 
@@ -55,6 +66,12 @@ export type RecurringPlan = { plan: ExpensePlan; planned: number; spent: number 
 export function monthPlans(plans: readonly ExpensePlan[], month: string): RecurringPlan[] {
  return plans.flatMap(plan => { const totals = expensePlanTotals(plan, month); return totals.active ? [{ plan, planned: totals.planned, spent: totals.spent }] : []; })
   .sort((a, b) => a.plan.name.localeCompare(b.plan.name));
+}
+
+/** The list narrowed to one side when Income or Expenses is tapped; spending plans are expenses. */
+export function onlyDirection(items: RecurringItem[], carried: RecurringItem[], plans: RecurringPlan[], only: RecurringItem['direction'] | null) {
+ const keep = (item: RecurringItem) => !only || item.direction === only;
+ return { shown: items.filter(keep), shownCarried: carried.filter(keep), shownPlans: only === 'income' ? [] : plans };
 }
 
 /** Summary bars: how much came in or went out, and how much is still to come. Skipped items count as neither. A spending plan adds what was spent and what it still allows; overspending adds nothing still to come. */

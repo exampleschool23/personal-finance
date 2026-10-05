@@ -61,7 +61,8 @@ test('holdings say "1 unit" and transaction rows name their amount and category'
  const t=(text,values={})=>text.replace(/\{(\w+)\}/g,(_,key)=>values[key]??key);
  const {unitCount}=loadTS('lib/asset-movements.ts');
  assert.equal(unitCount(t,1,'en-US'),'1 unit');assert.equal(unitCount(t,0.55,'en-US'),'0.55 units');assert.equal(unitCount(t,1200,'en-US'),'1,200 units');
- for(const file of fs.readdirSync('lib/locales'))assert.ok(JSON.parse(fs.readFileSync('lib/locales/'+file,'utf8'))['1 unit'],file);
+ for(const file of fs.readdirSync('lib/locales')){const locale=JSON.parse(fs.readFileSync('lib/locales/'+file,'utf8'));assert.ok(locale['1 unit'],file);assert.match(locale['1 unit · Gain/loss {amount}'],/\{amount\}/,file);}
+ assert.match(fs.readFileSync('components/workspace/records-table.tsx','utf8'),/r\.quantity === 1 \? '1 unit · Gain\/loss \{amount\}'/);
  const {transactionRowLabel}=loadTS('components/transactions/transaction-row.tsx');
  assert.equal(transactionRowLabel('View details for Coffee',{kind:'Living expense',amount:35,currency:'USD',frequency:'Once'},'Groceries','en-US'),'View details for Coffee · −$35 · Groceries');
 });

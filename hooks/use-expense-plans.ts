@@ -26,7 +26,9 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
  },[user,demo,reload,month,scope]);
  const [previousDemo,setPreviousDemo]=useState(demo);
  if(previousDemo!==demo){setPreviousDemo(demo);if(!demo)setDemoPlans([]);}
- const plans=demo?demoPlans.map(p=>({...p,spent:rows.filter(r=>r.expense_plan_id===p.id&&r.date.slice(0,7)===month).reduce((n,r)=>n+r.amount,0)})):user&&loadedScope===scope?saved:[];
+ // Archived plans stay out of budgets, forecasts and the plan picker; Recurring lists them to restore.
+ const all=demo?demoPlans.map(p=>({...p,spent:rows.filter(r=>r.expense_plan_id===p.id&&r.date.slice(0,7)===month).reduce((n,r)=>n+r.amount,0)})):user&&loadedScope===scope?saved:[];
+ const plans=all.filter(plan=>!plan.archived),archivedPlans=all.filter(plan=>plan.archived);
  async function save(plan:ExpensePlan) {
   if(demo){
    if(rows.some(r=>r.expense_plan_id===plan.id&&(r.currency!==plan.currency||r.date<plan.start_date||(plan.end_date&&r.date>plan.end_date))))throw Error('Keep the currency and dates compatible with recorded spending.');
@@ -47,5 +49,5 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
   else await requestJson('/api/expense-plans',{method:'DELETE',body:{id}});
   onSaved();
  }
- return {seedDemo,restoreDemo,plans,month,loading:!!user&&!demo&&loadedScope!==scope,refreshing:!!user&&!demo&&loading,error:!demo&&user&&loadedScope===scope?error:'',save,remove};
+ return {seedDemo,restoreDemo,plans,archivedPlans,month,loading:!!user&&!demo&&loadedScope!==scope,refreshing:!!user&&!demo&&loading,error:!demo&&user&&loadedScope===scope?error:'',save,remove};
 }

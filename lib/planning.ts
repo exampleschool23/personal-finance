@@ -6,7 +6,14 @@ import { depositToday } from './deposit-interest';
 export type Category = {id:string;name:string;direction:'income'|'expense'};
 export type InvestmentTarget = {holding_account_id:string;asset_kind:'Stock'|'Crypto';asset_symbol:string;target:number;monthly_contribution?:number|null};
 export type Goal = {completed_on?:string|null;funding_priority?:number;funding_monthly?:number|null;funding_enabled?:boolean;paused_until?:string|null;funding_mode?:'one_time'|'refill';investment_targets?:InvestmentTarget[];id:string;name:string;account_id:string|null;target:number;allocated:number;target_date:string|null;archived:boolean;kind?:'savings'|'net_worth'|'investment';holding_account_id?:string|null;asset_kind?:'Stock'|'Crypto'|null;asset_symbol?:string|null;currency?:string;monthly_contribution?:number|null;annual_return?:number};
-export type Occurrence = {id:string;record_id:string;due_on:string;status:'paid'|'dismissed';notes?:string|null;transaction_id?:string|null;transaction?:{amount:number;date:string}|null};
+export type Occurrence = {id:string;record_id:string;due_on:string;status:'paid'|'dismissed';notes?:string|null;transaction_id?:string|null;transaction?:{amount:number;date:string}|null;/** What later payments added, when the read attached them. */extra?:number};
+export type ExtraPayment = {occurrence_record_id:string;occurrence_due_on:string;amount:number};
+/** Each paid occurrence with the total of the later payments made for it. */
+export function withExtraPayments(occurrences:Occurrence[],payments:ExtraPayment[]):Occurrence[] {
+ const totals=new Map<string,number>();
+ for(const payment of payments){const key=payment.occurrence_record_id+':'+payment.occurrence_due_on;totals.set(key,(totals.get(key)??0)+Number(payment.amount));}
+ return occurrences.map(item=>item.status==='paid'?{...item,extra:totals.get(item.record_id+':'+item.due_on)??0}:item);
+}
 export type Activity = {id:string;action:string;account_id:string;target_id:string|null;amount:number;received:number;fee:number;occurred_on:string;notes:string;before_balance:number;after_balance:number};
 export type PlanningData = {debtPayments?:DebtPayment[];movements?:Array<Omit<AssetMovement,'date'> & {occurred_on:string;realized_gain:number|null}>;holdingAccounts?:HoldingAccount[];records:Entry[];categories:Category[];goals:Goal[];occurrences:Occurrence[];activity:Activity[];investmentLinks?:Array<{id:string;account_id:string;account_currency?:string|null;amount:number;investment_history:{occurred_on:string;record_id:string;event_type:string}}>};
 export const emptyPlanning:PlanningData={records:[],categories:[],goals:[],occurrences:[],activity:[]};
@@ -54,7 +61,7 @@ export function upcomingPayments(records:Entry[],occurrences:Occurrence[],today=
  const result:DueItem[]=[];
  const assetsById=scheduleAssets(records);
  for(const record of records){
-  if(!record.date||record.source_paused)continue;
+  if(!record.date||record.source_paused||record.archived)continue;
   const recurring=isRecurringCashFlow(record);
   const start=scheduleStart(record,assetsById);
   const add=(date:string,type:DueItem['type'])=>{const key=record.id+':'+date;if(date>=start&&date<=end&&!settled.has(key))result.push({key,record,date,type,overdue:date<today,amount:record.amount});};

@@ -4,14 +4,16 @@ import { depositForecasts } from '@/lib/deposit-forecasts';
 import { interestKinds, type Entry } from '@/lib/finance';
 import { isoDate } from '@/lib/api-validation';
 import { planningSchemas } from '@/lib/planning-schemas';
-import { debtPaymentsFrom } from '@/lib/planning';
+import { debtPaymentsFrom, withExtraPayments } from '@/lib/planning';
 import { crossSite,parseAction,postgrestFailure,readJson,signInAgain } from '@/lib/api-route';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { readOwnerRows } from '@/lib/server-records';
 import { categoryNameTaken, duplicateCategoryMessage } from '@/lib/category-names';
-import type { Category } from '@/lib/planning';
+import type { Category, ExtraPayment, Occurrence } from '@/lib/planning';
 import { queueMilestoneCheck } from '@/lib/notify-action';
 import type { ActionEvent } from '@/lib/action-messages';
+/** Later payments for recorded occurrences add to them; limited scopes leave those transactions out of `records`. Before migration 112 there are none. */
+const readExtraPayments=(scope:string,token:string)=>scope==='insights'?Promise.resolve([] as ExtraPayment[]):readOwnerRows<ExtraPayment>('finance_records',token,{select:'occurrence_record_id,occurrence_due_on,amount',occurrence_record_id:'not.is.null'}).catch(()=>[] as ExtraPayment[]);
 export async function GET(req?:Request){
  try{const auth=await session();if(!auth)return signInAgain();
  const scope=req?new URL(req.url).searchParams.get('scope')??'full':'full';
@@ -23,10 +25,13 @@ export async function GET(req?:Request){
  if(scope==='budget'&&(!first||!/^\d{4}-(0[1-9]|1[0-2])$/.test(first)||first>month||(Number(month.slice(0,4))*12+Number(month.slice(5)))-(Number(first.slice(0,4))*12+Number(first.slice(5)))>23))return Response.json({error:'Invalid review month.'},{status:400});
  const filters=planningReadFilters(scope,month,first);
  const tables={movements:'asset_movements',holdingAccounts:'holding_accounts',records:'finance_records',categories:'transaction_categories',goals:'savings_goals',occurrences:'payment_occurrences',activity:'account_activity',investmentLinks:'investment_account_links'};
- const results=await Promise.all(Object.entries(tables).filter(([key])=>scope==='insights'?key==='records':scope==='full'||(key!=='movements'&&(scope==='review'||scope==='budget'||!['activity','investmentLinks'].includes(key)))).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,filters[key as keyof typeof filters]??{})]));
+ const reads=Promise.all(Object.entries(tables).filter(([key])=>scope==='insights'?key==='records':scope==='full'||(key!=='movements'&&(scope==='review'||scope==='budget'||!['activity','investmentLinks'].includes(key)))).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,filters[key as keyof typeof filters]??{})]));
+ const extraPayments=readExtraPayments(scope,auth.token);
+ const results=await reads;
  const data={records:[],categories:[],goals:[],occurrences:[],activity:[],movements:[],investmentLinks:[],...Object.fromEntries(results)} as Record<string,unknown>;
  // Loan repayments and mortgage payments settle a loan's monthly payment on Recurring and Upcoming payments.
  if(scope==='full'||scope==='workspace'){const [repayments,mortgagePayments]=await Promise.all([readOwnerRows<{action:string;target_id:string|null;occurred_on:string}>('account_activity',auth.token,{select:'action,target_id,occurred_on',action:'in.(repayment,mortgage)'}),readOwnerRows<{mortgage_id:string;paid_on:string}>('mortgage_payments',auth.token,{select:'id,mortgage_id,paid_on'})]);data.debtPayments=debtPaymentsFrom(repayments,mortgagePayments);}
+ data.occurrences=withExtraPayments(data.occurrences as Occurrence[],await extraPayments);
  // Every scope but insights reads every holding (only income and expense history is period-limited), so the
  // deposits are already here and are not read again.
  const estimates=new Map((scope==='insights'?[]:await depositForecasts(auth.token,data.records as Entry[])).map(record=>[record.id,record.estimated_monthly_income]));
@@ -52,6 +57,14 @@ export async function POST(req:Request){
   const response=await supa('/rest/v1/rpc/set_schedule_exception',{method:'POST',body:JSON.stringify({p_record:value.target_id,p_day:value.date,p_skip:value.skip,...(note?{p_notes:note}:{})})},auth.token);
   if(!response.ok)return postgrestFailure(response,'Could not update the scheduled occurrence.',{codes:{PGRST202:['The app database needs an update. Ask the administrator to apply the latest migrations.',503]}});
   queueMilestoneCheck(auth,{type:'exception',target_id:value.target_id,date:value.date,skip:value.skip});
+  return Response.json({ok:true});
+ }
+ if(action==='archive'&&'source' in value){
+  // Only a repeating income or bill, or a spending plan, is archived; its recorded payments are untouched.
+  const path=value.source==='plan'?`expense_plans?id=eq.${value.id}`:`finance_records?id=eq.${value.id}&frequency=neq.Once`;
+  const response=await supa('/rest/v1/'+path,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({archived:value.archived})},auth.token);
+  if(!response.ok)return postgrestFailure(response,'Could not update the scheduled occurrence.',{codes:{PGRST204:['The app database needs an update. Ask the administrator to apply the latest migrations.',503],'42703':['The app database needs an update. Ask the administrator to apply the latest migrations.',503]}});
+  if(!(await response.json() as unknown[]).length)return Response.json({error:'Could not update the scheduled occurrence.'},{status:404});
   return Response.json({ok:true});
  }
  if(action==='category'){
@@ -104,14 +117,16 @@ export async function POST(req:Request){
  }
  // The database treats a second payment for a paid occurrence as a retry and reports success
  // without saving it. Only a retry of the same transaction may succeed; another payment is refused.
- if(action==='occurrence'){
+ // A later payment for an occurrence that is already recorded is asked for explicitly and adds to it.
+ const extra=action==='occurrence'&&'extra' in value&&value.extra===true;
+ if(action==='occurrence'&&!extra){
   const data=value as {id:string;target_id:string;date:string};
   const prior=await supa('/rest/v1/payment_occurrences?select=transaction_id&status=eq.paid&record_id=eq.'+data.target_id+'&due_on=eq.'+data.date,{},auth.token);
   if(!prior.ok)return Response.json({error:'Could not save the operation. Please try again.'},{status:503});
   if((await prior.json() as {transaction_id:string|null}[]).some(row=>row.transaction_id!==data.id))return Response.json({error:'This scheduled payment is already recorded. Keep its transaction.'},{status:409});
  }
  const multiGoal=action==='goal'&&'kind' in value&&value.kind==='investment'&&'investment_targets' in value&&Array.isArray(value.investment_targets);
- const result=await supa(multiGoal?'/rest/v1/rpc/planning_investment_goal':action==='occurrence'?'/rest/v1/rpc/planning_action_with_actual_amount':'/rest/v1/rpc/planning_action',{method:'POST',body:JSON.stringify(multiGoal?{p_data:value}:{p_action:action,p_data:paymentData})},auth.token);
+ const result=await supa(extra?'/rest/v1/rpc/record_occurrence_extra':multiGoal?'/rest/v1/rpc/planning_investment_goal':action==='occurrence'?'/rest/v1/rpc/planning_action_with_actual_amount':'/rest/v1/rpc/planning_action',{method:'POST',body:JSON.stringify(extra?{p_data:paymentData}:multiGoal?{p_data:value}:{p_action:action,p_data:paymentData})},auth.token);
  if(!result.ok)return postgrestFailure(result,'Could not save the operation. Please try again.',{codes:{...(multiGoal?{PGRST202:'Could not save the goal. Check that the latest migrations are installed.'}:{}),'23514':'Insufficient balance or invalid amount.','23505':'This name or payment already exists.'}});
  const event=planningEvent(action,value);if(event)queueMilestoneCheck(auth,event);
  return Response.json(await result.json());

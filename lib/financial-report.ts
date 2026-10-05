@@ -186,8 +186,8 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
   if(planned===null)issues.add(`${p.name}: ${t('Monthly budget or rollover unavailable')}`);
   return [`${p.name}\n${t(p.category)}`,money(planned,p.currency),money(actual,p.currency),money(remaining,p.currency)];
  }),[.34,.22,.22,.22],[1,2,3]);
- if(records.some(r=>expenses.includes(r.kind)&&r.frequency!=='Once'&&!r.source_paused))add('subheading',t('Recurring expense commitments'));
- table(['Commitment','Amount','Frequency','End date'],records.filter(r=>expenses.includes(r.kind)&&r.frequency!=='Once'&&!r.source_paused).map(r=>[r.name,money(number(byId.get(r.id)?.amount),r.currency),t(r.frequency),date(r.end_date)]),[.36,.24,.2,.2],[1]);
+ if(records.some(r=>expenses.includes(r.kind)&&r.frequency!=='Once'&&!r.source_paused&&!r.archived))add('subheading',t('Recurring expense commitments'));
+ table(['Commitment','Amount','Frequency','End date'],records.filter(r=>expenses.includes(r.kind)&&r.frequency!=='Once'&&!r.source_paused&&!r.archived).map(r=>[r.name,money(number(byId.get(r.id)?.amount),r.currency),t(r.frequency),date(r.end_date)]),[.36,.24,.2,.2],[1]);
  add('text',t('Negative budget remaining = overspend. Unlinked spending has no assigned budget.'));
  add('heading',t('Savings goals'));
  const goals=(tables.savings_goals??[]) as Goal[];

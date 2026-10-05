@@ -44,7 +44,7 @@ test('GET full scope reads every table, adds debt payments and deposit estimates
  assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');
  const body=await response.json();
  assert.deepEqual(tables(state).slice(0,8),['asset_movements','holding_accounts','finance_records','transaction_categories','savings_goals','payment_occurrences','account_activity','investment_account_links']);
- assert.deepEqual(state.reads.slice(8).map(read=>[read.table,read.extra]),[['account_activity',{select:'action,target_id,occurred_on',action:'in.(repayment,mortgage)'}],['mortgage_payments',{select:'id,mortgage_id,paid_on'}]]);
+ assert.deepEqual(state.reads.slice(8).map(read=>[read.table,read.extra]),[['finance_records',{select:'occurrence_record_id,occurrence_due_on,amount',occurrence_record_id:'not.is.null'}],['account_activity',{select:'action,target_id,occurred_on',action:'in.(repayment,mortgage)'}],['mortgage_payments',{select:'id,mortgage_id,paid_on'}]]);
  assert.ok(state.reads.every(read=>read.token==='owner-token'));
  assert.deepEqual(state.reads[2].extra,{},'a full read keeps every record');
  assert.deepEqual(body.debtPayments,[{record_id:'loan',date:'2026-09-05'},{record_id:'home',date:'2026-09-10'}]);
@@ -61,19 +61,19 @@ test('GET narrower scopes read only what they need',async()=>{
 
  ({api,state}=harness());
  body=await (await api.GET(get('?scope=review&month=2026-09'))).json();
- assert.deepEqual(tables(state),['holding_accounts','finance_records','transaction_categories','savings_goals','payment_occurrences','account_activity','investment_account_links']);
+ assert.deepEqual(tables(state),['holding_accounts','finance_records','transaction_categories','savings_goals','payment_occurrences','account_activity','investment_account_links','finance_records']);
  assert.equal(body.debtPayments,undefined);
  assert.match(state.reads[1].extra.or,/date\.gte\.2026-08-01,date\.lt\.2026-10-01/);
  assert.equal(state.reads[5].extra.and,'(occurred_on.gte.2026-08-01,occurred_on.lt.2026-10-01)');
 
  ({api,state}=harness());
  body=await (await api.GET(get('?scope=workspace&month=2026-09'))).json();
- assert.deepEqual(tables(state),['holding_accounts','finance_records','transaction_categories','savings_goals','payment_occurrences','account_activity','mortgage_payments']);
+ assert.deepEqual(tables(state),['holding_accounts','finance_records','transaction_categories','savings_goals','payment_occurrences','finance_records','account_activity','mortgage_payments']);
  assert.deepEqual(body.debtPayments,[]);assert.doesNotMatch(state.reads[1].extra.or,/date\.gte/);
 
  ({api,state}=harness());
  assert.equal((await api.GET(get('?scope=budget&month=2026-09&from=2024-10'))).status,200);
- assert.deepEqual(tables(state),['holding_accounts','finance_records','transaction_categories','savings_goals','payment_occurrences','account_activity','investment_account_links']);
+ assert.deepEqual(tables(state),['holding_accounts','finance_records','transaction_categories','savings_goals','payment_occurrences','account_activity','investment_account_links','finance_records']);
  assert.match(state.reads[1].extra.or,/date\.gte\.2024-10-01,date\.lt\.2026-10-01/);
 });
 
@@ -219,6 +219,32 @@ test('POST occurrence pays a same-currency schedule once and refuses a second tr
  assert.deepEqual(await json(await api.POST(post({action:'occurrence',data}))),{status:400,body:{error:'Choose one of your cash accounts.'}});
  paymentHandler(state,{records:[usdAccount]});
  assert.equal((await api.POST(post({action:'occurrence',data}))).status,400);
+});
+
+test('POST occurrence with extra adds another payment to a recorded occurrence instead of refusing it',async()=>{
+ const {api,state}=harness();
+ const data={id:TX,account_id:ACCOUNT,target_id:TARGET,amount:800,date:'2026-09-20',extra:true};
+ paymentHandler(state,{records:[usdAccount,{id:TARGET,kind:'Other income',currency:'USD',amount:6000}],occurrences:[{transaction_id:OTHER}]});
+ assert.equal((await api.POST(post({action:'occurrence',data}))).status,200);
+ assert.deepEqual(state.calls.map(call=>call.path),[`/rest/v1/finance_records?select=*&id=in.(${ACCOUNT},${TARGET},${TX})`,'/rest/v1/rpc/record_occurrence_extra'],'no already-recorded check');
+ assert.deepEqual(state.calls[1].body,{p_data:{...data,notes:''}});
+});
+
+test('GET attaches what later payments added to each paid occurrence, and still loads before migration 112',async()=>{
+ const occurrences=[{id:'o1',record_id:'free',due_on:'2026-10-01',status:'paid'},{id:'o2',record_id:'gym',due_on:'2026-10-02',status:'dismissed'},{id:'o3',record_id:'rent',due_on:'2026-10-01',status:'paid'}];
+ const extras=[{occurrence_record_id:'free',occurrence_due_on:'2026-10-01',amount:800},{occurrence_record_id:'free',occurrence_due_on:'2026-10-01',amount:500}];
+ // The extras read is the one that filters on occurrence_record_id; it answers with later payments, or fails when the column is missing.
+ const read=(state,answer)=>{state.rows=new Proxy({payment_occurrences:occurrences},{get:(rows,table)=>table==='finance_records'&&state.reads.at(-1)?.extra?.occurrence_record_id?answer():rows[table]});};
+ let {api,state}=harness();
+ read(state,()=>extras);
+ let body=await (await api.GET(get('?scope=workspace&month=2026-10'))).json();
+ assert.deepEqual(body.occurrences.map(item=>[item.id,item.extra]),[['o1',1300],['o2',undefined],['o3',0]]);
+ ({api,state}=harness());
+ read(state,()=>{throw Error('column finance_records.occurrence_record_id does not exist');});
+ const response=await api.GET(get('?scope=workspace&month=2026-10'));
+ assert.equal(response.status,200);
+ body=await response.json();
+ assert.deepEqual(body.occurrences.map(item=>item.extra),[0,undefined,0]);
 });
 
 test('POST occurrence across currencies checks the dated rate and stores it with the payment',async()=>{

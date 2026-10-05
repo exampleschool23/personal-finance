@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { monthOccurrences, monthPlans, recurringSummary, daysFrom, calendarWeeks } = loadTS('lib/recurring.ts');
+const { monthOccurrences, monthPlans, onlyDirection, archivedSchedules, recurringSummary, daysFrom, calendarWeeks } = loadTS('lib/recurring.ts');
+const { monthly } = loadTS('lib/finance.ts');
+const { planningSchemas } = loadTS('lib/planning-schemas.ts');
 const { upcomingPayments, debtPaymentsFrom } = loadTS('lib/planning.ts');
 
 const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Monthly', notes: '', ...extra });
@@ -88,6 +90,18 @@ test('a recorded payment shows its amount even when the page did not load its tr
  assert.equal(recurringSummary([october], amount => amount).income.done, 1600, 'the month counts what came in');
 });
 
+test('later payments add to what an occurrence recorded, whether the read totalled them or the records carry them', () => {
+ const free = { id: 'free', name: 'Freelancing', kind: 'Other income', currency: 'USD', amount: 6000, quantity: 1, cost: 0, rate: 0, date: '2026-09-01', frequency: 'Monthly', notes: '' };
+ const first = { id: 'o', record_id: 'free', due_on: '2026-10-01', status: 'paid', transaction_id: 't1', transaction: { amount: 700, date: '2026-10-01' } };
+ assert.equal(monthOccurrences([free], [{ ...first, extra: 800 }], '2026-10', '2026-10-05')[0].recorded, 1500);
+ const later = { ...free, id: 't2', amount: 800, frequency: 'Once', date: '2026-10-04', occurrence_record_id: 'free', occurrence_due_on: '2026-10-01' };
+ assert.equal(monthOccurrences([free, later], [first], '2026-10', '2026-10-05')[0].recorded, 1500);
+ assert.equal(monthOccurrences([free, later], [{ ...first, extra: 800 }], '2026-10', '2026-10-05')[0].recorded, 1500, 'counted once when both carry it');
+ const [due] = monthOccurrences([free, later], [], '2026-10', '2026-10-05');
+ assert.deepEqual([due.status, due.recorded], ['overdue', undefined], 'nothing is added to an occurrence that is not recorded');
+ assert.ok(planningSchemas.occurrence.safeParse({ id: '00000000-0000-4000-8000-000000000001', account_id: '00000000-0000-4000-8000-000000000002', target_id: '00000000-0000-4000-8000-000000000003', amount: 800, date: '2026-10-01', notes: '', extra: true }).success);
+});
+
 test('spending plans running in a month join the expenses: spent counts as paid, the rest as still to come, overspending adds nothing', () => {
  const plan = (id, name, amount, spent, extra = {}) => ({ id, name, category: 'Groceries', currency: 'UZS', amount, spent, start_date: '2026-01-01', end_date: null, ...extra });
  const plans = monthPlans([plan('g', 'Groceries', 9000000, 3000000), plan('m', 'Mum', 6000000, 7000000, { category: 'Family support' }), plan('old', 'Old', 100, 0, { end_date: '2026-09-30' }), plan('next', 'Next', 100, 0, { start_date: '2026-11-01' })], '2026-10');
@@ -96,4 +110,27 @@ test('spending plans running in a month join the expenses: spent counts as paid,
  const summary = recurringSummary(rent, (amount, unit) => unit === 'UZS' ? amount / 10000 : amount, plans);
  assert.deepEqual(summary.expense, { done: 1000, remaining: 700 });
  assert.equal(recurringSummary([], (amount, unit) => unit === 'UZS' ? null : amount, plans).missing, 2, 'a plan in a currency without a rate is counted as missing, never guessed');
+});
+
+test('an archived schedule or plan leaves the month, forecasts and reminders, and is listed to restore; payments stay untouched', () => {
+ const rent = record('rent', 'Rent', 'Rent expense', 100, '2026-01-01', { archived: true }), pay = record('pay', 'Pay', 'Salary', 900, '2026-01-15');
+ const occurrences = [{ id: 'o', record_id: 'rent', due_on: '2026-09-01', status: 'paid' }];
+ assert.deepEqual(monthOccurrences([rent, pay], occurrences, '2026-10', '2026-10-20').map(item => item.record.id), ['pay']);
+ assert.equal(upcomingPayments([rent], [], '2026-10-01', '2026-12-31').length, 0, 'no reminder for an archived bill');
+ assert.equal(monthly(rent, '2026-10'), 0, 'forecasts leave it out');
+ assert.deepEqual(archivedSchedules([rent, pay, record('once', 'Once', 'Living expense', 9, '2026-10-01', { frequency: 'Once', archived: true })]).map(item => item.id), ['rent']);
+ const plan = { id: 'g', name: 'Groceries', category: 'Groceries', currency: 'USD', amount: 500, spent: 0, start_date: '2026-01-01', end_date: null, archived: true };
+ assert.deepEqual(monthPlans([plan], '2026-10'), []);
+ const id = '00000000-0000-4000-8000-000000000001';
+ assert.ok(planningSchemas.archive.safeParse({ source: 'plan', id, archived: true }).success);
+ assert.ok(!planningSchemas.archive.safeParse({ source: 'goal', id, archived: true }).success, 'only schedules and plans are archived');
+});
+
+test('tapping Income or Expenses keeps only that side; spending plans count as expenses', () => {
+ const items = monthOccurrences([record('rent', 'Rent', 'Rent expense', 100, '2026-01-01'), record('pay', 'Pay', 'Salary', 900, '2026-01-15')], [], '2026-10', '2026-10-05');
+ const plans = [{ plan: { id: 'g' }, planned: 1, spent: 0 }];
+ assert.deepEqual(onlyDirection(items, [], plans, 'income').shown.map(item => item.record.id), ['pay']);
+ assert.deepEqual(onlyDirection(items, [], plans, 'income').shownPlans, []);
+ assert.equal(onlyDirection(items, [], plans, 'expense').shownPlans.length, 1);
+ assert.equal(onlyDirection(items, [], plans, null).shown.length, 2);
 });

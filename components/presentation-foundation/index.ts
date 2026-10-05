@@ -25,6 +25,8 @@ export { AssetIcon } from './asset-icon';
 export { RecordIcon } from './record-icon';
 export { CategoryBadge } from './category-badge';
 export { CategoryIcon } from './category-icon';
+export { ProgressLine } from './progress-line';
+export { DoneTick } from './done-tick';
 export { BusinessMark } from './business-mark';
 export { BusinessFilter, type BusinessOption } from './business-filter';
 export { TagChip } from './tag-chip';

@@ -1,4 +1,5 @@
 "use client";
+import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ export function MonthlyMortgagePayments({records,currency,market,loading,error,o
   <PanelTitle title={t('Monthly mortgage payments')} hint={t('Included in estimated monthly expenses. Record each payment after it happens to add it to transaction history.')}/>
   {loading?<LoadingPlaceholder label={t('Loading records…')}/>:error?<InlineError message={t(error)}/>:<div className="table-scroll"><table className="stack-table"><thead><tr><th>{t('Name')}</th><th>{t('Estimated per month')}</th><th>{t('Outstanding balance')}</th><th>{t('Actions')}</th></tr></thead><tbody>{mortgages.map(original=>{
    const record=marketEntry(original,currency,market)??original;
-   return <tr key={original.id}><td>{original.name}</td><td>{(record.estimated_monthly_payment??0)>0?formatMoney(record.estimated_monthly_payment!,record.currency,locale):t('Not set')}</td><td>{formatMoney(record.amount,record.currency,locale)}</td><td><div className="row-actions"><Button variant="outline" size="sm" onClick={()=>onPay(original)}>{t('Record payment')}</Button><RowMenu label={t('Actions for {name}',{name:original.name})} items={[{label:t('Edit'),onSelect:()=>onEdit(original)}]}/></div></td></tr>;
+   return <tr key={original.id}><td><div className="record-name"><CategoryIcon kind={original.kind}/><div><strong>{original.name}</strong><small>{t(original.kind)}</small></div></div></td><td>{(record.estimated_monthly_payment??0)>0?formatMoney(record.estimated_monthly_payment!,record.currency,locale):t('Not set')}</td><td>{formatMoney(record.amount,record.currency,locale)}</td><td><div className="row-actions"><Button variant="outline" size="sm" onClick={()=>onPay(original)}>{t('Record payment')}</Button><RowMenu label={t('Actions for {name}',{name:original.name})} items={[{label:t('Edit'),onSelect:()=>onEdit(original)}]}/></div></td></tr>;
   })}</tbody></table></div>}
  </section>;
 }

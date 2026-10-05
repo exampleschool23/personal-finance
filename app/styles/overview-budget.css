@@ -52,6 +52,14 @@
 .dashboard-goal-cover{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border-radius:10px;background:var(--muted);font-size:20px}
 .progress-track{height:6px;border-radius:6px;background:var(--muted);overflow:hidden}
 .progress-track>*{display:block;height:100%;border-radius:6px;background:var(--positive)}
+.progress-line{display:grid;justify-items:end;gap:4px;min-width:8rem}
+.progress-line>small{color:var(--muted-foreground);font-size:var(--type-caption);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.progress-line>.progress-track{width:100%}
+.progress-line[data-tone=expense]>.progress-track>*{background:var(--mark-bg)}
+.progress-line[data-over]>small{color:var(--negative)}
+.progress-line[data-over]>.progress-track>*{background:var(--negative)}
+.done-tick{display:grid;flex:none;place-items:center;width:18px;height:18px;border-radius:50%}
+.done-tick[data-done]{background:var(--positive);color:var(--background)}
 .workspace .content .overview-panel{padding:24px;min-width:0;box-shadow:var(--shadow-card)}
 .workspace .content .overview-panel .panel-title{margin-bottom:20px;align-items:baseline}
 .overview-panel .panel-title a{font-size:var(--type-caption);font-weight:500;color:var(--primary);white-space:nowrap}

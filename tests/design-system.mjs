@@ -109,8 +109,11 @@ test('row lists keep their columns lined up from row to row',()=>{
  for(const row of ['.report-transaction-list>li>*','.transaction-row','.account-holding-row','.share-bars>li','.business-card-list li','.tax-transactions li>button']){
   const columns=template(row);
   assert.ok(columns,`${row} has a column template`);
-  assert.match(columns,/minmax\(max-content,[\d.]+fr\)/,`${row}: its amount column takes a share of the row, not just its own width (${columns})`);
+  assert.match(columns,/minmax\((?:max-content|[\d.]+rem),[\d.]+fr\)/,`${row}: its amount column takes a share of the row, not just its own width (${columns})`);
  }
+ // A long amount (UZS 3,000,000) must not widen its own row: transactions keep a fixed minimum, and owner, category and business sit in equal columns.
+ assert.match(template('.transaction-row'),/minmax\([\d.]+rem,[\d.]+fr\)$/);
+ assert.match(css,/\.transaction-labels\{display:grid;grid-auto-flow:column;grid-auto-columns:minmax\(0,1fr\)/);
  assert.match(css,/\.recurring-row\{display:grid;grid-template-columns:subgrid/,'recurring and subscription rows share one set of columns per list');
  assert.match(css,/\.recurring-list>ul,\.subscription-list\{display:grid;grid-template-columns:/);
 });

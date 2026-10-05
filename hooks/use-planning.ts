@@ -13,7 +13,7 @@ export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:
   await requestJson(action==='movement'?'/api/asset-movements':'/api/planning',{body:action==='movement'?payload:{action,data:payload}});
   // A confirmed save supersedes any read that started before it.
   resource.invalidate();
-  if((action==='occurrence'||action==='dismiss')&&payload&&typeof payload==='object'&&'id' in payload&&'target_id' in payload&&'date' in payload){
+  if((action==='occurrence'||action==='dismiss')&&payload&&typeof payload==='object'&&!('extra' in payload&&payload.extra)&&'id' in payload&&'target_id' in payload&&'date' in payload){
    const {id,target_id,date}=payload;
    if(typeof id==='string'&&typeof target_id==='string'&&typeof date==='string')resource.update(data=>({...data,occurrences:[...data.occurrences.filter(item=>item.record_id!==target_id||item.due_on!==date),{id,record_id:target_id,due_on:date,status:action==='occurrence'?'paid':'dismissed',...(action==='occurrence'&&'amount' in payload&&typeof payload.amount==='number'?{transaction_id:id,transaction:{amount:payload.amount,date:'paid_on' in payload&&typeof payload.paid_on==='string'?payload.paid_on:date}}:{})}]}));
   }

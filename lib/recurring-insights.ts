@@ -136,7 +136,7 @@ function patternOf(id: string, rows: Entry[], today: string): RecurringPattern |
 
 /** Every merchant whose charges repeat on a cadence, except those already scheduled as a recurring plan. */
 function detectRecurring(records: Entry[], today: string) {
- const scheduled = new Set(records.filter(r => cashflow.includes(r.kind) && !r.source_paused && r.frequency !== 'Once' && (!r.end_date || r.end_date >= today)).map(groupKey));
+ const scheduled = new Set(records.filter(r => cashflow.includes(r.kind) && !r.source_paused && !r.archived && r.frequency !== 'Once' && (!r.end_date || r.end_date >= today)).map(groupKey));
  const groups = new Map<string, Entry[]>();
  for (const row of records) {
   if (!isCharge(row, today)) continue;

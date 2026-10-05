@@ -336,3 +336,17 @@ test('a person avatar shows initials, named on hover and for screen readers',()=
  assert.equal(render(PersonAvatar,{name:'Alex Morgan'}),'<span class="person-avatar" data-size="md" role="img" aria-label="Alex Morgan" title="Alex Morgan">AM</span>');
  assert.match(render(PersonAvatar,{name:'sam@example.com',size:'sm'}),/data-size="sm"[^>]*>S<\/span>$/);
 });
+
+test('progress line shows the share over a capped line; only spending past its plan is marked over',()=>{
+ const {ProgressLine}=load('progress-line.tsx');
+ assert.equal(render(ProgressLine,{value:100,target:400,tone:'expense'}),'<span class="progress-line" data-tone="expense"><small>25%</small><span class="progress-track"><span style="width:25%"></span></span></span>');
+ assert.match(render(ProgressLine,{value:300,target:200,tone:'expense'}),/data-over="true"><small>150%<\/small>.*width:100%/);
+ assert.equal(render(ProgressLine,{value:1600,target:1500,tone:'income',label:'Received'}),'<span class="progress-line" data-tone="income"><small>Received · 107%</small><span class="progress-track"><span style="width:100%"></span></span></span>');
+ assert.match(render(ProgressLine,{value:0,target:0,tone:'income'}),/<small>0%<\/small>.*width:0%/);
+});
+
+test('done tick marks a settled row and keeps the same space on an open one',()=>{
+ const {DoneTick}=load('done-tick.tsx');
+ assert.match(render(DoneTick,{done:true}),/^<span class="done-tick" data-done="true" aria-hidden="true"><svg/);
+ assert.equal(render(DoneTick,{done:false}),'<span class="done-tick" aria-hidden="true"></span>');
+});

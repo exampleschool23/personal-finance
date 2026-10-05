@@ -44,8 +44,9 @@ test('a scheduled payment can be recorded as 0 with its note and no cash moved, 
 
 test('migration 110 dates a scheduled payment on the day it was paid, never ahead, and keeps the occurrence on its due date',async()=>{
  const later=fs.readFileSync('migrations/110_scheduled_payment_date.sql','utf8');
- assert.ok(setup.endsWith(later),'setup.sql ends with migration 110');
- const upgraded=await db(setup.slice(0,setup.length-later.length));
+ const start=setup.indexOf(later);
+ assert.ok(start>0,'setup.sql includes migration 110');
+ const upgraded=await db(setup.slice(0,start));
  try{await upgraded.exec(later);await upgraded.exec(later);}finally{await upgraded.close();}
  const d=await db(setup);
  try{
@@ -61,3 +62,49 @@ test('migration 110 dates a scheduled payment on the day it was paid, never ahea
  }finally{await d.close();}
 });
 
+
+test('migration 111 adds archiving to schedules and spending plans, is safe to re-run, and archives without touching amounts',async()=>{
+ const archive=fs.readFileSync('migrations/111_archived_schedules.sql','utf8');
+ const start=setup.indexOf(archive);
+ assert.ok(start>0,'setup.sql includes migration 111');
+ const upgraded=await db(setup.slice(0,start));
+ try{await upgraded.exec(archive);await upgraded.exec(archive);}finally{await upgraded.close();}
+ const d=await db(setup);
+ try{
+  await signIn(d);
+  await d.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency) VALUES($1,$2,'Rent','Rent expense','USD',500,'2026-01-01','Monthly')",[id(70),id(1)]);
+  await d.query("INSERT INTO expense_plans(id,user_id,name,category,currency,amount,start_date) VALUES($1,$2,'Groceries','Groceries','USD',300,'2026-01-01')",[id(71),id(1)]);
+  assert.deepEqual((await d.query('SELECT archived FROM finance_records WHERE id=$1',[id(70)])).rows,[{archived:false}]);
+  await d.query('UPDATE finance_records SET archived=true WHERE id=$1',[id(70)]);
+  await d.query('UPDATE expense_plans SET archived=true WHERE id=$1',[id(71)]);
+  assert.deepEqual((await d.query('SELECT archived,amount::float AS amount FROM finance_records WHERE id=$1',[id(70)])).rows,[{archived:true,amount:500}]);
+  assert.equal((await d.query("SELECT (public.expense_plan_month('2026-10-01')->0->>'archived')::boolean AS archived")).rows[0].archived,true,'plans read with their archived flag');
+ }finally{await d.close();}
+});
+
+test('migration 112 adds later payments to a recorded occurrence: they add up, retries are no-ops, and nothing is added before the first',async()=>{
+ const extra=fs.readFileSync('migrations/112_extra_scheduled_payments.sql','utf8');
+ assert.ok(setup.endsWith(extra),'setup.sql ends with migration 112');
+ const upgraded=await db(setup.slice(0,setup.length-extra.length));
+ try{await upgraded.exec(extra);await upgraded.exec(extra);}finally{await upgraded.close();}
+ const d=await db(setup);
+ try{
+  await signIn(d);
+  const {month}=(await d.query("SELECT date_trunc('month',(now() AT TIME ZONE 'Asia/Tashkent')::date)::date::text AS month")).rows[0];
+  await d.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,opened_on) VALUES($1,$2,'Cash','Cash','USD',1000,$3,$3)",[id(80),id(1),month]);
+  await d.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency) VALUES($1,$2,'Freelancing','Other income','USD',6000,$3,'Monthly')",[id(81),id(1),month]);
+  const cash=async()=>Number((await d.query('SELECT amount FROM finance_records WHERE id=$1',[id(80)])).rows[0].amount);
+  const more=(n,amount,extra={})=>d.query('SELECT record_occurrence_extra($1)',[{id:id(n),account_id:id(80),target_id:id(81),date:month,amount,notes:'',...extra}]);
+  await assert.rejects(more(82,300),/Record the scheduled payment first/);
+  await d.query('SELECT planning_action_with_actual_amount($1,$2)',['occurrence',{id:id(83),account_id:id(80),target_id:id(81),date:month,amount:700,notes:''}]);
+  await more(84,800);
+  await more(84,800);
+  await assert.rejects(more(85,0),/Check the account fields/,'a later payment is more than 0');
+  const rows=(await d.query('SELECT amount::float AS amount,occurrence_record_id,occurrence_due_on::text AS due FROM finance_records WHERE id IN ($1,$2) ORDER BY amount',[id(83),id(84)])).rows;
+  assert.deepEqual(rows,[{amount:700,occurrence_record_id:null,due:null},{amount:800,occurrence_record_id:id(81),due:month}]);
+  assert.equal(await cash(),2500,'both payments reach the account, the retry only once');
+  await assert.rejects(more(84,900),/already saved with different details/);
+  await d.exec(`SET request.jwt.claim.sub='${id(2)}';`);
+  await assert.rejects(more(86,100),/Record not found/);
+ }finally{await d.close();}
+});

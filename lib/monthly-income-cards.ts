@@ -34,7 +34,7 @@ export function monthlyIncomeCards(entries: Entry[], month: string, sources: Ear
  const assets = entries.filter(entry => ['Business', 'Property', ...interestKinds].includes(entry.kind) && (entry.estimated_monthly_income ?? 0) > 0);
  const businessIds = new Set(assets.filter(entry => entry.kind === 'Business').map(entry => entry.id));
  const propertyIds = new Set(assets.filter(entry => entry.kind === 'Property').map(entry => entry.id));
- const recurring = entries.filter(entry => income.includes(entry.kind) && !entry.source_paused);
+ const recurring = entries.filter(entry => income.includes(entry.kind) && !entry.source_paused && !entry.archived);
  const included = recurring.filter(entry => monthly(entry, month) > 0 && !duplicatesAssetEstimate(entry, businessIds, propertyIds));
  const cards: IncomeCard[] = [
   ...included.map(entry => ({ entry, amount: monthly(entry, month), asset: false, excluded: false, notes: [] as string[], received: false, receivedAmount: 0 })),

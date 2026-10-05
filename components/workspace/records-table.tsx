@@ -44,7 +44,7 @@ export function RecordsTable({ title, transactions = false, limit, pagination = 
  // One line of context under each name: the fact that tells this record apart, or nothing.
  const detail = (r: (typeof visible)[number]) => r.mortgage_payment_id ? t("Mortgage payment · Principal: {principal} · Interest: {interest}", { principal: money(Number(r.payment_principal), r.currency), interest: money(Number(r.payment_interest), r.currency) })
   : r.kind === 'Mortgage' && (r.estimated_monthly_payment ?? 0) > 0 ? t("Estimated payment: {amount}/month", { amount: money(r.estimated_monthly_payment!, r.currency) })
-  : ['Stock', 'Crypto'].includes(r.kind) ? t('{quantity} units · Gain/loss {amount}', { quantity: formatNumber(r.quantity, locale), amount: money((r.amount - r.cost) * r.quantity, r.currency) })
+  : ['Stock', 'Crypto'].includes(r.kind) ? t(r.quantity === 1 ? '1 unit · Gain/loss {amount}' : '{quantity} units · Gain/loss {amount}', { quantity: formatNumber(r.quantity, locale), amount: money((r.amount - r.cost) * r.quantity, r.currency) })
   : r.frequency !== 'Once' ? t(r.frequency)
   : r.rate ? t('{rate}% annual interest', { rate: formatNumber(r.rate, locale) })
   : r.notes && !r.notes.trim().startsWith(r.name.trim()) ? r.notes : null;
