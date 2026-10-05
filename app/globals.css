@@ -1749,6 +1749,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 
 .overview-details{margin-top:16px;border-top:1px solid var(--border)}
 .overview-details>summary{color:var(--muted-foreground)}
+.net-worth-skeleton-settings{display:flex;align-items:center;min-height:44px}
 .overview-details>summary:hover{color:var(--foreground)}
 .overview-details .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px;margin:8px 0 12px}
 .overview-details .form-grid label{display:grid;gap:8px;margin:0;font-size:var(--type-small)}

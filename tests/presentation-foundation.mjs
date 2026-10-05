@@ -65,6 +65,20 @@ test('loading skeletons keep the shape of the content they replace, so the page 
  assert.equal(preview.match(/class="panel"/g).length,2);
  const cashflow=render(WorkspaceSkeleton,{label:'Loading',section:'Income & expenses'});
  assert.ok(cashflow.indexOf('stat-tiles')<cashflow.indexOf('cashflow-preview-grid')&&cashflow.indexOf('cashflow-preview-grid')<cashflow.indexOf('panel records'));
+ const {NetWorthBodySkeleton,ChartSkeleton}=load('loading-placeholder.tsx',{'@/components/ui/skeleton':{Skeleton:element('span')}});
+ const body=render(NetWorthBodySkeleton,{label:'Loading history…'});
+ assert.match(body,/^<div role="status" aria-busy="true"><span class="sr-only">Loading history…<\/span><div aria-hidden="true">/);
+ const order=['overview-chart-heading','comparison-legend','chart-skeleton','portfolio-headline','overview-details'].map(name=>body.indexOf(name));
+ assert.ok(order.every((at,i)=>at>0&&(i===0||at>order[i-1])),'heading, legend, chart, the three totals and the settings row, in the card\'s order');
+ assert.equal(body.match(/role="status"/g).length,1,'one announcement for the whole card');
+ assert.match(render(ChartSkeleton,{}),/^<div aria-hidden="true" class="chart-skeleton shimmer"/);
+ const board=render(WorkspaceSkeleton,{label:'Loading',section:'Overview'});
+ assert.match(board,/class="dashboard-grid"><div class="dashboard-column"><section class="panel overview-hero">.*portfolio-headline.*overview-details/,'Net worth leads the left column in its full shape');
+ assert.equal(board.match(/class="dashboard-column"/g).length,2);assert.ok(!board.includes('stat-tiles'),'the dashboard has no tile row');
+ const custom=render(WorkspaceSkeleton,{label:'Loading',section:'Overview',columns:{left:['goals'],right:['net_worth','a','b','c']}});
+ const [left,right]=custom.split('class="dashboard-column"').slice(1);
+ assert.ok(!left.includes('overview-hero')&&right.includes('overview-hero'),'follows the saved layout');
+ assert.equal(right.match(/<section/g).length,3,'at most three cards a column');
 });
 
 test('row menu keeps rare actions behind one labelled ⋯ button and disappears when there are none',()=>{
@@ -117,6 +131,26 @@ test('animated money renders the final formatted amount and eases between amount
  assert.equal(countValue(0,1000,5000),1000,'never overshoots');
  assert.ok(countValue(0,1000,400)>500,'eases out');
  assert.equal(countValue(500,-500,800),-500,'counts down to negatives');
+});
+
+test('animated money counts once, even when the amount changes mid-count, and skips motion when reduced',()=>{
+ let clock=0,frames=[],reduced=false;const slots=[];let cursor=0,effects=[];
+ const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=initial;return [slots[i],value=>{slots[i]=value;}];},useRef:initial=>{const i=cursor++;return slots[i]??(slots[i]={current:initial});},
+  useLayoutEffect:(effect,deps)=>{const i=cursor++;if(!slots[i]||deps.some((d,k)=>!Object.is(d,slots[i][k]))){slots[i]=deps;effects.push(effect);}}};
+ const saved={window:globalThis.window,raf:globalThis.requestAnimationFrame,caf:globalThis.cancelAnimationFrame,now:performance.now};
+ globalThis.window={matchMedia:()=>({matches:reduced})};globalThis.requestAnimationFrame=cb=>frames.push(cb);globalThis.cancelAnimationFrame=()=>{frames=[];};performance.now=()=>clock;
+ try{
+  const {AnimatedMoney}=load('animated-money.tsx',{react,'@/lib/format':{formatMoney:value=>String(Math.round(value))}});
+  const shown=value=>{cursor=0;const tree=AnimatedMoney({value,currency:'USD'});effects.splice(0).forEach(effect=>effect());cursor=0;return Number(AnimatedMoney({value,currency:'USD'}).props.children[0].props.children);};
+  const advance=ms=>{clock+=ms;const run=frames.splice(0);run.forEach(cb=>cb(clock));};
+  let value=1000,seen=[shown(value)];
+  assert.equal(seen[0],0,'starts from zero');
+  for(let t=0;t<12;t++){advance(100);if(t===3)value=2000;seen.push(shown(value));}
+  assert.ok(seen.every((n,i)=>i===0||n>=seen[i-1]),`never restarts: ${seen}`);
+  assert.equal(seen[8],2000,'settles on the new amount within one count');
+  assert.equal(frames.length,0,'no second count');
+  reduced=true;assert.equal(shown(500),500,'reduced motion shows the amount at once');
+ }finally{globalThis.window=saved.window;globalThis.requestAnimationFrame=saved.raf;globalThis.cancelAnimationFrame=saved.caf;performance.now=saved.now;}
 });
 
 test('info hint keeps its explanation behind a labelled ⓘ button',()=>{

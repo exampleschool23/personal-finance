@@ -31,12 +31,22 @@ export function PageSkeleton({ label, section }: { label: string; section: strin
   </div>;
 }
 
-export function WorkspaceSkeleton({ label, section }: { label: string; section: string }) {
+/** The dashboard board's two columns of cards, in the person's saved order. */
+export type DashboardSkeletonColumns = { left: readonly string[]; right: readonly string[] };
+const defaultDashboardSkeleton: DashboardSkeletonColumns = { left: ['net_worth', 'spending'], right: ['goals', 'transactions', 'upcoming'] };
+const chartCards = new Set(['spending', 'allocation', 'forecast', 'income']);
+
+/** One dashboard card while the workspace loads: Net worth in its full shape, chart cards with a chart, the rest with rows. */
+function DashboardCardSkeleton({ card }: { card: string }) {
+  if (card === 'net_worth') return <section className="panel overview-hero"><div className="overview-hero-head"><div className="overview-hero-value"><Skeleton className="h-8 w-40"/><Skeleton className="h-8 w-48 max-w-full"/></div><Skeleton className="h-11 w-96 max-w-full rounded-xl"/></div><NetWorthBodySkeleton/></section>;
+  return <section className="panel overview-panel"><Skeleton className="mb-6 h-8 w-1/3"/>{chartCards.has(card) ? <Skeleton className="h-52 w-full"/> : <SkeletonRows rows={3}/>}</section>;
+}
+
+export function WorkspaceSkeleton({ label, section, columns = defaultDashboardSkeleton }: { label: string; section: string; columns?: DashboardSkeletonColumns }) {
+  // The first few cards of each column fill the screen; drawing every card would only make the page longer than it loads.
   if (section === 'Overview') return <div role="status" aria-busy="true" className="overview-content-loading">
     <span className="sr-only">{label}</span>
-    <section aria-hidden="true" className="panel overview-hero"><Skeleton className="h-4 w-28"/><Skeleton className="my-4 h-12 w-64 max-w-full"/><Skeleton className="h-64 w-full"/></section>
-    <StatTilesSkeleton columns={4}/>
-    <div aria-hidden="true" className="dashboard-grid">{Array.from({ length: 2 }, (_, index) => <section className="panel overview-panel" key={index}><Skeleton className="mb-6 h-5 w-1/3"/><Skeleton className="h-40 w-full"/></section>)}</div>
+    <div aria-hidden="true" className="dashboard-grid">{[columns.left, columns.right].map((cards, index) => <div className="dashboard-column" key={index}>{cards.slice(0, 3).map(card => <DashboardCardSkeleton card={card} key={card}/>)}</div>)}</div>
   </div>;
   return <div role="status" aria-busy="true">
     <span className="sr-only">{label}</span>
@@ -58,12 +68,24 @@ export function CashflowPreviewSkeleton({ label }: { label?: string }) {
   return label ? <div role="status" aria-busy="true"><span className="sr-only">{label}</span>{grid}</div> : grid;
 }
 
-export function ChartSkeleton({ label, height = 310 }: { label: string; height?: number }) {
-  return <div role="status" aria-busy="true" className="chart-skeleton shimmer" style={{ height }}>
-    <span className="sr-only">{label}</span>
+/** A chart while its data loads. Without a label it is decoration inside a larger loading region. */
+export function ChartSkeleton({ label, height = 310 }: { label?: string; height?: number }) {
+  return <div role={label ? 'status' : undefined} aria-busy={label ? true : undefined} aria-hidden={label ? undefined : true} className="chart-skeleton shimmer" style={{ height }}>
+    {label && <span className="sr-only">{label}</span>}
     <svg aria-hidden="true" viewBox="0 0 400 100" preserveAspectRatio="none">
       {[20, 45, 70].map(y => <line key={y} x1="0" x2="400" y1={y} y2={y}/>)}
       <path d="M0 82 C40 78 60 60 100 64 S160 40 200 46 S260 28 300 34 S360 14 400 18"/>
     </svg>
   </div>;
+}
+
+/** The Net worth card below its header while history loads: chart heading, tracking date, legend, chart, the three period totals and the settings row, in the card's final shape so nothing moves when they arrive. */
+export function NetWorthBodySkeleton({ label }: { label?: string }) {
+  const body = <div aria-hidden="true">
+    <div className="overview-chart-heading"><div className="overview-chart-title"><Skeleton className="h-6 w-36"/><Skeleton className="h-9 w-56"/></div><div className="comparison-legend w-full">{[112, 96, 120, 136].map(width => <Skeleton key={width} className="h-8 rounded-full" style={{ width }}/>)}</div></div>
+    <ChartSkeleton/>
+    <div className="portfolio-headline">{[0, 1, 2].map(index => <div key={index}><Skeleton className="h-5 w-28 max-w-full"/><Skeleton className="h-8 w-32 max-w-full"/></div>)}</div>
+    <div className="overview-details"><div className="net-worth-skeleton-settings"><Skeleton className="h-4 w-44"/></div></div>
+  </div>;
+  return label ? <div role="status" aria-busy="true"><span className="sr-only">{label}</span>{body}</div> : body;
 }

@@ -16,7 +16,7 @@ export { Count } from './count';
 export { EmptyState } from './empty-state';
 export { InlineError } from './inline-error';
 export { ResourceState } from './resource-state';
-export { LoadingPlaceholder, PageSkeleton, WorkspaceSkeleton, ChartSkeleton, StatTilesSkeleton, PanelSkeleton, CashflowPreviewSkeleton } from './loading-placeholder';
+export { LoadingPlaceholder, PageSkeleton, WorkspaceSkeleton, ChartSkeleton, NetWorthBodySkeleton, StatTilesSkeleton, PanelSkeleton, CashflowPreviewSkeleton } from './loading-placeholder';
 export { Segmented, type SegmentedOption } from './segmented';
 export { SeriesLegend, toggleKey, type SeriesLegendItem } from './series-legend';
 export { RowMenu, type RowMenuItem } from './row-menu';

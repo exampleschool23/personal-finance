@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { changePercent } from '@/lib/overview';
 import { useLanguage } from '@/components/language-provider';
-import { ChartSkeleton } from '@/components/presentation-foundation/loading-placeholder';
+import { NetWorthBodySkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { financialTotals, type Entry } from '@/lib/finance';
 import { formatMoney, formatNumber, formatPercent } from '@/lib/format';
 import { AnimatedMoney } from '@/components/presentation-foundation/animated-money';
@@ -69,7 +69,7 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
     </div>
     <Segmented label={t('History period')} options={[30, 90, 365, null].map(days => ({ value: days, label: days === null ? t('All history') : t('{days} days', { days: formatNumber(days, locale, 0) }) }))} value={range} onChange={setRange}/>
    </header>
-   {loading ? <ChartSkeleton label={t('Loading history…')}/> : error ? <InlineError message={t('Could not load portfolio history.')} onRetry={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}/> : <>
+   {loading ? <NetWorthBodySkeleton label={t('Loading history…')}/> : error ? <InlineError message={t('Could not load portfolio history.')} onRetry={() => { setError(false); setHistory(null); setRetry(n => n + 1); }}/> : <>
     <InvestmentComparison history={history??{records:[],events:[]}} today={today} currency={currency} market={market} demo={demo} windowStart={windowStart} points={visible} profile={comparison.profile} profileError={comparison.error} trackingStart={comparison.trackingStart} onTrackingStartChange={comparison.saveTrackingStart} summary={<InvestmentPeriodSummary input={{records:allRecords,events:history?.events??[],cashflows:history?.cashflows,movements:history?.movements,market,currency,today}} start={windowStart}/>}/>
     {recorded.missing > 0 && <p className="muted overview-hero-note">{t('Some holdings have no recorded history yet.')}</p>}
     {excludedCurrencies.length > 0 && <p className="muted overview-hero-note">{t('Some currencies could not be converted and are excluded from totals.')}</p>}

@@ -11,25 +11,29 @@ export function countValue(from: number, to: number, elapsed: number, duration =
  return progress >= 1 ? to : from + (to - from) * (1 - (1 - progress) ** 3);
 }
 
-/** A money figure that counts up from zero when it appears and from its last amount when it changes. Screen readers and reduced motion get the final amount only. */
+/** A money figure that counts up from zero when it appears and from its last amount when it changes. An amount that changes mid-count (live prices landing) is picked up by the running count rather than starting a second one. Screen readers and reduced motion get the final amount only. */
 export function AnimatedMoney({ value, currency }: { value: number; currency: string }) {
  const { locale } = useLanguage();
  const [shown, setShown] = useState(value);
  const current = useRef(0);
+ const target = useRef(value);
+ const run = useRef<{ from: number; began: number } | null>(null);
+ const frame = useRef(0);
+ useLayoutEffect(() => () => { cancelAnimationFrame(frame.current); run.current = null; }, []);
  useLayoutEffect(() => {
-  const from = current.current;
-  if (from === value || !Number.isFinite(value) || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { current.current = value; setShown(value); return; }
-  let frame = 0;
-  const began = performance.now();
+  target.current = value;
+  if (!Number.isFinite(value) || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { cancelAnimationFrame(frame.current); run.current = null; current.current = value; setShown(value); return; }
+  if (run.current || current.current === value) return;
+  run.current = { from: current.current, began: performance.now() };
   const step = (now: number) => {
-   const next = countValue(from, value, now - began);
+   const { from, began } = run.current!;
+   const next = countValue(from, target.current, now - began);
    current.current = next;
    setShown(next);
-   if (next !== value) frame = requestAnimationFrame(step);
+   if (now - began < countDuration) frame.current = requestAnimationFrame(step); else run.current = null;
   };
-  setShown(from);
-  frame = requestAnimationFrame(step);
-  return () => cancelAnimationFrame(frame);
+  setShown(current.current);
+  frame.current = requestAnimationFrame(step);
  }, [value]);
  return <span className="animated-number"><span aria-hidden="true">{formatMoney(shown, currency, locale)}</span><span className="sr-only">{formatMoney(value, currency, locale)}</span></span>;
 }
