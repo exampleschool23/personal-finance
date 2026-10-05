@@ -437,17 +437,6 @@
       "count": 1
     }
   },
-  "lib/telegram-bot.ts": {
-    "complexity": {
-      "count": 2
-    },
-    "max-params": {
-      "count": 4
-    },
-    "size/max-file-bytes": {
-      "count": 1
-    }
-  },
   "lib/telegram-entry.ts": {
     "complexity": {
       "count": 1
