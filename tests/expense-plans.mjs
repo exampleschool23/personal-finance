@@ -35,3 +35,24 @@ test('selecting October adds future plans to mortgage estimates and uses that mo
  const overspent=estimatedCashFlow([mortgage],expensePlanTotals({...future,spent:650},'2026-10').projected);
  assert.equal(overspent.monthlyExpenses+overspent.mortgagePayments,2250);
 });
+
+test('the plan form saves a new plan, hands it back to be chosen, and keeps its submit from reaching the expense form behind it',async()=>{
+ const React=(await import('react')).default;
+ const {loadTS}=await import('./helpers/load-ts.mjs');
+ const slots=[];let cursor=0;
+ const react={...React,useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=initial;return [slots[i],value=>{slots[i]=value;}];}};
+ const element=tag=>props=>React.createElement(tag,props);
+ const {ExpensePlanDialog,newExpensePlan}=loadTS('components/expense-plans.tsx',{react,'@/components/language-provider':{useLanguage:()=>({t:text=>text,locale:'en-US'})},'@/components/discard-changes':{useDraftDialog:()=>({close:()=>{},confirmation:null})},'@/components/ui/dialog':{Dialog:element('div'),DialogContent:element('section'),DialogTitle:element('h2'),DialogDescription:element('p')}});
+ const plan=newExpensePlan('EUR','2026-10');
+ assert.deepEqual({...plan,id:undefined},{id:undefined,name:'',category:'Groceries',currency:'EUR',amount:0,start_date:'2026-10-01',end_date:null});
+ const saved=[],chosen=[];let closed=0;
+ const draw=()=>{cursor=0;return ExpensePlanDialog({plan:{...plan,name:'Groceries',amount:400},currencies:['EUR'],save:async value=>{saved.push(value);},onClose:()=>{closed++;},onSaved:value=>chosen.push(value)});};
+ const find=(node,match)=>{if(!node||typeof node!=='object')return null;if(Array.isArray(node)){for(const child of node){const found=find(child,match);if(found)return found;}return null;}if(match(node))return node;return find(node.props?.children,match);};
+ const form=find(draw(),node=>node.type==='form');
+ let stopped=false;
+ await form.props.onSubmit({preventDefault(){},stopPropagation(){stopped=true;}});
+ assert.equal(stopped,true,'the expense form behind does not submit too');
+ assert.deepEqual(saved.map(value=>[value.name,value.amount]),[['Groceries',400]]);
+ assert.equal(chosen[0].id,plan.id,'the new plan is handed back to be chosen');
+ assert.equal(closed,1);
+});

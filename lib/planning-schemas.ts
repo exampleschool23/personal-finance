@@ -12,7 +12,7 @@ export const planningSchemas={
  reconcile:base.refine(v=>!v.target_id&&v.received===0&&v.fee===0),
  repayment:base.refine(v=>!!v.target_id&&v.amount>0&&v.received===0),
  mortgage:base.refine(v=>!!v.target_id&&v.amount+v.fee>0&&v.received===0),
- occurrence:z.object({amount:z.number().finite().min(0).max(1e15),exchange_rate:z.number().finite().positive().max(1e15).optional(),id,account_id:id,target_id:id,date,notes:notes}),
+ occurrence:z.object({amount:z.number().finite().min(0).max(1e15),exchange_rate:z.number().finite().positive().max(1e15).optional(),id,account_id:id,target_id:id,date,paid_on:date.optional(),notes:notes}),
  dismiss:z.object({id,target_id:id,date}),
  delete_goal:z.object({id}),
  category:z.object({id,name:z.string().trim().min(1).max(80),direction:z.enum(['income','expense'])}),

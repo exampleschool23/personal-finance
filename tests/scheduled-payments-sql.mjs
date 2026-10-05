@@ -9,8 +9,8 @@ async function db(sql){const d=new PGlite();await d.exec(`CREATE ROLE anon;CREAT
 const signIn=d=>d.exec(`SET request.jwt.claim.sub='${id(1)}';SET ROLE authenticated;`);
 
 test('migration 109 patches the installed occurrence function once and is safe to re-run',async()=>{
- assert.ok(setup.endsWith(migration),'setup.sql ends with migration 109');
- const d=await db(setup.slice(0,setup.length-migration.length));
+ assert.ok(setup.includes(migration),'setup.sql includes migration 109');
+ const d=await db(setup.slice(0,setup.indexOf(migration)));
  try{await d.exec(migration);await d.exec(migration);
   const definition=(await d.query("SELECT pg_get_functiondef('public.planning_action_with_actual_amount(text,jsonb)'::regprocedure) AS f")).rows[0].f;
   assert.match(definition,/amount<0 OR amount>1e15/);assert.doesNotMatch(definition,/amount<=0 OR amount>1e15 OR amount::text IN \('NaN','Infinity','-Infinity'\) THEN RAISE EXCEPTION 'Check the account fields.'; END IF;\s+new_id/);
@@ -41,3 +41,23 @@ test('a scheduled payment can be recorded as 0 with its note and no cash moved, 
   await assert.rejects(pay(50,month,1),/Record not found/);
  }finally{await d.close();}
 });
+
+test('migration 110 dates a scheduled payment on the day it was paid, never ahead, and keeps the occurrence on its due date',async()=>{
+ const later=fs.readFileSync('migrations/110_scheduled_payment_date.sql','utf8');
+ assert.ok(setup.endsWith(later),'setup.sql ends with migration 110');
+ const upgraded=await db(setup.slice(0,setup.length-later.length));
+ try{await upgraded.exec(later);await upgraded.exec(later);}finally{await upgraded.close();}
+ const d=await db(setup);
+ try{
+  await signIn(d);
+  const {today,month,earlier}=(await d.query("SELECT (now() AT TIME ZONE 'Asia/Tashkent')::date::text AS today,date_trunc('month',(now() AT TIME ZONE 'Asia/Tashkent')::date - interval '1 month')::date::text AS month,(date_trunc('month',(now() AT TIME ZONE 'Asia/Tashkent')::date - interval '1 month')::date + 3)::text AS earlier")).rows[0];
+  await d.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,opened_on) VALUES($1,$2,'Cash','Cash','USD',1000,$3,$3)",[id(60),id(1),month]);
+  await d.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency) VALUES($1,$2,'Club','Other income','USD',500,$3,'Monthly')",[id(61),id(1),month]);
+  const pay=(n,paid_on)=>d.query('SELECT planning_action_with_actual_amount($1,$2)',['occurrence',{id:id(n),account_id:id(60),target_id:id(61),date:month,amount:450,notes:'',...(paid_on?{paid_on}:{})}]);
+  await assert.rejects(pay(62,(await d.query("SELECT ($1::date+1)::text AS d",[today])).rows[0].d),/Check the payment date/,'not a future day');
+  await pay(63,earlier);
+  assert.equal((await d.query('SELECT date::text FROM finance_records WHERE id=$1',[id(63)])).rows[0].date,earlier,'the transaction is dated when it was paid');
+  assert.equal((await d.query('SELECT due_on::text FROM payment_occurrences WHERE transaction_id=$1',[id(63)])).rows[0].due_on,month,'the occurrence keeps its due date');
+ }finally{await d.close();}
+});
+

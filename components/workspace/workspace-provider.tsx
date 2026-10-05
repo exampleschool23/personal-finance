@@ -439,7 +439,8 @@ function useWorkspaceState() {
         setEditing({ ...fresh(), name: plan.name, kind: plan.category === 'Groceries' || plan.category === 'Household' ? 'Living expense' : 'Other expense', currency: plan.currency, frequency: 'Once', expense_plan_id: plan.id, date });
     };
 
-    const addCashFlow = (kind: Entry['kind']) => { if (!editable()) return; setError(''); setRecordKinds(income.includes(kind) ? income : expenses); setEditing({ ...fresh(), currency, kind, frequency:'Once' }); };
+    /** Opens the income or expense form; Recurring opens it already repeating. */
+    const addCashFlow = (kind: Entry['kind'], frequency: Entry['frequency'] = 'Once') => { if (!editable()) return; setError(''); setRecordKinds(income.includes(kind) ? income : expenses); setEditing({ ...fresh(), currency, kind, frequency }); };
     const addRecord = () => {
         if (!editable()) return;
         if (cashFlowSection) { addCashFlow('Other expense'); return; }

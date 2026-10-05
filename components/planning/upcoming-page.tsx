@@ -1,7 +1,7 @@
 "use client";
 import { RowMenu } from '@/components/presentation-foundation/row-menu';
 import { Fragment, useState } from 'react';
-import { ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Repeat } from 'lucide-react';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
@@ -21,7 +21,7 @@ import { AccountOperation, type Operation } from './account-operation';
 
 /** The Recurring page's views, switched from tabs beside its title: the month as a list or a calendar, subscriptions and reminders. */
 export type RecurringView = 'list' | 'calendar' | 'subscriptions' | 'reminders';
-type Props = { data: PlanningData; save: (action: string, data: unknown) => Promise<void>; currency: string; rates?: number | Record<string, number>; view: RecurringView; onView: (view: RecurringView) => void };
+type Props = { data: PlanningData; save: (action: string, data: unknown) => Promise<void>; currency: string; rates?: number | Record<string, number>; view: RecurringView; onView: (view: RecurringView) => void; onAdd?: (direction: 'income' | 'expense') => void };
 
 /** "in 3 days", "today", "2 days ago": how far a due date is from today. */
 function useDueLabel() {
@@ -45,7 +45,7 @@ function SummaryBar({ label, done, remaining, doneLabel, currency, tone }: { lab
  </div>;
 }
 
-export function UpcomingPage({ data, save, currency, rates, view, onView }: Props) {
+export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd }: Props) {
  const { t, locale } = useLanguage(), today = depositToday();
  const dueLabel = useDueLabel();
  const [operation, setOperation] = useState<Operation | null>(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
@@ -62,7 +62,8 @@ export function UpcomingPage({ data, save, currency, rates, view, onView }: Prop
  const payDebt = (record: RecurringItem['record']) => setOperation({ action: record.kind === 'Mortgage' ? 'mortgage' : 'repayment', target_id: record.id, date: today, amount: 0 });
  const pay = (item: RecurringItem) => item.installment ? payDebt(item.record) : setOperation({ action: 'occurrence', target_id: item.record.id, date: item.date, amount: item.amount });
  const skip = (item: RecurringItem) => run(() => save('exception', { target_id: item.record.id, date: item.date, skip: true }));
- const status = (item: RecurringItem) => item.status === 'paid' ? <span className="status-badge is-paid">{t(item.direction === 'income' ? 'Received' : 'Paid')}</span>
+ // A settled payment names what actually arrived or left, beside the scheduled amount.
+ const status = (item: RecurringItem) => item.status === 'paid' ? <span className="status-badge is-paid">{t(item.direction === 'income' ? 'Received' : 'Paid')}{item.recorded !== undefined && <> · {formatMoney(item.recorded, item.record.currency, locale)}</>}</span>
   : item.status === 'skipped' ? <span className="status-badge">{t('Skipped')}</span>
   : <span className={item.status === 'overdue' ? 'status-badge is-overdue' : 'status-badge'}>{dueLabel(today, item.date)}</span>;
   // A payment is recorded once it happens: before its date the button waits and says when.
@@ -85,6 +86,8 @@ export function UpcomingPage({ data, save, currency, rates, view, onView }: Prop
     <Button variant="outline" size="icon" aria-label={t('Next month')} onClick={() => setMonth(shiftMonth(month, 1))}><ChevronRight size={16}/></Button>
     <Button variant="outline" disabled={month === today.slice(0, 7)} onClick={() => setMonth(today.slice(0, 7))}>{t('Today')}</Button>
    </div>}
+   {/* A new schedule opens the usual income or expense form, already repeating monthly. */}
+   {onAdd && <><Button variant="outline" onClick={() => onAdd('income')}><Plus size={17} aria-hidden="true"/>{t('Add income')}</Button><Button onClick={() => onAdd('expense')}><Plus size={17} aria-hidden="true"/>{t('Add expense')}</Button></>}
   </PageHeader>
   <ErrorPopup message={error}/>
   {scheduled && <>

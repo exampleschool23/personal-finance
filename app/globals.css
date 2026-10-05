@@ -1063,6 +1063,8 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .expense-form-scroll{display:grid;gap:20px;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px}
 .expense-form-actions{flex-shrink:0}
 .expense-plan-hint{font-size:var(--type-small);margin:-8px 0 0}
+.expense-plan-empty{display:grid;justify-items:start;gap:10px}
+.expense-plan-empty>p{font-size:var(--type-small)}
 .record-dialog .record-form .amount-currency-row{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
 .amount-currency-row>.amount-value-field:only-child{grid-column:1/-1}
 .amount-currency-row>label{min-width:0}
@@ -2010,6 +2012,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 /* One set of columns for the whole list: each row is a subgrid, so status, amount and actions line up on every row. */
 .recurring-list>ul,.subscription-list{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto}
 .recurring-list>ul>li,.subscription-list>li{grid-column:1/-1}
+/* Narrow (720px and below): name and amount on the first line, status and actions trailing on the second. */
 .recurring-row{display:grid;grid-template-columns:subgrid;align-items:center;gap:12px;padding:10px 16px;font-size:var(--type-small)}
 .recurring-row+.recurring-row{border-top:1px solid var(--hairline)}
 .recurring-row[data-status=paid],.recurring-row[data-status=skipped],.recurring-row[data-status=missed]{color:var(--muted-foreground)}
@@ -2036,7 +2039,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .recurring-chip[data-direction=income]{background:color-mix(in srgb,var(--positive) 12%,transparent);color:var(--positive)}
 .recurring-chip[data-status=overdue]{background:color-mix(in srgb,var(--negative) 12%,transparent);color:var(--negative)}
 .recurring-chip[data-status=paid],.recurring-chip[data-status=skipped]{opacity:.55}
-@container content (max-width:720px){.recurring-summary{grid-template-columns:minmax(0,1fr)}.recurring-list>ul,.subscription-list{grid-template-columns:minmax(0,1fr) auto}.recurring-row{row-gap:6px}.recurring-row .row-actions{grid-column:1/-1;justify-content:flex-start}.recurring-calendar-day{min-height:64px;padding:4px}.recurring-chip>strong{display:none}}
+@container content (max-width:720px){.recurring-summary{grid-template-columns:minmax(0,1fr)}.recurring-list>ul,.subscription-list{grid-template-columns:minmax(0,1fr) auto}.recurring-row{row-gap:6px}.recurring-row>:nth-child(1){grid-area:1/1}.recurring-row>:nth-child(2){grid-area:2/1}.recurring-row>:nth-child(3){grid-area:1/2;justify-self:end;text-align:end}.recurring-row>.row-actions{grid-area:2/2;justify-content:flex-end}.recurring-calendar-day{min-height:64px;padding:4px}.recurring-chip>strong{display:none}}
 
 /* Dashboard extras: budget at a glance and the Customize dialog. */
 .dashboard-budget-total{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}

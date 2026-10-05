@@ -65,13 +65,15 @@ test('new expense plans inherit current header currency while editing preserves 
  const currencyChoice=tree=>find(tree,node=>node.props?.value&&React.Children.toArray(node.props.children).some(option=>option.type==='option'&&option.props.value==='EUR'));
  let tree=render.tree({...props,currency:'USD'});
  tree=render.tree(props);
+ // The plan form is its own component (the expense form's Plan tab opens it too): render the one the list opens.
+ const form=tree=>component('components/expense-plans.tsx','ExpensePlanDialog').tree(find(tree,node=>node.type?.name==='ExpensePlanDialog').props);
  find(tree,node=>node.props?.onClick&&React.Children.toArray(node.props.children).includes('Add monthly plan')).props.onClick();
  tree=render.tree(props);
- assert.equal(currencyChoice(tree).props.value,'EUR');
+ assert.equal(currencyChoice(form(tree)).props.value,'EUR');
  find(tree,node=>node.props?.['aria-label']==='Edit {name}').props.onClick();
  tree=render.tree(props);
- assert.equal(currencyChoice(tree).props.value,'USD');
- assert.equal(find(tree,node=>node.props?.value===12.125).props.value,12.125);
+ assert.equal(currencyChoice(form(tree)).props.value,'USD');
+ assert.equal(find(form(tree),node=>node.props?.value===12.125).props.value,12.125);
  assert.equal(plan.currency,'USD');assert.equal(plan.amount,12.125);
 });
 

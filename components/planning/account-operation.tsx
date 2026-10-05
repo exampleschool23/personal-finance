@@ -19,7 +19,7 @@ export type Operation = {action:'transfer'|'reconcile'|'repayment'|'mortgage'|'o
 export function AccountOperation({operation,records,save,onClose}:{operation:Operation;records:Entry[];save:(action:string,data:unknown)=>Promise<void>;onClose:()=>void}){
  const {t,locale}=useLanguage();
  // A scheduled payment starts at its scheduled amount; the person edits it when the actual differs.
- const [draft,setDraft]=useState(()=>({id:crypto.randomUUID(),account_id:operation.account_id??'',target_id:operation.target_id??'',date:operation.date??depositToday(),amount:operation.amount??(operation.action==='occurrence'?Number(records.find(r=>r.id===operation.target_id)?.amount??0):0),received:0,fee:0,notes:''}));
+ const [draft,setDraft]=useState(()=>({id:crypto.randomUUID(),account_id:operation.account_id??'',target_id:operation.target_id??'',date:operation.date??depositToday(),paid_on:operation.action==='occurrence'?[operation.date??depositToday(),depositToday()].sort()[0]:undefined as string|undefined,amount:operation.amount??(operation.action==='occurrence'?Number(records.find(r=>r.id===operation.target_id)?.amount??0):0),received:0,fee:0,notes:''}));
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[submitted,setSubmitted]=useState(false);
  // A statement balance must be typed: a blank field reads as zero and would empty the account.
  const [balanceBlank,setBalanceBlank]=useState(!(operation.amount&&operation.amount>0));
@@ -29,7 +29,7 @@ export function AccountOperation({operation,records,save,onClose}:{operation:Ope
  const title={transfer:'Transfer money',reconcile:'Reconcile balance',repayment:'Record repayment',mortgage:'Record mortgage payment',occurrence:'Record scheduled payment'}[operation.action];
  const crossCurrency=operation.action==='transfer'&&account&&target&&account.currency!==target.currency;
  const convertedPayment=['repayment','mortgage','occurrence'].includes(operation.action)&&!!account&&!!target&&account.currency!==target.currency;
- const fx=useDatedExchangeRate(convertedPayment?account?.currency:undefined,target?.currency,draft.date);
+ const fx=useDatedExchangeRate(convertedPayment?account?.currency:undefined,target?.currency,draft.paid_on??draft.date);
  const [initialDraft]=useState(()=>JSON.stringify(draft));
  const guard=useDiscardChanges(JSON.stringify(draft)!==initialDraft,onClose,busy);
  return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(title)}</DialogTitle><DialogDescription>{t('Review the amounts before saving. Both balances update together.')}</DialogDescription>
@@ -47,6 +47,8 @@ export function AccountOperation({operation,records,save,onClose}:{operation:Ope
  {operation.action!=='occurrence'&&<label>{t(operation.action==='reconcile'?'Statement balance':operation.action==='transfer'?'Amount sent':'Principal repayment')} {operation.action==='repayment'||operation.action==='mortgage'?target?.currency:account?.currency}<FormattedNumberInput value={draft.amount} required={operation.action!=='mortgage'} requireEntry={operation.action==='reconcile'} onValueChange={(amount,blank)=>{setBalanceBlank(blank);setDraft({...draft,amount});}}/></label>}
  {crossCurrency&&<><label>{t('Amount received')} {target.currency}<FormattedNumberInput value={draft.received} onValueChange={received=>setDraft({...draft,received})}/></label>{draft.amount>0&&draft.received>0&&<p>{t('Exchange rate')}: {formatNumber(draft.received/draft.amount,locale,8)} {target.currency}/{account.currency}</p>}</>}
  {['transfer','repayment','mortgage'].includes(operation.action)&&<label>{t(operation.action==='transfer'?'Transfer fee':target?.kind==='Money lent'?'Interest received':'Interest paid')} {operation.action==='repayment'||operation.action==='mortgage'?target?.currency:account?.currency}<FormattedNumberInput required={false} value={draft.fee} onValueChange={fee=>setDraft({...draft,fee})}/></label>}
+ {/* The day it was actually received or paid: the due date by default, never a day ahead. */}
+ {operation.action==='occurrence'&&<label>{t('Payment date')}<DatePicker value={draft.paid_on??''} max={depositToday()} onChange={paid_on=>setDraft({...draft,paid_on:paid_on||depositToday()})}/></label>}
  {operation.action!=='occurrence'&&operation.action!=='reconcile'&&<label>{t('Date')}<DatePicker value={draft.date} max={depositToday()} onChange={date=>setDraft({...draft,date})}/></label>}
  <label>{t('Notes (optional)')}<Input value={draft.notes} maxLength={2000} onChange={e=>setDraft({...draft,notes:e.target.value})}/></label>
  </fieldset>

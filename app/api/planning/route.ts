@@ -62,7 +62,9 @@ export async function POST(req:Request){
  }
  let paymentData:unknown=value;
  if(['occurrence','repayment','mortgage'].includes(action)&&'account_id' in value&&'target_id' in value){
-  const p=value as unknown as {id:string;account_id:string;target_id:string;date:string;exchange_rate?:number;amount?:number;fee?:number;notes?:string};
+  const p=value as unknown as {id:string;account_id:string;target_id:string;date:string;paid_on?:string;exchange_rate?:number;amount?:number;fee?:number;notes?:string};
+  // A scheduled payment converts at the rate of the day it was paid, not its due date.
+  const rateDay=p.paid_on??p.date;
   const response=await supa(`/rest/v1/finance_records?select=*&id=in.(${p.account_id},${p.target_id},${p.id})`,{},auth.token);
   if(!response.ok)return Response.json({error:'Could not load accounts or exchange history.'},{status:503});
   const records=await response.json() as Entry[];
@@ -71,7 +73,7 @@ export async function POST(req:Request){
   // The database refuses an over-repayment with a generic message; name the real reason, as the bot and the investment tracker do.
   if(action==='repayment'&&account.currency===target.currency&&Number(p.amount)>Number(target.amount))return Response.json({error:'Repayment cannot exceed the outstanding balance.'},{status:409});
   if(account.currency!==target.currency){
-   const prior=records.find(record=>record.id===p.id&&record.account_id===account.id&&record.currency===target.currency&&record.date===p.date&&record.account_currency===account.currency&&record.account_exchange_rate);
+   const prior=records.find(record=>record.id===p.id&&record.account_id===account.id&&record.currency===target.currency&&record.date===rateDay&&record.account_currency===account.currency&&record.account_exchange_rate);
    let priorPayment:{exchange_rate:number;rate_date:string;account_id:string;account_currency:string;record_currency:string;investment_history:{balance:number|null}}|undefined;
    if(action!=='occurrence'){
     const history=await supa(`/rest/v1/investment_account_links?select=*,investment_history(balance)&id=eq.${p.id}`,{},auth.token);
@@ -82,7 +84,7 @@ export async function POST(req:Request){
    let rate:number,rateDate:string;
    if(priorPayment){rate=Number(priorPayment.exchange_rate);rateDate=priorPayment.rate_date;}
    else if(prior){rate=Number(prior.account_exchange_rate);rateDate=prior.account_rate_date!;}
-   else{try{const quote=await loadDatedExchangeRate(account.currency,target.currency,p.date);rate=quote.rate;rateDate=quote.effective_date;}catch{return Response.json({error:'Historical exchange rates are unavailable.'},{status:422});}}
+   else{try{const quote=await loadDatedExchangeRate(account.currency,target.currency,rateDay);rate=quote.rate;rateDate=quote.effective_date;}catch{return Response.json({error:'Historical exchange rates are unavailable.'},{status:422});}}
    if(rate!==p.exchange_rate)return Response.json({error:'The exchange rate changed. Refresh the rate and review the amounts.'},{status:409});
    if(action==='occurrence')paymentData={...value,account_exchange_rate:rate,account_rate_date:rateDate,account_currency:account.currency};
    else{

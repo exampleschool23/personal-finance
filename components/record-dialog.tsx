@@ -19,7 +19,7 @@ import { useState } from 'react';
 import type { Dispatch,SetStateAction,FormEvent } from 'react';
 import { CashAccountField } from '@/components/cash-account-field';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
@@ -39,8 +39,9 @@ import { isBusinessAccount, withAccount } from '@/lib/business';
 import { accountOwnerChange, sharedWorkspace, type HouseholdState } from '@/lib/household';
 import { BusinessProfileFields } from '@/components/business-profile-fields';
 import { expensePlanTotals, type ExpensePlan } from '@/lib/expense-plans';
+import { ExpensePlanDialog, newExpensePlan } from '@/components/expense-plans';
 import type { PlanningData } from '@/lib/planning';
-export type RecordDialogProps={navigate?:(path:string)=>void;onDebtSaved?:()=>void;onMortgageSave?:(payment:MortgagePayment)=>Promise<void>;onMortgageDone?:()=>void;onPaymentDraftState?:(dirty:boolean,busy:boolean)=>void;requestPaymentSwitch?:(action:()=>void)=>void;onDebtPayment?:(record:Entry)=>void;earningSources?:import('@/hooks/use-earning-sources').EarningSourcesController;currencies:string[];accountMode?:boolean;/** The open household: a transaction moved to another account follows that account's owner. */household?:HouseholdState|null;editing:Entry|null;setEditing:Dispatch<SetStateAction<Entry|null>>;busy:boolean;rows:Entry[];save:(e:FormEvent)=>void;editingCashFlow:boolean;recordKinds:readonly string[];demo:boolean;summary:Entry[];field:(key:keyof Entry,value:string|number)=>void;linkedExpensePlan?:ExpensePlan;availableBusinesses:Array<{id:string;name:string}>;expensePlans:{plans:ExpensePlan[];month:string;loading:boolean;error:string};money:(n:number,c?:string)=>string;fetchingPrice:boolean;fetchPrice:()=>void;priceMessage:string;error:string;planning:{loading:boolean;error:string;data:PlanningData}};
+export type RecordDialogProps={navigate?:(path:string)=>void;onDebtSaved?:()=>void;onMortgageSave?:(payment:MortgagePayment)=>Promise<void>;onMortgageDone?:()=>void;onPaymentDraftState?:(dirty:boolean,busy:boolean)=>void;requestPaymentSwitch?:(action:()=>void)=>void;onDebtPayment?:(record:Entry)=>void;earningSources?:import('@/hooks/use-earning-sources').EarningSourcesController;currencies:string[];accountMode?:boolean;/** The open household: a transaction moved to another account follows that account's owner. */household?:HouseholdState|null;editing:Entry|null;setEditing:Dispatch<SetStateAction<Entry|null>>;busy:boolean;rows:Entry[];save:(e:FormEvent)=>void;editingCashFlow:boolean;recordKinds:readonly string[];demo:boolean;summary:Entry[];field:(key:keyof Entry,value:string|number)=>void;linkedExpensePlan?:ExpensePlan;availableBusinesses:Array<{id:string;name:string}>;expensePlans:{plans:ExpensePlan[];month:string;loading:boolean;error:string;save?:(plan:ExpensePlan)=>Promise<void>};money:(n:number,c?:string)=>string;fetchingPrice:boolean;fetchPrice:()=>void;priceMessage:string;error:string;planning:{loading:boolean;error:string;data:PlanningData}};
 type Props=RecordDialogProps;
 // A transaction moved to another account takes that account's business and, in a household, its owner.
 const withAccountAndOwner=(entry:Entry,accountId:string|null,records:Entry[],household?:HouseholdState|null):Entry=>({...withAccount(entry,accountId,records),...(household&&sharedWorkspace(household)?accountOwnerChange(entry,accountId,records,household):{})});
@@ -62,6 +63,10 @@ export function RecordDialog(props:Props){
 
 
 function ExpenseRecordForm({onDebtSaved,onMortgageSave,onMortgageDone,onPaymentDraftState,requestPaymentSwitch,onDebtPayment,household,editing,setEditing,busy,save,linkedExpensePlan,expensePlans,planning,error,demo,currencies,rows}:Props){
+ const [addingPlan,setAddingPlan]=useState(false);
+ // Without a plan there is nothing to choose: offer to add one, then choose it.
+ const noPlans=!expensePlans.loading&&!expensePlans.error&&!expensePlans.plans.length&&!!expensePlans.save;
+ const choosePlan=(plan?:ExpensePlan)=>{update({expense_plan_id:plan?.id??null,...(plan?{name:plan.name,kind:plan.category==='Groceries'||plan.category==='Household'?'Living expense':'Other expense',currency:plan.currency,frequency:'Once',recurrence_days:null,end_date:null,business_id:null,account_id:plan.currency===editing?.currency?editing.account_id:null}:{})});};
  const {t,locale}=useLanguage();
  const [paymentId,setPaymentId]=useState('');
  const debts=planning.data.records.filter(record=>liabilities.includes(record.kind)&&record.amount>0);
@@ -83,10 +88,9 @@ function ExpenseRecordForm({onDebtSaved,onMortgageSave,onMortgageDone,onPaymentD
    </TabsContent>
    <TabsContent value={mode==='debt'?'expense':mode} className="expense-form-scroll">
    <p className="sr-only">{t(mode==='plan'?'Choose an existing monthly plan and record your spending.':'Record an expense without a monthly plan.')}</p>
-   {mode==='plan'&&<label>{t('Monthly expense plan')}<NativeSelect required disabled={busy||expensePlans.loading||!!expensePlans.error} value={editing.expense_plan_id||''} onChange={event=>{
-    const plan=expensePlans.plans.find(plan=>plan.id===event.target.value);
-    update({expense_plan_id:plan?.id??null,...(plan?{name:plan.name,kind:plan.category==='Groceries'||plan.category==='Household'?'Living expense':'Other expense',currency:plan.currency,frequency:'Once',recurrence_days:null,end_date:null,business_id:null,account_id:plan.currency===editing.currency?editing.account_id:null}:{})});
-   }}><option value="">{t(expensePlans.loading?'Loading plans…':'Choose a plan')}</option>{expensePlans.plans.map(plan=><option key={plan.id} value={plan.id}>{plan.name} · {t('Planned')}: {formatMoney(expensePlanTotals(plan,expensePlans.month).planned,plan.currency,locale)}</option>)}</NativeSelect></label>}
+   {mode==='plan'&&noPlans&&<div className="expense-plan-empty"><p className="muted">{t('No monthly plans yet. Add groceries, Mum’s allowance or another regular expense.')}</p><Button type="button" variant="outline" disabled={busy} onClick={()=>setAddingPlan(true)}><Plus size={16} aria-hidden="true"/>{t('Add monthly plan')}</Button></div>}
+   {addingPlan&&expensePlans.save&&<ExpensePlanDialog plan={newExpensePlan(editing.currency,expensePlans.month)} currencies={currencies} save={expensePlans.save} onClose={()=>setAddingPlan(false)} onSaved={choosePlan}/>}
+   {mode==='plan'&&!noPlans&&<label>{t('Monthly expense plan')}<NativeSelect required disabled={busy||expensePlans.loading||!!expensePlans.error} value={editing.expense_plan_id||''} onChange={event=>choosePlan(expensePlans.plans.find(plan=>plan.id===event.target.value))}><option value="">{t(expensePlans.loading?'Loading plans…':'Choose a plan')}</option>{expensePlans.plans.map(plan=><option key={plan.id} value={plan.id}>{plan.name} · {t('Planned')}: {formatMoney(expensePlanTotals(plan,expensePlans.month).planned,plan.currency,locale)}</option>)}</NativeSelect></label>}
    {mode==='plan'&&expensePlans.error&&<p className="error" role="alert">{t(expensePlans.error)}</p>}
    {linkedExpensePlan&&<p className="muted expense-plan-hint">{t('The plan supplies the name and currency. Enter the amount you spent.')}</p>}
    {mode==='expense'&&<div><label>{t('Category')}<NativeSelect disabled={busy||planning.loading||!!planning.error} value={editing.custom_category_id??editing.kind} onChange={event=>{

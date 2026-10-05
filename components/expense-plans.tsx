@@ -27,11 +27,9 @@ type Props={plans:ExpensePlan[];month:string;currency:string;loading:boolean;err
 export function ExpensePlans({plans,month,currency,currencies,loading,error,save,remove,onSpend,onRetry}:Props) {
  const {t,locale}=useLanguage();
  const [draft,setDraft]=useState<ExpensePlan|null>(null),[deleting,setDeleting]=useState<ExpensePlan|null>(null),[busy,setBusy]=useState(false),[failure,setFailure]=useState('');
- const guard=useDraftDialog(draft,()=>setDraft(null),busy);
  const [stopping,setStopping]=useState<ExpensePlan|null>(null);
  const money=(amount:number,currency:string)=>formatMoney(amount,currency,locale);
- const open=(plan?:ExpensePlan)=>{setFailure('');setDraft(plan?{...plan,amount:plan.amount||plan.base_amount||0}:{id:crypto.randomUUID(),name:'',category:'Groceries',currency,amount:0,start_date:month+'-01',end_date:null});};
- async function submit(e:React.FormEvent){e.preventDefault();if(!draft||!draft.amount)return;setBusy(true);setFailure('');try{await save(draft);setDraft(null);}catch(e){setFailure((e as Error).message);}finally{setBusy(false);}}
+ const open=(plan?:ExpensePlan)=>setDraft(plan?{...plan,amount:plan.amount||plan.base_amount||0}:newExpensePlan(currency,month));
  return <section className="panel expense-plans">
   <PanelTitle title={t('Monthly expense plans')} hint={<>
    <p>{t('Plan groceries and support for each family member. Record spending against a plan to track what remains.')}</p>
@@ -47,14 +45,28 @@ export function ExpensePlans({plans,month,currency,currencies,loading,error,save
    </tr>;})}
   </tbody></table></div>}
   {stopping&&<StopScheduleDialog name={stopping.name} start={stopping.start_date} onClose={()=>setStopping(null)} onSave={end_date=>save({...stopping,end_date})}/>}
-  <Dialog open={!!draft} onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(draft&&plans.some(p=>p.id===draft.id)?'Edit monthly plan':'Add monthly plan')}</DialogTitle><DialogDescription>{t('Keep each person or purpose as a separate plan. The amount repeats every month.')}</DialogDescription>
-   {draft&&<form className="record-form" onSubmit={submit}><fieldset className="tracker-fields" disabled={busy}>
-    <label>{t('Plan name')}<Input required maxLength={120} value={draft.name} placeholder={t('e.g. Groceries or Mum’s allowance')} onChange={e=>setDraft({...draft,name:e.target.value})}/></label>
-    <div className="form-grid"><label>{t('Category')}<NativeSelect value={draft.category} onChange={e=>setDraft({...draft,category:e.target.value as ExpensePlan['category']})}>{expensePlanCategories.map(category=><option key={category} value={category}>{t(category)}</option>)}</NativeSelect></label><CurrencySelect value={draft.currency} currencies={currencies} savedCurrency={plans.find(plan=>plan.id===draft.id)?.currency} onChange={currency=>setDraft({...draft,currency})}/></div>
-    <label>{t('Monthly amount')}<FormattedNumberInput value={draft.amount} onValueChange={amount=>setDraft({...draft,amount})}/></label>
-    <label className="planning-check"><Checkbox checked={draft.rollover??false} disabled={busy} onCheckedChange={checked=>setDraft({...draft,rollover:checked===true})}/><span>{t('Carry unused budget into the next month')}</span></label><p className="muted">{t('Amount changes apply from the selected forecast month. Earlier months keep their budgets.')}</p><div className="form-grid"><label>{t('Start date')}<DatePicker value={draft.start_date} onChange={start_date=>setDraft({...draft,start_date})}/></label><label>{t('End date (optional)')}<DatePicker value={draft.end_date||''} required={false} min={draft.start_date} onChange={end_date=>setDraft({...draft,end_date:end_date||null})}/></label></div>
-   </fieldset><ErrorPopup message={failure}/><FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy||!draft.amount||!draft.name.trim()||!!(draft.end_date&&draft.end_date<draft.start_date)}>{t(busy?'Saving…':'Save plan')}</Button></FormFooter></form>}
-  </DialogContent></Dialog>{guard.confirmation}
+  {draft&&<ExpensePlanDialog plan={draft} editing={plans.some(p=>p.id===draft.id)} savedCurrency={plans.find(plan=>plan.id===draft.id)?.currency} currencies={currencies} save={save} onClose={()=>setDraft(null)}/>}
   <ConfirmDialog open={!!deleting} onClose={()=>setDeleting(null)} busy={busy} title={t('Delete monthly plan?')} description={t('This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.')} error={failure} confirmLabel={t('Delete plan')} onConfirm={async()=>{if(!deleting)return;setBusy(true);setFailure('');try{await remove(deleting.id);setDeleting(null);}catch(e){setFailure((e as Error).message);}finally{setBusy(false);}}}/>
  </section>;
+}
+
+/** A new plan for the month: groceries by default, in the person's currency. */
+export const newExpensePlan=(currency:string,month:string):ExpensePlan=>({id:crypto.randomUUID(),name:'',category:'Groceries',currency,amount:0,start_date:month+'-01',end_date:null});
+
+/** Add or edit one monthly expense plan. Cash flow's plan list and the expense form's Plan tab share it. */
+export function ExpensePlanDialog({plan,editing=false,savedCurrency,currencies,save,onClose,onSaved}:{plan:ExpensePlan;editing?:boolean;savedCurrency?:string;currencies:string[];save:(plan:ExpensePlan)=>Promise<void>;onClose:()=>void;onSaved?:(plan:ExpensePlan)=>void}){
+ const {t}=useLanguage();
+ const [draft,setDraft]=useState(plan),[busy,setBusy]=useState(false),[failure,setFailure]=useState('');
+ const guard=useDraftDialog(draft,onClose,busy);
+ async function submit(e:React.FormEvent){e.preventDefault();e.stopPropagation();if(!draft.amount)return;setBusy(true);setFailure('');try{await save(draft);onSaved?.(draft);onClose();}catch(e){setFailure((e as Error).message);}finally{setBusy(false);}}
+ return <>
+  <Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(editing?'Edit monthly plan':'Add monthly plan')}</DialogTitle><DialogDescription>{t('Keep each person or purpose as a separate plan. The amount repeats every month.')}</DialogDescription>
+   <form className="record-form" onSubmit={submit}><fieldset className="tracker-fields" disabled={busy}>
+    <label>{t('Plan name')}<Input required maxLength={120} value={draft.name} placeholder={t('e.g. Groceries or Mum’s allowance')} onChange={e=>setDraft({...draft,name:e.target.value})}/></label>
+    <div className="form-grid"><label>{t('Category')}<NativeSelect value={draft.category} onChange={e=>setDraft({...draft,category:e.target.value as ExpensePlan['category']})}>{expensePlanCategories.map(category=><option key={category} value={category}>{t(category)}</option>)}</NativeSelect></label><CurrencySelect value={draft.currency} currencies={currencies} savedCurrency={savedCurrency} onChange={currency=>setDraft({...draft,currency})}/></div>
+    <label>{t('Monthly amount')}<FormattedNumberInput value={draft.amount} onValueChange={amount=>setDraft({...draft,amount})}/></label>
+    <label className="planning-check"><Checkbox checked={draft.rollover??false} disabled={busy} onCheckedChange={checked=>setDraft({...draft,rollover:checked===true})}/><span>{t('Carry unused budget into the next month')}</span></label><p className="muted">{t('Amount changes apply from the selected forecast month. Earlier months keep their budgets.')}</p><div className="form-grid"><label>{t('Start date')}<DatePicker value={draft.start_date} onChange={start_date=>setDraft({...draft,start_date})}/></label><label>{t('End date (optional)')}<DatePicker value={draft.end_date||''} required={false} min={draft.start_date} onChange={end_date=>setDraft({...draft,end_date:end_date||null})}/></label></div>
+   </fieldset><ErrorPopup message={failure}/><FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy||!draft.amount||!draft.name.trim()||!!(draft.end_date&&draft.end_date<draft.start_date)}>{t(busy?'Saving…':'Save plan')}</Button></FormFooter></form>
+  </DialogContent></Dialog>{guard.confirmation}
+ </>;
 }
