@@ -53,11 +53,14 @@
 /* Recurring: month summary bars, a dated list with "in N days", and a calendar. */
 .recurring-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px;width:100%}
 .recurring-summary>h2{grid-column:1/-1;margin:0;font-size:var(--type-title);font-weight:600}
-.recurring-bar{display:flex;flex-direction:column;gap:6px;font-size:var(--type-small)}
-.recurring-bar p{display:flex;justify-content:space-between;gap:8px;margin:0}
-.recurring-bar p>span,.recurring-bar small{color:var(--muted-foreground);font-size:var(--type-caption)}
-.recurring-bar .progress-track>div{background:var(--foreground)}
-.recurring-bar[data-tone=income] .progress-track>div{background:var(--positive)}
+.recurring-bar{display:flex;flex-direction:column;gap:6px;margin:-8px;padding:8px;border:1px solid transparent;border-radius:var(--radius-control);background:none;color:inherit;font:inherit;font-size:var(--type-small);text-align:start;cursor:pointer}
+.recurring-bar:hover{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+.recurring-bar[aria-pressed=true]{border-color:var(--hairline);background:var(--muted)}
+.recurring-bar:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.recurring-bar-line{display:flex;justify-content:space-between;gap:8px}
+.recurring-bar-line>span,.recurring-bar small{color:var(--muted-foreground);font-size:var(--type-caption)}
+.recurring-bar .progress-track>*{background:var(--foreground)}
+.recurring-bar[data-tone=income] .progress-track>*{background:var(--positive)}
 .recurring-list{width:100%;padding:0;overflow:hidden}
 .recurring-list>ul{margin:0;padding:0;list-style:none}
 /* One set of columns for the whole list: each row is a subgrid, so status, amount and actions line up on every row. */

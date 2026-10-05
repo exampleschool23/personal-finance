@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { monthOccurrences, recurringSummary, daysFrom, calendarWeeks } = loadTS('lib/recurring.ts');
+const { monthOccurrences, monthPlans, recurringSummary, daysFrom, calendarWeeks } = loadTS('lib/recurring.ts');
 const { upcomingPayments, debtPaymentsFrom } = loadTS('lib/planning.ts');
 
 const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Monthly', notes: '', ...extra });
@@ -86,4 +86,14 @@ test('a recorded payment shows its amount even when the page did not load its tr
  const [october] = monthOccurrences([shop], occurrences, '2026-10', '2026-10-05');
  assert.deepEqual([october.status, october.amount, october.recorded], ['paid', 1500, 1600]);
  assert.equal(recurringSummary([october], amount => amount).income.done, 1600, 'the month counts what came in');
+});
+
+test('spending plans running in a month join the expenses: spent counts as paid, the rest as still to come, overspending adds nothing', () => {
+ const plan = (id, name, amount, spent, extra = {}) => ({ id, name, category: 'Groceries', currency: 'UZS', amount, spent, start_date: '2026-01-01', end_date: null, ...extra });
+ const plans = monthPlans([plan('g', 'Groceries', 9000000, 3000000), plan('m', 'Mum', 6000000, 7000000, { category: 'Family support' }), plan('old', 'Old', 100, 0, { end_date: '2026-09-30' }), plan('next', 'Next', 100, 0, { start_date: '2026-11-01' })], '2026-10');
+ assert.deepEqual(plans.map(item => [item.plan.id, item.planned, item.spent]), [['g', 9000000, 3000000], ['m', 6000000, 7000000]]);
+ const rent = monthOccurrences([record('rent', 'Rent', 'Rent expense', 100, '2026-01-01')], [], '2026-10', '2026-10-05');
+ const summary = recurringSummary(rent, (amount, unit) => unit === 'UZS' ? amount / 10000 : amount, plans);
+ assert.deepEqual(summary.expense, { done: 1000, remaining: 700 });
+ assert.equal(recurringSummary([], (amount, unit) => unit === 'UZS' ? null : amount, plans).missing, 2, 'a plan in a currency without a rate is counted as missing, never guessed');
 });

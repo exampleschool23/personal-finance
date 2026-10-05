@@ -16,12 +16,16 @@ import { depositToday } from '@/lib/deposit-interest';
 import { shiftMonth } from '@/lib/calendar-days';
 import { convertAmount } from '@/lib/market';
 import { upcomingPayments, type PlanningData } from '@/lib/planning';
-import { calendarWeeks, carriedOverdue, daysFrom, monthOccurrences, recurringSummary, type RecurringItem } from '@/lib/recurring';
+import { calendarWeeks, carriedOverdue, daysFrom, monthOccurrences, monthPlans, recurringSummary, type RecurringItem, type RecurringPlan } from '@/lib/recurring';
+import type { ExpensePlan } from '@/lib/expense-plans';
 import { AccountOperation, type Operation } from './account-operation';
 
 /** The Recurring page's views, switched from tabs beside its title: the month as a list or a calendar, subscriptions and reminders. */
 export type RecurringView = 'list' | 'calendar' | 'subscriptions' | 'reminders';
-type Props = { data: PlanningData; save: (action: string, data: unknown) => Promise<void>; currency: string; rates?: number | Record<string, number>; view: RecurringView; onView: (view: RecurringView) => void; onAdd?: (direction: 'income' | 'expense') => void; onEdit?: (record: RecurringItem['record']) => void };
+type Props = { data: PlanningData; save: (action: string, data: unknown) => Promise<void>; currency: string; rates?: number | Record<string, number>; view: RecurringView; onView: (view: RecurringView) => void; onAdd?: (direction: 'income' | 'expense') => void; onEdit?: (record: RecurringItem['record']) => void;
+ /** The monthly spending plans (groceries, family support) and the month their spending is known for; tapping one records spending from it. */
+ plans?: readonly ExpensePlan[]; plansMonth?: string; onSpend?: (plan: ExpensePlan) => void };
+type Direction = RecurringItem['direction'];
 
 /** "in 3 days", "today", "2 days ago": how far a due date is from today. */
 function useDueLabel() {
@@ -34,18 +38,37 @@ function useDueLabel() {
  };
 }
 
-/** One summary bar: what already came in (or went out) against the month's total. */
-function SummaryBar({ label, done, remaining, doneLabel, currency, tone }: { label: string; done: number; remaining: number; doneLabel: string; currency: string; tone: 'income' | 'expense' }) {
+/** One summary bar: what already came in (or went out) against the month's total. Tapping it shows only that side in the list; tapping again shows everything. */
+function SummaryBar({ label, done, remaining, doneLabel, currency, tone, pressed, onPress }: { label: string; done: number; remaining: number; doneLabel: string; currency: string; tone: Direction; pressed: boolean; onPress: () => void }) {
  const { t, locale } = useLanguage();
  const total = done + remaining;
- return <div className="recurring-bar" data-tone={tone}>
-  <p><strong>{label}</strong><span>{t('{amount} total', { amount: formatMoney(total, currency, locale) })}</span></p>
-  <div className="progress-track"><div style={{ width: `${total > 0 ? done / total * 100 : 0}%` }}/></div>
-  <p><small>{t(doneLabel, { amount: formatMoney(done, currency, locale) })}</small><small>{t('{amount} remaining', { amount: formatMoney(remaining, currency, locale) })}</small></p>
- </div>;
+ return <button type="button" className="recurring-bar" data-tone={tone} aria-pressed={pressed} onClick={onPress}>
+  <span className="recurring-bar-line"><strong>{label}</strong><span>{t('{amount} total', { amount: formatMoney(total, currency, locale) })}</span></span>
+  <span className="progress-track"><span style={{ width: `${total > 0 ? done / total * 100 : 0}%` }}/></span>
+  <span className="recurring-bar-line"><small>{t(doneLabel, { amount: formatMoney(done, currency, locale) })}</small><small>{t('{amount} remaining', { amount: formatMoney(remaining, currency, locale) })}</small></span>
+ </button>;
 }
 
-export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd, onEdit }: Props) {
+/** The month's spending plans under the dated bills: spent against planned, tapped to record spending. */
+function PlanRows({ plans, onSpend }: { plans: RecurringPlan[]; onSpend?: (plan: ExpensePlan) => void }) {
+ const { t, locale } = useLanguage();
+ if (!plans.length) return null;
+ return <>
+  <li className="transaction-day-heading"><h3>{t('Spending plans')}<Count value={plans.length}/></h3></li>
+  {plans.map(({ plan, planned, spent }) => {
+   const over = spent > planned;
+   const spend = onSpend && ((event: MouseEvent) => { if (!(event.target as HTMLElement).closest('button,a')) onSpend(plan); });
+   return <li key={'plan:' + plan.id} className="recurring-row" data-editable={onSpend ? '' : undefined} onClick={spend}>
+    <span className="transaction-merchant"><CategoryIcon kind={plan.category}/><span>{onSpend ? <button type="button" className="recurring-edit" aria-label={t('Record spending') + ' · ' + plan.name} onClick={() => onSpend(plan)}>{plan.name}</button> : <strong>{plan.name}</strong>}<small>{[t(frequencyLabels.Monthly), t(plan.category)].join(' · ')}</small></span></span>
+    <span className={over ? 'status-badge is-overdue' : 'status-badge'}>{over ? t('Over budget by {amount}', { amount: formatMoney(spent - planned, plan.currency, locale) }) : t('{amount} spent', { amount: formatMoney(spent, plan.currency, locale) })}</span>
+    <strong className="transaction-amount">{formatMoney(planned, plan.currency, locale)}</strong>
+    <div className="row-actions">{onSpend && <Button size="sm" variant="outline" onClick={() => onSpend(plan)}>{t('Record spending')}</Button>}</div>
+   </li>;
+  })}
+ </>;
+}
+
+export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd, onEdit, plans = [], plansMonth, onSpend }: Props) {
  const { t, locale } = useLanguage(), today = depositToday();
  const dueLabel = useDueLabel();
  const [operation, setOperation] = useState<Operation | null>(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
@@ -55,7 +78,13 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
  const items = monthOccurrences(data.records, data.occurrences, month, today, data.debtPayments);
  // Payments left open in earlier months stay at the top of the current month until they are recorded (0 counts) or skipped, so none is forgotten. They are not this month's totals.
  const carried = month === today.slice(0, 7) ? carriedOverdue(data.records, data.occurrences, month, today) : [];
- const summary = recurringSummary(items, (amount, unit) => convertAmount(amount, unit, currency, rates));
+ // Spending plans are known for one month only (their spent amount is loaded per month), so other months show just the dated bills.
+ const planned = month === plansMonth ? monthPlans(plans, month) : [];
+ const summary = recurringSummary(items, (amount, unit) => convertAmount(amount, unit, currency, rates), planned);
+ // Tapping Income or Expenses narrows the list and calendar to that side.
+ const [only, setOnly] = useState<Direction | null>(null);
+ const toggle = (direction: Direction) => setOnly(only === direction ? null : direction);
+ const shown = items.filter(item => !only || item.direction === only), shownCarried = carried.filter(item => !only || item.direction === only), shownPlans = only === 'income' ? [] : planned;
  const reminders = upcomingPayments(data.records, data.occurrences, today, undefined, data.debtPayments).filter(item => item.type !== 'scheduled');
  const skipped = data.occurrences.filter(o => o.status === 'dismissed' && data.records.some(r => r.id === o.record_id && r.frequency !== 'Once'));
  async function run(action: () => Promise<void>) { setBusy(true); setError(''); try { await action(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
@@ -95,19 +124,20 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
   {scheduled && <>
   <section className="panel recurring-summary" aria-label={formatMonthYear(month, locale)}>
    <h2>{formatMonthYear(month, locale)}</h2>
-   <SummaryBar label={t('Income')} done={summary.income.done} remaining={summary.income.remaining} doneLabel="{amount} received" currency={currency} tone="income"/>
-   <SummaryBar label={t('Expenses')} done={summary.expense.done} remaining={summary.expense.remaining} doneLabel="{amount} paid" currency={currency} tone="expense"/>
+   <SummaryBar label={t('Income')} done={summary.income.done} remaining={summary.income.remaining} doneLabel="{amount} received" currency={currency} tone="income" pressed={only === 'income'} onPress={() => toggle('income')}/>
+   <SummaryBar label={t('Expenses')} done={summary.expense.done} remaining={summary.expense.remaining} doneLabel="{amount} paid" currency={currency} tone="expense" pressed={only === 'expense'} onPress={() => toggle('expense')}/>
   </section>
   {view === 'list' ? <section className="panel recurring-list" aria-label={t('Recurring')}>
-   {items.length || carried.length ? <ul>
-    {carried.length > 0 && <li className="transaction-day-heading"><h3>{t('Open from earlier months')}<Count value={carried.length}/></h3></li>}
-    {carried.map(item => row(item, true))}
-    {items.map((item, index) => <Fragment key={item.key}>
-     {item.date !== items[index - 1]?.date && <li className="transaction-day-heading"><h3>{formatDate(item.date, locale)}</h3></li>}
+   {shown.length || shownCarried.length || shownPlans.length ? <ul>
+    {shownCarried.length > 0 && <li className="transaction-day-heading"><h3>{t('Open from earlier months')}<Count value={shownCarried.length}/></h3></li>}
+    {shownCarried.map(item => row(item, true))}
+    {shown.map((item, index) => <Fragment key={item.key}>
+     {item.date !== shown[index - 1]?.date && <li className="transaction-day-heading"><h3>{formatDate(item.date, locale)}</h3></li>}
      {row(item)}
     </Fragment>)}
+    <PlanRows plans={shownPlans} onSpend={onSpend}/>
    </ul> : <EmptyState icon={<Repeat aria-hidden="true"/>} description={t('Nothing is scheduled this month. Add a monthly or weekly income or expense to see it here.')}/>}
-  </section> : <RecurringCalendar month={month} items={items} reminders={reminders} today={today}/>}
+  </section> : <RecurringCalendar month={month} items={shown} reminders={reminders} today={today}/>}
   {/* Only when a debt payment or deposit maturity is due this month; an empty card is just noise. */}
   {reminders.length > 0 && <section className="panel upcoming-section" aria-labelledby="upcoming-reminders">
    <header className="upcoming-section-heading"><h2 id="upcoming-reminders">{t('Debt repayments and deposit maturities')}<Count value={reminders.length}/></h2></header>

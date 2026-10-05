@@ -1,5 +1,6 @@
 import { daysBetween, monthDays, monthEnd, shiftDay } from './calendar-days';
 import { scheduleDates, income, type Entry } from './finance';
+import { expensePlanTotals, type ExpensePlan } from './expense-plans';
 import { installmentDates, installmentsFrom, isRecurringCashFlow, paidInstallmentMonths, scheduleAssets, scheduleStart, settledOccurrences, type DebtPayment, type Occurrence } from './planning';
 
 export type RecurringStatus = 'paid' | 'skipped' | 'due' | 'overdue';
@@ -47,8 +48,17 @@ function occurrencesBetween(records: Entry[], occurrences: Occurrence[], from: s
  return items.sort((a, b) => a.date.localeCompare(b.date) || a.record.name.localeCompare(b.record.name));
 }
 
-/** Summary bars: how much came in or went out, and how much is still to come. Skipped items count as neither. */
-export function recurringSummary(items: RecurringItem[], convert: (amount: number, currency: string) => number | null) {
+/** A monthly spending plan (groceries, family support) beside the month's bills: what it allows and what was spent from it. */
+export type RecurringPlan = { plan: ExpensePlan; planned: number; spent: number };
+
+/** The spending plans running in a month, by name. */
+export function monthPlans(plans: readonly ExpensePlan[], month: string): RecurringPlan[] {
+ return plans.flatMap(plan => { const totals = expensePlanTotals(plan, month); return totals.active ? [{ plan, planned: totals.planned, spent: totals.spent }] : []; })
+  .sort((a, b) => a.plan.name.localeCompare(b.plan.name));
+}
+
+/** Summary bars: how much came in or went out, and how much is still to come. Skipped items count as neither. A spending plan adds what was spent and what it still allows; overspending adds nothing still to come. */
+export function recurringSummary(items: RecurringItem[], convert: (amount: number, currency: string) => number | null, plans: readonly RecurringPlan[] = []) {
  const totals = { income: { done: 0, remaining: 0 }, expense: { done: 0, remaining: 0 }, missing: 0 };
  for (const item of items) {
   if (item.status === 'skipped') continue;
@@ -56,6 +66,11 @@ export function recurringSummary(items: RecurringItem[], convert: (amount: numbe
   const value = convert(item.status === 'paid' ? item.recorded ?? item.amount : item.amount, item.record.currency);
   if (value === null) { totals.missing++; continue; }
   totals[item.direction][item.status === 'paid' ? 'done' : 'remaining'] += value;
+ }
+ for (const { plan, planned, spent } of plans) {
+  const done = convert(spent, plan.currency), remaining = convert(Math.max(planned - spent, 0), plan.currency);
+  if (done === null || remaining === null) { totals.missing++; continue; }
+  totals.expense.done += done; totals.expense.remaining += remaining;
  }
  return totals;
 }
