@@ -44,12 +44,12 @@ secondary text `#68655f` in light mode (the reference app's `#777573` fails AA o
 
 | ID | Sev | Case | Measure | Expect |
 |---|---|---|---|---|
-| TYPE-001 | D1 | Page title | `PageHeader` h1 size | `--type-page` |
+| TYPE-001 | D1 | Page title | `PageHeader` h1 size: `.topbar-page-title h1` in the workspace, `.page-heading h1` elsewhere | `--type-compact` (15px) in the top bar; `--type-page` for the fallback heading, setup steps and onboarding (AGENTS § Interface design system, 2026-10-05) |
 | TYPE-002 | D1 | Figures | Stat values | `--type-stat`, medium weight, tabular numerals where columns align |
 | TYPE-003 | D2 | Percent columns align | Columns of % | Same decimals ("2.0%" under "12.2%") `[dr 2026-10-02: allocation]` |
 | TYPE-004 | D1 | UI font | `getComputedStyle(body).fontFamily` | `--font-ui` (Inter or Onest per Settings) |
 | TYPE-005 | D1 | Headline figures share one size | Audit D on the hero figure of Dashboard, Accounts, Goals, Investments | Same `--type-hero` size on every page (was 26/40/48/52 px) `[dr 2026-10-02]` |
-| TYPE-006 | D1 | Heading hierarchy | Compare h1 with h2/h3 sizes on each page, phone width | No section or panel heading larger than the page title (Settings h2 24px > h1 22px) `[dr 2026-10-02]` |
+| TYPE-006 | D1 | Heading hierarchy | Compare h1 with h2/h3 sizes on public pages, setup steps and onboarding, phone width | No section heading larger than the page title (Settings h2 24px > h1 22px was the old case). Workspace top-bar titles are exempt: they are 15px by design and panel headings carry the hierarchy `[dr 2026-10-02]` |
 | TYPE-007 | D2 | No orphans in marketing copy | Landing / sign-in headings and paragraphs at 375 and 1280 | `text-wrap: balance` on headings, `pretty` on paragraphs; no single word on the last line `[dr 2026-10-02]` |
 | TYPE-008 | D1 | Public card titles share one size | Computed `font-size` of the h1/h2 title on /sign-in, /auth/access?mode=signup, /auth/access?mode=recover, /connect/telegram, /auth/telegram | One token size on all five (sign-in h1 is a literal 28px, others are panel h2) |
 | TYPE-009 | D2 | Tabular numerals in new figure columns | `getComputedStyle(x).fontVariantNumeric` on `.pnl-table td`, `.report-transaction-list li strong`, `.tax-category>strong`, `.tax-line-heading>strong`, `.business-card-net strong`, `.budget-left-summary dd` | `tabular-nums` on every one |

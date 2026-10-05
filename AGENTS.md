@@ -85,7 +85,14 @@ it instead of styling a page on its own.
   `PanelTitle`, or wrap them in `InfoHint`. A tile's second line is a live
   figure (an estimate, a change), never prose.
 - Open each page with `PageHeader`. Pass page actions as children; the main
-  action is the default `Button`, others `outline`.
+  action is the default `Button`, others `outline`. Inside the workspace the
+  title moves into the top bar at `--type-compact` (15px), like a desktop app's
+  title bar, with the page's view tabs (`Segmented` with `page-tabs`) and actions
+  beside it where the bar has room; otherwise tabs and actions open the page.
+  This title is deliberately smaller than panel and card headings, which carry
+  the hierarchy on the page. `--type-page` is for titles that open the page
+  itself: the `PageHeader` fallback outside the top bar, full-screen setup steps
+  and onboarding. On phones the view tabs wrap rather than scroll.
 - Show key figures with `StatTiles` and `StatTile`. Colour a value only when its
   sign carries meaning, through `tone`; derive the tone with `signTone` from
   `tone.ts` rather than an inline comparison.
