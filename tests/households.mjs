@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {loadTS} from './helpers/load-ts.mjs';
+import {workspaceSource} from './helpers/workspace-source.mjs';
 
 const household=loadTS('lib/household.ts');
 const me='11111111-1111-4111-8111-111111111111',owner='22222222-2222-4222-8222-222222222222',other='33333333-3333-4333-8333-333333333333';
@@ -202,7 +203,7 @@ test('the shell, top bar and screens show sharing only where it applies',()=>{
  assert.match(panel,/\{!demo && state && <Button disabled=\{people \+ state\.invites\.length >= householdLimit\}/);
  assert.match(panel,/demo \? <ul className="household-people">\{state\?\.people\.map\(/);
  // The provider refuses to open edit forms for a viewer and skips the daily snapshot write.
- const provider=fs.readFileSync('components/workspace/workspace-provider.tsx','utf8');
+ const provider=workspaceSource();
  for(const action of ['addCashFlow','addRecord','addAccountRecord','quickExpense','requestDelete'])assert.match(provider,new RegExp(`const ${action} = [^\\n]*\\n?[^\\n]*editable\\(\\)`),action);
  assert.match(provider,/usePortfolioSnapshots\(demo \? null : user, market, summaryLoaded && !marketLoading && \(household\.state \? !readOnly : !household\.loading\), reload\)/);
 });

@@ -40,7 +40,9 @@ The drawer, the shell and the screens are separate. Keep them that way.
   and creating its route and screen.
 - Shared session, records and actions live in `WorkspaceProvider`
   (`components/workspace/workspace-provider.tsx`) and are read with
-  `useWorkspace()`. State that only one screen needs (a selected tab, a local
+  `useWorkspace()`. The provider composes hooks from `components/workspace/state/`
+  (sign-in, settings, record reads and table, saving, actions, dialogs); its pure
+  rules live in `lib/` (`record-save`, `record-table`, `workspace-totals`). State that only one screen needs (a selected tab, a local
   filter) stays inside that screen.
 - `tests/workspace-structure.mjs` enforces these boundaries.
 - Signed-out visitors see `LandingPage` (`components/landing-page.tsx`) at `/`: the

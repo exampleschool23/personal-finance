@@ -230,16 +230,7 @@
     }
   },
   "components/workspace/workspace-provider.tsx": {
-    "complexity": {
-      "count": 2
-    },
-    "max-lines-per-function": {
-      "count": 1
-    },
     "max-statements": {
-      "count": 2
-    },
-    "size/max-file-bytes": {
       "count": 1
     }
   },

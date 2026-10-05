@@ -8,6 +8,7 @@ import * as finance from '../lib/finance.ts';
 import * as market from '../lib/market.ts';
 import * as budgets from '../lib/expense-plans.ts';
 import {stylesheet} from './helpers/stylesheet.mjs';
+import {workspaceSource} from './helpers/workspace-source.mjs';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const dependencies={...finance,...market,...budgets,...days};
 const {projectGoal,goalFinancials}=new Function(...Object.keys(dependencies),compile('lib/goal-projection.ts')+';return {projectGoal,goalFinancials};')(...Object.values(dependencies));
@@ -57,7 +58,7 @@ test('a deadline today has not passed; the required amount shown is a whole amou
  assert.match(planner,/displayFractionDigits=\{monthly === null \? 0 : undefined\}/);
 });
 test('only Cash flow follows its month picker; other screens plan for the current month',()=>{
- const provider=fs.readFileSync('components/workspace/workspace-provider.tsx','utf8');
+ const provider=workspaceSource();
  assert.match(provider,/const planningMonth = section === 'Income & expenses' \? forecastMonth : expensePlanMonth\(\);/);
  assert.match(provider,/estimatedCashFlow\(current, planProjection, planningMonth\)/);
  assert.match(provider,/useExpensePlans\(user, demo, rows, reload, refreshRecords, planningMonth\)/);

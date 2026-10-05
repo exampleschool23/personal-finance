@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {loadTS} from './helpers/load-ts.mjs';
+import {workspaceSource} from './helpers/workspace-source.mjs';
 
 const en=JSON.parse(fs.readFileSync('lib/locales/en.json','utf8'));
 const seen=new Set();
@@ -55,7 +56,7 @@ test('signed-out visitors get the tour at the main page and the sign-in card on 
  assert.match(shell,/if \(signedOut && pathname === '\/'\)\s*return <LandingPage /);
  assert.match(shell,/if \(signedOut && pathname === signInPath\)\s*return <SignInScreen /);
  assert.match(shell,/if \(!ready \|\| !signedIn \|\| pathname === signInPath \|\| awaitingSettings/);
- const provider=fs.readFileSync('components/workspace/workspace-provider.tsx','utf8');
+ const provider=workspaceSource();
  assert.match(provider,/user \|\| demo \? pathname === signInPath : pathname !== '\/' && pathname !== signInPath\)\) router\.replace\('\/'\)/);
  // A failed Google attempt returns to the sign-in card, where the message is shown; success opens the dashboard.
  const {loginRedirect}=loadTS('lib/google-auth.ts');
@@ -111,7 +112,7 @@ test('an app preview opens only the sample workspace and only drawer screens',()
  assert.equal(previewPath({type:'open',path:'/budget'}),null,'other senders are ignored');
  assert.equal(previewPath(null),null);
  assert.equal(isPreviewReady(previewReady),true);assert.equal(isPreviewReady({type:'ready'}),false);
- const provider=fs.readFileSync('components/workspace/workspace-provider.tsx','utf8');
+ const provider=workspaceSource();
  assert.match(provider,/if \(preview && ready && !user && !demo\) void startDemo\(\);/,'it starts the sample workspace, never an account');
  assert.match(provider,/event\.origin === window\.location\.origin \? previewPath\(event\.data\) : null/,'only this site can move it');
  assert.match(provider,/window\.parent\.postMessage\(previewReady, window\.location\.origin\)/);

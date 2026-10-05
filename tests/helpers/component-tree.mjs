@@ -42,6 +42,8 @@ export function createRenderer({ attach = () => null } = {}) {
    instance.hooks[index] ??= { cleanup: subscribe(() => { dirty = true; }) };
    return snapshot();
   },
+  // A stable function that always calls the latest callback it was given.
+  useEffectEvent(callback) { const [instance, index] = slot(), hook = instance.hooks[index] ??= {}; hook.callback = callback; return hook.call ??= (...args) => hook.callback(...args); },
   forwardRef: render => Object.assign(props => render(props, props.ref), { displayName: render.displayName || render.name }),
   memo: component => component,
  };

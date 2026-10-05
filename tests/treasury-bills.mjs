@@ -93,5 +93,5 @@ test('a Treasury bill saves with its purchase date, and a refused record says wh
  assert.equal(reason({...bill,id:'not-a-uuid'}),'Check the record fields.','a field a person never types keeps the general message');
  // The records API answers with the reason, and the form names it before sending.
  assert.match(fs.readFileSync('app/api/records/route.ts','utf8'),/if\(!parsed\.success\)return Response\.json\(\{error:recordIssueMessage\(parsed\.error\)\}/);
- assert.match(fs.readFileSync('components/workspace/workspace-provider.tsx','utf8'),/'The maturity date cannot be before the purchase date\.'/);
+ assert.match(fs.readFileSync('lib/record-save.ts','utf8'),/'The maturity date cannot be before the purchase date\.'/);
 });

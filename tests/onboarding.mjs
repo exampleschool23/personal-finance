@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {loadTS} from './helpers/load-ts.mjs';
+import {workspaceSource} from './helpers/workspace-source.mjs';
 
 const helpers=loadTS('lib/onboarding.ts');
 const today='2026-09-30';
@@ -97,7 +98,7 @@ test('the shell shows the setup instead of the drawer, and Settings can run it a
  const shell=fs.readFileSync('components/workspace/workspace-shell.tsx','utf8');
  assert.match(shell,/if \(onboardingNeeded\)\s*return <OnboardingScreen /);
  assert.ok(shell.indexOf('<OnboardingScreen ')<shell.indexOf('<SidebarProvider>'));
- const provider=fs.readFileSync('components/workspace/workspace-provider.tsx','utf8');
+ const provider=workspaceSource();
  assert.match(provider,/needsOnboarding\(\{ user, demo, loading: settingsLoading, error: settingsError, preferences: preferencesData \}\)/);
  assert.match(provider,/savePreferences\(\{ \.\.\.preferencesData, onboarded: false \}\)/);
  const panel=fs.readFileSync('components/settings-panel.tsx','utf8');
@@ -118,7 +119,7 @@ test('the workspace waits for the settings of a signed-in owner, so the dashboar
 });
 
 test('an account that has not finished the setup keeps the language already showing, and the wizard preselects it',()=>{
- const provider=fs.readFileSync('components/workspace/workspace-provider.tsx','utf8');
+ const provider=workspaceSource();
  assert.match(provider,/useEffectEvent\(\(loaded: Preferences\) => applyPreferences\(loaded\.onboarded === false \? \{ \.\.\.loaded, language \} : loaded\)\)/);
 });
 

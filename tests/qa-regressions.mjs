@@ -98,7 +98,7 @@ test('actual transactions and payments cannot be dated in the future',()=>{
  assert.match(income,/const actual=editing\.frequency==='Once'&&!salaryPlan;/);assert.match(income,/<DatePicker value=\{editing\.date\}[^>]*max=\{latestDate\}/);
  assert.match(fs.readFileSync('components/mortgage-payment-dialog.tsx','utf8'),/<DatePicker value=\{payment\.date\}[^>]*max=\{depositToday\(\)\}/);
  assert.match(fs.readFileSync('components/planning/asset-movement-dialog.tsx','utf8'),/<DatePicker value=\{draft\.date\} max=\{depositToday\(\)\}/);
- assert.match(fs.readFileSync('components/workspace/workspace-provider.tsx','utf8'),/requiresCashAccount\(editing\) && editing\.date > today\(\)/);
+ assert.match(fs.readFileSync('lib/record-save.ts','utf8'),/requiresCashAccount\(editing\) && editing\.date > today\(\)/);
 });
 
 test('dialogs open the saved record, and the exchange rate reads in the stored direction',()=>{

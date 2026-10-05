@@ -113,7 +113,6 @@
   "components/workspace/screens/transactions-screen.tsx",
   "components/workspace/screens/upcoming-screen.tsx",
   "components/workspace/workspace-dialogs.tsx",
-  "components/workspace/workspace-provider.tsx",
   "components/workspace/workspace-shell.tsx",
   "hooks/use-comparison-profile.ts",
   "hooks/use-dashboard-layout.ts",
@@ -134,7 +133,6 @@
   "hooks/use-transaction-rules.ts",
   "hooks/use-transaction-tools.ts",
   "hooks/use-workspace-preferences.ts",
-  "lib/asset-sort.ts",
   "lib/budget-schemas.ts",
   "lib/deleted-items.ts"
  ]

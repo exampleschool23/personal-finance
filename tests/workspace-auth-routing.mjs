@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import ts from 'typescript';
+import {workspaceSource} from './helpers/workspace-source.mjs';
 
 // Execute the workspace's actual routing effect without a browser or network.
-const source = fs.readFileSync('components/workspace/workspace-provider.tsx', 'utf8');
+const source = workspaceSource();
 const tree = ts.createSourceFile('workspace.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 let callback;
 function visit(node) {
