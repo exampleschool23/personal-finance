@@ -178,3 +178,21 @@ test('cash account options show the whole balance so same-named accounts stay di
  assert.match(formatAccountOption({name:'Кошелёк',amount:1200,currency:'USD'},'ru-RU'),/^Кошелёк · 1\s200\s\$$/);
  assert.match(formatAccountOption({name:'Hamyon',amount:1200,currency:'USD'},'uz-UZ'),/^Hamyon · /);
 });
+
+test('a decimal typed with the grouping key is read as a decimal, never as thousands',()=>{
+ // Each keystroke passes the text it replaces, as the amount field does.
+ const type=(keys,locale,start='')=>{let text=start,value=null;for(const key of keys){const next=formatNumberInput(text+key,locale,text);if(!next)continue;({text,value}=next);}return {text,value};};
+ assert.deepEqual(type('49,99','en-US'),{text:'49,99',value:49.99});
+ assert.deepEqual(type('84,30','en-US'),{text:'84,30',value:84.3});
+ assert.deepEqual(type('1,000','en-US'),{text:'1,000',value:1000});
+ assert.deepEqual(type('1234,5','en-US'),{text:'1,234.5',value:1234.5});
+ assert.deepEqual(type('12.75','de-DE'),{text:'12.75',value:12.75});
+ assert.equal(type('12,75','ru-RU').value,12.75);
+ assert.equal(type('12,75','uz-UZ').value,12.75);
+ assert.equal(formatNumberInput('49,99','en-US','').value,49.99);
+ assert.equal(formatNumberInput('1,500','en-US','').value,1500);
+ // Deleting the last digit of a grouped number keeps it whole.
+ assert.deepEqual(formatNumberInput('1,23','en-US','1,234'),{text:'123',value:123});
+ assert.equal(formatNumberInput('9.5%','en-US','').value,9.5);
+ assert.equal(formatNumberInput('7,5 %','ru-RU','').value,7.5);
+});

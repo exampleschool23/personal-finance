@@ -20,6 +20,8 @@ import { convertAmount } from '@/lib/market';
 import { usePortfolioSnapshots } from '@/hooks/use-portfolio-snapshots';
 import { useMarket } from '@/hooks/use-market';
 import { type Entry, normalizeEntry, kinds, income, expenses, estimatedCashFlow } from '@/lib/finance';
+import { storedEntry } from '@/lib/record-table';
+import { inAccountOrder } from '@/lib/account-directory';
 import { sectionFor } from '@/components/workspace/navigation';
 import { businessesIn } from '@/lib/business';
 import { orderedGoals as orderById } from '@/lib/goal-order';
@@ -85,9 +87,10 @@ function useWorkspaceState() {
         const schedule=sourceSchedule(source);
         setRows(previous=>schedule?[...previous.filter(row=>row.id!==schedule.id),schedule]:previous.map(row=>row.id===source.schedule_id?{...row,source_paused:true}:row));
     },legacyEarningSources(rows));
-    const planning={...basePlanning,data:{...basePlanning.data,occurrences:demo?[...basePlanning.data.occurrences,...rows.filter(row=>row.earning_source_id&&row.earning_due_on).flatMap(row=>{const source=earningSources.sources.find(source=>source.id===row.earning_source_id);return source?.schedule_id?[{id:row.id,record_id:source.schedule_id,due_on:row.earning_due_on!,status:'paid' as const}]:[];})]:basePlanning.data.occurrences}};
-    const transactionTools=useTransactionTools(user,demo,reload,refreshRecords);
     const workspacePreferences=useWorkspacePreferences(user,demo,reload);
+    // Accounts in the person's own order (Accounts page), wherever an account is picked.
+    const planning={...basePlanning,data:{...basePlanning.data,records:inAccountOrder(basePlanning.data.records,savedOrder(workspacePreferences.data.preferences,'account_order')),occurrences:demo?[...basePlanning.data.occurrences,...rows.filter(row=>row.earning_source_id&&row.earning_due_on).flatMap(row=>{const source=earningSources.sources.find(source=>source.id===row.earning_source_id);return source?.schedule_id?[{id:row.id,record_id:source.schedule_id,due_on:row.earning_due_on!,status:'paid' as const}]:[];})]:basePlanning.data.occurrences}};
+    const transactionTools=useTransactionTools(user,demo,reload,refreshRecords);
     const categoryIcons=useCategoryIcons(workspacePreferences,user,demo,planning.data.categories);
     const tagResource=useTags(user,demo,reload,planning.data.records,sample.demoTags);
     const attachments=useRecordAttachments(user,demo,reload);
@@ -121,7 +124,8 @@ function useWorkspaceState() {
     const planProjection = budget.partial.projected;
     const forecastReady = !expensePlans.loading && !expensePlans.error;
     const { current, monthlyIncomeEntries, excludedCurrencies, totalDebt, netWorth } = workspaceTotals({ records: demo ? rows : summary, planningRecords: planning.data.records, currency, market });
-    const forecast = estimatedCashFlow(current, planProjection, planningMonth);
+    // Full planning rows, as on Goals: summary rows leave out loan and debt payments.
+    const forecast = estimatedCashFlow(monthlyIncomeEntries, planProjection, planningMonth);
     const table = useRecordTable({ user, demo, section, locale, currency, market, reload, rows, setRows, setSummary, setError, current, planning });
     const { sectionKey, historyPage, tableLoading, summaryLoaded } = table;
     // Viewing someone's household as a viewer records no daily snapshot; wait to know the role first.
@@ -134,7 +138,7 @@ function useWorkspaceState() {
     const linkedExpensePlan = expensePlans.plans.find(plan => plan.id === editing?.expense_plan_id);
     // Tables show display-currency copies. Dialogs must work on the saved record, in its own
     // currency. Transaction history returns raw rows, so normalize to the record shape forms expect.
-    const storedRecord = (record: Entry) => normalizeEntry(historyPage.data.records.find(r=>r.id===record.id) || planning.data.records.find(r=>r.id===record.id) || rows.find(r => r.id === record.id) || (demo ? record : summary.find(r => r.id === record.id) || record));
+    const storedRecord = (record: Entry) => storedEntry(record, { history: historyPage.data.records, planning: planning.data.records, rows, summary }, demo);
     const navigate = (path: string) => router.push(path);
     const forms = recordForms({ editable, setError, setRecordKinds, setEditing, setDeleting, setEditingIncomeSource, currency, section, cashFlowSection, holdingAccounts: planning.data.holdingAccounts, preferredCurrencies: preferencesData.currencies, sources: earningSources.sources, storedRecord });
 

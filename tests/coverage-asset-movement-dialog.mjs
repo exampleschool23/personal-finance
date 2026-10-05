@@ -48,7 +48,8 @@ test('a same-currency transfer deducts the fee from what arrives and saves both 
  assert.match(html, /Both sides are saved together/);
  assert.deepEqual(optionTexts(selects()[0]), ['Select account', `Wallet · ${usd(1000)}`, `Euro cash · ${usd(500, 'EUR')}`, `Savings deposit · ${usd(2000)}`]);
  assert.deepEqual(optionTexts(selects()[1]), ['Select account', `Euro cash · ${usd(500, 'EUR')}`, `Savings deposit · ${usd(2000)}`]);
- assert.ok(html.includes(`Available: ${usd(1000)}`));
+ // A cash source shows its balance: goal allocations do not lock money, so "Available" (balance less goals) would not match the limit.
+ assert.ok(html.includes(`Balance: ${usd(1000)}`));
  assert.match(html, /Total amount debited USD/);
  assert.match(html, /Fee included in these amounts USD/);
  assert.equal(save().props.disabled, true);

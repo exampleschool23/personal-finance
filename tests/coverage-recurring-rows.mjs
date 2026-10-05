@@ -194,3 +194,10 @@ test('deleting a schedule changes the sample copies, reversing deleted payments,
  assert.deepEqual(sent, [['/api/planning', { action: 'delete_schedule', data: { source: 'record', id: 'rent', remove_history: true } }], ['/api/planning', { action: 'delete_schedule', data: { source: 'plan', id: 'g', remove_history: false } }]]);
  assert.deepEqual([refreshed, saved.length], [2, 6]);
 });
+
+test('an overdue row due yesterday says Yesterday, never "1 days ago"', () => {
+ const props = { dated: true, busy: false, onPay() {}, onSkip() {} };
+ assert.match(text(mount(OccurrenceRow, { ...props, item: item('overdue'), today: '2026-10-02' }).tree), /Yesterday/);
+ assert.doesNotMatch(text(mount(OccurrenceRow, { ...props, item: item('overdue'), today: '2026-10-02' }).tree), /1 days ago/);
+ assert.match(text(mount(OccurrenceRow, { ...props, item: item('overdue'), today: '2026-10-05' }).tree), /4 days ago/);
+});

@@ -41,3 +41,14 @@ export function currencyTotals(items: readonly DirectoryItem[]) {
 
 /** What the savings goals of a cash account hold of its balance; archived goals hold nothing. */
 export const allocatedToGoals = (goals: PlanningData['goals'], accountId: string) => goals.filter(goal => goal.account_id === accountId && !goal.archived).reduce((sum, goal) => sum + Number(goal.allocated), 0);
+
+/** Records with their accounts in the person's order: the saved Accounts order first, then the rest as they were
+ * created. Only account positions change, so every account picker lists them as the Accounts page does. */
+export function inAccountOrder<T extends Entry>(records: readonly T[], ids: readonly string[]): T[] {
+ const accounts = new Set<Entry>(balanceAccounts(records));
+ const position = new Map(ids.map((id, index) => [id, index]));
+ const created = (record: Entry) => (record as { created_at?: string }).created_at ?? '';
+ const sorted = [...accounts].sort((a, b) => (position.get(a.id) ?? Infinity) - (position.get(b.id) ?? Infinity) || created(a).localeCompare(created(b)));
+ let next = 0;
+ return records.map(record => accounts.has(record) ? sorted[next++] as T : record);
+}

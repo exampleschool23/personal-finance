@@ -12,13 +12,14 @@ import { frequencyLabels, income, type Entry } from '@/lib/finance';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { daysFrom, type ArchiveTarget, type RecurringItem, type RecurringPlan } from '@/lib/recurring';
 
-/** "in 3 days", "today", "2 days ago": how far a due date is from today. */
+/** "in 3 days", "today", "yesterday", "2 days ago": how far a due date is from today. */
 export function useDueLabel() {
  const { t, locale } = useLanguage();
  return (today: string, date: string) => {
   const days = daysFrom(today, date);
   if (days === 0) return t('Today');
   if (days === 1) return t('Tomorrow');
+  if (days === -1) return t('Yesterday');
   return days > 0 ? t('in {count} days', { count: formatNumber(days, locale, 0) }) : t('{count} days ago', { count: formatNumber(-days, locale, 0) });
  };
 }

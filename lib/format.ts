@@ -52,7 +52,29 @@ export function formatDateTime(value: string, locale: string) {
   return formatLongDateTime(value, locale, '—');
 }
 // Keep fractional digits and a trailing decimal while typing; never round stored input.
-export function formatNumberInput(raw: string, locale: string): { text: string; value: number | null } | null {
+/** `previous` is the field's text before this edit: a group sign the person just typed or pasted (or one already read as a
+ * decimal) may be a decimal, while one left by deleting from a grouped number ("1,234" → "1,23") never is. */
+export function formatNumberInput(raw: string, locale: string, previous?: string): { text: string; value: number | null } | null {
+  const { group, decimal } = numberSymbols(locale);
+  // A rate pasted as "9.5%" keeps its number.
+  raw = raw.replace(/%\s*$/, '');
+  const compact = raw.replace(/[\s\u00a0\u202f]/g, '');
+  // "49,99" in English (or "12.75" in German) is a decimal typed with the other key: one group sign followed by
+  // fewer than three digits can't be grouping. The sign stays as typed while "1,0" may still become "1,000".
+  const signs = (text: string) => text.split(group).length - 1;
+  const typedSign = previous === undefined || signs(raw) > signs(previous) || (previous !== '' && groupedNumberInput(previous, locale)?.text !== previous);
+  const parts = !typedSign || /\s/.test(group) || compact.includes(decimal) ? [] : compact.split(group);
+  const tail = parts.length > 1 ? parts[parts.length - 1] : undefined, head = parts.slice(0, -1);
+  const grouped = head.length === 1 ? /^\d+$/.test(head[0]) : /^\d{1,3}$/.test(head[0] ?? '') && head.slice(1).every(part => /^\d{3}$/.test(part));
+  if (tail !== undefined && grouped && /^\d{0,2}$/.test(tail)) {
+    const whole = head.join('');
+    const value = Number(whole + '.' + (tail || '0'));
+    const text = whole.length > 3 ? groupedNumberInput(whole, locale)!.text + decimal + tail : whole + group + tail;
+    return { text, value };
+  }
+  return groupedNumberInput(raw, locale);
+}
+function groupedNumberInput(raw: string, locale: string): { text: string; value: number | null } | null {
   const { group, decimal } = numberSymbols(locale);
   const normalized = raw.split(group).join('').replace(/[\s\u00a0\u202f]/g, '');
   if (normalized === '') return { text: '', value: null };

@@ -177,3 +177,41 @@ test('dashboard payments show each instalment, and the comparison line is labell
  assert.match(read('components/dashboard-cards.tsx'),/budgetRowsForMode\(rows, budget\.state\.mode\)\.filter\(row => row\.budget\)/,'flex mode hides per-category budgets on the dashboard too');
  assert.match(read('lib/dashboard-layout.ts'),/upcoming: 'Upcoming payments'/);assert.doesNotMatch(comparison,/label=\{t\('Net worth'\)\}/);
 });
+
+test('a transaction opened from the list keeps its date, account and notes instead of the summary row',()=>{
+ const {storedEntry}=loadTS('lib/record-table.ts');
+ const full={id:'t1',name:'QA groceries UI',kind:'Living expense',currency:'USD',amount:84.3,quantity:1,cost:0,rate:0,date:'2026-10-06',frequency:'Once',notes:'QA groceries UI',account_id:'a1',revision:1};
+ const summaryRow={id:'t1',name:'QA groceries UI',kind:'Living expense',currency:'USD',amount:84.3,quantity:1,cost:0,rate:0,date:null,frequency:'Once',notes:'',record_count:1};
+ const none={history:[],planning:[],rows:[],summary:[summaryRow]};
+ const opened=storedEntry(full,none,false);
+ assert.equal(opened.date,'2026-10-06');assert.equal(opened.account_id,'a1');assert.equal(opened.notes,'QA groceries UI');assert.equal(opened.revision,1);
+ // A slim row handed in still borrows nothing worse; a stored copy elsewhere wins over both.
+ assert.equal(storedEntry(summaryRow,{...none,rows:[full]},false).date,'2026-10-06');
+ assert.equal(storedEntry({...summaryRow,date:''},none,false).record_count,1);
+});
+
+test('every account picker lists accounts in the Accounts order, then newest last, never by internal id',()=>{
+ const {inAccountOrder}=loadTS('lib/account-directory.ts');
+ const cash=(id,name,created_at)=>({id,name,kind:'Cash',currency:'USD',amount:1,quantity:1,cost:0,rate:0,date:'2026-10-01',frequency:'Once',notes:'',created_at});
+ const spend={id:'00-spend',name:'QA Lunch',kind:'Living expense',currency:'USD',amount:5,quantity:1,cost:0,rate:0,date:'2026-10-01',frequency:'Once',notes:''};
+ const records=[cash('aa','QA Newer','2026-10-05'),spend,cash('ff','QA Saved','2026-09-01'),cash('bb','QA Older','2026-10-01')];
+ const ordered=inAccountOrder(records,['ff']);
+ assert.deepEqual(ordered.map(r=>r.name),['QA Saved','QA Lunch','QA Older','QA Newer'],'transactions keep their places; accounts follow the saved order, then creation');
+ assert.deepEqual(inAccountOrder(records,[]).filter(r=>r.kind==='Cash').map(r=>r.name),['QA Saved','QA Older','QA Newer']);
+});
+
+test('an expense amount in the transaction details stays in the ink colour',()=>{
+ const dialog=fs.readFileSync('components/transaction-details-dialog.tsx','utf8');
+ assert.match(dialog,/className=\{incoming\?'positive':undefined\}/);
+ assert.doesNotMatch(dialog,/'negative'/,'red is for overdue, overspent or owed amounts only');
+});
+
+test('Cash flow, Dashboard and Goals estimate the monthly surplus from the same full rows, loan payments included',()=>{
+ const provider=fs.readFileSync('components/workspace/workspace-provider.tsx','utf8');
+ // Summary rows carry no estimated_monthly_payment for loans and debts; Goals already reads the planning rows.
+ assert.match(provider,/estimatedCashFlow\(monthlyIncomeEntries, planProjection, planningMonth\)/);
+ assert.match(fs.readFileSync('components/planning/goals-page.tsx','utf8'),/goalFinancials\(data\.records,/);
+ const {estimatedCashFlow}=loadTS('lib/finance.ts');
+ const loan={id:'l',name:'QA Car loan',kind:'Loan',currency:'USD',amount:7200,quantity:1,cost:0,rate:7.5,date:'2028-12-31',frequency:'Once',notes:'',estimated_monthly_payment:350};
+ assert.equal(estimatedCashFlow([loan],0,'2026-10').forecast,-350);
+});

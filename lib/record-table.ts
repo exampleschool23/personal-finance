@@ -51,3 +51,11 @@ export function recordTableView(input: RecordTableInput) {
   : rows.map(display);
  return { visible, totalRecords, pageCount, tablePage, tableLoading };
 }
+
+/** The full stored copy of a record for viewing and editing. Summary rows (`record_count`) leave out dates,
+ * accounts, notes and revisions, so a full record handed in wins over them. */
+export function storedEntry(record: Entry, sources: { history: readonly Entry[]; planning: readonly Entry[]; rows: readonly Entry[]; summary: readonly Entry[] }, demo: boolean) {
+ const find = (list: readonly Entry[]) => list.find(item => item.id === record.id);
+ const full = demo || record.record_count === undefined;
+ return normalizeEntry(find(sources.history) || find(sources.planning) || find(sources.rows) || (full ? record : find(sources.summary) || record));
+}

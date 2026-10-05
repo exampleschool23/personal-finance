@@ -24,7 +24,7 @@ export function TransactionDetailsDialog({record:initial,incoming,categoryName,b
  async function toggleTag(id:string){const has=tagIds.includes(id);try{await tagging.onTags(has?[]:[id],has?[id]:[]);setTagIds(has?tagIds.filter(item=>item!==id):[...tagIds,id]);}catch(reason){showError((reason as Error).message||'Could not save changes.');}}
  const money=(value:number)=>formatMoney(value,record.currency,locale);
  const rows:[string,ReactNode][]=[
-  [t('Amount'),<strong key="a" className={incoming?'positive':'negative'}>{`${incoming?'+':'−'}${money(record.amount)}`}</strong>],
+  [t('Amount'),<strong key="a" className={incoming?'positive':undefined}>{`${incoming?'+':'−'}${money(record.amount)}`}</strong>],
   [t('Category'),<span key="c" className="flex flex-wrap gap-1"><CategoryBadge kind={record.kind} label={t(record.payment_type==='bonus'?'Bonus':record.kind)}/>{categoryName&&record.custom_category_id&&<CategoryBadge kind={record.custom_category_id} label={categoryName}/>}</span>],
   [t('Date'),formatDate(record.date,locale)],
   [t('Frequency'),t(record.frequency==='Once'?'One-time record':record.frequency)],

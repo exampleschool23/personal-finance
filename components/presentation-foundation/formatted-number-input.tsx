@@ -20,19 +20,19 @@ export function FormattedNumberInput({ value, onValueChange, max = 1e15, maxMess
   return <><Input type="text" inputMode="decimal" autoComplete="off" aria-label={ariaLabel} placeholder={placeholder} value={text} required={requireEntry || (required && value !== 0)} onChange={event => {
     const input = event.currentTarget;
     const raw = input.value, cursor = input.selectionStart ?? raw.length;
-    const typed = formatNumberInput(raw, locale);
+    const typed = formatNumberInput(raw, locale, text);
     if (!typed) return;
     const over = typed.value !== null && typed.value > max;
     const parsed = over ? { text: max > 0 ? numberInputValue(max, locale, displayFractionDigits) : '', value: Math.max(0, max) } : typed;
     setExceeded(over);
     const decimal = numberSymbols(locale).decimal;
     const significant = (s: string) => [...s].filter(c => /\d/.test(c) || c === decimal).length;
-    const before = significant(raw.slice(0, cursor));
+    const before = significant(raw.slice(0, cursor)), atEnd = cursor === raw.length;
     setText(parsed.text);
     lastEmitted.current = parsed.value ?? 0;
     onValueChange(parsed.value ?? 0, parsed.text === '');
     requestAnimationFrame(() => {
-      let position = 0;
+      let position = atEnd ? parsed.text.length : 0;
       while (position < parsed.text.length && significant(parsed.text.slice(0, position)) < before) position++;
       if (document.activeElement === input) input.setSelectionRange(position, position);
     });
