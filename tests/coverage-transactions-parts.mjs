@@ -33,7 +33,7 @@ const Confirm=props=>React.createElement('ConfirmDialog',props,props.open?[props
 const Panel=props=>React.createElement('PanelTitle',props,props.title,props.count,props.children);
 const {formatDate,formatMoney,formatSignedMoney}=loadTS('lib/format.ts');
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
-const page=loadTS('components/transactions-page.tsx',{
+const overrides={
  react:fakeReact,'lucide-react':icons,
  '@/components/language-provider':{useLanguage:()=>({t,locale:'en'})},
  '@/components/presentation-foundation/category-icon':{CategoryIcon:host('CategoryIcon')},
@@ -52,7 +52,10 @@ const page=loadTS('components/transactions-page.tsx',{
  '@/components/ui/input':{Input:host('input')},
  '@/components/ui/native-select':{NativeSelect:host('select')},
  '@/components/ui/popover':{Popover:host('Popover'),PopoverContent:host('PopoverContent'),PopoverTrigger:host('PopoverTrigger')},
-});
+};
+// The transactions screen's parts, loaded together as one module would be.
+const cache=new Map();
+const page=Object.assign({},...['pickers','tags','bulk-edit','transaction-row','rule-dialog','rules-list'].map(name=>loadTS(`components/transactions/${name}.tsx`,overrides,cache)),loadTS('lib/transaction-rules.ts',overrides,cache));
 const h=React.createElement;
 const entry=(over={})=>({id:'r1',name:'Coffee Shop 123',kind:'Living expense',currency:'USD',amount:13,quantity:0,cost:0,rate:0,date:'2026-09-30',frequency:'Once',notes:'',...over});
 const categories=[{id:'c-food',name:'Food',direction:'expense'},{id:'c-side',name:'Side gig',direction:'income'}];

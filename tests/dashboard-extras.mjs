@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
+import {stylesheet} from './helpers/stylesheet.mjs';
 const { normalizeLayout, dashboardColumns, dropCard, placeCard, toggleCard, defaultDashboardLayout } = loadTS('lib/dashboard-layout.ts');
 const { workspacePreferenceSchema } = loadTS('lib/workspace-preferences.ts');
 
@@ -43,7 +44,7 @@ test('dashboard cards drag within and across columns, old saves load and every c
 
 test('dashboard cards move only in rearrange mode, which wiggles them until Done', async () => {
  const { readFileSync } = await import('node:fs');
- const css = readFileSync('app/globals.css', 'utf8'), board = readFileSync('components/dashboard-board.tsx', 'utf8'), screen = readFileSync('components/workspace/screens/overview-screen.tsx', 'utf8');
+ const css = stylesheet(), board = readFileSync('components/dashboard-board.tsx', 'utf8'), screen = readFileSync('components/workspace/screens/overview-screen.tsx', 'utf8');
  assert.match(css, /\.dashboard-card>\.drag-handle\{display:none\}/, 'no handles outside rearrange mode');
  assert.match(css, /\.dashboard-grid\[data-arranging\] \.dashboard-card>\.panel\{[^}]*animation:card-wiggle/, 'cards wiggle while rearranging');
  assert.match(css, /prefers-reduced-motion:reduce\)\{\.dashboard-grid\[data-arranging\] \.dashboard-card>\.panel\{animation:none\}/, 'reduced motion keeps them still');
@@ -55,7 +56,7 @@ test('dashboard cards move only in rearrange mode, which wiggles them until Done
 
 test('Customize switches keep their shape on phones and quick toggles save after a background refresh', async () => {
  const { readFileSync } = await import('node:fs');
- const css = readFileSync('app/globals.css', 'utf8'), hook = readFileSync('hooks/use-workspace-preferences.ts', 'utf8');
+ const css = stylesheet(), hook = readFileSync('hooks/use-workspace-preferences.ts', 'utf8');
  assert.match(css, /:not\(\.pos-day,\.drag-handle,\.info-hint,\.recurring-chip,\.switch\)\{min-height:44px!important\}/, 'the 44px floor skips switches');
  assert.match(css, /\.switch::after\{content:"";position:absolute;inset:-12px -6px\}/, 'a switch still gets a thumb-sized tap area');
  assert.match(hook, /if\(resource\.initialLoading\|\|resource\.error\)throw Error\('Load saved preferences before making changes\.'\)/, 'a refresh after a save does not block the next change');

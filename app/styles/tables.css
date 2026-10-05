@@ -1,0 +1,101 @@
+/* Record tables, rolling figures, grouped rows, touch targets and narrow-column record cards. */
+
+/* Record tables. */
+.records{padding:24px 0 0;overflow:hidden;scroll-margin-top:84px}
+.records .panel-title{padding:0 24px}
+.table-scroll{overflow:auto}
+table{width:100%;border-collapse:collapse;text-align:left;white-space:nowrap}
+th{padding:10px 16px;border-bottom:1px solid var(--border);color:var(--muted-foreground);font-size:var(--type-micro);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+td{padding:14px 16px;border-bottom:1px solid var(--hairline);font-size:var(--type-small)}
+tbody tr:last-child td{border-bottom:0}
+.workspace .content tbody tr{transition:background .15s}
+.workspace .content tbody tr:is(:hover,:focus-within){background:color-mix(in srgb,var(--accent) 35%,transparent)}
+.records :is(th,td):first-child{padding-left:24px}
+.records :is(th,td):last-child{padding-right:24px}
+/* The profit and loss table indents its rows by level, so it keeps its own start padding. */
+.panel:not(.records) .table-scroll table:not(.pnl-table) :is(th,td):first-child{padding-left:0}
+.panel:not(.records) .table-scroll :is(th,td):last-child{padding-right:0}
+@container content (min-width:721px){.records td:first-child{width:36%;max-width:0}}
+.record-name{display:flex;gap:12px;align-items:center;min-width:0}
+.record-name>div{min-width:0}
+.record-name strong{display:block;overflow:hidden;text-overflow:ellipsis}
+.record-name strong{font-size:var(--type-small);font-weight:600}
+.record-name small{display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;color:var(--muted-foreground);font-size:var(--type-caption)}
+.record-icon{flex-shrink:0;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--muted);color:var(--primary)}
+.category-icon{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:10px;background:hsl(var(--category-hue) 32% 20%);font-size:19px;line-height:1}
+.category-icon[data-size=sm]{width:28px;height:28px;border-radius:8px;font-size:14px}
+[data-theme="light"] .category-icon{background:hsl(var(--category-hue) 70% 94%)}
+.record-icon svg{width:18px;height:18px}
+.amount{font-weight:600;font-variant-numeric:tabular-nums}
+/* Odometer figures (RollingText): each digit is a 0–9 strip clipped to one line, so it rolls vertically
+   into place. Its own tags take the look of the element around them and are untouched by page span rules. */
+roll-text{font-variant-numeric:tabular-nums}
+roll-chars{display:inline-flex;align-items:flex-start;white-space:pre}
+roll-chars>*{display:inline-block;height:1lh}
+roll-digit{overflow:hidden}
+roll-strip{display:flex;flex-direction:column;transition:transform .9s cubic-bezier(.16,1,.3,1) var(--roll-delay,0ms)}
+roll-strip>roll-char{display:block;height:1lh}
+@media (prefers-reduced-motion:reduce){roll-strip{transition:none}}
+.tools-panel :is(th,td).amount{text-align:end}
+.table-group-row th{padding:20px 0 6px;border-bottom:0;color:var(--foreground);font-size:var(--type-compact);font-weight:600;letter-spacing:0;text-transform:none}
+.table-group-label{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px;padding:10px 16px;border-radius:var(--radius-control);background:var(--muted)}
+/* Rows under a group heading sit indented, so the heading reads as their parent. */
+@container content (min-width:721px){tbody:has(>.table-group-row) tr:not(.table-group-row) td:first-child{padding-inline-start:32px}tbody:has(>.table-group-row) tr:not(.table-group-row) td:last-child{padding-inline-end:16px}}
+.records td.amount{white-space:nowrap}
+@container content (min-width:721px){.records th:last-child,.records td:last-child{width:1%;text-align:right}}
+.row-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;color:var(--muted-foreground)}
+.row-actions button{flex-shrink:0;height:34px;min-height:34px;font-size:var(--type-caption)}
+.row-actions button[data-size="sm"]{width:auto;padding-inline:12px}
+.row-actions button[data-size="icon"]{width:34px;height:34px}
+@media(pointer:coarse){.row-actions button{height:44px;min-height:44px}.row-actions button[data-size="icon"]{width:44px;height:44px}}
+/* Touch screens: every control the thumb aims at is at least 44px; small icons grow an invisible hit area instead of a bigger glyph. */
+@media(pointer:coarse){
+ /* One floor for every tappable control; screen-specific sizes above it only ever make controls larger. */
+ :is(button,[role=button],[role=tab],summary,.date-picker-trigger,a[data-slot=button],input[type=range]):not(.pos-day,.drag-handle,.info-hint,.recurring-chip,.switch){min-height:44px!important}
+ :is(button,a)[data-size^=icon]:not(.drag-handle,.info-hint){min-width:44px!important}
+ .topbar-actions :is(button,a),.theme-toggle,[data-sidebar=trigger]{min-width:44px}
+ .nav-item,.user-link{min-height:44px!important}
+ .panel-title a,.panel-link{display:inline-flex;align-items:center;min-height:44px}
+ .info-hint::after{inset:-11px}
+ .drag-handle{min-width:32px;min-height:44px}
+ /* Switches keep their shape; an invisible area around them takes the tap. */
+ .switch{position:relative}.switch::after{content:"";position:absolute;inset:-12px -6px}
+}
+/* Narrow columns: each record becomes a small card instead of a sideways-scrolling row. */
+@container content (max-width:720px){
+ :is(.records,.upcoming-section) thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ :is(.records,.upcoming-section) :is(table,tbody){display:block;white-space:normal}
+ :is(.records,.upcoming-section) tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 12px;padding:14px 16px;border-bottom:1px solid var(--hairline)}
+ .upcoming-section tbody tr{padding-inline:0}
+ :is(.records,.upcoming-section) tbody tr:last-child{border-bottom:0}
+ :is(.records,.upcoming-section) tbody td{display:block;width:auto;max-width:none;padding:0;border:0}
+ .records tbody td:first-child{padding-left:0}
+ .records tbody td:last-child{padding-right:0}
+ .records td.amount{grid-column:2;grid-row:1;text-align:right}
+ .records td:nth-child(2){display:flex;flex-wrap:wrap;gap:6px;grid-column:1/-1;grid-row:2;max-width:calc(100% - 150px)}
+ .records td:nth-child(3){grid-column:1/-1;grid-row:2;justify-self:end;font-size:var(--type-caption)}
+ :is(.records,.upcoming-section) td:last-child{grid-column:1/-1;text-align:left}
+ :is(.records,.upcoming-section) td:last-child:empty,:is(.records,.upcoming-section) td:last-child:has(.row-actions:empty){display:none}
+ /* Small summary tables: name and main figure on one line, the remaining columns beneath, right-aligned. */
+ .stack-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .stack-table,.stack-table tbody{display:block;white-space:normal}
+ .stack-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 12px;padding:12px 0;border-bottom:1px solid var(--hairline)}
+ .stack-table tbody tr:last-child{border-bottom:0}
+ .stack-table tbody td{display:block;padding:0;border:0;text-align:end}
+ .stack-table tbody td:first-child{text-align:start}
+ .stack-table tbody td:nth-child(n+3){grid-column:1/-1;justify-self:end;font-size:var(--type-caption);color:var(--muted-foreground)}
+ :is(.records,.upcoming-section) .row-actions{justify-content:flex-start;flex-wrap:wrap}
+ .upcoming-section td:first-child{grid-column:1;grid-row:1}
+ .upcoming-section td:nth-child(2){grid-column:1;grid-row:2;font-size:var(--type-caption)}
+ .upcoming-section td:nth-child(3){grid-column:2;grid-row:1;text-align:right}
+ .upcoming-section tbody tr.table-group-row{display:block;padding:16px 0 4px;border-bottom:0}
+ .upcoming-section tbody:has(>.table-group-row) tr:not(.table-group-row){padding-inline:16px}
+ .upcoming-section .table-group-row th{display:block;padding:0;border:0}
+}
+
+.record-dialog{max-height:90svh;overflow:auto}
+.record-dialog form{margin-top:5px}
+.record-dialog label{margin-bottom:15px}
+.record-dialog textarea{width:100%;resize:vertical}
+@media(max-width:1200px){.content{padding:28px 24px}.workspace .content{padding:24px 24px 0}.topbar{padding-inline:24px}}
+@media(max-width:640px){.content{padding:22px 16px}.workspace .content{padding:20px 16px 0;gap:16px}.topbar{padding:0 16px}.page-heading{align-items:stretch;flex-direction:column}.page-heading>div:first-child{flex:none}.panel{padding:20px 16px}.records{padding:20px 0 0}.records .panel-title{padding:0 16px}.form-grid{gap:10px}.entry-actions{width:100%}.entry-actions [data-slot=button]{flex:1}}

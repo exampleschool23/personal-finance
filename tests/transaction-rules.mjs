@@ -4,7 +4,7 @@ import { loadTS } from './helpers/load-ts.mjs';
 const { categoryChoices, canRecategorize, recategorize, ruleMatches, ruleTargets, suggestedPattern, directionOf } = loadTS('lib/transaction-rules.ts');
 const { assignBusiness, moveAccountToBusiness, withAccount } = loadTS('lib/business.ts');
 const { changeTags } = loadTS('lib/tags.ts');
-const { periodRange, transactionsIn, groupByDay, summarizeTransactions, emptyTransactionFilter } = loadTS('lib/transaction-list.ts');
+const { periodRange, transactionsIn, groupByDay, groupPageByDay, summarizeTransactions, emptyTransactionFilter } = loadTS('lib/transaction-list.ts');
 
 const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Once', notes: '', ...extra });
 const categories = [{ id: 'pets', name: 'Pets', direction: 'expense' }, { id: 'tips', name: 'Tips', direction: 'income' }];
@@ -198,4 +198,32 @@ test('tags: counts, tags of a transaction, what can be tagged, and the tag schem
  assert.equal(tagSchemas.save.parse({ id, name: '  Trip  ', color: 'teal' }).name, 'Trip');
  assert.ok(!tagSchemas.save.safeParse({ id, name: ' ', color: 'teal' }).success && !tagSchemas.save.safeParse({ id, name: 'x'.repeat(61), color: 'teal' }).success && !tagSchemas.save.safeParse({ id, name: 'Trip', color: 'neon' }).success);
  assert.ok(!tagSchemas.delete.safeParse({ id: 'nope' }).success);
+});
+
+test('a rule form becomes a rule: name trimmed, categories only within one direction, a range that holds and at least one action',()=>{
+ const { finishedRule, canSaveRule, amountRangeValid, newRule, ruleFromChange, ruleFromBusiness } = loadTS('lib/transaction-rules.ts');
+ const draft={...newRule(),pattern:'  Uber ',kind:'Living expense',category_id:null,match_kind:'Charity',match_category_id:null};
+ const expense=finishedRule(draft);
+ assert.equal(expense.pattern,'Uber');assert.equal(expense.kind,'Living expense');assert.equal(expense.match_kind,'Charity');
+ // An income rule cannot set or require an expense category, and a rule for both directions sets none at all.
+ for(const direction of ['income','any']){const rule=finishedRule({...draft,direction});assert.deepEqual([rule.kind,rule.category_id,rule.match_kind,rule.match_category_id],[null,null,null,null]);}
+ assert.equal(canSaveRule(expense),true);
+ assert.equal(canSaveRule(finishedRule({...draft,direction:'any'})),false,'no action left');
+ assert.equal(canSaveRule(finishedRule({...draft,direction:'any',tag_ids:['t1']})),true);
+ assert.equal(canSaveRule({...expense,pattern:''}),true,'the required category still narrows it');
+ assert.equal(canSaveRule({...expense,pattern:'',match_kind:null}),false,'nothing narrows it');
+ assert.equal(amountRangeValid({amount_min:50,amount_max:20}),false);
+ assert.equal(amountRangeValid({amount_min:null,amount_max:0}),true);
+ assert.equal(canSaveRule({...expense,amount_min:50,amount_max:20}),false);
+ const record={id:'r',name:'UBER *TRIP 1234',kind:'Living expense'};
+ assert.deepEqual([ruleFromChange(record,{kind:'Other income',category_id:'c1'}).direction,ruleFromChange(record,{kind:'Charity',category_id:null}).direction],['income','expense']);
+ assert.deepEqual([ruleFromBusiness(record,'b1').direction,ruleFromBusiness(record,'b1').business_id],['any','b1']);
+});
+
+test('a page of transactions shows each day\'s whole total, also when the day runs onto the next page', () => {
+ const convert = amount => amount;
+ const rows = [record('a', 'Bonus', 'Salary', 500, '2026-10-03'), record('b', 'Rent', 'Rent expense', 900, '2026-10-03'), record('c', 'Pay', 'Salary', 3000, '2026-10-03'), record('d', 'Lunch', 'Living expense', 12, '2026-10-02')];
+ assert.deepEqual(groupPageByDay(rows, 0, 2, convert).map(day => [day.date, day.records.length, day.total]), [['2026-10-03', 2, 2600]]);
+ assert.deepEqual(groupPageByDay(rows, 2, 4, convert).map(day => [day.date, day.records.length, day.total]), [['2026-10-03', 1, 2600], ['2026-10-02', 1, -12]]);
+ assert.equal(groupPageByDay([{ ...rows[0], currency: 'UZS' }, rows[1]], 0, 1, (amount, unit) => unit === 'USD' ? amount : null)[0].total, null, 'a day with an unconvertible row stays unknown');
 });

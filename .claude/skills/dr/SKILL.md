@@ -22,17 +22,17 @@ Default mode is **review only**: do not edit code unless the user asks ("/dr fix
 Every page the app serves is one screen here; `tests/qa-design-catalogs.mjs` fails
 when a route has no row, a file no longer exists, or a screen has no `SCR` case.
 For "diff", map each changed file to the screens whose files (or whose imports)
-include it; a change to `app/globals.css`, `components/presentation-foundation/`,
+include it; a change to `app/globals.css` or `app/styles/`, `components/presentation-foundation/`,
 `components/workspace/` (shell) or `lib/format.ts` means every workspace screen.
 
 | Screen | Routes | Files |
 |---|---|---|
 | dashboard | `/` | `components/workspace/screens/overview-screen.tsx`, `components/overview-page.tsx`, `components/dashboard-cards.tsx`, `components/dashboard-board.tsx` |
 | accounts | `/accounts` | `components/workspace/screens/accounts-screen.tsx`, `components/planning/accounts-page.tsx` |
-| transactions | `/transactions` | `components/workspace/screens/transactions-screen.tsx`, `components/transactions-page.tsx` |
+| transactions | `/transactions` | `components/workspace/screens/transactions-screen.tsx`, `components/transactions/pickers.tsx`, `components/transactions/bulk-edit.tsx`, `components/transactions/rule-dialog.tsx`, `components/transactions/rules-list.tsx` |
 | reports | `/reports` | `components/workspace/screens/reports-screen.tsx`, `components/business-reports.tsx`, `components/tax-prep-sheet.tsx`, `components/business-card.tsx`, `components/business-setup-flow.tsx` |
 | cash-flow | `/income-expenses` | `components/workspace/screens/cash-flow-screen.tsx`, `components/cash-flow-report.tsx`, `components/cash-forecast.tsx` |
-| budget | `/budget` | `components/workspace/screens/budget-screen.tsx`, `components/budget-page.tsx` |
+| budget | `/budget` | `components/workspace/screens/budget-screen.tsx`, `components/budget/budget-rows.tsx`, `components/budget/planned-input.tsx`, `components/budget/left-to-budget-card.tsx`, `components/budget/settings-dialogs.tsx` |
 | recurring | `/upcoming` | `components/workspace/screens/upcoming-screen.tsx`, `components/planning/upcoming-page.tsx` |
 | investments | `/assets` | `components/workspace/screens/assets-screen.tsx`, `components/asset-dashboard.tsx`, `components/portfolio-allocation-plan.tsx` |
 | loans | `/loans-debts` | `components/workspace/screens/loans-debts-screen.tsx`, `components/planning/debt-payoff-panel.tsx` |
@@ -151,8 +151,8 @@ const h=document.querySelector('main h1')?.getBoundingClientRect();({top:h&&Math
 
 Source checks (Bash, read-only): inline `Intl.`/`toLocaleString`/`toFixed` in
 `components/`, native `type="date"`, literal hex colours or px font sizes in new
-rules (`app/globals.css` and `components/*.module.css`), a raw `<input type="number">`
-for money, duplicate selectors in `app/globals.css`, and every `animation` /
+rules (`app/styles/*.css` and `components/*.module.css`), a raw `<input type="number">`
+for money, duplicate selectors across `app/styles/*.css`, and every `animation` /
 `transition` without a `prefers-reduced-motion: reduce` counterpart (MOT-001).
 For MOT-002, fetch the landing page with `curl` and confirm nothing is hidden until
 JavaScript runs. Report the file and line.

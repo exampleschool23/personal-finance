@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties, type DetailedHTM
 // The figure is drawn with its own tags rather than spans, so a page's broad `.panel span` rules
 // can never resize or space out the digit strips.
 declare module 'react' {
+ // eslint-disable-next-line @typescript-eslint/no-namespace -- JSX element types can only be widened through this namespace.
  namespace JSX {
   interface IntrinsicElements {
    'roll-text': DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement>;
@@ -34,6 +35,7 @@ function RollingDigit({ digit, column }: { digit: number; column: number }) {
  const at = useRef(0);
  const delay = Math.min(column, 8) * 35;
  useLayoutEffect(() => {
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- the strip must be back on screen before the next roll is painted.
   setSettled(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
   // Two frames: the browser must paint the strip where it is before a move can be animated.

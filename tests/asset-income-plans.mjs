@@ -29,6 +29,7 @@ test('asset plans backfill once, save atomically, preserve precision and isolate
 });
 
 import {loadTS} from './helpers/load-ts.mjs';
+import {stylesheet} from './helpers/stylesheet.mjs';
 const {withAssetIncomePlans,legacyEarningSources}=loadTS('lib/earning-sources.ts');
 const {estimatedCashFlow}=loadTS('lib/finance.ts');
 test('demo generates selectable linked plans without counting asset income twice',()=>{
@@ -52,6 +53,6 @@ test('income picker owns its scroll lock inside the record dialog',()=>{
  const ui=fs.readFileSync('components/income-source-picker.tsx','utf8');
  // A non-modal body portal sits outside the enclosing dialog's allowed scroll area.
  assert.match(ui,/<Popover modal open=\{open\}/);
- const css=fs.readFileSync('app/globals.css','utf8');
+ const css=stylesheet();
  assert.match(css,/\.income-source-categories, \.income-source-results \{[^}]*overflow-y: auto;[^}]*overscroll-behavior-y: contain;/);
 });

@@ -16,7 +16,7 @@ const cards=loadTS('components/dashboard-cards.tsx',{
  '@/lib/expense-plans':{expensePlanMonth:()=>month},
  '@/hooks/use-owner-resource':{useOwnerResource:(url,owner,enabled,revision,empty)=>{resources.push({url,owner,enabled,revision});return {data:remote.data??empty,loading:remote.loading};}},
  '@/hooks/use-budget':{useBudget:(owner,demo,revision)=>({...budget,args:[owner,demo,revision]})},
- '@/components/budget-page':{BudgetProgress:({row})=>React.createElement('meter',{'data-progress':row.progress.toFixed?String(Math.round(row.progress*100)):'','data-remaining':String(row.remaining)})},
+ '@/components/budget/budget-rows':{BudgetProgress:({row})=>React.createElement('meter',{'data-progress':row.progress.toFixed?String(Math.round(row.progress*100)):'','data-remaining':String(row.remaining)})},
  '@/lib/investment-goals':{investmentGoalCompletion:goal=>completion.get(goal.id)??null},
  'next/link':{__esModule:true,default:({children,href,...props})=>React.createElement('a',{href,...props},children)},
 });

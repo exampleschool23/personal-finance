@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {loadTS} from './helpers/load-ts.mjs';
+import {stylesheet} from './helpers/stylesheet.mjs';
 const language={useLanguage:()=>({locale:'en-US',t:(text,values={})=>text.replace(/\{(\w+)\}/g,(_,key)=>values[key]??key)})};
 function nudgeWith(status,dismissed=false){
  const hook={useTelegramLink:()=>({status,loadError:'',error:'',busy:false,waiting:false,connect:()=>{},retry:()=>{},stopWaiting:()=>{},setToggles:async()=>{},unlink:async()=>{}})};
@@ -28,6 +29,6 @@ test('the Settings panel and the nudge share one link hook and Overview mounts t
  assert.ok(!fs.readFileSync('components/telegram-panel.tsx','utf8').includes("fetch('/api/telegram'"),'the panel no longer talks to the API itself');
  const overview=fs.readFileSync('components/workspace/screens/overview-screen.tsx','utf8');
  assert.ok(overview.indexOf('<ScreenNotices/>')<overview.indexOf('<TelegramNudge demo={demo}/>'));
- const css=fs.readFileSync('app/globals.css','utf8');
+ const css=stylesheet();
  assert.equal(css.split('\n').filter(line=>line.startsWith('.telegram-nudge{')).length,1);
 });

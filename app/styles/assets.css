@@ -1,0 +1,136 @@
+/* Assets, holdings, category filters, recently deleted and chart legends. */
+
+/* Assets: a holdings hero, then accounts and other assets as compact cards. */
+.asset-dashboard{--asset-color:var(--primary);display:grid;gap:28px}
+.portfolio-summary{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);border:1px solid var(--border);border-radius:var(--radius-card);overflow:hidden;background:var(--card);box-shadow:var(--shadow-card)}
+.portfolio-summary-main{padding:28px}
+.portfolio-summary-main h2{font-size:var(--type-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground)}
+.portfolio-summary-value{display:block;margin:6px 0 8px;font-size:var(--type-hero);font-weight:650;letter-spacing:-.04em;line-height:1.05;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.portfolio-summary-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.portfolio-summary-metrics>div{display:grid;gap:4px;min-width:0;padding-left:20px;border-left:1px solid var(--border)}
+.portfolio-summary-metrics>div:first-child{padding-left:0;border-left:0}
+.portfolio-summary-metrics span{font-size:var(--type-caption);color:var(--muted-foreground)}
+.portfolio-summary-metrics strong{font-size:var(--type-heading);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.portfolio-summary-allocation{min-width:0;padding:28px;border-left:1px solid var(--border)}
+.portfolio-summary-allocation h3{margin-bottom:16px;font-size:var(--type-body);font-weight:600;letter-spacing:-.01em}
+.portfolio-summary-allocation .allocation-bar{margin-bottom:12px}
+.portfolio-summary-allocation .allocation-bar span{min-width:4px}
+@container content (max-width:900px){.portfolio-summary{grid-template-columns:minmax(0,1fr)}.portfolio-summary-allocation{border-left:0;border-top:1px solid var(--border)}.portfolio-summary-main,.portfolio-summary-allocation{padding:24px}}
+@container content (max-width:520px){.portfolio-summary-main,.portfolio-summary-allocation{padding:20px 16px}}
+
+.asset-holdings-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
+.asset-holdings-heading h2{font-size:var(--type-heading);font-weight:650;letter-spacing:-.02em}
+.asset-holdings-heading a{font-size:var(--type-small);font-weight:500;color:var(--primary);white-space:nowrap}
+.asset-holdings-heading a:hover{text-decoration:underline;text-underline-offset:3px}
+.asset-layout-switch{display:flex;gap:2px;flex-shrink:0;padding:3px;border:1px solid var(--border);border-radius:12px;background:var(--muted)}
+.asset-layout-switch button{width:34px;height:34px;min-height:34px;border-radius:9px;color:var(--muted-foreground)}
+.asset-layout-switch button[aria-pressed=true]{background:var(--card);color:var(--foreground);box-shadow:0 1px 2px rgb(0 0 0 / 20%)}
+/* The category filter is a segmented switch; each option carries its colour dot and count. */
+.asset-category-filters>button{display:inline-flex;align-items:center;gap:8px}
+.asset-category-filters i{width:8px;height:8px;border-radius:50%;background:var(--asset-color)}
+.asset-category-filters span{font-size:var(--type-micro);font-weight:600;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.asset-result-count{display:flex;justify-content:space-between;align-items:center;min-height:20px;margin:14px 0 12px;font-size:var(--type-caption);color:var(--muted-foreground)}
+.asset-result-count button{padding:4px;text-decoration:underline;text-underline-offset:3px}
+
+.asset-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px;align-items:stretch}
+.asset-card{display:flex;flex-direction:column;min-width:0;padding:20px;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card);box-shadow:var(--shadow-card);transition:border-color .15s}
+.asset-card:is(:hover,:focus-within){border-color:color-mix(in srgb,var(--asset-color) 45%,var(--border))}
+.asset-card-header{display:flex;align-items:flex-start;gap:12px}
+.asset-card-icon{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--asset-color) 14%,transparent);color:var(--asset-color)}
+.asset-symbol{width:22px;height:22px;flex-shrink:0}
+.asset-card-header>div{display:grid;justify-items:start;gap:4px;flex:1;min-width:0}
+.asset-card-header h3{font-size:var(--type-body);font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.asset-card-header .category-badge{max-width:100%;padding:1px 8px;font-size:var(--type-micro);white-space:normal}
+.asset-card-header>button{flex-shrink:0;width:32px;height:32px;min-height:32px;margin:-4px -6px 0 0;color:var(--muted-foreground)}
+.asset-card-worth{display:grid;gap:4px;margin:18px 0 14px}
+.asset-card-worth>strong{font-size:var(--type-stat);font-weight:650;letter-spacing:-.03em;line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.asset-card-worth small{font-size:var(--type-caption);line-height:1.5;color:var(--muted-foreground)}
+.asset-card-facts{display:grid;gap:6px;margin:0 0 10px;font-size:var(--type-caption)}
+.asset-card-facts>div{display:flex;justify-content:space-between;gap:12px}
+.asset-card-facts dt{color:var(--muted-foreground)}
+.asset-card-facts dd{flex-shrink:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.asset-card-share{height:4px;border-radius:999px;background:var(--muted);overflow:hidden}
+.asset-card-share i{display:block;height:100%;border-radius:inherit;background:var(--asset-color)}
+.asset-card-details{margin-top:6px;font-size:var(--type-caption);color:var(--muted-foreground)}
+.asset-card-details summary{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:40px;cursor:pointer;list-style:none}
+.asset-card-details summary:hover{color:var(--foreground)}
+.asset-card-details summary svg{transition:transform .15s}
+.asset-card-details[open] summary svg{transform:rotate(180deg)}
+.asset-card-details dl{display:grid;gap:8px;padding:4px 0 12px}
+.asset-card-details dl>div{display:flex;justify-content:space-between;gap:14px;align-items:baseline}
+.asset-card-details dd{min-width:0;text-align:right;color:var(--foreground);overflow-wrap:anywhere}
+.asset-card-holdings>div{flex-wrap:wrap;align-items:center}
+.asset-card-holdings dt{flex:1;min-width:0;overflow-wrap:anywhere}
+.asset-card-holdings dd:last-child{display:flex;flex-basis:100%;justify-content:flex-end;gap:6px}
+.asset-card-holdings [data-slot=button]{height:32px;min-height:32px;font-size:var(--type-caption)}
+.asset-card-actions{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;margin-top:auto;padding-top:12px;border-top:1px solid var(--hairline)}
+.asset-card-actions :is(button,a){height:36px;min-height:36px;font-size:var(--type-small)}
+.asset-load-more{text-align:center;margin-top:20px}
+/* Compact view: one holding per line, value and actions aligned in columns. */
+.asset-layout-list{grid-template-columns:minmax(0,1fr);gap:8px}
+.asset-layout-list .asset-card{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(110px,.7fr) minmax(0,1.5fr) auto;align-items:center;gap:0 20px;padding:12px 16px;border-radius:14px;box-shadow:none}
+.asset-layout-list .asset-card-header{align-items:center}
+.asset-layout-list .asset-card-header>button{margin:0}
+.asset-layout-list .asset-card-worth,.asset-layout-list .asset-card-facts{margin:0}
+.asset-layout-list .asset-card-worth>strong{font-size:var(--type-body)}
+.asset-layout-list .asset-card-share{display:none}
+.asset-layout-list .asset-card-details{grid-column:1/-1;grid-row:2;margin:4px 0 0}
+.asset-layout-list .asset-card-details summary{min-height:32px}
+.asset-layout-list .asset-card-actions{grid-column:4;grid-row:1;margin:0;padding:0;border:0}
+@container content (max-width:760px){.asset-layout-list .asset-card{grid-template-columns:minmax(0,1fr) auto;gap:10px 16px}.asset-layout-list .asset-card-worth{text-align:right}.asset-layout-list .asset-card-facts,.asset-layout-list .asset-card-actions{grid-column:1/-1;grid-row:auto}.asset-layout-list .asset-card-details{grid-row:auto}}
+@media(pointer:coarse){.asset-card-actions :is(button,a),.asset-card-details summary{min-height:44px;height:auto}}
+@media(prefers-reduced-motion:reduce){.asset-card,.asset-card-details summary svg{transition:none}}
+
+/* Recently deleted: one row per item, newest first. */
+.recovery-panel{padding-top:0}
+.recovery-panel>.error{margin:16px 24px}
+.recovery-list{list-style:none;margin:0;padding:0}
+.recovery-row{display:grid;grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr) auto;align-items:center;gap:8px 16px;padding:14px 24px;border-bottom:1px solid var(--hairline)}
+.recovery-row:last-child{border-bottom:0}
+.recovery-icon{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:12px;background:color-mix(in srgb,var(--recovery-color) 14%,transparent);color:var(--recovery-color)}
+.recovery-info{min-width:0}
+.recovery-info strong{display:block;font-size:var(--type-small);font-weight:600;overflow-wrap:anywhere}
+.recovery-info p{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:4px;font-size:var(--type-caption);color:var(--muted-foreground)}
+.recovery-info .category-badge{padding:1px 8px;font-size:var(--type-micro)}
+.recovery-value{display:grid;gap:2px;min-width:0;text-align:right}
+.recovery-value strong{font-size:var(--type-small);font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.recovery-value small{font-size:var(--type-caption);color:var(--muted-foreground)}
+.recovery-delete{color:var(--negative)}
+.recovery-delete:hover{background:color-mix(in srgb,var(--negative) 12%,transparent);color:var(--negative)}
+@container content (max-width:860px){.recovery-row{grid-template-columns:auto minmax(0,1fr);padding-inline:16px}.recovery-value{grid-column:2;text-align:left}.recovery-row>.row-actions{grid-column:1/-1;justify-content:flex-start}}
+.records-pagination{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;border-top:1px solid var(--border);font-size:var(--type-caption);color:var(--muted-foreground)}
+.records-pagination>div{display:flex;gap:8px}
+.records-pagination button{height:36px;min-height:36px;font-size:var(--type-small)}
+@media(max-width:600px){.records-pagination{flex-wrap:wrap;padding:14px 16px}.records-pagination>div{margin-left:auto}}
+
+.workspace .content .settings-page{max-width:none}
+.workspace .content .comparison-settings-options{display:grid;gap:10px}
+.workspace .content .comparison-settings-options label{border:1px solid var(--border);border-radius:12px;padding:13px;background:var(--card);cursor:pointer;transition:border-color .15s}
+.workspace .content .comparison-settings-options label:has(input:checked){border-color:var(--primary);background:var(--accent)}
+.workspace .content .currency-catalogue{background:var(--background);gap:5px}
+.workspace .content .currency-catalogue label:has(input:checked){background:var(--accent);color:var(--accent-foreground)}
+.workspace .content .settings-form>button.primary{border-radius:12px;min-height:44px;justify-self:start;min-width:180px}
+@media(prefers-reduced-motion:reduce){.workspace .content tbody tr,.workspace .content .comparison-settings-options label,.nav-item,.segmented>button{transition:none}}
+
+.income-history-chart .income-estimate-key{background:transparent;border:1px dashed var(--primary);border-radius:2px}
+/* The card can sit in either dashboard column, so it adapts to its own width. */
+.income-history-chart{container:income-card/inline-size}
+@container income-card (max-width:560px){.income-history-chart .panel-title{flex-direction:column;align-items:flex-start;gap:12px}.workspace .content.overview-content .income-history-chart .portfolio-headline>div{padding:4px 12px}.workspace .content.overview-content .income-history-chart .portfolio-headline>div:first-child{padding-left:0}.income-history-chart .portfolio-headline strong{font-size:var(--type-title)}}
+
+/* Larger type needs room to wrap, without shrinking on smaller screens. */
+[data-slot="button"] { font-size: var(--type-small); font-weight: 500; min-height: 40px; border-radius: var(--radius-control); }
+[data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"] { font-size: var(--type-body); }
+.comparison-legend button { min-height: 40px; }
+.recharts-cartesian-axis-tick text { font-size: var(--type-small); fill: var(--muted-foreground); }
+.recharts-legend-wrapper { font-size: var(--type-small); line-height: 1.7; }
+.recharts-default-tooltip { font-size: var(--type-small); line-height: 1.6; color: var(--foreground); }
+.recharts-tooltip-label { color: var(--foreground); }
+/* Legend labels stay readable; the series colour is carried by the dot beside each label. */
+.recharts-legend-item-text { color: var(--muted-foreground) !important; }
+@media (max-width: 480px) {
+  .portfolio-headline { flex-direction: column; gap: 20px; }
+  .portfolio-chart { margin-left: 0; width: 100%; }
+}
+@media (pointer: coarse) {
+  [data-slot="button"], .comparison-legend button, .segmented > button { min-height: 44px; }
+}

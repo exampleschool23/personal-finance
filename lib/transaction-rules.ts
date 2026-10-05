@@ -28,6 +28,17 @@ export const hasCriteria = (rule: Criteria) => !!rule.pattern.trim() || extraCri
 export const ruleChoice = (rule: Pick<TransactionRule, 'kind' | 'category_id'>): CategoryChoice | null => rule.kind ? { kind: rule.kind, category_id: rule.category_id } : null;
 
 export const directionOf = (kind: string): Category['direction'] | null => income.includes(kind) ? 'income' : expenses.includes(kind) ? 'expense' : null;
+/** The rule a form describes, name trimmed. A category belongs to one direction, so a rule for both directions
+ * neither requires nor sets one. */
+export function finishedRule(draft: TransactionRule): TransactionRule {
+ const fits = (kind: string | null) => !!kind && draft.direction !== 'any' && directionOf(kind) === draft.direction;
+ const sets = fits(draft.kind), requires = fits(draft.match_kind);
+ return { ...draft, pattern: draft.pattern.trim(), kind: sets ? draft.kind : null, category_id: sets ? draft.category_id : null, match_kind: requires ? draft.match_kind : null, match_category_id: requires ? draft.match_category_id : null };
+}
+/** An amount range's upper bound may not sit below its lower one. */
+export const amountRangeValid = (rule: Pick<TransactionRule, 'amount_min' | 'amount_max'>) => rule.amount_max === null || rule.amount_max >= (rule.amount_min ?? 0);
+/** A rule saves once it narrows something, its range holds and it sets at least one thing. */
+export const canSaveRule = (rule: TransactionRule) => hasCriteria(rule) && amountRangeValid(rule) && (!!rule.kind || !!rule.business_id || rule.tag_ids.length > 0);
 const sameChoice = (record: Pick<Entry, 'kind' | 'custom_category_id'>, choice: CategoryChoice) => record.kind === choice.kind && (record.custom_category_id ?? null) === choice.category_id;
 export const choiceKey = (choice: CategoryChoice) => choice.category_id ?? choice.kind;
 
@@ -89,3 +100,11 @@ export function suggestedPattern(name: string) {
  const trimmed = name.trim().replace(/[\s#*-]*\d[\d\s#*-]*$/, '').trim();
  return (trimmed || name.trim()).slice(0, 120);
 }
+
+const emptyRule = (pattern: string, direction: TransactionRule['direction']): TransactionRule => ({ id: crypto.randomUUID(), pattern, direction, ...openCriteria, kind: null, category_id: null, business_id: null, tag_ids: [] });
+/** A new rule suggested from one category change. */
+export const ruleFromChange = (record: Entry, choice: CategoryChoice): TransactionRule => ({ ...emptyRule(suggestedPattern(record.name), directionOf(choice.kind) ?? 'expense'), ...choice });
+/** A new rule suggested from one business change: "anything from this merchant belongs to this business". */
+export const ruleFromBusiness = (record: Entry, business: string): TransactionRule => ({ ...emptyRule(suggestedPattern(record.name), 'any'), business_id: business });
+/** A blank rule from the Rules list. */
+export const newRule = () => emptyRule('', 'expense');

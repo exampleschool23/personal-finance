@@ -2,7 +2,8 @@
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { useState, type ReactNode } from 'react';
 import type { BusinessOption } from '@/components/presentation-foundation/business-filter';
-import { BusinessPicker, TagSelector } from '@/components/transactions-page';
+import { BusinessPicker } from '@/components/transactions/pickers';
+import { TagSelector } from '@/components/transactions/tags';
 import { showError } from '@/lib/feedback';
 import { canAssignBusiness } from '@/lib/business';
 import { canTag, type Tag } from '@/lib/tags';

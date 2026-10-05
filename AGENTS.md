@@ -60,7 +60,9 @@ The drawer, the shell and the screens are separate. Keep them that way.
 Every workspace page shares one visual language, first built for Overview. Extend
 it instead of styling a page on its own.
 
-- Tokens live at the top of `app/globals.css`: `--font-ui`, the `--type-*` scale
+- Styles live in `app/styles/*.css`, imported in cascade order by `app/globals.css`
+  (tests read them combined through `tests/helpers/stylesheet.mjs`). Tokens live at
+  the top of `app/styles/foundation.css`: `--font-ui`, the `--type-*` scale
   (`caption` 13px, `small` 14px, `compact` 15px, `body` 16px, `title`, `stat`,
   `page`), `--radius-card`, `--radius-control`, `--shadow-card`, `--space-page`,
   `--hairline`, `--field`, and the `--positive` / `--negative` / `--caution`
@@ -197,6 +199,12 @@ database, never by the app.
 # DRY and regression coverage
 
 Reuse shared components, hooks, validators, and calculation helpers instead of duplicating behavior (DRY: Don’t Repeat Yourself). Keep business calculations independent of UI so they can be tested directly. Before introducing an abstraction, check for an existing helper; extract shared behavior when it has multiple real callers. Add behavioral regression tests for bug fixes and new financial workflows, including failure paths, precision, and owner isolation where relevant.
+
+Size limits (`eslint.config.mjs`, the SwiftLint equivalent here): a file stays under 24 KB, a
+function under 150 lines, 40 statements, complexity 20, nesting depth 4, 5 parameters and 4 nested
+callbacks. Older breaches are listed in `eslint-suppressions.json`, which only shrinks: never add to
+it by hand; after fixing a listed spot run `npm run lint:prune`. Split a large screen into a folder of
+parts (`components/transactions/`, `components/budget/`) and styles into `app/styles/`.
 
 Shared modules to reach for first:
 

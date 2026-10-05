@@ -1,6 +1,6 @@
 "use client";
 import { ChartPie, Goal as GoalIcon, ReceiptText } from 'lucide-react';
-import { BudgetProgress } from '@/components/budget-page';
+import { BudgetProgress } from '@/components/budget/budget-rows';
 import { useBudget } from '@/hooks/use-budget';
 import { budgetCategories, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, leftToBudget, monthActuals, monthsBetween, remainingTone } from '@/lib/budget';
 import { expensePlanMonth } from '@/lib/expense-plans';

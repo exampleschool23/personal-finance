@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {loadTS} from './helpers/load-ts.mjs';
+import {stylesheet} from './helpers/stylesheet.mjs';
 
 const language={useLanguage:()=>({locale:'en-US',t:(text,values={})=>text.replace(/\{(\w+)\}/g,(_,key)=>values[key]??key)})};
 const render=(component,props,...children)=>renderToStaticMarkup(React.createElement(component,props,...children));
@@ -67,7 +68,7 @@ test('asset card names its share on the bar with one decimal, a dash without a t
 });
 
 test('redesigned pages translate every label and use the shared formatters',()=>{
- const files=['components/presentation-foundation/page-header.tsx','components/presentation-foundation/stat-tile.tsx','components/presentation-foundation/asset-card.tsx','components/presentation-foundation/brand.tsx','components/debt-summary.tsx','components/asset-dashboard.tsx','components/asset-accounts.tsx','components/recently-deleted.tsx','components/planning/upcoming-page.tsx','components/planning/accounts-page.tsx','components/planning/goals-page.tsx','components/settings-layout.tsx','components/telegram-panel.tsx','components/phone-sign-in.tsx','app/auth/telegram/page.tsx','components/telegram-nudge.tsx','components/onboarding-screen.tsx','components/settings-panel.tsx','components/income-sources-panel.tsx','components/workspace/app-drawer.tsx','components/workspace/top-bar.tsx','components/workspace/workspace-shell.tsx','components/workspace/workspace-dialogs.tsx','components/workspace/records-table.tsx','components/workspace/screen-notices.tsx','components/budget-page.tsx','components/transactions-page.tsx','components/dashboard-cards.tsx','components/cash-flow-report.tsx','components/planning/goal-detail.tsx','components/household-panel.tsx',...fs.readdirSync('components/workspace/screens').map(file=>'components/workspace/screens/'+file)];
+ const files=['components/presentation-foundation/page-header.tsx','components/presentation-foundation/stat-tile.tsx','components/presentation-foundation/asset-card.tsx','components/presentation-foundation/brand.tsx','components/debt-summary.tsx','components/asset-dashboard.tsx','components/asset-accounts.tsx','components/recently-deleted.tsx','components/planning/upcoming-page.tsx','components/planning/accounts-page.tsx','components/planning/goals-page.tsx','components/settings-layout.tsx','components/telegram-panel.tsx','components/phone-sign-in.tsx','app/auth/telegram/page.tsx','components/telegram-nudge.tsx','components/onboarding-screen.tsx','components/settings-panel.tsx','components/income-sources-panel.tsx','components/workspace/app-drawer.tsx','components/workspace/top-bar.tsx','components/workspace/workspace-shell.tsx','components/workspace/workspace-dialogs.tsx','components/workspace/records-table.tsx','components/workspace/screen-notices.tsx','components/budget/budget-rows.tsx','components/budget/planned-input.tsx','components/budget/left-to-budget-card.tsx','components/budget/settings-dialogs.tsx','components/transactions/pickers.tsx','components/transactions/tags.tsx','components/transactions/bulk-edit.tsx','components/transactions/transaction-row.tsx','components/transactions/rule-dialog.tsx','components/transactions/rules-list.tsx','components/dashboard-cards.tsx','components/cash-flow-report.tsx','components/planning/goal-detail.tsx','components/household-panel.tsx',...fs.readdirSync('components/workspace/screens').map(file=>'components/workspace/screens/'+file)];
  const sources=files.map(file=>[file,fs.readFileSync(file,'utf8')]);
  for(const language of ['en','ru','uz']){
   const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));
@@ -80,7 +81,7 @@ test('redesigned pages translate every label and use the shared formatters',()=>
 });
 
 test('shared surfaces are defined once and the stylesheet has no unterminated comments',()=>{
- const css=fs.readFileSync('app/globals.css','utf8');
+ const css=stylesheet();
  for(const selector of ['.panel{','.stat-tile{','.page-heading{','.segmented{','.topbar{'])assert.equal(css.split('\n').filter(line=>line.startsWith(selector)).length,1,selector);
  const stripped=css.replace(/\/\*[\s\S]*?\*\//g,'');
  assert.ok(!stripped.includes('/*'));
@@ -96,13 +97,13 @@ test('the logo links to the main page from every screen that shows it',()=>{
  assert.match(render(Brand,{badge:'Demo'}),/<\/span><span class="brand-badge">Demo<\/span><\/a>$/,'the sample workspace is labelled beside the logo');
  // The drawer, sign-in, loading, setup and account pages all render the same mark.
  for(const file of ['components/workspace/app-drawer.tsx','components/workspace/workspace-shell.tsx','app/auth/access/page.tsx','app/auth/confirm/page.tsx'])assert.match(fs.readFileSync(file,'utf8'),/<Brand/,file);
- const css=fs.readFileSync('app/globals.css','utf8');
+ const css=stylesheet();
  assert.equal(css.split('\n').filter(line=>line.startsWith('.brand{')).length,1);
  assert.match(css,/\.brand\{[^}]*text-decoration:none/);
 });
 
 test('row lists keep their columns lined up from row to row',()=>{
- const css=fs.readFileSync('app/globals.css','utf8');
+ const css=stylesheet();
  const template=selector=>css.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\>]/g,'\\$&')+'\\{[^}]*?grid-template-columns:([^;}]+)'))?.[1];
  // Each of these rows is its own grid, so a bare `auto` column would size to that row's own amount and shift its neighbours.
  for(const row of ['.report-transaction-list>li>*','.transaction-row','.account-holding-row','.share-bars>li','.business-card-list li','.tax-transactions li>button']){
@@ -115,7 +116,7 @@ test('row lists keep their columns lined up from row to row',()=>{
 });
 
 test('page titles and actions sit in the top bar, as in a desktop app',()=>{
- const bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),shell=fs.readFileSync('components/workspace/workspace-shell.tsx','utf8'),header=fs.readFileSync('components/presentation-foundation/page-header.tsx','utf8'),css=fs.readFileSync('app/globals.css','utf8');
+ const bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),shell=fs.readFileSync('components/workspace/workspace-shell.tsx','utf8'),header=fs.readFileSync('components/presentation-foundation/page-header.tsx','utf8'),css=stylesheet();
  assert.match(shell,/<TopBarSlotProvider><main className="workspace">[\s\S]*<\/main><\/TopBarSlotProvider>/,'the bar and the routed screen share one slot');
  assert.match(bar,/<div className="topbar-page-title" ref=\{slot\?\.titleRef\}\/><span className="topbar-title">/,'the section name stands in until the page puts its title there');
  assert.match(bar,/\{roomy && !crowded && <div className="topbar-page-actions" ref=\{slot\?\.actionsRef\}\/>\}/,'actions join the bar only where it has room');
@@ -127,7 +128,7 @@ test('page titles and actions sit in the top bar, as in a desktop app',()=>{
 });
 
 test('the top bar switches between the two display currencies in place, and the rates credit sits in the footer',()=>{
- const bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),shell=fs.readFileSync('components/workspace/workspace-shell.tsx','utf8'),css=fs.readFileSync('app/globals.css','utf8');
+ const bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),shell=fs.readFileSync('components/workspace/workspace-shell.tsx','utf8'),css=stylesheet();
  assert.match(bar,/preferencesData\.currencies\.length > 1 && <Segmented className="header-currency-switch"/,'a one-tap switch, shown only when there is a second currency');
  assert.doesNotMatch(bar,/Popover/,'no pop-up for the display currency');
  assert.doesNotMatch(shell,/Rates By Exchange Rate API|fx-note|Updated \{date\}/,'no exchange-rate date or credit under the pages');
@@ -149,7 +150,7 @@ test('Goals, Reports and Cash flow switch their views from tabs beside the title
  // Accounts keeps its operations behind a Recent activity tab; Cash flow adds expenses from the bar's own Add expense.
  assert.match(fs.readFileSync('components/planning/accounts-page.tsx','utf8'),/\{view==='activity'&&<>\n  <section className="panel account-activity">/);
  assert.doesNotMatch(fs.readFileSync('components/workspace/screens/cash-flow-screen.tsx','utf8'),/addCashFlow\('Other expense'\)/);
- const header=fs.readFileSync('components/presentation-foundation/page-header.tsx','utf8'),bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),css=fs.readFileSync('app/globals.css','utf8');
+ const header=fs.readFileSync('components/presentation-foundation/page-header.tsx','utf8'),bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),css=stylesheet();
  assert.match(header,/\{slot\.actions && tabs\}<\/>, slot\.title\)/,'tabs join the title only when the actions do');
  assert.match(header,/\(tabs \|\| actions\) && <header className=\{`\$\{classes\} page-heading-actions`\}>\{tabs\}\{actions\}<\/header>/,'otherwise they open the page');
  assert.match(bar,/\{roomy && !crowded && <div className="topbar-page-actions"/,'a bar that overflowed keeps only the title');

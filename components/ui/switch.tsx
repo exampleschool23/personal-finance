@@ -5,7 +5,7 @@ import { Switch as SwitchPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
-/** An on/off switch; its look follows the app theme tokens in globals.css (`.switch`). */
+/** An on/off switch; its look follows the app theme tokens in app/styles (`.switch`). */
 function Switch({
   className,
   ...props

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 import { applyFont, defaultFont, fontBootScript, fontIds, fonts, fontStorageKey, isFont, resolveFont } from '../lib/fonts.ts';
 import { defaultPreferences } from '../lib/currencies.ts';
+import {stylesheet} from './helpers/stylesheet.mjs';
 
 test('the font catalogue, the migration, the stylesheet and the boot script agree',()=>{
  assert.deepEqual(fontIds,['inter','onest']);
@@ -16,7 +17,7 @@ test('the font catalogue, the migration, the stylesheet and the boot script agre
  assert.match(migration,new RegExp(`CHECK \\(font IN \\(${fontIds.map(id=>`'${id}'`).join(',')}\\)\\)`));
  assert.match(migration,/DEFAULT 'inter'/);
  assert.ok(fs.readFileSync('database/setup.sql','utf8').includes(migration));
- const css=fs.readFileSync('app/globals.css','utf8');
+ const css=stylesheet();
  for(const font of fonts)assert.ok(css.includes(`[data-font="${font.id}"]{--font-ui:${font.family},var(--font-system)}`),font.id);
  assert.match(css,/^\s*--font-sans: var\(--font-ui\);$/m);
  assert.match(css,/^body\{[^\n]*font-family:var\(--font-ui\)/m);

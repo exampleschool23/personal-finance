@@ -7,6 +7,7 @@ import * as days from '../lib/calendar-days.ts';
 import * as finance from '../lib/finance.ts';
 import * as market from '../lib/market.ts';
 import * as budgets from '../lib/expense-plans.ts';
+import {stylesheet} from './helpers/stylesheet.mjs';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const dependencies={...finance,...market,...budgets,...days};
 const {projectGoal,goalFinancials}=new Function(...Object.keys(dependencies),compile('lib/goal-projection.ts')+';return {projectGoal,goalFinancials};')(...Object.values(dependencies));
@@ -89,7 +90,7 @@ test('a goal without a target date shows the month it is reached at the amount t
 });
 
 test('the Goals page switches Overview, Goal planner and History from the top bar',()=>{
- const css=fs.readFileSync('app/globals.css','utf8'),page=fs.readFileSync('components/planning/goals-page.tsx','utf8'),panel=fs.readFileSync('components/planning/goal-funding-panel.tsx','utf8');
+ const css=stylesheet(),page=fs.readFileSync('components/planning/goals-page.tsx','utf8'),panel=fs.readFileSync('components/planning/goal-funding-panel.tsx','utf8');
  assert.match(page,/<PageHeader title=\{t\('Goals'\)\} tabs=\{<Segmented className="page-tabs"[^\n]*value:'overview'[^\n]*value:'planner'[^\n]*value:'history'/);
  // Overview: the list, then the chosen goal beside what is free for goals; the other views stand alone.
  assert.match(page,/\{view==='overview'&&<>[\s\S]*goals-list[\s\S]*<div className="goals-split">[\s\S]*<GoalDetail[\s\S]*part="funding"\/>/);

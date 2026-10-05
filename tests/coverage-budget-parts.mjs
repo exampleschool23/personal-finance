@@ -33,7 +33,9 @@ const overrides={
  '@/components/ui/popover':{Popover:host('popover'),PopoverAnchor:host('popover-anchor'),PopoverContent:host('popover-content')},
  '@/lib/feedback':{showError:message=>errors.push(message)},
 };
-const page=loadTS('components/budget-page.tsx',overrides);
+// The budget screen's parts, loaded together as one module would be.
+const cache=new Map();
+const page=Object.assign({},...['budget-rows','planned-input','left-to-budget-card','settings-dialogs'].map(name=>loadTS(`components/budget/${name}.tsx`,overrides,cache)));
 const {formatMoney,formatSignedMoney,formatMonthShort}=loadTS('lib/format.ts');
 const {goalEmoji}=loadTS('lib/goal-emoji.ts');
 const money=value=>formatMoney(value,'USD','en-US');

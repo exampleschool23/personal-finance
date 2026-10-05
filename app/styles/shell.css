@@ -1,0 +1,118 @@
+/* The workspace shell, page tabs, page titles, surfaces, hints, key figures and segmented switches. */
+
+/* Workspace shell: navigation rail, sticky top bar and one content column. */
+.workspace{width:100%;min-width:0;padding-bottom:calc(var(--space-page) * 3)}
+.sidebar-brand{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;padding:14px 10px 12px 18px}
+.sidebar-tools{display:flex;align-items:center;gap:2px}
+.sidebar-tools [data-slot]{width:32px;height:32px;border-radius:8px;color:var(--muted-foreground)}
+.sidebar-tools [data-slot]:hover{background:var(--sidebar-accent);color:var(--sidebar-foreground)}
+.sidebar-tools svg{width:17px;height:17px}
+[dir=rtl] .sidebar-tools [data-sidebar=trigger] svg{transform:scaleX(-1)}
+.sidebar-navigation{padding:2px 10px 16px;gap:0}
+.nav-item{height:34px!important;padding:0 10px!important;gap:10px!important;border-radius:8px!important;font-size:var(--type-small)!important;font-weight:500;color:var(--sidebar-foreground);transition:background .15s,color .15s}
+.nav-item svg{width:17px!important;height:17px!important;opacity:.7}
+.nav-item[data-active=true]{background:var(--sidebar-accent);color:var(--sidebar-accent-foreground)}
+.nav-item[data-active=true] svg{opacity:1}
+.nav-item>span.count:last-child{flex:0 0 auto;min-width:max-content;margin-left:auto;background:color-mix(in srgb,var(--negative) 18%,transparent);color:var(--negative)}
+.sidebar-account{padding:12px;gap:6px}
+.user-line{display:flex;align-items:center;gap:4px;min-width:0;padding-top:6px;border-top:1px solid var(--sidebar-border)}
+.user-link{display:flex;flex:1;align-items:center;gap:10px;min-width:0;padding:6px;border-radius:8px;color:inherit;transition:background .15s}
+.user-link:hover,.user-link[data-active=true]{background:var(--sidebar-accent)}
+.user-link>div{flex:1;min-width:0;line-height:1.35}
+.user-line strong{display:block;font-size:var(--type-small);font-weight:600}
+.user-line p{font-size:var(--type-caption);color:var(--muted-foreground);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-link>svg{flex-shrink:0;color:var(--muted-foreground)}
+.avatar{display:grid;place-items:center;flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--sidebar-accent);color:var(--sidebar-accent-foreground);font-size:var(--type-small);font-weight:600}
+.topbar{position:sticky;top:0;z-index:30;container:topbar/inline-size;display:flex;align-items:center;justify-content:space-between;gap:12px;height:60px;padding:0 36px;background:color-mix(in srgb,var(--background) 84%,transparent);backdrop-filter:saturate(1.4) blur(14px);font-size:var(--type-small)}
+.topbar-location{display:flex;align-items:center;gap:12px;min-width:0}
+.topbar-title,.topbar-page-title h1{font-size:var(--type-compact);font-weight:600;color:var(--foreground)}
+.topbar-page-title{display:flex;align-items:baseline;gap:10px;min-width:0}
+.topbar-page-title:empty{display:none}
+.topbar-page-title:not(:empty)+.topbar-title{display:none}
+.topbar-page-title h1{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.topbar-page-title .page-eyebrow{margin:0;font-size:var(--type-caption);letter-spacing:0;text-transform:none;white-space:nowrap}
+/* A page's views as underlined tabs right after its title, as in a desktop app's title bar. */
+.segmented.page-tabs{gap:8px;padding:0;border:0;border-radius:0;background:none}
+.topbar-page-title .page-tabs{align-self:stretch;margin-inline-start:12px}
+/* Without room in the bar the tabs open the page, above its own actions. */
+.page-heading .page-tabs>button{padding-block:8px}
+.segmented.page-tabs>button{height:auto;padding:0 4px;border-radius:0;border-block-end:2px solid transparent;background:none;box-shadow:none;font-size:var(--type-small)}
+.segmented.page-tabs>button[aria-pressed=true]{background:none;box-shadow:none;color:var(--primary);border-block-end-color:var(--primary)}
+/* The strip scrolls sideways and would clip an outer ring to a stray line, so focus is drawn inside each tab. */
+.segmented.page-tabs>button:focus-visible{outline:2px solid var(--ring);outline-offset:-2px;border-radius:6px}
+.topbar-page-actions{display:flex;align-items:center;gap:8px}
+.topbar-page-actions:not(:empty){padding-inline-end:10px;margin-inline-end:2px;border-inline-end:1px solid var(--hairline)}
+.topbar-page-actions .entry-actions{flex-wrap:nowrap;gap:8px}
+.topbar-page-actions .date-picker-trigger{width:auto;min-width:0;height:38px;min-height:38px;padding-inline:10px}
+.topbar-location>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+.topbar-actions [data-slot=button]{height:38px;min-height:38px}
+@media(max-width:640px){.topbar{gap:8px}.topbar-page-title .page-eyebrow{display:none}.topbar-actions{gap:6px}.quick-expense{width:38px;padding:0}@media(pointer:coarse){.quick-expense{width:44px}}.quick-expense>span{display:none}}
+.content{padding:32px 36px;max-width:1640px;margin:auto}
+.workspace .content{container:content/inline-size;display:flex;flex-direction:column;gap:var(--space-page);width:100%;max-width:1440px;margin-inline:auto;padding:28px 36px 0}
+.workspace .content>*{flex-shrink:0;margin-block:0}
+.workspace .content:not(:has(*)){display:none}
+.workspace .review-content{padding-top:var(--space-page)}
+
+/* Page title block. */
+.page-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px 24px;min-height:40px}
+.page-heading>div:first-child{flex:1 1 320px;min-width:0}
+.page-eyebrow{margin-bottom:6px;font-size:var(--type-caption);font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-foreground)}
+.page-heading h1{display:flex;align-items:center;gap:8px;font-size:var(--type-page);font-weight:600;letter-spacing:-.025em;line-height:1.2;overflow-wrap:anywhere}
+.page-heading>label{display:grid;gap:6px;margin:0;font-size:var(--type-caption);color:var(--muted-foreground)}
+.entry-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.entry-actions [data-slot=button],.entry-actions .date-picker-trigger{height:42px;min-height:42px}
+
+/* Surfaces. */
+.panel{min-width:0;padding:20px;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card);box-shadow:var(--shadow-card)}
+.panel-title{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 16px;margin-bottom:16px}
+.panel-title h2{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;font-family:var(--font-display);font-size:var(--type-display);font-weight:500;letter-spacing:-.02em;line-height:1.15}
+.panel-title h2 .count{margin-inline-start:2px;align-self:center;font-family:var(--font-ui);letter-spacing:0}
+/* Dialog titles share the card titles' serif. */
+[data-slot=dialog-title]{font-family:var(--font-display);font-size:var(--type-display);font-weight:500;letter-spacing:-.02em;line-height:1.15}
+.panel-link{display:inline-flex;align-items:center;gap:6px;min-height:24px;font-size:var(--type-caption);font-weight:500;color:var(--primary);white-space:nowrap}
+/* Links and link buttons in a panel heading keep at least a 24px target. */
+.panel-title :is(a,[data-variant=link]){display:inline-flex;align-items:center;min-height:24px}
+.panel-link:hover{text-decoration:underline;text-underline-offset:3px}
+/* Explanations live behind a small ⓘ instead of a line of grey text under every heading. */
+.info-hint{position:relative;display:inline-grid;place-items:center;flex-shrink:0;width:22px;height:22px;border-radius:50%;color:var(--muted-foreground);transition:color .15s,background .15s}
+.info-hint:hover,.info-hint[data-state=open]{background:var(--muted);color:var(--foreground)}
+.info-hint svg{width:15px;height:15px}
+.info-hint::after{content:"";position:absolute;inset:-5px}
+h2:has(>.info-hint){display:flex;align-items:center;gap:6px}
+.info-hint-content{display:grid;gap:8px;width:min(340px,calc(100vw - 32px));font-size:var(--type-small);font-weight:400;letter-spacing:0;line-height:1.55;color:var(--popover-foreground)}
+.info-hint-content a{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+.panel-title>span{font-size:var(--type-caption);color:var(--muted-foreground)}
+.count{display:inline-block;min-width:22px;margin-left:8px;padding:2px 8px;border-radius:999px;background:var(--muted);color:var(--muted-foreground);font-size:var(--type-micro);font-weight:600;line-height:1.5;letter-spacing:0;text-align:center;vertical-align:middle;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;padding:3px 10px;border:1px solid var(--border);border-radius:999px;background:var(--muted);color:var(--muted-foreground);font-size:var(--type-caption);font-weight:500;line-height:1.5}
+.empty{display:grid;justify-items:center;gap:6px;padding:40px 24px;text-align:center;color:var(--muted-foreground);font-size:var(--type-small)}
+.empty>svg{box-sizing:content-box;width:22px;height:22px;padding:12px;margin-bottom:8px;border-radius:50%;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)}
+.empty h3{font-size:var(--type-title);font-weight:600;color:var(--foreground)}
+.empty p{max-width:46ch}
+.empty [data-slot=button]{margin-top:12px}
+
+/* Key figures. */
+.stat-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.stat-tiles[data-columns="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+.stat-tile{display:flex;flex-direction:column;gap:8px;min-width:0;padding:20px;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card);box-shadow:var(--shadow-card)}
+.stat-tile h3{font-size:var(--type-caption);font-weight:500;line-height:1.4;color:var(--muted-foreground)}
+.stat-tile>strong{font-size:var(--type-stat);font-weight:600;letter-spacing:-.03em;line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat-tile>p{margin-top:auto;font-size:var(--type-caption);line-height:1.5;color:var(--muted-foreground)}
+@container content (max-width:860px){.stat-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.stat-tiles[data-columns="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@container content (max-width:720px){.stat-tiles[data-columns="3"]{grid-template-columns:minmax(0,1fr)}.stat-tiles[data-columns="3"] .stat-tile{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 16px;padding:16px}.stat-tiles[data-columns="3"] .stat-tile>p{grid-column:1/-1;margin:0}}
+@container content (max-width:520px){.stat-tiles{grid-template-columns:minmax(0,1fr);gap:12px}.stat-tile{padding:16px}}
+
+/* Segmented controls switch between views of the same data. */
+.segmented{display:inline-flex;gap:2px;max-width:100%;padding:3px;border:1px solid var(--border);border-radius:12px;background:var(--muted);overflow-x:auto;scrollbar-width:none}
+.segmented::-webkit-scrollbar{display:none}
+.segmented>button{flex-shrink:0;height:36px;padding-inline:14px;border-radius:9px;font-size:var(--type-small);font-weight:500;white-space:nowrap;color:var(--muted-foreground);transition:background .15s,color .15s}
+.segmented>button:hover{color:var(--foreground)}
+.segmented>button[aria-pressed=true]{background:var(--card);color:var(--foreground);box-shadow:0 1px 2px rgb(0 0 0 / 20%)}
+.segmented>button:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
+/* On narrow pages a switch fills the row and wraps rather than hiding options off-screen. */
+@container content (max-width:520px){.segmented:not(.page-tabs){display:flex;width:100%;flex-wrap:wrap;overflow:visible}.segmented:not(.page-tabs)>button{flex:1 1 auto;padding-inline:10px}}
+
+/* Rows of overview figures. */
+.allocation-bar{display:flex;gap:3px;height:10px;border-radius:999px;overflow:hidden}
+.cash-footer{display:flex;justify-content:space-between;padding-top:20px;margin-top:26px;border-top:1px solid var(--border);font-size:var(--type-body)}
+.cash-footer strong{color:var(--positive)}

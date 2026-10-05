@@ -1,0 +1,542 @@
+{
+  "app/api/account-access/route.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "app/api/asset-movements/route.ts": {
+    "max-depth": {
+      "count": 2
+    }
+  },
+  "app/api/backup/route.ts": {
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "app/api/benchmarks/route.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/api/household/route.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "app/api/planning/route.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-depth": {
+      "count": 3
+    },
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "app/api/records/route.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-depth": {
+      "count": 4
+    },
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "components/account-access-panel.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/asset-dashboard.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/business-reports.tsx": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "components/business-setup-flow.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/cash-account-field.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/cash-flow-report.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/data-tools.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/delete-category-dialog.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/financial-review.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/income-record-form.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/income-sources-panel.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/instrument-picker.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/investment-comparison-settings.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/investment-comparison.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "components/investment-tracker.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "components/mortgage-payment-dialog.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/onboarding-screen.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/planning/account-operation.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/planning/accounts-page.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "size/max-file-bytes": {
+      "count": 1
+    }
+  },
+  "components/planning/asset-movement-dialog.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/planning/goal-forecast.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/planning/goal-funding-panel.tsx": {
+    "complexity": {
+      "count": 3
+    }
+  },
+  "components/planning/goals-page.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/planning/investment-goal-plan.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/portfolio-allocation-plan.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/portfolio-overview.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/record-dialog.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "size/max-file-bytes": {
+      "count": 1
+    }
+  },
+  "components/spending-pace-card.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/transaction-details-dialog.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/workspace/records-table.tsx": {
+    "complexity": {
+      "count": 2
+    }
+  },
+  "components/workspace/screens/budget-screen.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "components/workspace/screens/cash-flow-screen.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/workspace/screens/reports-screen.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "components/workspace/screens/transactions-screen.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "components/workspace/workspace-dialogs.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "components/workspace/workspace-provider.tsx": {
+    "complexity": {
+      "count": 2
+    },
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "max-statements": {
+      "count": 2
+    },
+    "size/max-file-bytes": {
+      "count": 1
+    }
+  },
+  "components/workspace/workspace-shell.tsx": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "hooks/use-earning-sources.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "hooks/use-expense-plans.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "hooks/use-planning.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "hooks/use-transaction-rules.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/action-messages.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/budget.ts": {
+    "max-params": {
+      "count": 5
+    }
+  },
+  "lib/business-report.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 2
+    }
+  },
+  "lib/business-tax.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/cash-flow-report.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/cash-forecast.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/csv.ts": {
+    "complexity": {
+      "count": 2
+    }
+  },
+  "lib/dated-exchange-rate.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/demo-finance.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/deposit-interest.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/financial-report-pdf.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-depth": {
+      "count": 2
+    },
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "lib/financial-report.ts": {
+    "complexity": {
+      "count": 3
+    },
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "max-statements": {
+      "count": 1
+    },
+    "size/max-file-bytes": {
+      "count": 1
+    }
+  },
+  "lib/goal-funding.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/goal-projection.ts": {
+    "max-params": {
+      "count": 2
+    }
+  },
+  "lib/income-history.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/investment-benchmarks.ts": {
+    "complexity": {
+      "count": 2
+    },
+    "max-params": {
+      "count": 1
+    },
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "lib/investment-comparison.ts": {
+    "complexity": {
+      "count": 2
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/investment-history.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/investment-period.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/market.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/monitoring.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/monthly-income-cards.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/planning-schemas.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/portfolio-history.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/record-kind.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/record-schema.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/recurring-insights.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/recurring.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/statement-rows.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/telegram-bot.ts": {
+    "complexity": {
+      "count": 2
+    },
+    "max-params": {
+      "count": 4
+    },
+    "size/max-file-bytes": {
+      "count": 1
+    }
+  },
+  "lib/telegram-entry.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-depth": {
+      "count": 1
+    },
+    "max-statements": {
+      "count": 1
+    }
+  },
+  "lib/telegram-flow.ts": {
+    "complexity": {
+      "count": 5
+    },
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    },
+    "max-statements": {
+      "count": 1
+    },
+    "size/max-file-bytes": {
+      "count": 1
+    }
+  },
+  "lib/telegram-onboarding.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/telegram-webapp.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/transaction-list.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/transaction-rules.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/transaction-tools.ts": {
+    "complexity": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "lib/xls.ts": {
+    "complexity": {
+      "count": 1
+    }
+  },
+  "lib/xlsx.ts": {
+    "complexity": {
+      "count": 1
+    }
+  }
+}

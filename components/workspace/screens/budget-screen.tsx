@@ -1,7 +1,10 @@
 "use client";
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
-import { BudgetGroupCard, BudgetProgress, BudgetSectionHeader, BudgetSettingsDialog, BudgetTotalRow, CategorySettingsDialog, ContributionRows, LeftToBudgetCard, PlannedInput, useCategoryName, type BudgetFigures } from '@/components/budget-page';
+import { BudgetGroupCard, BudgetProgress, BudgetSectionHeader, BudgetTotalRow, ContributionRows, useCategoryName } from '@/components/budget/budget-rows';
+import { LeftToBudgetCard } from '@/components/budget/left-to-budget-card';
+import { PlannedInput } from '@/components/budget/planned-input';
+import { BudgetSettingsDialog, CategorySettingsDialog, type BudgetFigures } from '@/components/budget/settings-dialogs';
 import { useLanguage } from '@/components/language-provider';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { PanelSkeleton } from '@/components/presentation-foundation/loading-placeholder';

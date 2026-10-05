@@ -115,7 +115,7 @@ test('the database refuses case-only duplicate categories per owner and keeps li
 
 test('deleting a rule asks first and confirms with Deleted, never Saved',async()=>{
  const values=[];let cursor=0;
- const {RulesDialog}=loadTS('components/transactions-page.tsx',{
+ const {RulesDialog}=loadTS('components/transactions/rules-list.tsx',{
   react:{...React,useState(initial){const i=cursor++;if(!(i in values))values[i]=initial;return [values[i],value=>{values[i]=value;}];}},
   '@/components/language-provider':{useLanguage:()=>({t,locale:'en-US'})},
  });

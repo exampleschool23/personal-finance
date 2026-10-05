@@ -12,7 +12,7 @@ export const isFont = (value: unknown): value is Font => fontIds.includes(value 
 /** Anything unknown (older rows, blocked storage, tampered values) falls back to the default. */
 export const resolveFont = (value: unknown): Font => isFont(value) ? value : defaultFont;
 export const fontStorageKey = 'hoggish-font';
-/** Sets the root `data-font` attribute that `app/globals.css` maps to `--font-ui`; `persist` also remembers it for the next visit. */
+/** Sets the root `data-font` attribute that `app/styles/foundation.css` maps to `--font-ui`; `persist` also remembers it for the next visit. */
 export function applyFont(font: Font, persist = true, root: { dataset: DOMStringMap } = document.documentElement) {
   root.dataset.font = font;
   if (!persist) return;

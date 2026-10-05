@@ -12,7 +12,7 @@ Arabic and German layouts.
 
 Coverage audit 2026-10-03: 172 cases were added from the source (rules in AGENTS.md / UI-AGENT.md, shared pieces, every screen), not yet measured live.
 
-Token reference (app/globals.css): `--type-micro` 12px, `--type-caption` 13px,
+Token reference (app/styles/foundation.css): `--type-micro` 12px, `--type-caption` 13px,
 `--type-small` 14px, `--type-compact` 15px, `--type-body`/`--type-title` 16px,
 `--type-heading` 20px, `--type-page`/`--type-stat` 22–26px, `--type-hero` 30–40px;
 `--radius-card` 12px, `--radius-control` 10px; `--space-page` 20px; tones
@@ -29,16 +29,16 @@ secondary text `#68655f` in light mode (the reference app's `#777573` fails AA o
 | TOK-004 | D1 | Page and rail colour | body / sidebar background in light | `#f6f5f3` |
 | TOK-005 | D1 | No literal colours in new CSS | grep new rules (incl. `*.module.css`) for `#hex`, `rgb(` outside `:root` | None; tokens only (onboarding once hard-coded lime) `[dr 2026-10-02]` |
 | TOK-006 | D1 | Page padding | `.content` padding / gap | `--space-page`; children spaced by flex gap, no outer margins |
-| TOK-007 | D2 | Selectors defined once | grep `app/globals.css` for repeated selectors | One rule per selector; unused classes removed (e.g. `.budget-unallocated`) |
-| TOK-008 | D1 | No literal px font sizes in CSS | `grep -c 'font-size:[0-9.]*px' app/globals.css components/*.module.css` | Zero outside `:root` token definitions (was 77) `[dr 2026-10-02]` |
+| TOK-007 | D2 | Selectors defined once | grep `app/styles/*.css` for repeated selectors | One rule per selector; unused classes removed (e.g. `.budget-unallocated`) |
+| TOK-008 | D1 | No literal px font sizes in CSS | `grep -c 'font-size:[0-9.]*px' app/styles/*.css components/*.module.css` | Zero outside `:root` token definitions (was 77) `[dr 2026-10-02]` |
 | TOK-009 | D1 | One brand in both themes | Compare `--brand`, logo colour and accent fills light vs dark | Teal in both (dark `#5cc8b9`); no lime `#c4f36b`; landing closing band not a full-width accent block in dark `[dr 2026-10-02]` |
-| TOK-010 | D1 | Literal px font sizes left | `grep -no 'font-size:[0-9.]*px' app/globals.css components/*.module.css` and `grep -n 'clamp([0-9]*px' components/*.module.css` | Only emoji tile rules remain (category-icon, goal covers); `.account-list-title>.business-mark` 10px (globals.css ~2271), sign-in `.cardHeading h1` 28px and landing `.pillarList strong` clamp(17px…) use `--type-*` tokens |
-| TOK-011 | D1 | No literal colours in business rules | `grep -n '#fff' app/globals.css` and `grep -n '#000' app/globals.css` within `.business-mark`, `.business-color-field` | Initial colour and swatch inset ring come from tokens (`--primary-foreground`, `--hairline`), not `#fff` / `#000` |
+| TOK-010 | D1 | Literal px font sizes left | `grep -no 'font-size:[0-9.]*px' app/styles/*.css components/*.module.css` and `grep -n 'clamp([0-9]*px' components/*.module.css` | Only emoji tile rules remain (category-icon, goal covers); `.account-list-title>.business-mark` 10px (globals.css ~2271), sign-in `.cardHeading h1` 28px and landing `.pillarList strong` clamp(17px…) use `--type-*` tokens |
+| TOK-011 | D1 | No literal colours in business rules | `grep -n '#fff' app/styles/*.css` and `grep -n '#000' app/styles/*.css` within `.business-mark`, `.business-color-field` | Initial colour and swatch inset ring come from tokens (`--primary-foreground`, `--hairline`), not `#fff` / `#000` |
 | TOK-012 | D1 | Business and tag palette has a dark variant | `getComputedStyle(.business-mark).backgroundColor` and `.tag-chip-dot` background in light and dark | `paletteColor()` adapts per theme (it returns the same hsl 46% lightness in both); dot ≥ 3:1 against the card in dark |
 | TOK-013 | D2 | Radii from tokens on new pieces | Audit D radii on Settings, Reports, Transactions (Edit multiple on) | Cards `--radius-card`, controls `--radius-control`, pills 999px; no 14px settings tab list, 12px segmented, 9px segment, 7px/5px business marks or 12px `.error` literals |
 | TOK-014 | D1 | No outer margins inside `.content` | `getComputedStyle(el).margin` for `.content > *`, `.settings-layout .panel`, `.content > .error` | 0 on every side; spacing only from the flex gap (Settings panels carry `margin:0 0 16px`, `.error` `12px 0`) |
 | TOK-015 | D2 | No inline layout styles | `grep -rn 'style={{ margin' components app` | None (sign-in "Continue with phone" has `marginTop: 10`); only custom-property or width styles remain |
-| TOK-016 | D1 | One red token | `grep -rn 'var(--destructive)' components/*.module.css app/globals.css` outside button variants | Form errors use `--negative` everywhere (onboarding `.error` uses `--destructive`) |
+| TOK-016 | D1 | One red token | `grep -rn 'var(--destructive)' components/*.module.css app/styles/*.css` outside button variants | Form errors use `--negative` everywhere (onboarding `.error` uses `--destructive`) |
 
 ## TYPE — typography
 
@@ -279,7 +279,7 @@ secondary text `#68655f` in light mode (the reference app's `#777573` fails AA o
 | RTL-001 | D0 | Direction | Arabic: `document.documentElement.dir` | `rtl`; drawer on the right |
 | RTL-002 | D1 | Logical properties | Icons, handles, chevrons | Mirrored correctly; no `left`/`right` in new rules |
 | RTL-003 | D1 | Digits | Amounts | Latin digits |
-| RTL-004 | D1 | Physical properties left in CSS | grep for margin-left, margin-right, padding-left, padding-right, text-align:left, text-align:right, left:, right:, border-left in app/globals.css and components/*.module.css | Zero in rules touched since 9c08db8; known offenders mirrored: `.count` margin, `.error` Retry margin, `table` text-align, `.records td.amount`, `.date-picker-presets` border, settings tabs, sign-in password, onboarding `.option` and `.optionMark`, landing `.nav` padding |
+| RTL-004 | D1 | Physical properties left in CSS | grep for margin-left, margin-right, padding-left, padding-right, text-align:left, text-align:right, left:, right:, border-left in app/styles/*.css and components/*.module.css | Zero in rules touched since 9c08db8; known offenders mirrored: `.count` margin, `.error` Retry margin, `table` text-align, `.records td.amount`, `.date-picker-presets` border, settings tabs, sign-in password, onboarding `.option` and `.optionMark`, landing `.nav` padding |
 | RTL-005 | D0 | Password field in Arabic | /sign-in and /auth/access in ar (Accept-Language) | Show-password button at the inline end (left); typed text never runs under it |
 | RTL-006 | D1 | Directional icons mirror | Arabic: landing and sign-in arrows, phone Send code, onboarding Continue / Back, setup Back, date picker month arrows, Budget month navigator | Arrows point with the reading direction (mirrored or swapped); chevrons for months move the right way |
 | RTL-007 | D1 | Reports in RTL | Arabic, Reports P&L and transactions | Indent on the right (`padding-inline-start`); folded chevrons point left; drill chip X at its end; amounts Latin digits with "−" kept before the symbol |
@@ -328,11 +328,11 @@ secondary text `#68655f` in light mode (the reference app's `#777573` fails AA o
 
 | ID | Sev | Case | Measure | Expect |
 |---|---|---|---|---|
-| MOT-001 | D1 | Reduced motion respected | For every `animation`/`transition` in `app/globals.css` and `components/*.module.css`, a `prefers-reduced-motion: reduce` rule turns it off | No moving element left (shimmer, reveal, chevrons, rows, onboarding steps, landing window) |
+| MOT-001 | D1 | Reduced motion respected | For every `animation`/`transition` in `app/styles/*.css` and `components/*.module.css`, a `prefers-reduced-motion: reduce` rule turns it off | No moving element left (shimmer, reveal, chevrons, rows, onboarding steps, landing window) |
 | MOT-002 | D0 | Content visible without JavaScript | Landing / sign-in served HTML (`curl -s <url>` and check `.reveal` styles) | Server-rendered sections never start at opacity 0 waiting for JS `[dr 2026-10-02]` |
 | MOT-003 | D2 | Restrained motion | `document.getAnimations()` while idle on each screen | Nothing loops except loading skeletons; durations ≤ 300ms for UI transitions |
 | MOT-004 | D2 | No layout shift on state change | Open/close disclosures, switch segments | Surrounding content does not jump; height animates or snaps cleanly |
-| MOT-005 | D1 | New transitions respect reduced motion | `grep -n 'transition' app/globals.css components/*.module.css` vs the reduce rules | `.sankey-link`, `.info-hint`, landing `.pillarList button` and every other transition switched off under `prefers-reduced-motion: reduce` |
+| MOT-005 | D1 | New transitions respect reduced motion | `grep -n 'transition' app/styles/*.css components/*.module.css` vs the reduce rules | `.sankey-link`, `.info-hint`, landing `.pillarList button` and every other transition switched off under `prefers-reduced-motion: reduce` |
 | MOT-006 | D2 | UI durations | Computed `transition-duration` / `animation-duration` on onboarding progress (.45s), steps (.42s), done mark (.5s) | ≤ 300ms for UI state changes; longer only for landing marketing reveal |
 | MOT-007 | D2 | Report switches do not jump | Switch Breakdown ↔ Trends and Sankey ↔ P&L; measure the transactions panel `top` | Panel height change snaps once; no bounce or repeated reflow |
 

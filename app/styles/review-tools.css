@@ -1,0 +1,260 @@
+/* Review and tools layouts, goal funding, monthly review, accumulation goals, account security and income sources. */
+
+/* Shared review and tools layout, sized to the content container. */
+.tools-panel{min-width:0;container-type:inline-size}
+.tools-panel h2{font-size:var(--type-title);font-weight:600;letter-spacing:-.01em;margin-bottom:6px}
+.tools-panel h3{font-size:var(--type-small);font-weight:600;margin-bottom:6px}
+.tools-panel p{font-size:var(--type-small);line-height:1.6;margin-block:6px}
+.tools-panel>p.muted:first-of-type{max-width:80ch}
+.tools-panel .tracker-fields{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));align-items:end;margin-block:16px}
+.tools-panel .tracker-fields>label{margin:0}
+.tools-panel .tracker-fields>p{grid-column:1/-1;margin:0}
+.tools-panel a{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+.review-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin-block:16px}
+.review-grid>article{display:flex;flex-direction:column;gap:6px;min-width:0;padding:16px;border:1px solid var(--border);border-radius:14px;background:color-mix(in srgb,var(--muted) 45%,transparent)}
+.review-grid>article h3{margin:0;font-size:var(--type-caption);font-weight:500;color:var(--muted-foreground)}
+.review-grid>article p{margin:0;font-size:var(--type-caption)}
+.review-grid>article [data-slot=button]{align-self:flex-start;margin-top:6px}
+.review-grid strong{display:block;font-size:var(--type-stat);font-weight:650;letter-spacing:-.02em;line-height:1.25;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.review-grid label,.inline-tool-form label{display:grid;gap:8px;min-width:0}
+.inline-tool-form{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin-block:16px}
+.inline-tool-form>label{flex:1 1 160px;margin:0}
+.inline-tool-form :is(input,select){max-width:100%}
+.tool-list{list-style:none;margin:16px 0;padding:0}
+.tool-list li{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:12px 0;border-bottom:1px solid var(--hairline);font-size:var(--type-small);overflow-wrap:anywhere}
+.tool-list li:last-child{border-bottom:0}
+.tool-list li p{margin:2px 0 0;font-size:var(--type-caption);color:var(--muted-foreground)}
+.tool-list a{font-size:var(--type-small);font-weight:500;color:var(--primary)}
+.tool-list li>label{max-width:100px}
+.tools-panel details>summary{cursor:pointer;min-height:44px;padding:12px 0;font-size:var(--type-small);font-weight:500;color:var(--muted-foreground)}
+.tools-panel details>summary:hover{color:var(--foreground)}
+.tools-panel details+details,.tools-panel .review-grid+details{border-top:1px solid var(--hairline)}
+.partial-total{display:block;font-size:var(--type-small);font-weight:500;line-height:1.6;color:var(--foreground);background:var(--accent);border:1px solid var(--border);padding:8px 12px;border-radius:8px;margin-block:8px;overflow-wrap:anywhere}
+.import-preview{max-height:400px;margin-block:16px}
+.record-filter-options{min-width:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:12px;align-items:end}
+.record-filters .mobile-filter-toggle{display:none}
+/* Narrow pages (a phone, or a tablet beside the drawer) keep only search visible; the other filters open from Filters. */
+@container content (max-width:720px){
+ .workspace .content .records .record-filters{grid-template-columns:minmax(0,1fr) auto;padding:0 16px 16px}
+ .workspace .content .record-filters .record-filter-search{grid-column:auto}
+ .record-filters .mobile-filter-toggle{display:inline-flex}
+ .record-filter-options{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .record-filter-options[data-expanded=false]{display:none}
+ .record-filter-options>button{grid-column:1/-1}
+}
+.goal-chart-canvas{min-width:0}
+@media(max-width:1200px){.workspace .content .records .record-filters{grid-template-columns:1fr}.record-filter-options{grid-template-columns:repeat(2,minmax(0,1fr))}.record-filter-options>button{grid-column:1/-1;justify-self:end}}
+@media(max-width:640px){
+ .tools-panel{padding:18px}
+ .goal-projection-chart{height:300px;overflow:visible}
+ .goal-chart-canvas{min-width:0}
+}
+/* Keep checkbox visuals square; their labels provide the larger touch target. */
+.tools-panel :is(button:not([role="checkbox"]),input,select){min-height:44px}
+.tools-panel .inline-tool-form>fieldset{flex:1 1 100%;width:100%;max-width:none}
+.tools-panel .inline-tool-form>fieldset.tracker-fields{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+
+/* Goal funding: full-width, named cards instead of a narrow fieldset in a flex row. */
+.goal-funding-notice{padding:14px 16px;background:var(--accent);border:1px solid var(--border);border-radius:10px;font-size:var(--type-small)}
+.goal-funding-advanced>summary{display:flex;align-items:center;gap:10px;list-style:none}
+.goal-funding-advanced>summary:focus-visible{outline:2px solid var(--ring);outline-offset:3px;border-radius:6px}
+.goal-disclosure-chevron{margin-left:auto;flex-shrink:0;transition:transform .15s ease}
+.goal-funding-advanced[open]>summary>.goal-disclosure-chevron{transform:rotate(180deg)}
+.goal-funding-editors{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:16px}
+.goal-funding-editor{display:flex;flex-direction:column;gap:16px;min-width:0;padding:18px;border:1px solid var(--border);border-radius:12px;background:var(--background)}
+.goal-funding-editor header h3{font-size:var(--type-body);margin:0;overflow-wrap:anywhere}
+.goal-funding-editor header p{font-size:var(--type-small);margin:4px 0 0}
+.goal-funding-controls{display:grid;gap:12px;border:0;margin:0;padding:0;min-width:0}
+.goal-funding-enable{margin:0;display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;font-size:var(--type-small)}
+.goal-funding-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;border:0;margin:0;padding:0;min-width:0}
+.goal-funding-fields>label{margin:0;display:grid;align-content:start;gap:8px;min-width:0;font-size:var(--type-small);line-height:1.5}
+.goal-funding-fields :is(input,[data-slot="native-select-wrapper"],.date-picker-trigger){width:100%;min-width:0;max-width:100%}
+.goal-funding-advanced{border-top:1px solid var(--border)}
+.goal-funding-advanced>summary{font-size:var(--type-small);color:var(--muted-foreground)}
+.goal-funding-editor-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:auto;padding-top:12px;border-top:1px solid var(--border)}
+.goal-funding-editor-footer>span{font-size:var(--type-small);flex:1 1 100px}
+.goal-funding-editor-footer>div{display:flex;gap:8px;flex-wrap:wrap}
+.goal-activity-form{margin:0}
+.goal-activity-form>p{font-size:var(--type-small);margin-top:0;margin-bottom:16px}
+.goal-field-wide{grid-column:1/-1}
+.goal-activity-actions{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+.goal-activity-actions>button{white-space:normal;height:auto}
+.goal-activity-amount{font-variant-numeric:tabular-nums}
+@container(min-width:740px){.goal-funding-editors{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container(max-width:480px){
+ .goal-funding-editor{padding:14px}
+ .goal-funding-fields{grid-template-columns:minmax(0,1fr)}
+ .goal-activity-actions>button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.goal-disclosure-chevron{transition:none}}
+
+/* Currency is chosen once in the workspace header; editors show its unit. */
+.currency-value{display:grid;align-content:start;gap:8px;min-width:0;margin-bottom:20px;font-size:var(--type-body)}
+.currency-value>strong{display:flex;align-items:center;min-height:46px;font-size:var(--type-body);font-weight:500;overflow-wrap:anywhere}
+
+/* Monthly review keeps the period control compact and explains missing activity. */
+.monthly-review-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.monthly-review-heading>div{flex:1 1 320px;min-width:0}
+.monthly-review-heading h2{margin:0}
+.monthly-review-heading>label{margin:0;flex:0 1 250px;min-width:0;gap:8px;font-size:var(--type-small)}
+.monthly-review-heading .date-picker-trigger{width:100%}
+.monthly-review-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-block:20px}
+.monthly-review-metrics h3{font-size:var(--type-small);color:var(--muted-foreground)}
+.monthly-review-metrics p{font-size:var(--type-small);margin-bottom:0}
+.monthly-review-net-worth{margin-top:24px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:baseline;gap:8px 20px;flex-wrap:wrap}
+.monthly-review-net-worth strong{font-size:var(--type-small);font-weight:500}
+.monthly-review-net-worth p{font-size:var(--type-small);margin:0}
+@container(max-width:600px){
+ .monthly-review-heading>label{flex:1 1 100%}
+ .monthly-review-metrics{grid-template-columns:minmax(0,1fr);gap:10px}
+ .monthly-review-metrics>article{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;padding:14px}
+ .monthly-review-metrics h3{margin:0;align-self:center}
+ .monthly-review-metrics p{grid-column:1/-1;margin:0}
+ .monthly-review-metrics strong{font-size:var(--type-stat);max-width:100%;overflow-wrap:anywhere}
+}
+
+/* Compact accumulation goals keep balances and progress visible without opening a chart. */
+.investment-goal-plan .investment-target-row{gap:12px;padding:16px}
+.investment-goal-plan .goal-card-values{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.investment-goal-plan .goal-card-values>div+div{padding-left:16px;border-left:1px solid var(--border)}
+.investment-goal-plan .goal-card-values dd{font-size:var(--type-stat)}
+.investment-goal-progress{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap;font-size:var(--type-small)}
+.investment-goal-progress progress{width:100%;height:6px;accent-color:var(--primary)}
+.investment-goal-progress strong{margin-left:auto;font-weight:500}
+.investment-goal-plan .investment-goal-fields{display:flex;align-items:end;flex-wrap:wrap;gap:12px;max-width:none;margin:0}
+.investment-goal-fields>label{flex:0 1 260px;margin:0;gap:6px}
+.investment-goal-fields .entry-actions{margin:0}
+.investment-goal-plan .ownership-summary{display:flex;flex-wrap:wrap;gap:6px 24px;margin:0;padding:10px 12px;font-size:var(--type-small)}
+.investment-goal-plan .ownership-summary p{margin:0}
+.investment-goal-plan .investment-goal-chart{margin:0;padding-top:8px}
+.investment-goal-chart>summary{cursor:pointer;min-height:36px;font-size:var(--type-compact)}
+.investment-goal-plan .goal-projection-chart{height:220px;margin:8px 0 0}
+.investment-goal-plan .goal-help{font-size:var(--type-small);margin-block:10px}
+@media(max-width:640px){
+ .investment-goal-plan .goal-card-values{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .investment-goal-plan .goal-card-values>div:nth-child(odd){border-left:0;padding-left:0}
+ .investment-goal-plan .goal-card-values dd{font-size:var(--type-heading)}
+ .investment-goal-fields>label{flex:1 1 100%}
+ .investment-goal-plan .goal-projection-chart{height:200px}
+}
+
+
+.investment-plan-body{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,1.5fr);gap:24px;align-items:center;min-width:0}
+.investment-plan-controls{display:grid;gap:12px;min-width:0}
+.investment-goal-plan .goal-card-values{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.investment-goal-plan .goal-card-values>div:nth-child(odd){border-left:0;padding-left:0}
+.investment-goal-plan .goal-card-values dt{font-size:var(--type-small)}
+.investment-goal-plan .goal-card-values dd{font-size:var(--type-heading)}
+.investment-goal-plan .investment-goal-chart{border:0;padding:0;margin:0;min-width:0}
+.investment-goal-chart h4{font-size:var(--type-small);font-weight:500;color:var(--muted-foreground)}
+.investment-goal-plan .goal-projection-chart{height:240px}
+.investment-goal-plan .investment-goal-fields{gap:8px}
+.investment-goal-fields>label{flex:1 1 160px;font-size:var(--type-small)}
+.investment-goal-plan .ownership-summary{display:block;background:transparent;border:0;padding:0;font-weight:400}
+.investment-plan-method{font-size:var(--type-small);color:var(--muted-foreground);margin-top:12px}
+.investment-plan-method summary{cursor:pointer;min-height:32px}
+.investment-goal-progress progress{appearance:none;border:0;border-radius:8px;overflow:hidden;background:var(--muted)}
+.investment-goal-progress progress::-webkit-progress-bar{background:var(--muted);border-radius:8px}
+.investment-goal-progress progress::-webkit-progress-value{background:var(--primary);border-radius:8px}
+.investment-goal-progress progress::-moz-progress-bar{background:var(--primary);border-radius:8px}
+@container(max-width:720px){.investment-plan-body{grid-template-columns:minmax(0,1fr);gap:12px}.investment-goal-plan .goal-projection-chart{height:220px}}
+
+/* Keep account security a compact settings form rather than a full-width worksheet. */
+.workspace .content .account-security-panel{max-width:880px}
+.account-security-panel h2{margin-bottom:4px}
+.account-security-panel>p:not(.error){font-size:var(--type-small);color:var(--muted-foreground);margin:4px 0 16px}
+.account-security-panel .record-form{margin:0}
+.account-security-panel .tracker-fields{gap:12px;margin-bottom:14px}
+.account-security-panel[data-mode="change_password"] .tracker-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+.account-security-panel .tracker-fields label{min-width:0;margin:0;gap:6px;font-size:var(--type-compact)}
+.account-security-panel .tracker-fields input{width:100%;min-width:0}
+.account-security-panel>.entry-actions{margin-bottom:14px}
+@media(max-width:700px){
+ .workspace .content .account-security-panel{padding:16px}
+ .account-security-panel[data-mode="change_password"] .tracker-fields{grid-template-columns:1fr}
+}
+
+
+@media(max-width:540px){.record-dialog .record-form .amount-currency-row{grid-template-columns:minmax(0,1fr)}}
+
+.finance-month-picker{width:min(440px,calc(100vw - 24px));padding:16px}.month-selection-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.month-selection-grid .pos-day{height:auto;min-height:48px;padding:8px;text-align:center}
+
+.monthly-review-title{display:flex;align-items:center;gap:8px}
+.monthly-review-help{flex-shrink:0;color:var(--muted-foreground);border-radius:50%}
+.monthly-review-help:hover{color:var(--primary);background:var(--accent)}
+.monthly-review-help-dialog{border-radius:24px;padding:28px;gap:16px;max-height:calc(100dvh - 32px);overflow-y:auto}
+.monthly-review-help-icon{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--accent);color:var(--primary)}
+.monthly-review-help-dialog [data-slot="dialog-title"]{padding-right:16px}
+.monthly-review-help-dialog [data-slot="dialog-description"]{line-height:1.6}
+.monthly-review-help-note{display:flex;align-items:flex-start;gap:12px;padding:16px;border:1px solid var(--border);border-radius:16px;background:var(--muted)}
+.monthly-review-help-note>svg{flex-shrink:0;margin-top:2px;color:var(--primary)}
+.monthly-review-help-note p{margin:0;font-size:var(--type-small);line-height:1.7}
+.monthly-review-help-close{position:absolute;top:16px;right:16px;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;color:var(--muted-foreground)}
+.monthly-review-help-close:hover{background:var(--accent);color:var(--foreground)}
+.monthly-review-help-close:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.monthly-review-help-done{justify-self:end;min-width:100px;border-radius:12px}
+
+.income-source-field { display: grid; gap: 8px; }
+.income-source-trigger { width: 100%; min-height: 48px; justify-content: space-between; text-align: left; }
+.income-source-trigger span { overflow: hidden; text-overflow: ellipsis; }
+.income-source-popover { width: min(680px, calc(100vw - 32px)); padding: 0; overflow: hidden; border-radius: 18px; }
+.income-source-search { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid var(--border); }
+.income-source-search input { min-width: 0; }
+.income-source-columns { display: grid; grid-template-columns: 210px minmax(0, 1fr); }
+.income-source-categories, .income-source-results { min-height: 0; max-height: min(360px, 45vh); overflow-y: auto; overscroll-behavior-y: contain; padding: 8px; }
+.income-source-categories { background: var(--muted); border-right: 1px solid var(--border); }
+.income-source-categories button, .income-source-results button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 12px; border-radius: 12px; text-align: left; min-height: 44px; }
+.income-source-categories button[aria-pressed="true"], .income-source-results button:hover { background: var(--background); color: var(--primary); }
+.income-source-results button:hover { background: var(--muted); }
+.income-source-results button > span { display: flex; align-items: flex-start; flex-direction: column; gap: 6px; }
+.income-source-results strong { overflow-wrap: anywhere; }
+.income-source-results > p { padding: 8px 12px; }
+.income-source-categories button:focus-visible, .income-source-results button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.income-source-results button:disabled { opacity: .5; }
+@media (max-width: 520px) {
+ .income-source-columns { grid-template-columns: 1fr; }
+ .income-source-categories { display: flex; max-height: 110px; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--border); }
+ .income-source-categories button { width: auto; padding: 8px 10px; }
+ .income-source-results { max-height: 28vh; }
+}
+
+.scheduled-payment-summary { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--muted); }
+.scheduled-payment-icon { display: flex; align-items: center; justify-content: center; flex: 0 0 40px; height: 40px; border-radius: 12px; background: var(--background); color: var(--primary); }
+.scheduled-payment-details { flex: 1; min-width: 0; }
+.scheduled-payment-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; font-size: var(--type-caption); color: var(--muted-foreground); }
+.scheduled-payment-auto { padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; font-size: var(--type-micro); font-weight: 600; background: var(--background); }
+.scheduled-payment-details > strong { display: block; margin-top: 4px; font-size: var(--type-title); line-height: 1.5; font-weight: 600; color: var(--foreground); }
+.scheduled-payment-details > p { margin: 6px 0 0; font-size: var(--type-micro); line-height: 1.5; color: var(--muted-foreground); }
+.income-source-estimate, .income-source-payment { font-size: var(--type-micro); line-height: 1.5; color: var(--muted-foreground); }
+.income-source-payment.is-paid { color: var(--primary); font-weight: 600; border: 1px solid var(--border); background: var(--muted); padding: 2px 8px; border-radius: 999px; }
+
+.income-source-results button > span { flex: 1; min-width: 0; }
+.income-source-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; width: 100%; }
+.income-source-title-row > strong { min-width: 0; }
+.income-source-title-row > :last-child { flex-shrink: 0; }
+
+.income-source-results button[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); }
+.income-source-results button[aria-pressed="true"] .income-source-estimate,
+.income-source-results button[aria-pressed="true"] .income-source-payment { color: var(--primary-foreground); }
+.income-source-results button[aria-pressed="true"] .income-source-payment.is-paid { background: transparent; border-color: currentColor; }
+.income-source-results button[aria-pressed="true"]:focus-visible { outline-color: var(--primary-foreground); outline-offset: -4px; }
+
+/* Monthly income sources: one quiet card per source, with its receipt status in the corner. */
+.income-estimates ul.income-source-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px}
+.income-estimates .income-source-card{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:14px;padding:16px;border:1px solid var(--border);border-radius:14px;background:color-mix(in srgb,var(--muted) 45%,transparent)}
+.income-source-card.is-excluded{border-style:dashed;background:none}
+.income-source-heading{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;min-width:0;padding-right:32px}
+.income-source-heading strong{flex:1 1 110px;min-width:0;font-size:var(--type-small);font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+.income-source-heading .category-badge{font-size:var(--type-micro);padding:1px 8px}
+.income-source-icon{display:grid;place-items:center;flex-shrink:0;width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--source-color) 14%,transparent);color:var(--source-color)}
+.income-estimates .income-source-amount{font-size:var(--type-stat);font-weight:650;letter-spacing:-.02em;line-height:1.2;text-align:left;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.income-receipt-indicator{position:absolute;top:14px;right:14px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--muted);color:var(--muted-foreground)}
+.income-receipt-indicator.is-received{background:color-mix(in srgb,var(--positive) 16%,transparent);color:var(--positive)}
+
+.currency-search-trigger{justify-self:start}
+.currency-search-dialog{max-height:85dvh;overflow-y:auto}
+.currency-search-dialog .currency-catalogue{max-height: min(45dvh,360px);background:var(--background)}
+.currency-search-dialog .currency-catalogue label:has(input:checked){background:var(--accent);color:var(--accent-foreground)}
+.currency-search-dialog .currency-catalogue label{cursor:pointer}
+.currency-search-empty{grid-column:1/-1;padding:16px}
+.currency-search-footer{display:flex;justify-content:flex-end}

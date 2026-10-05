@@ -41,6 +41,7 @@ test('the plan form saves a new plan, hands it back to be chosen, and keeps its 
  const {loadTS}=await import('./helpers/load-ts.mjs');
  const slots=[];let cursor=0;
  const react={...React,useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=initial;return [slots[i],value=>{slots[i]=value;}];}};
+ // eslint-disable-next-line react/display-name -- stand-in elements for the dialog parts.
  const element=tag=>props=>React.createElement(tag,props);
  const {ExpensePlanDialog,newExpensePlan}=loadTS('components/expense-plans.tsx',{react,'@/components/language-provider':{useLanguage:()=>({t:text=>text,locale:'en-US'})},'@/components/discard-changes':{useDraftDialog:()=>({close:()=>{},confirmation:null})},'@/components/ui/dialog':{Dialog:element('div'),DialogContent:element('section'),DialogTitle:element('h2'),DialogDescription:element('p')}});
  const plan=newExpensePlan('EUR','2026-10');

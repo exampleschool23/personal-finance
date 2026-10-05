@@ -1,0 +1,212 @@
+/* Tokens, the type scale, fonts, focus, the brand mark, account access pages, disclosures and form fields. */
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility scrollbar-gutter-stable {
+  scrollbar-gutter: stable;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #171717;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: #f5f5f5;
+  --accent-foreground: #171717;
+  --destructive: #e7000b;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #a1a1a1;
+  --chart-1: #f54900;
+  --chart-2: #009689;
+  --chart-3: #104e64;
+  --chart-4: #ffb900;
+  --chart-5: #fe9a00;
+  --radius: 0.625rem;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #171717;
+  --sidebar-primary: #171717;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #a1a1a1;
+}
+
+/* Shared reading scale. Small utility text also covers portaled menus and dialogs. */
+:root {
+  --type-micro: .75rem;
+  --type-caption: .8125rem;
+  --type-small: .875rem;
+  --type-compact: .9375rem;
+  --type-body: 1rem;
+  --type-title: 1rem;
+  --type-heading: 1.25rem;
+  --type-stat: clamp(22px, 2vw, 26px);
+  --type-hero: clamp(30px, 3vw, 40px);
+  --type-page: clamp(22px, 2vw, 26px);
+  /* Card and dialog titles: a large serif, as on the landing page's product window. */
+  --type-display: clamp(24px, 2.2vw, 30px);
+  --radius-control: 10px;
+  --space-page: 20px;
+  --positive: #4cc38a;
+  --negative: #f0a096;
+  --caution: #dfb883;
+  --field: #141a16;
+  --hairline: color-mix(in srgb, var(--border) 60%, transparent);
+  --font-system: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-ui: "Inter Variable", var(--font-system);
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  /* One card shape and one brand mark in both themes; only the colours change. */
+  --radius-card: 12px;
+  --mark-bg: #0f766e;
+  --mark-fg: #ffffff;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 24%);
+  /* Text on a pill tinted with its own tone: pulled toward the ink so it keeps 4.5:1 on the tint. */
+  --pill-positive: color-mix(in srgb, var(--positive) 80%, var(--foreground));
+  --pill-negative: color-mix(in srgb, var(--negative) 80%, var(--foreground));
+  --pill-caution: color-mix(in srgb, var(--caution) 80%, var(--foreground));
+}
+:root[data-theme="light"] {
+  /* Warm, airy cards: a hairline edge and a barely-there lift. */
+  --shadow-card: 0 1px 2px rgb(34 32 29 / 5%);
+  --positive: #1d7a52;
+  --negative: #c4262c;
+  --caution: #9a5a00;
+  --field: #ffffff;
+}
+
+@theme inline {
+  --text-xs: .875rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: .9375rem;
+  --text-sm--line-height: 1.6;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-ui);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+}
+
+:root { --background:#101412; --foreground:#edf3ef; --card:#181e1b; --card-foreground:#edf3ef; --popover:#1b231f; --popover-foreground:#edf3ef; --primary:#5cc8b9; --primary-foreground:#052e2a; --secondary:#242d27; --secondary-foreground:#edf3ef; --muted:#222a25; --muted-foreground:#a1afa5; --accent:#19302c; --accent-foreground:#7fd8cb; --border:#303b33; --input:#354239; --ring:#5cc8b9; --sidebar:#151b17; --sidebar-foreground:#c1cdc4; --sidebar-accent:#1d302c; --sidebar-accent-foreground:#a7e9df; --sidebar-border:#303b33; }
+/* The Settings font choice: the root carries the account default, and the Settings preview reuses the same attribute. */
+[data-font="inter"]{--font-ui:"Inter Variable",var(--font-system)}
+[data-font="onest"]{--font-ui:"Onest Variable",var(--font-system)}
+body{margin:0;background:var(--background);color:var(--foreground);font-family:var(--font-ui);font-size:var(--type-body);line-height:1.6}
+button,a,input,select{touch-action:manipulation}
+button{cursor:pointer}
+/* Buttons that stay focusable while unavailable look disabled too. */
+:is(button,a)[aria-disabled=true]{opacity:.5;cursor:not-allowed}
+button:focus-visible{outline:2px solid var(--ring);outline-offset:3px}
+/* Fields show focus with the accent border and a soft halo, so the cue clears 3:1 against the card. */
+:is(input,select,textarea):focus-visible{outline:none;border-color:var(--ring)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 28%,transparent)!important}
+small{font-size:var(--type-caption)}
+.muted{color:var(--muted-foreground);line-height:1.6}
+.positive{color:var(--positive)}
+.negative{color:var(--negative)}
+.eyebrow{font-size:var(--type-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px}
+
+/* Brand mark, shared by the sidebar, the sign-in screen and the loading state. */
+.brand{display:flex;align-items:center;gap:12px;font-size:var(--type-compact);font-weight:700;letter-spacing:.14em;color:inherit;text-decoration:none;border-radius:var(--radius-control)}
+.brand:focus-visible{outline:2px solid var(--ring);outline-offset:4px}
+.brand-badge{padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--primary) 12%,var(--card));color:var(--primary);font-size:var(--type-micro);font-weight:700;letter-spacing:.04em;line-height:18px}
+.brand small.block{display:block;white-space:nowrap;margin-top:2px;font-size:var(--type-micro);font-weight:500;letter-spacing:.12em;color:var(--muted-foreground)}
+.mark{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;padding-right:2px;border-radius:12px;background:var(--mark-bg);color:var(--mark-fg);font-size:26px;letter-spacing:-.08em}
+.brand-compact{gap:8px;min-width:0}
+.brand-compact .mark{width:30px;height:30px;border-radius:9px;font-size:20px}
+
+/* Account access pages: the brand above one centred card. */
+.auth-page{display:flex;flex-direction:column;align-items:center;gap:24px;min-height:100svh;padding:24px 16px 48px}
+.auth-page-header{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;max-width:1120px}
+.auth-page>.panel{width:100%;max-width:440px;margin-top:min(10vh,88px);padding:28px}
+.auth-page .panel h2{font-family:var(--font-display);font-size:var(--type-display);font-weight:500;letter-spacing:-.02em}
+.auth-page .panel .entry-actions{margin:16px 0 4px}
+.auth-page .panel .entry-actions [data-slot=button]{flex:1}
+.auth-page .panel form>[data-slot=button]{width:100%;height:44px;margin-top:4px}
+.auth-page .panel form>[data-slot=button]+[data-slot=button]{margin-top:8px}
+.auth-page .panel>a{display:inline-block;margin-top:20px;font-size:var(--type-small);font-weight:500;color:var(--primary)}
+.auth-page .panel>a:hover{text-decoration:underline;text-underline-offset:3px}
+.connect-telegram>p{margin-top:12px;color:var(--muted-foreground);font-size:var(--type-small)}
+.connect-facts{display:grid;gap:8px;margin-top:16px;padding:12px 14px;border:1px solid var(--hairline);border-radius:var(--radius-control)}
+.connect-facts>div{display:flex;justify-content:space-between;gap:16px;font-size:var(--type-small)}
+.connect-facts dt{color:var(--muted-foreground)}
+.connect-facts dd{font-weight:600;text-align:end;overflow-wrap:anywhere}
+.auth-page>.legal-document{max-width:760px;margin-top:8px;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:20px}
+.legal-document h1{font-size:var(--type-page);font-weight:650;letter-spacing:-.02em;line-height:1.15}
+.legal-document>p.muted{margin-top:-12px;font-size:var(--type-small)}
+.legal-language-note{padding:10px 14px;border-radius:var(--radius-control);background:var(--muted);font-size:var(--type-small)}
+.legal-document section{display:flex;flex-direction:column;gap:8px}
+.legal-document h2{font-size:var(--type-title);font-weight:600}
+.legal-document p,.legal-document li{font-size:var(--type-body);line-height:1.65;color:var(--foreground)}
+.legal-document ul{display:flex;flex-direction:column;gap:6px;padding-inline-start:20px;list-style:disc}
+.legal-links{display:flex;flex-wrap:wrap;gap:12px 24px;padding-top:16px;border-top:1px solid var(--hairline);font-size:var(--type-small);font-weight:500}
+.legal-links a{color:var(--primary)}.legal-links a:hover{text-decoration:underline;text-underline-offset:3px}
+@media(max-width:480px){.auth-page>.panel{margin-top:16px;padding:24px 20px}}
+
+/* Disclosures: one chevron for every <details>, never the browser's triangle. Summaries that carry their own icon keep it. */
+summary{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;list-style:none;font-size:var(--type-small);font-weight:500}
+summary::-webkit-details-marker{display:none}
+summary:not(:has(svg))::before{content:"";flex-shrink:0;width:7px;height:7px;margin-inline:2px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+[dir=rtl] summary:not(:has(svg))::before{transform:rotate(135deg)}
+details[open]>summary:not(:has(svg))::before{transform:rotate(45deg)}
+@media(prefers-reduced-motion:reduce){summary::before{transition:none}}
+
+/* Form fields. */
+label{display:grid;gap:8px;font-size:var(--type-small);font-weight:500;margin-bottom:20px}
+input,select,textarea{min-height:44px!important;background:var(--field)!important;color:var(--foreground);border:1px solid var(--input);border-radius:var(--radius-control);padding:10px 12px;font-size:var(--type-body)}
+:is(input,select,textarea)::placeholder{color:color-mix(in srgb,var(--muted-foreground) 70%,transparent)}
+.primary{background:var(--primary)!important;color:var(--primary-foreground)!important;min-height:44px;gap:10px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.error{padding:12px 16px;border:1px solid color-mix(in srgb,var(--negative) 30%,transparent);border-radius:12px;background:color-mix(in srgb,var(--negative) 12%,var(--card));color:var(--negative);margin:12px 0;font-size:var(--type-small);line-height:1.5}
+.error [data-slot=button]{margin-left:8px}

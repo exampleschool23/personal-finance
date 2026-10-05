@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { loadTS } from './helpers/load-ts.mjs';
+import {stylesheet} from './helpers/stylesheet.mjs';
 
 const goal = (kind = 'savings', extra = {}) => ({ id: kind, name: `${kind} goal`, kind, currency: 'USD', account_id: 'cash', target: 10000, allocated: 0, archived: false, ...extra });
 const props = goals => ({ data: { goals, records: [], categories: [], occurrences: [], activity: [] }, currency: 'USD', surplus: 10632, today: '2026-09-18', owner: 'owner', demo: false, revision: 0, onSaved() {} });
@@ -105,7 +105,7 @@ test('funding drafts reset, preserve precision, and remain dirty on save failure
 });
 
 test('responsive rules keep fieldsets full-width and exclude checkboxes from button height overrides', () => {
- const css = fs.readFileSync('app/globals.css', 'utf8');
+ const css = stylesheet();
  assert.match(css, /button:not\(\[role="checkbox"\]\)/);
  assert.doesNotMatch(css, /\.tools-panel[^{}]*fieldset\s*\{[^}]*max-width:120px/);
  assert.match(css, /@container\(min-width:740px\)\{\.goal-funding-editors\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);

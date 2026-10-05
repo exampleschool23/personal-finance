@@ -1,0 +1,258 @@
+/* Transactions, Recurring, dashboard extras and rearranging, goal detail, the cash flow report, the assistant and goals. */
+
+/* Transactions: the day-grouped list with an inline category picker and a summary beside it. */
+.transactions-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%}
+.transactions-search{position:relative;display:block;flex:1 1 240px;min-width:0;margin:0}
+.transactions-search>svg{position:absolute;inset-inline-start:12px;top:50%;transform:translateY(-50%);color:var(--muted-foreground);pointer-events:none}
+.transactions-search input{padding-inline-start:36px}
+.transactions-tools [data-slot=native-select-wrapper]{width:auto}
+.transactions-layout{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start;width:100%}
+.transactions-list{padding:0;overflow:hidden}
+.transaction-day+.transaction-day{border-top:1px solid var(--hairline)}
+.transaction-day-heading{display:flex;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--muted);font-size:var(--type-caption);font-weight:500;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.transaction-day-heading h3{margin:0;font-size:var(--type-caption);font-weight:500}
+.transaction-day ul{margin:0;padding:0;list-style:none}
+.transaction-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(max-content,.45fr);align-items:center;gap:12px;padding:10px 16px;cursor:pointer;font-size:var(--type-small)}
+.transaction-row:has(>input){grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr) minmax(max-content,.45fr)}
+.transaction-row+.transaction-row{border-top:1px solid var(--hairline)}
+.transaction-row:hover{background:color-mix(in srgb,var(--muted) 60%,transparent)}
+.transaction-row:focus-visible{outline:2px solid var(--ring);outline-offset:-2px}
+.transaction-row[data-selected]{background:color-mix(in srgb,var(--mark-bg) 8%,transparent)}
+.transaction-row>input{accent-color:var(--mark-bg);width:16px;height:16px}
+.transaction-merchant{display:flex;align-items:center;gap:12px;min-width:0}
+.transaction-merchant>span:last-child{display:flex;flex-direction:column;min-width:0}
+.transaction-merchant strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.transaction-merchant small{color:var(--muted-foreground);font-size:var(--type-caption)}
+.transaction-category{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%}
+.transaction-category>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.transaction-category-button,.rule-category-button{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:4px 10px 4px 4px;border:1px solid transparent;border-radius:999px;text-align:start}
+.transaction-category-button:hover,.transaction-category-button:focus-visible,.rule-category-button{border-color:var(--border);background:var(--card)}
+.transaction-category-button:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
+.rule-category-button{height:38px;padding-inline:8px 12px;border-radius:var(--radius-control);font-weight:400}
+.transaction-amount{font-variant-numeric:tabular-nums;font-weight:500;text-align:end;white-space:nowrap}
+.transactions-summary{position:sticky;top:16px;display:flex;flex-direction:column;gap:12px;padding:16px}
+.category-picker-popover{width:280px;padding:8px;border-radius:var(--radius-card)}
+.category-picker{display:flex;flex-direction:column;gap:6px}
+.category-picker-heading{margin:4px 6px 0;color:var(--muted-foreground);font-size:var(--type-caption);font-weight:500}
+.category-picker ul{max-height:280px;margin:0;padding:0;overflow-y:auto;list-style:none}
+.category-picker li>button{display:flex;align-items:center;gap:10px;width:100%;padding:6px;border-radius:8px;font-size:var(--type-small);text-align:start}
+.category-picker li>button:hover,.category-picker li>button:focus-visible{background:var(--muted);outline:none}
+.category-picker li>button>svg{margin-inline-start:auto;color:var(--mark-bg)}
+.category-picker-empty{padding:8px 6px;color:var(--muted-foreground);font-size:var(--type-small)}
+.bulk-bar{position:sticky;top:8px;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:10px;width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card);box-shadow:var(--shadow-card);font-size:var(--type-small)}
+.bulk-bar>strong{margin-inline-end:auto;font-weight:600}
+.bulk-bar-note{color:var(--muted-foreground);font-size:var(--type-caption)}
+.rule-list{display:flex;flex-direction:column;margin:0 0 16px;padding:0;list-style:none}
+.rule-list>li{display:flex;align-items:center;gap:8px;padding:8px 0}
+.rule-list>li+li{border-top:1px solid var(--hairline)}
+.rule-list>li>button{display:flex;flex:1;flex-wrap:wrap;align-items:center;gap:8px;min-width:0;font-size:var(--type-small);text-align:start}
+.rule-arrow{color:var(--muted-foreground)}
+@container content (max-width:900px){.transactions-layout{grid-template-columns:minmax(0,1fr)}.transactions-summary{position:static;order:-1}}
+@container content (max-width:600px){.transaction-row{grid-template-columns:minmax(0,1fr) auto;row-gap:4px}.transaction-row:has(>input){grid-template-columns:auto minmax(0,1fr) auto}.transaction-row>.transaction-labels{grid-column:-3/-2;grid-row:2}.transaction-row:has(>input)>.transaction-labels{grid-column:2}.transaction-amount{grid-row:1/3;grid-column:-2}}
+
+/* Recurring: month summary bars, a dated list with "in N days", and a calendar. */
+.recurring-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px;width:100%}
+.recurring-summary>h2{grid-column:1/-1;margin:0;font-size:var(--type-title);font-weight:600}
+.recurring-bar{display:flex;flex-direction:column;gap:6px;font-size:var(--type-small)}
+.recurring-bar p{display:flex;justify-content:space-between;gap:8px;margin:0}
+.recurring-bar p>span,.recurring-bar small{color:var(--muted-foreground);font-size:var(--type-caption)}
+.recurring-bar .progress-track>div{background:var(--foreground)}
+.recurring-bar[data-tone=income] .progress-track>div{background:var(--positive)}
+.recurring-list{width:100%;padding:0;overflow:hidden}
+.recurring-list>ul{margin:0;padding:0;list-style:none}
+/* One set of columns for the whole list: each row is a subgrid, so status, amount and actions line up on every row. */
+.recurring-list>ul,.subscription-list{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto}
+.recurring-list>ul>li,.subscription-list>li{grid-column:1/-1}
+/* Narrow (720px and below): name and amount on the first line, status and actions trailing on the second. */
+.recurring-row{display:grid;grid-template-columns:subgrid;align-items:center;gap:12px;padding:10px 16px;font-size:var(--type-small)}
+.recurring-row+.recurring-row{border-top:1px solid var(--hairline)}
+.recurring-row[data-status=paid],.recurring-row[data-status=skipped],.recurring-row[data-status=missed]{color:var(--muted-foreground)}
+.recurring-row .row-actions{justify-content:flex-end}
+.recurring-row>.status-badge{justify-self:start}
+.recurring-row[data-editable]{cursor:pointer}
+.recurring-row[data-editable]:hover{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+.recurring-edit{all:unset;font-weight:500;cursor:pointer;border-radius:4px}
+.recurring-edit:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.subscriptions-panel{width:100%}
+.subscription-totals{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:var(--type-small);font-weight:500;font-variant-numeric:tabular-nums}
+.subscription-list{margin:0;padding:0;list-style:none}
+.subscription-list>.recurring-row{padding-inline:0}
+.subscription-hidden{margin-top:8px;border-top:1px solid var(--hairline)}
+.status-badge.is-paid{background:color-mix(in srgb,var(--positive) 12%,transparent);color:var(--pill-positive)}
+.recurring-calendar{width:100%;padding:0;overflow:hidden}
+.recurring-calendar-grid{display:flex;flex-direction:column}
+.recurring-calendar-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.recurring-calendar-week>[role=columnheader]{padding:8px;background:var(--muted);color:var(--muted-foreground);font-size:var(--type-caption);font-weight:500;text-align:center}
+.recurring-calendar-day{display:flex;flex-direction:column;gap:4px;min-height:96px;padding:6px;border-top:1px solid var(--hairline);border-inline-start:1px solid var(--hairline);min-width:0}
+.recurring-calendar-day:first-child{border-inline-start:0}
+.recurring-calendar-day[data-empty]{background:color-mix(in srgb,var(--muted) 50%,transparent)}
+.recurring-calendar-date{font-size:var(--type-caption);color:var(--muted-foreground)}
+.recurring-calendar-day[data-today] .recurring-calendar-date{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--mark-bg);color:var(--mark-fg);font-weight:600}
+.recurring-chip{display:flex;justify-content:space-between;gap:4px;padding:2px 6px;border-radius:6px;background:var(--muted);font-size:var(--type-micro);line-height:1.5;min-width:0}
+.recurring-chip>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recurring-chip>strong{flex-shrink:0;font-weight:500;font-variant-numeric:tabular-nums}
+.recurring-chip[data-direction=income]{background:color-mix(in srgb,var(--positive) 12%,transparent);color:var(--positive)}
+.recurring-chip[data-status=overdue]{background:color-mix(in srgb,var(--negative) 12%,transparent);color:var(--negative)}
+.recurring-chip[data-status=paid],.recurring-chip[data-status=skipped]{opacity:.55}
+@container content (max-width:720px){.recurring-summary{grid-template-columns:minmax(0,1fr)}.recurring-list>ul,.subscription-list{grid-template-columns:minmax(0,1fr) auto}.recurring-row{row-gap:6px}.recurring-row>:nth-child(1){grid-area:1/1}.recurring-row>:nth-child(2){grid-area:2/1}.recurring-row>:nth-child(3){grid-area:1/2;justify-self:end;text-align:end}.recurring-row>.row-actions{grid-area:2/2;justify-content:flex-end}.recurring-calendar-day{min-height:64px;padding:4px}.recurring-chip>strong{display:none}}
+
+/* Dashboard extras: budget at a glance and the Customize dialog. */
+.dashboard-budget-total{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
+.dashboard-budget-total p{display:flex;align-items:baseline;gap:6px;margin:0}
+.dashboard-budget-total strong{font-size:var(--type-stat);font-weight:500;font-variant-numeric:tabular-nums}
+.dashboard-budget-total span,.dashboard-budget-total small{color:var(--muted-foreground);font-size:var(--type-small)}
+.dashboard-budget-total small[data-tone=positive]{color:var(--positive)}
+.dashboard-budget-total small[data-tone=negative]{color:var(--negative)}
+.dashboard-budget-list{margin-top:14px}
+.dashboard-budget-list>li>span{display:flex;flex-direction:column;gap:6px;min-width:0}
+/* Dashboard drag and drop: a six-dot handle in a card's top corner lifts it; the held card floats above the others. */
+.sortable-item{position:relative;min-width:0;touch-action:manipulation}
+.sortable-item[data-dragging]{z-index:5}
+.dashboard-card[data-dragging]>.panel{box-shadow:0 12px 32px rgb(0 0 0 / .14);opacity:.96}
+.drag-handle{display:inline-grid;place-items:center;width:20px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--muted-foreground);cursor:grab;touch-action:none}
+.drag-handle:hover{background:var(--muted);color:var(--foreground)}
+.drag-handle:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
+.sortable-item[data-dragging] .drag-handle{cursor:grabbing}
+/* Cards only move in rearrange mode: handles are hidden until then. */
+.dashboard-card>.drag-handle{display:none}
+/* Rearranging: the handle covers the whole card (its grip badge sits on the top corner), and the cards wiggle until Done. */
+.dashboard-grid[data-arranging] .dashboard-card>.drag-handle{position:absolute;inset:0;z-index:2;display:grid;place-items:start end;width:auto;height:auto;min-height:0;min-width:0;padding:0;border-radius:var(--radius-card);background:none;touch-action:manipulation}
+.dashboard-grid[data-arranging] .dashboard-card>.drag-handle>svg{box-sizing:content-box;padding:6px;border:1px solid var(--hairline);border-radius:999px;background:var(--card);color:var(--foreground);box-shadow:var(--shadow-card);translate:35% -35%}
+[dir=rtl] .dashboard-grid[data-arranging] .dashboard-card>.drag-handle>svg{translate:-35% -35%}
+.dashboard-grid[data-arranging] .dashboard-card>.drag-handle:focus-visible{outline-offset:-2px}
+.dashboard-grid[data-arranging] .dashboard-card>.panel{user-select:none;animation:card-wiggle .32s ease-in-out infinite alternate}
+.dashboard-grid[data-arranging] .dashboard-card:nth-child(even)>.panel{animation-delay:-.16s;animation-direction:alternate-reverse}
+.dashboard-grid[data-arranging] .dashboard-card[data-dragging]>.panel{animation:none}
+@keyframes card-wiggle{from{rotate:-.45deg}to{rotate:.45deg}}
+@media (prefers-reduced-motion:reduce){.dashboard-grid[data-arranging] .dashboard-card>.panel{animation:none}}
+.customize-dialog{max-width:720px}
+.switch{display:inline-flex;flex-shrink:0;align-items:center;width:36px;height:20px;padding:2px;border:0;border-radius:999px;background:var(--input);cursor:pointer;transition:background .15s}
+.switch[data-state=checked]{background:var(--primary)}
+.switch:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.switch:disabled{cursor:not-allowed;opacity:.5}
+.switch-thumb{display:block;width:16px;height:16px;border-radius:999px;background:#fff;box-shadow:0 1px 2px rgb(0 0 0 / .2);transition:transform .15s}
+.switch-thumb[data-state=checked]{transform:translateX(16px)}
+[dir=rtl] .switch-thumb[data-state=checked]{transform:translateX(-16px)}
+.customize-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 28px;margin-top:4px}
+.customize-column{min-height:56px}
+.customize-column ul{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
+.customize-row{position:relative;display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 0;background:var(--background);user-select:none}
+.customize-row[data-dragging]{z-index:5;border-radius:var(--radius-control);box-shadow:0 8px 24px rgb(0 0 0 / .14)}
+.customize-row label{display:block;flex:1;margin:0;font-size:var(--type-small);cursor:pointer}
+.customize-footer{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+@media (max-width:560px){.customize-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Goal detail: a cover band, the progress line and four figures heading a goal's plan. */
+.goal-detail{display:flex;flex-direction:column;gap:16px}
+.goal-detail-head{display:flex;flex-direction:column;gap:8px}
+.goal-detail-head>header{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.goal-detail-head>header>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-width:0}
+.goal-detail-mark{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border-radius:var(--radius-control);background:var(--muted);font-size:22px;line-height:1}
+/* Inside the goal card the figures sit flat, divided by hairlines, instead of boxed tiles inside a box. */
+.goal-detail .stat-tiles{gap:0;padding-top:14px;border-top:1px solid var(--hairline)}
+.goal-detail .stat-tile{gap:2px;padding:0 16px;border:0;border-inline-start:1px solid var(--hairline);border-radius:0;background:none;box-shadow:none}
+.goal-detail .stat-tile:first-child{padding-inline-start:0;border-inline-start:0}
+.goal-detail .stat-tile>strong{font-size:var(--type-title);font-weight:500}
+.goal-detail .stat-tile>p{margin-top:2px}
+@container content (max-width:720px){.goal-detail .stat-tiles[data-columns="3"]{gap:10px}.goal-detail .stat-tiles[data-columns="3"] .stat-tile{padding:0;border:0}}
+.goal-detail-head h2{margin:0;font-size:var(--type-title);font-weight:600;overflow-wrap:anywhere}
+.goal-detail-head p{display:flex;align-items:baseline;gap:8px;margin:0;color:var(--muted-foreground);font-size:var(--type-small)}
+.goal-detail-head p>strong{color:var(--foreground);font-size:var(--type-stat);font-weight:500;font-variant-numeric:tabular-nums}
+.goal-detail-percent{margin-inline-start:auto;color:var(--foreground);font-weight:500}
+
+/* Cash flow report: period figures, monthly bars, and the category / merchant breakdown or Sankey. */
+.cash-flow-report{display:flex;flex-direction:column;gap:16px;width:100%}
+.cash-flow-report-tools{display:flex;justify-content:flex-end}
+.cash-flow-switches{display:flex;flex-wrap:wrap;gap:8px}
+.cash-flow-breakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.cash-flow-breakdown h3{margin:0 0 10px;font-size:var(--type-small);font-weight:600}
+.share-bars{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;font-size:var(--type-small)}
+.share-bars>li{display:grid;grid-template-columns:minmax(0,1fr) minmax(max-content,.3fr) 52px;align-items:center;gap:10px}
+.share-bar{display:flex;align-items:center;min-width:max-content;height:28px;padding-inline:10px;border-radius:6px}
+.share-bar>span{white-space:nowrap}
+.share-bars strong{font-weight:500;font-variant-numeric:tabular-nums;text-align:end}
+.share-bars small{color:var(--muted-foreground);font-variant-numeric:tabular-nums;text-align:end}
+.cash-flow-sankey{overflow-x:auto}
+.sankey-label{fill:var(--foreground);font-size:var(--type-micro)}
+@container content (max-width:720px){.cash-flow-breakdown{grid-template-columns:minmax(0,1fr)}}
+
+/* Assistant: a chat about the user's own money. */
+.assistant-panel{display:flex;flex-direction:column;gap:12px;width:100%;max-width:820px;margin-inline:auto}
+.assistant-log{display:flex;flex-direction:column;gap:12px;min-height:240px;max-height:min(60vh,640px);overflow-y:auto}
+.assistant-turn{display:flex}
+.assistant-turn>p{max-width:85%;margin:0;padding:10px 14px;border-radius:var(--radius-card);font-size:var(--type-compact);line-height:1.55;white-space:pre-wrap}
+.assistant-turn[data-role=user]{justify-content:flex-end}
+.assistant-turn[data-role=user]>p{background:color-mix(in srgb,var(--mark-bg) 14%,var(--card))}
+.assistant-turn[data-role=assistant]>p{background:var(--muted)}
+.assistant-thinking{color:var(--muted-foreground)}
+.assistant-suggestions{display:flex;flex-wrap:wrap;gap:8px}
+.assistant-suggestions>button{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:var(--card);font-size:var(--type-small);text-align:start}
+.assistant-suggestions>button:hover{background:var(--muted)}
+.assistant-form{display:flex;align-items:flex-end;gap:8px}
+.assistant-form textarea{flex:1;min-height:48px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--field);font:inherit;font-size:var(--type-body);resize:vertical}
+.assistant-form textarea:disabled{opacity:.6;cursor:not-allowed;resize:none}
+.assistant-note{margin:0;color:var(--muted-foreground);font-size:var(--type-caption);text-align:center}
+
+/* Savings goals: one ordered list of goals beside what is free for goals. */
+/* The chosen goal and what is free for goals sit side by side and end together. */
+.goals-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:stretch;width:100%}
+.goal-planner-pick{display:flex;align-items:center;gap:10px;font-size:var(--type-small);font-weight:500}
+.goal-planner-pick [data-slot=native-select-wrapper]{width:auto;min-width:220px}
+.goal-rows{display:flex;flex-direction:column;margin:4px 0 0;padding:0;list-style:none}
+.goal-row{display:flex;align-items:center;gap:4px;margin-inline:-12px;padding-inline:4px;border-radius:var(--radius-control);background:var(--card)}
+.goal-row+.goal-row{border-top:1px solid var(--hairline)}
+.goal-row>.drag-handle{flex-shrink:0;opacity:0;transition:opacity .15s}
+.goal-row:hover>.drag-handle,.goal-row>.drag-handle:focus-visible,.goal-row[data-dragging]>.drag-handle{opacity:1}
+/* Accounts: the drag handle sits at the leading edge of each account row. */
+.account-sortable-row{display:flex;align-items:center;border-top:1px solid var(--hairline);background:var(--card)}
+.account-sortable-row>.drag-handle{flex-shrink:0;margin-inline-start:8px;opacity:0;transition:opacity .15s}
+.account-sortable-row:hover>.drag-handle,.account-sortable-row>.drag-handle:focus-visible,.account-sortable-row[data-dragging]>.drag-handle{opacity:1}
+@media (hover:none){.account-sortable-row>.drag-handle{opacity:1}}
+.account-sortable-row[data-dragging]{box-shadow:var(--shadow-card)}
+.account-sortable-row>.account-list-row{border-top:0;padding-inline-start:6px}
+/* Categories: the handle sits before each badge. */
+.category-settings .category-badges .sortable-item{display:inline-flex;align-items:center;gap:2px}
+.category-settings .category-badges .sortable-item>.drag-handle{opacity:.55}
+.category-settings .category-badges .sortable-item:hover>.drag-handle,.category-settings .category-badges .sortable-item>.drag-handle:focus-visible{opacity:1}
+@media (hover:none){.goal-row>.drag-handle{opacity:1}}
+.goal-row[data-dragging]{box-shadow:0 12px 32px rgb(0 0 0 / .14)}
+.goal-row.is-selected{background:color-mix(in srgb,var(--primary) 6%,var(--card))}
+.goal-row-main{display:flex;flex:1;align-items:center;gap:14px;min-width:0;padding:14px 4px;border:0;background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
+.goal-row-main:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:var(--radius-control)}
+.goal-row-cover{display:grid;place-items:center;width:48px;height:48px;flex-shrink:0;border-radius:var(--radius-control);background:var(--muted);font-size:24px;line-height:1}
+.goal-row-body{display:flex;flex:1;flex-direction:column;gap:6px;min-width:0}
+.goal-row-line{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-width:0}
+.goal-row-line>strong:first-child{font-size:var(--type-body);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal-row-amount{flex-shrink:0;font-size:var(--type-body);font-weight:500;font-variant-numeric:tabular-nums}
+.goal-row-meta{align-items:center;flex-wrap:wrap;row-gap:4px;font-size:var(--type-caption);color:var(--muted-foreground)}
+.goal-row-meta>span:first-child{display:flex;align-items:center;gap:8px;min-width:0}
+.goal-row-meta>span:first-child>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goals-list{container:goal-list/inline-size}
+@container goal-list (max-width:420px){.goal-row-cover{width:40px;height:40px;font-size:20px}.goal-row-main{gap:10px}.goal-row-line>strong:first-child,.goal-row-meta>span:first-child>span:last-child{white-space:normal;overflow-wrap:anywhere}.goal-row-meta>span:first-child{flex-wrap:wrap}}
+.goal-row-meta>span:last-child{flex-shrink:0;font-variant-numeric:tabular-nums}
+.goal-row .progress-track{margin-top:2px}
+.goal-row .progress-track[data-status=at_risk]>*{background:var(--caution)}
+.goal-row-alert{font-size:var(--type-caption);color:var(--negative)}
+.goal-row-menu{flex-shrink:0}
+.status-badge.goal-status.is-completed,.status-badge.goal-status.is-on_track{background:color-mix(in srgb,var(--positive) 12%,transparent);color:var(--pill-positive)}
+.status-badge.goal-status.is-at_risk,.status-badge.is-caution{background:color-mix(in srgb,var(--caution) 14%,transparent);color:var(--pill-caution)}
+.goal-available{display:flex;flex-direction:column;align-items:center;gap:4px;margin:4px 0 12px;padding:20px 16px;border-radius:var(--radius-control);background:color-mix(in srgb,var(--positive) 8%,var(--card));text-align:center}
+.goal-available strong{font-size:var(--type-stat);font-weight:500;font-variant-numeric:tabular-nums;color:var(--positive)}
+.goal-available span{font-size:var(--type-small);color:var(--muted-foreground)}
+.goal-funding-figures{display:flex;flex-direction:column;margin:0}
+.goal-funding-figures>div,.goal-funding-allocations>li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--hairline);font-size:var(--type-small)}
+.goal-funding-figures dt{color:var(--muted-foreground)}
+.goal-funding-figures dd{margin:0;font-weight:500;font-variant-numeric:tabular-nums}
+.goal-funding-allocations{margin:0;padding:0;list-style:none}
+.goal-funding-allocations>li>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal-funding-allocations>li>strong{font-weight:500;font-variant-numeric:tabular-nums}
+.goal-funding-plan{width:100%;margin-top:12px}
+.goal-funding-panel>.goal-funding-notice{margin:8px 0 0;font-size:var(--type-small)}
+.goal-activity-list{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
+.goal-activity-list>li{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-top:1px solid var(--hairline);font-size:var(--type-small)}
+.goal-activity-list>li:first-child{border-top:0}
+.goal-activity-list>li>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.goal-activity-list small{font-size:var(--type-caption);color:var(--muted-foreground)}
+.goal-dialog-title{display:flex;align-items:center;gap:8px}
+.record-dialog.goal-funding-dialog{max-width:880px!important}
+.goal-funding-dialog .goal-funding-editors{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));margin-top:4px}
