@@ -52,7 +52,7 @@ include it; a change to `app/globals.css` or `app/styles/`, `components/presenta
 signed out.
 
 **Overlays are part of their screen; open each one.** Shell (every screen): Add
-expense / record dialog (`components/record-dialog.tsx`, income, expense, transfer
+expense / record dialog (`components/record-dialog.tsx` and `components/record-dialog/`, income, expense, transfer
 tabs), discard prompt, display-currency menu, drawer sheet on mobile, date picker.
 Dashboard: Customize, Money invested popover, Comparison settings, Tracking since
 picker. Accounts: add / edit account, Adjust balance, Transfer, Reconcile statement,

@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {sourceWithParts} from './helpers/source.mjs';
 test('expense shortcut uses owned outstanding liabilities and guards unsaved changes',()=>{
- const ui=fs.readFileSync('components/record-dialog.tsx','utf8');
+ const ui=sourceWithParts('components/record-dialog.tsx');
  assert.match(ui,/planning.data.records.filter\(record=>liabilities.includes\(record.kind\)&&record.amount>0\)/);
  assert.match(ui,/guard.request\(\(\)=>props.onDebtPayment!\(record\)\)/);
  assert.match(ui,/planning.loading\?/);
@@ -18,7 +19,7 @@ test('shortcut routes mortgages to their existing form and loans to repayment mo
 });
 
 test('debt payment is a third segment and cannot submit an ordinary expense',()=>{
- const ui=fs.readFileSync('components/record-dialog.tsx','utf8');
+ const ui=sourceWithParts('components/record-dialog.tsx');
  assert.match(ui,/<TabsTrigger value="debt"/);
  assert.match(ui,/<TabsContent value="debt"/);
  assert.match(ui,/if\(mode==='debt'\)\{event.preventDefault\(\);return;\}/);
@@ -27,7 +28,7 @@ test('debt payment is a third segment and cannot submit an ordinary expense',()=
 });
 
 test('mortgage selection embeds the shared payment fields and guards draft switches',()=>{
- const ui=fs.readFileSync('components/record-dialog.tsx','utf8');
+ const ui=sourceWithParts('components/record-dialog.tsx');
  assert.match(ui,/selectedDebt\?\.kind==='Mortgage'&&onMortgageSave\?<MortgagePaymentDialog inline/);
  assert.match(ui,/requestPaymentSwitch\(change\)/);
  assert.match(ui,/paymentState.dirty/);
@@ -38,7 +39,7 @@ test('mortgage selection embeds the shared payment fields and guards draft switc
 });
 
 test('debt selection embeds repayment fields with a user-entered partial amount',()=>{
- const ui=fs.readFileSync('components/record-dialog.tsx','utf8');
+ const ui=sourceWithParts('components/record-dialog.tsx');
  assert.match(ui,/<InvestmentTracker inline key=\{selectedDebt.id\} initialType="withdrawal"/);
  const tracker=fs.readFileSync('components/investment-tracker.tsx','utf8');
  assert.match(tracker,/if\(inline\)return <>{paymentFields}{guard.confirmation}<\/>/);

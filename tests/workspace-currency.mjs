@@ -52,7 +52,8 @@ test('monthly review follows header currency on rerender without changing stored
 
 function find(node,predicate){
  if(!node||typeof node!=='object')return;
- if(['CurrencySelect','IncomeRecordForm','AmountCurrencyFields'].includes(node.type?.name))return find(node.type(node.props),predicate);
+ // The expense form's parts render where the form puts them.
+ if(['CurrencySelect','IncomeRecordForm','AmountCurrencyFields','PlanFields','CategoryAmount','DateDetails','DebtPayment','ExpenseActions'].includes(node.type?.name))return find(node.type(node.props),predicate);
  if(predicate(node))return node;
  for(const child of React.Children.toArray(node.props?.children)){
   const result=find(child,predicate);if(result)return result;
@@ -116,7 +117,7 @@ test('expense uses one category above amount, including user categories and safe
  assert.ok(selector);
  assert.ok(React.Children.toArray(selector.props.children).some(node=>node.props.children===category.name));
  const labels=[];
- const visit=node=>{if(!node||typeof node!=='object')return;if(node.type?.name==='AmountCurrencyFields')return visit(node.type(node.props));if(node.type==='label')labels.push(React.Children.toArray(node.props.children)[0]);for(const child of React.Children.toArray(node.props?.children))visit(child);};
+ const visit=node=>{if(!node||typeof node!=='object')return;if(['AmountCurrencyFields','PlanFields','CategoryAmount','DateDetails','DebtPayment','ExpenseActions'].includes(node.type?.name))return visit(node.type(node.props));if(node.type==='label')labels.push(React.Children.toArray(node.props.children)[0]);for(const child of React.Children.toArray(node.props?.children))visit(child);};
  visit(tree);
  assert.equal(labels.filter(label=>label==='Category').length,1);
  assert.ok(labels.indexOf('Category')<labels.indexOf('Amount'));

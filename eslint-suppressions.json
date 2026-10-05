@@ -180,14 +180,6 @@
       "count": 1
     }
   },
-  "components/record-dialog.tsx": {
-    "complexity": {
-      "count": 2
-    },
-    "size/max-file-bytes": {
-      "count": 1
-    }
-  },
   "components/spending-pace-card.tsx": {
     "complexity": {
       "count": 1

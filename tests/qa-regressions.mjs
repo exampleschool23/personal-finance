@@ -6,6 +6,7 @@ import {z} from 'zod';
 import React from 'react';
 import {loadTS} from './helpers/load-ts.mjs';
 import {apiFunction} from './helpers/api-function.mjs';
+import {sourceWithParts} from './helpers/source.mjs';
 
 const {decimalSum,decimalTotalEquals}=loadTS('lib/decimal-amounts.ts');
 const {requiresCashAccount,cashFlowAmountMissing}=loadTS('lib/cash-account-required.ts');
@@ -93,7 +94,7 @@ test('tracker valuations must be typed and amounts use the required entry rule',
 });
 
 test('actual transactions and payments cannot be dated in the future',()=>{
- const dialog=fs.readFileSync('components/record-dialog.tsx','utf8'),income=fs.readFileSync('components/income-record-form.tsx','utf8');
+ const dialog=sourceWithParts('components/record-dialog.tsx'),income=fs.readFileSync('components/income-record-form.tsx','utf8');
  assert.match(dialog,/max=\{\[editing\.frequency==='Once'\?today\(\):undefined,linkedExpensePlan\?\.end_date\?\?undefined\]/);
  assert.match(income,/const actual=editing\.frequency==='Once'&&!salaryPlan;/);assert.match(income,/<DatePicker value=\{editing\.date\}[^>]*max=\{latestDate\}/);
  assert.match(fs.readFileSync('components/mortgage-payment-dialog.tsx','utf8'),/<DatePicker value=\{payment\.date\}[^>]*max=\{depositToday\(\)\}/);
@@ -110,7 +111,7 @@ test('dialogs open the saved record, and the exchange rate reads in the stored d
 });
 
 test('the edit form and its history panel are siblings with different keys',()=>{
- const dialog=fs.readFileSync('components/record-dialog.tsx','utf8');
+ const dialog=sourceWithParts('components/record-dialog.tsx');
  assert.match(dialog,/<RecordEditHistory key=\{'history:'\+editing\.id\}/);
  assert.doesNotMatch(dialog,/<RecordEditHistory key=\{editing\.id\}/);
 });
@@ -158,7 +159,7 @@ test('QA 2026-10-02: dialogs explain limits, prefill scheduled amounts and offer
  for(const file of ['components/planning/asset-movement-dialog.tsx','components/planning/account-operation.tsx','components/planning/goals-page.tsx','components/data-tools.tsx','components/cash-account-field.tsx'])assert.match(read(file),/formatAccountOption\(/,file);
  assert.doesNotMatch(read('components/planning/account-operation.tsx'),/\{a\.name\} · \{a\.currency\}/);
  // Loans & debts: currency choice for new records, loan-only filter, payments for loans and debts, plural counts.
- assert.match(read('components/record-dialog.tsx'),/!existing&&\(assetRecord\|\|lendingRecordKinds\.includes\(editing\.kind\)\)/);
+ assert.match(sourceWithParts('components/record-dialog.tsx'),/!existing&&\(assetRecord\|\|lendingRecordKinds\.includes\(editing\.kind\)\)/);
  const table=read('components/workspace/records-table.tsx');
  assert.match(table,/categories=\{sectionKey === 'debts' \? \[\] : planning\.data\.categories\}/);
  assert.match(table,/\(r\.kind === 'Loan' \|\| r\.kind === 'Debt'\) && <Button.*?setDebtPayment/);

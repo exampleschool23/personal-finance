@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
 import ts from 'typescript';
 import { assetRecordKinds, income, lendingRecordKinds } from '../lib/finance.ts';
+import {sourceWithParts} from './helpers/source.mjs';
 
 // Exercise the currency control's actual visibility and change handler without a browser.
-const source = fs.readFileSync('components/record-dialog.tsx', 'utf8');
+const source = sourceWithParts('components/record-dialog.tsx');
 const tree = ts.createSourceFile('record-dialog.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 let condition, change;
 function visit(node) {
