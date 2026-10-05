@@ -2516,5 +2516,15 @@
   "Updated {date}": "עודכן {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "התחברות עם מספר טלפון זמינה רק לחשבונות שנוצרו ב-Telegram. המשיכו להתחבר באתר כמו עכשיו.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "חיבור מאפשר לצ׳אט ה-Telegram הזה לראות ולשנות הכול בחשבון הזה. קשרו רק אם לחצתם בעצמכם הרגע על „התחברות” ב-Telegram שלכם: את השם ב-Telegram שלמעלה בוחר מי שמחזיק בצ׳אט, ולכן הוא לא מוכיח דבר.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "החשבון הזה נוצר בחשבון Telegram אחר. פתחו את הבוט מאותו חשבון Telegram כדי להשתמש בו שם."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "החשבון הזה נוצר בחשבון Telegram אחר. פתחו את הבוט מאותו חשבון Telegram כדי להשתמש בו שם.",
+  "The maturity date cannot be before the purchase date.": "תאריך הפירעון לא יכול להיות לפני תאריך הרכישה.",
+  "Check the amount.": "בדקו את הסכום.",
+  "Check the quantity.": "בדקו את הכמות.",
+  "Check the annual rate.": "בדקו את השיעור השנתי.",
+  "Choose a supported currency.": "בחרו מטבע נתמך.",
+  "Notes are too long.": "ההערות ארוכות מדי.",
+  "Date is required.": "נדרש תאריך.",
+  "Date lent is required.": "נדרש תאריך ההלוואה.",
+  "Due date must not precede lending date.": "תאריך הפירעון לא יכול להקדים את תאריך ההלוואה.",
+  "Check the end date.": "בדקו את תאריך הסיום."
 }

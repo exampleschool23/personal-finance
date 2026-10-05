@@ -2516,5 +2516,15 @@
   "Updated {date}": "अपडेट किया गया {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "फ़ोन नंबर से साइन इन केवल Telegram में बनाए गए खातों के लिए है। वेब पर वैसे ही साइन इन करते रहें जैसे अभी करते हैं।",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "जोड़ने पर यह Telegram चैट इस खाते में सब कुछ देख और बदल सकेगी। केवल तभी जोड़ें जब आपने अभी-अभी अपने Telegram में खुद “साइन इन करें” दबाया हो: ऊपर दिया Telegram नाम उस चैट का मालिक खुद चुनता है, इसलिए वह कुछ साबित नहीं करता।",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "यह खाता किसी दूसरे Telegram खाते में बनाया गया था। इसे वहाँ इस्तेमाल करने के लिए उसी Telegram खाते से बॉट खोलें।"
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "यह खाता किसी दूसरे Telegram खाते में बनाया गया था। इसे वहाँ इस्तेमाल करने के लिए उसी Telegram खाते से बॉट खोलें।",
+  "The maturity date cannot be before the purchase date.": "परिपक्वता तिथि खरीद तिथि से पहले नहीं हो सकती।",
+  "Check the amount.": "राशि जाँचें।",
+  "Check the quantity.": "मात्रा जाँचें।",
+  "Check the annual rate.": "वार्षिक दर जाँचें।",
+  "Choose a supported currency.": "कोई समर्थित मुद्रा चुनें।",
+  "Notes are too long.": "नोट बहुत लंबे हैं।",
+  "Date is required.": "तिथि आवश्यक है।",
+  "Date lent is required.": "उधार देने की तिथि आवश्यक है।",
+  "Due date must not precede lending date.": "देय तिथि उधार देने की तिथि से पहले नहीं हो सकती।",
+  "Check the end date.": "समाप्ति तिथि जाँचें।"
 }

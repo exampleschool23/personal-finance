@@ -26,6 +26,8 @@ const overrides={
  '@/components/presentation-foundation/formatted-number-input':{FormattedNumberInput:host('number-input')},
  '@/components/presentation-foundation/info-hint':{InfoHint:host('info-hint')},
  '@/components/presentation-foundation/segmented':{Segmented:host('segmented')},
+ // Rolling digits are covered in presentation-foundation; here a figure is its formatted text.
+ '@/components/presentation-foundation/rolling-text':{RollingText:({text})=>text},
  '@/components/ui/button':{Button:host('button')},
  '@/components/ui/dialog':{Dialog:host('dialog'),DialogContent:host('dialog-content'),DialogTitle:host('dialog-title')},
  '@/components/ui/popover':{Popover:host('popover'),PopoverAnchor:host('popover-anchor'),PopoverContent:host('popover-content')},

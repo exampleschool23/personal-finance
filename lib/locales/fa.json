@@ -2516,5 +2516,15 @@
   "Updated {date}": "به‌روزرسانی: {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "ورود با شماره تلفن فقط برای حساب‌هایی است که در Telegram ساخته شده‌اند. همان‌طور که الان در وب وارد می‌شوید، ادامه دهید.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "با اتصال، این گفتگوی Telegram می‌تواند همه چیز را در این حساب ببیند و تغییر دهد. فقط اگر همین الان خودتان در Telegram خودتان روی «ورود» زده‌اید، متصل کنید: نام Telegram بالا را صاحب آن گفتگو انتخاب می‌کند، پس چیزی را ثابت نمی‌کند.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "این حساب در یک حساب Telegram دیگر ساخته شده است. برای استفاده از آن، ربات را از همان حساب Telegram باز کنید."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "این حساب در یک حساب Telegram دیگر ساخته شده است. برای استفاده از آن، ربات را از همان حساب Telegram باز کنید.",
+  "The maturity date cannot be before the purchase date.": "تاریخ سررسید نمی‌تواند پیش از تاریخ خرید باشد.",
+  "Check the amount.": "مبلغ را بررسی کنید.",
+  "Check the quantity.": "مقدار را بررسی کنید.",
+  "Check the annual rate.": "نرخ سالانه را بررسی کنید.",
+  "Choose a supported currency.": "یک ارز پشتیبانی‌شده انتخاب کنید.",
+  "Notes are too long.": "یادداشت‌ها بیش از حد طولانی است.",
+  "Date is required.": "تاریخ الزامی است.",
+  "Date lent is required.": "تاریخ قرض دادن الزامی است.",
+  "Due date must not precede lending date.": "تاریخ سررسید نباید پیش از تاریخ قرض دادن باشد.",
+  "Check the end date.": "تاریخ پایان را بررسی کنید."
 }

@@ -2516,5 +2516,15 @@
   "Updated {date}": "Imesasishwa {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Kuingia kwa nambari ya simu ni kwa akaunti zilizofunguliwa kwenye Telegram pekee. Endelea kuingia kwenye wavuti kama unavyofanya sasa.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Ukiunganisha, gumzo hili la Telegram litaweza kuona na kubadilisha kila kitu katika akaunti hii. Unganisha tu ikiwa wewe mwenyewe umebonyeza “Ingia” kwenye Telegram yako sasa hivi: jina la Telegram lililo juu huchaguliwa na mmiliki wa gumzo hilo, kwa hiyo halithibitishi chochote.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Akaunti hii ilifunguliwa kwenye akaunti nyingine ya Telegram. Fungua bot kutoka kwenye akaunti hiyo ya Telegram ili uitumie huko."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Akaunti hii ilifunguliwa kwenye akaunti nyingine ya Telegram. Fungua bot kutoka kwenye akaunti hiyo ya Telegram ili uitumie huko.",
+  "The maturity date cannot be before the purchase date.": "Tarehe ya kukomaa haiwezi kuwa kabla ya tarehe ya ununuzi.",
+  "Check the amount.": "Kagua kiasi.",
+  "Check the quantity.": "Kagua idadi.",
+  "Check the annual rate.": "Kagua kiwango cha mwaka.",
+  "Choose a supported currency.": "Chagua sarafu inayotumika.",
+  "Notes are too long.": "Maelezo ni marefu mno.",
+  "Date is required.": "Tarehe inahitajika.",
+  "Date lent is required.": "Tarehe ya kukopesha inahitajika.",
+  "Due date must not precede lending date.": "Tarehe ya kulipa haipaswi kutangulia tarehe ya kukopesha.",
+  "Check the end date.": "Kagua tarehe ya mwisho."
 }

@@ -2516,5 +2516,15 @@
   "Updated {date}": "Aktualisiert {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Die Anmeldung mit der Telefonnummer gibt es nur für Konten, die in Telegram erstellt wurden. Melden Sie sich im Web weiter so an wie bisher.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Nach dem Verbinden kann dieser Telegram-Chat alles in diesem Konto sehen und ändern. Verbinden Sie nur, wenn Sie gerade selbst in Ihrem eigenen Telegram auf „Anmelden“ getippt haben: Den Telegram-Namen oben wählt, wer diesen Chat besitzt, er beweist also nichts.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Dieses Konto wurde mit einem anderen Telegram-Konto erstellt. Öffnen Sie den Bot mit diesem Telegram-Konto, um es dort zu nutzen."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Dieses Konto wurde mit einem anderen Telegram-Konto erstellt. Öffnen Sie den Bot mit diesem Telegram-Konto, um es dort zu nutzen.",
+  "The maturity date cannot be before the purchase date.": "Das Fälligkeitsdatum darf nicht vor dem Kaufdatum liegen.",
+  "Check the amount.": "Prüfen Sie den Betrag.",
+  "Check the quantity.": "Prüfen Sie die Menge.",
+  "Check the annual rate.": "Prüfen Sie den Jahreszins.",
+  "Choose a supported currency.": "Wählen Sie eine unterstützte Währung.",
+  "Notes are too long.": "Die Notizen sind zu lang.",
+  "Date is required.": "Ein Datum ist erforderlich.",
+  "Date lent is required.": "Das Verleihdatum ist erforderlich.",
+  "Due date must not precede lending date.": "Das Fälligkeitsdatum darf nicht vor dem Verleihdatum liegen.",
+  "Check the end date.": "Prüfen Sie das Enddatum."
 }

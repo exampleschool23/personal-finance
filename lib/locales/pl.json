@@ -2516,5 +2516,15 @@
   "Updated {date}": "Zaktualizowano {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Logowanie numerem telefonu jest tylko dla kont utworzonych w Telegramie. Nadal loguj się w przeglądarce tak jak teraz.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Po połączeniu ten czat Telegrama będzie mógł widzieć i zmieniać wszystko na tym koncie. Łącz tylko wtedy, gdy przed chwilą sam(a) nacisnąłeś(-ęłaś) „Zaloguj się” we własnym Telegramie: nazwę Telegrama powyżej wybiera właściciel tego czatu, więc niczego nie dowodzi.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "To konto zostało utworzone na innym koncie Telegrama. Otwórz bota z tamtego konta Telegrama, aby z niego tam korzystać."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "To konto zostało utworzone na innym koncie Telegrama. Otwórz bota z tamtego konta Telegrama, aby z niego tam korzystać.",
+  "The maturity date cannot be before the purchase date.": "Data zapadalności nie może być wcześniejsza niż data zakupu.",
+  "Check the amount.": "Sprawdź kwotę.",
+  "Check the quantity.": "Sprawdź ilość.",
+  "Check the annual rate.": "Sprawdź roczną stopę.",
+  "Choose a supported currency.": "Wybierz obsługiwaną walutę.",
+  "Notes are too long.": "Notatki są za długie.",
+  "Date is required.": "Data jest wymagana.",
+  "Date lent is required.": "Data pożyczki jest wymagana.",
+  "Due date must not precede lending date.": "Termin spłaty nie może być wcześniejszy niż data pożyczki.",
+  "Check the end date.": "Sprawdź datę zakończenia."
 }

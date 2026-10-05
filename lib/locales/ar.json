@@ -2516,5 +2516,15 @@
   "Updated {date}": "آخر تحديث {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "تسجيل الدخول برقم الهاتف متاح فقط للحسابات التي أُنشئت في Telegram. واصل تسجيل الدخول على الويب كما تفعل الآن.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "الربط يتيح لمحادثة Telegram هذه رؤية كل شيء في هذا الحساب وتغييره. لا تربط إلا إذا ضغطت للتو بنفسك على «تسجيل الدخول» في Telegram الخاص بك: اسم Telegram أعلاه يختاره مالك تلك المحادثة، لذا فهو لا يثبت شيئًا.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "أُنشئ هذا الحساب من حساب Telegram آخر. افتح البوت من حساب Telegram ذلك لاستخدامه هناك."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "أُنشئ هذا الحساب من حساب Telegram آخر. افتح البوت من حساب Telegram ذلك لاستخدامه هناك.",
+  "The maturity date cannot be before the purchase date.": "لا يمكن أن يكون تاريخ الاستحقاق قبل تاريخ الشراء.",
+  "Check the amount.": "تحقق من المبلغ.",
+  "Check the quantity.": "تحقق من الكمية.",
+  "Check the annual rate.": "تحقق من المعدل السنوي.",
+  "Choose a supported currency.": "اختر عملة مدعومة.",
+  "Notes are too long.": "الملاحظات طويلة جدًا.",
+  "Date is required.": "التاريخ مطلوب.",
+  "Date lent is required.": "تاريخ الإقراض مطلوب.",
+  "Due date must not precede lending date.": "يجب ألا يسبق تاريخ الاستحقاق تاريخ الإقراض.",
+  "Check the end date.": "تحقق من تاريخ الانتهاء."
 }

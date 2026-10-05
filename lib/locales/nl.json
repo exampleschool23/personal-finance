@@ -2516,5 +2516,15 @@
   "Updated {date}": "Bijgewerkt {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Aanmelden met een telefoonnummer is alleen voor accounts die in Telegram zijn gemaakt. Meld u op het web aan zoals u nu doet.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Na het koppelen kan deze Telegram-chat alles in dit account zien en wijzigen. Koppel alleen als u zojuist zelf op ‘Aanmelden’ hebt getikt in uw eigen Telegram: de Telegram-naam hierboven kiest wie die chat bezit, dus die bewijst niets.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Dit account is gemaakt met een ander Telegram-account. Open de bot vanuit dat Telegram-account om het daar te gebruiken."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Dit account is gemaakt met een ander Telegram-account. Open de bot vanuit dat Telegram-account om het daar te gebruiken.",
+  "The maturity date cannot be before the purchase date.": "De vervaldatum kan niet vóór de aankoopdatum liggen.",
+  "Check the amount.": "Controleer het bedrag.",
+  "Check the quantity.": "Controleer de hoeveelheid.",
+  "Check the annual rate.": "Controleer het jaarlijkse tarief.",
+  "Choose a supported currency.": "Kies een ondersteunde valuta.",
+  "Notes are too long.": "De notities zijn te lang.",
+  "Date is required.": "Een datum is verplicht.",
+  "Date lent is required.": "De uitleendatum is verplicht.",
+  "Due date must not precede lending date.": "De vervaldatum mag niet vóór de uitleendatum liggen.",
+  "Check the end date.": "Controleer de einddatum."
 }

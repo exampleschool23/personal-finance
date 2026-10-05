@@ -2516,5 +2516,15 @@
   "Updated {date}": "Actualizat {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Conectarea cu numărul de telefon este doar pentru conturile create în Telegram. Continuă să te conectezi pe web așa cum o faci acum.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Prin legare, acest chat Telegram va putea vedea și modifica totul în acest cont. Leagă doar dacă tocmai ai apăsat tu însuți „Conectare” în propriul Telegram: numele Telegram de mai sus este ales de cine deține acel chat, deci nu dovedește nimic.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Acest cont a fost creat într-un alt cont Telegram. Deschide botul din acel cont Telegram ca să-l folosești acolo."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Acest cont a fost creat într-un alt cont Telegram. Deschide botul din acel cont Telegram ca să-l folosești acolo.",
+  "The maturity date cannot be before the purchase date.": "Data scadenței nu poate fi înaintea datei de cumpărare.",
+  "Check the amount.": "Verificați suma.",
+  "Check the quantity.": "Verificați cantitatea.",
+  "Check the annual rate.": "Verificați rata anuală.",
+  "Choose a supported currency.": "Alegeți o monedă acceptată.",
+  "Notes are too long.": "Notele sunt prea lungi.",
+  "Date is required.": "Data este obligatorie.",
+  "Date lent is required.": "Data împrumutului este obligatorie.",
+  "Due date must not precede lending date.": "Data scadenței nu poate preceda data împrumutului.",
+  "Check the end date.": "Verificați data de încheiere."
 }

@@ -2516,5 +2516,15 @@
   "Updated {date}": "Yangilangan: {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Telefon raqami bilan kirish faqat Telegramda yaratilgan hisoblar uchun. Saytga hozirgidek kirishda davom eting.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Ulansangiz, bu Telegram chati ushbu hisobdagi hamma narsani ko‘ra va o‘zgartira oladi. Faqat hozirgina o‘z Telegramingizda «Kirish» tugmasini o‘zingiz bosgan bo‘lsangiz ulang: yuqoridagi Telegram ismini o‘sha chat egasi o‘zi tanlaydi, shuning uchun u hech narsani isbotlamaydi.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Bu hisob boshqa Telegram hisobida yaratilgan. Undan o‘sha yerda foydalanish uchun botni o‘sha Telegram hisobidan oching."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Bu hisob boshqa Telegram hisobida yaratilgan. Undan o‘sha yerda foydalanish uchun botni o‘sha Telegram hisobidan oching.",
+  "The maturity date cannot be before the purchase date.": "Toʻlov muddati sotib olingan sanadan oldin boʻlishi mumkin emas.",
+  "Check the amount.": "Summani tekshiring.",
+  "Check the quantity.": "Miqdorni tekshiring.",
+  "Check the annual rate.": "Yillik stavkani tekshiring.",
+  "Choose a supported currency.": "Qoʻllab-quvvatlanadigan valyutani tanlang.",
+  "Notes are too long.": "Izohlar juda uzun.",
+  "Date is required.": "Sana kiritilishi shart.",
+  "Date lent is required.": "Qarz berilgan sana kiritilishi shart.",
+  "Due date must not precede lending date.": "Qaytarish muddati qarz berilgan sanadan oldin boʻlmasligi kerak.",
+  "Check the end date.": "Tugash sanasini tekshiring."
 }

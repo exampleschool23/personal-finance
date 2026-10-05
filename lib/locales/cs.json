@@ -2516,5 +2516,15 @@
   "Updated {date}": "Aktualizováno {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Přihlášení telefonním číslem je jen pro účty vytvořené v Telegramu. Na webu se dál přihlašujte tak jako teď.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Po propojení bude tento chat v Telegramu moci vidět a měnit vše v tomto účtu. Propojte jen tehdy, pokud jste právě sami klepli na „Přihlásit se“ ve svém vlastním Telegramu: jméno v Telegramu výše si volí majitel toho chatu, takže nic nedokazuje.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Tento účet byl vytvořen v jiném účtu Telegramu. Otevřete bota z toho účtu Telegramu a používejte ho tam."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Tento účet byl vytvořen v jiném účtu Telegramu. Otevřete bota z toho účtu Telegramu a používejte ho tam.",
+  "The maturity date cannot be before the purchase date.": "Datum splatnosti nemůže být před datem nákupu.",
+  "Check the amount.": "Zkontrolujte částku.",
+  "Check the quantity.": "Zkontrolujte množství.",
+  "Check the annual rate.": "Zkontrolujte roční sazbu.",
+  "Choose a supported currency.": "Vyberte podporovanou měnu.",
+  "Notes are too long.": "Poznámky jsou příliš dlouhé.",
+  "Date is required.": "Datum je povinné.",
+  "Date lent is required.": "Datum zapůjčení je povinné.",
+  "Due date must not precede lending date.": "Datum splatnosti nesmí předcházet datu zapůjčení.",
+  "Check the end date.": "Zkontrolujte datum ukončení."
 }

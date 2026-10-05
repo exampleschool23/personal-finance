@@ -2516,5 +2516,15 @@
   "Updated {date}": "更新于 {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "只有在 Telegram 中创建的账户才能用手机号登录。请继续按现在的方式在网页上登录。",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "连接后，这个 Telegram 聊天将能查看并更改此账户中的一切。只有在你本人刚刚于自己的 Telegram 中点按了“登录”时才连接：上面的 Telegram 名称由该聊天的拥有者自行设置，因此证明不了任何事。",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "此账户是在另一个 Telegram 账户中创建的。请从那个 Telegram 账户打开机器人，在那里使用它。"
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "此账户是在另一个 Telegram 账户中创建的。请从那个 Telegram 账户打开机器人，在那里使用它。",
+  "The maturity date cannot be before the purchase date.": "到期日不能早于购买日期。",
+  "Check the amount.": "请检查金额。",
+  "Check the quantity.": "请检查数量。",
+  "Check the annual rate.": "请检查年利率。",
+  "Choose a supported currency.": "请选择受支持的货币。",
+  "Notes are too long.": "备注太长。",
+  "Date is required.": "日期为必填项。",
+  "Date lent is required.": "借出日期为必填项。",
+  "Due date must not precede lending date.": "到期日不能早于借出日期。",
+  "Check the end date.": "请检查结束日期。"
 }

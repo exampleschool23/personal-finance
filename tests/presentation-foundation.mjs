@@ -79,6 +79,13 @@ test('loading skeletons keep the shape of the content they replace, so the page 
  const [left,right]=custom.split('class="dashboard-column"').slice(1);
  assert.ok(!left.includes('overview-hero')&&right.includes('overview-hero'),'follows the saved layout');
  assert.equal(right.match(/<section/g).length,3,'at most three cards a column');
+ const {AccountsSkeleton}=load('loading-placeholder.tsx',{'@/components/ui/skeleton':{Skeleton:element('span')}});
+ const accounts=render(AccountsSkeleton,{label:'Loading records…',currencies:2});
+ assert.match(accounts,/^<div role="status" aria-busy="true" class="overview-content-loading"><span class="sr-only">Loading records…<\/span>/);
+ assert.equal(accounts.match(/class="stat-tile"/g).length,2,'a balance tile per preferred currency');
+ assert.ok(accounts.indexOf('account-group')<accounts.indexOf('account-selected-panel'),'the account list with the selected account beside it');
+ assert.equal(accounts.match(/class="account-list-row"/g).length,5);
+ assert.ok(!accounts.includes('transactions-tools'));assert.ok(render(AccountsSkeleton,{label:'L',filters:true}).includes('transactions-tools'),'filters only for a shared workspace');
 });
 
 test('row menu keeps rare actions behind one labelled ⋯ button and disappears when there are none',()=>{
@@ -123,34 +130,37 @@ test('panel title keeps the heading, count and hint on one line and the aside on
  assert.equal(render(Count,{value:12,loading:true}),'<span class="count">—</span>');
 });
 
-test('animated money renders the final formatted amount and eases between amounts',()=>{
- const {AnimatedMoney,countValue}=load('animated-money.tsx',{'@/lib/format':{formatMoney:(value,currency)=>`${currency} ${Math.round(value)}`}});
- assert.equal(render(AnimatedMoney,{value:310391,currency:'USD'}),'<span class="animated-number"><span aria-hidden="true">USD 310391</span><span class="sr-only">USD 310391</span></span>');
- assert.equal(countValue(0,1000,0),0);
- assert.equal(countValue(0,1000,800),1000);
- assert.equal(countValue(0,1000,5000),1000,'never overshoots');
- assert.ok(countValue(0,1000,400)>500,'eases out');
- assert.equal(countValue(500,-500,800),-500,'counts down to negatives');
+test('animated money rolls each digit on its own 0–9 strip and keeps the amount whole for screen readers',()=>{
+ const {AnimatedMoney}=load('animated-money.tsx',{'@/lib/format':{formatMoney:value=>(value<0?'-$':'$')+Math.abs(value).toLocaleString('en-US')}});
+ const {rollingColumns}=load('rolling-text.tsx');
+ const html=render(AnimatedMoney,{value:-20631,currency:'USD'});
+ assert.match(html,/<span class="sr-only">-\$20,631<\/span><\/roll-text>$/,'the whole amount for screen readers');
+ assert.match(html,/^<roll-text><roll-chars aria-hidden="true"><roll-char>-<\/roll-char><roll-char>\$<\/roll-char><roll-digit>/,'signs and separators stay put');
+ assert.equal(html.match(/<roll-digit>/g).length,5,'one strip per digit');
+ assert.equal(html.match(/<roll-strip /g).length,5);
+ assert.ok(html.includes([...'0123456789'].map(digit=>`<roll-char>${digit}</roll-char>`).join('')),'each strip holds 0–9');
+ assert.doesNotMatch(html.replace('<span class="sr-only">',''),/<span/,'no spans for page rules to restyle');
+ assert.ok(html.includes('translateY(-0%)'),'digits start at 0 and roll up into place');
+ // Keys count from the right, so units stay units when the amount gains a digit and roll instead of jumping.
+ assert.deepEqual(rollingColumns('$9').map(item=>item.key),[2,1]);
+ assert.deepEqual(rollingColumns('$10').map(item=>[item.key,item.digit]),[[3,null],[2,1],[1,0]]);
+ assert.deepEqual(rollingColumns('€1,655').filter(item=>item.digit===null).map(item=>item.char),['€',',']);
 });
 
-test('animated money counts once, even when the amount changes mid-count, and skips motion when reduced',()=>{
- let clock=0,frames=[],reduced=false;const slots=[];let cursor=0,effects=[];
- const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=initial;return [slots[i],value=>{slots[i]=value;}];},useRef:initial=>{const i=cursor++;return slots[i]??(slots[i]={current:initial});},
+test('a rolling digit moves to its value only after the strip has been drawn at its old one',()=>{
+ const slots=[];let cursor=0,effects=[],frames=[];
+ const react={useState:initial=>{const i=cursor++;if(!(i in slots))slots[i]=initial;return [slots[i],value=>{slots[i]=value;}];},
   useLayoutEffect:(effect,deps)=>{const i=cursor++;if(!slots[i]||deps.some((d,k)=>!Object.is(d,slots[i][k]))){slots[i]=deps;effects.push(effect);}}};
- const saved={window:globalThis.window,raf:globalThis.requestAnimationFrame,caf:globalThis.cancelAnimationFrame,now:performance.now};
- globalThis.window={matchMedia:()=>({matches:reduced})};globalThis.requestAnimationFrame=cb=>frames.push(cb);globalThis.cancelAnimationFrame=()=>{frames=[];};performance.now=()=>clock;
+ const saved={raf:globalThis.requestAnimationFrame,caf:globalThis.cancelAnimationFrame};
+ globalThis.requestAnimationFrame=cb=>frames.push(cb);globalThis.cancelAnimationFrame=()=>{frames=[];};
  try{
-  const {AnimatedMoney}=load('animated-money.tsx',{react,'@/lib/format':{formatMoney:value=>String(Math.round(value))}});
-  const shown=value=>{cursor=0;const tree=AnimatedMoney({value,currency:'USD'});effects.splice(0).forEach(effect=>effect());cursor=0;return Number(AnimatedMoney({value,currency:'USD'}).props.children[0].props.children);};
-  const advance=ms=>{clock+=ms;const run=frames.splice(0);run.forEach(cb=>cb(clock));};
-  let value=1000,seen=[shown(value)];
-  assert.equal(seen[0],0,'starts from zero');
-  for(let t=0;t<12;t++){advance(100);if(t===3)value=2000;seen.push(shown(value));}
-  assert.ok(seen.every((n,i)=>i===0||n>=seen[i-1]),`never restarts: ${seen}`);
-  assert.equal(seen[8],2000,'settles on the new amount within one count');
-  assert.equal(frames.length,0,'no second count');
-  reduced=true;assert.equal(shown(500),500,'reduced motion shows the amount at once');
- }finally{globalThis.window=saved.window;globalThis.requestAnimationFrame=saved.raf;globalThis.cancelAnimationFrame=saved.caf;performance.now=saved.now;}
+  const {RollingText}=load('rolling-text.tsx',{react});
+  const digit=()=>RollingText({text:'7'}).props.children[0].props.children[0];
+  const offset=()=>{cursor=0;const element=digit();const tree=element.type(element.props);effects.splice(0).forEach(effect=>effect());return tree.props.children.props.style.transform;};
+  assert.equal(offset(),'translateY(-0%)');
+  frames.splice(0).forEach(cb=>cb());assert.equal(offset(),'translateY(-0%)','not on the first frame');
+  frames.splice(0).forEach(cb=>cb());assert.equal(offset(),'translateY(-70%)','rolls to 7 on the second');
+ }finally{globalThis.requestAnimationFrame=saved.raf;globalThis.cancelAnimationFrame=saved.caf;}
 });
 
 test('info hint keeps its explanation behind a labelled ⓘ button',()=>{

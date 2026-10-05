@@ -2516,5 +2516,15 @@
   "Updated {date}": "อัปเดตเมื่อ {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "การลงชื่อเข้าใช้ด้วยหมายเลขโทรศัพท์ใช้ได้เฉพาะบัญชีที่สร้างใน Telegram เท่านั้น ลงชื่อเข้าใช้บนเว็บต่อไปแบบที่คุณทำอยู่ตอนนี้",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "การเชื่อมต่อจะทำให้แชต Telegram นี้ดูและเปลี่ยนแปลงทุกอย่างในบัญชีนี้ได้ เชื่อมต่อเฉพาะเมื่อคุณเพิ่งกด “ลงชื่อเข้าใช้” ใน Telegram ของคุณเองเท่านั้น: ชื่อ Telegram ด้านบนตั้งโดยเจ้าของแชตนั้น จึงพิสูจน์อะไรไม่ได้",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "บัญชีนี้สร้างจากบัญชี Telegram อื่น เปิดบอตจากบัญชี Telegram นั้นเพื่อใช้งานที่นั่น"
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "บัญชีนี้สร้างจากบัญชี Telegram อื่น เปิดบอตจากบัญชี Telegram นั้นเพื่อใช้งานที่นั่น",
+  "The maturity date cannot be before the purchase date.": "วันครบกำหนดต้องไม่อยู่ก่อนวันที่ซื้อ",
+  "Check the amount.": "ตรวจสอบจำนวนเงิน",
+  "Check the quantity.": "ตรวจสอบปริมาณ",
+  "Check the annual rate.": "ตรวจสอบอัตราต่อปี",
+  "Choose a supported currency.": "เลือกสกุลเงินที่รองรับ",
+  "Notes are too long.": "บันทึกยาวเกินไป",
+  "Date is required.": "ต้องระบุวันที่",
+  "Date lent is required.": "ต้องระบุวันที่ให้ยืม",
+  "Due date must not precede lending date.": "วันครบกำหนดต้องไม่อยู่ก่อนวันที่ให้ยืม",
+  "Check the end date.": "ตรวจสอบวันที่สิ้นสุด"
 }

@@ -33,6 +33,7 @@ import { convertAmount } from '@/lib/market';
 import { emptyPlanning } from '@/lib/planning';
 import { chunks, emptyTransactionFilter, filtersTransactions, groupByDay, periodRange, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
 import { canRecategorize, canTakeCategory, categoryChoices, choiceKey, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
+import { RollingText } from '@/components/presentation-foundation/rolling-text';
 
 const transactionsPerPage = 20;
 
@@ -171,10 +172,10 @@ export function TransactionsScreen() {
     <PanelTitle title={t('Summary')}/>
     <dl className="budget-left-summary">
      <div><dt>{t('Transactions')}</dt><dd>{formatNumber(summary.count, locale, 0)}</dd></div>
-     <div><dt>{t('Income')}</dt><dd className={summary.received > 0 ? 'positive' : undefined}>{money(summary.received)}</dd></div>
-     <div><dt>{t('Spending')}</dt><dd>{money(summary.spent)}</dd></div>
-     {summary.largest && <div><dt>{t('Largest expense')}</dt><dd>{money(summary.largest.amount)}</dd></div>}
-     <div className="budget-left-total"><dt>{t('Net')}</dt><dd className={summary.received - summary.spent > 0 ? 'positive' : undefined}>{money(summary.received - summary.spent)}</dd></div>
+     <div><dt>{t('Income')}</dt><dd className={summary.received > 0 ? 'positive' : undefined}><RollingText text={money(summary.received)}/></dd></div>
+     <div><dt>{t('Spending')}</dt><dd><RollingText text={money(summary.spent)}/></dd></div>
+     {summary.largest && <div><dt>{t('Largest expense')}</dt><dd><RollingText text={money(summary.largest.amount)}/></dd></div>}
+     <div className="budget-left-total"><dt>{t('Net')}</dt><dd className={summary.received - summary.spent > 0 ? 'positive' : undefined}><RollingText text={money(summary.received - summary.spent)}/></dd></div>
     </dl>
    </aside>
   </div>}

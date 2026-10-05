@@ -25,6 +25,7 @@ import { depositToday } from '@/lib/deposit-interest';
 import type { ExpensePlan } from '@/lib/expense-plans';
 import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatSignedMoney } from '@/lib/format';
 import type { PlanningData } from '@/lib/planning';
+import { RollingText } from '@/components/presentation-foundation/rolling-text';
 
 type Rates = number | Record<string, number> | undefined;
 type Props = { owner?: string | null; data: PlanningData; plans: readonly ExpensePlan[]; plansMonth?: string; currency: string; rates: Rates; loading: boolean; error: string; onRetry: () => void };
@@ -170,7 +171,7 @@ export function LowestBalanceCard({ data, plans, plansMonth, currency, rates }: 
  return <section className="panel overview-panel forecast-card" aria-label={t('Lowest balance ahead')}>
   <PanelTitle title={t('Lowest balance ahead')}><DrawerLink href="/income-expenses#forecast">{t('View forecast')}</DrawerLink></PanelTitle>
   {forecast.totals.length ? <ul className="forecast-card-figures">{forecast.totals.map(total => <li key={total.id}>
-   <strong className={signTone(total.lowest.balance, true)}>{formatMoney(total.lowest.balance, total.currency, locale)}</strong>
+   <strong className={signTone(total.lowest.balance, true)}><RollingText text={formatMoney(total.lowest.balance, total.currency, locale)}/></strong>
    <small>{formatDate(total.lowest.date, locale)}</small>
   </li>)}</ul> : <EmptyState icon={<Wallet aria-hidden="true"/>} description={t('Add a cash account to forecast its balance.')}/>}
   <BelowZeroWarning forecast={forecast}/>

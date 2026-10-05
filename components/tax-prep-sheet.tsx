@@ -20,6 +20,7 @@ import { exportCSV } from '@/lib/csv';
 import { depositToday } from '@/lib/deposit-interest';
 import { formatDate, formatMoney, formatNumber, formatYear } from '@/lib/format';
 import { pdfUnsupportedLanguages } from '@/lib/languages';
+import { RollingText } from '@/components/presentation-foundation/rolling-text';
 
 const periodLabels: Record<TaxPeriod, string> = { year: 'Full year', q1: 'Q1', q2: 'Q2', q3: 'Q3', q4: 'Q4' };
 
@@ -84,7 +85,7 @@ export function TaxPrepSheet({ lines, businesses, business, onBusiness, year, ye
    {part('income', t(numbered ? 'Part I · Income' : 'Income'))}
    {part('expense', t(numbered ? 'Part II · Expenses' : 'Expenses'))}
    {sheet.unmapped.length > 0 && <section className="panel tax-part"><PanelTitle title={t('Not on the sheet')} hint={t('These categories are left out of the export until you move them to a line.')}/><ul className="tax-unmapped">{sheet.unmapped.map(categoryRow)}</ul></section>}
-   <section className="panel tax-net"><BusinessName id={business} names={names}/><span>{t('Net profit or loss')}</span><strong className={sheet.net < 0 ? 'negative' : 'positive'}>{money(sheet.net)}</strong></section>
+   <section className="panel tax-net"><BusinessName id={business} names={names}/><span>{t('Net profit or loss')}</span><strong className={sheet.net < 0 ? 'negative' : 'positive'}><RollingText text={money(sheet.net)}/></strong></section>
   </>}
   <ErrorPopup message={error}/>
   {previewing && <TaxExportDialog sheet={sheet} template={settings.template} title={`${names.business(business)} · ${t(periodLabels[period])} ${formatYear(year, locale)}`} names={names} currency={currency} onClose={() => setPreviewing(false)}/>}

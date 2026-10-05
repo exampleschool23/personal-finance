@@ -19,6 +19,7 @@ import type { Share } from '@/lib/cash-flow-report';
 import { categoryColor } from '@/lib/category-colors';
 import { exportCSV } from '@/lib/csv';
 import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatSignedMoney, formatYear } from '@/lib/format';
+import { RollingText } from '@/components/presentation-foundation/rolling-text';
 
 /** How a report names things: categories (built-in kinds are translated), the key a category's icon and colour come
  * from (a built-in kind, or an added category's own name), category groups and businesses. */
@@ -199,10 +200,10 @@ export function ReportSummary({ lines, mixed, names, currency, fileName }: { lin
   <PanelTitle title={t('Summary')}/>
   <dl className="budget-left-summary">
    <div><dt>{t('Total transactions')}</dt><dd>{formatNumber(summary.count, locale, 0)}</dd></div>
-   <div><dt>{t('Largest transaction')}</dt><dd>{summary.largest ? money(summary.largest.amount) : '—'}</dd></div>
-   <div><dt>{t('Average transaction')}</dt><dd>{summary.count ? (mixed ? formatSignedMoney(net / summary.count, currency, locale) : money(total / summary.count)) : '—'}</dd></div>
-   {mixed ? <><div><dt>{t('Total income')}</dt><dd className={summary.income > 0 ? 'positive' : undefined}>{money(summary.income)}</dd></div><div><dt>{t('Total spending')}</dt><dd>{money(summary.expenses)}</dd></div></>
-    : <div><dt>{t('Total')}</dt><dd>{money(total)}</dd></div>}
+   <div><dt>{t('Largest transaction')}</dt><dd><RollingText text={summary.largest ? money(summary.largest.amount) : '—'}/></dd></div>
+   <div><dt>{t('Average transaction')}</dt><dd><RollingText text={summary.count ? (mixed ? formatSignedMoney(net / summary.count, currency, locale) : money(total / summary.count)) : '—'}/></dd></div>
+   {mixed ? <><div><dt>{t('Total income')}</dt><dd className={summary.income > 0 ? 'positive' : undefined}><RollingText text={money(summary.income)}/></dd></div><div><dt>{t('Total spending')}</dt><dd><RollingText text={money(summary.expenses)}/></dd></div></>
+    : <div><dt>{t('Total')}</dt><dd><RollingText text={money(total)}/></dd></div>}
    <div><dt>{t('First transaction')}</dt><dd>{formatDate(summary.first ?? '', locale)}</dd></div>
    <div><dt>{t('Last transaction')}</dt><dd>{formatDate(summary.last ?? '', locale)}</dd></div>
   </dl>

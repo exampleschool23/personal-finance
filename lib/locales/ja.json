@@ -2516,5 +2516,15 @@
   "Updated {date}": "{date}更新",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "電話番号でのサインインは Telegram で作成したアカウントのみ利用できます。Web では今までどおりの方法でサインインしてください。",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "接続すると、この Telegram チャットはこのアカウントのすべてを閲覧・変更できるようになります。ご自身の Telegram で今「サインイン」を押した場合にのみ接続してください。上の Telegram の名前はそのチャットの持ち主が自由に決められるため、本人である証明にはなりません。",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "このアカウントは別の Telegram アカウントで作成されました。そこで使うには、その Telegram アカウントからボットを開いてください。"
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "このアカウントは別の Telegram アカウントで作成されました。そこで使うには、その Telegram アカウントからボットを開いてください。",
+  "The maturity date cannot be before the purchase date.": "満期日を購入日より前にすることはできません。",
+  "Check the amount.": "金額を確認してください。",
+  "Check the quantity.": "数量を確認してください。",
+  "Check the annual rate.": "年利を確認してください。",
+  "Choose a supported currency.": "対応している通貨を選んでください。",
+  "Notes are too long.": "メモが長すぎます。",
+  "Date is required.": "日付は必須です。",
+  "Date lent is required.": "貸付日は必須です。",
+  "Due date must not precede lending date.": "返済期日は貸付日より前にできません。",
+  "Check the end date.": "終了日を確認してください。"
 }

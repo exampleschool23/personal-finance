@@ -21,28 +21,31 @@ test('page header shows its eyebrow, hint and actions only when they are provide
  assert.match(full,/<div class="entry-actions"><button>Add<\/button><\/div>/);
 });
 
-test('stat tiles keep the value text intact and colour it only for a stated tone',()=>{
+test('stat tiles keep the value text intact, roll its digits and colour it only for a stated tone',()=>{
  const {StatTile,StatTiles}=loadTS('components/presentation-foundation/stat-tile.tsx');
  const html=render(StatTiles,{columns:3,label:'Debts'},
   React.createElement(StatTile,{label:'Money you owe',value:'$92,726'}),
   React.createElement(StatTile,{label:'Net lending position',value:'-$80,507',tone:'negative'},React.createElement('p',null,'Shortfall')));
  assert.match(html,/^<div class="stat-tiles" data-columns="3" role="group" aria-label="Debts">/);
- assert.match(html,/<h3>Money you owe<\/h3><strong>\$92,726<\/strong><\/article>/);
- assert.match(html,/<strong class="negative">-\$80,507<\/strong><p>Shortfall<\/p>/);
+ assert.match(html,/<h3>Money you owe<\/h3><strong><roll-text><roll-chars aria-hidden="true"><roll-char>\$<\/roll-char><roll-digit>.*?<span class="sr-only">\$92,726<\/span><\/roll-text><\/strong><\/article>/);
+ assert.match(html,/<strong class="negative"><roll-text>.*?<span class="sr-only">-\$80,507<\/span><\/roll-text><\/strong><p>Shortfall<\/p>/);
+ assert.equal(render(StatTile,{label:'Target date',value:'28 January 2027',rolling:false}),'<article class="stat-tile"><h3>Target date</h3><strong>28 January 2027</strong></article>','a date does not roll');
  assert.doesNotMatch(render(StatTiles,{},null),/role=|aria-label=/);
  // An explanation sits behind the ⓘ in the heading, never as a sentence under the figure.
  const hinted=loadTS('components/presentation-foundation/stat-tile.tsx',{'@/components/presentation-foundation/info-hint':{InfoHint:({children})=>React.createElement('i',{className:'info-hint'},children)}});
- assert.equal(render(hinted.StatTile,{label:'Age of Money',value:'12 days',hint:'How long money waits.'},React.createElement('p',null,'+3 days vs 30 days ago')),'<article class="stat-tile"><h3>Age of Money<i class="info-hint">How long money waits.</i></h3><strong>12 days</strong><p>+3 days vs 30 days ago</p></article>');
+ assert.equal(render(hinted.StatTile,{label:'Age of Money',value:'12 days',hint:'How long money waits.'},React.createElement('p',null,'+3 days vs 30 days ago')),'<article class="stat-tile"><h3>Age of Money<i class="info-hint">How long money waits.</i></h3><strong>12 days</strong><p>+3 days vs 30 days ago</p></article>'.replace('<strong>12 days</strong>',render(hinted.StatTile,{label:'x',value:'12 days'}).match(/<strong>.*<\/strong>/)[0]));
+ assert.match(render(hinted.StatTile,{label:'x',value:'12 days'}),/<span class="sr-only">12 days<\/span>/);
 });
 
 test('debt summary totals stay whole amounts, money you owe and a net shortfall are marked negative',()=>{
  const {DebtSummary}=loadTS('components/debt-summary.tsx',{'@/components/language-provider':language});
  const entry=(id,kind,amount)=>({id,name:id,kind,amount,quantity:1,cost:0,rate:0,currency:'USD',frequency:'Once',date:'2026-09-01'});
  const owing=render(DebtSummary,{currency:'USD',entries:[entry('lent','Money lent',1200.75),entry('loan','Loan',5000.4)]});
- assert.match(owing,/<strong>\$1,201<\/strong>/);
- assert.match(owing,/<strong class="negative">\$5,000<\/strong>/);
- assert.match(owing,/<strong class="negative">\u2212\$3,800<\/strong>/);
- assert.doesNotMatch(owing,/\.\d/);
+ // Figures roll their digits; the whole amount is the text screen readers get.
+ assert.match(owing,/<strong><roll-text>(?:(?!<\/strong>).)*<span class="sr-only">\$1,201<\/span><\/roll-text><\/strong>/);
+ assert.match(owing,/<strong class="negative"><roll-text>(?:(?!<\/strong>).)*<span class="sr-only">\$5,000<\/span><\/roll-text><\/strong>/);
+ assert.match(owing,/<strong class="negative"><roll-text>(?:(?!<\/strong>).)*<span class="sr-only">\u2212\$3,800<\/span><\/roll-text><\/strong>/);
+ assert.doesNotMatch(owing.replace(/<roll-chars aria-hidden="true">.*?<\/roll-chars>/g,''),/\.\d/);
  const ahead=render(DebtSummary,{currency:'USD',entries:[entry('lent','Money lent',900)]});
  assert.doesNotMatch(ahead,/class="(?:positive|negative)"/);
 });

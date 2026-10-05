@@ -2516,5 +2516,15 @@
   "Updated {date}": "Updated {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.",
+  "The maturity date cannot be before the purchase date.": "The maturity date cannot be before the purchase date.",
+  "Check the amount.": "Check the amount.",
+  "Check the quantity.": "Check the quantity.",
+  "Check the annual rate.": "Check the annual rate.",
+  "Choose a supported currency.": "Choose a supported currency.",
+  "Notes are too long.": "Notes are too long.",
+  "Date is required.": "Date is required.",
+  "Date lent is required.": "Date lent is required.",
+  "Due date must not precede lending date.": "Due date must not precede lending date.",
+  "Check the end date.": "Check the end date."
 }

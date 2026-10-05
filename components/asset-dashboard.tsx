@@ -6,6 +6,7 @@ import { signTone } from '@/components/presentation-foundation/tone';
 
 import { useMemo, useState, type CSSProperties } from 'react';
 import { AssetCard } from '@/components/presentation-foundation/asset-card';
+import { AnimatedMoney } from '@/components/presentation-foundation/animated-money';
 import { ChevronDown, Ellipsis, LayoutGrid, List, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AssetAccounts } from '@/components/asset-accounts';
@@ -70,14 +71,14 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
   <section className="portfolio-summary" aria-label={t('Your holdings')}>
    <div className="portfolio-summary-main">
     <h2>{t('Your holdings')}<Count value={holdings.length}/></h2>
-    <strong className="portfolio-summary-value">{loading ? '—' : money(total)}</strong>
+    <strong className="portfolio-summary-value">{loading ? '—' : <AnimatedMoney value={total} currency={currency}/>}</strong>
     <PartialTotal currencies={excludedCurrencies}/>
-    <div className="portfolio-summary-metrics"><div><span>{t('Net worth')}</span><strong>{loading ? '—' : money(netWorth)}</strong></div><div><span>{t('Outstanding debt')}</span><strong>{loading ? '—' : money(debt)}</strong></div></div>
+    <div className="portfolio-summary-metrics"><div><span>{t('Net worth')}</span><strong>{loading ? '—' : <AnimatedMoney value={netWorth} currency={currency}/>}</strong></div><div><span>{t('Outstanding debt')}</span><strong>{loading ? '—' : <AnimatedMoney value={debt} currency={currency}/>}</strong></div></div>
    </div>
    <div className="portfolio-summary-allocation">
     <h3>{t('Asset allocation')}</h3>
     <div className="allocation-bar" aria-hidden="true">{categories.filter(group=>group.amount>0).map(group=><span key={group.kind} style={{flexGrow:group.amount,background:categoryColor(group.kind)}}/>)}</div>
-    <ul className="overview-list">{categories.map(group=><li key={group.kind}><i style={{background:categoryColor(group.kind)}} aria-hidden="true"/><span>{t(group.kind)}</span><strong>{loading ? '—' : money(group.amount)}</strong><small>{loading || total<=0 ? '—' : formatPercent(group.amount/total*100,locale,1,1)}</small></li>)}</ul>
+    <ul className="overview-list">{categories.map(group=><li key={group.kind}><i style={{background:categoryColor(group.kind)}} aria-hidden="true"/><span>{t(group.kind)}</span><strong>{loading ? '—' : <AnimatedMoney value={group.amount} currency={currency}/>}</strong><small>{loading || total<=0 ? '—' : formatPercent(group.amount/total*100,locale,1,1)}</small></li>)}</ul>
    </div>
   </section>
 

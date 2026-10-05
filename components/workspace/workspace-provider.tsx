@@ -314,7 +314,10 @@ function useWorkspaceState() {
     /** Opens a form only where the person may change the workspace. */
     const editable = () => { if (readOnly) showError('This shared workspace is view-only.'); return !readOnly; };
     async function save(e: React.FormEvent) { e.preventDefault(); if (!editing)
-        return; if ((editing.kind === 'Money lent' && (!editing.lent_date || (editing.date && editing.date < editing.lent_date))) || (editing.kind !== 'Money lent' && !editing.date)) { fail('Check the record fields.'); return; }
+        return; // Name the rule that stops the save, as the server would.
+        const dateProblem = editing.kind === 'Money lent' ? (!editing.lent_date ? 'Date lent is required.' : editing.date && editing.date < editing.lent_date ? 'Due date must not precede lending date.' : '')
+            : !editing.date ? 'Date is required.' : editing.kind === 'Treasury bill' && editing.opened_on && editing.date < editing.opened_on ? 'The maturity date cannot be before the purchase date.' : '';
+        if (dateProblem) { fail(dateProblem); return; }
         if (cashFlowAmountMissing(editing)) { fail('Enter an amount greater than zero.'); return; }
         if (requiresCashAccount(editing) && editing.date > today()) { fail('Actual income and expenses cannot be dated in the future.'); return; }
         setBusy(true); setError(''); try {

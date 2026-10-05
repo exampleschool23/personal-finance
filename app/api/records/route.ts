@@ -1,6 +1,6 @@
 import { linkedAccountMessage } from '@/lib/account-deletion';
 import { uuid,fiatCurrency } from '@/lib/api-validation';
-import { recordSchema } from '@/lib/record-schema';
+import { recordIssueMessage, recordSchema } from '@/lib/record-schema';
 import { requiresCashAccount, cashFlowAmountMissing } from '@/lib/cash-account-required';
 import { resolveEarningSource,type EarningSource } from '@/lib/earning-sources';
 import { resolveIncomeSource } from '@/lib/income-sources';
@@ -18,7 +18,7 @@ async function handle(req:Request,method:string){if(method!=='GET'&&!sameOrigin(
  const query=z.object({page:z.coerce.number().int().min(1).max(1000000),section:z.enum(['all','assets','cashflow','debts']),currency:fiatCurrency.nullable(),summary:z.enum(['0','1'])}).safeParse({page:params.get('page')||'1',section:params.get('section')||'all',currency:params.get('currency'),summary:params.get('summary')||'0'});
  if(!query.success)return Response.json({error:'Invalid pagination parameters.'},{status:400});
  path='/rest/v1/rpc/finance_records_page';init={method:'POST',body:JSON.stringify({p_page:query.data.page,p_section:query.data.section,p_currency:query.data.currency,p_summary:query.data.summary==='1'})};
- }else if(method==='DELETE'){const {id}=(await readJson(req)??{}) as {id?:unknown};if(!uuid.safeParse(id).success)return new Response(null,{status:400});event={type:'record_deleted',id:id as string};path='/rest/v1/rpc/move_item_to_deleted';init={method:'POST',body:JSON.stringify({p_id:id,p_source:'finance_records'})};}else{const parsed=recordSchema.safeParse(await readJson(req));if(!parsed.success)return Response.json({error:'Check the record fields.'},{status:400});if(cashFlowAmountMissing(parsed.data))return Response.json({error:'Enter an amount greater than zero.'},{status:400});if(requiresCashAccount(parsed.data)&&!parsed.data.account_id)return Response.json({error:'Choose a cash account.'},{status:400});const payload={...parsed.data,account_exchange_rate:null as number|null,account_rate_date:null as string|null,account_currency:null as string|null};
+ }else if(method==='DELETE'){const {id}=(await readJson(req)??{}) as {id?:unknown};if(!uuid.safeParse(id).success)return new Response(null,{status:400});event={type:'record_deleted',id:id as string};path='/rest/v1/rpc/move_item_to_deleted';init={method:'POST',body:JSON.stringify({p_id:id,p_source:'finance_records'})};}else{const parsed=recordSchema.safeParse(await readJson(req));if(!parsed.success)return Response.json({error:recordIssueMessage(parsed.error)},{status:400});if(cashFlowAmountMissing(parsed.data))return Response.json({error:'Enter an amount greater than zero.'},{status:400});if(requiresCashAccount(parsed.data)&&!parsed.data.account_id)return Response.json({error:'Choose a cash account.'},{status:400});const payload={...parsed.data,account_exchange_rate:null as number|null,account_rate_date:null as string|null,account_currency:null as string|null};
 if(parsed.data.earning_source_id){
  const response=await supa('/rest/v1/income_sources?select=*&id=eq.'+parsed.data.earning_source_id,{},s.token);
  if(!response.ok)return Response.json({error:'Could not load income sources.'},{status:503});

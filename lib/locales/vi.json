@@ -2516,5 +2516,15 @@
   "Updated {date}": "Cập nhật {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Đăng nhập bằng số điện thoại chỉ dành cho tài khoản được tạo trong Telegram. Hãy tiếp tục đăng nhập trên web như hiện nay.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Khi kết nối, cuộc trò chuyện Telegram này có thể xem và thay đổi mọi thứ trong tài khoản này. Chỉ kết nối nếu chính bạn vừa nhấn “Đăng nhập” trong Telegram của mình: tên Telegram ở trên do người sở hữu cuộc trò chuyện đó tự đặt, nên nó không chứng minh được gì.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Tài khoản này được tạo trong một tài khoản Telegram khác. Hãy mở bot từ tài khoản Telegram đó để dùng ở đó."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Tài khoản này được tạo trong một tài khoản Telegram khác. Hãy mở bot từ tài khoản Telegram đó để dùng ở đó.",
+  "The maturity date cannot be before the purchase date.": "Ngày đáo hạn không thể trước ngày mua.",
+  "Check the amount.": "Kiểm tra số tiền.",
+  "Check the quantity.": "Kiểm tra số lượng.",
+  "Check the annual rate.": "Kiểm tra lãi suất hằng năm.",
+  "Choose a supported currency.": "Chọn một loại tiền tệ được hỗ trợ.",
+  "Notes are too long.": "Ghi chú quá dài.",
+  "Date is required.": "Cần có ngày.",
+  "Date lent is required.": "Cần có ngày cho vay.",
+  "Due date must not precede lending date.": "Ngày đến hạn không được trước ngày cho vay.",
+  "Check the end date.": "Kiểm tra ngày kết thúc."
 }

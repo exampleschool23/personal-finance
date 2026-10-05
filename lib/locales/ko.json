@@ -2516,5 +2516,15 @@
   "Updated {date}": "{date} 업데이트",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "전화번호 로그인은 Telegram에서 만든 계정에서만 사용할 수 있습니다. 웹에서는 지금처럼 로그인하세요.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "연결하면 이 Telegram 채팅이 이 계정의 모든 내용을 보고 변경할 수 있습니다. 방금 본인의 Telegram에서 직접 “로그인”을 누른 경우에만 연결하세요. 위의 Telegram 이름은 그 채팅의 소유자가 직접 정하는 것이므로 아무것도 증명하지 않습니다.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "이 계정은 다른 Telegram 계정에서 만들어졌습니다. 그 Telegram 계정에서 봇을 열어 사용하세요."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "이 계정은 다른 Telegram 계정에서 만들어졌습니다. 그 Telegram 계정에서 봇을 열어 사용하세요.",
+  "The maturity date cannot be before the purchase date.": "만기일은 매수일보다 앞설 수 없습니다.",
+  "Check the amount.": "금액을 확인하세요.",
+  "Check the quantity.": "수량을 확인하세요.",
+  "Check the annual rate.": "연이율을 확인하세요.",
+  "Choose a supported currency.": "지원되는 통화를 선택하세요.",
+  "Notes are too long.": "메모가 너무 깁니다.",
+  "Date is required.": "날짜는 필수입니다.",
+  "Date lent is required.": "빌려준 날짜는 필수입니다.",
+  "Due date must not precede lending date.": "만기일은 빌려준 날짜보다 앞설 수 없습니다.",
+  "Check the end date.": "종료일을 확인하세요."
 }

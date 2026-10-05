@@ -75,3 +75,23 @@ test('every interface language names Treasury bills and the BIL benchmark',()=>{
   assert.match(labels['US Treasury bills · BIL'],/BIL$/,file);
  }
 });
+
+test('a Treasury bill saves with its purchase date, and a refused record says which rule stopped it',()=>{
+ const {recordSchema,recordIssueMessage}=loadTS('lib/record-schema.ts');
+ const bill={id:'7d8f2c1e-1111-4a2b-9c3d-123456789abc',name:'T-bill',kind:'Treasury bill',currency:'USD',amount:16000,quantity:1,cost:0,rate:5,date:'2026-10-05',opened_on:'2026-10-05',frequency:'Once',notes:''};
+ assert.ok(recordSchema.safeParse(bill).success,'maturing on the purchase day is allowed');
+ assert.ok(recordSchema.safeParse({...bill,date:'2027-01-05'}).success);
+ const reason=record=>{const parsed=recordSchema.safeParse(record);assert.ok(!parsed.success);return recordIssueMessage(parsed.error);};
+ assert.equal(reason({...bill,date:'2026-10-01'}),'The maturity date cannot be before the purchase date.');
+ assert.equal(reason({...bill,kind:'Property'}),'Check the start and due dates.','other kinds still keep no opening date');
+ assert.equal(reason({...bill,name:' '}),'Enter a name.');
+ assert.equal(reason({...bill,amount:-1}),'Check the amount.');
+ assert.equal(reason({...bill,rate:5000}),'Check the annual rate.');
+ assert.equal(reason({...bill,currency:'XYZ'}),'Choose a supported currency.');
+ assert.equal(reason({...bill,notes:'x'.repeat(2001)}),'Notes are too long.');
+ assert.equal(reason({...bill,date:''}),'Date is required.');
+ assert.equal(reason({...bill,id:'not-a-uuid'}),'Check the record fields.','a field a person never types keeps the general message');
+ // The records API answers with the reason, and the form names it before sending.
+ assert.match(fs.readFileSync('app/api/records/route.ts','utf8'),/if\(!parsed\.success\)return Response\.json\(\{error:recordIssueMessage\(parsed\.error\)\}/);
+ assert.match(fs.readFileSync('components/workspace/workspace-provider.tsx','utf8'),/'The maturity date cannot be before the purchase date\.'/);
+});

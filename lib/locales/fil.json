@@ -2516,5 +2516,15 @@
   "Updated {date}": "Na-update noong {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Ang pag-sign in gamit ang numero ng telepono ay para lang sa mga account na ginawa sa Telegram. Magpatuloy sa pag-sign in sa web gaya ng ginagawa mo ngayon.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Kapag ikinonekta, makikita at mababago ng Telegram chat na ito ang lahat sa account na ito. Ikonekta lang kung ikaw mismo ang kapipindot ng “Mag-sign in” sa sarili mong Telegram: ang pangalan sa Telegram sa itaas ay pinipili ng may-ari ng chat na iyon, kaya wala itong pinapatunayan.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Ang account na ito ay ginawa sa ibang Telegram account. Buksan ang bot mula sa Telegram account na iyon para magamit ito roon."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Ang account na ito ay ginawa sa ibang Telegram account. Buksan ang bot mula sa Telegram account na iyon para magamit ito roon.",
+  "The maturity date cannot be before the purchase date.": "Hindi maaaring mauna ang petsa ng maturity sa petsa ng pagbili.",
+  "Check the amount.": "Suriin ang halaga.",
+  "Check the quantity.": "Suriin ang dami.",
+  "Check the annual rate.": "Suriin ang taunang rate.",
+  "Choose a supported currency.": "Pumili ng sinusuportahang currency.",
+  "Notes are too long.": "Masyadong mahaba ang mga tala.",
+  "Date is required.": "Kailangan ang petsa.",
+  "Date lent is required.": "Kailangan ang petsa ng pagpapautang.",
+  "Due date must not precede lending date.": "Hindi dapat mauna ang takdang petsa sa petsa ng pagpapautang.",
+  "Check the end date.": "Suriin ang petsa ng pagtatapos."
 }

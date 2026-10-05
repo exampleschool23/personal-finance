@@ -2516,5 +2516,15 @@
   "Updated {date}": "Actualizado el {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Iniciar sesión con un número de teléfono solo es posible en las cuentas creadas en Telegram. Sigue iniciando sesión en la web como lo haces ahora.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Al conectar, este chat de Telegram podrá ver y cambiar todo en esta cuenta. Conecta solo si acabas de pulsar «Iniciar sesión» en tu propio Telegram: el nombre de Telegram de arriba lo elige quien tenga ese chat, así que no demuestra nada.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Esta cuenta se creó en otra cuenta de Telegram. Abre el bot desde esa cuenta de Telegram para usarla allí."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Esta cuenta se creó en otra cuenta de Telegram. Abre el bot desde esa cuenta de Telegram para usarla allí.",
+  "The maturity date cannot be before the purchase date.": "La fecha de vencimiento no puede ser anterior a la fecha de compra.",
+  "Check the amount.": "Revisa el importe.",
+  "Check the quantity.": "Revisa la cantidad.",
+  "Check the annual rate.": "Revisa la tasa anual.",
+  "Choose a supported currency.": "Elige una moneda compatible.",
+  "Notes are too long.": "Las notas son demasiado largas.",
+  "Date is required.": "La fecha es obligatoria.",
+  "Date lent is required.": "La fecha del préstamo es obligatoria.",
+  "Due date must not precede lending date.": "La fecha de vencimiento no puede ser anterior a la fecha del préstamo.",
+  "Check the end date.": "Revisa la fecha de finalización."
 }

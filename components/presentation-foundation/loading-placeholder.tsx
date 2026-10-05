@@ -59,6 +59,27 @@ export function WorkspaceSkeleton({ label, section, columns = defaultDashboardSk
   </div>;
 }
 
+/** Accounts while records load, in the loaded page's shape: a balance tile per preferred currency, one account group with its rows, and the selected account's card beside it. */
+export function AccountsSkeleton({ label, currencies = 1, filters = false }: { label: string; currencies?: number; filters?: boolean }) {
+  return <div role="status" aria-busy="true" className="overview-content-loading">
+    <span className="sr-only">{label}</span>
+    <div aria-hidden="true" className="stat-tiles" data-columns="auto">{Array.from({ length: Math.max(1, currencies) }, (_, index) => <article className="stat-tile" key={index}><Skeleton className="h-4 w-28"/><Skeleton className="h-8 w-36"/></article>)}</div>
+    {filters && <div aria-hidden="true" className="transactions-tools"><Skeleton className="h-11 w-44 rounded-xl"/><Skeleton className="h-11 w-36 rounded-xl"/></div>}
+    <div aria-hidden="true" className="accounts-master-detail">
+      <section className="account-directory"><div className="panel account-group">
+        <div className="account-group-skeleton-head"><Skeleton className="h-6 w-28"/><Skeleton className="ms-auto h-6 w-36"/></div>
+        {Array.from({ length: 5 }, (_, index) => <div className="account-list-row" key={index}><Skeleton className="size-[38px] rounded-[10px]"/><span className="account-list-name"><Skeleton className="h-5 w-36 max-w-full"/><Skeleton className="mt-1.5 h-[18px] w-24"/></span><Skeleton className="h-4 w-20"/><span/></div>)}
+      </div></section>
+      <div className="account-selected-panel"><article className="panel account-card">
+        <header><Skeleton className="size-[38px] rounded-[10px]"/><div className="account-card-heading"><Skeleton className="h-6 w-32"/><Skeleton className="h-4 w-24"/></div></header>
+        <Skeleton className="mt-2 h-12 w-48 max-w-full"/>
+        <div className="account-balance-facts"><Skeleton className="h-5 w-full"/><Skeleton className="h-5 w-full"/></div>
+        <div className="account-card-actions"><Skeleton className="h-[42px] w-full"/><Skeleton className="h-[42px] w-full"/></div>
+      </article></div>
+    </div>
+  </div>;
+}
+
 /** The two Cash flow preview panels (income this month, spending plans) while their records load. */
 export function CashflowPreviewSkeleton({ label }: { label?: string }) {
   const grid = <div aria-hidden="true" className="cashflow-preview-grid">

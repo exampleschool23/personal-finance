@@ -2516,5 +2516,15 @@
   "Updated {date}": "Güncellendi: {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Telefon numarasıyla giriş yalnızca Telegram’da oluşturulan hesaplar içindir. Web’de şimdi yaptığınız gibi giriş yapmaya devam edin.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Bağlandığında bu Telegram sohbeti bu hesaptaki her şeyi görüp değiştirebilir. Yalnızca az önce kendi Telegram’ınızda “Giriş yap” düğmesine kendiniz bastıysanız bağlayın: Yukarıdaki Telegram adını o sohbetin sahibi seçer, bu yüzden hiçbir şey kanıtlamaz.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Bu hesap başka bir Telegram hesabında oluşturuldu. Orada kullanmak için botu o Telegram hesabından açın."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Bu hesap başka bir Telegram hesabında oluşturuldu. Orada kullanmak için botu o Telegram hesabından açın.",
+  "The maturity date cannot be before the purchase date.": "Vade tarihi satın alma tarihinden önce olamaz.",
+  "Check the amount.": "Tutarı kontrol edin.",
+  "Check the quantity.": "Miktarı kontrol edin.",
+  "Check the annual rate.": "Yıllık oranı kontrol edin.",
+  "Choose a supported currency.": "Desteklenen bir para birimi seçin.",
+  "Notes are too long.": "Notlar çok uzun.",
+  "Date is required.": "Tarih gerekli.",
+  "Date lent is required.": "Borç verme tarihi gerekli.",
+  "Due date must not precede lending date.": "Vade tarihi borç verme tarihinden önce olamaz.",
+  "Check the end date.": "Bitiş tarihini kontrol edin."
 }

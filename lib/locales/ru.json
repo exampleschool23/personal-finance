@@ -2516,5 +2516,15 @@
   "Updated {date}": "Обновлено {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Вход по номеру телефона доступен только для аккаунтов, созданных в Telegram. Продолжайте входить на сайте так же, как сейчас.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "После подключения этот чат Telegram сможет видеть и менять всё в этом аккаунте. Подключайте, только если вы сами только что нажали «Войти» в своём Telegram: имя в Telegram выше выбирает владелец чата, поэтому оно ничего не доказывает.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Этот аккаунт создан в другом аккаунте Telegram. Откройте бота из того аккаунта Telegram, чтобы пользоваться им там."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Этот аккаунт создан в другом аккаунте Telegram. Откройте бота из того аккаунта Telegram, чтобы пользоваться им там.",
+  "The maturity date cannot be before the purchase date.": "Дата погашения не может быть раньше даты покупки.",
+  "Check the amount.": "Проверьте сумму.",
+  "Check the quantity.": "Проверьте количество.",
+  "Check the annual rate.": "Проверьте годовую ставку.",
+  "Choose a supported currency.": "Выберите поддерживаемую валюту.",
+  "Notes are too long.": "Заметки слишком длинные.",
+  "Date is required.": "Укажите дату.",
+  "Date lent is required.": "Укажите дату выдачи займа.",
+  "Due date must not precede lending date.": "Срок возврата не может быть раньше даты выдачи займа.",
+  "Check the end date.": "Проверьте дату окончания."
 }

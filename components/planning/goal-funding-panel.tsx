@@ -23,6 +23,7 @@ import { income } from '@/lib/finance';
 import { fundingPlan, type GoalEvent } from '@/lib/goal-funding';
 import { emptyPlanning,type Goal,type PlanningData } from '@/lib/planning';
 import { useOwnerResource, saveOwnerResource } from '@/hooks/use-owner-resource';
+import { RollingText } from '@/components/presentation-foundation/rolling-text';
 
 const empty = { events: [] as GoalEvent[] };
 type Props = { data: PlanningData; currency: string; surplus: number | null; today: string; rates?: Record<string, number>; owner: string | null; demo: boolean; revision: number; onSaved: () => void;
@@ -61,7 +62,7 @@ export function GoalFundingPanel({ data, currency, surplus, today, rates, owner,
  return <>
   {part !== 'activity' && activeGoals.length > 0 && <section className="panel goal-funding-panel" aria-labelledby={`${activityId}-funding`}>
    <PanelTitle title={<span id={`${activityId}-funding`}>{t('Available for goals')}</span>} hint={t('Plan how to divide your monthly surplus between goals. Money stays in your accounts until you move it.')}/>
-   <div className="goal-available"><strong>{money(plan.remaining)}</strong><span>{t('Unassigned monthly surplus')}</span></div>
+   <div className="goal-available"><strong><RollingText text={money(plan.remaining)}/></strong><span>{t('Unassigned monthly surplus')}</span></div>
    <dl className="goal-funding-figures">
     <div><dt>{t('Available monthly surplus')}</dt><dd>{money(surplus)}</dd></div>
     <div><dt>{t('Planned goal funding')}</dt><dd>{money(plan.requested)}</dd></div>

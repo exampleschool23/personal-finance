@@ -2516,5 +2516,15 @@
   "Updated {date}": "Diperbarui {date}",
   "Signing in with a phone number is only for accounts created in Telegram. Keep signing in on the web the way you do now.": "Masuk dengan nomor telepon hanya untuk akun yang dibuat di Telegram. Tetap masuk di web seperti yang Anda lakukan sekarang.",
   "Connecting lets this Telegram chat see and change everything in this account. Only connect if you pressed Sign in in your own Telegram just now: the Telegram name above is chosen by whoever owns that chat, so it proves nothing.": "Dengan menghubungkan, obrolan Telegram ini dapat melihat dan mengubah semua isi akun ini. Hubungkan hanya jika Anda sendiri baru saja menekan “Masuk” di Telegram Anda: nama Telegram di atas dipilih oleh pemilik obrolan itu, jadi tidak membuktikan apa pun.",
-  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Akun ini dibuat di akun Telegram lain. Buka bot dari akun Telegram tersebut untuk menggunakannya di sana."
+  "This account was created in a different Telegram account. Open the bot from that Telegram account to use it there.": "Akun ini dibuat di akun Telegram lain. Buka bot dari akun Telegram tersebut untuk menggunakannya di sana.",
+  "The maturity date cannot be before the purchase date.": "Tanggal jatuh tempo tidak boleh sebelum tanggal pembelian.",
+  "Check the amount.": "Periksa jumlahnya.",
+  "Check the quantity.": "Periksa kuantitasnya.",
+  "Check the annual rate.": "Periksa suku bunga tahunan.",
+  "Choose a supported currency.": "Pilih mata uang yang didukung.",
+  "Notes are too long.": "Catatan terlalu panjang.",
+  "Date is required.": "Tanggal wajib diisi.",
+  "Date lent is required.": "Tanggal peminjaman wajib diisi.",
+  "Due date must not precede lending date.": "Tanggal jatuh tempo tidak boleh sebelum tanggal peminjaman.",
+  "Check the end date.": "Periksa tanggal berakhir."
 }
