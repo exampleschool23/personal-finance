@@ -68,7 +68,6 @@
   "components/legal-page.tsx",
   "components/monthly-mortgage-payments.tsx",
   "components/planning/account-operation.tsx",
-  "components/planning/accounts-page.tsx",
   "components/planning/corporate-event-dialog.tsx",
   "components/planning/debt-payoff-panel.tsx",
   "components/planning/goal-detail.tsx",

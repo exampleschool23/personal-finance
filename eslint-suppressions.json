@@ -145,14 +145,6 @@
       "count": 1
     }
   },
-  "components/planning/accounts-page.tsx": {
-    "complexity": {
-      "count": 1
-    },
-    "size/max-file-bytes": {
-      "count": 1
-    }
-  },
   "components/planning/asset-movement-dialog.tsx": {
     "complexity": {
       "count": 1

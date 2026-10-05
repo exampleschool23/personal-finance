@@ -125,7 +125,7 @@ test('money lent is filtered and sorted by the day it was lent, with or without 
 });
 
 test('account activity shows spending as money out and income as money in',()=>{
- const page=fs.readFileSync('components/planning/accounts-page.tsx','utf8');
+ const page=fs.readFileSync('components/planning/accounts/account-activity.tsx','utf8');
  assert.match(page,/formatMoney\(income\.includes\(record\.kind\)\?record\.amount:-record\.amount,record\.currency,locale\)/);
 });
 

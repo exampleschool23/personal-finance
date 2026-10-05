@@ -193,7 +193,7 @@ test('the shell, top bar and screens show sharing only where it applies',()=>{
  assert.match(transactions,/\{owners\.length > 0 && <OwnerPicker record=\{record\}/);
  const accountsPage=fs.readFileSync('components/planning/accounts-page.tsx','utf8');
  assert.match(accountsPage,/\{owners\.length>0&&<Button variant="outline" disabled=\{readOnly\} onClick=\{\(\)=>setEditingOwners\(true\)\}>/);
- assert.match(accountsPage,/\{owners\.length>0&&<OwnerFilter owners=\{owners\} value=\{ownerFilter\} onChange=\{setOwnerFilter\}\/>\}/);
+ assert.match(fs.readFileSync('components/planning/accounts/accounts-overview.tsx','utf8'),/\{owners\.length>0&&<OwnerFilter owners=\{owners\} value=\{ownerFilter\} onChange=\{setOwnerFilter\}\/>\}/);
  assert.match(fs.readFileSync('components/workspace/screens/reports-screen.tsx','utf8'),/owners\.length > 0 && <OwnerFilter owners=\{owners\}/);
  const settings=fs.readFileSync('components/settings-layout.tsx','utf8');
  assert.match(settings,/\{id:'household',label:'Household',areas:\['household'\]\}/);

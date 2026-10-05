@@ -28,7 +28,7 @@ include it; a change to `app/globals.css` or `app/styles/`, `components/presenta
 | Screen | Routes | Files |
 |---|---|---|
 | dashboard | `/` | `components/workspace/screens/overview-screen.tsx`, `components/overview-page.tsx`, `components/dashboard-cards.tsx`, `components/dashboard-board.tsx` |
-| accounts | `/accounts` | `components/workspace/screens/accounts-screen.tsx`, `components/planning/accounts-page.tsx` |
+| accounts | `/accounts` | `components/workspace/screens/accounts-screen.tsx`, `components/planning/accounts-page.tsx`, `components/planning/accounts/account-cards.tsx`, `components/planning/accounts/account-directory.tsx`, `components/planning/accounts/account-activity.tsx` |
 | transactions | `/transactions` | `components/workspace/screens/transactions-screen.tsx`, `components/transactions/pickers.tsx`, `components/transactions/bulk-edit.tsx`, `components/transactions/rule-dialog.tsx`, `components/transactions/rules-list.tsx` |
 | reports | `/reports` | `components/workspace/screens/reports-screen.tsx`, `components/business-reports.tsx`, `components/tax-prep-sheet.tsx`, `components/business-card.tsx`, `components/business-setup-flow.tsx` |
 | cash-flow | `/income-expenses` | `components/workspace/screens/cash-flow-screen.tsx`, `components/cash-flow-report.tsx`, `components/cash-forecast.tsx` |
