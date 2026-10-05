@@ -11,13 +11,13 @@ import { useSubscriptions } from '@/hooks/use-subscriptions';
 
 export function UpcomingScreen() {
  const { t } = useLanguage();
- const { user, demo, reload, planning, workspacePreferences, currency, market, reviewRecurring, addCashFlow } = useWorkspace();
+ const { user, demo, reload, planning, workspacePreferences, currency, market, reviewRecurring, addCashFlow, editRecord } = useWorkspace();
  const [view, setView] = useState<RecurringView>('list');
  const subscriptions = useSubscriptions(user, demo, reload, planning.data.records);
  return <>
   <div data-page="Upcoming payments" className="content">
    <PlanningError/>
-   {planning.loading ? <LoadingPlaceholder label={t('Loading records…')}/> : <UpcomingPage data={planning.data} save={planning.save} currency={currency} rates={market?.rates ?? market?.fx?.rate} view={view} onView={setView} onAdd={direction => addCashFlow(direction === 'income' ? 'Other income' : 'Other expense', 'Monthly')}/>}
+   {planning.loading ? <LoadingPlaceholder label={t('Loading records…')}/> : <UpcomingPage data={planning.data} save={planning.save} currency={currency} rates={market?.rates ?? market?.fx?.rate} view={view} onView={setView} onAdd={direction => addCashFlow(direction === 'income' ? 'Other income' : 'Other expense', 'Monthly')} onEdit={editRecord}/>}
    {view === 'subscriptions' && !planning.loading && <SubscriptionsPanel records={subscriptions.records} decisions={subscriptions.decisions} loading={subscriptions.loading} error={subscriptions.error} onRetry={subscriptions.retry} decide={subscriptions.decide} restore={subscriptions.restore} onTrack={reviewRecurring}/>}
   </div>
   {(workspacePreferences.error||planning.error)&&<ToolsUnavailable/>}

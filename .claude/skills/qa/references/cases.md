@@ -10,6 +10,7 @@ Cases marked `[bug 2026-10-02]` reproduce a defect found in the 2 October QA pas
 
 | Date | Commit tested | Scope | Notes |
 |---|---|---|---|
+| 2026-10-05 | 25bbf1c | Smoke (P0) on production, user1 | Run with the pane hidden (real clicks still worked). 33 of 102 P0 cases run (DASH-020 blocked by a backlog of overdue items); bot cases not run (chat not linked to user1, relinking would move it off the real account); SET-050 typing DELETE blocked by the auto-mode classifier; I18N-007 skipped (no visit-only language selector, Settings would change the saved default); ACC-008 and GOAL-011 rewritten to current design; new TX-044, TX-045, GOAL-024 |
 | 2026-10-03 | 693a6b6 (+ local fixes) | 500 actions on localhost against the shared database: salary, business income, expenses, forecasts, benchmarks, plus a January 2023 – October 2026 monthly backfill and cross-page checks | Telegram not run (bot needs the deploy); pane hidden for much of the run, so the budget History popover, Radix menus and typing were blocked and API routes were used instead; fixes for CF-036, REP-036 and REC-028 deployed in f5886c8; follow-up the same day ran the bot (BOT-148 fixed in d60ea90), downloads, uploads and click-only Budget and menu checks |
 | 2026-10-03 | 4d7d417 → bef3873 | 100 bot actions and 100 app actions, cross-checked (app actions through the app's API routes, not clicks) | Pane hidden twice, so the last ~15 bot actions, BOT-074/110 sign-out and UI clicking were not run; per-save action messages removed in bef3873 by design; fixes for BOT-143–146 and LOAN-024 not deployed yet |
 | 2026-10-02 | 6eb533f | Retest of every 2 October finding, live | Dashboard fixes and design-review fixes in 9c08db8 not yet retested live; ACC-010 not run live |
@@ -189,7 +190,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | ACC-005 | P0 | Transfer same currency | $20 + $2 fee | Source −20, target +18, fee is an expense |
 | ACC-006 | P1 | Transfer same account | Pick same From/To | Not offered |
 | ACC-007 | P1 | Fee ≥ amount | Fee 25 on 20 | Visible message "The transfer fee must be less than the amount sent." `[bug 2026-10-02]` |
-| ACC-008 | P0 | Transfer cross currency | $500 → €460 | Both sides saved with the entered amounts |
+| ACC-008 | P0 | Transfer cross currency | Transfer money › QA USD cash → QA EUR cash › Total amount debited 500 | Shows "Exchange rate: 1 USD = <rate> EUR · ECB · effective <date>" and "Net amount received: €<500 × rate>"; USD falls by exactly 500, EUR rises by 500 × rate; no received-amount field (the dated rate decides it) |
 | ACC-009 | P1 | Delete linked account | ⋯ → Delete on an account with records | Blocked: "This account has linked transactions…" `[bug 2026-10-02]` |
 | ACC-010 | P1 | Delete unused account | ⋯ → Delete on a fresh QA account | Confirm → Recently deleted → Restore brings it back |
 | ACC-011 | P1 | Reorder | Drag an account within Cash; reload | Order kept (needs migration 089) `[bug 2026-10-02]` |
@@ -239,7 +240,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | TX-017 | P1 | Select all | Edit multiple › Select all, then Clear selection | Every listed transaction is selected, then none; more than 500 still update |
 | TX-018 | P1 | Tag history | Settings › Tags; click a tag's count | Transactions open on Last 24 months filtered by the tag |
 | TX-019 | P0 | Future-dated actual refused | Add transaction › Add expense; open the Record date picker | Days after today are disabled, so tomorrow cannot be picked; no future-dated row appears in the list |
-| TX-020 | P0 | Zero or blank amount | Add expense with amount 0, then with the amount left blank | Both refused with "Enter an amount greater than zero."; nothing saved; the list is unchanged |
+| TX-020 | P0 | Zero or blank amount | Add expense with amount 0, then with the amount left blank | 0 refused with "Enter an amount greater than zero."; blank stopped by the required field ("Please fill in this field."); nothing saved; the list is unchanged |
 | TX-021 | P0 | Decimal comma and dot | Expense "QA Coffee" 12,75 in Russian, then 12.75 in English | Both store 12.75; the list row shows the whole amount −$13; Edit shows 12,75 in Russian and 12.75 in English |
 | TX-022 | P0 | Edit amount moves balance once | Edit a QA expense from 20 to 35; reopen Edit › Record history | Account balance drops by exactly 15 more; history lists "Amount: $20 → $35" |
 | TX-023 | P0 | Stale edit refused | Open Edit on the same QA expense in two tabs; save in tab 1, then save in tab 2 | Tab 2 shows "This record changed since you opened it. Reload it before saving."; tab 1's values are kept |
@@ -263,6 +264,8 @@ currencies (USD primary). Compute every expected figure yourself first.
 | TX-041 | P1 | Phone width list | 375px; Edit multiple on | Filters wrap; each row shows the name with the category pill on a second line and the amount at the right; checkboxes tappable; no horizontal scroll |
 | TX-042 | P2 | Month end and time zone | Expense dated 30 September; view with the browser time zone set to America/Los_Angeles | Shown as "30 September 2026"; counted in September on Transactions (Last month), Cash flow and Budget |
 | TX-043 | P1 | Comma decimal in English | Add expense in English, type "49,99" in Amount | Not silently read as 4,999: either 49.99 or a visible correction before saving `[bug 2026-10-03]` |
+| TX-044 | P1 | Day total across pages | Transactions › Last 3 months with a day whose rows run past page 1 (20 rows); note the day header total, then add one expense today | The header shows the whole day's net, the same on page 1 and page 2 and unchanged by today's new row; never the sum of only the rows on the current page `[qa 2026-10-05]` |
+| TX-045 | P2 | Edit dialog title | Open an existing expense › Edit | Dialog title says it edits the record, not "Add expense" `[qa 2026-10-05]` |
 
 ## CF — cash flow
 
@@ -494,7 +497,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | GOAL-008 | P1 | Planner math | Net-worth goal | Left to save = target − current; monthly = left / months, rounded up |
 | GOAL-009 | P2 | Archive | Archive a goal | Hidden from list and dashboard; Show archived |
 | GOAL-010 | P0 | Contribute and withdraw | QA savings goal (target 500) in a QA cash account holding 1000 › Goals › Cash goal activity › Record › Type contribution, Amount 100 › Save; then withdrawal 30; then withdrawal 80 | Goal shows 70 and the activity list +100 and −30; on Accounts the cash balance is unchanged and "Allocated to goals" is 70; the withdrawal of 80 is refused with "The activity exceeds the goal balance or target." |
-| GOAL-011 | P0 | Allocations over balance | QA cash account 100 with a QA goal › Record › contribution 150; then allocate 80 and add a QA expense of 50 from that account; also Add goal › Contribution step › Already saved above the account balance | Contribution refused with "Allocations exceed the account balance."; after the expense the goal row shows "Your goal allocations exceed the current account balance. Update the allocations."; the Contribution step shows the same alert inline |
+| GOAL-011 | P0 | Allocations over balance | Add goal › Contribution step › QA cash account holding 0.30 › Already saved 150 › Create goal; then History › Record › contribution 100 | Allowed by design since 2026-10-04 (migration 105): no alert, "Saved"; Accounts shows Allocated to goals $250 and Available −$250; the cash balance is unchanged |
 | GOAL-012 | P1 | Goal transfer | QA goals A (100 allocated) and B in one QA cash account, QA goal C in another › Record › Goal A, Type transfer, Amount 50 › Destination goal | Destination goal lists only B, and Save stays disabled until one is chosen; after Save A 50, B +50; the account balance and "Allocated to goals" total unchanged |
 | GOAL-013 | P1 | Target date passed | Existing QA savings goal with money left › ⋯ › Edit goal › Target date last month › Save | Pill "At risk"; Target date tile "Target date reached"; monthly needed equals the amount left (no negative months, Infinity or NaN); planner says "The deadline has passed. Choose a future date to make a new plan." |
 | GOAL-014 | P1 | Investment goal | Add goal › Stocks or crypto › QA stock account, instrument, Target quantity 10 › Save; Accounts › Buy 2, then Sell / convert 1 | Planner shows "10% complete", Currently held 1, Target quantity 10; a price change moves Account balance but not % complete; the goal row shows 10% |
@@ -507,6 +510,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | GOAL-021 | P2 | Reorder failure | Block /api/workspace-preferences › drag a goal by its handle | "Could not save goal order. Please try again."; the list snaps back; after reload the old order is kept |
 | GOAL-022 | P1 | Sample workspace goals | Sample workspace › Goals › drag a goal; Add goal › through to Create goal; ⋯ › Edit goal; Cash goal activity › Record | Drag reorders on screen only; Create goal fails with "Sign in to save planning changes." and adds nothing; Edit goal has no "Delete goal"; Record shows "Sign in to record cash goal activity." |
 | GOAL-023 | P1 | Funding over surplus | Plan funding › raise budgets above the monthly surplus | "Your funding plan exceeds your monthly surplus by {amount}."; lower priority numbers are funded first in "Available monthly surplus" |
+| GOAL-024 | P2 | Activity types translated | Goals › History › Record; read the Type options and the activity list | Type options and list labels are translated words (Contribution, Withdrawal, Transfer, Opening), never raw lowercase keys `[qa 2026-10-05]` |
 
 ## AST — assistant
 

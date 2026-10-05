@@ -125,7 +125,7 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
         <label>{t('Cash account')}<NativeSelect required value={goal.account_id ?? ''} onChange={event => update(goal.id, { account_id: event.target.value || null })}>{goalAccountOptions(accounts, goal.currency).map(item => <option key={item.id} value={item.id}>{item.name} · {money(item.amount, item.currency)}</option>)}</NativeSelect></label>
         <label>{t('Already saved')} ({goal.currency})<FormattedNumberInput required={false} value={goal.allocated} max={goal.target || 1e15} onValueChange={allocated => update(goal.id, { allocated })}/></label>
        </div>}
-       {/* Already saved may exceed the account balance; the Goals page points it out afterwards. */}
+       {/* Already saved may exceed the account balance; Accounts then shows a negative Available amount. */}
        {problems(goal).map(problem => <p key={problem} role="alert" className="goal-row-alert">{t(problem)}</p>)}
       </article>)}
      </section>

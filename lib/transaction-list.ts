@@ -51,6 +51,12 @@ export function groupByDay(records: readonly Entry[], convert: Convert) {
  return days;
 }
 
+/** One page of rows grouped by day. Each day's total covers the whole day, also the rows on the pages before or after it. */
+export function groupPageByDay(records: readonly Entry[], from: number, to: number, convert: Convert) {
+ const totals = new Map(groupByDay(records, convert).map(day => [day.date, day.total]));
+ return groupByDay(records.slice(from, to), convert).map(day => ({ ...day, total: totals.get(day.date) ?? day.total }));
+}
+
 /** Summary card: how many, money in and out, and the largest single expense. Spending follows `lib/spending.ts`, so a mortgage payment counts only its interest. */
 export function summarizeTransactions(records: readonly Entry[], convert: Convert) {
  let received = 0, spent = 0, missing = 0;

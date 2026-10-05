@@ -355,6 +355,9 @@ test('an expense opens on the expense tab with its category, amount, date and ac
  const categories=[{id:'c1',name:'Eating out',direction:'expense'},{id:'c2',name:'Bonus',direction:'income'}];
  const d=dialog(t,expense(),{editingCashFlow:true,planning:planning({categories,records:[record('acct','Cash')]})});
  assert.equal(d.title(),'Add expense');
+ // A saved expense missing from an older planning list still opens as an edit.
+ const saved=dialog(t,expense({revision:2}),{editingCashFlow:true,planning:planning({categories,records:[record('acct','Cash')]})});
+ assert.equal(saved.title(),'Edit record');
  assert.equal(d.r.find(byType('DialogContent')).props.className,'record-dialog expense-dialog');
  assert.equal(d.r.find(byType('DialogDescription')).props.className,'sr-only');
  assert.equal(d.description(),'Choose a plan or enter an expense amount. Add notes if needed.');

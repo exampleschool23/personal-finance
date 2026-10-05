@@ -1,6 +1,6 @@
 "use client";
 import { RowMenu } from '@/components/presentation-foundation/row-menu';
-import { Fragment, useState } from 'react';
+import { Fragment, useState, type MouseEvent } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Repeat } from 'lucide-react';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
@@ -21,7 +21,7 @@ import { AccountOperation, type Operation } from './account-operation';
 
 /** The Recurring page's views, switched from tabs beside its title: the month as a list or a calendar, subscriptions and reminders. */
 export type RecurringView = 'list' | 'calendar' | 'subscriptions' | 'reminders';
-type Props = { data: PlanningData; save: (action: string, data: unknown) => Promise<void>; currency: string; rates?: number | Record<string, number>; view: RecurringView; onView: (view: RecurringView) => void; onAdd?: (direction: 'income' | 'expense') => void };
+type Props = { data: PlanningData; save: (action: string, data: unknown) => Promise<void>; currency: string; rates?: number | Record<string, number>; view: RecurringView; onView: (view: RecurringView) => void; onAdd?: (direction: 'income' | 'expense') => void; onEdit?: (record: RecurringItem['record']) => void };
 
 /** "in 3 days", "today", "2 days ago": how far a due date is from today. */
 function useDueLabel() {
@@ -45,7 +45,7 @@ function SummaryBar({ label, done, remaining, doneLabel, currency, tone }: { lab
  </div>;
 }
 
-export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd }: Props) {
+export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd, onEdit }: Props) {
  const { t, locale } = useLanguage(), today = depositToday();
  const dueLabel = useDueLabel();
  const [operation, setOperation] = useState<Operation | null>(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
@@ -69,8 +69,10 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd 
   // A payment is recorded once it happens: before its date the button waits and says when.
  const row = (item: RecurringItem, dated = false) => {
   const early = !item.installment && item.date > today;
-  return <li key={item.key} className="recurring-row" data-status={item.status}>
-   <span className="transaction-merchant"><CategoryIcon kind={item.record.kind}/><span><strong>{item.record.name}</strong><small>{[t(frequencyLabels[item.installment ? 'Monthly' : item.record.frequency]), t(item.record.kind), dated ? formatDate(item.date, locale) : null].filter(Boolean).join(' · ')}</small></span></span>
+  // Tapping a row (outside its buttons) opens the schedule's form to change its date, amount or anything else.
+  const edit = onEdit && ((event: MouseEvent) => { if (!(event.target as HTMLElement).closest('button,a,[role=menu]')) onEdit(item.record); });
+  return <li key={item.key} className="recurring-row" data-status={item.status} data-editable={onEdit ? '' : undefined} onClick={edit}>
+   <span className="transaction-merchant"><CategoryIcon kind={item.record.kind}/><span>{onEdit ? <button type="button" className="recurring-edit" aria-label={t('Edit {name}', { name: item.record.name })} onClick={() => onEdit(item.record)}>{item.record.name}</button> : <strong>{item.record.name}</strong>}<small>{[t(frequencyLabels[item.installment ? 'Monthly' : item.record.frequency]), t(item.record.kind), dated ? formatDate(item.date, locale) : null].filter(Boolean).join(' · ')}</small></span></span>
    {status(item)}
    <strong className={income.includes(item.record.kind) ? 'transaction-amount positive' : 'transaction-amount'}>{formatMoney(item.amount, item.record.currency, locale)}</strong>
    <div className="row-actions">{(item.status === 'due' || item.status === 'overdue') && <>
