@@ -310,6 +310,9 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .expense-form-scroll{display:grid;gap:20px;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px}
 .expense-form-actions{flex-shrink:0}
 .expense-plan-hint{font-size:var(--type-small);margin:-8px 0 0}
+.expense-plan-picker{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
+.expense-plan-picker>label{flex:1 1 220px;min-width:0}
+.expense-plan-picker>button{min-height:44px}
 .expense-plan-empty{display:grid;justify-items:start;gap:10px}
 .expense-plan-empty>p{font-size:var(--type-small)}
 .record-dialog .record-form .amount-currency-row{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
