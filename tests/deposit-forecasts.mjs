@@ -30,3 +30,14 @@ test('records summary replaces grouped deposits once and preserves other assets 
  const result=await (await api(new Request('https://local/api/records?summary=1'))).json();
  assert.equal(result.summary.length,2);assert.equal(result.summary[0].kind,'Cash');assert.equal(result.summary[1].estimated_monthly_income,140000);assert.deepEqual(result.records,data.records);assert.equal(result.total,12);
 });
+test('records the caller already read give the same estimates without reading deposits again or changing those records',async()=>{
+ const reads=[];
+ const supa=async path=>{reads.push(path);if(path.includes('finance_records'))return Response.json([deposit]);return Response.json(path.includes('offset=0')?[event]:[]);};
+ const {interestKinds}=await import('../lib/finance.ts');
+ const read=apiFunction('supa','depositInterest','interestKinds',compile('lib/deposit-forecasts.ts')+';return depositForecasts;')(supa,depositInterest,interestKinds);
+ const fresh=await read('owner');const freshReads=reads.splice(0);
+ const holdings=[{...deposit},{id:'c',kind:'Cash',amount:5,currency:'UZS'}];const before=structuredClone(holdings);
+ assert.deepEqual(await read('owner',holdings),fresh);
+ assert.ok(freshReads.some(path=>path.includes('finance_records')));assert.ok(!reads.some(path=>path.includes('finance_records')));
+ assert.deepEqual(holdings,before,'the caller’s records stay as they were');
+});

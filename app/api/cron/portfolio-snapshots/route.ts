@@ -1,4 +1,5 @@
 import { cronAuthorized } from '@/lib/cron-auth';
+import { reportError } from '@/lib/monitoring';
 import { loadMarket } from '@/lib/server-market';
 import { readAllPages } from '@/lib/owner-rows';
 import { serviceDatabase } from '@/lib/service-role';
@@ -8,6 +9,7 @@ import { snapshotTotals } from '@/lib/portfolio-snapshots';
 import { depositToday } from '@/lib/deposit-interest';
 import type { Entry } from '@/lib/finance';
 export const maxDuration=60;
+const route='/api/cron/portfolio-snapshots';
 export async function GET(req:Request){
  if(!cronAuthorized(req))return new Response(null,{status:401});
  const db=serviceDatabase();
@@ -28,6 +30,7 @@ export async function GET(req:Request){
   // A celebration that cannot be sent never fails the capture.
   if(await announceNetWorthHigh(owner).catch(()=>false))celebrated++;
  }
+ if(skipped)await reportError('cron:portfolio-snapshots','Some portfolios could not be valued, so they were not captured.',{route,status:503,counts:{captured,skipped}},{alert:true});
  return Response.json({captured,skipped,celebrated},{status:skipped?503:200,headers:{'Cache-Control':'no-store'}});
- }catch{return Response.json({error:'Background capture failed. Completed captures remain safe to retry.'},{status:503});}
+ }catch(error){await reportError('cron:portfolio-snapshots',error,{route,status:503},{alert:true});return Response.json({error:'Background capture failed. Completed captures remain safe to retry.'},{status:503});}
 }

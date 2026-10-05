@@ -1,4 +1,5 @@
 import { cronAuthorized } from '@/lib/cron-auth';
+import { reportError } from '@/lib/monitoring';
 import { dueReminders, type ReminderSettings } from '@/lib/daily-finance';
 import { depositToday } from '@/lib/deposit-interest';
 import { digestMessage } from '@/lib/digest-message';
@@ -39,6 +40,7 @@ export async function GET(req:Request){
     const text=digestMessage(dueReminders({records,occurrences,categories:[],goals:[],activity:[],debtPayments:debtPaymentsFrom(activity,mortgagePayments)},settings,today),profile.language,today,{name:profile.name,currency:profile.currency,netWorth,spending});
     return sendTelegramMessage({chat_id,text},config);
   });
+  if(failed)await reportError('cron:telegram-digest','Some Telegram digests were not delivered.',{route:'/api/cron/telegram-digest',status:503,counts:{sent,failed}},{alert:true});
   return Response.json({sent,failed},{status:failed?503:200,headers:{'Cache-Control':'no-store'}});
- }catch{return Response.json({error:'Telegram digest failed. Digests already sent are not repeated on retry.',sent:0,failed:0},{status:503});}
+ }catch(error){await reportError('cron:telegram-digest',error,{route:'/api/cron/telegram-digest',status:503},{alert:true});return Response.json({error:'Telegram digest failed. Digests already sent are not repeated on retry.',sent:0,failed:0},{status:503});}
 }

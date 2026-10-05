@@ -32,9 +32,24 @@ test('database readiness distinguishes missing migrations, network failure and c
  response=()=>{throw Error('network');};assert.match((await (await GET()).json()).error,/Could not check/);
 });
 test('large owner reads traverse every batch and keep owner authorization on every request',async()=>{
- let calls=0;
- const {readOwnerRows}=loadTS('lib/server-records.ts',{'@/lib/supabase':{supa:async(path,init,token)=>{assert.equal(token,'owner');const query=new URL('https://local'+path).searchParams;const offset=Number(query.get('offset'));calls++;return Response.json(Array.from({length:Math.min(500,25017-offset)},(_,index)=>({id:offset+index})));}}});
+ let calls=0;const paths=[];
+ // Ids in order; each page answers the 500 rows after the `id=gt.` it is given.
+ const ids=Array.from({length:25017},(_,index)=>String(index).padStart(6,'0'));
+ const {readOwnerRows}=loadTS('lib/server-records.ts',{'@/lib/supabase':{supa:async(path,init,token)=>{assert.equal(token,'owner');paths.push(path);const query=new URL('https://local'+path).searchParams;assert.equal(query.get('offset'),null,'pages follow the last id, never an offset');const after=query.getAll('id').find(filter=>filter.startsWith('gt.'))?.slice(3);calls++;const start=after===undefined?0:ids.indexOf(after)+1;return Response.json(ids.slice(start,start+Number(query.get('limit'))).map(id=>({id,name:'n'+id})));}}});
  const rows=await readOwnerRows('finance_records','owner');assert.equal(rows.length,25017);assert.equal(new Set(rows.map(row=>row.id)).size,25017);assert.equal(calls,51);
+ assert.match(paths[0],/order=id\.asc/);assert.doesNotMatch(paths[0],/id=gt/);assert.match(paths[1],/id=gt\.000499/);
+ // A select without the id reads it for the next page and hands back only the columns asked for.
+ calls=0;paths.length=0;
+ const named=await readOwnerRows('account_activity','owner',{select:'name',action:'in.(repayment,mortgage)'});
+ assert.equal(named.length,25017);assert.deepEqual(named[0],{name:'n000000'});assert.equal(calls,51);
+ assert.match(decodeURIComponent(paths[0]),/select=name,id&order=id\.asc&action=in\.\(repayment,mortgage\)/);
+ // A filter on the id stays next to the page's own.
+ paths.length=0;await readOwnerRows('finance_records','owner',{id:'in.(000001,000002)'});
+ assert.deepEqual(new URL('https://local'+paths[0]).searchParams.getAll('id'),['in.(000001,000002)']);
+ // Any other order keeps offset pages.
+ const offsets=[];
+ const {readOwnerRows:ordered}=loadTS('lib/server-records.ts',{'@/lib/supabase':{supa:async path=>{const query=new URL('https://local'+path).searchParams;offsets.push(query.get('offset'));return Response.json(query.get('offset')==='0'?Array.from({length:500},(_,i)=>({id:String(i)})):[{id:'last'}]);}}});
+ assert.equal((await ordered('goal_events','owner',{order:'occurred_on.desc,created_at.desc,id.asc'})).length,501);assert.deepEqual(offsets,['0','500']);
 });
 test('workspace planning omits unused history while review retains financial activity',async()=>{
  let tables=[];

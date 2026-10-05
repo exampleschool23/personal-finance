@@ -1,9 +1,11 @@
 import { translate } from '@/lib/i18n';
+import { reportError } from '@/lib/monitoring';
 import { serviceDatabase } from '@/lib/service-role';
 import { verifyStandardWebhook } from '@/lib/standard-webhook';
 import { sendTelegramMessage, telegramConfig } from '@/lib/telegram';
 import { ownerLanguage } from '@/lib/telegram-bot';
 export const maxDuration = 30;
+const route = '/api/auth/send-sms-hook';
 const fail = (status: number, message: string) => Response.json({ error: { http_code: status, message } }, { status });
 /** Supabase calls this instead of sending an SMS. The sign-in code goes to the Telegram chat linked to the account, so it costs nothing and reaches only the Telegram user who owns that account. */
 export async function POST(req: Request) {
@@ -20,6 +22,12 @@ export async function POST(req: Request) {
     if (!subscription?.chat_id) return fail(400, 'This account has no Telegram chat to receive the code.');
     const language = await ownerLanguage(db, userId);
     const sent = await sendTelegramMessage({ chat_id: subscription.chat_id, text: translate(language, 'Your Hoggish sign-in code is {code}. If you did not ask for it, ignore this message.', { code: `<code>${otp}</code>` }) }, config);
-    return sent ? Response.json({}) : fail(502, 'The code could not be delivered.');
-  } catch { return fail(503, 'Sign-in codes are not available right now.'); }
+    if (sent) return Response.json({});
+    // Without the code nobody can sign in by phone: tell the operator.
+    await reportError('send-sms-hook', 'Telegram did not accept a sign-in code.', { route, status: 502, userId }, { alert: 'repeated' });
+    return fail(502, 'The code could not be delivered.');
+  } catch (error) {
+    await reportError('send-sms-hook', error, { route, status: 503, userId }, { alert: true });
+    return fail(503, 'Sign-in codes are not available right now.');
+  }
 }

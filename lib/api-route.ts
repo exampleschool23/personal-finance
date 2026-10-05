@@ -1,6 +1,8 @@
-// Response shaping shared by the API routes. Every helper is pure: no session, cookies or network,
-// so routes keep calling session() and supa() themselves and tests can substitute those.
+// Response shaping shared by the API routes. The helpers need no session, cookies or network, so routes keep
+// calling session() and supa() themselves and tests can substitute those; a database failure that answers 5xx is
+// also reported to lib/monitoring.ts, which alerts once the same failure keeps happening.
 import type { z } from 'zod';
+import { reportError } from '@/lib/monitoring';
 
 const noStore = { 'Cache-Control': 'no-store' };
 /** JSON that is never cached; `noReferrer` also withholds the referrer, for account and sign-in answers. */
@@ -43,6 +45,8 @@ export async function postgrestFailure(response: Response, fallback: string, { s
  const { code = '', message } = await postgrestError(response);
  if (code === 'P0001' && message) return Response.json({ error: message }, { status });
  const known = Object.hasOwn(codes, code) ? codes[code] : undefined;
- if (known !== undefined) return typeof known === 'string' ? Response.json({ error: known }, { status }) : Response.json({ error: known[0] }, { status: known[1] });
- return Response.json({ error: fallback }, { status: fallbackStatus });
+ const [error, answer] = known === undefined ? [fallback, fallbackStatus] : typeof known === 'string' ? [known, status] : known;
+ // Only the code travels: PostgREST's own message and details can quote the values of a row.
+ if (answer >= 500) await reportError('database', Object.assign(new Error(`${fallback} (PostgREST ${code || 'no code'}, HTTP ${response.status})`), { name: 'DatabaseError', stack: '' }), { status: answer }, { alert: 'repeated' });
+ return Response.json({ error }, { status: answer });
 }

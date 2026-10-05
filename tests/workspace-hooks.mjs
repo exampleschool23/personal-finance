@@ -71,3 +71,32 @@ test('the Telegram link shows a load failure, retries, and keeps a later answer 
  assert.equal(JSON.parse(requests[2].options.body).action,'settings');assert.equal(run(false).status.digest_enabled,false);
  assert.equal(run(true).status.configured,false,'the sample workspace shows the sample status');
 });
+test('identical reads that start together share one request, each with its own copy, and later reads ask again',async()=>{
+ const requests=[];
+ const refreshRead=(url,options)=>new Promise(resolve=>requests.push({url,signal:options.signal,reply:(data,status=200)=>resolve(Response.json(data,{status}))}));
+ const {sharedRead}=loadTS('hooks/use-owner-resource.ts',{'@/lib/refresh-read':{refreshRead},'@/lib/feedback':{showSaved:()=>{}},'@/lib/api-client':{requestJson:async()=>({})},react:{useEffect:()=>{},useRef:()=>({}),useState:()=>[]}});
+ const reader=()=>new AbortController();
+ // Two cards of one screen asking for the same month: one request, two separate copies.
+ const [a,b]=[reader(),reader()];
+ const first=sharedRead('one:/api/planning?scope=review',`/api/planning?scope=review`,a.signal),second=sharedRead('one:/api/planning?scope=review','/api/planning?scope=review',b.signal);
+ const other=sharedRead('two:/api/planning?scope=review','/api/planning?scope=review',reader().signal);
+ assert.equal(requests.length,2,'another owner never shares a read');
+ requests[0].reply({records:[{id:'r'}]});
+ const [one,two]=await Promise.all([first,second]);
+ const parsed=[JSON.parse(one.text),JSON.parse(two.text)];parsed[0].records.push({id:'changed'});
+ assert.deepEqual(parsed[1].records,[{id:'r'}]);assert.equal(one.ok,true);
+ requests[1].reply({error:'Offline'},503);assert.equal((await other).ok,false);
+ // A read that is already under way is not joined later: it may have started before a save.
+ await new Promise(resolve=>setTimeout(resolve,0));
+ const later=sharedRead('one:/api/planning?scope=review','/api/planning?scope=review',reader().signal);
+ assert.equal(requests.length,3);requests[2].reply({records:[]});assert.deepEqual(JSON.parse((await later).text),{records:[]});
+ // The request is cancelled only when every reader has let go of it.
+ const [c,d]=[reader(),reader()];
+ const kept=sharedRead('one:/api/x','/api/x',c.signal);sharedRead('one:/api/x','/api/x',d.signal).catch(()=>{});
+ d.abort();assert.equal(requests[3].signal.aborted,false);requests[3].reply({ok:1});assert.deepEqual(JSON.parse((await kept).text),{ok:1});
+ const [e,f]=[reader(),reader()];
+ sharedRead('one:/api/y','/api/y',e.signal).catch(()=>{});sharedRead('one:/api/y','/api/y',f.signal).catch(()=>{});
+ e.abort();f.abort();assert.equal(requests[4].signal.aborted,true);
+ // Once cancelled, a reader starting in the same task (a remount) asks again rather than joining the cancelled one.
+ sharedRead('one:/api/y','/api/y',reader().signal).catch(()=>{});assert.equal(requests.length,6);
+});

@@ -12,6 +12,18 @@ export async function readAllPages<T>(page:(range:string)=>Promise<Response|T[]>
   rows.push(...batch);if(batch.length<pageSize)return rows;
  }
 }
+/** Every row of an `order=id.asc` query. Each page asks for the rows after the last id it has (`id=gt.…`), so a page is
+ * one index range of (user_id,id) rather than an offset the database counts past again; a failed page throws `error`. */
+export async function readIdPages<T extends {id:string}>(page:(range:string)=>Promise<Response|T[]>,error='Database request failed.'):Promise<T[]>{
+ const rows:T[]=[];
+ for(let after:string|null=null;;){
+  const result=await page(`limit=${pageSize}`+(after===null?'':`&id=gt.${encodeURIComponent(after)}`));
+  if(result instanceof Response&&!result.ok)throw Error(error);
+  const batch=result instanceof Response?await result.json() as T[]:result;
+  rows.push(...batch);if(batch.length<pageSize)return rows;
+  after=String(batch[batch.length-1].id);
+ }
+}
 /** `path` with the page range appended, whether or not it already has a query. */
 export const pagePath=(path:string,range:string)=>path+(path.includes('?')?'&':'?')+range;
 export function ownerRows<T>(db:ServiceDatabase,table:string,owner:string,select='*'){

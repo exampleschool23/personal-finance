@@ -1,4 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
+import { reportError } from '@/lib/monitoring';
 import { serviceDatabase } from '@/lib/service-role';
 import { answerCallback, sendTelegramMessage, telegramConfig } from '@/lib/telegram';
 import { handleTelegramUpdate, type TelegramUpdate } from '@/lib/telegram-bot';
@@ -18,5 +19,9 @@ export async function POST(req:Request){
   if(outcome.callbackId)await answerCallback(outcome.callbackId,config);
   for(const reply of outcome.replies)await sendTelegramMessage(reply,config);
   return new Response(null,{status:200});
- }catch{return new Response(null,{status:503});}
+ }catch(error){
+  // Telegram retries the update, so the alert is deduplicated per failure (lib/monitoring.ts).
+  await reportError('telegram-webhook',error,{route:'/api/telegram/webhook',status:503},{alert:true});
+  return new Response(null,{status:503});
+ }
 }

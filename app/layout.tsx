@@ -1,4 +1,5 @@
 import {WebAppRegistration} from "@/components/web-app-registration";
+import { ErrorReporter } from "@/components/error-reporter";
 import type { Metadata } from "next";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/onest";
@@ -30,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: fontBootScript }}/></head>
-      <body className="antialiased"><ThemeProvider>{children}<Toaster position="top-center" duration={4000} offset="max(24px, env(safe-area-inset-top))" mobileOffset="max(16px, env(safe-area-inset-top))" /><WebAppRegistration/></ThemeProvider></body>
+      <body className="antialiased"><ThemeProvider>{children}<Toaster position="top-center" duration={4000} offset="max(24px, env(safe-area-inset-top))" mobileOffset="max(16px, env(safe-area-inset-top))" /><WebAppRegistration/><ErrorReporter/></ThemeProvider></body>
     </html>
   );
 }

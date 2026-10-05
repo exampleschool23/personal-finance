@@ -4,6 +4,23 @@ import { useEffect,useRef,useState } from 'react';
 import { refreshRead } from '@/lib/refresh-read';
 import { requestJson } from '@/lib/api-client';
 
+type SharedRead={controller:AbortController;readers:number;reply:Promise<{ok:boolean;text:string}>};
+const sharedReads=new Map<string,SharedRead>();
+/** Identical reads that start together (one screen load, one refresh after a save) share one request, and each reader
+ * parses its own copy of the reply. Only reads started in the same task join: one already under way may predate a save.
+ * The request is cancelled once every reader has let go of it. */
+export function sharedRead(key:string,url:string,signal:AbortSignal):Promise<{ok:boolean;text:string}>{
+ let read=sharedReads.get(key);
+ if(!read){
+  const controller=new AbortController(),started:SharedRead={controller,readers:0,reply:refreshRead(url,{signal:controller.signal}).then(async response=>({ok:response.ok,text:await response.text()}))};
+  sharedReads.set(key,started);read=started;
+  setTimeout(()=>{if(sharedReads.get(key)===started)sharedReads.delete(key);},0);
+ }
+ const joined=read;joined.readers++;
+ const leave=()=>{if(--joined.readers>0)return;joined.controller.abort();if(sharedReads.get(key)===joined)sharedReads.delete(key);};
+ signal.addEventListener('abort',leave,{once:true});
+ return joined.reply;
+}
 export function useOwnerResource<T>(url:string,owner:string|null,enabled:boolean,revision:number,empty:T){
  const request=useRef<AbortController|null>(null);
  const current=useRef('');
@@ -15,9 +32,9 @@ export function useOwnerResource<T>(url:string,owner:string|null,enabled:boolean
  useEffect(()=>{
   if(!owner||!enabled)return;
   const controller=new AbortController();request.current=controller;
-  refreshRead(url,{signal:controller.signal}).then(async response=>{
-   const result=await response.json() as T & {error?:string};
-   if(!response.ok)throw Error(result.error??'Could not load data.');
+  sharedRead(scope,url,controller.signal).then(reply=>{
+   const result=JSON.parse(reply.text) as T & {error?:string};
+   if(!reply.ok)throw Error(result.error??'Could not load data.');
    if(!controller.signal.aborted)setState({scope,key,data:result,error:''});
   }).catch(error=>{if(!controller.signal.aborted)setState(previous=>({scope,key,data:previous.scope===scope?previous.data:empty,error:error.message}));});
   return()=>controller.abort();

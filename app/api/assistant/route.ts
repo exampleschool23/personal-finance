@@ -7,6 +7,7 @@ import { planningReadFilters } from '@/lib/planning-reads';
 import type { PlanningData } from '@/lib/planning';
 import { readOwnerRows } from '@/lib/server-records';
 import { crossSite, readJson, signInAgain, tooManyAttempts } from '@/lib/api-route';
+import { reportError } from '@/lib/monitoring';
 import { limits, rateLimited } from '@/lib/rate-limit';
 import { session, sameOrigin } from '@/lib/supabase';
 
@@ -16,6 +17,7 @@ export function GET() {
  return Response.json({ available: assistantAvailable() }, { headers: { 'Cache-Control': 'no-store' } });
 }
 const assistantAvailable = () => !!process.env.ANTHROPIC_API_KEY;
+const route = '/api/assistant';
 
 /** Answers a question about the signed-in user's money with Claude. The request carries the conversation;
  * the server adds a snapshot built from the user's own records, read with their token. */
@@ -38,7 +40,10 @@ export async function POST(req: Request) {
    readOwnerRows<PlanningData['activity'][number]>('account_activity', auth.token, filters.activity),
   ]);
   snapshot = assistantContext({ records: records.map(normalizeEntry), categories, goals, occurrences, activity, investmentLinks: [] }, today, currency, rates, language);
- } catch { return Response.json({ error: 'Could not load your records. Please try again.' }, { status: 503 }); }
+ } catch (error) {
+  await reportError('assistant', error, { route, status: 503, userId: auth.user.id }, { alert: 'repeated' });
+  return Response.json({ error: 'Could not load your records. Please try again.' }, { status: 503 });
+ }
  try {
   const client = new Anthropic();
   const response = await client.beta.messages.create({
@@ -56,7 +61,12 @@ export async function POST(req: Request) {
   return Response.json({ answer: text || 'No answer was returned. Please try again.' }, { headers: { 'Cache-Control': 'no-store' } });
  } catch (error) {
   if (error instanceof Anthropic.RateLimitError) return Response.json({ error: 'The assistant is busy. Please try again in a minute.' }, { status: 429 });
-  if (error instanceof Anthropic.AuthenticationError) return Response.json({ error: assistantUnavailable }, { status: 503 });
+  // A rejected key means nobody gets answers until it is replaced; anything else alerts once it keeps happening.
+  if (error instanceof Anthropic.AuthenticationError) {
+   await reportError('assistant', error, { route, status: 503, userId: auth.user.id }, { alert: true });
+   return Response.json({ error: assistantUnavailable }, { status: 503 });
+  }
+  await reportError('assistant', error, { route, status: 502, userId: auth.user.id }, { alert: 'repeated' });
   return Response.json({ error: 'The assistant could not answer. Please try again.' }, { status: 502 });
  }
 }

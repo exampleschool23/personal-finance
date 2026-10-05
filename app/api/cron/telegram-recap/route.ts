@@ -1,5 +1,6 @@
 import { accountOrigin } from '@/lib/account-access';
 import { cronAuthorized } from '@/lib/cron-auth';
+import { reportError } from '@/lib/monitoring';
 import { depositToday } from '@/lib/deposit-interest';
 import type { Entry } from '@/lib/finance';
 import { translate } from '@/lib/i18n';
@@ -31,6 +32,7 @@ export async function GET(req:Request){
     const message=recapMessage({name:profile.name,currency:profile.currency,from,to,income:totals.income,spending:totals.spending,top:best&&label?{label,amount:best.amount}:null,goalsMoved:new Set(goalEvents.map(event=>event.goal_id)).size,shareOrigin},profile.language);
     return sendTelegramMessage({chat_id,...message},config);
   });
+  if(failed)await reportError('cron:telegram-recap','Some Telegram recaps were not delivered.',{route:'/api/cron/telegram-recap',status:503,counts:{sent,failed}},{alert:true});
   return Response.json({sent,failed},{status:failed?503:200,headers:{'Cache-Control':'no-store'}});
- }catch{return Response.json({error:'Telegram recap failed. Recaps already sent are not repeated on retry.',sent:0,failed:0},{status:503});}
+ }catch(error){await reportError('cron:telegram-recap',error,{route:'/api/cron/telegram-recap',status:503},{alert:true});return Response.json({error:'Telegram recap failed. Recaps already sent are not repeated on retry.',sent:0,failed:0},{status:503});}
 }

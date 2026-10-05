@@ -229,3 +229,69 @@ includeSubDomains`. The Content Security Policy is still report-only (nothing
 is blocked; violations appear in the browser console) and allows
 `connect-src` to the `SUPABASE_URL` origin read at build time, because
 attachment uploads go straight to Supabase Storage.
+
+## Monitoring and alerts
+
+Nothing new needs to be installed. `lib/monitoring.ts` writes every server
+failure as one JSON line on stderr (`{"level":"error","source":…,"message":…,
+"name":…,"stack":…,"route":…,"status":…,"release":…,"at":…}`), so it shows in
+Vercel › Project › Logs; filter by level Error or search for `"level":"error"`.
+`release` is `VERCEL_GIT_COMMIT_SHA`. Before anything is written, messages
+and stacks are scrubbed of emails, phone numbers and long numbers (amounts),
+ids, bearer tokens, JWTs, API keys and URL query strings. Request bodies,
+balances, cookies and raw user ids are never included; a user id appears only
+as `userIdHash`, an HMAC keyed with `SUPABASE_SERVICE_ROLE_KEY`.
+
+What is reported: failed or partial cron runs (portfolio snapshots, Telegram
+digest and recap, with their sent/failed or captured/skipped counts), Telegram
+webhook processing failures, the Send SMS hook failing to deliver a sign-in
+code, unexpected Assistant errors, database failures that answer 5xx through
+`postgrestFailure` (`lib/api-route.ts`), and browser errors.
+
+Browser errors: `ErrorReporter` (root layout) sends uncaught errors and
+unhandled promise rejections, at most five per page load, to
+`POST /api/client-errors` (same origin, 10 a minute and 100 a day per address,
+8 KB at most, only the message, stack, page path without query and Next's
+digest). The error boundaries `app/error.tsx` and `app/global-error.tsx` show a
+retry and report the digest, which matches the server log line of the same
+failure.
+
+Optional variables (Production environment), then redeploy:
+
+- `SENTRY_DSN`: a Sentry project's DSN (Project settings › Client Keys). Each
+  report is also posted to Sentry's envelope endpoint, with a two-second
+  timeout; a Sentry outage never affects a request. Sentry's free Developer
+  plan is enough.
+- `TELEGRAM_ALERT_CHAT_ID`: your own chat with the bot (or a private group the
+  bot is in). Send the bot any message, open
+  `https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/getUpdates` and copy
+  `"chat":{"id":…}`. While the webhook is set getUpdates returns nothing, so
+  read it before registering the webhook, or call `deleteWebhook`, read it and
+  register the webhook again. Alerts go out for cron failures and partial runs,
+  webhook and sign-in code failures and a rejected Assistant key at once, and
+  for repeated failures (more than five in ten minutes: database 5xx,
+  Assistant errors) once they keep happening. Each failure alerts at most once
+  an hour and all alerts together at most twenty an hour, counted with the
+  rate limiter of migration 106 (per server instance when the database cannot
+  count). An alert names the source, the scrubbed error, route, status and
+  commit, with the time written as `5 October 2026 09:30`.
+
+### Uptime monitor
+
+`GET /api/health` answers `{"ok":true,"db":true}` with 200 while the app runs
+and its database answers, and `{"ok":false,"db":false}` with 503 otherwise
+(also without `SUPABASE_SERVICE_ROLE_KEY`). It needs no sign-in, returns no
+data, is never cached and allows 30 checks a minute per address. Point a free
+monitor at it, for example UptimeRobot (New monitor › HTTP(s), URL
+`https://<your-domain>/api/health`, every 5 minutes, alert contact: email or
+Telegram) or Better Stack Uptime (Monitors › Create, "URL becomes unavailable",
+3-minute checks). Both treat any status other than 2xx as down.
+
+### Cron failures in Vercel
+
+A cron route answers 503 when its run failed or was partial, so Vercel marks
+the invocation as failed: Vercel › Project › Settings › Cron Jobs lists each
+job with **View logs**, and Logs can be filtered by the cron paths
+(`/api/cron/…`). Vercel does not notify about failed cron invocations itself;
+the Telegram alert above (or a Sentry alert rule on `source:cron:*`) is the
+notification.

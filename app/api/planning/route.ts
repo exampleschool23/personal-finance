@@ -27,7 +27,9 @@ export async function GET(req?:Request){
  const data={records:[],categories:[],goals:[],occurrences:[],activity:[],movements:[],investmentLinks:[],...Object.fromEntries(results)} as Record<string,unknown>;
  // Loan repayments and mortgage payments settle a loan's monthly payment on Recurring and Upcoming payments.
  if(scope==='full'||scope==='workspace'){const [repayments,mortgagePayments]=await Promise.all([readOwnerRows<{action:string;target_id:string|null;occurred_on:string}>('account_activity',auth.token,{select:'action,target_id,occurred_on',action:'in.(repayment,mortgage)'}),readOwnerRows<{mortgage_id:string;paid_on:string}>('mortgage_payments',auth.token,{select:'id,mortgage_id,paid_on'})]);data.debtPayments=debtPaymentsFrom(repayments,mortgagePayments);}
- const estimates=new Map((scope==='insights'?[]:await depositForecasts(auth.token)).map(record=>[record.id,record.estimated_monthly_income]));
+ // Every scope but insights reads every holding (only income and expense history is period-limited), so the
+ // deposits are already here and are not read again.
+ const estimates=new Map((scope==='insights'?[]:await depositForecasts(auth.token,data.records as Entry[])).map(record=>[record.id,record.estimated_monthly_income]));
  data.records=(data.records as Entry[]).map(record=>interestKinds.includes(record.kind)?{...record,estimated_monthly_income:estimates.get(record.id)??0}:record);
  return Response.json(data,{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Could not load planning data. Check that the latest migrations are installed.'},{status:503});}
