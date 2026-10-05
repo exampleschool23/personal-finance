@@ -459,23 +459,6 @@
       "count": 1
     }
   },
-  "lib/telegram-flow.ts": {
-    "complexity": {
-      "count": 5
-    },
-    "max-lines-per-function": {
-      "count": 1
-    },
-    "max-params": {
-      "count": 1
-    },
-    "max-statements": {
-      "count": 1
-    },
-    "size/max-file-bytes": {
-      "count": 1
-    }
-  },
   "lib/telegram-onboarding.ts": {
     "complexity": {
       "count": 1

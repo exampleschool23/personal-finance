@@ -142,9 +142,12 @@ test('dates must be real and not in the future; long lists page eight at a time'
 });
 
 test('every bot string exists in all three locales and prompts stay under Telegram limits',()=>{
- const sources=['lib/telegram-flow.ts','lib/telegram-bot.ts','lib/digest-message.ts','lib/action-messages.ts'].map(file=>fs.readFileSync(file,'utf8')).join('\n');
- const used=[...sources.matchAll(/\bt\((?:language|hint|ctx\.language)?,?'((?:[^'\\]|\\.)+)'/g)].map(match=>match[1]).concat([...sources.matchAll(/label:'([^']+)'/g)].map(match=>match[1]));
+ const flowParts=fs.readdirSync('lib/telegram-flow').map(name=>'lib/telegram-flow/'+name);
+ const sources=['lib/telegram-flow.ts',...flowParts,'lib/telegram-bot.ts','lib/digest-message.ts','lib/action-messages.ts'].map(file=>fs.readFileSync(file,'utf8')).join('\n');
+ const used=[...sources.matchAll(/\bt\((?:language|hint|ctx\.language|ask\.language)?,?'((?:[^'\\]|\\.)+)'/g)].map(match=>match[1]).concat([...sources.matchAll(/label:'([^']+)'/g)].map(match=>match[1]));
  assert.ok(used.length>40);
+ // Every prompt's text is found by the scan above, wherever the flow keeps it.
+ for(const key of ['Choose a business','Type the rate: how many {to} is 1 {from}?','Keep the name under 120 characters.'])assert.ok(used.includes(key),key);
  for(const language of ['en','ru']){const labels=JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'));for(const key of used)assert.ok(labels[key],`${language}: ${key}`);}
  const start=advance(null,{text:'Expense'},ctx(),chat);
  for(const button of start.reply.keyboard.inline.flat())assert.ok(Buffer.byteLength(button.callback_data)<=64,button.callback_data);
@@ -364,7 +367,7 @@ test('every Telegram message is written with one kit: translation, money, keyboa
  assert.equal(locale,'ru-RU');assert.equal(t('Back'),translate('ru','Back'));assert.equal(t('{count} more',{count:3}),translate('ru','{count} more',{count:3}));
  assert.equal(money(1500,'USD'),kit.moneyIn(1500,'USD','ru'));assert.equal(kit.t('en','Back'),'Back');
  // No bot module keeps its own copy.
- for(const file of ['lib/telegram-bot.ts','lib/telegram-flow.ts','lib/telegram-onboarding.ts','lib/digest-message.ts','lib/recap-message.ts','lib/action-messages.ts','lib/milestones.ts']){
+ for(const file of ['lib/telegram-bot.ts','lib/telegram-flow.ts',...fs.readdirSync('lib/telegram-flow').map(name=>'lib/telegram-flow/'+name),'lib/telegram-onboarding.ts','lib/digest-message.ts','lib/recap-message.ts','lib/action-messages.ts','lib/milestones.ts']){
   const source=fs.readFileSync(file,'utf8');
   assert.doesNotMatch(source,/=>translate\(language,key,params\)/,file);
   assert.doesNotMatch(source,/out\.push\(buttons\.slice/,file);
