@@ -16,6 +16,7 @@ import { useLanguage } from '@/components/language-provider';
 import { ChartSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { financialTotals, type Entry } from '@/lib/finance';
 import { formatMoney, formatNumber, formatPercent } from '@/lib/format';
+import { AnimatedMoney } from '@/components/presentation-foundation/animated-money';
 import { depositToday } from '@/lib/deposit-interest';
 import { mergePortfolioPoints, type PortfolioSnapshot } from '@/lib/portfolio-snapshots';
 import { portfolioHistory, portfolioWindow, trackingWindowStart } from '@/lib/portfolio-history';
@@ -62,7 +63,7 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
    <header className="overview-hero-head">
     <div className="overview-hero-value">
      <h2 id="overview-net-worth">{t('Net worth')}</h2>
-     <strong>{money(portfolioValue)}</strong>
+     <strong><AnimatedMoney value={portfolioValue} currency={currency}/></strong>
      {!loading && !error && change !== null && <p><span className={change >= 0 ? 'overview-delta positive' : 'overview-delta negative'}><Trend size={15} aria-hidden="true"/>{change > 0 ? '+' : ''}{money(change)}{percent !== null && <> · {percent > 0 ? '+' : ''}{formatPercent(percent, locale)}</>}</span><span>{t('Change in selected period')}</span></p>}
      <PartialTotal currencies={excludedCurrencies}/>
     </div>

@@ -33,6 +33,7 @@ export { OwnerFilter, type OwnerOption } from './owner-filter';
 export { Brand } from './brand';
 export { DrawerLink } from './drawer-link';
 export { PartialTotal } from './partial-total';
+export { AnimatedMoney, countValue } from './animated-money';
 export { CurrencyValue } from './currency-value';
 export { CurrencySelect } from './currency-select';
 export { FormattedNumberInput } from './formatted-number-input';

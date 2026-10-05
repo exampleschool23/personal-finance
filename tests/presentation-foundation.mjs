@@ -109,6 +109,16 @@ test('panel title keeps the heading, count and hint on one line and the aside on
  assert.equal(render(Count,{value:12,loading:true}),'<span class="count">—</span>');
 });
 
+test('animated money renders the final formatted amount and eases between amounts',()=>{
+ const {AnimatedMoney,countValue}=load('animated-money.tsx',{'@/lib/format':{formatMoney:(value,currency)=>`${currency} ${Math.round(value)}`}});
+ assert.equal(render(AnimatedMoney,{value:310391,currency:'USD'}),'<span class="animated-number"><span aria-hidden="true">USD 310391</span><span class="sr-only">USD 310391</span></span>');
+ assert.equal(countValue(0,1000,0),0);
+ assert.equal(countValue(0,1000,800),1000);
+ assert.equal(countValue(0,1000,5000),1000,'never overshoots');
+ assert.ok(countValue(0,1000,400)>500,'eases out');
+ assert.equal(countValue(500,-500,800),-500,'counts down to negatives');
+});
+
 test('info hint keeps its explanation behind a labelled ⓘ button',()=>{
  const popover={Popover:element('span'),PopoverTrigger:element('button'),PopoverContent:({children,className})=>React.createElement('div',{className},children)};
  const {InfoHint}=load('info-hint.tsx',{'@/components/ui/popover':popover});
