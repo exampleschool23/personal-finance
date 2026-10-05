@@ -59,7 +59,12 @@ export async function POST(req:Request){
   queueMilestoneCheck(auth,{type:'exception',target_id:value.target_id,date:value.date,skip:value.skip});
   return Response.json({ok:true});
  }
- if(action==='archive'&&'source' in value){
+ if(action==='delete_schedule'&&'remove_history' in value){
+  const response=await supa('/rest/v1/rpc/delete_schedule',{method:'POST',body:JSON.stringify({p_source:value.source,p_id:value.id,p_remove_history:value.remove_history})},auth.token);
+  if(!response.ok)return postgrestFailure(response,'Could not delete this schedule. Please try again.',{codes:{PGRST202:['The app database needs an update. Ask the administrator to apply the latest migrations.',503]}});
+  return Response.json({ok:true});
+ }
+ if(action==='archive'&&'source' in value&&'archived' in value){
   // Only a repeating income or bill, or a spending plan, is archived; its recorded payments are untouched.
   const path=value.source==='plan'?`expense_plans?id=eq.${value.id}`:`finance_records?id=eq.${value.id}&frequency=neq.Once`;
   const response=await supa('/rest/v1/'+path,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({archived:value.archived})},auth.token);

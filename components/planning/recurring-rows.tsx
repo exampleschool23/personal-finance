@@ -4,7 +4,7 @@ import { CategoryIcon } from '@/components/presentation-foundation/category-icon
 import { DoneTick } from '@/components/presentation-foundation/done-tick';
 import { ProgressLine } from '@/components/presentation-foundation/progress-line';
 import { Count } from '@/components/presentation-foundation/count';
-import { RowMenu } from '@/components/presentation-foundation/row-menu';
+import { RowMenu, type RowMenuItem } from '@/components/presentation-foundation/row-menu';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
 import type { ExpensePlan } from '@/lib/expense-plans';
@@ -31,10 +31,15 @@ function RowName({ name, label, detail, onOpen }: { name: string; label: string;
 /** Tapping a row outside its buttons and menu does what its name does. */
 const rowTap = (action?: () => void) => action && ((event: MouseEvent) => { if (!(event.target as HTMLElement).closest('button,a,[role=menu]')) action(); });
 
-type OccurrenceProps = { item: RecurringItem; dated: boolean; today: string; busy: boolean; onEdit?: (record: Entry) => void; onPay: (item: RecurringItem) => void; onSkip: (item: RecurringItem) => void; onArchive?: () => void };
+type OccurrenceProps = { item: RecurringItem; dated: boolean; today: string; busy: boolean; onEdit?: (record: Entry) => void; onPay: (item: RecurringItem) => void; onSkip: (item: RecurringItem) => void; onArchive?: () => void; onDelete?: (target: ArchiveTarget) => void };
 
 /** One scheduled income or bill on its day: its status, the scheduled amount, and recording, skipping or archiving it. */
-export function OccurrenceRow({ item, dated, today, busy, onEdit, onPay, onSkip, onArchive }: OccurrenceProps) {
+/** A schedule's or plan's ⋯ menu: Skip while an occurrence is open, then Archive and Delete where they are offered. */
+function scheduleMenu(t: (key: string) => string, busy: boolean, { skip, archive, remove }: { skip?: () => void; archive?: () => void; remove?: () => void }): RowMenuItem[] {
+ return [...(skip ? [{ label: t('Skip this occurrence'), disabled: busy, onSelect: skip }] : []), ...(archive ? [{ label: t('Archive'), disabled: busy, onSelect: archive }] : []), ...(remove ? [{ label: t('Delete'), destructive: true, disabled: busy, onSelect: remove }] : [])];
+}
+
+export function OccurrenceRow({ item, dated, today, busy, onEdit, onPay, onSkip, onArchive, onDelete }: OccurrenceProps) {
  const { t, locale } = useLanguage();
  const dueLabel = useDueLabel();
  // A payment is recorded once it happens: before its date the button waits and says when. A recorded one takes further payments; a skipped one none.
@@ -46,7 +51,7 @@ export function OccurrenceRow({ item, dated, today, busy, onEdit, onPay, onSkip,
   : item.status === 'skipped' ? <span className="status-badge">{t('Skipped')}</span>
   : <span className={item.status === 'overdue' ? 'status-badge is-overdue' : 'status-badge'}>{dueLabel(today, item.date)}</span>;
  // Archiving takes the whole schedule out of Recurring; its recorded payments stay. Loan payments follow their loan instead.
- const menu = item.installment ? [] : [...(open ? [{ label: t('Skip this occurrence'), disabled: busy, onSelect: () => onSkip(item) }] : []), ...(onArchive ? [{ label: t('Archive'), disabled: busy, onSelect: onArchive }] : [])];
+ const menu = item.installment ? [] : scheduleMenu(t, busy, { skip: open ? () => onSkip(item) : undefined, archive: onArchive, remove: onDelete && (() => onDelete({ source: 'record', record: item.record })) });
  return <li className="recurring-row" data-status={item.status} data-editable={edit ? '' : undefined} onClick={rowTap(edit)}>
   <span className="transaction-merchant"><DoneTick done={paid}/><CategoryIcon kind={item.record.kind}/><RowName name={item.record.name} label={t('Edit {name}', { name: item.record.name })} onOpen={edit} detail={[t(frequencyLabels[item.installment ? 'Monthly' : item.record.frequency]), t(item.record.kind), dated ? formatDate(item.date, locale) : null].filter(Boolean).join(' · ')}/></span>
   {status}
@@ -58,7 +63,7 @@ export function OccurrenceRow({ item, dated, today, busy, onEdit, onPay, onSkip,
 }
 
 /** The month's spending plans under the dated bills, as on the Spending tab: spent against planned with a progress bar, tapped to record spending. */
-export function PlanRows({ plans, onSpend, onArchive }: { plans: RecurringPlan[]; onSpend?: (plan: ExpensePlan) => void; onArchive?: (plan: ExpensePlan) => void }) {
+export function PlanRows({ plans, onSpend, onArchive, onDelete }: { plans: RecurringPlan[]; onSpend?: (plan: ExpensePlan) => void; onArchive?: (plan: ExpensePlan) => void; onDelete?: (target: ArchiveTarget) => void }) {
  const { t, locale } = useLanguage();
  if (!plans.length) return null;
  return <>
@@ -69,7 +74,7 @@ export function PlanRows({ plans, onSpend, onArchive }: { plans: RecurringPlan[]
     <span className="transaction-merchant"><DoneTick done={false}/><CategoryIcon kind={plan.category}/><RowName name={plan.name} label={t('Record spending') + ' · ' + plan.name} onOpen={spend} detail={[t(frequencyLabels.Monthly), t(plan.category)].join(' · ')}/></span>
     <ProgressLine value={spent} target={planned} tone="expense"/>
     <strong className="transaction-amount">{formatMoney(spent, plan.currency, locale)} / {formatMoney(planned, plan.currency, locale)}</strong>
-    <div className="row-actions">{spend && <Button size="sm" variant="outline" onClick={spend}>{t('Record spending')}</Button>}{onArchive && <RowMenu label={t('Actions for {name}', { name: plan.name })} items={[{ label: t('Archive'), onSelect: () => onArchive(plan) }]}/>}</div>
+    <div className="row-actions">{spend && <Button size="sm" variant="outline" onClick={spend}>{t('Record spending')}</Button>}{(onArchive || onDelete) && <RowMenu label={t('Actions for {name}', { name: plan.name })} items={scheduleMenu(t, false, { archive: onArchive && (() => onArchive(plan)), remove: onDelete && (() => onDelete({ source: 'plan', plan })) })}/>}</div>
    </li>;
   })}
  </>;

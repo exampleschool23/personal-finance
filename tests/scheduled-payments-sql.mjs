@@ -84,8 +84,8 @@ test('migration 111 adds archiving to schedules and spending plans, is safe to r
 
 test('migration 112 adds later payments to a recorded occurrence: they add up, retries are no-ops, and nothing is added before the first',async()=>{
  const extra=fs.readFileSync('migrations/112_extra_scheduled_payments.sql','utf8');
- assert.ok(setup.endsWith(extra),'setup.sql ends with migration 112');
- const upgraded=await db(setup.slice(0,setup.length-extra.length));
+ assert.ok(setup.includes(extra),'setup.sql includes migration 112');
+ const upgraded=await db(setup.slice(0,setup.indexOf(extra)));
  try{await upgraded.exec(extra);await upgraded.exec(extra);}finally{await upgraded.close();}
  const d=await db(setup);
  try{

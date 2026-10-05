@@ -56,6 +56,16 @@ function occurrencesBetween(records: Entry[], occurrences: Occurrence[], from: s
 /** A repeating income or bill, or a spending plan, to archive or restore. */
 export type ArchiveTarget = { source: 'record'; record: Entry } | { source: 'plan'; plan: ExpensePlan };
 
+/** The transactions recorded against a schedule or spending plan: each recorded occurrence's payment and any later payment for it, or a plan's spending.
+ * Deleting the schedule keeps them in history or deletes them too. */
+export function scheduleHistory(target: ArchiveTarget, records: Entry[], occurrences: Occurrence[]): string[] {
+ if (target.source === 'plan') return records.filter(record => record.expense_plan_id === target.plan.id).map(record => record.id);
+ const id = target.record.id;
+ const ids = new Set(occurrences.flatMap(item => item.record_id === id && item.status === 'paid' && item.transaction_id ? [item.transaction_id] : []));
+ for (const record of records) if (record.occurrence_record_id === id) ids.add(record.id);
+ return [...ids];
+}
+
 /** Repeating incomes and bills that were archived, by name; loan payments are never archived here. */
 export const archivedSchedules = (records: Entry[]) => records.filter(record => record.archived && !record.source_paused && isRecurringCashFlow(record)).sort((a, b) => a.name.localeCompare(b.name));
 

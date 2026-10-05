@@ -18,6 +18,7 @@ import { archivedSchedules, calendarWeeks, carriedOverdue, monthOccurrences, mon
 import type { ExpensePlan } from '@/lib/expense-plans';
 import { AccountOperation, type Operation } from './account-operation';
 import { ArchivedFold, OccurrenceRow, PlanRows, useDueLabel } from './recurring-rows';
+import { useScheduleDeletion } from './delete-schedule-dialog';
 
 /** The Recurring page's views, switched from tabs beside its title: the month as a list or a calendar, subscriptions and reminders. */
 export type RecurringView = 'list' | 'calendar' | 'subscriptions' | 'reminders';
@@ -25,7 +26,9 @@ type Props = { data: PlanningData; save: (action: string, data: unknown) => Prom
  /** The monthly spending plans (groceries, family support) and the month their spending is known for; tapping one records spending from it. */
  plans?: readonly ExpensePlan[]; plansMonth?: string; onSpend?: (plan: ExpensePlan) => void;
  /** Archived plans, listed to restore; archiving moves a schedule or plan out of the month and back. */
- archivedPlans?: readonly ExpensePlan[]; onArchive?: (target: ArchiveTarget, archived: boolean) => Promise<void> };
+ archivedPlans?: readonly ExpensePlan[]; onArchive?: (target: ArchiveTarget, archived: boolean) => Promise<void>;
+ /** Moves a schedule or plan to Recently deleted, keeping its recorded payments in history or deleting them too. */
+ onDelete?: (target: ArchiveTarget, removeHistory: boolean) => Promise<void> };
 type Direction = RecurringItem['direction'];
 
 /** One summary bar: what already came in (or went out) against the month's total. Tapping it shows only that side in the list; tapping again shows everything. */
@@ -40,7 +43,7 @@ function SummaryBar({ label, done, remaining, doneLabel, currency, tone, pressed
 }
 
 /** The month's spending plans under the dated bills: spent against planned, tapped to record spending. */
-export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd, onEdit, plans = [], plansMonth, onSpend, archivedPlans = [], onArchive }: Props) {
+export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd, onEdit, plans = [], plansMonth, onSpend, archivedPlans = [], onArchive, onDelete }: Props) {
  const { t, locale } = useLanguage(), today = depositToday();
  const dueLabel = useDueLabel();
  const [operation, setOperation] = useState<Operation | null>(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
@@ -65,8 +68,9 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
  const pay = (item: RecurringItem) => item.installment ? payDebt(item.record) : setOperation({ action: 'occurrence', target_id: item.record.id, date: item.date, ...(item.status === 'paid' ? { extra: true, amount: Math.max(Math.ceil(item.amount - (item.recorded ?? item.amount)), 0) } : { amount: item.amount }) });
  const archive = onArchive && ((target: ArchiveTarget, archived = true) => run(() => onArchive(target, archived)));
  const archived = archivedSchedules(data.records);
+ const deletion = useScheduleDeletion(data, onDelete);
  const skip = (item: RecurringItem) => run(() => save('exception', { target_id: item.record.id, date: item.date, skip: true }));
- const row = (item: RecurringItem, dated = false) => <OccurrenceRow key={item.key} item={item} dated={dated} today={today} busy={busy} onEdit={onEdit} onPay={pay} onSkip={skip} onArchive={archive && (() => archive({ source: 'record', record: item.record }))}/>;
+ const row = (item: RecurringItem, dated = false) => <OccurrenceRow key={item.key} item={item} dated={dated} today={today} busy={busy} onEdit={onEdit} onPay={pay} onSkip={skip} onArchive={archive && (() => archive({ source: 'record', record: item.record }))} onDelete={deletion.open}/>;
  return <>
   <PageHeader title={t('Recurring')} tabs={<Segmented className="page-tabs" as="nav" label={t('Recurring view')} options={[{ value: 'list', label: t('List') }, { value: 'calendar', label: t('Calendar') }, { value: 'subscriptions', label: t('Subscriptions') }, { value: 'reminders', label: t('Reminders') }] as const} value={view} onChange={onView}/>} hint={<><p>{t('Every scheduled income and bill, month by month. Record a payment only after it happens; a reminder never moves money.')}</p><p>{t('Debt amounts show the outstanding balance; enter the actual principal and interest when paying.')}</p></>}>
    {scheduled && <div className="budget-month-nav">
@@ -74,7 +78,7 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
     <Button variant="outline" size="icon" aria-label={t('Next month')} onClick={() => setMonth(shiftMonth(month, 1))}><ChevronRight size={16}/></Button>
     <Button variant="outline" disabled={month === today.slice(0, 7)} onClick={() => setMonth(today.slice(0, 7))}>{t('Today')}</Button>
    </div>}
-   {/* A new schedule opens the usual income or expense form, already repeating monthly. */}
+   {/* Adding opens the usual income or expense form as a one-time entry, so its cash account can be chosen; Repeats makes it a schedule. */}
    {onAdd && <><Button variant="outline" onClick={() => onAdd('income')}><Plus size={17} aria-hidden="true"/>{t('Add income')}</Button><Button onClick={() => onAdd('expense')}><Plus size={17} aria-hidden="true"/>{t('Add expense')}</Button></>}
   </PageHeader>
   <ErrorPopup message={error}/>
@@ -92,7 +96,7 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
      {item.date !== shown[index - 1]?.date && <li className="transaction-day-heading"><h3>{formatDate(item.date, locale)}</h3></li>}
      {row(item)}
     </Fragment>)}
-    <PlanRows plans={shownPlans} onSpend={onSpend} onArchive={archive && (plan => archive({ source: 'plan', plan }))}/>
+    <PlanRows plans={shownPlans} onSpend={onSpend} onArchive={archive && (plan => archive({ source: 'plan', plan }))} onDelete={deletion.open}/>
    </ul> : <EmptyState icon={<Repeat aria-hidden="true"/>} description={t('Nothing is scheduled this month. Add a monthly or weekly income or expense to see it here.')}/>}
   </section> : <RecurringCalendar month={month} items={shown} reminders={reminders} today={today}/>}
   {/* Only when a debt payment or deposit maturity is due this month; an empty card is just noise. */}
@@ -111,6 +115,7 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
   {skipped.length > 0 && <details className="panel tools-panel"><summary>{t('Skipped occurrences')}<Count value={skipped.length}/></summary><ul className="tool-list">{skipped.map(o => <li key={o.id}><span>{data.records.find(r => r.id === o.record_id)?.name} · {formatDate(o.due_on, locale)}{o.notes && <> · {o.notes}</>}</span><Button size="sm" disabled={busy} variant="outline" onClick={() => run(() => save('exception', { target_id: o.record_id, date: o.due_on, skip: false }))}>{t('Restore occurrence')}</Button></li>)}</ul></details>}
   {archive && <ArchivedFold records={archived} plans={archivedPlans} busy={busy} onRestore={target => archive(target, false)}/>}
   </>}
+  {deletion.dialog}
   {operation && <AccountOperation operation={operation} records={data.records} save={save} onClose={() => setOperation(null)}/>}
  </>;
 }

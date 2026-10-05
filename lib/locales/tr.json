@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "Vade tarihi borç verme tarihinden önce olamaz.",
   "Check the end date.": "Bitiş tarihini kontrol edin.",
   "Open from earlier months": "Önceki aylardan açık kalanlar",
-  "You can record it from {date}.": "Bunu {date} tarihinden itibaren kaydedebilirsiniz."
+  "You can record it from {date}.": "Bunu {date} tarihinden itibaren kaydedebilirsiniz.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Kaydedilen ödemeler: {count}. Geçmişte tutulsun mu, yoksa onlar da silinsin mi? Silmek hesap bakiyelerini de geri alır. Her şeyi Son silinenler’den geri yükleyebilirsiniz.",
+  "It moves to Recently deleted, where you can restore it.": "Son silinenler’e taşınır; oradan geri yükleyebilirsiniz.",
+  "Delete, keep history": "Sil, geçmişi tut",
+  "Delete with history": "Geçmişiyle sil",
+  "Could not delete this schedule. Please try again.": "Bu plan silinemedi. Tekrar deneyin.",
+  "Only repeating income and expenses are deleted here.": "Burada yalnızca tekrarlayan gelir ve giderler silinir."
 }

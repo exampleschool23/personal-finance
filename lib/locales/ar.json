@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "يجب ألا يسبق تاريخ الاستحقاق تاريخ الإقراض.",
   "Check the end date.": "تحقق من تاريخ الانتهاء.",
   "Open from earlier months": "مفتوحة من الأشهر السابقة",
-  "You can record it from {date}.": "يمكنك تسجيلها اعتبارًا من {date}."
+  "You can record it from {date}.": "يمكنك تسجيلها اعتبارًا من {date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "المدفوعات المسجلة له: {count}. هل تبقيها في السجل أم تحذفها أيضًا؟ حذفها يعكس أيضًا أرصدة حساباتها. يمكنك استعادة كل شيء من المحذوفات الأخيرة.",
+  "It moves to Recently deleted, where you can restore it.": "ينتقل إلى المحذوفات الأخيرة، حيث يمكنك استعادته.",
+  "Delete, keep history": "حذف مع إبقاء السجل",
+  "Delete with history": "حذف مع السجل",
+  "Could not delete this schedule. Please try again.": "تعذّر حذف هذا الجدول. حاول مرة أخرى.",
+  "Only repeating income and expenses are deleted here.": "يُحذف هنا الدخل والمصروفات المتكررة فقط."
 }

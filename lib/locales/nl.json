@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "De vervaldatum mag niet vóór de uitleendatum liggen.",
   "Check the end date.": "Controleer de einddatum.",
   "Open from earlier months": "Nog open uit eerdere maanden",
-  "You can record it from {date}.": "Je kunt het vanaf {date} vastleggen."
+  "You can record it from {date}.": "Je kunt het vanaf {date} vastleggen.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Geregistreerde betalingen: {count}. In je geschiedenis houden of ook verwijderen? Verwijderen draait ook de saldi van hun rekeningen terug. Alles is te herstellen vanuit Onlangs verwijderd.",
+  "It moves to Recently deleted, where you can restore it.": "Het gaat naar Onlangs verwijderd, waar je het kunt herstellen.",
+  "Delete, keep history": "Verwijderen, geschiedenis houden",
+  "Delete with history": "Verwijderen met geschiedenis",
+  "Could not delete this schedule. Please try again.": "Deze planning kon niet worden verwijderd. Probeer het opnieuw.",
+  "Only repeating income and expenses are deleted here.": "Hier worden alleen terugkerende inkomsten en uitgaven verwijderd."
 }

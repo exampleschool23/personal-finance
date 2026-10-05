@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "La fecha de vencimiento no puede ser anterior a la fecha del préstamo.",
   "Check the end date.": "Revisa la fecha de finalización.",
   "Open from earlier months": "Pendientes de meses anteriores",
-  "You can record it from {date}.": "Puedes registrarlo a partir del {date}."
+  "You can record it from {date}.": "Puedes registrarlo a partir del {date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Pagos registrados: {count}. ¿Mantenerlos en tu historial o eliminarlos también? Eliminarlos también revierte los saldos de sus cuentas. Puedes restaurarlo todo desde Eliminados recientemente.",
+  "It moves to Recently deleted, where you can restore it.": "Pasa a Eliminados recientemente, donde puedes restaurarlo.",
+  "Delete, keep history": "Eliminar y conservar historial",
+  "Delete with history": "Eliminar con historial",
+  "Could not delete this schedule. Please try again.": "No se pudo eliminar esta programación. Inténtalo de nuevo.",
+  "Only repeating income and expenses are deleted here.": "Aquí solo se eliminan ingresos y gastos recurrentes."
 }

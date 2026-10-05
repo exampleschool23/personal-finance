@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "تاریخ سررسید نباید پیش از تاریخ قرض دادن باشد.",
   "Check the end date.": "تاریخ پایان را بررسی کنید.",
   "Open from earlier months": "باز از ماه‌های قبل",
-  "You can record it from {date}.": "می‌توانید از {date} آن را ثبت کنید."
+  "You can record it from {date}.": "می‌توانید از {date} آن را ثبت کنید.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "پرداخت‌های ثبت‌شده برای آن: {count}. آن‌ها را در تاریخچه نگه می‌دارید یا آن‌ها را هم حذف می‌کنید؟ حذف آن‌ها موجودی حساب‌هایشان را هم برمی‌گرداند. همه‌چیز را می‌توانید از «اخیراً حذف‌شده» بازیابی کنید.",
+  "It moves to Recently deleted, where you can restore it.": "به «اخیراً حذف‌شده» منتقل می‌شود و می‌توانید آن را بازیابی کنید.",
+  "Delete, keep history": "حذف، با حفظ تاریخچه",
+  "Delete with history": "حذف همراه با تاریخچه",
+  "Could not delete this schedule. Please try again.": "حذف این برنامه ممکن نشد. دوباره تلاش کنید.",
+  "Only repeating income and expenses are deleted here.": "اینجا فقط درآمدها و هزینه‌های تکراری حذف می‌شوند."
 }

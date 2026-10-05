@@ -3,7 +3,9 @@ import type { Dispatch, SetStateAction } from 'react';
 import { requestJson } from '@/lib/api-client';
 import { showSaved } from '@/lib/feedback';
 import type { Entry } from '@/lib/finance';
-import type { ArchiveTarget } from '@/lib/recurring';
+import { applyRecordChange } from '@/lib/record-balance';
+import { scheduleHistory, type ArchiveTarget } from '@/lib/recurring';
+import type { Occurrence } from '@/lib/planning';
 import type { ExpensePlan } from '@/lib/expense-plans';
 
 /** Archiving on Recurring. In the sample workspace it changes the local copies; signed in, it is sent and everything is read again. */
@@ -19,4 +21,30 @@ export function useArchive({ demo, setRows, restoreDemoPlan, refreshRecords }: {
   showSaved();
  }
  return archive;
+}
+
+type DeleteInput = { demo: boolean; rows: Entry[]; setRows: Dispatch<SetStateAction<Entry[]>>; occurrences: Occurrence[]; bin: { binRecord: (record: Entry) => void; binPlan: (plan: ExpensePlan) => void }; dropDemoPlan: (id: string) => void; refreshRecords: () => void };
+
+/** Deleting on Recurring: the schedule or plan moves to Recently deleted, and its recorded payments stay in history or go with it.
+ * In the sample workspace the local copies change the same way, reversing the cash of each payment deleted. */
+export function useDeleteSchedule({ demo, rows, setRows, occurrences, bin, dropDemoPlan, refreshRecords }: DeleteInput) {
+ async function deleteSchedule(target: ArchiveTarget, removeHistory: boolean) {
+  if (demo) {
+   const history = new Set(scheduleHistory(target, rows, occurrences));
+   let next = rows;
+   for (const row of rows) {
+    if (!history.has(row.id)) continue;
+    if (removeHistory) { bin.binRecord(row); next = applyRecordChange(next, row); }
+    else if (target.source === 'plan') next = next.map(item => item.id === row.id ? { ...item, expense_plan_id: null } : item);
+   }
+   if (target.source === 'plan') { bin.binPlan(target.plan); dropDemoPlan(target.plan.id); }
+   else { const original = next.find(row => row.id === target.record.id) ?? target.record; bin.binRecord(original); next = applyRecordChange(next, original); }
+   setRows(next);
+  } else {
+   await requestJson('/api/planning', { body: { action: 'delete_schedule', data: { source: target.source, id: target.source === 'plan' ? target.plan.id : target.record.id, remove_history: removeHistory } } });
+   refreshRecords();
+  }
+  showSaved();
+ }
+ return deleteSchedule;
 }

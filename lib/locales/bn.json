@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "পরিশোধের তারিখ ধার দেওয়ার তারিখের আগে হতে পারে না।",
   "Check the end date.": "শেষ তারিখ যাচাই করুন।",
   "Open from earlier months": "আগের মাস থেকে বাকি",
-  "You can record it from {date}.": "আপনি {date} থেকে এটি রেকর্ড করতে পারবেন।"
+  "You can record it from {date}.": "আপনি {date} থেকে এটি রেকর্ড করতে পারবেন।",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "এর জন্য রেকর্ড করা পেমেন্ট: {count}। এগুলো ইতিহাসে রাখবেন, নাকি এগুলোও মুছবেন? মুছলে এদের অ্যাকাউন্ট ব্যালান্সও ফিরিয়ে দেওয়া হয়। সাম্প্রতিক মুছে ফেলা থেকে সবকিছু পুনরুদ্ধার করতে পারবেন।",
+  "It moves to Recently deleted, where you can restore it.": "এটি সাম্প্রতিক মুছে ফেলায় যাবে, সেখান থেকে পুনরুদ্ধার করতে পারবেন।",
+  "Delete, keep history": "মুছুন, ইতিহাস রাখুন",
+  "Delete with history": "ইতিহাসসহ মুছুন",
+  "Could not delete this schedule. Please try again.": "এই সময়সূচি মোছা যায়নি। আবার চেষ্টা করুন।",
+  "Only repeating income and expenses are deleted here.": "এখানে শুধু পুনরাবৃত্ত আয় ও খরচ মোছা যায়।"
 }

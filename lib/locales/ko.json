@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "만기일은 빌려준 날짜보다 앞설 수 없습니다.",
   "Check the end date.": "종료일을 확인하세요.",
   "Open from earlier months": "이전 달에서 남은 항목",
-  "You can record it from {date}.": "{date}부터 기록할 수 있습니다."
+  "You can record it from {date}.": "{date}부터 기록할 수 있습니다.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "기록된 결제: {count}건. 내역에 남길까요, 함께 삭제할까요? 삭제하면 계좌 잔액도 되돌려집니다. 모두 최근 삭제된 항목에서 복원할 수 있습니다.",
+  "It moves to Recently deleted, where you can restore it.": "최근 삭제된 항목으로 이동하며, 거기서 복원할 수 있습니다.",
+  "Delete, keep history": "삭제하고 내역 유지",
+  "Delete with history": "내역과 함께 삭제",
+  "Could not delete this schedule. Please try again.": "이 일정을 삭제할 수 없습니다. 다시 시도하세요.",
+  "Only repeating income and expenses are deleted here.": "여기서는 반복 수입과 지출만 삭제됩니다."
 }

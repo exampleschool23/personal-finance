@@ -16,6 +16,8 @@ export const planningSchemas={
  dismiss:z.object({id,target_id:id,date}),
  // An income, bill or spending plan leaves Recurring (archived) or comes back.
  archive:z.object({source:z.enum(['record','plan']),id,archived:z.boolean()}),
+ // An income, bill or spending plan moves to Recently deleted, with or without the payments recorded against it.
+ delete_schedule:z.object({source:z.enum(['record','plan']),id,remove_history:z.boolean()}),
  delete_goal:z.object({id}),
  category:z.object({id,name:z.string().trim().min(1).max(80),direction:z.enum(['income','expense'])}),
  goal:z.object({investment_targets:z.array(investmentTarget).max(50).optional(),id,name:z.string().trim().min(1).max(120),account_id:id.nullable(),kind:z.enum(['savings','net_worth','investment']).default('savings'),currency:fiatCurrency.optional(),target:amount.positive(),allocated:amount,target_date:date.nullable(),archived:z.boolean().default(false),monthly_contribution:amount.nullable().default(null),annual_return:z.number().finite().min(0).max(100).default(0),holding_account_id:id.nullable().default(null),asset_kind:z.enum(['Stock','Crypto']).nullable().default(null),asset_symbol:z.string().trim().max(15).nullable().default(null)}).transform(v=>v.kind==='investment'&&v.investment_targets?.length?{...v,...v.investment_targets[0]}:v).refine(v=>{

@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "Termin spłaty nie może być wcześniejszy niż data pożyczki.",
   "Check the end date.": "Sprawdź datę zakończenia.",
   "Open from earlier months": "Otwarte z poprzednich miesięcy",
-  "You can record it from {date}.": "Możesz to zapisać od {date}."
+  "You can record it from {date}.": "Możesz to zapisać od {date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Zarejestrowane płatności: {count}. Zachować je w historii czy też usunąć? Usunięcie cofa również salda ich kont. Wszystko można przywrócić z Ostatnio usuniętych.",
+  "It moves to Recently deleted, where you can restore it.": "Trafi do Ostatnio usuniętych, skąd możesz go przywrócić.",
+  "Delete, keep history": "Usuń, zachowaj historię",
+  "Delete with history": "Usuń z historią",
+  "Could not delete this schedule. Please try again.": "Nie udało się usunąć harmonogramu. Spróbuj ponownie.",
+  "Only repeating income and expenses are deleted here.": "Tutaj usuwa się tylko cykliczne przychody i wydatki."
 }

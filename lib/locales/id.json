@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "Tanggal jatuh tempo tidak boleh sebelum tanggal peminjaman.",
   "Check the end date.": "Periksa tanggal berakhir.",
   "Open from earlier months": "Masih terbuka dari bulan sebelumnya",
-  "You can record it from {date}.": "Anda dapat mencatatnya mulai {date}."
+  "You can record it from {date}.": "Anda dapat mencatatnya mulai {date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Pembayaran yang tercatat: {count}. Simpan di riwayat, atau hapus juga? Menghapusnya juga mengembalikan saldo akunnya. Semua bisa dipulihkan dari Baru dihapus.",
+  "It moves to Recently deleted, where you can restore it.": "Ini dipindahkan ke Baru dihapus, tempat Anda bisa memulihkannya.",
+  "Delete, keep history": "Hapus, simpan riwayat",
+  "Delete with history": "Hapus beserta riwayat",
+  "Could not delete this schedule. Please try again.": "Jadwal ini tidak dapat dihapus. Coba lagi.",
+  "Only repeating income and expenses are deleted here.": "Di sini hanya pemasukan dan pengeluaran berulang yang dihapus."
 }

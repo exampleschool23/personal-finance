@@ -85,3 +85,112 @@ test('archiving changes the sample copies locally and sends signed-in changes be
  assert.deepEqual(sent, [['/api/planning', { action: 'archive', data: { source: 'plan', id: 'g', archived: false } }]]);
  assert.deepEqual([refreshed, saved.length], [1, 3]);
 });
+
+test('Delete sits last in a schedule\'s and a plan\'s menu, marked destructive, only where deleting is offered', () => {
+ const calls = [];
+ const view = mount(OccurrenceRow, { item: item('paid', { recorded: 900 }), dated: false, today: '2026-10-05', busy: false, onPay() {}, onSkip() {}, onArchive: () => calls.push('archive'), onDelete: target => calls.push(target.source + ' ' + target.record.id) });
+ const items = view.find(byType(RowMenu)).props.items;
+ assert.deepEqual(items.map(entry => [entry.label, !!entry.destructive]), [['Archive', false], ['Delete', true]]);
+ items[1].onSelect();
+ const busy = mount(OccurrenceRow, { item: item('due'), dated: false, today: '2026-10-05', busy: true, onPay() {}, onSkip() {}, onDelete() {} });
+ assert.equal(busy.find(byType(RowMenu)).props.items.at(-1).disabled, true, 'not while something is saving');
+ const plan = { id: 'g', name: 'Groceries', category: 'Groceries', currency: 'USD', amount: 400 };
+ const plans = mount(PlanRows, { plans: [{ plan, planned: 400, spent: 0 }], onDelete: target => calls.push(target.source + ' ' + target.plan.id) });
+ const planItems = plans.find(byType(RowMenu)).props.items;
+ assert.deepEqual(planItems.map(entry => entry.label), ['Delete'], 'Delete alone when archiving is not offered');
+ planItems[0].onSelect();
+ assert.deepEqual(calls, ['record rent', 'plan g']);
+ assert.equal(mount(PlanRows, { plans: [{ plan, planned: 400, spent: 0 }] }).all(byType(RowMenu)).length, 0, 'a read-only list has no menu');
+});
+
+test('the delete dialog asks about history only when payments were recorded, and stays open on a refusal', async () => {
+ const h = React.createElement, named = (name, render) => Object.assign(render, { displayName: name });
+ const alert = {
+  AlertDialog: named('AlertDialog', ({ open, children }) => open ? h('section', null, children) : null),
+  AlertDialogContent: named('AlertDialogContent', ({ children }) => h('div', null, children)),
+  AlertDialogTitle: named('AlertDialogTitle', ({ children }) => h('h2', null, children)),
+  AlertDialogDescription: named('AlertDialogDescription', ({ children }) => h('p', null, children)),
+  AlertDialogFooter: named('AlertDialogFooter', ({ children }) => h('footer', null, children)),
+  AlertDialogCancel: named('AlertDialogCancel', ({ children, disabled }) => h('button', { disabled, 'data-cancel': true }, children)),
+  AlertDialogAction: named('AlertDialogAction', ({ children, disabled, onClick, className, variant }) => h('button', { disabled, onClick, className, 'data-variant': variant }, children)),
+ };
+ const { DeleteScheduleDialog } = r.load('components/planning/delete-schedule-dialog.tsx', { ...ui.modules, '@/components/ui/alert-dialog': alert });
+ const choices = [], closed = [];
+ let refuse = false;
+ const props = history => ({ target: { source: 'record', record: rent }, history, onClose: () => closed.push(true), onDelete: async removeHistory => { if (refuse) throw Error('Only repeating income and expenses are deleted here.'); choices.push(removeHistory); } });
+ const actions = () => r.all(node => node.type === 'button' && !node.props['data-cancel']);
+ const press = label => r.fireAsync(actions().find(node => text(node) === label), 'onClick', { preventDefault() {} });
+
+ mount(DeleteScheduleDialog, props(0));
+ assert.match(text(r.tree), /Delete Rent\?It moves to Recently deleted, where you can restore it\./);
+ assert.deepEqual(actions().map(text), ['Delete']);
+ await press('Delete');
+ assert.deepEqual([choices, closed.length], [[false], 1], 'nothing recorded: the schedule alone goes');
+
+ mount(DeleteScheduleDialog, props(3));
+ assert.match(text(r.tree), /Payments recorded for it: 3\. Keep them in your history, or delete them too\?/);
+ assert.deepEqual(actions().map(node => [text(node), node.props['data-variant']]), [['Delete, keep history', 'outline'], ['Delete with history', 'default']]);
+ assert.match(actions()[1].props.className, /destructive/);
+ await press('Delete, keep history');
+ await press('Delete with history');
+ assert.deepEqual(choices, [false, false, true]);
+
+ refuse = true;
+ mount(DeleteScheduleDialog, props(1));
+ const before = closed.length;
+ await press('Delete with history');
+ assert.equal(closed.length, before, 'a refusal keeps the dialog open to retry');
+ assert.equal(r.find(byType(ui.ErrorPopup)).props.message, 'Only repeating income and expenses are deleted here.');
+ mount(DeleteScheduleDialog, { ...props(1), target: null });
+ assert.equal(text(r.tree), '', 'closed without a target');
+ // The page's hook opens the question for the tapped schedule and counts its payments from the loaded data.
+ const { useScheduleDeletion } = r.load('components/planning/delete-schedule-dialog.tsx', { ...ui.modules, '@/components/ui/alert-dialog': alert });
+ const data = { records: [rent, { id: 'p2', occurrence_record_id: 'rent' }], occurrences: [{ id: 'o1', record_id: 'rent', due_on: '2026-09-01', status: 'paid', transaction_id: 'p1' }] };
+ const deleted = [];
+ let deletion;
+ const Page = ({ onDelete }) => { deletion = useScheduleDeletion(data, onDelete); return h('main', null, deletion.dialog); };
+ mount(Page, { onDelete: async (target, removeHistory) => { deleted.push([target.record.id, removeHistory]); } });
+ assert.equal(text(r.tree), '', 'nothing asked until a row is chosen');
+ deletion.open({ source: 'record', record: rent }); r.update();
+ assert.match(text(r.tree), /Payments recorded for it: 2\./);
+ await press('Delete with history');
+ assert.deepEqual([deleted, text(r.tree)], [[['rent', true]], ''], 'the dialog closes after deleting');
+ mount(Page, {});
+ assert.deepEqual([deletion.open, deletion.dialog], [undefined, undefined], 'a read-only page offers no Delete');
+});
+
+test('deleting a schedule changes the sample copies, reversing deleted payments, and sends signed-in deletes before reading again', async () => {
+ const sent = [], saved = [];
+ const { useDeleteSchedule: deleteScheduleWith } = loadTS('components/workspace/state/use-archive.ts', {
+  '@/lib/api-client': { requestJson: async (url, options) => { sent.push([url, options.body]); } },
+  '@/lib/feedback': { showSaved: () => saved.push(true) },
+ });
+ const cash = { id: 'cash', name: 'Cash', kind: 'Cash', currency: 'USD', amount: 1000, frequency: 'Once', date: '2026-01-01' };
+ const paid = { id: 'p1', name: 'Rent', kind: 'Rent expense', currency: 'USD', amount: 900, frequency: 'Once', date: '2026-10-01', account_id: 'cash' };
+ const extra = { ...paid, id: 'p2', amount: 50, occurrence_record_id: 'rent', occurrence_due_on: '2026-10-01' };
+ const food = { ...paid, id: 'f1', name: 'Food', kind: 'Living expense', amount: 100, account_id: null, expense_plan_id: 'g' };
+ const occurrences = [{ id: 'o1', record_id: 'rent', due_on: '2026-10-01', status: 'paid', transaction_id: 'p1' }];
+ const run = async (target, removeHistory) => {
+  let rows = [cash, rent, paid, extra, food];
+  const binned = [], dropped = [];
+  const remove = deleteScheduleWith({ demo: true, rows, setRows: next => { rows = next; }, occurrences, bin: { binRecord: row => binned.push(row.id), binPlan: plan => binned.push('plan ' + plan.id) }, dropDemoPlan: id => dropped.push(id), refreshRecords() { throw Error('no reads in the sample'); } });
+  await remove(target, removeHistory);
+  return { ids: rows.map(row => row.id), cash: rows.find(row => row.id === 'cash').amount, food: rows.find(row => row.id === 'f1'), binned, dropped };
+ };
+ const kept = await run({ source: 'record', record: rent }, false);
+ assert.deepEqual([kept.ids, kept.binned], [['cash', 'p1', 'p2', 'f1'], ['rent']], 'payments stay');
+ const removed = await run({ source: 'record', record: rent }, true);
+ assert.deepEqual([removed.ids, removed.binned], [['cash', 'f1'], ['p1', 'p2', 'rent']]);
+ assert.equal(removed.cash, kept.cash + 950, 'both payments are reversed');
+ const plan = { id: 'g', name: 'Food', category: 'Groceries', currency: 'USD', amount: 400 };
+ const unlinked = await run({ source: 'plan', plan }, false);
+ assert.deepEqual([unlinked.food.expense_plan_id, unlinked.binned, unlinked.dropped], [null, ['plan g'], ['g']]);
+ assert.equal((await run({ source: 'plan', plan }, true)).food, undefined);
+
+ let refreshed = 0;
+ const live = deleteScheduleWith({ demo: false, rows: [], setRows() { throw Error('signed in, the server decides'); }, occurrences: [], bin: {}, dropDemoPlan() {}, refreshRecords: () => refreshed++ });
+ await live({ source: 'record', record: rent }, true);
+ await live({ source: 'plan', plan }, false);
+ assert.deepEqual(sent, [['/api/planning', { action: 'delete_schedule', data: { source: 'record', id: 'rent', remove_history: true } }], ['/api/planning', { action: 'delete_schedule', data: { source: 'plan', id: 'g', remove_history: false } }]]);
+ assert.deepEqual([refreshed, saved.length], [2, 6]);
+});

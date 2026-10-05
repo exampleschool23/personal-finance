@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "واجب الادا تاریخ قرض دینے کی تاریخ سے پہلے نہیں ہو سکتی۔",
   "Check the end date.": "اختتامی تاریخ چیک کریں۔",
   "Open from earlier months": "پچھلے مہینوں سے باقی",
-  "You can record it from {date}.": "آپ اسے {date} سے درج کر سکتے ہیں۔"
+  "You can record it from {date}.": "آپ اسے {date} سے درج کر سکتے ہیں۔",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "اس کے لیے درج ادائیگیاں: {count}۔ انہیں تاریخ میں رکھیں یا انہیں بھی حذف کریں؟ حذف کرنے سے ان کے اکاؤنٹ بیلنس بھی واپس ہو جاتے ہیں۔ سب کچھ حال ہی میں حذف شدہ سے بحال کیا جا سکتا ہے۔",
+  "It moves to Recently deleted, where you can restore it.": "یہ حال ہی میں حذف شدہ میں چلا جائے گا، جہاں سے آپ اسے بحال کر سکتے ہیں۔",
+  "Delete, keep history": "حذف کریں، تاریخ رکھیں",
+  "Delete with history": "تاریخ سمیت حذف کریں",
+  "Could not delete this schedule. Please try again.": "یہ شیڈول حذف نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
+  "Only repeating income and expenses are deleted here.": "یہاں صرف بار بار ہونے والی آمدنی اور اخراجات حذف ہوتے ہیں۔"
 }

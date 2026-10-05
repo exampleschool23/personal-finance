@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "תאריך הפירעון לא יכול להקדים את תאריך ההלוואה.",
   "Check the end date.": "בדקו את תאריך הסיום.",
   "Open from earlier months": "פתוחים מחודשים קודמים",
-  "You can record it from {date}.": "אפשר לרשום אותו החל מ-{date}."
+  "You can record it from {date}.": "אפשר לרשום אותו החל מ-{date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "תשלומים שנרשמו עבורו: {count}. להשאיר אותם בהיסטוריה או למחוק גם אותם? מחיקתם גם מחזירה את יתרות החשבונות שלהם. אפשר לשחזר הכול מ\"נמחקו לאחרונה\".",
+  "It moves to Recently deleted, where you can restore it.": "הוא יועבר ל\"נמחקו לאחרונה\", ומשם אפשר לשחזר אותו.",
+  "Delete, keep history": "מחיקה, השארת ההיסטוריה",
+  "Delete with history": "מחיקה כולל ההיסטוריה",
+  "Could not delete this schedule. Please try again.": "לא ניתן היה למחוק את התזמון. נסו שוב.",
+  "Only repeating income and expenses are deleted here.": "כאן נמחקות רק הכנסות והוצאות חוזרות."
 }

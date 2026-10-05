@@ -10,10 +10,11 @@ import { applyRecordChange } from '@/lib/record-balance';
 export function useDemoBin({ demo, rows, setRows, expensePlans }: { demo: boolean; rows: Entry[]; setRows: Dispatch<SetStateAction<Entry[]>>; expensePlans: { plans: ExpensePlan[]; remove: (id: string) => Promise<void>; restoreDemo: (plan: ExpensePlan) => void } }) {
     const [deletedItems,setDeletedItems]=useState<DeletedItem[]>([]);
     const binRecord = (original: Entry) => setDeletedItems(prev=>[{id:crypto.randomUUID(),source:'finance_records',data:original,deleted_at:new Date().toISOString()},...prev]);
+    const binPlan = (plan: ExpensePlan) => setDeletedItems(prev=>[{id:crypto.randomUUID(),source:'expense_plans',data:plan,deleted_at:new Date().toISOString()},...prev]);
     async function removePlan(id:string) {
         const plan=expensePlans.plans.find(plan=>plan.id===id);
         await expensePlans.remove(id);
-        if(demo&&plan)setDeletedItems(prev=>[{id:crypto.randomUUID(),source:'expense_plans',data:plan,deleted_at:new Date().toISOString()},...prev]);
+        if(demo&&plan)binPlan(plan);
     }
     function restoreDemoItem(item:DeletedItem) {
         if(item.source==='expense_plans')expensePlans.restoreDemo(item.data);
@@ -29,5 +30,5 @@ export function useDemoBin({ demo, rows, setRows, expensePlans }: { demo: boolea
     }
     const discardDeletedItem = (item: DeletedItem) => setDeletedItems(items => items.filter(existing => existing.id !== item.id));
     const emptyBin = () => setDeletedItems([]);
-    return { deletedItems, binRecord, removePlan, restoreDemoItem, discardDeletedItem, emptyBin };
+    return { deletedItems, binRecord, binPlan, removePlan, restoreDemoItem, discardDeletedItem, emptyBin };
 }

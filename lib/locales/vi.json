@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "Ngày đến hạn không được trước ngày cho vay.",
   "Check the end date.": "Kiểm tra ngày kết thúc.",
   "Open from earlier months": "Còn mở từ các tháng trước",
-  "You can record it from {date}.": "Bạn có thể ghi nhận từ {date}."
+  "You can record it from {date}.": "Bạn có thể ghi nhận từ {date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Khoản thanh toán đã ghi: {count}. Giữ chúng trong lịch sử, hay xóa luôn? Xóa cũng hoàn lại số dư tài khoản của chúng. Bạn có thể khôi phục mọi thứ từ Đã xóa gần đây.",
+  "It moves to Recently deleted, where you can restore it.": "Mục này chuyển vào Đã xóa gần đây, nơi bạn có thể khôi phục.",
+  "Delete, keep history": "Xóa, giữ lịch sử",
+  "Delete with history": "Xóa cùng lịch sử",
+  "Could not delete this schedule. Please try again.": "Không thể xóa lịch này. Hãy thử lại.",
+  "Only repeating income and expenses are deleted here.": "Ở đây chỉ xóa thu nhập và chi tiêu định kỳ."
 }

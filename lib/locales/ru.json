@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "Срок возврата не может быть раньше даты выдачи займа.",
   "Check the end date.": "Проверьте дату окончания.",
   "Open from earlier months": "Не закрыто с прошлых месяцев",
-  "You can record it from {date}.": "Записать платёж можно с {date}."
+  "You can record it from {date}.": "Записать платёж можно с {date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Записано платежей: {count}. Оставить их в истории или удалить тоже? Удаление также вернёт балансы их счетов. Всё можно восстановить из «Недавно удалённых».",
+  "It moves to Recently deleted, where you can restore it.": "Он попадёт в «Недавно удалённые», откуда его можно восстановить.",
+  "Delete, keep history": "Удалить, сохранить историю",
+  "Delete with history": "Удалить вместе с историей",
+  "Could not delete this schedule. Please try again.": "Не удалось удалить расписание. Попробуйте ещё раз.",
+  "Only repeating income and expenses are deleted here.": "Здесь удаляются только регулярные доходы и расходы."
 }

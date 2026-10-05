@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "Data scadenței nu poate preceda data împrumutului.",
   "Check the end date.": "Verificați data de încheiere.",
   "Open from earlier months": "Deschise din lunile anterioare",
-  "You can record it from {date}.": "O puteți înregistra începând cu {date}."
+  "You can record it from {date}.": "O puteți înregistra începând cu {date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Plăți înregistrate: {count}. Le păstrezi în istoric sau le ștergi și pe ele? Ștergerea anulează și soldurile conturilor lor. Poți restaura totul din Șterse recent.",
+  "It moves to Recently deleted, where you can restore it.": "Se mută în Șterse recent, de unde îl poți restaura.",
+  "Delete, keep history": "Șterge, păstrează istoricul",
+  "Delete with history": "Șterge cu istoric",
+  "Could not delete this schedule. Please try again.": "Programarea nu a putut fi ștearsă. Încearcă din nou.",
+  "Only repeating income and expenses are deleted here.": "Aici se șterg doar veniturile și cheltuielile recurente."
 }

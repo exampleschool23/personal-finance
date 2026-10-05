@@ -44,10 +44,12 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
   if(rows.some(r=>r.expense_plan_id===plan.id&&(r.currency!==plan.currency||r.date<plan.start_date||(plan.end_date&&r.date>plan.end_date))))throw Error('Keep the currency and dates compatible with recorded spending.');
   setDemoPlans(prev=>[...prev.filter(p=>p.id!==plan.id),plan]);
  }
+ /** Drops a sample plan whose spending was already kept or deleted. */
+ function dropDemo(id:string){setDemoPlans(prev=>prev.filter(p=>p.id!==id));}
  async function remove(id:string) {
   if(demo){if(rows.some(r=>r.expense_plan_id===id))throw Error('This plan has spending. Set an end date instead of deleting it.');setDemoPlans(prev=>prev.filter(p=>p.id!==id));}
   else await requestJson('/api/expense-plans',{method:'DELETE',body:{id}});
   onSaved();
  }
- return {seedDemo,restoreDemo,plans,archivedPlans,month,loading:!!user&&!demo&&loadedScope!==scope,refreshing:!!user&&!demo&&loading,error:!demo&&user&&loadedScope===scope?error:'',save,remove};
+ return {seedDemo,restoreDemo,dropDemo,plans,archivedPlans,month,loading:!!user&&!demo&&loadedScope!==scope,refreshing:!!user&&!demo&&loading,error:!demo&&user&&loadedScope===scope?error:'',save,remove};
 }

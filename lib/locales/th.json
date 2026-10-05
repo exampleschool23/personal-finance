@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "วันครบกำหนดต้องไม่อยู่ก่อนวันที่ให้ยืม",
   "Check the end date.": "ตรวจสอบวันที่สิ้นสุด",
   "Open from earlier months": "ค้างจากเดือนก่อนหน้า",
-  "You can record it from {date}.": "บันทึกได้ตั้งแต่ {date}"
+  "You can record it from {date}.": "บันทึกได้ตั้งแต่ {date}",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "การชำระเงินที่บันทึกไว้: {count} รายการ เก็บไว้ในประวัติ หรือลบด้วย? การลบจะคืนยอดคงเหลือในบัญชีด้วย คุณกู้คืนทุกอย่างได้จากรายการที่ลบล่าสุด",
+  "It moves to Recently deleted, where you can restore it.": "จะย้ายไปที่รายการที่ลบล่าสุด ซึ่งคุณกู้คืนได้",
+  "Delete, keep history": "ลบ แต่เก็บประวัติ",
+  "Delete with history": "ลบพร้อมประวัติ",
+  "Could not delete this schedule. Please try again.": "ลบกำหนดการนี้ไม่ได้ ลองอีกครั้ง",
+  "Only repeating income and expenses are deleted here.": "ที่นี่ลบได้เฉพาะรายรับและรายจ่ายที่เกิดซ้ำ"
 }

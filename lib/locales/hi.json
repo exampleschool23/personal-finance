@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "देय तिथि उधार देने की तिथि से पहले नहीं हो सकती।",
   "Check the end date.": "समाप्ति तिथि जाँचें।",
   "Open from earlier months": "पिछले महीनों से बाकी",
-  "You can record it from {date}.": "आप इसे {date} से दर्ज कर सकते हैं।"
+  "You can record it from {date}.": "आप इसे {date} से दर्ज कर सकते हैं।",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "इसके लिए दर्ज भुगतान: {count}। इन्हें इतिहास में रखें, या इन्हें भी हटाएँ? हटाने पर इनके खातों की शेष राशि भी वापस हो जाती है। सब कुछ हाल ही में हटाए गए से वापस लाया जा सकता है।",
+  "It moves to Recently deleted, where you can restore it.": "यह हाल ही में हटाए गए में चला जाएगा, जहाँ से आप इसे वापस ला सकते हैं।",
+  "Delete, keep history": "हटाएँ, इतिहास रखें",
+  "Delete with history": "इतिहास सहित हटाएँ",
+  "Could not delete this schedule. Please try again.": "यह शेड्यूल हटाया नहीं जा सका। फिर से कोशिश करें।",
+  "Only repeating income and expenses are deleted here.": "यहाँ केवल आवर्ती आय और खर्च हटाए जाते हैं।"
 }

@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "Tarehe ya kulipa haipaswi kutangulia tarehe ya kukopesha.",
   "Check the end date.": "Kagua tarehe ya mwisho.",
   "Open from earlier months": "Bado wazi kutoka miezi iliyopita",
-  "You can record it from {date}.": "Unaweza kuirekodi kuanzia {date}."
+  "You can record it from {date}.": "Unaweza kuirekodi kuanzia {date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Malipo yaliyorekodiwa: {count}. Yabaki kwenye historia, au yafutwe pia? Kuyafuta pia kunarudisha salio la akaunti zao. Unaweza kurejesha kila kitu kutoka Vilivyofutwa hivi karibuni.",
+  "It moves to Recently deleted, where you can restore it.": "Inahamia Vilivyofutwa hivi karibuni, unapoweza kuirejesha.",
+  "Delete, keep history": "Futa, baki na historia",
+  "Delete with history": "Futa pamoja na historia",
+  "Could not delete this schedule. Please try again.": "Ratiba hii haikuweza kufutwa. Jaribu tena.",
+  "Only repeating income and expenses are deleted here.": "Hapa hufutwa mapato na matumizi yanayojirudia pekee."
 }

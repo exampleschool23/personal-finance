@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "Hindi dapat mauna ang takdang petsa sa petsa ng pagpapautang.",
   "Check the end date.": "Suriin ang petsa ng pagtatapos.",
   "Open from earlier months": "Bukas pa mula sa mga nakaraang buwan",
-  "You can record it from {date}.": "Maitatala mo ito simula {date}."
+  "You can record it from {date}.": "Maitatala mo ito simula {date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Mga bayad na naitala para dito: {count}. Itatago ba sa history, o buburahin din? Ang pagbura ay magbabalik din ng balanse ng kanilang mga account. Maibabalik mo ang lahat mula sa Kamakailang binura.",
+  "It moves to Recently deleted, where you can restore it.": "Mapupunta ito sa Kamakailang binura, kung saan mo ito maibabalik.",
+  "Delete, keep history": "Burahin, itago ang history",
+  "Delete with history": "Burahin kasama ang history",
+  "Could not delete this schedule. Please try again.": "Hindi mabura ang iskedyul na ito. Subukan muli.",
+  "Only repeating income and expenses are deleted here.": "Dito, paulit-ulit na kita at gastos lang ang binubura."
 }

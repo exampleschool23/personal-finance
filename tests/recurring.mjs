@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { monthOccurrences, monthPlans, onlyDirection, archivedSchedules, recurringSummary, daysFrom, calendarWeeks } = loadTS('lib/recurring.ts');
+const { monthOccurrences, monthPlans, scheduleHistory, onlyDirection, archivedSchedules, recurringSummary, daysFrom, calendarWeeks } = loadTS('lib/recurring.ts');
 const { monthly } = loadTS('lib/finance.ts');
 const { planningSchemas } = loadTS('lib/planning-schemas.ts');
 const { upcomingPayments, debtPaymentsFrom } = loadTS('lib/planning.ts');
@@ -133,4 +133,18 @@ test('tapping Income or Expenses keeps only that side; spending plans count as e
  assert.deepEqual(onlyDirection(items, [], plans, 'income').shownPlans, []);
  assert.equal(onlyDirection(items, [], plans, 'expense').shownPlans.length, 1);
  assert.equal(onlyDirection(items, [], plans, null).shown.length, 2);
+});
+
+test('a schedule\'s history is each recorded payment and later payment for it; a plan\'s is its spending', () => {
+ const rent = { id: 'rent', name: 'Rent', kind: 'Rent expense', currency: 'USD', amount: 900, frequency: 'Monthly', date: '2026-01-01' };
+ const records = [rent, { id: 'p2', occurrence_record_id: 'rent' }, { id: 'x', occurrence_record_id: 'other' }, { id: 'f1', expense_plan_id: 'g' }, { id: 'f2', expense_plan_id: 'h' }];
+ const occurrences = [
+  { id: 'o1', record_id: 'rent', due_on: '2026-09-01', status: 'paid', transaction_id: 'p1' },
+  { id: 'o2', record_id: 'rent', due_on: '2026-08-01', status: 'dismissed', transaction_id: null },
+  { id: 'o3', record_id: 'other', due_on: '2026-09-01', status: 'paid', transaction_id: 'q1' },
+  { id: 'o4', record_id: 'rent', due_on: '2026-10-01', status: 'paid', transaction_id: 'p1' },
+ ];
+ assert.deepEqual(scheduleHistory({ source: 'record', record: rent }, records, occurrences), ['p1', 'p2'], 'a skipped month is not history, and nothing counts twice');
+ assert.deepEqual(scheduleHistory({ source: 'plan', plan: { id: 'g' } }, records, occurrences), ['f1']);
+ assert.deepEqual(scheduleHistory({ source: 'record', record: { ...rent, id: 'new' } }, records, occurrences), []);
 });

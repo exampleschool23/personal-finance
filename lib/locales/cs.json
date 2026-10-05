@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "Datum splatnosti nesmí předcházet datu zapůjčení.",
   "Check the end date.": "Zkontrolujte datum ukončení.",
   "Open from earlier months": "Otevřené z předchozích měsíců",
-  "You can record it from {date}.": "Zaznamenat ji můžete od {date}."
+  "You can record it from {date}.": "Zaznamenat ji můžete od {date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Zaznamenané platby: {count}. Ponechat je v historii, nebo je také smazat? Smazání vrátí i zůstatky jejich účtů. Vše můžete obnovit z Nedávno smazaných.",
+  "It moves to Recently deleted, where you can restore it.": "Přesune se do Nedávno smazaných, odkud ji můžete obnovit.",
+  "Delete, keep history": "Smazat, ponechat historii",
+  "Delete with history": "Smazat i s historií",
+  "Could not delete this schedule. Please try again.": "Plán se nepodařilo smazat. Zkuste to znovu.",
+  "Only repeating income and expenses are deleted here.": "Zde se mažou jen opakované příjmy a výdaje."
 }

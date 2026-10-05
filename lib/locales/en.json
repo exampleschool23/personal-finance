@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "Due date must not precede lending date.",
   "Check the end date.": "Check the end date.",
   "Open from earlier months": "Open from earlier months",
-  "You can record it from {date}.": "You can record it from {date}."
+  "You can record it from {date}.": "You can record it from {date}.",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.",
+  "It moves to Recently deleted, where you can restore it.": "It moves to Recently deleted, where you can restore it.",
+  "Delete, keep history": "Delete, keep history",
+  "Delete with history": "Delete with history",
+  "Could not delete this schedule. Please try again.": "Could not delete this schedule. Please try again.",
+  "Only repeating income and expenses are deleted here.": "Only repeating income and expenses are deleted here."
 }

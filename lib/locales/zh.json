@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "到期日不能早于借出日期。",
   "Check the end date.": "请检查结束日期。",
   "Open from earlier months": "往月未结",
-  "You can record it from {date}.": "可从 {date} 起记录。"
+  "You can record it from {date}.": "可从 {date} 起记录。",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "已记录的付款：{count} 笔。保留在历史中，还是一并删除？删除还会冲回其账户余额。所有内容都可在“最近删除”中恢复。",
+  "It moves to Recently deleted, where you can restore it.": "它会移到“最近删除”，可在那里恢复。",
+  "Delete, keep history": "删除，保留历史",
+  "Delete with history": "连同历史删除",
+  "Could not delete this schedule. Please try again.": "无法删除此计划，请重试。",
+  "Only repeating income and expenses are deleted here.": "这里只能删除定期收入和支出。"
 }

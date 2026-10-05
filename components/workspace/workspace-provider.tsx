@@ -34,7 +34,7 @@ import { useSessionRouting } from './state/use-session-routing';
 import { useAccountSettings } from './state/use-account-settings';
 import { usePriceFetch } from './state/use-price-fetch';
 import { useRecordActions } from './state/use-record-actions';
-import { useArchive } from './state/use-archive';
+import { useArchive, useDeleteSchedule } from './state/use-archive';
 import { useDemoBin } from './state/use-demo-bin';
 import { useRecordFormTool } from './state/use-record-form-tool';
 import { useRecordSave } from './state/use-record-save';
@@ -99,6 +99,7 @@ function useWorkspaceState() {
     const bin = useDemoBin({ demo, rows, setRows, expensePlans });
     const actions = useRecordActions({ demo, rows, setRows, refreshRecords, splits: transactionTools.data.splits, household, demoHoldingAccounts, setDemoHoldingAccounts, stopping });
     const archiveSchedule = useArchive({ demo, setRows, restoreDemoPlan: expensePlans.restoreDemo, refreshRecords });
+    const deleteSchedule = useDeleteSchedule({ demo, rows, setRows, occurrences: planning.data.occurrences, bin, dropDemoPlan: expensePlans.dropDemo, refreshRecords });
     useRecordFormTool({ user, demo, openForm: () => { setRecordKinds(kinds); setEditing(fresh()); } });
     // A repeated message leaves the error state unchanged, so show the popup directly as well.
     const fail = (message: string) => { const shown = readOnly ? 'This shared workspace is view-only.' : message; setError(shown); showError(shown); };
@@ -162,7 +163,7 @@ function useWorkspaceState() {
         recordsLoading: table.recordsLoading, showFirstPage: table.showFirstPage, showPage: table.showPage,
         // Actions
         ...forms, storedRecord, navigate, removePlan: bin.removePlan,
-        saveHoldingAccount: actions.saveHoldingAccount, assignHolding: actions.assignHolding, recordMortgagePayment: actions.recordMortgagePayment, save, remove, stopRecord: actions.stopRecord, archiveSchedule, categorize: actions.categorize, assignTransactionsBusiness: actions.assignTransactionsBusiness, setAccountBusiness: actions.setAccountBusiness, saveBusiness: actions.saveBusiness, fetchPrice: price.fetchPrice, fetchingPrice: price.fetchingPrice, priceMessage: price.priceMessage,
+        saveHoldingAccount: actions.saveHoldingAccount, assignHolding: actions.assignHolding, recordMortgagePayment: actions.recordMortgagePayment, save, remove, stopRecord: actions.stopRecord, archiveSchedule, deleteSchedule, categorize: actions.categorize, assignTransactionsBusiness: actions.assignTransactionsBusiness, setAccountBusiness: actions.setAccountBusiness, saveBusiness: actions.saveBusiness, fetchPrice: price.fetchPrice, fetchingPrice: price.fetchingPrice, priceMessage: price.priceMessage,
         // Open dialogs
         editing, setEditing, editingCashFlow, recordKinds, linkedExpensePlan, deleting, setDeleting, ...dialogs,
     };

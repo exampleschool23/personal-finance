@@ -2526,5 +2526,11 @@
   "Due date must not precede lending date.": "返済期日は貸付日より前にできません。",
   "Check the end date.": "終了日を確認してください。",
   "Open from earlier months": "前の月から未処理",
-  "You can record it from {date}.": "{date}から記録できます。"
+  "You can record it from {date}.": "{date}から記録できます。",
+  "Payments recorded for it: {count}. Keep them in your history, or delete them too? Deleting them also reverses their account balances. You can restore everything from Recently deleted.": "記録済みの支払い：{count}件。履歴に残しますか、それとも一緒に削除しますか？削除すると口座残高も元に戻ります。すべて「最近削除した項目」から復元できます。",
+  "It moves to Recently deleted, where you can restore it.": "「最近削除した項目」に移動し、そこから復元できます。",
+  "Delete, keep history": "削除して履歴を残す",
+  "Delete with history": "履歴ごと削除",
+  "Could not delete this schedule. Please try again.": "このスケジュールを削除できませんでした。もう一度お試しください。",
+  "Only repeating income and expenses are deleted here.": "ここで削除できるのは定期的な収入と支出だけです。"
 }
