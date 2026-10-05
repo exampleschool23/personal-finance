@@ -216,14 +216,6 @@
       "count": 1
     }
   },
-  "components/workspace/screens/reports-screen.tsx": {
-    "complexity": {
-      "count": 1
-    },
-    "max-statements": {
-      "count": 1
-    }
-  },
   "components/workspace/screens/transactions-screen.tsx": {
     "complexity": {
       "count": 1

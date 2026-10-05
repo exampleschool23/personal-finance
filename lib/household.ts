@@ -156,4 +156,6 @@ export const demoHousehold: HouseholdState = {
 
 /** Sharing exists only once someone else is in the workspace. */
 export const sharedWorkspace = (state: Pick<HouseholdState, 'people'> | null | undefined) => (state?.people.length ?? 0) > 1;
+/** The owners to filter and pick from, only once the open workspace is shared; otherwise none. */
+export const workspaceOwners = (state: Household | null | undefined, labels: { shared: string; unnamed: string }) => state && sharedWorkspace(state) ? ownerChoices(state, labels) : [];
 export const canEdit = (state: Pick<HouseholdState, 'role'> | null | undefined) => !state || state.role !== 'viewer';

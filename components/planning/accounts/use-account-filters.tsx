@@ -5,7 +5,7 @@ import type { BusinessOption } from '@/components/presentation-foundation/busine
 import { OwnerAvatar } from '@/components/presentation-foundation/person-avatar';
 import { useLanguage } from '@/components/language-provider';
 import { queryList, useLocationSearch } from '@/hooks/use-location-search';
-import { holdingOwner, inOwnerFilter, ownerChoices, ownerOf, sharedWorkspace, type HouseholdState } from '@/lib/household';
+import { holdingOwner, inOwnerFilter, ownerOf, workspaceOwners, type HouseholdState } from '@/lib/household';
 import { HOUSEHOLD, inBusinessFilter, isBusinessAccount } from '@/lib/business';
 import { directoryBusiness, type DirectoryItem } from '@/lib/account-directory';
 import type { Entry } from '@/lib/finance';
@@ -20,7 +20,7 @@ export function useAccountFilters({ items, records, businesses, household }: { i
  const search=useLocationSearch();
  const [businessFilter,setBusinessFilter]=useState<string[]>([]),[appliedSearch,setAppliedSearch]=useState('');
  if(search!==appliedSearch){setAppliedSearch(search);setBusinessFilter(queryList(search,'business'));}
- const owners=household&&sharedWorkspace(household)?ownerChoices(household,{shared:t('Shared'),unnamed:t('Partner')}):[];
+ const owners=workspaceOwners(household,{shared:t('Shared'),unnamed:t('Partner')});
  const [ownerFilter,setOwnerFilter]=useState<string[]>([]);
  const ownerOfItem=(item:DirectoryItem)=>item.key.startsWith('record:')?ownerOf(item.account as Entry,household!):holdingOwner(item.account,household!);
  const named=(item:DirectoryItem)=>item.account.name.toLocaleLowerCase(locale).includes(query.toLocaleLowerCase(locale));
