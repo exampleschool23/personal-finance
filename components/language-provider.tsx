@@ -4,9 +4,12 @@ import { useContext, useEffect, useState } from 'react';
 import { detectLanguage, directionOf, isLanguage, Language, locales, translate } from '@/lib/i18n';
 
 import { LanguageContext } from '@/components/language-context';
+import { useVisitor } from '@/components/visitor-context';
 
-/** `initial` is the language the server rendered in; a saved choice or the browser's own list still takes over after loading. */
-export function LanguageProvider({ children, initial = 'en' }: { children: React.ReactNode; initial?: Language }) {
+/** `initial` is the language the server rendered in (by default the request's, from `VisitorHint`); a saved choice or the browser's own list still takes over after loading. */
+export function LanguageProvider({ children, initial: given }: { children: React.ReactNode; initial?: Language }) {
+  const visitor = useVisitor();
+  const initial = given ?? visitor.language;
   const [language, updateLanguage] = useState<Language>(initial);
   useEffect(() => {
     let saved: string | null = null;

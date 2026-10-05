@@ -573,6 +573,7 @@
   "{count} holdings": "{count} posities",
   "Holdings": "Posities",
   "{quantity} units": "{quantity} eenheden",
+  "1 unit": "1 eenheid",
   "per unit": "per eenheid",
   "Exchange rates are missing. The account total is unavailable.": "Wisselkoersen ontbreken. Het rekeningtotaal is niet beschikbaar.",
   "Add a cash, deposit, stock or crypto account to get started.": "Voeg een contante, deposito-, aandelen- of cryptorekening toe om te beginnen.",

@@ -573,6 +573,7 @@
   "{count} holdings": "Активів: {count}",
   "Holdings": "Активи",
   "{quantity} units": "{quantity} од.",
+  "1 unit": "1 од.",
   "per unit": "за одиницю",
   "Exchange rates are missing. The account total is unavailable.": "Бракує курсів обміну. Загальна сума рахунку недоступна.",
   "Add a cash, deposit, stock or crypto account to get started.": "Додайте готівковий, депозитний, акційний чи крипторахунок, щоб почати.",

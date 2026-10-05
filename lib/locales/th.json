@@ -573,6 +573,7 @@
   "{count} holdings": "{count} รายการที่ถือ",
   "Holdings": "สินทรัพย์ที่ถือ",
   "{quantity} units": "{quantity} หน่วย",
+  "1 unit": "1 หน่วย",
   "per unit": "ต่อหน่วย",
   "Exchange rates are missing. The account total is unavailable.": "ไม่มีอัตราแลกเปลี่ยน ไม่สามารถแสดงยอดรวมของบัญชีได้",
   "Add a cash, deposit, stock or crypto account to get started.": "เพิ่มบัญชีเงินสด เงินฝาก หุ้น หรือคริปโตเพื่อเริ่มต้น",

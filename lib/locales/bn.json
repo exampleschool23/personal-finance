@@ -573,6 +573,7 @@
   "{count} holdings": "{count}টি হোল্ডিং",
   "Holdings": "হোল্ডিং",
   "{quantity} units": "{quantity} ইউনিট",
+  "1 unit": "1 ইউনিট",
   "per unit": "প্রতি ইউনিট",
   "Exchange rates are missing. The account total is unavailable.": "বিনিময় হার পাওয়া যাচ্ছে না। অ্যাকাউন্টের মোট অনুপলব্ধ।",
   "Add a cash, deposit, stock or crypto account to get started.": "শুরু করতে একটি নগদ, আমানত, স্টক বা ক্রিপ্টো অ্যাকাউন্ট যোগ করুন।",

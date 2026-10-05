@@ -104,16 +104,16 @@
 .cashflow-preview-grid :is(th,td){padding:10px 8px}
 .cashflow-preview-grid th{letter-spacing:.03em;vertical-align:bottom}
 .cashflow-preview-grid .row-actions{flex-wrap:wrap}
-.cashflow-preview-grid td:last-child,.cashflow-preview-grid th:last-child{text-align:right}
+.cashflow-preview-grid td:last-child,.cashflow-preview-grid th:last-child{text-align:end}
 .cashflow-preview-grid td{font-variant-numeric:tabular-nums}
 .cashflow-income-preview footer{margin-top:auto;padding-top:8px;border-top:1px solid var(--hairline)}
-.cashflow-income-preview footer button{padding-left:0;font-size:var(--type-small);color:var(--primary)}
+.cashflow-income-preview footer button{padding-inline-start:0;font-size:var(--type-small);color:var(--primary)}
 .cashflow-spending-preview{display:grid;gap:16px;min-width:0}
 .workspace .content .cashflow-spending-preview .monthly-mortgage-payments{margin-top:16px;padding:16px 0 0;border:0;border-top:1px solid var(--border);border-radius:0;box-shadow:none;background:none}
 .cashflow-spending-preview .monthly-mortgage-payments .panel-title{margin-bottom:8px}
 .cashflow-spending-preview .monthly-mortgage-payments h2{font-size:var(--type-small)}
 .cashflow-spending-preview .monthly-mortgage-payments :is(th,td):nth-child(3){display:none}
-.cashflow-spending-preview .expense-plan-usage{min-width:90px;margin-left:auto}
+.cashflow-spending-preview .expense-plan-usage{min-width:90px;margin-inline-start:auto}
 .cashflow-view-history{display:flex;margin:4px 16px 12px auto;font-size:var(--type-small)}
 @container content (max-width:900px){.cashflow-preview-grid{grid-template-columns:minmax(0,1fr)}}
 

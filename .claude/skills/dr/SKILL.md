@@ -95,6 +95,7 @@ clipped:all.filter(e=>{const c=getComputedStyle(e);return /hidden|clip/.test(c.o
 scrollers:all.filter(e=>/auto|scroll/.test(getComputedStyle(e).overflowX)&&e.scrollWidth>e.clientWidth+1).slice(0,10).map(id),
 truncated:all.filter(e=>getComputedStyle(e).textOverflow==='ellipsis'&&e.scrollWidth>e.clientWidth).slice(0,10).map(e=>e.textContent.trim().slice(0,30))})
 ```
+`out` lists a screen-reader-only `thead` row in stacked tables (clipped to 1px, harmless): check `tr` hits with `closest('thead')`.
 `scrollers` are only fine for deliberate scroll areas (wide tables above 720px);
 a switch or tab strip that scrolls is a RESP-006 failure.
 ```js
@@ -141,7 +142,7 @@ const bg=e=>{for(;e;e=e.parentElement){const l=L(getComputedStyle(e).backgroundC
 [...document.querySelectorAll('main *, [role=dialog] *')].filter(e=>[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())&&e.offsetParent&&e.clientWidth>1).map(e=>{const f=L(getComputedStyle(e).color)??0,b=bg(e),r=(Math.max(f,b)+.05)/(Math.min(f,b)+.05);return [r,e]}).filter(([r])=>r<4.5).slice(0,15).map(([r,e])=>r.toFixed(2)+' '+e.textContent.trim().slice(0,30))
 ```
 ```js
-// J. Touch targets under 44px (run at the mobile preset, which emulates a coarse pointer)
+// J. Touch targets under 44px (the ⓘ reports 22px: its 44px hit area is `.info-hint::after` on coarse pointers) (run at the mobile preset, which emulates a coarse pointer)
 [...document.querySelectorAll('button,a,[role=button],input,select,summary')].filter(e=>e.offsetParent&&e.getBoundingClientRect().height<44&&!e.closest('p')).slice(0,20).map(e=>Math.round(e.getBoundingClientRect().height)+'px '+(e.innerText||e.getAttribute('aria-label')||e.tagName).trim().slice(0,30))
 ```
 ```js

@@ -573,6 +573,7 @@
   "{count} holdings": "{count} holdings",
   "Holdings": "Holdings",
   "{quantity} units": "{quantity} units",
+  "1 unit": "1 unit",
   "per unit": "per unit",
   "Exchange rates are missing. The account total is unavailable.": "Exchange rates are missing. The account total is unavailable.",
   "Add a cash, deposit, stock or crypto account to get started.": "Add a cash, deposit, stock or crypto account to get started.",

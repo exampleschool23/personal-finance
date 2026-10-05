@@ -85,7 +85,7 @@ export function TaxPrepSheet({ lines, businesses, business, onBusiness, year, ye
    {part('income', t(numbered ? 'Part I · Income' : 'Income'))}
    {part('expense', t(numbered ? 'Part II · Expenses' : 'Expenses'))}
    {sheet.unmapped.length > 0 && <section className="panel tax-part"><PanelTitle title={t('Not on the sheet')} hint={t('These categories are left out of the export until you move them to a line.')}/><ul className="tax-unmapped">{sheet.unmapped.map(categoryRow)}</ul></section>}
-   <section className="panel tax-net"><BusinessName id={business} names={names}/><span>{t('Net profit or loss')}</span><strong className={sheet.net < 0 ? 'negative' : 'positive'}><RollingText text={money(sheet.net)}/></strong></section>
+   <section className="panel tax-net"><BusinessName id={business} names={names}/><span>{t('Net profit or loss')}</span><strong className={signTone(sheet.net)}><RollingText text={money(sheet.net)}/></strong></section>
   </>}
   <ErrorPopup message={error}/>
   {previewing && <TaxExportDialog sheet={sheet} template={settings.template} title={`${names.business(business)} · ${t(periodLabels[period])} ${formatYear(year, locale)}`} names={names} currency={currency} onClose={() => setPreviewing(false)}/>}
@@ -133,7 +133,7 @@ function TaxExportDialog({ sheet, template, title, names, currency, onClose }: {
   <DialogContent className="record-dialog tax-export-dialog">
    <DialogTitle>{t('Preview export')}</DialogTitle>
    <DialogDescription>{title}</DialogDescription>
-   {summary.length ? <table className="pnl-table"><tbody>{summary.map(row => <tr key={row.description}><th scope="row">{row.line && <span className="tax-line-number">{row.line}</span>}{row.description}</th><td>{formatMoney(row.amount, currency, locale)}</td></tr>)}<tr data-kind="total"><th scope="row">{t('Net profit or loss')}</th><td className={sheet.net < 0 ? 'negative' : 'positive'}>{formatMoney(sheet.net, currency, locale)}</td></tr></tbody></table> : <p className="muted">{t('No lines to export yet.')}</p>}
+   {summary.length ? <table className="pnl-table"><tbody>{summary.map(row => <tr key={row.description}><th scope="row">{row.line && <span className="tax-line-number">{row.line}</span>}{row.description}</th><td>{formatMoney(row.amount, currency, locale)}</td></tr>)}<tr data-kind="total"><th scope="row">{t('Net profit or loss')}</th><td className={signTone(sheet.net)}>{formatMoney(sheet.net, currency, locale)}</td></tr></tbody></table> : <p className="muted">{t('No lines to export yet.')}</p>}
    <div className="budget-dialog-label">{t('File format')}<Segmented label={t('File format')} options={[{ value: 'csv', label: 'CSV' }, { value: 'pdf', label: 'PDF' }] as const} value={format} onChange={setFormat}/></div>
    <div className="budget-dialog-label">{t('Detail')}<Segmented label={t('Detail')} options={[{ value: 'lines', label: t('Line totals') }, { value: 'categories', label: t('With categories') }, { value: 'transactions', label: t('With transactions') }] as const} value={detail} onChange={setDetail}/></div>
    <label className="budget-check"><input type="checkbox" checked={totals} onChange={event => setTotals(event.currentTarget.checked)}/><span>{t('Include totals')}</span></label>

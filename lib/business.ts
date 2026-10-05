@@ -12,10 +12,14 @@ const paletteHues = { teal: 175, blue: 215, indigo: 240, violet: 270, pink: 330,
 export type PaletteColor = keyof typeof paletteHues;
 export const paletteColors = Object.keys(paletteHues) as PaletteColor[];
 export const paletteLabels: Record<PaletteColor, string> = { teal: 'Teal', blue: 'Blue', indigo: 'Indigo', violet: 'Violet', pink: 'Pink', red: 'Red', orange: 'Orange', amber: 'Amber', green: 'Green', slate: 'Grey' };
+const paletteKey = (color: string | null | undefined) => (color && Object.hasOwn(paletteHues, color) ? color : 'slate') as PaletteColor;
 export const paletteColor = (color: string | null | undefined) => {
- const key = (color && Object.hasOwn(paletteHues, color) ? color : 'slate') as PaletteColor;
- return key === 'slate' ? 'hsl(215 14% 52%)' : `hsl(${paletteHues[key]} 62% 46%)`;
+ const key = paletteKey(color);
+ return key === 'slate' ? 'hsl(215 14% 46%)' : `hsl(${paletteHues[key]} 62% ${key === 'orange' ? 50 : 46}%)`;
 };
+/** Light hues carry dark text: white on teal, green, amber or orange stays under 4.5:1. */
+const darkInkColors: readonly PaletteColor[] = ['teal', 'green', 'amber', 'orange'];
+export const paletteInk = (color: string | null | undefined): 'dark' | 'light' => darkInkColors.includes(paletteKey(color)) ? 'dark' : 'light';
 /** A colour for a new business or tag: the first one not yet taken. */
 export const nextPaletteColor = (taken: readonly (string | null | undefined)[]) => paletteColors.find(color => color !== 'slate' && !taken.includes(color)) ?? 'slate';
 

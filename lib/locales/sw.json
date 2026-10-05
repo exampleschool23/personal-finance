@@ -573,6 +573,7 @@
   "{count} holdings": "Vitu {count}",
   "Holdings": "Vitu ulivyomiliki",
   "{quantity} units": "Vipimo {quantity}",
+  "1 unit": "Kipimo 1",
   "per unit": "kwa kipimo",
   "Exchange rates are missing. The account total is unavailable.": "Viwango vya ubadilishaji havipo. Jumla ya akaunti haipatikani.",
   "Add a cash, deposit, stock or crypto account to get started.": "Ongeza akaunti ya fedha taslimu, amana, hisa au kripto ili uanze.",

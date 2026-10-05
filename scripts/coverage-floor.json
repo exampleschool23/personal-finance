@@ -95,7 +95,6 @@
   "components/theme-provider.tsx",
   "components/transaction-details-dialog.tsx",
   "components/transaction-insights.tsx",
-  "components/visitor-context.tsx",
   "components/visitor-hint.tsx",
   "components/web-app-registration.tsx",
   "components/workspace/records-table.tsx",

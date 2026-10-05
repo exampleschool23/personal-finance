@@ -37,6 +37,7 @@
 @container content (max-width:720px){
  .workspace .content .records .record-filters{grid-template-columns:minmax(0,1fr) auto;padding:0 16px 16px}
  .workspace .content .record-filters .record-filter-search{grid-column:auto}
+ .workspace .content .record-filters :is(input,select){font-size:var(--type-body)}
  .record-filters .mobile-filter-toggle{display:inline-flex}
  .record-filter-options{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}
  .record-filter-options[data-expanded=false]{display:none}
@@ -58,7 +59,7 @@
 .goal-funding-notice{padding:14px 16px;background:var(--accent);border:1px solid var(--border);border-radius:10px;font-size:var(--type-small)}
 .goal-funding-advanced>summary{display:flex;align-items:center;gap:10px;list-style:none}
 .goal-funding-advanced>summary:focus-visible{outline:2px solid var(--ring);outline-offset:3px;border-radius:6px}
-.goal-disclosure-chevron{margin-left:auto;flex-shrink:0;transition:transform .15s ease}
+.goal-disclosure-chevron{margin-inline-start:auto;flex-shrink:0;transition:transform .15s ease}
 .goal-funding-advanced[open]>summary>.goal-disclosure-chevron{transform:rotate(180deg)}
 .goal-funding-editors{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:16px}
 .goal-funding-editor{display:flex;flex-direction:column;gap:16px;min-width:0;padding:18px;border:1px solid var(--border);border-radius:12px;background:var(--background)}
@@ -116,11 +117,11 @@
 /* Compact accumulation goals keep balances and progress visible without opening a chart. */
 .investment-goal-plan .investment-target-row{gap:12px;padding:16px}
 .investment-goal-plan .goal-card-values{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
-.investment-goal-plan .goal-card-values>div+div{padding-left:16px;border-left:1px solid var(--border)}
+.investment-goal-plan .goal-card-values>div+div{padding-inline-start:16px;border-inline-start:1px solid var(--border)}
 .investment-goal-plan .goal-card-values dd{font-size:var(--type-stat)}
 .investment-goal-progress{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap;font-size:var(--type-small)}
 .investment-goal-progress progress{width:100%;height:6px;accent-color:var(--primary)}
-.investment-goal-progress strong{margin-left:auto;font-weight:500}
+.investment-goal-progress strong{margin-inline-start:auto;font-weight:500}
 .investment-goal-plan .investment-goal-fields{display:flex;align-items:end;flex-wrap:wrap;gap:12px;max-width:none;margin:0}
 .investment-goal-fields>label{flex:0 1 260px;margin:0;gap:6px}
 .investment-goal-fields .entry-actions{margin:0}
@@ -132,7 +133,7 @@
 .investment-goal-plan .goal-help{font-size:var(--type-small);margin-block:10px}
 @media(max-width:640px){
  .investment-goal-plan .goal-card-values{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
- .investment-goal-plan .goal-card-values>div:nth-child(odd){border-left:0;padding-left:0}
+ .investment-goal-plan .goal-card-values>div:nth-child(odd){border-inline-start:0;padding-inline-start:0}
  .investment-goal-plan .goal-card-values dd{font-size:var(--type-heading)}
  .investment-goal-fields>label{flex:1 1 100%}
  .investment-goal-plan .goal-projection-chart{height:200px}
@@ -142,7 +143,7 @@
 .investment-plan-body{display:grid;grid-template-columns:minmax(280px,1fr) minmax(0,1.5fr);gap:24px;align-items:center;min-width:0}
 .investment-plan-controls{display:grid;gap:12px;min-width:0}
 .investment-goal-plan .goal-card-values{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.investment-goal-plan .goal-card-values>div:nth-child(odd){border-left:0;padding-left:0}
+.investment-goal-plan .goal-card-values>div:nth-child(odd){border-inline-start:0;padding-inline-start:0}
 .investment-goal-plan .goal-card-values dt{font-size:var(--type-small)}
 .investment-goal-plan .goal-card-values dd{font-size:var(--type-heading)}
 .investment-goal-plan .investment-goal-chart{border:0;padding:0;margin:0;min-width:0}
@@ -184,7 +185,7 @@
 .monthly-review-help:hover{color:var(--primary);background:var(--accent)}
 .monthly-review-help-dialog{border-radius:24px;padding:28px;gap:16px;max-height:calc(100dvh - 32px);overflow-y:auto}
 .monthly-review-help-icon{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--accent);color:var(--primary)}
-.monthly-review-help-dialog [data-slot="dialog-title"]{padding-right:16px}
+.monthly-review-help-dialog [data-slot="dialog-title"]{padding-inline-end:16px}
 .monthly-review-help-dialog [data-slot="dialog-description"]{line-height:1.6}
 .monthly-review-help-note{display:flex;align-items:flex-start;gap:12px;padding:16px;border:1px solid var(--border);border-radius:16px;background:var(--muted)}
 .monthly-review-help-note>svg{flex-shrink:0;margin-top:2px;color:var(--primary)}
@@ -195,15 +196,15 @@
 .monthly-review-help-done{justify-self:end;min-width:100px;border-radius:12px}
 
 .income-source-field { display: grid; gap: 8px; }
-.income-source-trigger { width: 100%; min-height: 48px; justify-content: space-between; text-align: left; }
+.income-source-trigger { width: 100%; min-height: 48px; justify-content: space-between; text-align: start; }
 .income-source-trigger span { overflow: hidden; text-overflow: ellipsis; }
 .income-source-popover { width: min(680px, calc(100vw - 32px)); padding: 0; overflow: hidden; border-radius: 18px; }
 .income-source-search { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid var(--border); }
 .income-source-search input { min-width: 0; }
 .income-source-columns { display: grid; grid-template-columns: 210px minmax(0, 1fr); }
 .income-source-categories, .income-source-results { min-height: 0; max-height: min(360px, 45vh); overflow-y: auto; overscroll-behavior-y: contain; padding: 8px; }
-.income-source-categories { background: var(--muted); border-right: 1px solid var(--border); }
-.income-source-categories button, .income-source-results button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 12px; border-radius: 12px; text-align: left; min-height: 44px; }
+.income-source-categories { background: var(--muted); border-inline-end: 1px solid var(--border); }
+.income-source-categories button, .income-source-results button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 12px; border-radius: 12px; text-align: start; min-height: 44px; }
 .income-source-categories button[aria-pressed="true"], .income-source-results button:hover { background: var(--background); color: var(--primary); }
 .income-source-results button:hover { background: var(--muted); }
 .income-source-results button > span { display: flex; align-items: flex-start; flex-direction: column; gap: 6px; }
@@ -213,7 +214,7 @@
 .income-source-results button:disabled { opacity: .5; }
 @media (max-width: 520px) {
  .income-source-columns { grid-template-columns: 1fr; }
- .income-source-categories { display: flex; max-height: 110px; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--border); }
+ .income-source-categories { display: flex; max-height: 110px; flex-wrap: wrap; border-inline-end: 0; border-bottom: 1px solid var(--border); }
  .income-source-categories button { width: auto; padding: 8px 10px; }
  .income-source-results { max-height: 28vh; }
 }
@@ -243,11 +244,11 @@
 .income-estimates ul.income-source-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:12px}
 .income-estimates .income-source-card{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:14px;padding:16px;border:1px solid var(--border);border-radius:14px;background:color-mix(in srgb,var(--muted) 45%,transparent)}
 .income-source-card.is-excluded{border-style:dashed;background:none}
-.income-source-heading{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;min-width:0;padding-right:32px}
+.income-source-heading{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;min-width:0;padding-inline-end:32px}
 .income-source-heading strong{flex:1 1 110px;min-width:0;font-size:var(--type-small);font-weight:600;line-height:1.4;overflow-wrap:anywhere}
 .income-source-heading .category-badge{font-size:var(--type-micro);padding:1px 8px}
 .income-source-icon{display:grid;place-items:center;flex-shrink:0;width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--source-color) 14%,transparent);color:var(--source-color)}
-.income-estimates .income-source-amount{font-size:var(--type-stat);font-weight:650;letter-spacing:-.02em;line-height:1.2;text-align:left;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.income-estimates .income-source-amount{font-size:var(--type-stat);font-weight:650;letter-spacing:-.02em;line-height:1.2;text-align:start;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .income-receipt-indicator{position:absolute;top:14px;right:14px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--muted);color:var(--muted-foreground)}
 .income-receipt-indicator.is-received{background:color-mix(in srgb,var(--positive) 16%,transparent);color:var(--positive)}
 

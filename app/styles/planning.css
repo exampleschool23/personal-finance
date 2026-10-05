@@ -11,19 +11,19 @@
 
 .goal-card-values{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:24px;margin:0}
 .goal-card-values>div{min-width:0;display:flex;flex-direction:column;justify-content:end;gap:8px}
-.goal-card-values>div+div{padding-left:24px;border-left:1px solid var(--border)}
+.goal-card-values>div+div{padding-inline-start:24px;border-inline-start:1px solid var(--border)}
 .goal-card-values dt{font-size:var(--type-small);line-height:1.5;color:var(--muted-foreground)}
 .goal-card-values dd{font-size:var(--type-stat);font-weight:550;line-height:1.25;letter-spacing:-.5px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .goal-planner-destination{display:flex;flex-direction:column;gap:16px;scroll-margin-top:100px;border-radius:20px}
 .goal-planner-destination:focus-visible{outline:2px solid var(--ring);outline-offset:4px}
 @container(max-width:520px){
  .goal-card-values{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
- .goal-card-values>div:nth-child(2){border-left:0;padding-left:0}
- .goal-card-values>div+div{padding-left:16px}
+ .goal-card-values>div:nth-child(2){border-inline-start:0;padding-inline-start:0}
+ .goal-card-values>div+div{padding-inline-start:16px}
  .goal-card-values dd{font-size:var(--type-stat)}
 }
 .goal-milestones{max-height:320px;margin-top:12px}
-.goal-milestones table{width:100%;text-align:left}
+.goal-milestones table{width:100%;text-align:start}
 .goal-milestones th,.goal-milestones td{padding:10px;border-bottom:1px solid var(--border)}
 .goal-milestones th{white-space:normal;vertical-align:bottom}
 
@@ -41,15 +41,15 @@
 .goal-section-heading{display:flex;gap:9px;align-items:center}
 .goal-section-heading>svg{color:var(--primary);flex-shrink:0}
 .goal-section-heading h3,.goal-chart-heading h3{font-size:var(--type-title);font-weight:600;letter-spacing:-.01em}
-.goal-live-badge{margin-left:auto;font-size:var(--type-small);font-weight:600;color:var(--primary);display:flex;align-items:center;gap:5px}
+.goal-live-badge{margin-inline-start:auto;font-size:var(--type-small);font-weight:600;color:var(--primary);display:flex;align-items:center;gap:5px}
 .goal-live-badge::before{content:"";width:6px;height:6px;background:currentColor;border-radius:50%}
 .goal-help{font-size:var(--type-small);line-height:1.65;color:var(--muted-foreground);margin:9px 0 0}
 .goal-scenario-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;min-width:0;border:0;padding:0;margin:22px 0 0}
 .goal-scenario-fields:disabled{opacity:.65}
-.goal-control+.goal-control{padding-left:32px;border-left:1px solid var(--border)}
+.goal-control+.goal-control{padding-inline-start:32px;border-inline-start:1px solid var(--border)}
 .goal-input-label{margin:0;display:flex;flex-direction:column;gap:10px;font-size:var(--type-small);font-weight:500;color:var(--foreground)}
 .goal-amount-input{display:flex;align-items:center;position:relative}
-.goal-amount-input input{height:52px;padding-right:60px;font-size:var(--type-heading);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;border-radius:12px;background:var(--card);min-width:0}
+.goal-amount-input input{height:52px;padding-inline-end:60px;font-size:var(--type-heading);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;border-radius:12px;background:var(--card);min-width:0}
 .goal-amount-input>span{position:absolute;right:14px;font-size:var(--type-small);font-weight:500;color:var(--muted-foreground);pointer-events:none}
 .goal-forecast .goal-range{display:block;width:100%;min-height:28px!important;height:28px;padding:0;border:0;border-radius:0;margin:14px 0 0;appearance:none;-webkit-appearance:none;background:transparent!important;cursor:pointer;touch-action:pan-y;--range-progress:0%}
 .goal-range::-webkit-slider-runnable-track{height:5px;border-radius:10px;background:linear-gradient(to right,var(--primary) var(--range-progress),var(--border) var(--range-progress))}
@@ -86,7 +86,7 @@
 .goal-outcome-bottom{display:flex;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;font-size:var(--type-caption);color:var(--muted-foreground)}
 .goal-summary-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0;gap:16px}
 .goal-summary-stats>div{display:flex;flex-direction:column;gap:7px;min-width:0}
-.goal-summary-stats>div+div{border-left:1px solid var(--border);padding-left:16px}
+.goal-summary-stats>div+div{border-inline-start:1px solid var(--border);padding-inline-start:16px}
 .goal-summary-stats span{font-size:var(--type-small);line-height:1.5;color:var(--muted-foreground)}
 .goal-summary-stats strong{font-size:var(--type-heading);line-height:1.3;font-weight:650;letter-spacing:-.02em;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .goal-insight{display:flex;align-items:start;gap:10px;border:1px solid var(--border);border-radius:12px;padding:14px;background:color-mix(in srgb,var(--muted) 45%,transparent);font-size:var(--type-small);line-height:1.6}
@@ -108,7 +108,7 @@
 .goal-chart-section .goal-milestones{max-height:480px;min-height:360px;margin-top:16px;font-size:var(--type-small)}
 .goal-method{border-top:1px solid var(--border);margin-top:26px;padding-top:18px;font-size:var(--type-small);color:var(--muted-foreground)}
 .goal-method summary{display:flex;align-items:center;gap:9px;cursor:pointer;list-style:none;min-height:36px}
-.goal-method summary>svg:last-child{margin-left:auto;transition:transform .15s}
+.goal-method summary>svg:last-child{margin-inline-start:auto;transition:transform .15s}
 .goal-method[open] summary>svg:last-child{transform:rotate(180deg)}
 .goal-method>div{max-width:900px;line-height:1.8;padding:4px 0 8px}
 .goal-method p+p{margin-top:10px}
@@ -125,7 +125,7 @@
  .goal-results{grid-template-columns:minmax(0,1fr)}
  .goal-results>.goal-outcome{grid-row:auto}
  .goal-scenario-fields{gap:24px}
- .goal-control+.goal-control{padding-left:24px}
+ .goal-control+.goal-control{padding-inline-start:24px}
 }
 @container(max-width:600px){
  .goal-planner-header{align-items:start;gap:12px}
@@ -134,11 +134,11 @@
  .goal-planner-header>button{padding:10px 12px}
  .goal-scenario{padding:18px}
  .goal-scenario-fields{grid-template-columns:1fr;gap:24px}
- .goal-control+.goal-control{border-left:0;border-top:1px solid var(--border);padding:24px 0 0}
+ .goal-control+.goal-control{border-inline-start:0;border-top:1px solid var(--border);padding:24px 0 0}
  .goal-outcome{padding:20px}
  .goal-summary-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 12px}
- .goal-summary-stats>div+div{padding-left:12px}
- .goal-summary-stats>div:last-child{border-left:0;padding-left:0}
+ .goal-summary-stats>div+div{padding-inline-start:12px}
+ .goal-summary-stats>div:last-child{border-inline-start:0;padding-inline-start:0}
  .goal-summary-stats strong{font-size:var(--type-stat)}
  .goal-chart-heading{align-items:start;flex-direction:column}
  .goal-projection-chart{height:380px}
@@ -164,7 +164,7 @@
 .account-card-facts,.account-balance-facts{display:grid;gap:12px;margin:12px 0 0;padding-top:16px;border-top:1px solid var(--hairline);font-size:var(--type-small)}
 .account-card-facts>div,.account-balance-facts>div{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px}
 .account-card-facts dt,.account-balance-facts dt{color:var(--muted-foreground)}
-.account-card-facts dd,.account-balance-facts dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.account-card-facts dd,.account-balance-facts dd{margin:0;font-weight:600;text-align:end;font-variant-numeric:tabular-nums}
 .account-card-actions{display:grid;gap:8px;margin-top:16px}
 .account-card-actions>button{width:100%;height:42px;min-height:42px}
 .account-card .account-details-trigger{align-self:stretch;margin-top:auto;color:var(--muted-foreground)}
@@ -178,12 +178,12 @@
 .account-holding-actions label{margin:0;min-width:0}
 .account-holding-actions select{width:100%;max-width:100%;min-height:38px!important;height:38px;padding-block:6px;font-size:var(--type-small)}
 .account-holding-actions .account-card-menu{order:2;width:36px;height:36px;min-height:36px;padding:0;color:var(--muted-foreground)}
-@container content (max-width:640px){.account-holding-row{grid-template-columns:auto minmax(0,1fr) auto auto}.account-holding-actions label{grid-column:1/-1;grid-row:2;order:3}}
+@container content (max-width:640px){.account-holding-row{grid-template-columns:auto minmax(0,1fr) auto auto}.account-holding-actions label{grid-column:1/-1;grid-row:2;order:3}.account-holding-actions select{min-height:44px!important;height:44px;font-size:var(--type-body)}}
 .account-holding-row>.error{width:100%}
 .account-unassigned h2{font-size:var(--type-title);font-weight:600;margin-bottom:6px}
 .account-unassigned>.muted{font-size:var(--type-small)}
 .account-type-options{display:grid;gap:10px;margin-top:12px}
-.account-type-options>button{display:flex;gap:14px;align-items:flex-start;padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--card);text-align:left;transition:background .15s,border-color .15s}
+.account-type-options>button{display:flex;gap:14px;align-items:flex-start;padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--card);text-align:start;transition:background .15s,border-color .15s}
 .account-type-options>button:hover{background:var(--accent);border-color:color-mix(in srgb,var(--primary) 55%,var(--border))}
 .account-type-options>button:focus-visible{outline:2px solid var(--ring);outline-offset:3px}
 .account-type-options>button>svg{flex-shrink:0;margin-top:2px;color:var(--primary)}
@@ -193,7 +193,7 @@
 
 /* Searchable crypto and stock selectors share the record form's theme. */
 .instrument-field{display:grid;gap:8px;min-width:0}
-.instrument-trigger{width:100%;min-height:44px;justify-content:space-between;text-align:left;white-space:normal;border-radius:10px;font-weight:400}
+.instrument-trigger{width:100%;min-height:44px;justify-content:space-between;text-align:start;white-space:normal;border-radius:10px;font-weight:400}
 .instrument-trigger>span{min-width:0;overflow-wrap:anywhere}
 .instrument-trigger>svg{flex-shrink:0}
 .instrument-popover{width:max(320px,var(--radix-popover-trigger-width));max-width:calc(100vw - 32px);height:min(440px,70dvh);overflow:hidden;padding:0;border-radius:12px}
@@ -263,7 +263,7 @@
 
 /* The selected category previews the same symbol as its saved record. */
 .native-select-leading-icon {position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex}
-.record-form [data-slot="native-select-wrapper"][data-has-leading-icon="true"] select {padding-left:52px}
+.record-form [data-slot="native-select-wrapper"][data-has-leading-icon="true"] select {padding-inline-start:52px}
 .record-dialog .native-select-leading-icon .record-icon.category-record-icon {width:32px;height:32px;padding:5px;border-radius:10px}
 .record-dialog .native-select-leading-icon .category-record-icon svg {width:20px;height:20px}
 
@@ -296,7 +296,7 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .upcoming-section-heading h2{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:var(--type-title);font-weight:600;letter-spacing:-.01em}
 .upcoming-section-heading h2 .count{margin:0}
 .upcoming-section td:nth-child(2){white-space:nowrap}
-@container content (min-width:721px){.upcoming-section :is(th:not([colspan]),td):last-child{width:1%;text-align:right}}
+@container content (min-width:721px){.upcoming-section :is(th:not([colspan]),td):last-child{width:1%;text-align:end}}
 .status-badge{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;background:var(--muted);color:var(--muted-foreground);font-size:var(--type-caption);font-weight:500;line-height:1.6;white-space:nowrap}
 .status-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .status-badge.is-overdue{background:color-mix(in srgb,var(--negative) 12%,transparent);color:var(--pill-negative)}

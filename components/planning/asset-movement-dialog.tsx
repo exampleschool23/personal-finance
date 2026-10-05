@@ -11,10 +11,10 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
-import { formatAccountOption, formatMoney, formatNumber } from '@/lib/format';
+import { formatAccountOption, formatMoney } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
 import { decimalSum } from '@/lib/decimal-amounts';
-import { isHolding, movementSources, movementTargets, type AssetMovement, type MovementKind } from '@/lib/asset-movements';
+import { isHolding, movementSources, unitCount, movementTargets, type AssetMovement, type MovementKind } from '@/lib/asset-movements';
 import type { Entry } from '@/lib/finance';
 import type { HoldingAccount } from '@/lib/holding-accounts';
 
@@ -45,12 +45,12 @@ export function AssetMovementDialog({initial,records,accounts=[],save,onClose}:{
  const feeTooHigh=draft.kind==='transfer'&&draft.fee>0&&draft.sent>0&&draft.fee>=draft.sent;
  const title={transfer:'Transfer money',buy:'Buy holding',sell:'Sell / convert holding',interest:'Record capitalized interest'}[draft.kind];
  const accountName=(record:Entry)=>{const parent=accounts.find(account=>account.id===record.holding_account_id);return `${parent?parent.name+' · ':''}${isHolding(record)?`${record.name} · ${record.currency}`:formatAccountOption(record,locale)}`;};
- const units=(record:Entry,amount:number)=>isHolding(record)?t('{quantity} units',{quantity:formatNumber(amount,locale,8)}):formatMoney(amount,record.currency,locale);
+ const units=(record:Entry,amount:number)=>isHolding(record)?unitCount(t,amount,locale):formatMoney(amount,record.currency,locale);
  const change=(name:keyof typeof draft,value:string|number)=>setDraft({...draft,[name]:value});
  const [initialDraft]=useState(()=>JSON.stringify(draft));
  const guard=useDiscardChanges(JSON.stringify(draft)!==initialDraft,onClose,busy);
  return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}>
-  <DialogTitle>{t(title)}</DialogTitle><DialogDescription>{t(interest?'Record interest your bank has added to this deposit. It will earn interest from this date.':'Both sides are saved together. Enter the actual amounts from your transaction.')}</DialogDescription>
+  <DialogTitle>{t(title)}</DialogTitle><DialogDescription className="sr-only">{t(interest?'Record interest your bank has added to this deposit. It will earn interest from this date.':'Both sides are saved together. Enter the actual amounts from your transaction.')}</DialogDescription>
   <form className="record-form" onSubmit={async event=>{
    event.preventDefault();if((!valid&&!submitted)||busy)return;setBusy(true);setSubmitted(true);setError('');
    try{const payload={...draft,...(crossTransfer?{exchange_rate:rate!}:{})};setDraft(payload);await save({...payload,target_id:target!.id,sent:interest?0:draft.sent,received,source_value:sourceValue,target_value:targetValue,fee:interest?0:draft.fee});onClose();}

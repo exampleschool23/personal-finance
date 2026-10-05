@@ -573,6 +573,7 @@
   "{count} holdings": "{count} 项持仓",
   "Holdings": "持仓",
   "{quantity} units": "{quantity} 单位",
+  "1 unit": "1 单位",
   "per unit": "每单位",
   "Exchange rates are missing. The account total is unavailable.": "缺少汇率。账户总额不可用。",
   "Add a cash, deposit, stock or crypto account to get started.": "添加现金、存款、股票或加密货币账户即可开始。",

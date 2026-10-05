@@ -34,7 +34,7 @@ function ConnectTelegram() {
   const bot = 'bot' in view && view.bot ? `https://t.me/${view.bot}` : null;
   const openTelegram = bot && <Button asChild><a href={bot}>{t('Open Telegram')}</a></Button>;
   return <section className="panel connect-telegram">
-    <h2>{t('Connect Telegram')}</h2>
+    <h1>{t('Connect Telegram')}</h1>
     {view.state === 'loading' && <LoadingPlaceholder label={t('Connect Telegram')} rows={1}/>}
     {view.state === 'error' && <>
       <p role="alert">{t(view.message)}</p>

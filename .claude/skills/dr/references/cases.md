@@ -5,7 +5,7 @@ Each case says how to measure it. IDs are stable; append, never renumber.
 `[bug 2026-10-02]` marks a defect found in the 2 October QA pass; `[dr 2026-10-02]`
 marks one found in the 2 October full design review. Audits A–K are in `SKILL.md` §3.
 
-Run log (newest first): 2026-10-02 full review of 14 screens at 1440/1280/768/375,
+Run log (newest first): 2026-10-05 `/dr fix` of that review: COMP-019, RTL-010, I18N-012, DLG-018/019, RESP-021, HEAD-012, TYPE-008, FMT-014 (`signTone(0)` is now neutral), A11Y-008, RTL-004 (every physical side in app styles made logical), MOT-001, SCR-059/029, SCR-082, SCR-084 fixed and guarded by `tests/design-review-rules.mjs`; the Cash flow and Loans "sideways tables" were the screen-reader-only `thead`, not real overflow; the ⓘ 44px hit area already came from `.info-hint::after`. 2026-10-05 full review at 11b14ed, signed-in test account on localhost:5001 (another session's server), 1024 and 375 px, light and dark; workspace screens by audits, dialogs on Dashboard, Accounts, Transactions, Goals; public pages by curl and 375 px frames. Pane hidden, so no screenshots and no drags. Not run: sample workspace (signing out not allowed), 768 px, Arabic and German inside the workspace (the language only changes through saved Settings), landing and sign-in live (signed-in session redirects), motion by eye. 2026-10-02 full review of 14 screens at 1440/1280/768/375,
 light and dark, sample workspace; fixes in 9c08db8,
 re-checked by audits only (pane hidden). Not yet run: legal, account-access, connect,
 Arabic and German layouts.
@@ -74,6 +74,7 @@ secondary text `#68655f` in light mode (the reference app's `#777573` fails AA o
 | HEAD-012 | D1 | One h1 per public page | `document.querySelectorAll('h1').length` on /connect/telegram, /auth/telegram, /auth/access, /auth/confirm, /terms, /privacy, /sign-in, onboarding | Exactly 1 (connect, Telegram sign-in and account access render only an h2) |
 | HEAD-013 | D2 | Card controls sit in the heading row | Dashboard Business tracking card: position of the Period select vs `.panel-title` | Period select inside the `PanelTitle` aside beside Net income / Net assets, not a separate row under it |
 | HEAD-014 | D2 | Status lines are status, not prose | Reports: "{count} transactions in other currencies are left out…" and "Reports cover up to 24 months." | Rendered as a status element (`role=status`, `PartialTotal`-style), not a muted `<p>` paragraph under the tiles |
+| HEAD-015 | D2 | Top-bar title keeps its ⓘ whole | `getComputedStyle(.topbar-page-title h1)` overflow on Budget, Reports, Recurring, Transactions | `overflow:clip` with `overflow-clip-margin` covering the ⓘ hit area (`::after`, −5px / −11px coarse); was `overflow:hidden` cutting it (85 > 80) `[dr 2026-10-05]` |
 
 ## FMT — numbers, money, dates
 
@@ -231,6 +232,8 @@ secondary text `#68655f` in light mode (the reference app's `#777573` fails AA o
 | DLG-015 | D1 | Pickers inside dialogs | Rule dialog category / business pickers and Edit multiple pickers | Popover above the dialog, scrolls internally, closes on pick; Escape closes only the popover, then the dialog |
 | DLG-016 | D2 | Edit businesses dialog | Accounts › Edit businesses, change one account | Toast "<name> moved to <business> with N transactions"; selects disabled while saving; single Done in FormFooter style; rows two-line under 520px |
 | DLG-017 | D1 | Initial focus in new dialogs | `document.activeElement` after opening Tag, Rule, Edit multiple, Preview export | First field (Name, the name pattern, Category picker, File format); never the close button |
+| DLG-018 | D1 | Focus returns to the opener | Focus the trigger, open, press a real Escape, read `document.activeElement` (Customize dashboard, Add account, Transfer money) | The trigger; never `body` (28 of 32 dialog files open from state with no `DialogTrigger`) `[dr 2026-10-05]` |
+| DLG-019 | D1 | Account dialogs carry no grey explanation | Audit B with Transfer money and Adjust balance open | No visible "Both sides are saved together…", "Review the amounts before saving…", "This records a balance correction…"; hints behind ⓘ `[dr 2026-10-05]` |
 
 ## RESP — responsive
 
@@ -256,6 +259,7 @@ secondary text `#68655f` in light mode (the reference app's `#777573` fails AA o
 | RESP-018 | D1 | Touch targets on new controls | Audit J at 375 on Reports, tax prep, Settings Businesses/Tags/Rules, Rule dialog | `.pnl-toggle` (22px), `.pnl-drill` (24px), `.report-drill` X (20px), colour swatches (26px), business filter trigger (36px), tag chips, `.rule-more` summary all ≥ 44px |
 | RESP-019 | D1 | New inputs at 16px | RESP-007 measure on Rule name, New tag, business Name, setup Notes textarea, Transactions search, tax selects at 375 | ≥ 16px computed font size |
 | RESP-020 | D2 | Landing at 320 | Audit A on / at 320×640 | Hero heading, both CTAs and the product window fit; footer two columns without overflow |
+| RESP-021 | D0 | Top-bar page tabs fit at 375 | `.segmented.page-tabs` buttons' `getBoundingClientRect().right` ≤ nav right on Cash flow, Reports, Settings, Goals, Accounts | Every tab visible or wrapped (Cash flow "Transactions" ends at 409, Reports "Business tax prep" at 371, Settings "Import & backup" starts at 357 of a 359 px strip) `[dr 2026-10-05]` |
 
 ## THEME — light and dark
 
@@ -303,6 +307,7 @@ secondary text `#68655f` in light mode (the reference app's `#777573` fails AA o
 | I18N-009 | D1 | No language selector when signed out | Landing, /sign-in, /auth/access, /terms, /connect/telegram: count language selects or language menus | 0; language follows Accept-Language (AGENTS § Languages) |
 | I18N-010 | D1 | Language chips on the landing | Landing language sample | 30 chips; first is English; Uzbek not first; each chip has its `lang`, RTL ones `dir=rtl` |
 | I18N-011 | D2 | Count placeholders in new strings | en with 1 item: "{count} selected", "Edit {count}", "Edit {count} transactions", "{count} accounts and assets" | Singular wording for 1 in every new count string |
+| I18N-012 | D1 | Public pages render in the request language | `curl -H 'Accept-Language: ar'` on /sign-in, /auth/access, /connect/telegram | Translated heading, `lang` and `dir` in the served HTML (/auth/access and /connect/telegram serve English; /sign-in serves Arabic text without `dir=rtl`) `[dr 2026-10-05]` |
 
 ## A11Y — accessibility
 
@@ -437,3 +442,5 @@ Every screen named in `SKILL.md` §1 (screen map) has at least one case here
 | SCR-079 | D1 | cash-flow | Forecast view | Horizon is `Segmented` in the panel title; three `StatTile`s (lowest balance toned by `signTone` only when negative); chart uses the shared area style with a dashed zero line only when the axis goes negative; explanation behind ⓘ |
 | SCR-080 | D1 | cash-flow | Forecast warning and events | Below-zero warning uses the caution tone (never red) with ⓘ; events table stacks into cards below 720px with month totals in the group row; what-if form fields wrap at 375 |
 | SCR-081 | D1 | recurring | Subscriptions panel | `PanelTitle` with Count and ⓘ, totals listed per currency (never added); price rise and possibly cancelled use the caution `.status-badge`, never red; amounts whole; actions only in the ⋯ `RowMenu`; rows stack below 720px |
+| SCR-082 | D1 | accounts | Holdings without an account | Investment account select ≥ 16px and ≥ 44px on touch (14px / 38px today); "1 unit" not "1 units"; unit prices may keep decimals `[dr 2026-10-05]` |
+| SCR-084 | D1 | settings | Danger zone in dark | "Permanently delete account" heading uses `--negative` and reaches 4.5:1 on the dark card (`text-destructive` measures 3.55) `[dr 2026-10-05]` |

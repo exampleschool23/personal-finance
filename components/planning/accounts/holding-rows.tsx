@@ -5,11 +5,11 @@ import { CategoryIcon } from '@/components/presentation-foundation/category-icon
 import { useLanguage } from '@/components/language-provider';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { NativeSelect } from '@/components/ui/native-select';
-import { formatMoney, formatNumber } from '@/lib/format';
+import { formatMoney } from '@/lib/format';
 import type { HoldingAccount } from '@/lib/holding-accounts';
 import { value, type Entry } from '@/lib/finance';
 import { marketEntry, type MarketData } from '@/lib/market';
-import { isHolding } from '@/lib/asset-movements';
+import { isHolding, unitCount } from '@/lib/asset-movements';
 import type { MovementDraft } from '../asset-movement-dialog';
 import { AccountMenu } from './account-menu';
 
@@ -29,7 +29,7 @@ function HoldingRow({ record, accounts, market, onEdit, onTrack, assignHolding, 
   setBusy(true);setError('');
   try{await assignHolding(record,accountId);}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}
  }
- return <li className="account-holding-row"><CategoryIcon kind={record.kind}/><div><strong>{record.name}</strong><p className="muted">{isHolding(record)?<>{t('{quantity} units', { quantity: formatNumber(record.quantity, locale) })} · {formatMoney(priced.amount, record.currency, locale, true)} {t('per unit')}</>:t('Available cash')}</p></div><strong className="account-holding-value">{formatMoney(value(priced), record.currency, locale)}</strong>
+ return <li className="account-holding-row"><CategoryIcon kind={record.kind}/><div><strong>{record.name}</strong><p className="muted">{isHolding(record)?<>{unitCount(t, record.quantity, locale)} · {formatMoney(priced.amount, record.currency, locale, true)} {t('per unit')}</>:t('Available cash')}</p></div><strong className="account-holding-value">{formatMoney(value(priced), record.currency, locale)}</strong>
   <div className="account-holding-actions"><label><span className="sr-only">{t('Investment account')}</span><NativeSelect value={record.holding_account_id??''} disabled={busy} onChange={event=>void assign(event.target.value||null)}><option value="">{t('No investment account')}</option>{accounts.filter(account=>record.kind==='Cash'||account.kind===record.kind).map(account=><option key={account.id} value={account.id}>{account.name}</option>)}</NativeSelect></label><AccountMenu name={record.name}>{isHolding(record)&&<><DropdownMenuItem onSelect={()=>onMove({kind:'buy',target_id:record.id})}>{t('Buy')}</DropdownMenuItem><DropdownMenuItem onSelect={()=>onMove({kind:'sell',source_id:record.id})}>{t('Sell / convert')}</DropdownMenuItem><DropdownMenuItem onSelect={()=>onCorporate(record)}>{t('Investment events')}</DropdownMenuItem></>}{onTrack&&<DropdownMenuItem onSelect={()=>onTrack(record)}>{t('Tracker')}</DropdownMenuItem>}<DropdownMenuItem onSelect={()=>onEdit(record)}>{t('Edit')}</DropdownMenuItem></AccountMenu></div>
   <ErrorPopup message={error}/>
  </li>;

@@ -573,6 +573,7 @@
   "{count} holdings": "{count} hawak",
   "Holdings": "Mga hawak",
   "{quantity} units": "{quantity} yunit",
+  "1 unit": "1 yunit",
   "per unit": "kada yunit",
   "Exchange rates are missing. The account total is unavailable.": "Kulang ang mga exchange rate. Hindi available ang kabuuan ng account.",
   "Add a cash, deposit, stock or crypto account to get started.": "Magdagdag ng cash, deposito, stock o crypto account para makapagsimula.",

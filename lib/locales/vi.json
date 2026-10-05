@@ -573,6 +573,7 @@
   "{count} holdings": "{count} tài sản nắm giữ",
   "Holdings": "Tài sản nắm giữ",
   "{quantity} units": "{quantity} đơn vị",
+  "1 unit": "1 đơn vị",
   "per unit": "mỗi đơn vị",
   "Exchange rates are missing. The account total is unavailable.": "Thiếu tỷ giá. Không có tổng số dư tài khoản.",
   "Add a cash, deposit, stock or crypto account to get started.": "Thêm tài khoản tiền mặt, tiền gửi, cổ phiếu hoặc tiền mã hóa để bắt đầu.",

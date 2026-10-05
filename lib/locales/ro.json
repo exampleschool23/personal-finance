@@ -573,6 +573,7 @@
   "{count} holdings": "{count} dețineri",
   "Holdings": "Dețineri",
   "{quantity} units": "{quantity} unități",
+  "1 unit": "1 unitate",
   "per unit": "per unitate",
   "Exchange rates are missing. The account total is unavailable.": "Lipsesc cursurile de schimb. Totalul contului nu este disponibil.",
   "Add a cash, deposit, stock or crypto account to get started.": "Adaugă un cont de numerar, depozit, acțiuni sau cripto pentru a începe.",

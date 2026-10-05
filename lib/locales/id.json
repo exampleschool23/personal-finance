@@ -573,6 +573,7 @@
   "{count} holdings": "{count} kepemilikan",
   "Holdings": "Kepemilikan",
   "{quantity} units": "{quantity} unit",
+  "1 unit": "1 unit",
   "per unit": "per unit",
   "Exchange rates are missing. The account total is unavailable.": "Kurs tidak tersedia. Total rekening tidak tersedia.",
   "Add a cash, deposit, stock or crypto account to get started.": "Tambahkan rekening kas, deposito, saham, atau kripto untuk memulai.",

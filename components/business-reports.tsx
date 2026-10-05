@@ -20,6 +20,7 @@ import { categoryColor } from '@/lib/category-colors';
 import { exportCSV } from '@/lib/csv';
 import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatSignedMoney, formatYear } from '@/lib/format';
 import { RollingText } from '@/components/presentation-foundation/rolling-text';
+import { signTone } from '@/components/presentation-foundation/tone';
 
 /** How a report names things: categories (built-in kinds are translated), the key a category's icon and colour come
  * from (a built-in kind, or an added category's own name), category groups and businesses. */
@@ -89,7 +90,7 @@ export function ProfitLossTable({ pnl, breakdown, names, groupOf, currency, onDr
     {row('household-expenses', t('Household expenses'), household.expenseTotal, 0, { direction: 'expense', business: null }, 'total', undefined, t('Household expenses'))}
     {!closed.includes('household-expenses') && lines(household.expenses, 1, { direction: 'expense', business: null }, 'he')}
    </>}
-   {row('net', t(household ? 'Net cash flow' : 'Net income'), pnl.net, 0, null, 'total', pnl.net < 0 ? 'negative' : 'positive')}
+   {row('net', t(household ? 'Net cash flow' : 'Net income'), pnl.net, 0, null, 'total', signTone(pnl.net))}
   </tbody>
  </table></div>;
 }

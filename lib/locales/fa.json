@@ -573,6 +573,7 @@
   "{count} holdings": "{count} دارایی",
   "Holdings": "دارایی‌ها",
   "{quantity} units": "{quantity} واحد",
+  "1 unit": "1 واحد",
   "per unit": "به ازای هر واحد",
   "Exchange rates are missing. The account total is unavailable.": "نرخ‌های تبدیل موجود نیستند. مجموع حساب در دسترس نیست.",
   "Add a cash, deposit, stock or crypto account to get started.": "برای شروع، یک حساب نقدی، سپرده، سهام یا ارز دیجیتال اضافه کنید.",

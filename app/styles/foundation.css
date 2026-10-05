@@ -72,6 +72,9 @@
   --caution: #dfb883;
   --field: #141a16;
   --hairline: color-mix(in srgb, var(--border) 60%, transparent);
+  /* Text on palette tiles (business marks): the same in both themes, picked per hue by `paletteInk`. */
+  --on-palette-light: #fff;
+  --on-palette-dark: #22201d;
   --font-system: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-ui: "Inter Variable", var(--font-system);
   --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
@@ -162,7 +165,7 @@ small{font-size:var(--type-caption)}
 .brand:focus-visible{outline:2px solid var(--ring);outline-offset:4px}
 .brand-badge{padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--primary) 12%,var(--card));color:var(--primary);font-size:var(--type-micro);font-weight:700;letter-spacing:.04em;line-height:18px}
 .brand small.block{display:block;white-space:nowrap;margin-top:2px;font-size:var(--type-micro);font-weight:500;letter-spacing:.12em;color:var(--muted-foreground)}
-.mark{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;padding-right:2px;border-radius:12px;background:var(--mark-bg);color:var(--mark-fg);font-size:26px;letter-spacing:-.08em}
+.mark{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;padding-inline-end:2px;border-radius:12px;background:var(--mark-bg);color:var(--mark-fg);font-size:26px;letter-spacing:-.08em}
 .brand-compact{gap:8px;min-width:0}
 .brand-compact .mark{width:30px;height:30px;border-radius:9px;font-size:20px}
 
@@ -170,7 +173,7 @@ small{font-size:var(--type-caption)}
 .auth-page{display:flex;flex-direction:column;align-items:center;gap:24px;min-height:100svh;padding:24px 16px 48px}
 .auth-page-header{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;max-width:1120px}
 .auth-page>.panel{width:100%;max-width:440px;margin-top:min(10vh,88px);padding:28px}
-.auth-page .panel h2{font-family:var(--font-display);font-size:var(--type-display);font-weight:500;letter-spacing:-.02em}
+.auth-page .panel :is(h1,h2){font-family:var(--font-display);font-size:var(--type-display);font-weight:500;letter-spacing:-.02em}
 .auth-page .panel .entry-actions{margin:16px 0 4px}
 .auth-page .panel .entry-actions [data-slot=button]{flex:1}
 .auth-page .panel form>[data-slot=button]{width:100%;height:44px;margin-top:4px}
@@ -183,21 +186,22 @@ small{font-size:var(--type-caption)}
 .connect-facts dt{color:var(--muted-foreground)}
 .connect-facts dd{font-weight:600;text-align:end;overflow-wrap:anywhere}
 .auth-page>.legal-document{max-width:760px;margin-top:8px;padding:clamp(20px,4vw,40px);display:flex;flex-direction:column;gap:20px}
-.legal-document h1{font-size:var(--type-page);font-weight:650;letter-spacing:-.02em;line-height:1.15}
+.legal-document h1{line-height:1.15}
 .legal-document>p.muted{margin-top:-12px;font-size:var(--type-small)}
 .legal-language-note{padding:10px 14px;border-radius:var(--radius-control);background:var(--muted);font-size:var(--type-small)}
 .legal-document section{display:flex;flex-direction:column;gap:8px}
-.legal-document h2{font-size:var(--type-title);font-weight:600}
-.legal-document p,.legal-document li{font-size:var(--type-body);line-height:1.65;color:var(--foreground)}
+.auth-page .legal-document h2{font-family:var(--font-ui);font-size:var(--type-title);font-weight:600;letter-spacing:0}
+.legal-document p,.legal-document li{max-width:70ch;font-size:var(--type-body);line-height:1.65;color:var(--foreground)}
 .legal-document ul{display:flex;flex-direction:column;gap:6px;padding-inline-start:20px;list-style:disc}
 .legal-links{display:flex;flex-wrap:wrap;gap:12px 24px;padding-top:16px;border-top:1px solid var(--hairline);font-size:var(--type-small);font-weight:500}
-.legal-links a{color:var(--primary)}.legal-links a:hover{text-decoration:underline;text-underline-offset:3px}
+.legal-links a{display:inline-flex;align-items:center;min-height:24px;color:var(--primary)}
+@media(pointer:coarse){.legal-links a{min-height:44px}}.legal-links a:hover{text-decoration:underline;text-underline-offset:3px}
 @media(max-width:480px){.auth-page>.panel{margin-top:16px;padding:24px 20px}}
 
 /* Disclosures: one chevron for every <details>, never the browser's triangle. Summaries that carry their own icon keep it. */
 summary{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;list-style:none;font-size:var(--type-small);font-weight:500}
 summary::-webkit-details-marker{display:none}
-summary:not(:has(svg))::before{content:"";flex-shrink:0;width:7px;height:7px;margin-inline:2px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+summary:not(:has(svg))::before{content:"";flex-shrink:0;width:7px;height:7px;margin-inline:2px;border-inline-end:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
 [dir=rtl] summary:not(:has(svg))::before{transform:rotate(135deg)}
 details[open]>summary:not(:has(svg))::before{transform:rotate(45deg)}
 @media(prefers-reduced-motion:reduce){summary::before{transition:none}}
@@ -209,4 +213,4 @@ input,select,textarea{min-height:44px!important;background:var(--field)!importan
 .primary{background:var(--primary)!important;color:var(--primary-foreground)!important;min-height:44px;gap:10px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .error{padding:12px 16px;border:1px solid color-mix(in srgb,var(--negative) 30%,transparent);border-radius:12px;background:color-mix(in srgb,var(--negative) 12%,var(--card));color:var(--negative);margin:12px 0;font-size:var(--type-small);line-height:1.5}
-.error [data-slot=button]{margin-left:8px}
+.error [data-slot=button]{margin-inline-start:8px}

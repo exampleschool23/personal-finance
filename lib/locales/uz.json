@@ -573,6 +573,7 @@
   "{count} holdings": "{count} ta aktiv",
   "Holdings": "Hisob aktivlari",
   "{quantity} units": "{quantity} birlik",
+  "1 unit": "1 birlik",
   "per unit": "birlik uchun",
   "Exchange rates are missing. The account total is unavailable.": "Valyuta kurslari yetishmayapti. Hisob jami mavjud emas.",
   "Add a cash, deposit, stock or crypto account to get started.": "Boshlash uchun naqd pul, omonat, aksiyalar yoki kripto hisobini qo‘shing.",

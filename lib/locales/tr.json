@@ -573,6 +573,7 @@
   "{count} holdings": "{count} varlık",
   "Holdings": "Varlıklar",
   "{quantity} units": "{quantity} adet",
+  "1 unit": "1 adet",
   "per unit": "birim başına",
   "Exchange rates are missing. The account total is unavailable.": "Döviz kurları eksik. Hesap toplamı kullanılamıyor.",
   "Add a cash, deposit, stock or crypto account to get started.": "Başlamak için bir nakit, mevduat, hisse senedi veya kripto hesabı ekleyin.",

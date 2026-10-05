@@ -25,8 +25,8 @@
 
 /* Period figures read as one strip, separated by hairlines instead of a nested box. */
 .workspace .content.overview-content .portfolio-headline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:20px 0 0;padding:0;border:0;border-radius:0;background:none}
-.workspace .content.overview-content .portfolio-headline>div{padding:4px 20px;border-left:1px solid var(--border);min-width:0}
-.workspace .content.overview-content .portfolio-headline>div:first-child{padding-left:0;border-left:0}
+.workspace .content.overview-content .portfolio-headline>div{padding:4px 20px;border-inline-start:1px solid var(--border);min-width:0}
+.workspace .content.overview-content .portfolio-headline>div:first-child{padding-inline-start:0;border-inline-start:0}
 .workspace .content.overview-content .portfolio-headline span{font-size:var(--type-caption)}
 .workspace .content.overview-content .portfolio-headline strong{font-size:var(--type-heading);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .workspace .content .overview-hero .portfolio-headline{padding-top:20px;border-top:1px solid var(--border)}
@@ -87,10 +87,10 @@
 .overview-list li:first-child{border-top:0}
 .overview-list i{width:8px;height:8px;border-radius:50%}
 .overview-list strong{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
-.overview-list small{min-width:48px;text-align:right;font-size:var(--type-caption);color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.overview-list small{min-width:48px;text-align:end;font-size:var(--type-caption);color:var(--muted-foreground);font-variant-numeric:tabular-nums}
 .overview-list:is(.overview-due,.overview-commitments) li{grid-template-columns:auto minmax(0,1fr) auto}
 .overview-due li>span:nth-child(2){display:grid;min-width:0;overflow-wrap:anywhere}
-.overview-due small{min-width:0;text-align:left}
+.overview-due small{min-width:0;text-align:start}
 .overview-panel .cash-footer{margin-top:0;padding-top:16px;font-size:var(--type-small);font-weight:600}
 .overview-panel .cash-footer strong{font-variant-numeric:tabular-nums}
 .overview-panel .empty{padding:24px 8px;font-size:var(--type-small)}
@@ -104,7 +104,7 @@
  .workspace .content .overview-hero,.workspace .content .income-history-chart{padding:20px 16px}
  .workspace .content .overview-panel{padding:20px 16px}
  .workspace .content.overview-content .portfolio-headline{grid-template-columns:1fr}
- .workspace .content.overview-content .portfolio-headline>div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:10px 0;border-left:0;border-top:1px solid color-mix(in srgb,var(--border) 60%,transparent)}
+ .workspace .content.overview-content .portfolio-headline>div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:10px 0;border-inline-start:0;border-top:1px solid color-mix(in srgb,var(--border) 60%,transparent)}
  .workspace .content.overview-content .portfolio-headline>div:first-child{border-top:0}
  .workspace .content .overview-hero .portfolio-headline{padding-top:6px}
  .overview-content .comparison-legend button{min-height:40px}

@@ -7,15 +7,15 @@
 .portfolio-summary-main h2{font-size:var(--type-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground)}
 .portfolio-summary-value{display:block;margin:6px 0 8px;font-size:var(--type-hero);font-weight:650;letter-spacing:-.04em;line-height:1.05;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .portfolio-summary-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
-.portfolio-summary-metrics>div{display:grid;gap:4px;min-width:0;padding-left:20px;border-left:1px solid var(--border)}
-.portfolio-summary-metrics>div:first-child{padding-left:0;border-left:0}
+.portfolio-summary-metrics>div{display:grid;gap:4px;min-width:0;padding-inline-start:20px;border-inline-start:1px solid var(--border)}
+.portfolio-summary-metrics>div:first-child{padding-inline-start:0;border-inline-start:0}
 .portfolio-summary-metrics span{font-size:var(--type-caption);color:var(--muted-foreground)}
 .portfolio-summary-metrics strong{font-size:var(--type-heading);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.portfolio-summary-allocation{min-width:0;padding:28px;border-left:1px solid var(--border)}
+.portfolio-summary-allocation{min-width:0;padding:28px;border-inline-start:1px solid var(--border)}
 .portfolio-summary-allocation h3{margin-bottom:16px;font-size:var(--type-body);font-weight:600;letter-spacing:-.01em}
 .portfolio-summary-allocation .allocation-bar{margin-bottom:12px}
 .portfolio-summary-allocation .allocation-bar span{min-width:4px}
-@container content (max-width:900px){.portfolio-summary{grid-template-columns:minmax(0,1fr)}.portfolio-summary-allocation{border-left:0;border-top:1px solid var(--border)}.portfolio-summary-main,.portfolio-summary-allocation{padding:24px}}
+@container content (max-width:900px){.portfolio-summary{grid-template-columns:minmax(0,1fr)}.portfolio-summary-allocation{border-inline-start:0;border-top:1px solid var(--border)}.portfolio-summary-main,.portfolio-summary-allocation{padding:24px}}
 @container content (max-width:520px){.portfolio-summary-main,.portfolio-summary-allocation{padding:20px 16px}}
 
 .asset-holdings-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
@@ -48,7 +48,7 @@
 .asset-card-facts{display:grid;gap:6px;margin:0 0 10px;font-size:var(--type-caption)}
 .asset-card-facts>div{display:flex;justify-content:space-between;gap:12px}
 .asset-card-facts dt{color:var(--muted-foreground)}
-.asset-card-facts dd{flex-shrink:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.asset-card-facts dd{flex-shrink:0;font-weight:600;text-align:end;font-variant-numeric:tabular-nums}
 .asset-card-share{height:4px;border-radius:999px;background:var(--muted);overflow:hidden}
 .asset-card-share i{display:block;height:100%;border-radius:inherit;background:var(--asset-color)}
 .asset-card-details{margin-top:6px;font-size:var(--type-caption);color:var(--muted-foreground)}
@@ -58,7 +58,7 @@
 .asset-card-details[open] summary svg{transform:rotate(180deg)}
 .asset-card-details dl{display:grid;gap:8px;padding:4px 0 12px}
 .asset-card-details dl>div{display:flex;justify-content:space-between;gap:14px;align-items:baseline}
-.asset-card-details dd{min-width:0;text-align:right;color:var(--foreground);overflow-wrap:anywhere}
+.asset-card-details dd{min-width:0;text-align:end;color:var(--foreground);overflow-wrap:anywhere}
 .asset-card-holdings>div{flex-wrap:wrap;align-items:center}
 .asset-card-holdings dt{flex:1;min-width:0;overflow-wrap:anywhere}
 .asset-card-holdings dd:last-child{display:flex;flex-basis:100%;justify-content:flex-end;gap:6px}
@@ -77,7 +77,7 @@
 .asset-layout-list .asset-card-details{grid-column:1/-1;grid-row:2;margin:4px 0 0}
 .asset-layout-list .asset-card-details summary{min-height:32px}
 .asset-layout-list .asset-card-actions{grid-column:4;grid-row:1;margin:0;padding:0;border:0}
-@container content (max-width:760px){.asset-layout-list .asset-card{grid-template-columns:minmax(0,1fr) auto;gap:10px 16px}.asset-layout-list .asset-card-worth{text-align:right}.asset-layout-list .asset-card-facts,.asset-layout-list .asset-card-actions{grid-column:1/-1;grid-row:auto}.asset-layout-list .asset-card-details{grid-row:auto}}
+@container content (max-width:760px){.asset-layout-list .asset-card{grid-template-columns:minmax(0,1fr) auto;gap:10px 16px}.asset-layout-list .asset-card-worth{text-align:end}.asset-layout-list .asset-card-facts,.asset-layout-list .asset-card-actions{grid-column:1/-1;grid-row:auto}.asset-layout-list .asset-card-details{grid-row:auto}}
 @media(pointer:coarse){.asset-card-actions :is(button,a),.asset-card-details summary{min-height:44px;height:auto}}
 @media(prefers-reduced-motion:reduce){.asset-card,.asset-card-details summary svg{transition:none}}
 
@@ -92,16 +92,16 @@
 .recovery-info strong{display:block;font-size:var(--type-small);font-weight:600;overflow-wrap:anywhere}
 .recovery-info p{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:4px;font-size:var(--type-caption);color:var(--muted-foreground)}
 .recovery-info .category-badge{padding:1px 8px;font-size:var(--type-micro)}
-.recovery-value{display:grid;gap:2px;min-width:0;text-align:right}
+.recovery-value{display:grid;gap:2px;min-width:0;text-align:end}
 .recovery-value strong{font-size:var(--type-small);font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .recovery-value small{font-size:var(--type-caption);color:var(--muted-foreground)}
 .recovery-delete{color:var(--negative)}
 .recovery-delete:hover{background:color-mix(in srgb,var(--negative) 12%,transparent);color:var(--negative)}
-@container content (max-width:860px){.recovery-row{grid-template-columns:auto minmax(0,1fr);padding-inline:16px}.recovery-value{grid-column:2;text-align:left}.recovery-row>.row-actions{grid-column:1/-1;justify-content:flex-start}}
+@container content (max-width:860px){.recovery-row{grid-template-columns:auto minmax(0,1fr);padding-inline:16px}.recovery-value{grid-column:2;text-align:start}.recovery-row>.row-actions{grid-column:1/-1;justify-content:flex-start}}
 .records-pagination{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;border-top:1px solid var(--border);font-size:var(--type-caption);color:var(--muted-foreground)}
 .records-pagination>div{display:flex;gap:8px}
 .records-pagination button{height:36px;min-height:36px;font-size:var(--type-small)}
-@media(max-width:600px){.records-pagination{flex-wrap:wrap;padding:14px 16px}.records-pagination>div{margin-left:auto}}
+@media(max-width:600px){.records-pagination{flex-wrap:wrap;padding:14px 16px}.records-pagination>div{margin-inline-start:auto}}
 
 .workspace .content .settings-page{max-width:none}
 .workspace .content .comparison-settings-options{display:grid;gap:10px}
@@ -110,12 +110,12 @@
 .workspace .content .currency-catalogue{background:var(--background);gap:5px}
 .workspace .content .currency-catalogue label:has(input:checked){background:var(--accent);color:var(--accent-foreground)}
 .workspace .content .settings-form>button.primary{border-radius:12px;min-height:44px;justify-self:start;min-width:180px}
-@media(prefers-reduced-motion:reduce){.workspace .content tbody tr,.workspace .content .comparison-settings-options label,.nav-item,.segmented>button{transition:none}}
+@media(prefers-reduced-motion:reduce){.workspace .content tbody tr,.workspace .content .comparison-settings-options label,.nav-item,.segmented>button,.user-link,.info-hint,.account-group>summary>svg,.account-list-row,.goal-setup-progress>span,.goal-template{transition:none}}
 
 .income-history-chart .income-estimate-key{background:transparent;border:1px dashed var(--primary);border-radius:2px}
 /* The card can sit in either dashboard column, so it adapts to its own width. */
 .income-history-chart{container:income-card/inline-size}
-@container income-card (max-width:560px){.income-history-chart .panel-title{flex-direction:column;align-items:flex-start;gap:12px}.workspace .content.overview-content .income-history-chart .portfolio-headline>div{padding:4px 12px}.workspace .content.overview-content .income-history-chart .portfolio-headline>div:first-child{padding-left:0}.income-history-chart .portfolio-headline strong{font-size:var(--type-title)}}
+@container income-card (max-width:560px){.income-history-chart .panel-title{flex-direction:column;align-items:flex-start;gap:12px}.workspace .content.overview-content .income-history-chart .portfolio-headline>div{padding:4px 12px}.workspace .content.overview-content .income-history-chart .portfolio-headline>div:first-child{padding-inline-start:0}.income-history-chart .portfolio-headline strong{font-size:var(--type-title)}}
 
 /* Larger type needs room to wrap, without shrinking on smaller screens. */
 [data-slot="button"] { font-size: var(--type-small); font-weight: 500; min-height: 40px; border-radius: var(--radius-control); }
@@ -129,7 +129,7 @@
 .recharts-legend-item-text { color: var(--muted-foreground) !important; }
 @media (max-width: 480px) {
   .portfolio-headline { flex-direction: column; gap: 20px; }
-  .portfolio-chart { margin-left: 0; width: 100%; }
+  .portfolio-chart { margin-inline-start: 0; width: 100%; }
 }
 @media (pointer: coarse) {
   [data-slot="button"], .comparison-legend button, .segmented > button { min-height: 44px; }

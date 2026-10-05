@@ -573,6 +573,7 @@
   "{count} holdings": "{count} होल्डिंग्स",
   "Holdings": "होल्डिंग्स",
   "{quantity} units": "{quantity} यूनिट",
+  "1 unit": "1 यूनिट",
   "per unit": "प्रति यूनिट",
   "Exchange rates are missing. The account total is unavailable.": "विनिमय दरें उपलब्ध नहीं हैं। अकाउंट का कुल उपलब्ध नहीं है।",
   "Add a cash, deposit, stock or crypto account to get started.": "शुरू करने के लिए नकद, डिपॉज़िट, स्टॉक या क्रिप्टो अकाउंट जोड़ें।",

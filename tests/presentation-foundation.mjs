@@ -249,7 +249,7 @@ test('confirm dialog blocks closing while busy, never submits a form and styles 
 test('sign tone colours losses, treats surpluses as positive unless told otherwise, and ignores unknowns',()=>{
  const {signTone}=load('tone.ts');
  assert.equal(signTone(-1),'negative');
- assert.equal(signTone(0),'positive');
+ assert.equal(signTone(0),undefined);
  assert.equal(signTone(250),'positive');
  assert.equal(signTone(250,true),undefined);
  assert.equal(signTone(-250,true),'negative');

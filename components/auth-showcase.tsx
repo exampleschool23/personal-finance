@@ -63,7 +63,7 @@ export function AuthShowcase() {
   const cash = scale(200, 64, Math.min(...forecast), Math.max(...forecast), forecast.length);
   const dip = forecast.indexOf(Math.min(...forecast)), [dipX, dipY] = cash(forecast[dip], dip);
   return <aside className={styles.showcase} aria-label={t('Sample data')}>
-    <h2 className={styles.showcaseTitle}>{t('Take a clear look at your money.')}</h2>
+    <p className={styles.showcaseTitle}>{t('Take a clear look at your money.')}</p>
     <div className={styles.preview}><AppPreview tour={showcaseTour} size={showcaseSize}/></div>
     <div className={styles.tiles} aria-hidden="true">
       <Tile icon={<ChartNoAxesCombined size={14}/>} label={t('Benchmarks')}>

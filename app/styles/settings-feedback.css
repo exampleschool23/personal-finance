@@ -46,7 +46,7 @@
 .data-import-fields>label{display:grid;gap:8px;min-width:0;margin:0}
 .data-import-fields .data-file-field{grid-column:1/-1}
 .data-file-field input[type=file]{width:100%;min-width:0;max-width:100%;padding:14px;background:var(--accent);border:1px dashed var(--border);border-radius:10px}
-.data-file-field input[type=file]::file-selector-button{background:var(--card);color:var(--foreground);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-right:12px;cursor:pointer}
+.data-file-field input[type=file]::file-selector-button{background:var(--card);color:var(--foreground);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-inline-end:12px;cursor:pointer}
 .data-import-fields [data-slot=native-select-wrapper]{width:100%}
 .data-import-fields select{min-height:44px}
 @media(max-width:600px){.data-import-fields{grid-template-columns:1fr}.data-backup-actions{flex-direction:column}.data-backup-actions a{width:100%}}
@@ -72,7 +72,7 @@
 .tracker-value-choice [data-slot="toggle-group-item"]:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
 .tracker-value-choice small{line-height:1.5}
 
-.portfolio-tooltip{width:min(360px,calc(100vw - 48px));border:1px solid var(--border);border-radius:18px;background:var(--background);color:var(--foreground);box-shadow:0 14px 45px #0002;overflow:hidden;text-align:left}
+.portfolio-tooltip{width:min(360px,calc(100vw - 48px));border:1px solid var(--border);border-radius:18px;background:var(--background);color:var(--foreground);box-shadow:0 14px 45px #0002;overflow:hidden;text-align:start}
 .portfolio-tooltip header{padding:12px 20px;background:var(--muted);display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 12px}
 .portfolio-tooltip header>span{grid-column:1 / -1;font-size:var(--type-small);color:var(--muted-foreground);margin-bottom:2px}
 .portfolio-tooltip header>small{font-size:var(--type-micro);letter-spacing:.09em;color:var(--muted-foreground)}
@@ -100,7 +100,7 @@
 
 .portfolio-trend .portfolio-chart{font-family:inherit;font-size:var(--type-small)}
 
-.period-amount{text-align:left;background:none;border:0;padding:0;cursor:pointer;color:inherit}.period-details.portfolio-tooltip{padding:0;width:360px;max-width:calc(100vw - 32px)}
+.period-amount{text-align:start;background:none;border:0;padding:0;cursor:pointer;color:inherit}.period-details.portfolio-tooltip{padding:0;width:360px;max-width:calc(100vw - 32px)}
 
 .diversified-settings{border:1px solid var(--border);border-radius:16px;padding:20px;margin:24px 0;min-width:0}
 .diversified-settings legend{padding:0 8px;font-weight:600}
@@ -147,7 +147,7 @@
 
 /* Portfolio editor: fixed chrome, one scroll area, and content-sized sections. */
 .portfolio-editor-dialog{display:flex;flex-direction:column;height:min(860px,90dvh);max-height:90dvh;gap:0;padding:0;overflow:hidden;scrollbar-gutter:auto}
-.portfolio-editor-dialog>[data-slot="dialog-header"]{flex-shrink:0;padding:24px 52px 20px 24px;border-bottom:1px solid var(--border);text-align:left}
+.portfolio-editor-dialog>[data-slot="dialog-header"]{flex-shrink:0;padding:24px 52px 20px 24px;border-bottom:1px solid var(--border);text-align:start}
 .portfolio-editor-body{flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable;padding:20px 24px}
 .portfolio-editor-body>fieldset{min-width:0;border:0;padding:0;margin:0}
 .portfolio-editor-body .diversified-settings{border:0;padding:0;margin:0}
@@ -190,7 +190,7 @@
  .settings-layout .inline-tool-form>button{width:100%}
  .data-import-fields{gap:16px;margin:20px 0}
  .data-file-field input[type=file]{padding:10px;font-size:var(--type-small)}
- .data-file-field input[type=file]::file-selector-button{padding:8px;margin-right:8px;font:inherit}
+ .data-file-field input[type=file]::file-selector-button{padding:8px;margin-inline-end:8px;font:inherit}
  .import-profiles>summary{font-size:var(--type-compact);line-height:1.4}
 }
 
@@ -204,11 +204,11 @@
  .portfolio-tooltip header>strong{font-size:var(--type-title);overflow-wrap:anywhere;min-width:0}
  .portfolio-tooltip-body{padding-inline:12px}
  .portfolio-tooltip-row{flex-wrap:wrap}
- .portfolio-tooltip-row>b{margin-left:auto;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+ .portfolio-tooltip-row>b{margin-inline-start:auto;max-width:100%;white-space:normal;overflow-wrap:anywhere}
 }
 
 /* Shared dropdown spacing: leave room for the arrow and its inset edge. */
-[data-slot="native-select-wrapper"] select[data-slot="native-select"]{appearance:none;padding-right:40px;text-overflow:ellipsis}
+[data-slot="native-select-wrapper"] select[data-slot="native-select"]{appearance:none;padding-inline-end:40px;text-overflow:ellipsis}
 [data-slot="native-select-wrapper"] [data-slot="native-select-icon"]{right:14px;width:16px;height:16px;pointer-events:none}
 .settings-form [data-slot="native-select-wrapper"]{width:100%}
 
@@ -218,7 +218,7 @@
   max-width: min(480px, 100%);
   min-width: 160px;
   left: 50%;
-  margin-left: 0;
+  margin-inline-start: 0;
   translate: -50% 0;
   gap: 12px;
   padding: 14px 20px;

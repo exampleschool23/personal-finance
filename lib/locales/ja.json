@@ -573,6 +573,7 @@
   "{count} holdings": "保有資産{count}件",
   "Holdings": "保有資産",
   "{quantity} units": "{quantity}単位",
+  "1 unit": "1単位",
   "per unit": "1単位あたり",
   "Exchange rates are missing. The account total is unavailable.": "為替レートがありません。口座の合計を表示できません。",
   "Add a cash, deposit, stock or crypto account to get started.": "現金、預金、株式、暗号資産のいずれかの口座を追加して始めましょう。",

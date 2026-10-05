@@ -573,6 +573,7 @@
   "{count} holdings": "{count} držeb",
   "Holdings": "Držby",
   "{quantity} units": "{quantity} ks",
+  "1 unit": "1 ks",
   "per unit": "za kus",
   "Exchange rates are missing. The account total is unavailable.": "Chybí směnné kurzy. Celkový součet účtu není dostupný.",
   "Add a cash, deposit, stock or crypto account to get started.": "Přidejte hotovostní, vkladový, akciový nebo kryptoúčet a začněte.",

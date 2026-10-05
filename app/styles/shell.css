@@ -13,7 +13,7 @@
 .nav-item svg{width:17px!important;height:17px!important;opacity:.7}
 .nav-item[data-active=true]{background:var(--sidebar-accent);color:var(--sidebar-accent-foreground)}
 .nav-item[data-active=true] svg{opacity:1}
-.nav-item>span.count:last-child{flex:0 0 auto;min-width:max-content;margin-left:auto;background:color-mix(in srgb,var(--negative) 18%,transparent);color:var(--negative)}
+.nav-item>span.count:last-child{flex:0 0 auto;min-width:max-content;margin-inline-start:auto;background:color-mix(in srgb,var(--negative) 18%,transparent);color:var(--negative)}
 .sidebar-account{padding:12px;gap:6px}
 .user-line{display:flex;align-items:center;gap:4px;min-width:0;padding-top:6px;border-top:1px solid var(--sidebar-border)}
 .user-link{display:flex;flex:1;align-items:center;gap:10px;min-width:0;padding:6px;border-radius:8px;color:inherit;transition:background .15s}
@@ -29,7 +29,8 @@
 .topbar-page-title{display:flex;align-items:baseline;gap:10px;min-width:0}
 .topbar-page-title:empty{display:none}
 .topbar-page-title:not(:empty)+.topbar-title{display:none}
-.topbar-page-title h1{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+/* Clipped with room for the ⓘ hit area around it. */
+.topbar-page-title h1{display:flex;align-items:center;gap:6px;min-width:0;overflow:clip;overflow-clip-margin:11px;white-space:nowrap;text-overflow:ellipsis}
 .topbar-page-title .page-eyebrow{margin:0;font-size:var(--type-caption);letter-spacing:0;text-transform:none;white-space:nowrap}
 /* A page's views as underlined tabs right after its title, as in a desktop app's title bar. */
 .segmented.page-tabs{gap:8px;padding:0;border:0;border-radius:0;background:none}
@@ -38,7 +39,7 @@
 .page-heading .page-tabs>button{padding-block:8px}
 .segmented.page-tabs>button{height:auto;padding:0 4px;border-radius:0;border-block-end:2px solid transparent;background:none;box-shadow:none;font-size:var(--type-small)}
 .segmented.page-tabs>button[aria-pressed=true]{background:none;box-shadow:none;color:var(--primary);border-block-end-color:var(--primary)}
-/* The strip scrolls sideways and would clip an outer ring to a stray line, so focus is drawn inside each tab. */
+/* Focus is drawn inside each tab, so a wrapped row never cuts a ring in half. */
 .segmented.page-tabs>button:focus-visible{outline:2px solid var(--ring);outline-offset:-2px;border-radius:6px}
 .topbar-page-actions{display:flex;align-items:center;gap:8px}
 .topbar-page-actions:not(:empty){padding-inline-end:10px;margin-inline-end:2px;border-inline-end:1px solid var(--hairline)}
@@ -83,7 +84,7 @@ h2:has(>.info-hint){display:flex;align-items:center;gap:6px}
 .info-hint-content{display:grid;gap:8px;width:min(340px,calc(100vw - 32px));font-size:var(--type-small);font-weight:400;letter-spacing:0;line-height:1.55;color:var(--popover-foreground)}
 .info-hint-content a{color:var(--primary);text-decoration:underline;text-underline-offset:3px}
 .panel-title>span{font-size:var(--type-caption);color:var(--muted-foreground)}
-.count{display:inline-block;min-width:22px;margin-left:8px;padding:2px 8px;border-radius:999px;background:var(--muted);color:var(--muted-foreground);font-size:var(--type-micro);font-weight:600;line-height:1.5;letter-spacing:0;text-align:center;vertical-align:middle;font-variant-numeric:tabular-nums}
+.count{display:inline-block;min-width:22px;margin-inline-start:8px;padding:2px 8px;border-radius:999px;background:var(--muted);color:var(--muted-foreground);font-size:var(--type-micro);font-weight:600;line-height:1.5;letter-spacing:0;text-align:center;vertical-align:middle;font-variant-numeric:tabular-nums}
 .badge{display:inline-block;padding:3px 10px;border:1px solid var(--border);border-radius:999px;background:var(--muted);color:var(--muted-foreground);font-size:var(--type-caption);font-weight:500;line-height:1.5}
 .empty{display:grid;justify-items:center;gap:6px;padding:40px 24px;text-align:center;color:var(--muted-foreground);font-size:var(--type-small)}
 .empty>svg{box-sizing:content-box;width:22px;height:22px;padding:12px;margin-bottom:8px;border-radius:50%;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)}
@@ -110,7 +111,7 @@ h2:has(>.info-hint){display:flex;align-items:center;gap:6px}
 .segmented>button[aria-pressed=true]{background:var(--card);color:var(--foreground);box-shadow:0 1px 2px rgb(0 0 0 / 20%)}
 .segmented>button:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
 /* On narrow pages a switch fills the row and wraps rather than hiding options off-screen. */
-@container content (max-width:520px){.segmented:not(.page-tabs){display:flex;width:100%;flex-wrap:wrap;overflow:visible}.segmented:not(.page-tabs)>button{flex:1 1 auto;padding-inline:10px}}
+@container content (max-width:520px){.segmented:not(.page-tabs){display:flex;width:100%;flex-wrap:wrap;overflow:visible}.segmented:not(.page-tabs)>button{flex:1 1 auto;padding-inline:10px}.segmented.page-tabs{flex-wrap:wrap;row-gap:4px;overflow:visible}}
 
 /* Rows of overview figures. */
 .allocation-bar{display:flex;gap:3px;height:10px;border-radius:999px;overflow:hidden}

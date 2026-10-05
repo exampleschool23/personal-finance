@@ -7,6 +7,9 @@ import { formatDate, formatMoney, formatSignedMoney } from '@/lib/format';
 import { isMortgagePayment, spendingAmount, transferAmount } from '@/lib/spending';
 import { signedAmount } from '@/lib/transaction-list';
 
+/** What a screen reader hears for a row: the action, then its amount and category. */
+export const transactionRowLabel = (action: string, record: Entry, category: string, locale: string) => [action, formatSignedMoney(signedAmount(record), record.currency, locale), category].join(' · ');
+
 /** One day: its date and net total in the heading, its transactions below. */
 export function DayGroup({ date, total, currency, today, children }: { date: string; total: number | null; currency: string; today: string; children: ReactNode }) {
  const { t, locale } = useLanguage();

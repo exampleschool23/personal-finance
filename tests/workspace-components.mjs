@@ -38,7 +38,7 @@ test('discard guard keeps changed forms open until explicitly discarded, and lea
 });
 test('account security clears the persistent workspace session before navigating after a password change',async context=>{
  const navigation=[];let cleared=false;context.mock.method(globalThis,'fetch',async()=>Response.json({message:'Password changed.'}));
- const {AccountAccessPanel}=loadTS('components/account-access-panel.tsx',{...overrides,react:{...React,useState:initial=>[initial,()=>{}],useEffect:()=>{}},'next/navigation':{useRouter:()=>({replace:path=>{assert.ok(cleared);navigation.push(path);},refresh:()=>{}})}});
+ const {AccountAccessPanel}=loadTS('components/account-access-panel.tsx',{...overrides,react:{...React,useState:initial=>[initial,()=>{}],useEffect:()=>{},useId:()=>'password-hint'},'next/navigation':{useRouter:()=>({replace:path=>{assert.ok(cleared);navigation.push(path);},refresh:()=>{}})}});
  const tree=AccountAccessPanel({settings:true,onSignedOut:()=>{cleared=true;}});const find=node=>{if(!node||typeof node!=='object')return null;if(node.type==='form')return node;return React.Children.toArray(node.props?.children).map(find).find(Boolean);};
  await find(tree).props.onSubmit({preventDefault:()=>{}});assert.equal(cleared,true);assert.deepEqual(navigation,['/']);
 });

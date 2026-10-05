@@ -35,7 +35,7 @@ function TelegramSignIn() {
     document.head.appendChild(script);
   }, [query]);
   return <section className="panel tools-panel">
-    <h2>{t(error ? 'Sign in' : 'Signing you in…')}</h2>
+    <h1>{t(error ? 'Sign in' : 'Signing you in…')}</h1>
     {error ? <><p role="alert">{t(error)}</p><Link href={signInPath}>{t('Back to sign in')}</Link></> : <LoadingPlaceholder label={t('Signing you in…')} rows={1}/>}
   </section>;
 }

@@ -6,13 +6,15 @@ import * as jsx from 'react/jsx-runtime';
 
 import {loadTS as load} from './helpers/load-ts.mjs';
 const i18n = load('lib/i18n.ts');
+// The provider starts in the language the server rendered for this request.
+const visitor = { useVisitor: () => ({ signedOut: true, language: 'en' }) };
 
 test('language changes propagate to page, category, date locale, and back to English', () => {
   let language = 'en';
   const provider = load('components/language-provider.tsx', {
     react: { ...React, useState: () => [language, next => { language = next; }], useEffect: () => {} },
     'react/jsx-runtime': jsx,
-    '@/lib/i18n': i18n,
+    '@/lib/i18n': i18n, '@/components/visitor-context': visitor,
   });
   let setter;
   function Page() {
@@ -80,7 +82,7 @@ test('a saved default wins over the browser, and the browser is never written as
     const provider = load('components/language-provider.tsx', {
       react: { ...React, useState: () => ['en', next => updates.push(next)], useEffect: effect => effects.push(effect) },
       'react/jsx-runtime': jsx,
-      '@/lib/i18n': i18n,
+      '@/lib/i18n': i18n, '@/components/visitor-context': visitor,
     });
     const previous = { localStorage: globalThis.localStorage, window: globalThis.window, queueMicrotask: globalThis.queueMicrotask };
     const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');

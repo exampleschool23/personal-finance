@@ -573,6 +573,7 @@
   "{count} holdings": "{count} אחזקות",
   "Holdings": "אחזקות",
   "{quantity} units": "{quantity} יחידות",
+  "1 unit": "יחידה אחת",
   "per unit": "ליחידה",
   "Exchange rates are missing. The account total is unavailable.": "שערי חליפין חסרים. סך החשבון אינו זמין.",
   "Add a cash, deposit, stock or crypto account to get started.": "הוסיפו חשבון מזומן, פיקדון, מניות או קריפטו כדי להתחיל.",

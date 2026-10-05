@@ -573,6 +573,7 @@
   "{count} holdings": "{count} حيازة",
   "Holdings": "الحيازات",
   "{quantity} units": "{quantity} وحدة",
+  "1 unit": "وحدة واحدة",
   "per unit": "للوحدة",
   "Exchange rates are missing. The account total is unavailable.": "أسعار الصرف مفقودة. إجمالي الحساب غير متاح.",
   "Add a cash, deposit, stock or crypto account to get started.": "أضف حسابًا نقديًا أو وديعة أو أسهمًا أو عملات رقمية للبدء.",

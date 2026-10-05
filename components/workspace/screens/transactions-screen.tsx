@@ -15,7 +15,7 @@ import { BusinessPicker, CategoryPicker, OwnerPicker, useChoiceName } from '@/co
 import { RuleDialog } from '@/components/transactions/rule-dialog';
 import { RulesDialog } from '@/components/transactions/rules-list';
 import { TagFilter } from '@/components/transactions/tags';
-import { DayGroup, MortgageSplit, TransactionAmount } from '@/components/transactions/transaction-row';
+import { DayGroup, MortgageSplit, TransactionAmount, transactionRowLabel } from '@/components/transactions/transaction-row';
 import { BusinessFilter } from '@/components/presentation-foundation/business-filter';
 import { OwnerFilter } from '@/components/presentation-foundation/owner-filter';
 import { TagChip } from '@/components/presentation-foundation/tag-chip';
@@ -162,7 +162,7 @@ export function TransactionsScreen() {
      {day.records.map(record => {
       const editable = canRecategorize(record, splits);
       const recordTags = tagsOf(record.id).map(id => tagById.get(id)).filter(tag => !!tag);
-      return <li key={record.id} className="transaction-row" data-selected={selected.has(record.id) || undefined} tabIndex={0} aria-label={t('View details for {name}', { name: record.name })} onClick={open(record)} onKeyDown={open(record)}>
+      return <li key={record.id} className="transaction-row" data-selected={selected.has(record.id) || undefined} tabIndex={0} aria-label={transactionRowLabel(t('View details for {name}', { name: record.name }), record, nameOf(record), locale)} onClick={open(record)} onKeyDown={open(record)}>
        {selecting && <input type="checkbox" aria-label={t('Select {name}', { name: record.name })} checked={selected.has(record.id)} onChange={() => toggle(record.id)}/>}
        <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span>{attachments.counts.get(record.id) ? <span className="transaction-name"><strong>{record.name}</strong><Paperclip className="transaction-attachment-mark" size={13} role="img" aria-label={t('Attachments: {count}', { count: attachments.counts.get(record.id)! })}/></span> : <strong>{record.name}</strong>}{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}<MortgageSplit record={record}/>{recordTags.length > 0 && <span className="transaction-tags">{recordTags.map(tag => <TagChip key={tag.id} name={tag.name} color={tag.color}/>)}</span>}</span></span>
        <span className="transaction-labels">{owners.length > 0 && <OwnerPicker record={record} owner={ownerOption(record)} owners={owners} disabled={readOnly || selecting} onChange={owner => void giveTo(record, owner)}/>}<CategoryPicker record={record} categories={data.categories} disabled={!editable || selecting || readOnly} onChange={choice => change([record], choice)}/>

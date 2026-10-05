@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Dialog,DialogContent,DialogTitle,DialogDescription } from '@/components/ui/dialog';
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
@@ -26,13 +27,13 @@ export function AccountOperation({operation,records,save,onClose}:{operation:Ope
  const target=records.find(r=>r.id===draft.target_id),account=records.find(r=>r.id===draft.account_id);
  const accounts=records.filter(r=>r.kind==='Cash');
  const targets=records.filter(r=>r.id!==draft.account_id&&(operation.action==='transfer'?r.kind==='Cash':['Loan','Debt','Money lent','Mortgage'].includes(r.kind)));
- const title={transfer:'Transfer money',reconcile:'Reconcile balance',repayment:'Record repayment',mortgage:'Record mortgage payment',occurrence:'Record scheduled payment'}[operation.action];
+ const title={transfer:'Transfer money',reconcile:'Adjust balance',repayment:'Record repayment',mortgage:'Record mortgage payment',occurrence:'Record scheduled payment'}[operation.action];
  const crossCurrency=operation.action==='transfer'&&account&&target&&account.currency!==target.currency;
  const convertedPayment=['repayment','mortgage','occurrence'].includes(operation.action)&&!!account&&!!target&&account.currency!==target.currency;
  const fx=useDatedExchangeRate(convertedPayment?account?.currency:undefined,target?.currency,draft.paid_on??draft.date);
  const [initialDraft]=useState(()=>JSON.stringify(draft));
  const guard=useDiscardChanges(JSON.stringify(draft)!==initialDraft,onClose,busy);
- return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(title)}</DialogTitle><DialogDescription>{t('Review the amounts before saving. Both balances update together.')}</DialogDescription>
+ return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(title)}{operation.action==='reconcile'&&<InfoHint>{t('This records a balance correction today. It is not income or spending.')}</InfoHint>}</DialogTitle><DialogDescription className="sr-only">{t('Review the amounts before saving. Both balances update together.')}</DialogDescription>
  <form className="record-form" onSubmit={async e=>{e.preventDefault();setBusy(true);setSubmitted(true);setError('');try{await save(operation.action,{...draft,...(convertedPayment?{exchange_rate:fx.rate}:{}),target_id:draft.target_id||null,received:operation.action==='transfer'?(crossCurrency?draft.received:draft.amount):0});onClose();}catch(e){setError((e as Error).message);if((e as Error & {confirmedFailure?:boolean}).confirmedFailure)setSubmitted(false);}finally{setBusy(false);}}}>
  <fieldset disabled={busy||submitted} className="tracker-fields">
  <label>{t('Cash account')}<NativeSelect required value={draft.account_id} onChange={e=>{
@@ -53,8 +54,7 @@ export function AccountOperation({operation,records,save,onClose}:{operation:Ope
  <label>{t('Notes (optional)')}<Input value={draft.notes} maxLength={2000} onChange={e=>setDraft({...draft,notes:e.target.value})}/></label>
  </fieldset>
  {convertedPayment&&<><ExchangeRatePreview fx={fx}/>{fx.rate&&account&&<p className="muted">{t('Account amount')}: {formatMoney((operation.action==='occurrence'?draft.amount:draft.amount+draft.fee)/fx.rate,account.currency,locale)}</p>}</>}
- {operation.action==='reconcile'&&<p className="muted">{t('This records a balance correction today. It is not income or spending.')}</p>}
  <ErrorPopup message={error}/>
- <FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy||!draft.account_id||(['transfer','repayment'].includes(operation.action)&&draft.amount<=0)||(operation.action==='mortgage'&&draft.amount+draft.fee<=0)||(operation.action==='reconcile'&&balanceBlank)||(convertedPayment&&!fx.rate)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></FormFooter>
+ <FormFooter busy={busy} onCancel={guard.close}><Button title={busy?undefined:!draft.account_id?t('Choose a cash account.'):(['transfer','repayment'].includes(operation.action)&&draft.amount<=0)||(operation.action==='mortgage'&&draft.amount+draft.fee<=0)?t('Enter an amount greater than zero.'):undefined} disabled={busy||!draft.account_id||(['transfer','repayment'].includes(operation.action)&&draft.amount<=0)||(operation.action==='mortgage'&&draft.amount+draft.fee<=0)||(operation.action==='reconcile'&&balanceBlank)||(convertedPayment&&!fx.rate)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></FormFooter>
  </form></DialogContent></Dialog>{guard.confirmation}</>;
 }

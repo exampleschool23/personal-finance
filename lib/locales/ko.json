@@ -573,6 +573,7 @@
   "{count} holdings": "보유 자산 {count}개",
   "Holdings": "보유 자산",
   "{quantity} units": "{quantity}단위",
+  "1 unit": "1단위",
   "per unit": "단위당",
   "Exchange rates are missing. The account total is unavailable.": "환율이 없어요. 계좌 합계를 사용할 수 없어요.",
   "Add a cash, deposit, stock or crypto account to get started.": "현금, 예금, 주식 또는 암호화폐 계좌를 추가해 시작하세요.",

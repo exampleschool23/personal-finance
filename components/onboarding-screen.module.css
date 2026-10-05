@@ -12,7 +12,7 @@
 .amount{display:flex;align-items:center;gap:10px}.amount>span{font-weight:600;color:var(--muted-foreground)}
 .groupLabel{font-size:var(--type-small);font-weight:500;margin:4px 0 -8px}
 .options{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-.option{position:relative;display:grid;gap:4px;text-align:left;padding:18px 16px 16px;border:1px solid var(--border);border-radius:16px;background:var(--card);color:var(--foreground);cursor:pointer;transition:transform .2s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s,background-color .2s}
+.option{position:relative;display:grid;gap:4px;text-align:start;padding:18px 16px 16px;border:1px solid var(--border);border-radius:16px;background:var(--card);color:var(--foreground);cursor:pointer;transition:transform .2s cubic-bezier(.22,1,.36,1),border-color .2s,box-shadow .2s,background-color .2s}
 .option strong{font-size:var(--type-body);font-weight:600}
 .option>span:not(.optionMark){font-size:var(--type-caption);color:var(--muted-foreground);line-height:1.4}
 .option:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--foreground) 30%,var(--border));box-shadow:var(--shadow-card)}
@@ -38,5 +38,5 @@
 .doneMark{width:84px;height:84px;border-radius:50%;background:var(--primary);color:var(--primary-foreground);display:grid;place-items:center;animation:onboarding-pop .5s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes onboarding-step{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes onboarding-pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
-@media(max-width:600px){.page{padding:18px 16px 28px}.progress{margin-top:24px}.options{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.option{padding:14px 12px 12px}.actions{flex-wrap:wrap}.actionsRight{margin-left:auto}}
+@media(max-width:600px){.page{padding:18px 16px 28px}.progress{margin-top:24px}.options{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}.option{padding:14px 12px 12px}.actions{flex-wrap:wrap}.actionsRight{margin-inline-start:auto}}
 @media(prefers-reduced-motion:reduce){.step,.hint,.picker,.doneMark{animation:none}.option,.optionMark,.progress>span,.chip{transition:none}.option:hover{transform:none}}

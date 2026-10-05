@@ -573,6 +573,7 @@
   "{count} holdings": "Активов: {count}",
   "Holdings": "Активы счёта",
   "{quantity} units": "Количество: {quantity}",
+  "1 unit": "Количество: 1",
   "per unit": "за единицу",
   "Exchange rates are missing. The account total is unavailable.": "Не хватает курсов валют. Итог по счёту недоступен.",
   "Add a cash, deposit, stock or crypto account to get started.": "Начните с наличного счёта, вклада, брокерского или криптосчёта.",

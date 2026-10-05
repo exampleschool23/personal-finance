@@ -4,17 +4,17 @@
 .records{padding:24px 0 0;overflow:hidden;scroll-margin-top:84px}
 .records .panel-title{padding:0 24px}
 .table-scroll{overflow:auto}
-table{width:100%;border-collapse:collapse;text-align:left;white-space:nowrap}
+table{width:100%;border-collapse:collapse;text-align:start;white-space:nowrap}
 th{padding:10px 16px;border-bottom:1px solid var(--border);color:var(--muted-foreground);font-size:var(--type-micro);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
 td{padding:14px 16px;border-bottom:1px solid var(--hairline);font-size:var(--type-small)}
 tbody tr:last-child td{border-bottom:0}
 .workspace .content tbody tr{transition:background .15s}
 .workspace .content tbody tr:is(:hover,:focus-within){background:color-mix(in srgb,var(--accent) 35%,transparent)}
-.records :is(th,td):first-child{padding-left:24px}
-.records :is(th,td):last-child{padding-right:24px}
+.records :is(th,td):first-child{padding-inline-start:24px}
+.records :is(th,td):last-child{padding-inline-end:24px}
 /* The profit and loss table indents its rows by level, so it keeps its own start padding. */
-.panel:not(.records) .table-scroll table:not(.pnl-table) :is(th,td):first-child{padding-left:0}
-.panel:not(.records) .table-scroll :is(th,td):last-child{padding-right:0}
+.panel:not(.records) .table-scroll table:not(.pnl-table) :is(th,td):first-child{padding-inline-start:0}
+.panel:not(.records) .table-scroll :is(th,td):last-child{padding-inline-end:0}
 @container content (min-width:721px){.records td:first-child{width:36%;max-width:0}}
 .record-name{display:flex;gap:12px;align-items:center;min-width:0}
 .record-name>div{min-width:0}
@@ -42,7 +42,7 @@ roll-strip>roll-char{display:block;height:1lh}
 /* Rows under a group heading sit indented, so the heading reads as their parent. */
 @container content (min-width:721px){tbody:has(>.table-group-row) tr:not(.table-group-row) td:first-child{padding-inline-start:32px}tbody:has(>.table-group-row) tr:not(.table-group-row) td:last-child{padding-inline-end:16px}}
 .records td.amount{white-space:nowrap}
-@container content (min-width:721px){.records th:last-child,.records td:last-child{width:1%;text-align:right}}
+@container content (min-width:721px){.records th:last-child,.records td:last-child{width:1%;text-align:end}}
 .row-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;color:var(--muted-foreground)}
 .row-actions button{flex-shrink:0;height:34px;min-height:34px;font-size:var(--type-caption)}
 .row-actions button[data-size="sm"]{width:auto;padding-inline:12px}
@@ -69,12 +69,12 @@ roll-strip>roll-char{display:block;height:1lh}
  .upcoming-section tbody tr{padding-inline:0}
  :is(.records,.upcoming-section) tbody tr:last-child{border-bottom:0}
  :is(.records,.upcoming-section) tbody td{display:block;width:auto;max-width:none;padding:0;border:0}
- .records tbody td:first-child{padding-left:0}
- .records tbody td:last-child{padding-right:0}
- .records td.amount{grid-column:2;grid-row:1;text-align:right}
+ .records tbody td:first-child{padding-inline-start:0}
+ .records tbody td:last-child{padding-inline-end:0}
+ .records td.amount{grid-column:2;grid-row:1;text-align:end}
  .records td:nth-child(2){display:flex;flex-wrap:wrap;gap:6px;grid-column:1/-1;grid-row:2;max-width:calc(100% - 150px)}
  .records td:nth-child(3){grid-column:1/-1;grid-row:2;justify-self:end;font-size:var(--type-caption)}
- :is(.records,.upcoming-section) td:last-child{grid-column:1/-1;text-align:left}
+ :is(.records,.upcoming-section) td:last-child{grid-column:1/-1;text-align:start}
  :is(.records,.upcoming-section) td:last-child:empty,:is(.records,.upcoming-section) td:last-child:has(.row-actions:empty){display:none}
  /* Small summary tables: name and main figure on one line, the remaining columns beneath, right-aligned. */
  .stack-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
@@ -87,7 +87,7 @@ roll-strip>roll-char{display:block;height:1lh}
  :is(.records,.upcoming-section) .row-actions{justify-content:flex-start;flex-wrap:wrap}
  .upcoming-section td:first-child{grid-column:1;grid-row:1}
  .upcoming-section td:nth-child(2){grid-column:1;grid-row:2;font-size:var(--type-caption)}
- .upcoming-section td:nth-child(3){grid-column:2;grid-row:1;text-align:right}
+ .upcoming-section td:nth-child(3){grid-column:2;grid-row:1;text-align:end}
  .upcoming-section tbody tr.table-group-row{display:block;padding:16px 0 4px;border-bottom:0}
  .upcoming-section tbody:has(>.table-group-row) tr:not(.table-group-row){padding-inline:16px}
  .upcoming-section .table-group-row th{display:block;padding:0;border:0}

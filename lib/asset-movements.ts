@@ -1,4 +1,5 @@
 import type { Entry } from './finance';
+import { formatNumber } from './format';
 
 export type MovementKind = 'transfer' | 'buy' | 'sell' | 'interest';
 export type AssetMovement = {
@@ -8,6 +9,8 @@ export type AssetMovement = {
  fee: number; date: string; notes: string;
 };
 export const isHolding = (record: Pick<Entry, 'kind'>) => record.kind === 'Stock' || record.kind === 'Crypto';
+/** A holding's quantity in words: "1 unit", "0.55 units". */
+export const unitCount = (t: (key: string, params?: Record<string, string | number>) => string, quantity: number, locale: string) => quantity === 1 ? t('1 unit') : t('{quantity} units', { quantity: formatNumber(quantity, locale, 8) });
 const isBalanceAccount = (record: Pick<Entry, 'kind'>) => record.kind === 'Cash' || record.kind === 'Deposit';
 export function movementSources(kind: MovementKind, records: Entry[]) {
  return records.filter(record => kind === 'transfer' ? isBalanceAccount(record) : kind === 'interest' ? record.kind === 'Deposit' : kind === 'sell' ? isHolding(record) : ['Cash','Deposit','Stock','Crypto'].includes(record.kind));

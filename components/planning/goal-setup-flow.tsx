@@ -156,7 +156,7 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
    <footer className="goal-setup-footer">
     <ErrorPopup message={error}/>
     {(name === 'contribution' || name === 'budget') && <Button variant="ghost" disabled={busy || !canContinue(list, 'targets', today)} onClick={skip}>{t('Skip')}</Button>}
-    <Button disabled={busy} aria-disabled={!ready || undefined} onClick={() => void next()}>{t(busy ? 'Saving…' : name === 'budget' ? (list.length === 1 ? 'Create goal' : 'Create goals') : 'Continue')}</Button>
+    <Button disabled={busy} aria-disabled={!ready || undefined} title={!ready && name === 'select' ? t('Select goals to add') : undefined} onClick={() => void next()}>{t(busy ? 'Saving…' : name === 'budget' ? (list.length === 1 ? 'Create goal' : 'Create goals') : 'Continue')}</Button>
    </footer>
   </DialogContent>
  </Dialog>;

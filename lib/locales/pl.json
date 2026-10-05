@@ -573,6 +573,7 @@
   "{count} holdings": "Pozycje: {count}",
   "Holdings": "Pozycje",
   "{quantity} units": "{quantity} szt.",
+  "1 unit": "1 szt.",
   "per unit": "za jednostkę",
   "Exchange rates are missing. The account total is unavailable.": "Brakuje kursów wymiany. Suma konta jest niedostępna.",
   "Add a cash, deposit, stock or crypto account to get started.": "Dodaj konto gotówkowe, lokatę, konto akcji lub kryptowalut, aby zacząć.",

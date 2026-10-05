@@ -3,13 +3,14 @@ import Link from 'next/link';
 import {LanguageProvider,useLanguage} from '@/components/language-provider';
 import {Brand} from '@/components/presentation-foundation/brand';
 import {formatDate} from '@/lib/format';
+import {directionOf} from '@/lib/i18n';
 import {legalPaths,legalUpdated,privacyPolicy,termsOfUse,type LegalDocument} from '@/lib/legal';
 const titles={terms:'Terms of use',privacy:'Privacy policy'} as const;
 function LegalContent({document}:{document:LegalDocument}){
  const {t,locale,language}=useLanguage();
  const other=document.kind==='terms'?'privacy':'terms';
  return <article className="panel legal-document" lang="en" dir="ltr">
-  <h1>{t(titles[document.kind])}</h1>
+  <h1 lang={language} dir={directionOf(language)}>{t(titles[document.kind])}</h1>
   <p className="muted">{t('Last updated: {date}',{date:formatDate(legalUpdated,locale)})}</p>
   {language!=='en'&&<p className="legal-language-note" lang={language}>{t('This document is available in English.')}</p>}
   {document.sections.map(section=><section key={section.heading}>
@@ -17,7 +18,7 @@ function LegalContent({document}:{document:LegalDocument}){
    {section.paragraphs.map(paragraph=><p key={paragraph}>{paragraph}</p>)}
    {section.items&&<ul>{section.items.map(item=><li key={item}>{item}</li>)}</ul>}
   </section>)}
-  <nav className="legal-links" lang={language}><Link href={legalPaths[other]}>{t(titles[other])}</Link><Link href="/">{t('Back to Hoggish')}</Link></nav>
+  <nav className="legal-links" lang={language} dir={directionOf(language)}><Link href={legalPaths[other]}>{t(titles[other])}</Link><Link href="/">{t('Back to Hoggish')}</Link></nav>
  </article>;
 }
 /** The public terms or privacy page. Readable signed out, in the browser's language for its headings. */
