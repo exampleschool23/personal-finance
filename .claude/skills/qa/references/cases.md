@@ -22,6 +22,8 @@ Cases marked `[bug 2026-10-02]` reproduce a defect found in the 2 October QA pas
 
 Coverage audit 2026-10-03: about 360 cases were added area by area, each checked against the code and `en.json` but not yet run live. Treat a failure there as either a bug or a case to correct, and note which in the run log.
 
+Automated: cases tagged `[e2e]` run in a browser on every push (`npm run test:e2e`, `e2e/p0.spec.mjs`) against a production build and a fixed workspace (`e2e/fixture.mjs`); a live run need not repeat them unless the change touches their flow. Add a test there when a P0 case can run on the fixture.
+
 Conventions: amounts typed as shown; "USD/EUR" = the test account's two preferred
 currencies (USD primary). Compute every expected figure yourself first.
 
@@ -29,10 +31,10 @@ currencies (USD primary). Compute every expected figure yourself first.
 
 | ID | P | Case | Steps | Expect |
 |---|---|---|---|---|
-| AUTH-001 | P0 | Landing loads | Open `/` signed out | Landing page with "Get started", "Explore sample workspace"; no language selector; no console errors |
+| AUTH-001 | P0 | Landing loads | Open `/` signed out | Landing page with "Get started", "Explore sample workspace"; no language selector; no console errors `[e2e]` |
 | AUTH-002 | P1 | Sign-in page | Open `/sign-in` | Google, phone, email + password fields, "Forgot password?", "Create an account", Terms and Privacy links |
 | AUTH-003 | P1 | Language follows browser | Signed out, browser language ru | Sign-in copy in Russian; unsupported browser language falls back to English |
-| AUTH-004 | P0 | Sample workspace | Click "Explore sample workspace" | Dashboard with Demo badge; saving anything says sign in; "Exit demo" in drawer returns to landing |
+| AUTH-004 | P0 | Sample workspace | Click "Explore sample workspace" | Dashboard with Demo badge; saving anything says sign in; "Exit demo" in drawer returns to landing `[e2e]` |
 | AUTH-005 | P1 | Sample survives navigation | In demo, use sidebar to visit every page | Each page renders sample data; a full reload returns to landing (known, by design) |
 | AUTH-006 | P1 | Legal pages | Open `/terms`, `/privacy` | Public, link to each other; no country named for the operator |
 | AUTH-007 | P2 | Password rule copy | Create account form | Minimum 8 characters stated and enforced client-side `[bug 2026-10-02]` |
@@ -56,7 +58,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | AUTH-025 | P1 | Email field validation | Submit sign-in with "qa-not-an-email" and an empty password | Native validation blocks submit on Email and Password; no request to `/api/auth` in the network log |
 | AUTH-026 | P2 | Sign-in busy state | Submit the form while the request is pending (user signs in) | Button reads "Signing in…" and is disabled with the Google and demo buttons; double clicking sends one request |
 | AUTH-027 | P1 | Google sign-in failure messages | Open `/sign-in?auth_error=google_cancelled`, then `google_expired`, `google_failed`, `bogus` | "Google sign-in was not completed. Please try again." / "Your sign-in attempt expired. Please start again." / "Google sign-in failed. Please try again or use email." / "Sign-in could not be completed. Please try again."; the query parameter is removed from the address bar |
-| AUTH-028 | P0 | Google callback without verifier | Open `/auth/callback?code=abc` in a fresh tab (no PKCE cookie) | Lands on `/sign-in` with "Your sign-in attempt expired. Please start again."; no session created; never redirects to an external `redirect_to` |
+| AUTH-028 | P0 | Google callback without verifier | Open `/auth/callback?code=abc` in a fresh tab (no PKCE cookie) | Lands on `/sign-in` with "Your sign-in attempt expired. Please start again."; no session created; never redirects to an external `redirect_to` `[e2e]` |
 | AUTH-029 | P1 | Phone sign-in send step | `/sign-in` → "Continue with phone" (only when shown); enter "12" then a well-formed unregistered number "+1 555 000 0000" | "12": "Enter your phone number with the country code."; well-formed: neutral toast "If this number has an account, a code is on its way to its Telegram chat."; never reveals whether the number exists; never use a real person's number |
 | AUTH-030 | P1 | Phone code resend timer | After Send code, read the outline button | "Send a new code in 60 s" counting down, disabled; at 0 reads "Send a new code" and is enabled; "Use a different number" returns to the number field with the code cleared |
 | AUTH-031 | P1 | Phone code validation | On the code step type "12ab" then "000000" and Verify | Letters are stripped as typed; a 2-digit code is blocked by the pattern; a wrong code shows "The code is wrong or has expired."; stays signed out |
@@ -111,7 +113,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 
 | ID | P | Case | Steps | Expect |
 |---|---|---|---|---|
-| SHELL-001 | P0 | Every drawer link | Click each destination | Correct page, active state, title in top bar |
+| SHELL-001 | P0 | Every drawer link | Click each destination | Correct page, active state, title in top bar `[e2e]` |
 | SHELL-002 | P1 | Overdue badge | Create an overdue scheduled payment | Count on Recurring; includes overdue monthly loan instalments |
 | SHELL-003 | P1 | Display currency | Top bar → EUR, then USD | All totals convert; per-currency goals stay in their currency; rates source and date shown |
 | SHELL-004 | P1 | Refresh prices | Press refresh | Disabled in demo; otherwise updates or shows a clear error |
@@ -143,7 +145,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 
 | ID | P | Case | Steps | Expect |
 |---|---|---|---|---|
-| DASH-001 | P0 | Net worth | Read headline | Equals assets − debts computed from Accounts, Investments and Loans (convert EUR at shown rate) |
+| DASH-001 | P0 | Net worth | Read headline | Equals assets − debts computed from Accounts, Investments and Loans (convert EUR at shown rate) `[e2e]` |
 | DASH-002 | P1 | Period buttons | 30 / 90 / 365 / All history | Pressed state moves; chart window changes; no errors |
 | DASH-003 | P1 | Benchmark toggles | Toggle BTC, SPY, deposit, main line | Each series appears / disappears (dot or line count changes) |
 | DASH-004 | P1 | Main series label | Read legend + tooltip | Line is "Investments" (it plots investments, not net worth) `[bug 2026-10-02]` |
@@ -155,7 +157,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | DASH-010 | P1 | Tracking start persists | Pick Start of this month; reload | Same date shown |
 | DASH-011 | P2 | Settings text vs picker | Comparison settings with a chosen day before first investment | Explains comparisons start on the first investment day; never contradicts picker `[bug 2026-10-02]` |
 | DASH-012 | P1 | Benchmark funding | Switch Excluding / Including expenses | Chart and summary recompute; choice remembered |
-| DASH-013 | P0 | Spending card | Read | Equals Cash flow actual spending this month; last-month line correct |
+| DASH-013 | P0 | Spending card | Read | Equals Cash flow actual spending this month; last-month line correct `[e2e]` |
 | DASH-014 | P2 | Empty spending card | New account, no spending | Empty state, not a "$0–$1" axis `[bug 2026-10-02]` |
 | DASH-015 | P1 | Budget card | Read | "spent of planned" equals Budget page totals; in Flex mode no per-category amounts for flexible categories `[bug 2026-10-02]` |
 | DASH-016 | P1 | Monthly commitments | Read | Income − expenses − mortgage payments − loan/debt payments; loan line shown when > 0 `[bug 2026-10-02]` |
@@ -188,11 +190,11 @@ currencies (USD primary). Compute every expected figure yourself first.
 
 | ID | P | Case | Steps | Expect |
 |---|---|---|---|---|
-| ACC-001 | P0 | Add cash account | Add account → name "QA Wallet", USD, opening 1,250.50 | Listed under Cash with $1,251 display; balance exact in edits |
+| ACC-001 | P0 | Add cash account | Add account → name "QA Wallet", USD, opening 1,250.50 | Listed under Cash with $1,251 display; balance exact in edits `[e2e]` |
 | ACC-002 | P1 | Duplicate name hint | Add another "QA Wallet" | Hint "This name already exists"; pickers still distinguish by balance |
 | ACC-003 | P0 | Edit / rename | ⋯ → Edit → rename "QA Wallet 2" | Name updates everywhere (pickers, bot) |
 | ACC-004 | P1 | Adjust balance | Adjust balance → 50 | Balance 50; activity "Reconcile balance"; not income or spending |
-| ACC-005 | P0 | Transfer same currency | $20 + $2 fee | Source −20, target +18, fee is an expense |
+| ACC-005 | P0 | Transfer same currency | $20 + $2 fee | Source −20, target +18, fee is an expense `[e2e]` |
 | ACC-006 | P1 | Transfer same account | Pick same From/To | Not offered |
 | ACC-007 | P1 | Fee ≥ amount | Fee 25 on 20 | Visible message "The transfer fee must be less than the amount sent." `[bug 2026-10-02]` |
 | ACC-008 | P0 | Transfer cross currency | Transfer money › QA USD cash → QA EUR cash › Total amount debited 500 | Shows "Exchange rate: 1 USD = <rate> EUR · ECB · effective <date>" and "Net amount received: €<500 × rate>"; USD falls by exactly 500, EUR rises by 500 × rate; no received-amount field (the dated rate decides it) |
@@ -246,12 +248,12 @@ currencies (USD primary). Compute every expected figure yourself first.
 | TX-016 | P1 | Rule conditions | Rules › Add rule › More conditions: exact name, account, category, business, amount range | The count of matching transactions follows each condition; a rule with no condition cannot be saved; an upper amount below the lower shows an error |
 | TX-017 | P1 | Select all | Edit multiple › Select all, then Clear selection | Every listed transaction is selected, then none; more than 500 still update |
 | TX-018 | P1 | Tag history | Settings › Tags; click a tag's count | Transactions open on Last 24 months filtered by the tag |
-| TX-019 | P0 | Future-dated actual refused | Add transaction › Add expense; open the Record date picker | Days after today are disabled, so tomorrow cannot be picked; no future-dated row appears in the list |
-| TX-020 | P0 | Zero or blank amount | Add expense with amount 0, then with the amount left blank | 0 refused with "Enter an amount greater than zero."; blank stopped by the required field ("Please fill in this field."); nothing saved; the list is unchanged |
+| TX-019 | P0 | Future-dated actual refused | Add transaction › Add expense; open the Record date picker | Days after today are disabled, so tomorrow cannot be picked; no future-dated row appears in the list `[e2e]` |
+| TX-020 | P0 | Zero or blank amount | Add expense with amount 0, then with the amount left blank | 0 refused: clicking Save leaves the field, which shows a zero as its empty placeholder, so the browser's "Please fill in this field." stops it (the app answers "Enter an amount greater than zero." when 0 reaches it); blank stopped by the required field ("Please fill in this field."); nothing saved; the list is unchanged `[e2e]` |
 | TX-021 | P0 | Decimal comma and dot | Expense "QA Coffee" 12,75 in Russian, then 12.75 in English | Both store 12.75; the list row shows the whole amount −$13; Edit shows 12,75 in Russian and 12.75 in English |
-| TX-022 | P0 | Edit amount moves balance once | Edit a QA expense from 20 to 35; reopen Edit › Record history | Account balance drops by exactly 15 more; history lists "Amount: $20 → $35" |
+| TX-022 | P0 | Edit amount moves balance once | Edit a QA expense from 20 to 35; reopen Edit › Record history | Account balance drops by exactly 15 more; history lists "Amount: $20 → $35" `[e2e]` |
 | TX-023 | P0 | Stale edit refused | Open Edit on the same QA expense in two tabs; save in tab 1, then save in tab 2 | Tab 2 shows "This record changed since you opened it. Reload it before saving."; tab 1's values are kept |
-| TX-024 | P0 | Delete and restore | Cash flow › QA expense row ⋯ › Delete; Recently deleted › Restore | Account balance goes back up by the amount, then down again exactly once after restore; the row returns on Transactions with its category and business |
+| TX-024 | P0 | Delete and restore | Cash flow › QA expense row ⋯ › Delete; Recently deleted › Restore | Account balance goes back up by the amount, then down again exactly once after restore; the row returns on Transactions with its category and business `[e2e]` |
 | TX-025 | P1 | Delete a Record payment transaction | Recurring › Record payment on a QA monthly expense; delete that transaction from Cash flow ⋯ › Delete; restore it | After delete the occurrence offers Record payment again (no longer Paid); after restore it shows Paid again |
 | TX-026 | P1 | Double submit | Double-click Save expense on a new QA expense | Exactly one record created; the button shows "Saving…" and is disabled during the save |
 | TX-027 | P1 | Name suggestions | Add income (named records) or Add account; type "QA Co" in Name | "Matching existing names" lists earlier names of the same kind containing it with "Existing records: N"; picking one fills the name and closes the list. The Add expense form has no Name field (2026-10-06) |
@@ -323,7 +325,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | CF-037 | P2 | Future occurrence paid early | Fixed QA salary source; POST a payment for next month's due date dated today | Refused like the form (which only offers the current occurrence); Recurring never shows next month as Received in advance `[bug 2026-10-03]` |
 | CF-038 | P2 | Deposit maturity in forecast | QA deposit 5,000 at 8% maturing within 365 days; Forecast 365 days | Maturity event shows the expected payout including interest, or a note that interest is added when recorded `[bug 2026-10-03]` |
 | CF-039 | P2 | Estimates for past months | Header month picker May 2025 with a deposit and mortgages added in 2026 | Monthly estimate tiles leave out assets, debts and sources that did not exist in that month `[bug 2026-10-03]` |
-| CF-040 | P1 | Recent transactions newest first | Record two QA expenses today, a few minutes apart; Cash flow › Overview › Recent transactions | The newest expense is listed first; 2026-10-06: same-day rows were oldest-first, so the $65 expense saved last was missing from the four-row preview while two older fees showed `[qa 2026-10-06]` Fixed 2026-10-06 by migration 118 (same-day rows newest first; awaits manual apply), guarded by `tests/newest-records-first-sql.mjs`. |
+| CF-040 | P1 | Recent transactions newest first | Record two QA expenses today, a few minutes apart; Cash flow › Overview › Recent transactions | The newest expense is listed first; 2026-10-06: same-day rows were oldest-first, so the $65 expense saved last was missing from the four-row preview while two older fees showed `[qa 2026-10-06]` Fixed 2026-10-06 by migration 118 (record pages and the transaction history Cash flow reads: same-day rows newest first; awaits manual apply), guarded by `tests/newest-records-first-sql.mjs` and `e2e/p0.spec.mjs`. The first version patched only the record pages; the browser test caught that Cash flow reads `transaction_history_page`. `[e2e]` |
 
 ## REP — reports and business tracking
 
@@ -401,7 +403,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 |---|---|---|---|---|
 | REC-001 | P0 | Monthly expense appears | Create $40 monthly expense | Listed today with Record payment |
 | REC-002 | P1 | Record payment prefill | Record payment | Amount prefilled 40 (value, not placeholder) `[bug 2026-10-02]` |
-| REC-003 | P0 | Overdraft refused | Pay from a $0 account | "Insufficient balance or invalid amount." nothing saved |
+| REC-003 | P0 | Overdraft refused | Pay from a $0 account | "Insufficient balance or invalid amount." nothing saved `[e2e]` |
 | REC-004 | P1 | Paid state | Pay from funded account | "Paid"; summary bars update |
 | REC-005 | P1 | Future occurrence | Next month | Record payment disabled; "in N days" |
 | REC-006 | P1 | Skip / Restore | Skip next month; restore from Skipped occurrences | Both work |
@@ -425,7 +427,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | REC-024 | P1 | Subscriptions detected | Sample workspace, Recurring | Subscriptions panel lists Netflix (Price went up, caution pill), Spotify and Daily News digital (Possibly cancelled); totals per currency leave Daily News out; no day-to-day purchases listed |
 | REC-025 | P1 | Subscription decisions | ⋯ on a subscription: Not a subscription, Mark cancelled; then Restore under Hidden subscriptions | Row moves to Hidden with its reason and back; totals follow; survives reload on a signed-in account |
 | REC-026 | P1 | Track as recurring | ⋯ → Track as recurring, save | Record form opens with the name, amount and next charge date; once saved the plan is listed and the subscription row is gone |
-| REC-027 | P2 | Back-dated schedule | Monthly QA expense with start date three years ago | Overdue count does not jump by every past month (36+); past occurrences before the schedule was created are not overdue reminders `[bug 2026-10-03]` Fixed 2026-10-06: dates before the record was added stay open in their month but never remind (`installmentsFrom`), guarded by `tests/qa-regressions.mjs`. |
+| REC-027 | P2 | Back-dated schedule | Monthly QA expense with start date three years ago | Overdue count does not jump by every past month (36+); past occurrences before the schedule was created are not overdue reminders `[bug 2026-10-03]` Fixed 2026-10-06: dates before the record was added stay open in their month but never remind (`installmentsFrom`), guarded by `tests/qa-regressions.mjs`. `[e2e]` |
 | REC-028 | P1 | Second payment, different amount | Record payment 45 on a QA monthly expense; send a second Record payment for the same date with 30 from another account (second tab or API) | Refused with "This scheduled payment is already recorded. Keep its transaction."; a retry of the same payment (same id) still succeeds; one transaction `[bug 2026-10-03]` |
 | REC-029 | P2 | Yesterday wording | QA monthly expense due yesterday, unpaid › Recurring list | Reads "Yesterday" (or "1 day ago"), never "1 days ago" (`useDueLabel` in `components/planning/recurring-rows.tsx`) `[bug 2026-10-06]` |
 | REC-030 | P1 | Restore does not refund archived months | QA spending plan $100/month from 1 July with rollover, no spending › archive it › a month later Restore › Recurring and Budget | The plan resumes from the month it is restored: archived months add no carry-over and no planned amount. 2026-10-06: the server rollover ignores `archived`, so carry-over kept growing while archived ($300 in October, $400 in November) and Restore brings it all back `[bug 2026-10-06]`; fixed by migration 115 (archive pauses) |
@@ -439,7 +441,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 |---|---|---|---|---|
 | INV-001 | P0 | Add stock | Add asset → Stock → AAPL → Fetch price → qty 2.5, buy 250 | Value = qty × price; gain = value − cost |
 | INV-002 | P1 | Unit price precision | Read price | Up to 8 decimals, no trailing zeros |
-| INV-003 | P0 | Sell | Sell 2 into a cash account for 990 | Holding 0.5; cash +990 |
+| INV-003 | P0 | Sell | Sell 2 into a cash account for 990 | Holding 0.5; cash +990 `[e2e]` |
 | INV-004 | P1 | Oversell | Type 3 when 2.5 available | Message "Only 2.5 units available", value capped `[bug 2026-10-02]` |
 | INV-005 | P2 | Crypto hint | Stock sale | No USDT/USDC note (only for crypto) `[bug 2026-10-02]` |
 | INV-006 | P1 | Tracker | Open Tracker; Buy; value update | Works; history chart updates |
@@ -488,7 +490,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | LOAN-001 | P0 | Totals | Owed to you / you owe / net | Sum of rows (converted) |
 | LOAN-002 | P1 | Currency on new record | Add record | USD/EUR select for all kinds `[bug 2026-10-02]` |
 | LOAN-003 | P1 | Category filter | Open | Only Money lent / Mortgage / Loan / Debt `[bug 2026-10-02]` |
-| LOAN-004 | P0 | Record payment on loan | Car loan → Record payment | Debt payment flow; balance falls `[bug 2026-10-02]` |
+| LOAN-004 | P0 | Record payment on loan | Car loan → Record payment | Debt payment flow; balance falls `[bug 2026-10-02]` `[e2e]` |
 | LOAN-005 | P2 | Plural | One lending record | "1 lending record" `[bug 2026-10-02]` |
 | LOAN-006 | P1 | Payoff planner | Change method / extra payment | Debt-free date and interest recompute; Save plan |
 | LOAN-007 | P1 | Mortgage payment dialog | Principal + interest | Balance falls by principal only |
@@ -496,7 +498,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | LOAN-009 | P0 | Repayment over balance | Money lent QA Friend 150 › Tracker › Update type Repayment received › amount 200 › pick a QA cash account | Save update stays disabled; help text "Enter updates on or after the latest balance date. Repayments cannot exceed the outstanding balance." shown; nothing saved |
 | LOAN-010 | P0 | Partial repayment received | QA Friend 150 › Tracker › Repayment received › 50 › Receive into cash account QA cash › Save update | "Saved" toast; owed 100; History shows Repayment received with "Cash added to QA cash: 50"; cash +50; Money owed to you tile −50 |
 | LOAN-011 | P0 | Mortgage principal over balance | QA mortgage › Record payment › Principal repayment above the Outstanding balance, pick a Cash account | Save payment stays disabled; Remaining balance shows a negative amount; nothing saved |
-| LOAN-012 | P0 | Undo a recorded payment | QA loan › Record payment 50 from QA cash › Save › Tracker › History › newest Repayment made › Delete update › confirm | Outstanding balance and QA cash return exactly to their prior values; the entry is gone from History |
+| LOAN-012 | P0 | Undo a recorded payment | QA loan › Record payment 50 from QA cash › Save › Tracker › History › newest Repayment made › Delete update › confirm | Outstanding balance and QA cash return exactly to their prior values; the entry is gone from History `[e2e]` |
 | LOAN-013 | P1 | Repayment in another currency | USD QA loan › Record payment 100 › pick a EUR cash account | Exchange rate preview appears; Save stays disabled until the rate loads; History then shows "Cash deducted from" the EUR account at the converted amount, never 100 EUR 1:1 |
 | LOAN-014 | P1 | Payoff planner methods | Two QA debts in the display currency (small high-rate, large low-rate) › set each Minimum monthly payment › Extra monthly payment 100 › switch Highest interest first and Smallest balance first | Estimated debt-free date and Estimated interest recompute; Highest interest first never costs more interest; the Alternative method line shows the other method; with extra 0, Interest saved by extra payments is 0 |
 | LOAN-015 | P2 | Planner empty | No debts, or none in the display currency | "Add a debt to compare payoff strategies."; Save plan disabled |
@@ -562,7 +564,7 @@ currencies (USD primary). Compute every expected figure yourself first.
 | DEL-001 | P0 | Restore | Delete a QA goal, Restore | Confirm; item back with its activity |
 | DEL-002 | P2 | Empty | Nothing deleted | Empty state, no pagination `[bug 2026-10-02]` |
 | DEL-003 | P1 | Delete permanently | Only on QA items, with user OK | Confirm; gone |
-| DEL-004 | P0 | Restore puts money back | Note a QA cash account balance; delete a QA expense of 12.75 from it; restore it | After delete balance +12.75; after restore back to the original; transaction listed again with its date and category |
+| DEL-004 | P0 | Restore puts money back | Note a QA cash account balance; delete a QA expense of 12.75 from it; restore it | After delete balance +12.75; after restore back to the original; transaction listed again with its date and category `[e2e]` |
 | DEL-005 | P1 | Row details | Delete a QA expense 12.75 USD, a QA stock record (qty 3 at 10), a QA expense plan and a QA goal | Rows show name, type badge, date (records only), amount ($13, stock $30 = 3 × 10), "Target amount: …" for the goal, "Monthly expense plan" label, "Deleted on · <date time>" |
 | DEL-006 | P1 | Deleted-on time zone | Delete a QA record, read "Deleted on" | Time equals current Asia/Tashkent time (UTC+5), 24-hour, "16 September 2026" date style |
 | DEL-007 | P1 | Newest first and pagination | Account with more than 10 deleted QA items | Newest first; 10 per page; "Page 2" via Next; Next disabled on the last page; deleting the last item on page 2 returns to page 1 |
@@ -774,16 +776,16 @@ currencies (USD primary). Compute every expected figure yourself first.
 
 | ID | P | Case | Expect |
 |---|---|---|---|
-| XAPP-001 | P0 | One spending definition | Cash flow, Transactions, Dashboard spending card, Budget actuals, bot digest all equal: expenses in full + mortgage interest; principal and loan repayments excluded `[bug 2026-10-02]` |
+| XAPP-001 | P0 | One spending definition | Cash flow, Transactions, Dashboard spending card, Budget actuals, bot digest all equal: expenses in full + mortgage interest; principal and loan repayments excluded `[bug 2026-10-02]` `[e2e]` |
 | XAPP-002 | P0 | Balances | Bot pickers, Accounts, Investments account cards equal (after conversion) |
-| XAPP-003 | P0 | Net worth | Dashboard = Investments page "Net worth" = assets − debts |
+| XAPP-003 | P0 | Net worth | Dashboard = Investments page "Net worth" = assets − debts `[e2e]` |
 | XAPP-004 | P1 | Upcoming | Bot upcoming = Dashboard card = Recurring list for the same window |
 | XAPP-005 | P1 | Goal values | Goals page = Dashboard goals card |
 | XAPP-006 | P1 | Category names | Same custom name in app list, bot buttons, bot confirmations |
 | XAPP-007 | P1 | Rates | Same pair and date → same rate in every dialog; label names the source (ECB / CBU) |
 | XAPP-008 | P0 | Delete then restore | Deleting a QA expense, a QA stock and a QA loan with no recorded trades or payments moves each to Recently deleted; restoring each returns balances, net worth, spending, budget actuals and goal values exactly to their pre-delete figures on every page; a stock or loan with trades or payments refuses deletion with "This record has saved tracker updates or transactions and cannot be deleted." |
 | XAPP-009 | P0 | Edit a past record | Change a QA expense from last month (amount, then date into this month, then account): both months' spending, budget actuals and both accounts' balances move alike on Cash flow, Transactions, Dashboard and Budget |
-| XAPP-010 | P0 | Cross-currency transfer | QA USD → EUR Transfer money on Accounts uses the shown dated rate: USD falls by the amount sent, EUR rises by "Net amount received"; net worth changes only by the fee and rounding; only the fee counts as spending, the transfer never as spending or income |
+| XAPP-010 | P0 | Cross-currency transfer | QA USD → EUR Transfer money on Accounts uses the shown dated rate: USD falls by the amount sent, EUR rises by "Net amount received"; net worth changes only by the fee and rounding; only the fee counts as spending, the transfer never as spending or income `[e2e]` |
 | XAPP-011 | P1 | Display currency switch | With USD and EUR enabled in Settings, top-bar Display currency USD → EUR: net worth, debts, holdings and goals reconvert at the same rate on Dashboard, Investments, Loans & debts and Goals; goals with their own currency stay in it |
 | XAPP-012 | P1 | Loan payment ripple | One QA loan payment (principal plus interest) from Recurring: the loan falls by principal on Loans & debts, the account by principal plus interest on Accounts, the instalment shows Paid on Recurring, the Dashboard upcoming card and the drawer overdue count update together; spending rises by the interest only |
 | XAPP-013 | P1 | Investment buy ripple | Buying a QA stock from a cash account with a fee: cash falls by the total cost, the holding rises, net worth changes only by the fee and price; Dashboard Net worth card "Money invested" for the period rises by the cost; only the fee counts as spending |

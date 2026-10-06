@@ -17,7 +17,9 @@
     "test:integration": "node scripts/test.mjs --integration",
     "test:coverage": "node scripts/test.mjs --coverage",
     "build:production": "next build --webpack",
-    "typecheck": "tsc --noEmit --incremental false"
+    "typecheck": "tsc --noEmit --incremental false",
+    "test:e2e": "playwright test",
+    "test:e2e:full": "npm run build:production && playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
@@ -47,6 +49,7 @@
     "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
     "@electric-sql/pglite": "0.5.8",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",

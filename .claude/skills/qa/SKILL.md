@@ -105,6 +105,11 @@ is blocked by the pane; that is expected.
 
 ## 3. Method
 
+0. **Automated P0 first.** Run `npm run test:e2e:full` (a production build, then the browser tests in
+   `e2e/p0.spec.mjs` on the fixed workspace in `e2e/fixture.mjs`, against the app's schema in PGlite through
+   `e2e/fake-supabase.mjs`; no real account or service is touched). Every failure is a finding. Cases tagged `[e2e]`
+   in the catalog are covered there, so a live run spends its time on the rest. When a P0 finding can be reproduced
+   on the fixture, add its test to `e2e/p0.spec.mjs` with the fix.
 1. **Plan.** Pick cases from `references/cases.md` for the requested scope. For
    "retest", take the top commit of the catalog's **Run log**, map each commit since
    it (`git log <sha>..origin/main`) to case IDs through the §1a routes and the

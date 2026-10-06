@@ -53,3 +53,8 @@ next-env.d.ts
 !/.claude/skills/
 /research_notes
 /reports
+
+# Browser tests (e2e/): the saved session, results and report of the last run
+/e2e/.auth/
+/test-results/
+/playwright-report/
