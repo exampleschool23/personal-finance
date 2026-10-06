@@ -24,7 +24,7 @@
 .account-search>svg{position:absolute;inset-inline-start:12px;top:50%;transform:translateY(-50%)}
 .account-search input{height:42px;padding-inline-start:40px;box-shadow:none}
 .account-group{padding:0;overflow:hidden}
-.account-group>summary{display:flex;align-items:center;gap:10px;padding:16px 20px;list-style:none;cursor:pointer}
+.account-group>summary{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:16px 20px;list-style:none;cursor:pointer}
 .account-group>summary>svg{flex-shrink:0;color:var(--muted-foreground);transition:transform .15s}
 .account-group:not([open])>summary>svg{transform:rotate(-90deg)}
 .account-group>summary h2{font-size:var(--type-title);font-weight:600}
@@ -32,13 +32,13 @@
 .account-group-skeleton-head{display:flex;align-items:center;gap:10px;min-height:62px;padding:16px 20px}
 .account-group>summary>strong{margin-inline-start:auto;font-size:var(--type-title);font-weight:650;font-variant-numeric:tabular-nums}
 .account-group>summary:focus-visible{outline:2px solid var(--ring);outline-offset:-3px}
-.account-list-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto 18px;align-items:center;gap:14px;width:100%;min-height:64px;padding:12px 20px;border-top:1px solid var(--hairline);font-size:var(--type-small);text-align:start;cursor:pointer;transition:background .15s}
+.account-list-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;width:100%;min-height:64px;padding:12px 20px;border-top:1px solid var(--hairline);font-size:var(--type-small);text-align:start;cursor:pointer;transition:background .15s}
 .account-list-row:hover{background:color-mix(in srgb,var(--accent) 35%,transparent)}
 .account-list-row[aria-pressed=true]{background:color-mix(in srgb,var(--accent) 70%,transparent)}
 .account-list-row:focus-visible{outline:2px solid var(--ring);outline-offset:-3px}
-.account-list-row>strong{font-size:var(--type-compact);font-weight:600;text-align:end;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.account-list-row>svg{color:var(--muted-foreground)}
-.account-list-name{min-width:0;font-weight:600;overflow-wrap:anywhere}
+.account-list-row>strong{margin-inline-start:auto;font-size:var(--type-compact);font-weight:600;text-align:end;font-variant-numeric:tabular-nums}
+.account-list-row>svg{flex-shrink:0;color:var(--muted-foreground)}
+.account-list-name{flex:1 1 9rem;min-width:0;font-weight:600;overflow-wrap:break-word}
 .account-list-name small{display:block;margin-top:1px;font-size:var(--type-caption);font-weight:400;color:var(--muted-foreground)}
 .account-search-empty{padding:28px 20px;font-size:var(--type-small)}
 .account-selected-panel{position:sticky;top:84px;min-width:0}
@@ -46,7 +46,7 @@
 .account-activity .records-pagination{margin:12px -20px -20px}
 .account-activity td{font-variant-numeric:tabular-nums}
 @container content (max-width:900px){.accounts-master-detail{grid-template-columns:minmax(0,1fr)}.account-selected-panel{position:static}}
-@container content (max-width:560px){.account-list-row,.account-group>summary{padding-inline:16px}.account-list-row{gap:10px}.account-activity .records-pagination{margin:12px -16px -20px}}
+@container content (max-width:560px){.account-list-row,.account-group>summary{padding-inline:16px}.account-list-row{gap:4px 10px}.account-activity .records-pagination{margin:12px -16px -20px}}
 
 /* Settings: quiet navigation and focused preference cards. */
 .settings-layout .page-heading{margin-bottom:24px}

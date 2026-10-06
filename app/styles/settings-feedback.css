@@ -222,7 +222,7 @@
 
 /* Shared dropdown spacing: leave room for the arrow and its inset edge. */
 [data-slot="native-select-wrapper"] select[data-slot="native-select"]{appearance:none;padding-inline-end:40px;text-overflow:ellipsis}
-[data-slot="native-select-wrapper"] [data-slot="native-select-icon"]{right:14px;width:16px;height:16px;pointer-events:none}
+[data-slot="native-select-wrapper"] [data-slot="native-select-icon"]{inset-inline-end:14px;width:16px;height:16px;pointer-events:none}
 .settings-form [data-slot="native-select-wrapper"]{width:100%}
 
 /* Save confirmations and action errors share one popup with Sonner's top entrance/exit and swipe dismissal. */

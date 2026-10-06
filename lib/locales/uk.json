@@ -2543,5 +2543,12 @@
   "Money and work": "Гроші й робота",
   "Change icon for {name}": "Змінити значок для {name}",
   "Choose an icon": "Виберіть значок",
-  "Use the default icon": "Значок за замовчуванням"
+  "Use the default icon": "Значок за замовчуванням",
+  "Menu": "Меню",
+  "You can keep up to {count} watchlists.": "Можна мати не більше {count} списків спостереження.",
+  "Enter a whole number for priority.": "Введіть ціле число для пріоритету.",
+  "Today is already shown.": "Сьогоднішній день уже показано.",
+  "Check each asset in the portfolio.": "Перевірте кожен актив у портфелі.",
+  "Type a question.": "Введіть запитання.",
+  "Choose both accounts.": "Виберіть обидва рахунки."
 }

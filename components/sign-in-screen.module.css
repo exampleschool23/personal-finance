@@ -4,6 +4,8 @@
 .formSide{display:flex;flex-direction:column;gap:28px;min-width:0;padding:12px clamp(16px,4vw,56px)}
 .header{display:flex;align-items:center;justify-content:space-between;gap:24px}
 .preferences{flex-shrink:0}
+/* At 280px the brand gives way: its tagline wraps rather than push the theme toggle off the screen (RESP-026). */
+.header>:first-child{min-width:0}.header :global(.brand small.block){white-space:normal}
 .card{width:100%;max-width:420px;margin:auto;background:var(--card);border:1px solid var(--hairline);border-radius:20px;padding:32px;box-shadow:var(--shadow-card);min-width:0}
 .cardHeading{margin-bottom:24px;text-align:center}.cardHeading h1{font-size:var(--type-display);letter-spacing:-.02em;font-weight:600;line-height:1.25;margin:0 0 8px}.cardHeading p{font-size:var(--type-small);color:var(--muted-foreground);line-height:1.6;margin:0}
 .card form{margin:0}
@@ -13,13 +15,13 @@
 /* Fields stay at 16px so phones do not zoom in when one is focused. */
 .card .form{display:flex;flex-direction:column;gap:8px}.form label{font-size:var(--type-small);font-weight:500;margin:0;color:var(--foreground)}.card .form input{height:44px;width:100%;border-radius:var(--radius-control);background:var(--field);border:1px solid var(--input);font-size:var(--type-body);color:var(--foreground);padding:10px 12px}.form input::placeholder{color:var(--muted-foreground);opacity:.8}
 .passwordLabel{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:10px}.card a{display:inline-flex;align-items:center;min-height:24px;color:var(--foreground);font-weight:500;font-size:var(--type-caption);text-decoration:none}.card a:hover{text-decoration:underline}.card a:focus-visible{outline:2px solid var(--ring);outline-offset:4px;border-radius:2px}
-.password{position:relative}.card .password input{padding-inline-end:46px}.password button{position:absolute;right:3px;top:3px;width:38px;height:38px;color:var(--muted-foreground)}
+.password{position:relative}.card .password input{padding-inline-end:46px}.password button{position:absolute;inset-inline-end:3px;top:3px;width:38px;height:38px;color:var(--muted-foreground)}
 .card .submit{height:44px;width:100%;background:var(--primary);color:var(--primary-foreground);border:1px solid transparent;border-radius:var(--radius-control);margin-top:12px;font-size:var(--type-small);font-weight:600}.card .submit:hover{background:color-mix(in srgb,var(--primary) 90%,var(--foreground))}
 .register{text-align:center;font-size:var(--type-caption);color:var(--muted-foreground);line-height:1.8;margin:20px 0 0}.register a{gap:3px}
 .demo{border-top:1px solid var(--border);margin-top:24px;padding-top:21px;text-align:center}.demo p{font-size:var(--type-caption);color:var(--muted-foreground);margin:0 0 10px}.demo button{width:100%;height:auto;min-height:44px;white-space:normal;font-size:var(--type-small);border-radius:var(--radius-control);color:var(--foreground)}.demo small{display:block;font-size:var(--type-caption);color:var(--muted-foreground);margin-top:10px}
 .error,.notice{font-size:var(--type-caption);line-height:1.6;border-radius:8px;padding:10px 12px;margin:6px 0 0}.error{color:var(--negative);background:color-mix(in srgb,var(--negative) 8%,transparent)}.notice{background:var(--secondary);color:var(--muted-foreground)}
-.footer{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 20px;color:var(--muted-foreground);font-size:var(--type-caption);line-height:1.6;text-align:center}.footer>span{display:flex;align-items:center;gap:6px}.legal{display:flex;gap:16px}.legal a{display:inline-flex;align-items:center;min-height:44px;color:inherit;text-decoration:underline;text-underline-offset:3px}.legal a:hover{color:var(--foreground)}
-@media(pointer:coarse){.card a{min-height:44px}.password button{width:44px;height:44px;top:0;right:0}.card .password input{padding-inline-end:50px}}
+.footer{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 20px;color:var(--muted-foreground);font-size:var(--type-caption);line-height:1.6;text-align:center}.footer>span{display:flex;align-items:center;gap:6px}.legal{display:flex;flex-wrap:wrap;justify-content:center;column-gap:16px}.legal a{display:inline-flex;align-items:center;min-height:44px;color:inherit;text-decoration:underline;text-underline-offset:3px}.legal a:hover{color:var(--foreground)}
+@media(pointer:coarse){.card a{min-height:44px}.password button{width:44px;height:44px;top:0;inset-inline-end:0}.card .password input{padding-inline-end:50px}}
 /* The showcase: the promise in one line and a glimpse of the product with sample figures. */
 .showcase{position:relative;display:flex;flex-direction:column;justify-content:center;gap:clamp(16px,2.6vh,28px);min-height:calc(100svh - 40px);overflow:hidden;padding:clamp(28px,3.5vw,56px) clamp(20px,2.5vw,40px);border-radius:28px;background:radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,#fff 16%,var(--auth-accent)) 0%,var(--auth-accent) 45%,color-mix(in srgb,#000 22%,var(--auth-accent)) 100%);color:#fff}
 .showcase::before{content:"";position:absolute;inset-block-start:-120px;inset-inline-start:-120px;width:320px;height:320px;border:1px solid rgb(255 255 255/.14);border-radius:50%}
@@ -101,5 +103,5 @@
 .countrySheet [data-slot="command-input-wrapper"]{flex-shrink:0;height:52px;padding-inline:16px}
 .countrySheet [data-slot="command-input"]{height:52px}
 .countrySheet .countryList{flex:1;max-height:none;padding:4px 8px calc(16px + env(safe-area-inset-bottom))}
-.countrySheet [data-slot="dialog-close"]{top:14px;right:10px;display:grid;place-items:center;width:44px;height:44px;opacity:1}
+.countrySheet [data-slot="dialog-close"]{top:14px;inset-inline-end:10px;display:grid;place-items:center;width:44px;height:44px;opacity:1}
 .countrySheet [data-slot="dialog-close"] svg{width:20px;height:20px}

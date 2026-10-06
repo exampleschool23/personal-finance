@@ -30,11 +30,18 @@ test('the module index lists every piece exactly once',()=>{
  assert.equal(new Set(listed).size,listed.length);
 });
 
+test('today button is off with its reason while the current period is shown',()=>{
+ const {TodayButton}=load('today-button.tsx');
+ assert.equal(render(TodayButton,{current:true,onClick(){}}),'<span title="Today is already shown."><button disabled="">Today</button></span>');
+ assert.equal(render(TodayButton,{current:false,onClick(){}}),'<span><button>Today</button></span>');
+});
+
 test('empty state renders the icon, heading, guidance and actions in order',()=>{
  const {EmptyState}=load('empty-state.tsx');
  const html=render(EmptyState,{icon:React.createElement('svg'),title:'A fresh start',description:'Add a record to begin.'},React.createElement('button',null,'Add'));
  assert.equal(html,'<div class="empty"><svg></svg><h3>A fresh start</h3><p>Add a record to begin.</p><button>Add</button></div>');
  assert.equal(render(EmptyState,{icon:null,description:'Nothing due.',as:'section',className:'panel'}),'<section class="empty panel"><p>Nothing due.</p></section>');
+ assert.equal(render(EmptyState,{icon:null,id:'why',description:'Sign in first.'}),'<div id="why" class="empty"><p>Sign in first.</p></div>');
 });
 
 test('inline error is announced and only offers Retry when a retry exists',()=>{

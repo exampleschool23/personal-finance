@@ -2543,5 +2543,12 @@
   "Money and work": "पैसा और काम",
   "Change icon for {name}": "{name} का आइकन बदलें",
   "Choose an icon": "एक आइकन चुनें",
-  "Use the default icon": "डिफ़ॉल्ट आइकन इस्तेमाल करें"
+  "Use the default icon": "डिफ़ॉल्ट आइकन इस्तेमाल करें",
+  "Menu": "मेनू",
+  "You can keep up to {count} watchlists.": "आप अधिकतम {count} वॉचलिस्ट रख सकते हैं।",
+  "Enter a whole number for priority.": "प्राथमिकता के लिए पूर्ण संख्या दर्ज करें।",
+  "Today is already shown.": "आज पहले से दिखाया जा रहा है।",
+  "Check each asset in the portfolio.": "पोर्टफ़ोलियो की हर संपत्ति जाँचें।",
+  "Type a question.": "कोई सवाल लिखें।",
+  "Choose both accounts.": "दोनों खाते चुनें।"
 }

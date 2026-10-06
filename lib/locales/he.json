@@ -2543,5 +2543,12 @@
   "Money and work": "כסף ועבודה",
   "Change icon for {name}": "שינוי הסמל של {name}",
   "Choose an icon": "בחירת סמל",
-  "Use the default icon": "שימוש בסמל ברירת המחדל"
+  "Use the default icon": "שימוש בסמל ברירת המחדל",
+  "Menu": "תפריט",
+  "You can keep up to {count} watchlists.": "אפשר לשמור עד {count} רשימות מעקב.",
+  "Enter a whole number for priority.": "הזינו מספר שלם לעדיפות.",
+  "Today is already shown.": "היום כבר מוצג.",
+  "Check each asset in the portfolio.": "בדקו כל נכס בתיק.",
+  "Type a question.": "הקלידו שאלה.",
+  "Choose both accounts.": "בחרו את שני החשבונות."
 }

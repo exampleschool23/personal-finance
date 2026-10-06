@@ -27,6 +27,7 @@ export function MortgagePaymentDialog({ mortgage, accounts = [], onClose, onSave
  const crossCurrency=!!selectedAccount&&selectedAccount.currency!==mortgage.currency;
  const debit=fx.rate?(payment.principal+payment.interest)/fx.rate:null;
  const valid = submitted||( payment.principal <= mortgage.amount && payment.principal + payment.interest > 0 && !!payment.date && payment.date<=depositToday() && (!mortgage.opened_on||payment.date>=mortgage.opened_on)&&(!!selectedAccount&&debit!==null&&debit<=selectedAccount.amount));
+ const blocked=valid?undefined:paymentBlocker({payment,mortgage,account:selectedAccount,debit,rateError:!!fx.error});
  const [initialDraft]=useState(()=>JSON.stringify(payment));
  const dirty=JSON.stringify(payment)!==initialDraft;
  useEffect(()=>{onDraftState?.(dirty,busy);},[dirty,busy,onDraftState]);
@@ -50,7 +51,7 @@ export function MortgagePaymentDialog({ mortgage, accounts = [], onClose, onSave
    <div className="ownership-summary"><p>{t('Total payment: {amount}', { amount: money(payment.principal + payment.interest) })}</p><p>{t('Remaining balance: {amount}', { amount: money(mortgage.amount - payment.principal) })}</p></div>
    <p className="muted">{t('Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.')}</p>
    <ErrorPopup message={error} detail="Retry the same payment to avoid duplicates."/>
-   <FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy || !valid} type="button" onClick={()=>void submit()}>{t(busy ? 'Saving…' : 'Save payment')}</Button></FormFooter>
+   <FormFooter busy={busy} onCancel={guard.close}><span title={busy||!blocked?undefined:t(blocked)}><Button disabled={busy || !valid} type="button" onClick={()=>void submit()}>{t(busy ? 'Saving…' : 'Save payment')}</Button></span></FormFooter>
   </div>;
  if(inline)return <>{content}{guard.confirmation}</>;
  return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}>
@@ -58,4 +59,15 @@ export function MortgagePaymentDialog({ mortgage, accounts = [], onClose, onSave
   <DialogDescription>{mortgage.name} · {t('Outstanding balance: {amount}',{amount:money(mortgage.amount)})}</DialogDescription>
   {content}
  </DialogContent></Dialog>{guard.confirmation}</>;
+}
+
+/** The first reason Save payment is unavailable, as an English key: a missing amount, too much principal, no cash account, a date out of range or too little cash. */
+function paymentBlocker({payment,mortgage,account,debit,rateError}:{payment:MortgagePayment;mortgage:Entry;account?:Entry;debit:number|null;rateError:boolean}){
+ if(payment.principal+payment.interest<=0)return 'Enter an amount greater than zero.';
+ if(payment.principal>mortgage.amount)return 'Principal exceeds the outstanding balance.';
+ if(!payment.date||payment.date>depositToday())return 'Actual income and expenses cannot be dated in the future.';
+ if(mortgage.opened_on&&payment.date<mortgage.opened_on)return 'Payment date cannot precede the start date.';
+ if(!account)return 'Choose a cash account.';
+ if(debit===null)return rateError?'Check the dated exchange rate.':'Loading exchange rate for the selected date…';
+ return 'Not enough money in the selected cash account.';
 }

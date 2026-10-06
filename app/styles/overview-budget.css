@@ -184,8 +184,8 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-left-figure[data-tone=positive] strong{color:var(--positive)}
 .budget-left-figure[data-tone=negative]{background:color-mix(in srgb,var(--negative) 12%,transparent)}
 .budget-left-figure[data-tone=negative] strong{color:var(--negative)}
-.budget-left-tabs{display:flex;width:100%}
-.budget-left-tabs>button{flex:1}
+.budget-left-tabs{display:flex;width:100%;flex-wrap:wrap;overflow:visible}
+.budget-left-tabs>button{flex:1 1 auto;padding-inline:10px}
 .budget-left-summary{display:flex;flex-direction:column;gap:8px;margin:0;font-size:var(--type-small)}
 .budget-left-summary>div{display:flex;justify-content:space-between;gap:12px}
 .budget-left-summary dt{color:var(--muted-foreground)}

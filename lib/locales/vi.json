@@ -2543,5 +2543,12 @@
   "Money and work": "Tiền và công việc",
   "Change icon for {name}": "Đổi biểu tượng của {name}",
   "Choose an icon": "Chọn biểu tượng",
-  "Use the default icon": "Dùng biểu tượng mặc định"
+  "Use the default icon": "Dùng biểu tượng mặc định",
+  "Menu": "Menu",
+  "You can keep up to {count} watchlists.": "Bạn có thể giữ tối đa {count} danh sách theo dõi.",
+  "Enter a whole number for priority.": "Nhập số nguyên cho mức ưu tiên.",
+  "Today is already shown.": "Hôm nay đã được hiển thị.",
+  "Check each asset in the portfolio.": "Kiểm tra từng tài sản trong danh mục.",
+  "Type a question.": "Nhập một câu hỏi.",
+  "Choose both accounts.": "Chọn cả hai tài khoản."
 }

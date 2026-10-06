@@ -7,6 +7,7 @@ import { PlannedInput } from '@/components/budget/planned-input';
 import { BudgetSettingsDialog, CategorySettingsDialog, type BudgetFigures } from '@/components/budget/settings-dialogs';
 import { useLanguage } from '@/components/language-provider';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
+import { TodayButton } from '@/components/presentation-foundation/today-button';
 import { PanelSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { StatTile } from '@/components/presentation-foundation/stat-tile';
@@ -102,7 +103,7 @@ export function BudgetScreen() {
     {/* The period being planned, between the arrows that move it. */}
     <strong className="budget-period" aria-live="polite">{view === 'year' ? formatYear(Number(month.slice(0, 4)), locale) : formatMonthYear(month, locale)}</strong>
     <Button variant="outline" size="icon" aria-label={t(view === 'year' ? 'Next year' : 'Next month')} onClick={() => setMonth(shiftMonth(month, view === 'year' ? 12 : 1))}><ChevronRight size={16}/></Button>
-    <Button variant="outline" disabled={month === thisMonth} onClick={() => setMonth(thisMonth)}>{t('Today')}</Button>
+    <TodayButton current={month === thisMonth} onClick={() => setMonth(thisMonth)}/>
    </div>
    <Button variant="outline" onClick={() => setSettingsOpen(true)}><Settings size={16} aria-hidden="true"/>{t('Settings')}</Button>
   </PageHeader>

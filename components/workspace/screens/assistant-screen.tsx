@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowUp, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
@@ -33,6 +33,9 @@ export function AssistantScreen() {
  }, [live, user]);
  const available = !live ? null : status.owner === user ? status.available : null;
  const unavailable = available === false;
+ // Send says why it is off: the empty state already explains the sample workspace and a missing setup, so it points there.
+ const reasonId = useId();
+ const send = sendBlocker({ busy, demo, unavailable, asked: turns.length > 0, draft }, reasonId, t);
  const rates = typeof market?.rates === 'object' ? market.rates : {};
  async function ask(question: string) {
   const text = question.trim();
@@ -54,8 +57,8 @@ export function AssistantScreen() {
   <section className="panel assistant-panel" aria-label={t('Assistant')}>
    <div className="assistant-log" aria-live="polite">
     {turns.length ? turns.map((turn, index) => <div key={index} className="assistant-turn" data-role={turn.role}><p>{turn.content}</p></div>)
-     : unavailable ? <EmptyState icon={<Sparkles/>} title={t('The assistant isn’t available yet')} description={t('It will answer questions here once it has been set up for this app.')}/>
-     : <EmptyState icon={<Sparkles/>} title={t('Ask anything about your money')} description={t(demo ? 'Sign in to ask about your own records. The sample workspace has no assistant.' : 'Try one of these, or type your own question.')}/>}
+     : unavailable ? <EmptyState id={reasonId} icon={<Sparkles/>} title={t('The assistant isn’t available yet')} description={t('It will answer questions here once it has been set up for this app.')}/>
+     : <EmptyState id={reasonId} icon={<Sparkles/>} title={t('Ask anything about your money')} description={t(demo ? 'Sign in to ask about your own records. The sample workspace has no assistant.' : 'Try one of these, or type your own question.')}/>}
     {busy && <div className="assistant-turn" data-role="assistant"><p className="assistant-thinking">{t('Thinking…')}</p></div>}
     <div ref={end}/>
    </div>
@@ -63,9 +66,17 @@ export function AssistantScreen() {
    {error && <p className="form-error" role="alert">{t(error)}</p>}
    <form className="assistant-form" onSubmit={event => { event.preventDefault(); ask(draft); }}>
     <textarea aria-label={t('Ask anything about your money')} placeholder={t('Ask anything about your money…')} value={draft} maxLength={4000} rows={2} disabled={demo || !user || !available} onChange={event => setDraft(event.currentTarget.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); ask(draft); } }}/>
-    <Button size="icon" disabled={busy || demo || !available || !draft.trim()} aria-label={t('Send')}><ArrowUp size={18}/></Button>
+    <span title={send.title}><Button size="icon" disabled={busy || demo || !available || !draft.trim()} aria-label={t('Send')} aria-describedby={send.describedBy}><ArrowUp size={18}/></Button></span>
    </form>
    <p className="assistant-note">{t('The assistant can make mistakes and is not financial advice.')}</p>
   </section>
  </div>;
+}
+
+type SendState = { busy: boolean; demo: boolean; unavailable: boolean; asked: boolean; draft: string };
+/** Why Send is off. The empty state on screen already explains the sample workspace and a missing setup, so Send points to it (`describedBy`); other reasons are its `title`. */
+function sendBlocker({ busy, demo, unavailable, asked, draft }: SendState, emptyId: string, t: (key: string) => string) {
+ if (!asked && (demo || unavailable)) return { describedBy: emptyId, title: undefined };
+ if (busy) return { describedBy: undefined, title: undefined };
+ return { describedBy: undefined, title: unavailable ? t('The assistant isn’t available yet') : draft.trim() ? undefined : t('Type a question.') };
 }

@@ -2543,5 +2543,12 @@
   "Money and work": "Pesa na kazi",
   "Change icon for {name}": "Badilisha ikoni ya {name}",
   "Choose an icon": "Chagua ikoni",
-  "Use the default icon": "Tumia ikoni chaguo-msingi"
+  "Use the default icon": "Tumia ikoni chaguo-msingi",
+  "Menu": "Menyu",
+  "You can keep up to {count} watchlists.": "Unaweza kuwa na hadi orodha {count} za ufuatiliaji.",
+  "Enter a whole number for priority.": "Weka nambari kamili kwa kipaumbele.",
+  "Today is already shown.": "Leo tayari inaonyeshwa.",
+  "Check each asset in the portfolio.": "Kagua kila mali katika jalada.",
+  "Type a question.": "Andika swali.",
+  "Choose both accounts.": "Chagua akaunti zote mbili."
 }

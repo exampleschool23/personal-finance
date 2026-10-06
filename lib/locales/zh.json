@@ -2543,5 +2543,12 @@
   "Money and work": "金钱与工作",
   "Change icon for {name}": "更改 {name} 的图标",
   "Choose an icon": "选择图标",
-  "Use the default icon": "使用默认图标"
+  "Use the default icon": "使用默认图标",
+  "Menu": "菜单",
+  "You can keep up to {count} watchlists.": "最多可保留 {count} 个关注清单。",
+  "Enter a whole number for priority.": "请为优先级输入整数。",
+  "Today is already shown.": "已在显示今天。",
+  "Check each asset in the portfolio.": "请检查投资组合中的每项资产。",
+  "Type a question.": "请输入问题。",
+  "Choose both accounts.": "请选择两个账户。"
 }

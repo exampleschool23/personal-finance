@@ -2543,5 +2543,12 @@
   "Money and work": "Pul va ish",
   "Change icon for {name}": "{name} belgisini oʻzgartirish",
   "Choose an icon": "Belgi tanlang",
-  "Use the default icon": "Standart belgidan foydalanish"
+  "Use the default icon": "Standart belgidan foydalanish",
+  "Menu": "Menyu",
+  "You can keep up to {count} watchlists.": "Ko‘pi bilan {count} ta kuzatuv ro‘yxati saqlash mumkin.",
+  "Enter a whole number for priority.": "Ustuvorlik uchun butun son kiriting.",
+  "Today is already shown.": "Bugungi kun allaqachon ko‘rsatilmoqda.",
+  "Check each asset in the portfolio.": "Portfeldagi har bir aktivni tekshiring.",
+  "Type a question.": "Savol yozing.",
+  "Choose both accounts.": "Ikkala hisobni tanlang."
 }

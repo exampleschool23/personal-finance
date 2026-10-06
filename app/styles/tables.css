@@ -56,7 +56,9 @@ roll-strip>roll-char{display:block;height:1lh}
  :is(button,[role=button],[role=tab],summary,.date-picker-trigger,a[data-slot=button],input[type=range]):not(.pos-day,.drag-handle,.info-hint,.recurring-chip,.switch){min-height:44px!important}
  :is(button,a)[data-size^=icon]:not(.drag-handle,.info-hint){min-width:44px!important}
  .topbar-actions :is(button,a),.theme-toggle,[data-sidebar=trigger]{min-width:44px}
- .nav-item,.user-link{min-height:44px!important}
+ .nav-item,.user-link,.brand-compact{min-height:44px!important}
+ /* Fields under 16px make iPhone and iPad zoom in on focus, so every field on a touch screen is at least the body size (RESP-027). */
+ :is(input:not([type=checkbox],[type=radio],[type=range]),select,textarea){font-size:var(--type-body)!important}
  /* Matches the panel-title link rule in shell.css, which would otherwise win and keep "View all" at 24px (RESP-024). */
  .panel-title :is(a,[data-variant=link]),.panel-link{display:inline-flex;align-items:center;min-height:44px}
  .business-card-list li>a{min-height:44px;justify-content:center}

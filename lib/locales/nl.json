@@ -2543,5 +2543,12 @@
   "Money and work": "Geld en werk",
   "Change icon for {name}": "Pictogram van {name} wijzigen",
   "Choose an icon": "Kies een pictogram",
-  "Use the default icon": "Standaardpictogram gebruiken"
+  "Use the default icon": "Standaardpictogram gebruiken",
+  "Menu": "Menu",
+  "You can keep up to {count} watchlists.": "Je kunt maximaal {count} volglijsten hebben.",
+  "Enter a whole number for priority.": "Voer een geheel getal in voor de prioriteit.",
+  "Today is already shown.": "Vandaag wordt al getoond.",
+  "Check each asset in the portfolio.": "Controleer elk bezit in de portefeuille.",
+  "Type a question.": "Typ een vraag.",
+  "Choose both accounts.": "Kies beide rekeningen."
 }

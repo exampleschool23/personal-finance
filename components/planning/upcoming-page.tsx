@@ -2,6 +2,7 @@
 import { Fragment, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Repeat } from 'lucide-react';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
+import { TodayButton } from '@/components/presentation-foundation/today-button';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
@@ -79,7 +80,7 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
    {scheduled && <div className="budget-month-nav">
     <Button variant="outline" size="icon" aria-label={t('Previous month')} onClick={() => setMonth(shiftMonth(month, -1))}><ChevronLeft size={16}/></Button>
     <Button variant="outline" size="icon" aria-label={t('Next month')} onClick={() => setMonth(shiftMonth(month, 1))}><ChevronRight size={16}/></Button>
-    <Button variant="outline" disabled={month === today.slice(0, 7)} onClick={() => setMonth(today.slice(0, 7))}>{t('Today')}</Button>
+    <TodayButton current={month === today.slice(0, 7)} onClick={() => setMonth(today.slice(0, 7))}/>
    </div>}
    {/* Adding opens the usual income or expense form as a one-time entry, so its cash account can be chosen; Repeats makes it a schedule. */}
    {onAdd && <><Button variant="outline" onClick={() => onAdd('income')}><Plus size={17} aria-hidden="true"/>{t('Add income')}</Button><Button onClick={() => onAdd('expense')}><Plus size={17} aria-hidden="true"/>{t('Add expense')}</Button></>}

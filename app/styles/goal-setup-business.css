@@ -4,7 +4,7 @@
 .goal-setup{background:var(--background)}
 .goal-setup-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--hairline)}
 .goal-setup-spacer{width:36px}
-.goal-setup-steps{display:flex;gap:24px;margin:0;padding:0;list-style:none;font-size:var(--type-small);color:var(--muted-foreground)}
+.goal-setup-steps{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 24px;min-width:0;margin:0;padding:0;list-style:none;font-size:var(--type-small);color:var(--muted-foreground)}
 .goal-setup-steps>li[aria-current=step]{color:var(--foreground);font-weight:600}
 .goal-setup-steps button{padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer}
 .goal-setup-steps button:hover{color:var(--foreground);text-decoration:underline}
@@ -51,14 +51,14 @@
 .goal-setup-footer>button:last-child{min-width:min(100%,320px)}
 @container goal-setup (max-width:760px){.goal-setup-split{grid-template-columns:minmax(0,1fr);gap:20px}.goal-setup-preview{position:static}}
 @container goal-setup (max-width:520px){.goal-template-grid,.goal-setup-fields{grid-template-columns:minmax(0,1fr)}}
-@media (max-width:560px){.goal-setup-steps{gap:12px;font-size:var(--type-caption)}}
+@media (max-width:560px){.goal-setup-steps{gap:4px 12px;font-size:var(--type-caption)}}
 
 /* Business tracking and tags */
 /* Owner, category and business each take an equal column, so every row lines up whatever its labels say. */
 .transaction-labels{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);justify-items:start;align-items:center;gap:4px 8px;min-width:0}
 .transaction-labels:has(>.transaction-member-button:first-child){grid-template-columns:auto}
 .transaction-business{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;color:var(--muted-foreground)}
-.transaction-business>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.transaction-business>span:last-child{min-width:0;white-space:normal;overflow-wrap:break-word}
 .transaction-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .transaction-name{display:flex;align-items:center;gap:4px;min-width:0}
 .transaction-attachment-mark{flex:none;color:var(--muted-foreground)}

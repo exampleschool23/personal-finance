@@ -2543,5 +2543,12 @@
   "Money and work": "المال والعمل",
   "Change icon for {name}": "تغيير أيقونة {name}",
   "Choose an icon": "اختر أيقونة",
-  "Use the default icon": "استخدام الأيقونة الافتراضية"
+  "Use the default icon": "استخدام الأيقونة الافتراضية",
+  "Menu": "القائمة",
+  "You can keep up to {count} watchlists.": "يمكنك الاحتفاظ بما يصل إلى {count} من قوائم المراقبة.",
+  "Enter a whole number for priority.": "أدخل عددًا صحيحًا للأولوية.",
+  "Today is already shown.": "اليوم معروض بالفعل.",
+  "Check each asset in the portfolio.": "تحقق من كل أصل في المحفظة.",
+  "Type a question.": "اكتب سؤالًا.",
+  "Choose both accounts.": "اختر الحسابين كليهما."
 }

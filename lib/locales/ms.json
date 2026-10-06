@@ -2543,5 +2543,12 @@
   "Money and work": "Wang dan kerja",
   "Change icon for {name}": "Tukar ikon {name}",
   "Choose an icon": "Pilih ikon",
-  "Use the default icon": "Guna ikon lalai"
+  "Use the default icon": "Guna ikon lalai",
+  "Menu": "Menu",
+  "You can keep up to {count} watchlists.": "Anda boleh menyimpan sehingga {count} senarai pantauan.",
+  "Enter a whole number for priority.": "Masukkan nombor bulat untuk keutamaan.",
+  "Today is already shown.": "Hari ini sudah dipaparkan.",
+  "Check each asset in the portfolio.": "Semak setiap aset dalam portfolio.",
+  "Type a question.": "Taip satu soalan.",
+  "Choose both accounts.": "Pilih kedua-dua akaun."
 }

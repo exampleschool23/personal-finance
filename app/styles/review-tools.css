@@ -193,7 +193,7 @@
 .monthly-review-help-note{display:flex;align-items:flex-start;gap:12px;padding:16px;border:1px solid var(--border);border-radius:16px;background:var(--muted)}
 .monthly-review-help-note>svg{flex-shrink:0;margin-top:2px;color:var(--primary)}
 .monthly-review-help-note p{margin:0;font-size:var(--type-small);line-height:1.7}
-.monthly-review-help-close{position:absolute;top:16px;right:16px;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;color:var(--muted-foreground)}
+.monthly-review-help-close{position:absolute;top:16px;inset-inline-end:16px;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;color:var(--muted-foreground)}
 .monthly-review-help-close:hover{background:var(--accent);color:var(--foreground)}
 .monthly-review-help-close:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
 .monthly-review-help-done{justify-self:end;min-width:100px;border-radius:12px}
@@ -252,7 +252,7 @@
 .income-source-heading .category-badge{font-size:var(--type-micro);padding:1px 8px}
 .income-source-icon{display:grid;place-items:center;flex-shrink:0;width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--source-color) 14%,transparent);color:var(--source-color)}
 .income-estimates .income-source-amount{font-size:var(--type-stat);font-weight:650;letter-spacing:-.02em;line-height:1.2;text-align:start;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.income-receipt-indicator{position:absolute;top:14px;right:14px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--muted);color:var(--muted-foreground)}
+.income-receipt-indicator{position:absolute;top:14px;inset-inline-end:14px;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--muted);color:var(--muted-foreground)}
 .income-receipt-indicator.is-received{background:color-mix(in srgb,var(--positive) 16%,transparent);color:var(--positive)}
 
 .currency-search-trigger{justify-self:start}

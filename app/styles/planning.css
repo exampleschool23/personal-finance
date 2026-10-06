@@ -50,7 +50,7 @@
 .goal-input-label{margin:0;display:flex;flex-direction:column;gap:10px;font-size:var(--type-small);font-weight:500;color:var(--foreground)}
 .goal-amount-input{display:flex;align-items:center;position:relative}
 .goal-amount-input input{height:52px;padding-inline-end:60px;font-size:var(--type-heading);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;border-radius:12px;background:var(--card);min-width:0}
-.goal-amount-input>span{position:absolute;right:14px;font-size:var(--type-small);font-weight:500;color:var(--muted-foreground);pointer-events:none}
+.goal-amount-input>span{position:absolute;inset-inline-end:14px;font-size:var(--type-small);font-weight:500;color:var(--muted-foreground);pointer-events:none}
 .goal-forecast .goal-range{display:block;width:100%;min-height:28px!important;height:28px;padding:0;border:0;border-radius:0;margin:14px 0 0;appearance:none;-webkit-appearance:none;background:transparent!important;cursor:pointer;touch-action:pan-y;--range-progress:0%}
 .goal-range::-webkit-slider-runnable-track{height:5px;border-radius:10px;background:linear-gradient(to right,var(--primary) var(--range-progress),var(--border) var(--range-progress))}
 .goal-range::-moz-range-track{height:5px;border-radius:10px;background:linear-gradient(to right,var(--primary) var(--range-progress),var(--border) var(--range-progress))}
@@ -262,7 +262,7 @@
 }
 
 /* The selected category previews the same symbol as its saved record. */
-.native-select-leading-icon {position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex}
+.native-select-leading-icon {position:absolute;inset-inline-start:10px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex}
 .record-form [data-slot="native-select-wrapper"][data-has-leading-icon="true"] select {padding-inline-start:52px}
 .record-dialog .native-select-leading-icon .record-icon.category-record-icon {width:32px;height:32px;padding:5px;border-radius:10px}
 .record-dialog .native-select-leading-icon .category-record-icon svg {width:20px;height:20px}
@@ -324,10 +324,12 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .expense-optional-fields{display:grid;gap:18px;padding:12px 0 4px}
 
 .expense-mode-tabs{min-height:0;overflow:hidden;gap:16px}
-.expense-mode-tabs>[data-slot="tabs-list"]{width:100%;height:48px;flex-shrink:0;padding:4px}
+.expense-mode-tabs>[data-slot="tabs-list"]{width:100%;height:auto;min-height:48px;flex-shrink:0;flex-wrap:wrap;padding:4px}
 .expense-mode-tabs [data-slot="tabs-trigger"]{font-size:var(--type-body);min-height:40px}
 .expense-mode-tabs>.expense-form-scroll{margin:0}
 
-.cash-account-field{display:grid;gap:8px;min-width:0;align-content:start}.cash-account-field p{font-size:var(--type-small);line-height:1.5;margin:0}
+.cash-account-field{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;min-width:0;align-content:start}
+/* A long account option ("Everyday checking · $14,200") never widens the dialog: the field and its select shrink to the column (DLG-022). */
+.cash-account-field>label{min-width:0}.cash-account-field [data-slot="native-select-wrapper"]{width:100%;min-width:0}.cash-account-field p{font-size:var(--type-small);line-height:1.5;margin:0}
 
 .monthly-mortgage-payments{min-width:0}

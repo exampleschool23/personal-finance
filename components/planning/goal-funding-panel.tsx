@@ -103,6 +103,7 @@ function FundingEditor({ goal, today, busy, save }: { goal: Goal; today: string;
  const [draft, setDraft] = useState(initial), [saved, setSaved] = useState(initial);
  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
  const guard = useUnsavedNavigation(dirty);
+ const blocked = !dirty ? t('No changes') : !Number.isInteger(draft.priority) ? t('Enter a whole number for priority.') : undefined;
  const monthly = draft.monthly ?? (goal.kind === 'investment' ? 0 : goal.monthly_contribution ?? 0);
  return <form className="goal-funding-editor" aria-labelledby={`${id}-title`} onSubmit={async event => {
   event.preventDefault(); if (busy || !dirty || !Number.isInteger(draft.priority)) return;
@@ -122,7 +123,7 @@ function FundingEditor({ goal, today, busy, save }: { goal: Goal; today: string;
     </div>
    </details>
   </fieldset>
-  <footer className="goal-funding-editor-footer"><span className="muted" role="status">{dirty ? t('Unsaved changes') : saved.paused_until && saved.paused_until >= today ? t('Paused through {date}', { date: formatDate(saved.paused_until, locale) }) : t(saved.enabled ? 'Funding enabled' : 'Funding not enabled')}</span><div>{dirty && <Button type="button" variant="ghost" disabled={busy} onClick={() => setDraft(saved)}>{t('Reset changes')}</Button>}<Button type="submit" aria-label={t('Save funding for {name}', { name: goal.name })} disabled={busy || !dirty || !Number.isInteger(draft.priority)}>{t('Save')}</Button></div></footer>
+  <footer className="goal-funding-editor-footer"><span className="muted" role="status">{dirty ? t('Unsaved changes') : saved.paused_until && saved.paused_until >= today ? t('Paused through {date}', { date: formatDate(saved.paused_until, locale) }) : t(saved.enabled ? 'Funding enabled' : 'Funding not enabled')}</span><div>{dirty && <Button type="button" variant="ghost" disabled={busy} onClick={() => setDraft(saved)}>{t('Reset changes')}</Button>}<span title={busy ? undefined : blocked}><Button type="submit" aria-label={t('Save funding for {name}', { name: goal.name })} disabled={busy || !!blocked}>{t('Save')}</Button></span></div></footer>
   {guard}
  </form>;
 }

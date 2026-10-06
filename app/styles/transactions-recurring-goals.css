@@ -24,7 +24,7 @@
 .transaction-merchant strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 .transaction-merchant small{overflow:hidden;color:var(--muted-foreground);font-size:var(--type-caption);text-overflow:ellipsis;white-space:nowrap}
 .transaction-category{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%}
-.transaction-category>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.transaction-category>span:last-child{min-width:0;white-space:normal;overflow-wrap:break-word}
 .transaction-category-button,.rule-category-button{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:4px 10px 4px 4px;border:1px solid transparent;border-radius:999px;text-align:start}
 .transaction-category-button:hover,.transaction-category-button:focus-visible,.rule-category-button{border-color:var(--border);background:var(--card)}
 .transaction-category-button:focus-visible{outline:2px solid var(--ring);outline-offset:1px}

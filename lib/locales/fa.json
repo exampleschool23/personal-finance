@@ -2543,5 +2543,12 @@
   "Money and work": "پول و کار",
   "Change icon for {name}": "تغییر نماد {name}",
   "Choose an icon": "یک نماد انتخاب کنید",
-  "Use the default icon": "استفاده از نماد پیش‌فرض"
+  "Use the default icon": "استفاده از نماد پیش‌فرض",
+  "Menu": "منو",
+  "You can keep up to {count} watchlists.": "حداکثر می‌توانید {count} فهرست پیگیری داشته باشید.",
+  "Enter a whole number for priority.": "برای اولویت یک عدد صحیح وارد کنید.",
+  "Today is already shown.": "امروز از قبل نمایش داده شده است.",
+  "Check each asset in the portfolio.": "هر دارایی در سبد را بررسی کنید.",
+  "Type a question.": "یک سؤال بنویسید.",
+  "Choose both accounts.": "هر دو حساب را انتخاب کنید."
 }

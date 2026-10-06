@@ -43,9 +43,11 @@ export function AssetMovementDialog({initial,records,accounts=[],save,onClose}:{
  const valid=!!source&&!!target&&(interest||(source.id!==target.id&&draft.sent>0&&draft.sent<=available&&sourceValue>0))&&received>0&&targetValue>0&&!!draft.date&&draft.date<=depositToday()&&(draft.kind!=='transfer'||draft.fee<draft.sent);
  // Say why Save is unavailable rather than leaving an oversized fee unexplained.
  const feeTooHigh=draft.kind==='transfer'&&draft.fee>0&&draft.sent>0&&draft.fee>=draft.sent;
+ const blocked=valid||submitted?undefined:movementBlocker({draft,source,target,available,amounts:interest?[received,targetValue]:[sourceValue,received,targetValue],rateIssue:crossTransfer&&!rate?(fx.error?'Check the dated exchange rate.':'Loading exchange rate for the selected date…'):undefined});
  const title={transfer:'Transfer money',buy:'Buy holding',sell:'Sell / convert holding',interest:'Record capitalized interest'}[draft.kind];
  const accountName=(record:Entry)=>{const parent=accounts.find(account=>account.id===record.holding_account_id);return `${parent?parent.name+' · ':''}${isHolding(record)?`${record.name} · ${record.currency}`:formatAccountOption(record,locale)}`;};
  const units=(record:Entry,amount:number)=>isHolding(record)?unitCount(t,amount,locale):formatMoney(amount,record.currency,locale);
+ const blockedReason=!blocked?undefined:source?t(blocked,{amount:units(source,available)}):t(blocked);
  const change=(name:keyof typeof draft,value:string|number)=>setDraft({...draft,[name]:value});
  const [initialDraft]=useState(()=>JSON.stringify(draft));
  const guard=useDiscardChanges(JSON.stringify(draft)!==initialDraft,onClose,busy);
@@ -76,7 +78,21 @@ export function AssetMovementDialog({initial,records,accounts=[],save,onClose}:{
    {source&&target&&valid&&<div className="ownership-summary">{!interest&&<p>{source.name}: {units(source,available-draft.sent)}</p>}<p>{target.name}: {units(target,(isHolding(target)?target.quantity:target.amount)+received)}</p><small>{t('Balances after this transaction')}</small></div>}
    {!interest&&(!movementSources(draft.kind,records).length||!movementTargets(draft.kind,source,records).length)&&<p className="muted">{t('Add the source and destination first. For a new holding or proceeds balance, start at zero.')}</p>}
    <ErrorPopup message={error}/>
-   <FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy||(!valid&&!submitted)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></FormFooter>
+   <FormFooter busy={busy} onCancel={guard.close}><span title={busy?undefined:blockedReason}><Button disabled={busy||(!valid&&!submitted)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></span></FormFooter>
   </form>
  </DialogContent></Dialog>{guard.confirmation}</>;
+}
+
+type MovementState = { draft:{kind:MovementKind;sent:number;fee:number}; source?:Entry; target?:Entry; available:number; amounts:number[]; rateIssue?:string };
+/** The first reason Save is unavailable, as an English key ({amount} is what the source holds): accounts first, then the amounts. */
+function movementBlocker({draft,source,target,available,amounts,rateIssue}:MovementState){
+ const interest=draft.kind==='interest';
+ if(!source)return interest?'Choose a deposit for capitalized interest.':'Choose both accounts.';
+ if(!target)return 'Choose both accounts.';
+ if(!interest&&source.id===target.id)return 'Choose a different destination.';
+ if(!interest&&draft.sent>available)return 'Only {amount} available';
+ if(draft.kind==='transfer'&&draft.sent>0&&draft.fee>=draft.sent)return 'The transfer fee must be less than the amount sent.';
+ if(rateIssue)return rateIssue;
+ if((!interest&&draft.sent<=0)||amounts.some(amount=>amount<=0))return 'Enter an amount greater than zero.';
+ return undefined;
 }

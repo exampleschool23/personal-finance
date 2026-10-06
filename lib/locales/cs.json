@@ -2543,5 +2543,12 @@
   "Money and work": "Peníze a práce",
   "Change icon for {name}": "Změnit ikonu pro {name}",
   "Choose an icon": "Vyberte ikonu",
-  "Use the default icon": "Použít výchozí ikonu"
+  "Use the default icon": "Použít výchozí ikonu",
+  "Menu": "Nabídka",
+  "You can keep up to {count} watchlists.": "Můžete mít nejvýše {count} sledovaných seznamů.",
+  "Enter a whole number for priority.": "Zadejte pro prioritu celé číslo.",
+  "Today is already shown.": "Dnešek je již zobrazen.",
+  "Check each asset in the portfolio.": "Zkontrolujte každé aktivum v portfoliu.",
+  "Type a question.": "Napište otázku.",
+  "Choose both accounts.": "Vyberte oba účty."
 }

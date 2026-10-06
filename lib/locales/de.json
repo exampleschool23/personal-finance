@@ -2543,5 +2543,12 @@
   "Money and work": "Geld und Arbeit",
   "Change icon for {name}": "Symbol für {name} ändern",
   "Choose an icon": "Symbol wählen",
-  "Use the default icon": "Standardsymbol verwenden"
+  "Use the default icon": "Standardsymbol verwenden",
+  "Menu": "Menü",
+  "You can keep up to {count} watchlists.": "Sie können bis zu {count} Beobachtungslisten führen.",
+  "Enter a whole number for priority.": "Geben Sie für die Priorität eine ganze Zahl ein.",
+  "Today is already shown.": "Heute wird bereits angezeigt.",
+  "Check each asset in the portfolio.": "Prüfen Sie jedes Asset im Portfolio.",
+  "Type a question.": "Geben Sie eine Frage ein.",
+  "Choose both accounts.": "Wählen Sie beide Konten."
 }

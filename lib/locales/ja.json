@@ -2543,5 +2543,12 @@
   "Money and work": "お金と仕事",
   "Change icon for {name}": "{name}のアイコンを変更",
   "Choose an icon": "アイコンを選択",
-  "Use the default icon": "既定のアイコンを使う"
+  "Use the default icon": "既定のアイコンを使う",
+  "Menu": "メニュー",
+  "You can keep up to {count} watchlists.": "ウォッチリストは最大 {count} 件まで作成できます。",
+  "Enter a whole number for priority.": "優先度には整数を入力してください。",
+  "Today is already shown.": "今日はすでに表示されています。",
+  "Check each asset in the portfolio.": "ポートフォリオの各資産を確認してください。",
+  "Type a question.": "質問を入力してください。",
+  "Choose both accounts.": "両方の口座を選択してください。"
 }

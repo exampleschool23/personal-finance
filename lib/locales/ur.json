@@ -2543,5 +2543,12 @@
   "Money and work": "پیسہ اور کام",
   "Change icon for {name}": "{name} کا آئیکن بدلیں",
   "Choose an icon": "ایک آئیکن منتخب کریں",
-  "Use the default icon": "ڈیفالٹ آئیکن استعمال کریں"
+  "Use the default icon": "ڈیفالٹ آئیکن استعمال کریں",
+  "Menu": "مینو",
+  "You can keep up to {count} watchlists.": "آپ زیادہ سے زیادہ {count} واچ لسٹس رکھ سکتے ہیں۔",
+  "Enter a whole number for priority.": "ترجیح کے لیے مکمل عدد درج کریں۔",
+  "Today is already shown.": "آج پہلے ہی دکھایا جا رہا ہے۔",
+  "Check each asset in the portfolio.": "پورٹ فولیو کے ہر اثاثے کو چیک کریں۔",
+  "Type a question.": "ایک سوال لکھیں۔",
+  "Choose both accounts.": "دونوں اکاؤنٹس منتخب کریں۔"
 }

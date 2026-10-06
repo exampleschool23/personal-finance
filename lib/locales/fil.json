@@ -2543,5 +2543,12 @@
   "Money and work": "Pera at trabaho",
   "Change icon for {name}": "Palitan ang icon ng {name}",
   "Choose an icon": "Pumili ng icon",
-  "Use the default icon": "Gamitin ang default na icon"
+  "Use the default icon": "Gamitin ang default na icon",
+  "Menu": "Menu",
+  "You can keep up to {count} watchlists.": "Hanggang {count} watchlist lang ang maaari mong itago.",
+  "Enter a whole number for priority.": "Maglagay ng buong numero para sa priyoridad.",
+  "Today is already shown.": "Ipinapakita na ang araw na ito.",
+  "Check each asset in the portfolio.": "Suriin ang bawat asset sa portfolio.",
+  "Type a question.": "Mag-type ng tanong.",
+  "Choose both accounts.": "Piliin ang dalawang account."
 }

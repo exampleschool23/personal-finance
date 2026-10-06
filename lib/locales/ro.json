@@ -2543,5 +2543,12 @@
   "Money and work": "Bani și muncă",
   "Change icon for {name}": "Schimbă pictograma pentru {name}",
   "Choose an icon": "Alege o pictogramă",
-  "Use the default icon": "Folosește pictograma implicită"
+  "Use the default icon": "Folosește pictograma implicită",
+  "Menu": "Meniu",
+  "You can keep up to {count} watchlists.": "Puteți păstra cel mult {count} liste de urmărire.",
+  "Enter a whole number for priority.": "Introduceți un număr întreg pentru prioritate.",
+  "Today is already shown.": "Ziua de azi este deja afișată.",
+  "Check each asset in the portfolio.": "Verificați fiecare activ din portofoliu.",
+  "Type a question.": "Scrieți o întrebare.",
+  "Choose both accounts.": "Alegeți ambele conturi."
 }

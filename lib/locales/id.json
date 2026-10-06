@@ -2543,5 +2543,12 @@
   "Money and work": "Uang dan pekerjaan",
   "Change icon for {name}": "Ubah ikon {name}",
   "Choose an icon": "Pilih ikon",
-  "Use the default icon": "Gunakan ikon bawaan"
+  "Use the default icon": "Gunakan ikon bawaan",
+  "Menu": "Menu",
+  "You can keep up to {count} watchlists.": "Anda dapat menyimpan hingga {count} daftar pantauan.",
+  "Enter a whole number for priority.": "Masukkan bilangan bulat untuk prioritas.",
+  "Today is already shown.": "Hari ini sudah ditampilkan.",
+  "Check each asset in the portfolio.": "Periksa setiap aset dalam portofolio.",
+  "Type a question.": "Ketik sebuah pertanyaan.",
+  "Choose both accounts.": "Pilih kedua akun."
 }

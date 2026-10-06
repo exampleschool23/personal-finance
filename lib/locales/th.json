@@ -2543,5 +2543,12 @@
   "Money and work": "เงินและงาน",
   "Change icon for {name}": "เปลี่ยนไอคอนของ {name}",
   "Choose an icon": "เลือกไอคอน",
-  "Use the default icon": "ใช้ไอคอนเริ่มต้น"
+  "Use the default icon": "ใช้ไอคอนเริ่มต้น",
+  "Menu": "เมนู",
+  "You can keep up to {count} watchlists.": "คุณมีรายการเฝ้าดูได้สูงสุด {count} รายการ",
+  "Enter a whole number for priority.": "ป้อนจำนวนเต็มสำหรับลำดับความสำคัญ",
+  "Today is already shown.": "กำลังแสดงวันนี้อยู่แล้ว",
+  "Check each asset in the portfolio.": "ตรวจสอบสินทรัพย์แต่ละรายการในพอร์ตโฟลิโอ",
+  "Type a question.": "พิมพ์คำถาม",
+  "Choose both accounts.": "เลือกบัญชีทั้งสองบัญชี"
 }

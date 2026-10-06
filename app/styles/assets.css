@@ -1,7 +1,7 @@
 /* Assets, holdings, category filters, recently deleted and chart legends. */
 
 /* Assets: a holdings hero, then accounts and other assets as compact cards. */
-.asset-dashboard{--asset-color:var(--primary);display:grid;gap:28px}
+.asset-dashboard{--asset-color:var(--primary);display:grid;grid-template-columns:minmax(0,1fr);gap:28px}
 .portfolio-summary{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);border:1px solid var(--border);border-radius:var(--radius-card);overflow:hidden;background:var(--card);box-shadow:var(--shadow-card)}
 .portfolio-summary-main{padding:28px}
 .portfolio-summary-main h2{font-size:var(--type-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground)}
@@ -26,6 +26,7 @@
 .asset-layout-switch button{width:34px;height:34px;min-height:34px;border-radius:9px;color:var(--muted-foreground)}
 .asset-layout-switch button[aria-pressed=true]{background:var(--card);color:var(--foreground);box-shadow:0 1px 2px rgb(0 0 0 / 20%)}
 /* The category filter is a segmented switch; each option carries its colour dot and count. */
+.segmented.asset-category-filters{flex-wrap:wrap;overflow:visible}
 .asset-category-filters>button{display:inline-flex;align-items:center;gap:8px}
 .asset-category-filters i{width:8px;height:8px;border-radius:50%;background:var(--asset-color)}
 .asset-category-filters span{font-size:var(--type-micro);font-weight:600;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
@@ -123,7 +124,8 @@
 .comparison-legend button { min-height: 40px; }
 .recharts-cartesian-axis-tick text { font-size: var(--type-small); fill: var(--muted-foreground); }
 .recharts-legend-wrapper { font-size: var(--type-small); line-height: 1.7; }
-.recharts-default-tooltip { font-size: var(--type-small); line-height: 1.6; color: var(--foreground); }
+/* Recharts writes a white background inline; every chart tooltip takes the theme's surface instead (THEME-011). */
+.recharts-default-tooltip { font-size: var(--type-small); line-height: 1.6; color: var(--popover-foreground); background: var(--popover) !important; border-color: var(--border) !important; }
 .recharts-tooltip-label { color: var(--foreground); }
 /* Legend labels stay readable; the series colour is carried by the dot beside each label. */
 .recharts-legend-item-text { color: var(--muted-foreground) !important; }

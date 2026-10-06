@@ -189,3 +189,57 @@ test('cards line up on one edge, and summary tables keep their figures together 
  assert.match(css,/\.stack-table tbody td:nth-child\(n\+3\)\{grid-row:2;/);
  assert.doesNotMatch(css,/\.stack-table tbody td:nth-child\(n\+3\)\{grid-column:1\/-1/,'no figure on a line of its own beside empty space');
 });
+
+// Rules from the 6 October 2026 review in 100 viewports (280 to 3840 px, light and dark, English, Arabic and German).
+test('pages and dialogs never grow wider than the screen, and fit short screens (RESP-025, DLG-021, DLG-022, RESP-026, RESP-029)',()=>{
+ const css=stylesheet(),dialog=fs.readFileSync('components/ui/dialog.tsx','utf8');
+ // A grid with an implicit `auto` column grows to its widest child: German category names made Investments 1100px wide in a 1024px window.
+ assert.match(css,/\.asset-dashboard\{[^}]*display:grid;grid-template-columns:minmax\(0,1fr\)/);
+ assert.match(css,/\.segmented\.asset-category-filters\{flex-wrap:wrap;overflow:visible\}/);
+ // Every dialog: one column that cannot outgrow it, a height within the screen, and its own scroll (Customize was cut off on phones).
+ assert.match(dialog,/grid w-full grid-cols-\[minmax\(0,1fr\)\] max-w-\[calc\(100%-2rem\)\] max-h-\[calc\(100dvh-2rem\)\] overflow-y-auto/);
+ assert.match(css,/\.expense-mode-tabs>\[data-slot="tabs-list"\]\{[^}]*height:auto;[^}]*flex-wrap:wrap/,'Plan, Expense and Debt or mortgage wrap at 280px');
+ assert.match(fs.readFileSync('components/sign-in-screen.module.css','utf8'),/\.legal\{display:flex;flex-wrap:wrap/,'Terms and Privacy wrap in German at 280px');
+ assert.match(fs.readFileSync('components/sign-in-screen.module.css','utf8'),/\.header>:first-child\{min-width:0\}\.header :global\(\.brand small\.block\)\{white-space:normal\}/,'the theme toggle stays on a 280px screen');
+ // Record forms and the cash account field: a long option ("Everyday checking · $14,200") or source name never widens the dialog.
+ assert.match(css,/\.record-form\{display:grid;grid-template-columns:minmax\(0,1fr\);/);
+ assert.match(css,/\.cash-account-field\{display:grid;grid-template-columns:minmax\(0,1fr\);/);
+ assert.match(fs.readFileSync('components/ui/sidebar.tsx','utf8'),/SIDEBAR_WIDTH_MOBILE = "min\(18rem, 85vw\)"/);
+ assert.match(css,/\.goal-setup-steps\{display:flex;flex-wrap:wrap;/,'the add-goal steps wrap so Close stays on screen');
+});
+
+test('switches, chips and names show their whole text (SCR-085, LIST-024, LIST-025, LIST-007)',()=>{
+ const css=stylesheet();
+ assert.match(css,/\.budget-left-tabs\{display:flex;width:100%;flex-wrap:wrap;overflow:visible\}/,'Summary, Income and Expenses never scroll');
+ // Account rows wrap by themselves: the balance moves under the name before the name breaks between letters.
+ assert.match(css,/\.account-list-row\{display:flex;flex-wrap:wrap;/);
+ assert.match(css,/\.account-list-name\{flex:1 1 9rem;min-width:0;font-weight:600;overflow-wrap:break-word\}/);
+ assert.match(css,/\.account-group>summary\{display:flex;flex-wrap:wrap;/);
+ // Transaction chips keep their equal columns, and a long name wraps inside its column.
+ for(const chip of ['.transaction-category>span:last-child','.transaction-business>span:last-child','.report-transaction-list>li>*>span:nth-child(2)>*']){
+  const rule=css.match(new RegExp(chip.replace(/[.*+?^${}()|[\]\\>]/g,'\\$&')+'\\{([^}]*)\\}'))?.[1];
+  assert.ok(rule,chip);assert.doesNotMatch(rule,/ellipsis|nowrap/,chip);
+ }
+});
+
+test('dark tooltips and menus stay readable, touch fields do not zoom, and primitives speak the page language (THEME-011, A11Y-016, RESP-027, RESP-028, RTL-004, TOK-010)',()=>{
+ const css=stylesheet(),modules=fs.readdirSync('components').filter(file=>file.endsWith('.module.css')).map(file=>fs.readFileSync('components/'+file,'utf8')).join('\n');
+ // Recharts writes a white background inline; with the dark theme's light text it read 1.12:1.
+ assert.match(css,/\.recharts-default-tooltip \{[^}]*color: var\(--popover-foreground\); background: var\(--popover\) !important;/);
+ const menu=fs.readFileSync('components/ui/dropdown-menu.tsx','utf8');
+ assert.doesNotMatch(menu,/text-destructive/,'red on the dark menu was 3.37:1');assert.match(menu,/data-\[variant=destructive\]:text-\(--negative\)/);
+ const coarse=css.slice(css.indexOf('/* One floor for every tappable control'));
+ assert.match(coarse,/:is\(input:not\(\[type=checkbox\],\[type=radio\],\[type=range\]\),select,textarea\)\{font-size:var\(--type-body\)!important\}/);
+ assert.match(coarse,/\.nav-item,\.user-link,\.brand-compact\{min-height:44px!important\}/);
+ assert.match(css,/\.auth-page \.panel>a\{display:inline-flex;align-items:center;min-height:44px;/);
+ // Positions mirror in Arabic: only a centred toast (left:50%) and a full-screen sheet (left:0) keep a physical side.
+ assert.deepEqual((css+modules).match(/(?<![\w-])right:\s*-?\d/g),null);
+ assert.deepEqual((css+modules).match(/(?<![\w-])left:\s*(?!0[;}]|50%)-?\d/g),null);
+ assert.doesNotMatch(css+modules,/font-size:10px/);
+ // Close, the drawer's name and Toggle Sidebar are translated; no English-only description is read out.
+ for(const file of ['components/ui/dialog.tsx','components/ui/sheet.tsx'])assert.match(fs.readFileSync(file,'utf8'),/<span className="sr-only">\{label\("Close"\)\}<\/span>/);
+ const sidebar=fs.readFileSync('components/ui/sidebar.tsx','utf8');
+ assert.match(sidebar,/<SheetTitle>\{label\("Menu"\)\}<\/SheetTitle>/);assert.doesNotMatch(sidebar,/Displays the mobile sidebar/);
+ const {useUiLabel}=loadTS('components/ui/ui-label.ts',{react:{...React,useContext:()=>null}});
+ assert.equal(useUiLabel()('Close'),'Close','without a provider a primitive falls back to English instead of throwing');
+});

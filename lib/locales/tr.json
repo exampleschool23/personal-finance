@@ -2543,5 +2543,12 @@
   "Money and work": "Para ve iş",
   "Change icon for {name}": "{name} simgesini değiştir",
   "Choose an icon": "Bir simge seçin",
-  "Use the default icon": "Varsayılan simgeyi kullan"
+  "Use the default icon": "Varsayılan simgeyi kullan",
+  "Menu": "Menü",
+  "You can keep up to {count} watchlists.": "En fazla {count} izleme listesi tutabilirsiniz.",
+  "Enter a whole number for priority.": "Öncelik için bir tam sayı girin.",
+  "Today is already shown.": "Bugün zaten gösteriliyor.",
+  "Check each asset in the portfolio.": "Portföydeki her varlığı kontrol edin.",
+  "Type a question.": "Bir soru yazın.",
+  "Choose both accounts.": "Her iki hesabı da seçin."
 }

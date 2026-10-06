@@ -178,7 +178,7 @@ small{font-size:var(--type-caption)}
 .auth-page .panel .entry-actions [data-slot=button]{flex:1}
 .auth-page .panel form>[data-slot=button]{width:100%;height:44px;margin-top:4px}
 .auth-page .panel form>[data-slot=button]+[data-slot=button]{margin-top:8px}
-.auth-page .panel>a{display:inline-block;margin-top:20px;font-size:var(--type-small);font-weight:500;color:var(--primary)}
+.auth-page .panel>a{display:inline-flex;align-items:center;min-height:44px;margin-top:12px;font-size:var(--type-small);font-weight:500;color:var(--primary)}
 .auth-page .panel>a:hover{text-decoration:underline;text-underline-offset:3px}
 .connect-telegram>p{margin-top:12px;color:var(--muted-foreground);font-size:var(--type-small)}
 .connect-facts{display:grid;gap:8px;margin-top:16px;padding:12px 14px;border:1px solid var(--hairline);border-radius:var(--radius-control)}

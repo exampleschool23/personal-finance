@@ -16,10 +16,12 @@ export function TelegramPanel({demo}:{demo:boolean}){
  const link=useTelegramLink(demo);
  const {status,loadError,error,busy,waiting}=link;
  const [confirmUnlink,setConfirmUnlink]=useState(false);
- return <section className="panel preferences-card telegram-panel"><header><h3>{t('Telegram notifications')}<InfoHint>{t('Get a morning digest of upcoming payments and milestone messages, and add records from Telegram.')}</InfoHint></h3></header>
+ // Without a bot (the sample workspace, or before server setup) Connect stays visible but off, and the reason sits behind the ⓘ and on the button.
+ const offReason=status&&!status.configured?t(demo?'Sign in to connect Telegram to your own workspace.':'Telegram notifications are awaiting server setup.'):undefined;
+ return <section className="panel preferences-card telegram-panel"><header><h3>{t('Telegram notifications')}<InfoHint>{t('Get a morning digest of upcoming payments and milestone messages, and add records from Telegram.')}{offReason&&<> {offReason}</>}</InfoHint></h3></header>
   {loadError&&<InlineError message={t(loadError)} onRetry={link.retry}/>}
   {!loadError&&!status&&<LoadingPlaceholder label={t('Loading Telegram settings…')}/>}
-  {status&&!status.configured&&<p className="muted">{t(demo?'Sign in to connect Telegram to your own workspace.':'Telegram notifications are awaiting server setup.')}</p>}
+  {offReason&&<div className="entry-actions"><span title={offReason}><Button type="button" disabled><Send size={16} aria-hidden="true"/>{t('Connect to Telegram')}</Button></span></div>}
   {status?.configured&&!status.linked&&<div className="telegram-connect">
    <p>{t('Press Connect, then in Telegram press Start and I already have an account.')}</p>
    <div className="entry-actions"><Button type="button" disabled={busy} onClick={link.connect}><Send size={16} aria-hidden="true"/>{t(waiting?'Waiting for Telegram…':'Connect to Telegram')}</Button>{waiting&&<Button type="button" variant="outline" onClick={link.stopWaiting}>{t('Cancel')}</Button>}</div>
