@@ -2,8 +2,7 @@ import { loadMarket } from '@/lib/server-market';
 import { tooManyAttempts } from '@/lib/api-route';
 import { limits, rateLimited } from '@/lib/rate-limit';
 import { session } from '@/lib/supabase';
-import { coins } from '@/lib/market';
-import { isMetalCode } from '@/lib/precious-metals';
+import { coins, isMetalCode } from '@/lib/market';
 
 export async function GET(req: Request) {
   const params = new URL(req.url).searchParams;

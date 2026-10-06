@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
-import { coins } from '../lib/market.ts';
+import { coins, metalCodes } from '../lib/market.ts';
 let source=fs.readFileSync(new URL('../app/api/market/route.ts',import.meta.url),'utf8');
 source=fs.readFileSync(new URL('../lib/server-market.ts',import.meta.url),'utf8')+'\n'+source;
 source=source.replace(/import .* from .*;\n/g,'');
-source='const coins = '+JSON.stringify(coins)+'; const session=async()=>globalThis.marketTestSession; const limits={publicMarket:[]}; const rateLimited=async(...args)=>globalThis.marketTestLimited?.(...args)??false; const tooManyAttempts=()=>Response.json({error:\'Too many attempts. Please try again later.\'},{status:429});\n'+source;
+source='const coins = '+JSON.stringify(coins)+'; const isMetalCode=value=>'+JSON.stringify(metalCodes)+'.includes(value); const session=async()=>globalThis.marketTestSession; const limits={publicMarket:[]}; const rateLimited=async(...args)=>globalThis.marketTestLimited?.(...args)??false; const tooManyAttempts=()=>Response.json({error:\'Too many attempts. Please try again later.\'},{status:429});\n'+source;
 const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
 const {GET}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
 test('market endpoint validates symbols, isolates failures, and protects stock access',async()=>{

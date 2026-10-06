@@ -163,7 +163,7 @@ test('cron runs report failures and partial runs as alerts with their tallies; t
   assert.equal(response.status,503);assert.equal((await response.json()).sent,0);
   assert.equal(reported.length,2);assert.equal(reported[1][1].message,'subscribers unavailable');assert.deepEqual(reported[1][3],{alert:true});
  }
- const snapshots=(overrides)=>loadTS('app/api/cron/portfolio-snapshots/route.ts',{...monitor,'@/lib/server-market':{loadMarket:async()=>({})},'@/lib/owner-rows':{readAllPages:async()=>[{user_id:'a'},{user_id:'b'}]},'@/lib/market':{instrumentFor:()=>null},'@/lib/deposit-interest':{depositToday:()=>'2026-10-05'},'@/lib/telegram-milestones':{announceNetWorthHigh:async()=>false},'@/lib/service-role':{serviceDatabase:()=>db},...overrides});
+ const snapshots=(overrides)=>loadTS('app/api/cron/portfolio-snapshots/route.ts',{...monitor,'@/lib/server-market':{loadMarket:async()=>({})},'@/lib/owner-rows':{readAllPages:async()=>[{user_id:'a'},{user_id:'b'}]},'@/lib/market':{instrumentFor:()=>null,marketSymbols:()=>({crypto:[],stocks:[],metals:[]})},'@/lib/deposit-interest':{depositToday:()=>'2026-10-05'},'@/lib/telegram-milestones':{announceNetWorthHigh:async()=>false},'@/lib/service-role':{serviceDatabase:()=>db},...overrides});
  reported.length=0;
  let response=await snapshots({'@/lib/portfolio-snapshots':{snapshotTotals:holdings=>holdings[0].user_id==='a'?{USD:1}:null}}).GET(cron);
  assert.equal(response.status,503);assert.deepEqual(await response.json(),{captured:1,skipped:1,celebrated:0});

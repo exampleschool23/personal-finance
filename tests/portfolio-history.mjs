@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
-import { assets, liabilities } from '../lib/finance.ts';
+import { assets, liabilities, valuedKinds } from '../lib/finance.ts';
 const compile = path => ts.transpileModule(fs.readFileSync(new URL(path, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/export /g, ''), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
 import * as days from '../lib/calendar-days.ts';
 const convertAmount = new Function(compile('../lib/market.ts') + ';return convertAmount;')();
-const { portfolioHistory, portfolioWindow, trackingWindowStart } = new Function('assets', 'liabilities', 'convertAmount', 'shiftDay', compile('../lib/portfolio-history.ts') + ';return {portfolioHistory,portfolioWindow,trackingWindowStart};')(assets, liabilities, convertAmount, days.shiftDay);
+const { portfolioHistory, portfolioWindow, trackingWindowStart } = new Function('assets', 'liabilities', 'valuedKinds', 'convertAmount', 'shiftDay', compile('../lib/portfolio-history.ts') + ';return {portfolioHistory,portfolioWindow,trackingWindowStart};')(assets, liabilities, valuedKinds, convertAmount, days.shiftDay);
 const record = (id, kind, currency = 'USD') => ({ id, kind, currency });
 const event = (record_id, date, balance, ownership_percentage = 100) => ({ id: record_id + date, record_id, occurred_on: date, balance, ownership_percentage, created_at: date });
 test('waits for full coverage, applies ownership and FX, and carries debt forward', () => {

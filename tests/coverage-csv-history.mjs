@@ -106,7 +106,7 @@ test('history update types and lending kinds match each holding',()=>{
  for(const kind of ['Property','Business','Valuables'])assert.deepEqual(historyUpdateTypes(kind),['valuation','contribution','withdrawal','income','expense']);
  assert.deepEqual(historyUpdateTypes('Salary'),[]);
  assert.equal(isLendingKind('Mortgage'),true);assert.equal(isLendingKind('Stock'),false);
- assert.equal(trackedKinds.length,12);assert.ok(trackedKinds.includes('Treasury bill'));
+ assert.equal(trackedKinds.length,17);assert.ok(trackedKinds.includes('Treasury bill'));for(const kind of ['Bond','Precious metals','Equity compensation','Retirement account','Vehicle'])assert.ok(trackedKinds.includes(kind),kind);
 });
 
 test('history event labels name each event in the words of its holding',()=>{

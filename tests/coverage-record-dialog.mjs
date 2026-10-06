@@ -283,7 +283,7 @@ test('debts take a start date that is fixed once saved and written out as a date
 });
 
 test('name placeholders follow the kind of record',t=>{
- for(const [kind,placeholder] of [['Business','e.g. Solar panels, café, or game club'],['Property','e.g. Apartment or land'],['Valuables','e.g. Watch, jewellery, art or car'],['Debt','e.g. Car loan or credit card'],['Cash','e.g. Savings account']]){
+ for(const [kind,placeholder] of [['Business','e.g. Solar panels, café, or game club'],['Property','e.g. Apartment or land'],['Valuables','e.g. Watch, jewellery or art'],['Vehicle','e.g. Family car or motorbike'],['Retirement account','e.g. Pension, 401(k) or IRA'],['Bond','e.g. 10-year government bond'],['Precious metals','e.g. Gold bars or coins'],['Debt','e.g. Car loan or credit card'],['Cash','e.g. Savings account']]){
   assert.equal(dialog(t,record('x',kind)).r.find(byType('RecordNameInput')).props.placeholder,placeholder,kind);
  }
  const demo=dialog(t,record('x','Cash'),{demo:true,rows:[record('y','Cash')],summary:[record('z','Cash')]});

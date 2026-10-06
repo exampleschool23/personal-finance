@@ -8,7 +8,9 @@ const source=ts.transpileModule(fs.readFileSync('lib/planning.ts','utf8').replac
 import * as days from '../lib/calendar-days.ts';
 const {upcomingPayments}=new Function('income','expenses','depositToday','scheduleDates','shiftDay','archivedIn',source+';return {upcomingPayments};')(income,expenses,depositToday,scheduleDates,days.shiftDay,archivedIn);
 import {parseCSV,mapCSV,exportCSV,FINANCE_RECORD_CSV_COLUMNS} from '../lib/csv.ts';
-import {categoryHue} from '../lib/category-colors.ts';
+import {loadTS} from './helpers/load-ts.mjs';
+// category-colors imports the business palette, so it loads through loadTS rather than natively.
+const {categoryHue}=loadTS('lib/category-colors.ts');
 const r={id:'rent',name:'Rent',kind:'Rent expense',amount:10,date:'2026-01-31',frequency:'Monthly'};
 test('recurring payment dates clip month ends without drifting and preserve overdue unpaid items',()=>{
  const items=upcomingPayments([r],[],'2026-03-01','2026-03-31');assert.deepEqual(items.map(i=>i.date),['2026-01-31','2026-02-28','2026-03-31']);assert.equal(items[0].overdue,true);assert.equal(items[2].overdue,false);

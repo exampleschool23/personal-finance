@@ -275,7 +275,7 @@ test('the daily snapshot cron announces highs per captured owner and a failed an
  try{
   const route=loadTS('app/api/cron/portfolio-snapshots/route.ts',{
    '@/lib/server-market':{loadMarket:async()=>({quotes:{},rates:{USD:1}})},
-   '@/lib/market':{instrumentFor:()=>null},
+   '@/lib/market':{instrumentFor:()=>null,marketSymbols:()=>({crypto:[],stocks:[],metals:[]})},
    '@/lib/portfolio-snapshots':{snapshotTotals:()=>({assets:1,debt:0,rates:{USD:1}})},
    '@/lib/deposit-interest':{depositToday:()=>'2026-10-04'},
    '@/lib/telegram-milestones':{announceNetWorthHigh:async id=>{announced.push(id);if(id==='anna')throw Error('Telegram is down');return true;}},

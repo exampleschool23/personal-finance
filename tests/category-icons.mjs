@@ -14,7 +14,7 @@ test('the icon catalogue is large, grouped, has no repeats and includes every de
  assert.ok(icons.length >= 120, `${icons.length} icons`);
  assert.equal(new Set(icons).size, icons.length, 'no icon is listed twice');
  assert.ok(categoryIconGroups.every(group => group.icons.length >= 10), 'every group has a real choice');
- for (const [kind, icon] of Object.entries(categoryEmojis)) if (!['Cash', 'Stock', 'Crypto', 'Deposit', 'Treasury bill', 'Property', 'Valuables', 'Money lent', 'Mortgage', 'Loan', 'Debt', 'Business'].includes(kind)) assert.ok(isCategoryIcon(icon), `${kind}'s default ${icon} can be chosen back`);
+ for (const [kind, icon] of Object.entries(categoryEmojis)) if (!['Cash', 'Stock', 'Crypto', 'Precious metals', 'Equity compensation', 'Deposit', 'Treasury bill', 'Bond', 'Retirement account', 'Property', 'Vehicle', 'Valuables', 'Money lent', 'Mortgage', 'Loan', 'Debt', 'Business'].includes(kind)) assert.ok(isCategoryIcon(icon), `${kind}'s default ${icon} can be chosen back`);
  assert.equal(isCategoryIcon('A'), false);
  assert.equal(isCategoryIcon('🦄'), false);
 });

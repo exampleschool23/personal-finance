@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Entry } from '@/lib/finance';
 import { instrumentFor, marketSymbols, type MarketData } from '@/lib/market';
 
+/** A failed request leaves its symbols on their saved prices, each with the same note. */
+const markUnavailable = (market: MarketData, keys: string[]) => { for (const key of keys) market.errors[key] = 'Price unavailable. Saved price is shown.'; };
 export async function fetchMarket(entries: Array<Pick<Entry, 'kind' | 'name' | 'metal'>>, signal?: AbortSignal): Promise<MarketData> {
   const { crypto, stocks, metals } = marketSymbols(entries);
   const combined: MarketData = { fx:null, quotes:{}, errors:{}, stocksConfigured:false };
@@ -26,9 +28,7 @@ export async function fetchMarket(entries: Array<Pick<Entry, 'kind' | 'name' | '
       combined.stocksConfigured ||= result.stocksConfigured;
     }catch(error){
       if(signal?.aborted)throw error;
-      for(const symbol of coinBatch)combined.errors[`Crypto:${symbol}`]='Price unavailable. Saved price is shown.';
-      for(const symbol of stockBatch)combined.errors[`Stock:${symbol}`]='Price unavailable. Saved price is shown.';
-      if(index===0)for(const symbol of metals)combined.errors[`Metal:${symbol}`]='Price unavailable. Saved price is shown.';
+      markUnavailable(combined,[...coinBatch.map(symbol=>`Crypto:${symbol}`),...stockBatch.map(symbol=>`Stock:${symbol}`),...(index===0?metals.map(symbol=>`Metal:${symbol}`):[])]);
     }
   }
   if(!completed)throw new Error('Market prices unavailable. Saved prices are shown.');
