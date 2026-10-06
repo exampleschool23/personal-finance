@@ -7,7 +7,6 @@ import { formatNumber } from '@/lib/format';
 import type { PlanningData } from '@/lib/planning';
 import { scheduleHistory, type ArchiveTarget } from '@/lib/recurring';
 
-const destructive = 'bg-destructive text-white hover:bg-destructive/90';
 
 /** Deleting a schedule or spending plan from Recurring. When payments were recorded against it, the person chooses
  * whether they stay in history or are deleted too; otherwise it is a plain yes or no. Either way everything can be restored from Recently deleted. */
@@ -19,7 +18,7 @@ export function DeleteScheduleDialog({ target, history, onDelete, onClose }: { t
   setBusy(true); setError('');
   try { await onDelete(removeHistory); onClose(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
  }
- const action = (label: string, removeHistory: boolean, className?: string) => <AlertDialogAction className={className} variant={className ? 'default' : 'outline'} disabled={busy} onClick={event => { event.preventDefault(); void remove(removeHistory); }}>{t(label)}</AlertDialogAction>;
+ const action = (label: string, removeHistory: boolean, variant: 'outline' | 'destructive') => <AlertDialogAction variant={variant} disabled={busy} onClick={event => { event.preventDefault(); void remove(removeHistory); }}>{t(label)}</AlertDialogAction>;
  return <AlertDialog open={!!target} onOpenChange={next => { if (!next && !busy) { setError(''); onClose(); } }}><AlertDialogContent>
   <AlertDialogTitle>{t('Delete {name}?', { name })}</AlertDialogTitle>
   <AlertDialogDescription>{history > 0
@@ -28,7 +27,7 @@ export function DeleteScheduleDialog({ target, history, onDelete, onClose }: { t
   <ErrorPopup message={error}/>
   <AlertDialogFooter>
    <AlertDialogCancel disabled={busy}>{t('Cancel')}</AlertDialogCancel>
-   {history > 0 ? <>{action('Delete, keep history', false)}{action('Delete with history', true, destructive)}</> : action('Delete', false, destructive)}
+   {history > 0 ? <>{action('Delete, keep history', false, 'outline')}{action('Delete with history', true, 'destructive')}</> : action('Delete', false, 'destructive')}
   </AlertDialogFooter>
  </AlertDialogContent></AlertDialog>;
 }

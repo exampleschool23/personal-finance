@@ -124,7 +124,8 @@
 .budget-period{min-width:8.5em;font-size:var(--type-compact);font-weight:600;text-align:center;white-space:nowrap}
 .budget-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start;width:100%}
 .budget-table{display:flex;flex-direction:column;gap:8px;min-width:0}
-.budget-row{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,minmax(92px,128px));align-items:center;gap:8px;padding:10px 16px;position:relative}
+/* The name keeps 9rem before Planned, Actual and Remaining grow past 92px; a `minmax(0,1fr)` name got only what the figures left. */
+.budget-row{display:grid;grid-template-columns:minmax(9rem,1fr) repeat(3,minmax(92px,128px));align-items:center;gap:8px;padding:10px 16px;position:relative}
 .budget-cell{text-align:end;font-variant-numeric:tabular-nums;font-size:var(--type-small)}
 .budget-section-header{margin-top:8px;padding-block:8px;border-radius:var(--radius-control);background:var(--muted);color:var(--muted-foreground);font-size:var(--type-caption);font-weight:500}
 .budget-section-header .budget-cell{font-size:var(--type-caption)}
@@ -138,13 +139,13 @@
 .budget-group-toggle:focus-visible,.budget-category-name:focus-visible,.budget-unbudgeted:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:6px}
 .budget-category-row+.budget-category-row{border-top:1px solid var(--hairline)}
 .budget-category-name{display:inline-flex;align-items:center;gap:10px;min-width:0;font-size:var(--type-small);text-align:start}
-.budget-category-name>span:not(.category-icon){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Category names wrap at spaces, never between letters and never behind an ellipsis. */
+.budget-category-name>span:not(.category-icon){overflow-wrap:break-word}
 .budget-category-name>svg{flex-shrink:0;color:var(--muted-foreground)}
 button.budget-category-name:hover>span:not(.category-icon){text-decoration:underline;text-underline-offset:3px}
 .budget-rollover{display:block;font-size:var(--type-caption);font-weight:400;color:var(--muted-foreground)}
 .budget-empty-cell{color:var(--muted-foreground)}
 /* On narrow pages category names wrap instead of shrinking to a few letters. */
-@container content (max-width:600px){.budget-category-name>span:not(.category-icon){white-space:normal;overflow-wrap:anywhere}}
 .budget-progress{grid-column:1/-1;height:3px;border-radius:999px;background:var(--hairline);overflow:hidden}
 .budget-category-row .budget-progress{position:absolute;inset-inline:16px;bottom:0;height:2px}
 .budget-progress>div{height:100%;border-radius:inherit;background:var(--mark-bg)}
@@ -228,4 +229,6 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-year td .budget-progress{margin-top:4px}
 .budget-year>.budget-left-empty{padding:24px}
 @container content (max-width:980px){.budget-layout{grid-template-columns:minmax(0,1fr)}.budget-side{position:static;order:-1}}
-@container content (max-width:600px){.budget-row{grid-template-columns:minmax(0,1fr) minmax(84px,auto) minmax(72px,auto);padding-inline:12px}.budget-row>.budget-cell:nth-child(3){display:none}.budget-category-row .budget-progress{inset-inline:12px}.budget-pill{min-width:0}}
+/* Planned, Actual and Remaining stay beside the name until a 9rem name and three 92px figures no longer fit (about 540px of content). Below that,
+ * Actual moves under the name with its label instead of disappearing: no figure is ever hidden for lack of room. */
+@container content (max-width:540px){.budget-row{grid-template-columns:minmax(0,1fr) minmax(84px,auto) minmax(72px,auto);padding-inline:12px}.budget-row:has(>.budget-actual[data-label])>:first-child{grid-column:1;grid-row:1}.budget-row:has(>.budget-actual[data-label])>.budget-cell:not(.budget-actual){grid-row:1/3}.budget-row>.budget-actual{grid-column:1;grid-row:2;justify-self:start;color:var(--muted-foreground);font-size:var(--type-caption);text-align:start;white-space:nowrap}.budget-row>.budget-actual::before{content:attr(data-label) " "}.budget-section-header>.budget-actual,.budget-row>.budget-empty-cell.budget-actual{display:none}.budget-category-row .budget-progress{inset-inline:12px}.budget-pill{min-width:0}}

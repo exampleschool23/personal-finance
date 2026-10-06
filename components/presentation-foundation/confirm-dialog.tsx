@@ -23,7 +23,7 @@ export function ConfirmDialog({ open, onClose, busy = false, title, description,
   <ErrorPopup message={error}/>
   <AlertDialogFooter>
    <AlertDialogCancel disabled={busy}>{cancelLabel ?? t('Cancel')}</AlertDialogCancel>
-   <AlertDialogAction className={destructive ? 'bg-destructive text-white hover:bg-destructive/90' : undefined} disabled={busy} onClick={event => { event.preventDefault(); void onConfirm(); }}>{confirmLabel}</AlertDialogAction>
+   <AlertDialogAction variant={destructive ? 'destructive' : 'default'} disabled={busy} onClick={event => { event.preventDefault(); void onConfirm(); }}>{confirmLabel}</AlertDialogAction>
   </AlertDialogFooter>
  </AlertDialogContent></AlertDialog>;
 }

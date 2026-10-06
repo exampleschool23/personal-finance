@@ -240,13 +240,13 @@
   background: var(--popover);
   color: var(--popover-foreground);
   box-shadow: 0 12px 36px rgb(0 0 0 / 14%);
-  transition: transform 420ms cubic-bezier(.22, 1, .36, 1), opacity 260ms ease, height 260ms ease;
+  transition: transform 280ms cubic-bezier(.22, 1, .36, 1), opacity 260ms ease, height 260ms ease;
 }
 [data-sonner-toast].app-feedback [data-title] { font-size: var(--type-small); font-weight: 600; }
 [data-sonner-toast].app-feedback [data-description] { font-size: var(--type-caption); color: var(--muted-foreground); }
 [data-sonner-toast].app-feedback [data-icon] {
   color: var(--primary);
-  animation: saved-check-in 420ms cubic-bezier(.22, 1, .36, 1) both;
+  animation: saved-check-in 280ms cubic-bezier(.22, 1, .36, 1) both;
 }
 [data-sonner-toaster] [data-sonner-toast].error-feedback { border-color: color-mix(in srgb, var(--destructive) 35%, var(--border)); }
 [data-sonner-toast].error-feedback [data-icon] { color: var(--destructive); }

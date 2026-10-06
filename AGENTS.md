@@ -126,8 +126,15 @@ it instead of styling a page on its own.
 - Page children are spaced by the `.content` flex gap. Do not add outer margins
   to page sections, and give a centred child an explicit `width:100%`.
 - Size layouts with `@container content (...)` queries, because the sidebar
-  changes the room a page really has. Record and upcoming tables turn into
-  stacked cards below 720px; keep new tables compatible with that.
+  changes the room a page really has. Record tables keep their columns and
+  scroll sideways when they do not fit, with the name column frozen
+  (`position: sticky`) and at least 13rem wide; on a phone (560px and below)
+  each record is a card with name and value on the first line. Names are never
+  ellipsised, squeezed under another column or broken between letters, and no
+  script measures a table to choose its layout (that flickered). Never hide a
+  figure for lack of room: move it under the name with a label instead (Budget
+  shows "Actual $1,231" under the category on a phone). Upcoming tables turn
+  into stacked cards below 720px.
 - Never stack a row while it still has room. A breakpoint guessed for the widest
   possible row (long UZS amounts, a progress line) stacks every ordinary row too
   early and leaves a gap with the date on a second line. Row lists that line up

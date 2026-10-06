@@ -53,11 +53,12 @@ function DialogContent({
   children,
   showCloseButton = true,
   onCloseAutoFocus,
+  onOpenAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
 }) {
-  const returnFocus = useReturnFocus(onCloseAutoFocus)
+  const returnFocus = useReturnFocus(onCloseAutoFocus, onOpenAutoFocus)
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
@@ -68,7 +69,8 @@ function DialogContent({
           className
         )}
         {...props}
-        onCloseAutoFocus={returnFocus}
+        onOpenAutoFocus={returnFocus.onOpenAutoFocus}
+        onCloseAutoFocus={returnFocus.onCloseAutoFocus}
       >
         {children}
         {showCloseButton && (

@@ -129,8 +129,7 @@ test('the delete dialog asks about history only when payments were recorded, and
 
  mount(DeleteScheduleDialog, props(3));
  assert.match(text(r.tree), /Payments recorded for it: 3\. Keep them in your history, or delete them too\?/);
- assert.deepEqual(actions().map(node => [text(node), node.props['data-variant']]), [['Delete, keep history', 'outline'], ['Delete with history', 'default']]);
- assert.match(actions()[1].props.className, /destructive/);
+ assert.deepEqual(actions().map(node => [text(node), node.props['data-variant']]), [['Delete, keep history', 'outline'], ['Delete with history', 'destructive']], 'red through the Button variant: a class on the action loses to bg-primary (COMP-039)');
  await press('Delete, keep history');
  await press('Delete with history');
  assert.deepEqual(choices, [false, false, true]);

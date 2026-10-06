@@ -13,7 +13,7 @@ import { RecordFilters, emptyRecordFilters } from '@/components/record-filters';
 import { RecordIcon } from '@/components/presentation-foundation/record-icon';
 import { RowMenu } from '@/components/presentation-foundation/row-menu';
 import { Button } from '@/components/ui/button';
-import { expenses, income, kinds, lendingRecordKinds, liabilities, value } from '@/lib/finance';
+import { expenses, income, kinds, lendingRecordKinds, liabilities, value, type Entry } from '@/lib/finance';
 import { formatDate, formatNumber, formatSignedMoney } from '@/lib/format';
 import { signedAmount } from '@/lib/transaction-list';
 import { trackedKinds } from '@/lib/investment-history';
@@ -34,6 +34,9 @@ type Props = {
 };
 
 /** The filterable record list shared by Cash flow and Loans & debts. */
+/** Loans, debts and mortgages are paid with Record payment, their main row action. */
+const paidByPayment = (record: Entry) => record.kind === 'Mortgage' || record.kind === 'Loan' || record.kind === 'Debt';
+
 export function RecordsTable({ title, transactions = false, limit, pagination = true, children }: Props) {
  const { t, locale } = useLanguage();
  const { filters, setFilters, filtersActive, historyOnly, useFilteredRecords, remoteHistory, historyPage, visible, totalRecords, pageCount, tablePage, tableLoading, recordsLoading, showPage,
@@ -61,9 +64,11 @@ export function RecordsTable({ title, transactions = false, limit, pagination = 
     <td><CategoryBadge kind={r.kind} label={t(r.payment_type==='bonus'?'Bonus':r.kind)}/>{r.custom_category_id&&<CategoryBadge kind={r.custom_category_id} label={planning.data.categories.find(c=>c.id===r.custom_category_id)?.name??t('Custom category')}/>}</td>
     <td className="muted">{r.kind === 'Money lent' ? <><div>{t("Lent: {date}", { date: date(r.lent_date || '') })}</div><small>{r.date ? t("Due: {date}", { date: date(r.date) }) : t("No due date")}</small></> : liabilities.includes(r.kind)?<><div>{t('Started: {date}',{date:date(r.opened_on||'')})}</div><small>{t('Due: {date}',{date:date(r.date)})}</small></>:date(r.date)}</td>
     <td className={transactions&&income.includes(r.kind)?'amount positive':'amount'}>{transactions?formatSignedMoney(signedAmount(r),r.currency,locale):money(value(r), r.currency)}</td>
-    <td><div className="row-actions">{!demo && trackedKinds.includes(r.kind) && <Button size="sm" variant="outline" onClick={() => setTracking(storedRecord(r))}>{t("Tracker")}</Button>}{r.kind === 'Mortgage' && <Button size="sm" variant="outline" onClick={() => setPayingMortgage(storedRecord(r))}>{t("Record payment")}</Button>}{(r.kind === 'Loan' || r.kind === 'Debt') && <Button size="sm" variant="outline" aria-disabled={demo || undefined} title={demo ? t('Available after you sign in.') : undefined} onClick={() => { if (!demo) setDebtPayment(storedRecord(r)); }}>{t("Record payment")}</Button>}
+    <td><div className="row-actions">{!demo && trackedKinds.includes(r.kind) && !paidByPayment(r) && <Button size="sm" variant="outline" onClick={() => setTracking(storedRecord(r))}>{t("Tracker")}</Button>}{r.kind === 'Mortgage' && <Button size="sm" variant="outline" onClick={() => setPayingMortgage(storedRecord(r))}>{t("Record payment")}</Button>}{(r.kind === 'Loan' || r.kind === 'Debt') && <Button size="sm" variant="outline" aria-disabled={demo || undefined} title={demo ? t('Available after you sign in.') : undefined} onClick={() => { if (!demo) setDebtPayment(storedRecord(r)); }}>{t("Record payment")}</Button>}
      {/* Everything else is rare: it waits behind the row's ⋯ menu. */}
      <RowMenu label={t('Actions for {name}', { name: r.name })} items={[
+      // A loan, debt or mortgage leads with Record payment, so its tracker is the rarer action.
+      !demo && trackedKinds.includes(r.kind) && paidByPayment(r) && { label: t('Tracker'), onSelect: () => setTracking(storedRecord(r)) },
       [...income, ...expenses].includes(r.kind) && r.frequency !== 'Once' && !r.end_date && { label: t('Stop'), onSelect: () => setStopping(storedRecord(r)) },
       ...(!r.movement_id && !r.operation_id && !r.mortgage_payment_id && !r.history_event_id ? [
        isTransactionHistory(r) && { label: t('Split'), disabled: transactionTools.loading || !!transactionTools.error, onSelect: () => setSplitting(storedRecord(r)) },

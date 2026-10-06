@@ -46,7 +46,7 @@ export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgete
     {onGroupSettings && <Button type="button" variant="ghost" size="icon-xs" aria-label={t('Category settings: {name}', { name: t(group.name) })} onClick={onGroupSettings}><Settings2/></Button>}
    </span>
    <span className="budget-cell">{header ?? formatMoney(group.budget, currency, locale)}</span>
-   <span className="budget-cell">{formatMoney(group.actual, currency, locale)}</span>
+   <span className="budget-cell budget-actual" data-label={t('Actual')}>{formatMoney(group.actual, currency, locale)}</span>
    <span className="budget-cell"><RemainingPill value={group.remaining} direction={group.direction} currency={currency}/></span>
   </div>
   {open && <>
@@ -55,7 +55,7 @@ export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgete
      <CategoryIcon kind={row.custom ? row.name : row.key} size="sm"/><span>{name(row)}{row.rolloverIn !== 0 && <RolledOver amount={row.rolloverIn} currency={currency}/>}</span>{row.rollover && <RefreshCw size={13} aria-label={t('Rollover')}/>}
     </button>
     <span className="budget-cell">{renderPlanned(row)}</span>
-    <span className="budget-cell">{formatMoney(row.actual, currency, locale)}</span>
+    <span className="budget-cell budget-actual" data-label={t('Actual')}>{formatMoney(row.actual, currency, locale)}</span>
     <span className="budget-cell"><RemainingPill value={row.remaining} direction={row.direction} currency={currency}/></span>
     <BudgetProgress row={row}/>
    </div>)}
@@ -74,12 +74,12 @@ function RolledOver({ amount, currency }: { amount: number; currency: string }) 
 /** A grey band naming a section and its columns: the Income / Expenses / Contributions headers. */
 export function BudgetSectionHeader({ title }: { title: string }) {
  const { t } = useLanguage();
- return <div className="budget-row budget-section-header"><span>{title}</span><span className="budget-cell">{t('Planned')}</span><span className="budget-cell">{t('Actual')}</span><span className="budget-cell">{t('Remaining')}</span></div>;
+ return <div className="budget-row budget-section-header"><span>{title}</span><span className="budget-cell">{t('Planned')}</span><span className="budget-cell budget-actual">{t('Actual')}</span><span className="budget-cell">{t('Remaining')}</span></div>;
 }
 
 export function BudgetTotalRow({ label, planned, actual, remaining, direction, currency }: { label: string; planned: number; actual: number; remaining: number; direction: BudgetRow['direction']; currency: string }) {
- const { locale } = useLanguage();
- return <div className="budget-row budget-total-row"><span>{label}</span><span className="budget-cell">{formatMoney(planned, currency, locale)}</span><span className="budget-cell">{formatMoney(actual, currency, locale)}</span><span className="budget-cell"><RemainingPill value={remaining} direction={direction} currency={currency}/></span></div>;
+ const { t, locale } = useLanguage();
+ return <div className="budget-row budget-total-row"><span>{label}</span><span className="budget-cell">{formatMoney(planned, currency, locale)}</span><span className="budget-cell budget-actual" data-label={t('Actual')}>{formatMoney(actual, currency, locale)}</span><span className="budget-cell"><RemainingPill value={remaining} direction={direction} currency={currency}/></span></div>;
 }
 
 /** Goals with a planned monthly saving. Contributions are edited on the goal itself. */
@@ -91,7 +91,7 @@ export function ContributionRows({ goals, currency, amountOf }: { goals: Goal[];
    return <div className="budget-row budget-category-row" key={goal.id}>
     <span className="budget-category-name"><span className="category-icon" data-size="sm" aria-hidden="true">{goalEmoji(goal)}</span><span>{goal.name}</span></span>
     <span className="budget-cell">{amount === null ? '—' : formatMoney(amount, currency, locale)}</span>
-    <span className="budget-cell budget-empty-cell">—</span>
+    <span className="budget-cell budget-empty-cell budget-actual">—</span>
     <span className="budget-cell budget-empty-cell">—</span>
    </div>;
   })}

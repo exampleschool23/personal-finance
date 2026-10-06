@@ -49,11 +49,12 @@ function AlertDialogContent({
   className,
   size = "default",
   onCloseAutoFocus,
+  onOpenAutoFocus,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
   size?: "default" | "sm"
 }) {
-  const returnFocus = useReturnFocus(onCloseAutoFocus)
+  const returnFocus = useReturnFocus(onCloseAutoFocus, onOpenAutoFocus)
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
@@ -65,7 +66,8 @@ function AlertDialogContent({
           className
         )}
         {...props}
-        onCloseAutoFocus={returnFocus}
+        onOpenAutoFocus={returnFocus.onOpenAutoFocus}
+        onCloseAutoFocus={returnFocus.onCloseAutoFocus}
       />
     </AlertDialogPortal>
   )

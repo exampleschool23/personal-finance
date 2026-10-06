@@ -229,13 +229,16 @@ test('form footer cancels through its callback and honours the busy state',()=>{
 test('confirm dialog blocks closing while busy, never submits a form and styles destructive actions',()=>{
  const dialog={};
  for(const name of ['AlertDialog','AlertDialogContent','AlertDialogTitle','AlertDialogDescription','AlertDialogFooter','AlertDialogCancel','AlertDialogAction'])dialog[name]=element('div');
+ dialog.AlertDialogAction=function AlertDialogAction({variant,...props}){return React.createElement('div',{...props,'data-variant':variant});};
  const shown=[];
  const {ConfirmDialog}=load('confirm-dialog.tsx',{'@/components/ui/alert-dialog':dialog,'@/lib/feedback':{showError:message=>shown.push(message)}});
  const confirmed=[];let closed=0;
  const props={open:true,onClose:()=>closed++,title:'Delete this record?',description:'It moves to Recently deleted.',confirmLabel:'Delete record',onConfirm:()=>confirmed.push(1)};
  const html=render(ConfirmDialog,{...props,destructive:true});
- assert.match(html,/Delete this record\?[\s\S]*It moves to Recently deleted\.[\s\S]*Cancel[\s\S]*bg-destructive[\s\S]*Delete record/);
- assert.doesNotMatch(render(ConfirmDialog,props),/bg-destructive|disabled=""/);
+ assert.match(html,/Delete this record\?[\s\S]*It moves to Recently deleted\.[\s\S]*Cancel[\s\S]*data-variant="destructive"[\s\S]*Delete record/);
+ assert.doesNotMatch(render(ConfirmDialog,props),/data-variant="destructive"|disabled=""/);
+ // The red comes from the Button variant; a bg-destructive class on the action loses to the default bg-primary (COMP-039).
+ assert.doesNotMatch(fs.readFileSync('components/presentation-foundation/confirm-dialog.tsx','utf8'),/bg-destructive/);
  assert.match(render(ConfirmDialog,{...props,busy:true,cancelLabel:'Keep record'}),/<div disabled="">Keep record<\/div>/);
  const tree=ConfirmDialog({...props,busy:true});
  tree.props.onOpenChange(false);assert.equal(closed,0);
