@@ -204,6 +204,13 @@ test('pages and dialogs never grow wider than the screen, and fit short screens 
  // Record forms and the cash account field: a long option ("Everyday checking · $14,200") or source name never widens the dialog.
  assert.match(css,/\.record-form\{display:grid;grid-template-columns:minmax\(0,1fr\);/);
  assert.match(css,/\.cash-account-field\{display:grid;grid-template-columns:minmax\(0,1fr\);/);
+ // Any dialog: a long option or a link label never widens it; the Customize buttons wrap (seen in German at 280–393px).
+ assert.match(css,/\[data-slot=dialog-content\] \[data-slot="native-select-wrapper"\]\{width:100%;min-width:0\}/);
+ assert.match(css,/\[data-slot=dialog-content\] form :is\(div,label\):not\(\[class\*="min-w-"\]\)\{min-width:0\}/);
+ assert.match(css,/\[data-slot=dialog-content\] :is\(\[data-variant=link\],\.panel-link\)\{max-width:100%;height:auto;white-space:normal/);
+ assert.match(css,/\.customize-footer\{display:flex;flex-wrap:wrap;/);
+ // Net worth and debt sit side by side only while both figures fit (Arabic at 280px cut "202,800 US$").
+ assert.match(css,/\.portfolio-summary-metrics\{display:grid;grid-template-columns:repeat\(auto-fit,minmax\(min\(100%,11rem\),1fr\)\)/);
  assert.match(fs.readFileSync('components/ui/sidebar.tsx','utf8'),/SIDEBAR_WIDTH_MOBILE = "min\(18rem, 85vw\)"/);
  assert.match(css,/\.goal-setup-steps\{display:flex;flex-wrap:wrap;/,'the add-goal steps wrap so Close stays on screen');
 });
@@ -226,6 +233,7 @@ test('dark tooltips and menus stay readable, touch fields do not zoom, and primi
  const css=stylesheet(),modules=fs.readdirSync('components').filter(file=>file.endsWith('.module.css')).map(file=>fs.readFileSync('components/'+file,'utf8')).join('\n');
  // Recharts writes a white background inline; with the dark theme's light text it read 1.12:1.
  assert.match(css,/\.recharts-default-tooltip \{[^}]*color: var\(--popover-foreground\); background: var\(--popover\) !important;/);
+ assert.match(css,/\.recharts-default-tooltip \.recharts-tooltip-item \{ color: var\(--popover-foreground\) !important; \}/,'rows are never drawn in the series colour (1.31:1 in dark)');
  const menu=fs.readFileSync('components/ui/dropdown-menu.tsx','utf8');
  assert.doesNotMatch(menu,/text-destructive/,'red on the dark menu was 3.37:1');assert.match(menu,/data-\[variant=destructive\]:text-\(--negative\)/);
  const coarse=css.slice(css.indexOf('/* One floor for every tappable control'));

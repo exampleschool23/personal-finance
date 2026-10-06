@@ -6,7 +6,7 @@
 .portfolio-summary-main{padding:28px}
 .portfolio-summary-main h2{font-size:var(--type-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground)}
 .portfolio-summary-value{display:block;margin:6px 0 8px;font-size:var(--type-hero);font-weight:650;letter-spacing:-.04em;line-height:1.05;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.portfolio-summary-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.portfolio-summary-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr));row-gap:16px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
 .portfolio-summary-metrics>div{display:grid;gap:4px;min-width:0;padding-inline-start:20px;border-inline-start:1px solid var(--border)}
 .portfolio-summary-metrics>div:first-child{padding-inline-start:0;border-inline-start:0}
 .portfolio-summary-metrics span{font-size:var(--type-caption);color:var(--muted-foreground)}
@@ -126,6 +126,7 @@
 .recharts-legend-wrapper { font-size: var(--type-small); line-height: 1.7; }
 /* Recharts writes a white background inline; every chart tooltip takes the theme's surface instead (THEME-011). */
 .recharts-default-tooltip { font-size: var(--type-small); line-height: 1.6; color: var(--popover-foreground); background: var(--popover) !important; border-color: var(--border) !important; }
+.recharts-default-tooltip .recharts-tooltip-item { color: var(--popover-foreground) !important; }
 .recharts-tooltip-label { color: var(--foreground); }
 /* Legend labels stay readable; the series colour is carried by the dot beside each label. */
 .recharts-legend-item-text { color: var(--muted-foreground) !important; }

@@ -147,7 +147,7 @@
 .customize-row{position:relative;display:flex;align-items:center;gap:8px;min-height:44px;padding:4px 0;background:var(--background);user-select:none}
 .customize-row[data-dragging]{z-index:5;border-radius:var(--radius-control);box-shadow:0 8px 24px rgb(0 0 0 / .14)}
 .customize-row label{display:block;flex:1;margin:0;font-size:var(--type-small);cursor:pointer}
-.customize-footer{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+.customize-footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-top:8px}
 @media (max-width:560px){.customize-grid{grid-template-columns:minmax(0,1fr)}}
 
 /* Goal detail: a cover band, the progress line and four figures heading a goal's plan. */
