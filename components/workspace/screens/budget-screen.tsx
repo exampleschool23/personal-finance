@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { BudgetGroupCard, BudgetProgress, BudgetSectionHeader, BudgetTotalRow, ContributionRows, useCategoryName } from '@/components/budget/budget-rows';
-import { LeftToBudgetCard } from '@/components/budget/left-to-budget-card';
+import { LeftToBudgetCard, type BudgetFocus } from '@/components/budget/left-to-budget-card';
 import { PlannedInput } from '@/components/budget/planned-input';
 import { BudgetSettingsDialog, CategorySettingsDialog, type BudgetFigures } from '@/components/budget/settings-dialogs';
 import { useLanguage } from '@/components/language-provider';
@@ -33,6 +33,7 @@ export function BudgetScreen() {
  const today = depositToday(), thisMonth = expensePlanMonth();
  const [month, setMonth] = useState(thisMonth);
  const [view, setView] = useState<'month' | 'year'>('month');
+ const [focus, setFocus] = useState<BudgetFocus>('summary');
  const [closed, setClosed] = useState<Set<string>>(new Set());
  const [unbudgeted, setUnbudgeted] = useState<Set<string>>(new Set());
  const [editing, setEditing] = useState<{ category: BudgetCategory; figures?: BudgetFigures } | null>(null);
@@ -106,10 +107,14 @@ export function BudgetScreen() {
    <Button variant="outline" onClick={() => setSettingsOpen(true)}><Settings size={16} aria-hidden="true"/>{t('Settings')}</Button>
   </PageHeader>
   {error ? <InlineError message={t(error)} onRetry={() => { budget.retry(); remote.retry(); }}/> : loading ? <PanelSkeleton label={t('Loading records…')} rows={6}/> : view === 'year' ? <BudgetYear rows={categories} month={month} history={history} amounts={budget.state.amounts} currency={currency} rates={rates} today={today}/> : <div className="budget-layout">
-   <div className="budget-table">
+   {/* Summary shows every section; Income or Expenses in the Left to budget card narrows the list to that side. */}
+   <div className="budget-table" data-focus={focus}>
+    <div className="budget-section" data-section="income">
     <BudgetSectionHeader title={t('Income')}/>
     {income.map(card)}
     <BudgetTotalRow label={t('Total income')} planned={sum(income, 'budget')} actual={sum(income, 'actual')} remaining={sum(income, 'budget') - sum(income, 'actual')} direction="income" currency={currency}/>
+    </div>
+    <div className="budget-section" data-section="expenses">
     <BudgetSectionHeader title={t('Expenses')}/>
     {spending.map(card)}
     <BudgetTotalRow label={t('Total expenses')} planned={spendingPlanned} actual={sum(spending, 'actual')} remaining={spendingPlanned - sum(spending, 'actual')} direction="expense" currency={currency}/>
@@ -118,9 +123,10 @@ export function BudgetScreen() {
      <ContributionRows goals={goals} currency={currency} amountOf={contributionOf}/>
      <BudgetTotalRow label={t('Total contributions')} planned={contributions} actual={0} remaining={contributions} direction="income" currency={currency}/>
     </>}
+    </div>
    </div>
    <div className="budget-side">
-    <LeftToBudgetCard left={left} rows={rows} mode={budget.state.mode} currency={currency}/>
+    <LeftToBudgetCard left={left} rows={rows} mode={budget.state.mode} currency={currency} tab={focus} onTab={setFocus}/>
     <AgeOfMoneyTile records={data.records} currency={currency} today={today} rates={rates}/>
    </div>
   </div>}

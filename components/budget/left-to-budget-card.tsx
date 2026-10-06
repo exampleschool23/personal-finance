@@ -8,11 +8,15 @@ import { formatMoney } from '@/lib/format';
 import { RollingText } from '@/components/presentation-foundation/rolling-text';
 import { BudgetProgress, useCategoryName } from './budget-rows';
 
-/** The right-hand card: money not yet given a job, with Summary / Income / Expenses tabs. */
-export function LeftToBudgetCard({ left, rows, mode, currency }: { left: LeftToBudget; rows: BudgetRow[]; mode: BudgetMode; currency: string }) {
+export type BudgetFocus = 'summary' | 'income' | 'expenses';
+
+/** The right-hand card: money not yet given a job, with Summary / Income / Expenses tabs. The Budget page passes `tab` and `onTab`, so the
+ * same tabs also narrow its list to that section; without them the card keeps its own tab. */
+export function LeftToBudgetCard({ left, rows, mode, currency, tab: chosen, onTab }: { left: LeftToBudget; rows: BudgetRow[]; mode: BudgetMode; currency: string; tab?: BudgetFocus; onTab?: (tab: BudgetFocus) => void }) {
  const { t, locale } = useLanguage();
  const name = useCategoryName();
- const [tab, setTab] = useState<'summary' | 'income' | 'expenses'>('summary');
+ const [own, setOwn] = useState<BudgetFocus>('summary');
+ const tab = chosen ?? own, setTab = onTab ?? setOwn;
  const money = (value: number) => formatMoney(value, currency, locale);
  const tone = remainingTone(left.left);
  const income = rows.filter(row => row.direction === 'income' && !row.excluded && (row.budget || row.actual));

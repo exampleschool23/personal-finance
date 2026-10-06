@@ -129,7 +129,10 @@
 .budget-cell{text-align:end;font-variant-numeric:tabular-nums;font-size:var(--type-small)}
 .budget-section-header{margin-top:8px;padding-block:8px;border-radius:var(--radius-control);background:var(--muted);color:var(--muted-foreground);font-size:var(--type-caption);font-weight:500}
 .budget-section-header .budget-cell{font-size:var(--type-caption)}
-.budget-table>.budget-section-header:first-child{margin-top:0}
+/* Each section is a layout-free wrapper, so the list keeps one column of groups; the Left to budget tabs hide the other side. */
+.budget-section{display:contents}
+.budget-table[data-focus=income]>[data-section=expenses],.budget-table[data-focus=expenses]>[data-section=income]{display:none}
+.budget-table>.budget-section:first-child>.budget-section-header:first-child,.budget-table[data-focus=expenses]>[data-section=expenses]>.budget-section-header:first-child{margin-top:0}
 .budget-group{border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card);box-shadow:var(--shadow-card);overflow:hidden}
 .budget-group-row{font-weight:600}
 .budget-group-row .budget-cell{font-weight:600;font-size:var(--type-compact)}

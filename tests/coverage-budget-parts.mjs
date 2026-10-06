@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
+import fs from 'node:fs';
 import {loadTS} from './helpers/load-ts.mjs';
+import {stylesheet} from './helpers/stylesheet.mjs';
 
 // A tiny renderer: expands every function component (so nested pieces run), keeps hook state per
 // component path between renders, and leaves UI kit pieces as plain host elements whose handlers
@@ -472,4 +474,21 @@ test('BudgetSettingsDialog recalculates, reports failures and blocks closing whi
  assert.equal(text(one(busy.view,'x-button',node=>node.props.variant===undefined)),'T:Save');
  one(busy.view,'x-dialog').props.onOpenChange(true);assert.equal(busy.closed.length,0);
  one(busy.view,'x-dialog').props.onOpenChange(false);assert.equal(busy.closed.length,1);
+});
+
+test('the Budget page drives the Left to budget tabs, so Income and Expenses narrow its list to that side (BUD-024)',()=>{
+ const picked=[];
+ const view=mount(React.createElement(page.LeftToBudgetCard,{left,rows:leftRows,mode:'category',currency:'USD',tab:'expenses',onTab:tab=>picked.push(tab)}));
+ const segmented=one(view,'x-segmented');
+ assert.equal(segmented.props.value,'expenses','the page decides the tab');
+ assert.equal(byClass(view,'budget-left-summary').length,0);
+ segmented.props.onChange('income');
+ assert.deepEqual(picked,['income'],'a tap goes to the page');
+ const screen=fs.readFileSync('components/workspace/screens/budget-screen.tsx','utf8');
+ assert.match(screen,/<div className="budget-table" data-focus=\{focus\}>/);
+ assert.match(screen,/data-section="income"[\s\S]*data-section="expenses"[\s\S]*Total contributions/,'contributions sit with expenses');
+ assert.match(screen,/<LeftToBudgetCard [^>]*tab=\{focus\} onTab=\{setFocus\}\/>/);
+ const css=stylesheet();
+ assert.match(css,/\.budget-section\{display:contents\}/);
+ assert.match(css,/\.budget-table\[data-focus=income\]>\[data-section=expenses\],\.budget-table\[data-focus=expenses\]>\[data-section=income\]\{display:none\}/);
 });
