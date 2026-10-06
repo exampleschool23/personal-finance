@@ -20,9 +20,9 @@ import { signedAmount } from '@/lib/transaction-list';
 import { trackedKinds } from '@/lib/investment-history';
 import { isTransactionHistory } from '@/lib/transaction-history';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
+import { shownName } from '@/lib/record-names';
 
 // Fee rows are written by the database under these names; show them in the visitor's language.
-const generatedNames = ['Transaction fee', 'Transfer fee'];
 
 type Props = {
  title: string;
@@ -61,8 +61,8 @@ export function RecordsTable({ title, transactions = false, limit, pagination = 
   {useFilteredRecords&&planning.error&&<InlineError message={t(planning.error)}/>}
   {tableLoading ? <LoadingPlaceholder label={t("Loading records…")}/> : visible.length ? <div className="table-scroll"><table>
    <thead><tr><th>{t("Name")}</th><th>{t("Category")}</th><th>{transactions ? t("Date") : t("Date / due date")}</th><th>{transactions ? t("Amount") : t("Value")}</th><th>{t("Actions")}</th></tr></thead>
-   <tbody>{shown.map(r => <tr key={r.id} {...(transactions?{className:'clickable-row',tabIndex:0,'aria-label':t('View details for {name}',{name:r.name}),onClick:(event:ReactMouseEvent)=>{const target=event.target as HTMLElement;/* Menu items are portaled out of the row, but React still bubbles their clicks here. */if(event.currentTarget.contains(target)&&!target.closest('button,a,input'))setViewing(storedRecord(r));},onKeyDown:(event:ReactKeyboardEvent)=>{if(event.target===event.currentTarget&&(event.key==='Enter'||event.key===' ')){event.preventDefault();setViewing(storedRecord(r));}}}:{})}>
-    <td><div className="record-name"><RecordIcon record={r} /><div><strong>{generatedNames.includes(r.name)&&(r.movement_id||r.operation_id)?t(r.name):r.name}</strong>{detail(r)&&<small>{detail(r)}</small>}</div></div></td>
+   <tbody>{shown.map(r => <tr key={r.id} {...(transactions?{className:'clickable-row',tabIndex:0,'aria-label':t('View details for {name}',{name:shownName(r, t)}),onClick:(event:ReactMouseEvent)=>{const target=event.target as HTMLElement;/* Menu items are portaled out of the row, but React still bubbles their clicks here. */if(event.currentTarget.contains(target)&&!target.closest('button,a,input'))setViewing(storedRecord(r));},onKeyDown:(event:ReactKeyboardEvent)=>{if(event.target===event.currentTarget&&(event.key==='Enter'||event.key===' ')){event.preventDefault();setViewing(storedRecord(r));}}}:{})}>
+    <td><div className="record-name"><RecordIcon record={r} /><div><strong>{shownName(r, t)}</strong>{detail(r)&&<small>{detail(r)}</small>}</div></div></td>
     <td><CategoryBadge kind={r.kind} label={t(r.payment_type==='bonus'?'Bonus':r.kind)}/>{r.custom_category_id&&<CategoryBadge kind={r.custom_category_id} label={planning.data.categories.find(c=>c.id===r.custom_category_id)?.name??t('Custom category')}/>}</td>
     <td className="muted">{r.kind === 'Money lent' ? <><div>{t("Lent: {date}", { date: date(r.lent_date || '') })}</div><small>{r.date ? t("Due: {date}", { date: date(r.date) }) : t("No due date")}</small></> : liabilities.includes(r.kind)?<><div>{t('Started: {date}',{date:date(r.opened_on||'')})}</div><small>{t('Due: {date}',{date:date(r.date)})}</small></>:date(r.date)}</td>
     <td className={transactions&&income.includes(r.kind)?'amount positive':'amount'}>{transactions?formatSignedMoney(signedAmount(r),r.currency,locale):money(value(r), r.currency)}</td>

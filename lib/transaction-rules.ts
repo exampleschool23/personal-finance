@@ -62,15 +62,24 @@ export function canRecategorize(record: Entry, splits: readonly TransactionSplit
 export const canTakeCategory = (record: Entry, choice: CategoryChoice, splits: readonly TransactionSplit[] = []) => canRecategorize(record, splits) && (choice.kind !== 'Business income' || !!record.business_id);
 
 /** Moves the chosen transactions of the choice's direction to it; returns the changed records and how many changed. */
-export function recategorize(records: readonly Entry[], ids: readonly string[], choice: CategoryChoice, splits: readonly TransactionSplit[] = []) {
+export function recategorize(records: readonly Entry[], ids: readonly string[], choice: CategoryChoice, splits: readonly TransactionSplit[] = [], categories: readonly { id: string; name: string }[] = []) {
  const wanted = new Set(ids), direction = directionOf(choice.kind);
  let changed = 0;
  const next = records.map(record => {
   if (!wanted.has(record.id) || directionOf(record.kind) !== direction || !canTakeCategory(record, choice, splits) || sameChoice(record, choice)) return record;
   changed++;
-  return { ...record, kind: choice.kind, custom_category_id: choice.category_id };
+  return { ...record, kind: choice.kind, custom_category_id: choice.category_id, name: renamedForCategory(record, choice, categories) };
  });
  return { records: next, changed };
+}
+
+/** A transaction saved without a name is named after its category; when the category changes, so does that name
+ * (mirrors `public.recategorize_transactions`). A name the person typed stays. */
+export function renamedForCategory(record: Pick<Entry, 'name' | 'kind' | 'custom_category_id'>, choice: CategoryChoice, categories: readonly { id: string; name: string }[] = []) {
+ const nameOf = (id: string | null | undefined) => id ? categories.find(category => category.id === id)?.name : undefined;
+ const current = record.name.trim().toLowerCase();
+ const generated = [record.kind, nameOf(record.custom_category_id) ?? ''].map(name => name.trim().toLowerCase());
+ return generated.includes(current) ? nameOf(choice.category_id) ?? choice.kind : record.name;
 }
 
 /** Whether a rule's criteria hold for a transaction; mirrors `public.transaction_rule_matches` and the direction test beside it. */

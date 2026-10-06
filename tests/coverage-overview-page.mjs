@@ -89,7 +89,12 @@ test('upcoming payments put overdue ones first, show formatted dates and colour 
  ];
  const {upcoming}=cards({planning:{records,occurrences:[],categories:[],goals:[],activity:[],debtPayments:[]}});
  const text=plain(upcoming);
- assert.match(text,/Upcoming payments \d+ due soon/);
+ assert.match(text,/Upcoming payments 1 overdue/,'an overdue item is counted as overdue, never as due soon');
+ // Live QA, 6 October 2026: "5 due soon" with 101 overdue items; the pill counted only the five rows shown.
+ const backlog=Array.from({length:7},(_,i)=>entry('Debt '+i,'Debt',10,{date:shiftDay(today,-(i+1))}));
+ assert.match(plain(cards({planning:{records:backlog,occurrences:[],categories:[],goals:[],activity:[],debtPayments:[]}}).upcoming),/Upcoming payments 7 overdue/);
+ const ahead=cards({planning:{records:[records[0],records[2]],occurrences:[],categories:[],goals:[],activity:[],debtPayments:[]}});
+ assert.match(plain(ahead.upcoming),/Upcoming payments \d+ due soon/);
  assert.ok(upcoming.indexOf('Old debt')<upcoming.indexOf('Car loan'),'overdue first');
  assert.match(upcoming,new RegExp(`<small class="negative">Overdue · ${formatDate(late,'en-US')}</small>`));
  assert.match(upcoming,new RegExp(`<small>${formatDate(soon,'en-US')}</small><\\/span><strong>\\$321</strong>`));

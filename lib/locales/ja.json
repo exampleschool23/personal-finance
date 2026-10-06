@@ -1813,6 +1813,7 @@
   "Welcome back!": "おかえりなさい！",
   "{amount} left": "残り {amount}",
   "{count} due soon": "まもなく {count} 件",
+  "{count} overdue": "期限切れ {count} 件",
   "No transactions recorded this month or last.": "今月も先月も取引はありません。",
   "Goals": "目標",
   "{amount} target": "目標 {amount}",

@@ -1,6 +1,5 @@
 "use client";
 import type { Dispatch, SetStateAction } from 'react';
-import { useLanguage } from '@/components/language-provider';
 import { requestJson } from '@/lib/api-client';
 import { withAssetIncomePlans, resolveEarningSource, type EarningSource } from '@/lib/earning-sources';
 import type { ExpensePlan } from '@/lib/expense-plans';
@@ -31,7 +30,6 @@ export type RecordSaveInput = {
 
 /** Saving the record form and deleting a record. Both name the rule that refuses a change, as the server would. */
 export function useRecordSave(input: RecordSaveInput) {
-    const { t } = useLanguage();
     const { demo, rows, setRows, editing, setEditing, deleting, setDeleting, setBusy, setError, fail, planning } = input;
     /** The record as it is sent: a blank expense named, its exchange rate and income source filled in, a new debt dated. */
     function recordToSave(editing: Entry, rate: number, converted: boolean) {
@@ -39,7 +37,7 @@ export function useRecordSave(input: RecordSaveInput) {
         if(demo&&duplicateScheduledPayment(editing,rows,earningPatch.earning_due_on))throw Error('This scheduled payment is already recorded.');
         const incomeSourcePatch=editing.income_source_id?resolveIncomeSource(editing,planning.data.records):{};
         if(demo&&duplicateSalaryPayment(editing,rows,incomeSourcePatch.income_due_on))throw Error('This salary payment is already recorded.');
-        const name=expenseName(editing,planning.data.categories.find(category=>category.id===editing.custom_category_id)?.name,t(editing.kind));
+        const name=expenseName(editing,planning.data.categories.find(category=>category.id===editing.custom_category_id)?.name,editing.kind);
         const opened=liabilities.includes(editing.kind)&&!rows.some(row=>row.id===editing.id)?{opened_on:editing.opened_on??today()}:{};
         return {...editing,name,account_exchange_rate:converted?rate:undefined,...opened,...incomeSourcePatch,...earningPatch};
     }

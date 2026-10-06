@@ -1813,6 +1813,7 @@
   "Welcome back!": "Tekrar hoş geldin!",
   "{amount} left": "{amount} kaldı",
   "{count} due soon": "{count} yakında",
+  "{count} overdue": "{count} gecikmiş",
   "No transactions recorded this month or last.": "Bu ay ve geçen ay işlem yok.",
   "Goals": "Hedefler",
   "{amount} target": "Hedef {amount}",

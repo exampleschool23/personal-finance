@@ -1813,6 +1813,7 @@
   "Welcome back!": "Karibu tena!",
   "{amount} left": "Zimebaki {amount}",
   "{count} due soon": "{count} hivi karibuni",
+  "{count} overdue": "{count} zimechelewa",
   "No transactions recorded this month or last.": "Hakuna miamala mwezi huu wala uliopita.",
   "Goals": "Malengo",
   "{amount} target": "Lengo {amount}",

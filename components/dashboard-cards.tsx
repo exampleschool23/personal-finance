@@ -22,6 +22,7 @@ import { orderedGoals } from '@/lib/goal-order';
 import { goalCurrency, goalCurrentValue } from '@/lib/goal-projection';
 import { investmentGoalCompletion } from '@/lib/investment-goals';
 import { emptyPlanning, type Goal, type PlanningData } from '@/lib/planning';
+import { shownName } from '@/lib/record-names';
 
 /** The most recent income and spending, newest first: the "Transactions · Most recent" card. */
 export function recentTransactions(records: Entry[], today: string, limit = 5) {
@@ -39,7 +40,7 @@ export function RecentTransactionsCard({ owner = null, demo = false, revision = 
   <PanelTitle title={t('Transactions')}><DrawerLink href="/transactions">{t('View all')}</DrawerLink></PanelTitle>
   {owner && !demo && remote.loading ? <LoadingPlaceholder label={t('Loading records…')} rows={4}/> : recent.length ? <ul className="overview-list overview-due">{recent.map(record => {
    const incoming = income.includes(record.kind);
-   return <li key={record.id}><CategoryIcon kind={record.kind}/><span>{record.name}<small>{t(record.kind)} · {formatDate(record.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{formatMoney(Math.abs(signedAmount(record)), record.currency, locale)}</strong></li>;
+   return <li key={record.id}><CategoryIcon kind={record.kind}/><span>{shownName(record, t)}<small>{t(record.kind)} · {formatDate(record.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{formatMoney(Math.abs(signedAmount(record)), record.currency, locale)}</strong></li>;
   })}</ul> : <EmptyState icon={<ReceiptText/>} description={t('No transactions recorded this month or last.')}/>}
  </section>;
 }

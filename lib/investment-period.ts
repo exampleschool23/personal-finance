@@ -1,19 +1,23 @@
 import { benchmarkExpenseFunding, benchmarkInvestment, investmentActivity, openingFunding, type BenchmarkMovement } from './investment-benchmarks';
 import { income, liabilities } from './finance';
 import { convertAmount } from './market';
+import { convertHistorical } from './investment-comparison';
+import type { FxPoint } from './benchmark-data';
 import type { InvestmentPortfolioInput } from './investment-portfolio';
 
 export type PeriodRow={name:string;date:string;category:string;amount:number|null};
 // The three figures follow the chart's funding rules: money invested is what funds benchmarks
 // when expenses are excluded (purchases, principal repayments and values recorded without a purchase), and expenses paid is what "Including expenses" adds to it.
-export function investmentPeriodTotals(input:InvestmentPortfolioInput&{movements?:BenchmarkMovement[]},start:string,details?:Record<'income'|'invested'|'expenses',PeriodRow[]>){
+export function investmentPeriodTotals(input:InvestmentPortfolioInput&{movements?:BenchmarkMovement[];fx?:FxPoint[]},start:string,details?:Record<'income'|'invested'|'expenses',PeriodRow[]>){
  const totals={income:0,invested:0,expenses:0};
  const missing=new Set<string>();
  const records=new Map(input.records.map(record=>[record.id,record]));
  const rates=input.market?.rates??(input.market?.fx?{UZS:input.market.fx.rate}:{});
  let context={name:'',date:'',category:''};
  const add=(key:keyof typeof totals,amount:number,currency:string)=>{
-  const converted=convertAmount(amount,currency,input.currency,rates);
+  // With the chart's dated rates, convert like the chart: to USD at the day's rate, then to the display currency at today's.
+  const usd=input.fx?.length?convertHistorical(amount,currency,'USD',context.date,input.fx):null;
+  const converted=usd===null?convertAmount(amount,currency,input.currency,rates):convertAmount(usd,'USD',input.currency,rates);
   if(amount!==0)details?.[key].push({...context,amount:converted});
   if(converted===null||!Number.isFinite(converted))missing.add(currency);else totals[key]+=converted;
  };
@@ -24,7 +28,7 @@ export function investmentPeriodTotals(input:InvestmentPortfolioInput&{movements
   const kind=records.get(item.recordId)?.kind??'';
   context={name:item.name,date:item.date,category:kind==='Property'?'Rental improvements':kind==='Valuables'?'Valuables purchase':kind==='Vehicle'?'Vehicle purchase':kind==='Retirement account'?'Retirement contribution':kind==='Business'?'Business investment':kind};
   // Money moved from another investment is the same capital, not a new investment.
-  add('invested',item.amount-item.reused,item.currency);
+  add('invested',Math.max(0,item.amount-item.reused),item.currency);
  }
  // A holding valued without a recorded purchase counts its first value as invested that day, as in the chart.
  for(const item of openingFunding(input.records,input.events,input.today).values()){

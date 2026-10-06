@@ -40,7 +40,8 @@ export function installmentDates(record:Entry,from:string,through:string):string
  const last=record.date&&record.date<through?record.date:through;
  return scheduleDates({date:anchor,frequency:'Monthly'} as Entry,from,last).filter(date=>date>anchor);
 }
-/** Installments are owed from the day the record was added, so months before tracking began are never overdue. */
+/** Installments, and payments of a schedule, are owed from the day the record was added: a schedule entered with a
+ * start years back is not years overdue. Dates before it stay open to record in their month, but never remind. */
 export const installmentsFrom=(record:Entry&{created_at?:string|null})=>(record.created_at?createdDay(record.created_at):null)??'0000-01-01';
 /** Loan months already paid: a repayment or mortgage payment for the loan in that month settles that month's installment. */
 export const paidInstallmentMonths=(payments:DebtPayment[])=>new Set(payments.map(payment=>payment.record_id+':'+payment.date.slice(0,7)));
@@ -64,7 +65,7 @@ export function upcomingPayments(records:Entry[],occurrences:Occurrence[],today=
   if(!record.date||record.source_paused||record.archived)continue;
   const recurring=isRecurringCashFlow(record);
   const start=scheduleStart(record,assetsById);
-  const add=(date:string,type:DueItem['type'])=>{const key=record.id+':'+date;if(!archivedIn(record,date.slice(0,7))&&date>=start&&date<=end&&!settled.has(key))result.push({key,record,date,type,overdue:date<today,amount:record.amount});};
+  const add=(date:string,type:DueItem['type'])=>{const key=record.id+':'+date;if(type==='scheduled'&&date<today&&date<installmentsFrom(record))return;if(!archivedIn(record,date.slice(0,7))&&date>=start&&date<=end&&!settled.has(key))result.push({key,record,date,type,overdue:date<today,amount:record.amount});};
   if(recurring){
    for(const date of scheduleDates(record,start,end))add(date,'scheduled');
   }else if(record.amount>0&&['Loan','Debt','Mortgage','Money lent',...interestKinds].includes(record.kind))add(record.date,interestKinds.includes(record.kind)?'maturity':'repayment');

@@ -1813,6 +1813,7 @@
   "Welcome back!": "Welkom terug!",
   "{amount} left": "Nog {amount}",
   "{count} due soon": "{count} binnenkort",
+  "{count} overdue": "{count} achterstallig",
   "No transactions recorded this month or last.": "Geen transacties deze of vorige maand.",
   "Goals": "Doelen",
   "{amount} target": "Doel {amount}",

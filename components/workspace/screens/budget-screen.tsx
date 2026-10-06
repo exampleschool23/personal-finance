@@ -56,8 +56,8 @@ export function BudgetScreen() {
  const bucketRollover = flex ? flexBucketRollover(bucket, categories, budget.state.amounts, history, month, currency, rates) : 0;
  const rows = budgetRowsForMode(categoryRows, budget.state.mode);
  const groups = groupRows(rows, flex);
- const goals = data.goals.filter(goal => goalContribution(goal) > 0);
- const contributionOf = (goal: (typeof goals)[number]) => convertAmount(goalContribution(goal), goal.currency ?? currency, currency, rates);
+ const goals = data.goals.filter(goal => goalContribution(goal, today) > 0);
+ const contributionOf = (goal: (typeof goals)[number]) => convertAmount(goalContribution(goal, today), goal.currency ?? currency, currency, rates);
  const contributions = goals.reduce((sum, goal) => sum + (contributionOf(goal) ?? 0), 0);
  const left = leftToBudget(rows, budget.state.mode, flexBudget, contributions);
  const customGroups = [...new Set(budget.state.categories.map(item => item.group_name).filter((item): item is string => !!item))];

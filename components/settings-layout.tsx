@@ -8,7 +8,7 @@ import { Segmented } from '@/components/presentation-foundation/segmented';
 // (#rules, #tags, #security…) so older links still open the right view and land on the area.
 const views = [
  {id:'account',label:'Account',areas:['preferences','benchmarks','security']},
- {id:'household',label:'Household',areas:['household']},
+ {id:'household',label:'Household sharing',areas:['household']},
  {id:'categories',label:'Categories',areas:['categories','tags','rules']},
  {id:'businesses',label:'Businesses',areas:['businesses']},
  {id:'data-tools',label:'Import & backup',areas:['data-tools']},

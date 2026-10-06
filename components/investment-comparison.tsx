@@ -21,7 +21,7 @@ import { categoryColor } from '@/lib/category-colors';
 import { type Entry } from '@/lib/finance';
 import { type MarketData } from '@/lib/market';
 import { type HistoryEvent } from '@/lib/investment-history';
-import { type BenchmarkData } from '@/lib/benchmark-data';
+import { type BenchmarkData, type FxPoint } from '@/lib/benchmark-data';
 import { defaultComparisonPreferences,isInvestmentRecord,type ComparisonProfile } from '@/lib/comparison-profile';
 import Link from 'next/link';
 import { ChartNoAxesCombined } from 'lucide-react';
@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 
 type History={movements?:BenchmarkMovement[];records:Entry[];events:HistoryEvent[];cashflows?:Entry[]};
-export function InvestmentComparison({history,today,currency,market,demo,windowStart,points,summary,profile,profileError,trackingStart,onTrackingStartChange}:{windowStart:string;points:{date:string;net:number}[];summary?:ReactNode;history:History;today:string;currency:string;market:MarketData|null;demo:boolean;profile:ComparisonProfile|null;profileError:string;trackingStart:string|null;onTrackingStartChange:(date:string|null)=>Promise<void>}){
+export function InvestmentComparison({history,today,currency,market,demo,windowStart,points,summary,profile,profileError,trackingStart,onTrackingStartChange}:{windowStart:string;points:{date:string;net:number}[];summary?:ReactNode|((fx:FxPoint[]|undefined)=>ReactNode);history:History;today:string;currency:string;market:MarketData|null;demo:boolean;profile:ComparisonProfile|null;profileError:string;trackingStart:string|null;onTrackingStartChange:(date:string|null)=>Promise<void>}){
  const {t,locale}=useLanguage();
  const [data,setData]=useState<BenchmarkData|null>(null),[error,setError]=useState(''),[retry,setRetry]=useState(0),[loadedKey,setLoadedKey]=useState('');
  const [overviewSelection,setOverviewSelection]=useState<{owner:string;keys:string[]}|null>(null);
@@ -90,6 +90,8 @@ export function InvestmentComparison({history,today,currency,market,demo,windowS
  },[demo,requestKey,start,today,selectionKey,symbol,portfolioCrypto,portfolioStock,portfolioConfig,retry,canLoad]);
  const comparisonsLoading=!!requestKey&&((!demo&&!profile&&!profileError)||loadedKey!==requestKey);
  const ready=loadedKey===requestKey?data:null;
+ // The period summary converts with the same dated rates as the chart, so their funding totals agree.
+ const summaryNode=typeof summary==='function'?summary(ready?.fx):summary;
  const decision=useMemo(()=>ready?investmentDecisionComparison({records:history.records,events:history.events,cashflows:history.cashflows,movements:history.movements,market,currency,today,method},ready,activeDiversified):null,[ready,history,market,currency,today,method,activeDiversified]);
  const definitions=[{key:'actual',label:t('Investments'),color:'var(--primary)',dash:undefined,quotes:undefined},...stockBenchmarks(profile?.preferences.benchmarks??[]).map(item=>({key:item.id,label:item.symbol,color:categoryColor(item.id),dash:'12 4',quotes:[{key:item.id,symbol:item.symbol}]})),{key:'BTC',label:'Bitcoin · BTC',color:categoryColor('Crypto'),dash:undefined,quotes:[{key:'BTC',symbol:'BTC'}]},{key:'SPY',label:'S&P 500 · SPY',color:categoryColor('Stock'),dash:'7 3',quotes:[{key:'SPY',symbol:'SPY'}]},{key:'HYG',label:t('High-yield bonds · HYG'),color:categoryColor('Property'),dash:'9 3 2 3',quotes:[{key:'HYG',symbol:'HYG'}]},{key:'BIL',label:t('US Treasury bills · BIL'),color:categoryColor('Treasury bill'),dash:'4 2',quotes:[{key:'BIL',symbol:'BIL'}]},{key:'depositUZS',label:t('{currency} deposit · {rate}%',{currency:'UZS',rate:formatNumber(21,locale)}),color:categoryColor('Deposit'),dash:'5 5'},{key:'depositUSD',label:t('{currency} deposit · {rate}%',{currency:'USD',rate:formatNumber(8,locale)}),color:categoryColor('Cash'),dash:'2 4'},{key:'CUSTOM',label:symbol,color:categoryColor('Business'),dash:'12 4',quotes:[{key:'CUSTOM',symbol}]},{key:'PORTFOLIO',label:t('Diversified portfolio'),color:categoryColor('Money lent'),dash:'8 3 2 3',quotes:activeDiversified?portfolioQuotes(activeDiversified):undefined}];
  const displayed=definitions.filter(item=>item.key==='actual'||selected.includes(item.key));
@@ -105,14 +107,14 @@ export function InvestmentComparison({history,today,currency,market,demo,windowS
  if(scope==='investments'&&nothingInvested)return <>
   <div className="overview-chart-heading"><div className="overview-chart-title"><h3>{t('Portfolio over time')}</h3></div></div>
   <EmptyState icon={<ChartNoAxesCombined aria-hidden="true"/>} title={t('No investments yet')} description={t('Add a stock, crypto, deposit, Treasury bill or another investment to follow its value and compare it with the market.')}><Button asChild><Link href="/assets">{t('Add asset')}</Link></Button></EmptyState>
-  {summary}
+  {summaryNode}
  </>;
  return <>
   <div className="overview-chart-heading"><div className="overview-chart-title"><h3>{t('Portfolio over time')}</h3><div className="tracking-start" aria-busy={savingStart}><span>{t('Tracking since')}</span>{/* The picker shows the day the chart starts from and offers no day before the first investment activity: there is no value to compare from earlier. */}<DatePicker value={trackingFrom??''} required={false} min={earliestStart} max={today} presets={pastDatePresets} onChange={date=>{if(!savingStart)void chooseTrackingStart(date||null);}}/></div></div><div className="comparison-legend" aria-busy={comparisonsLoading}>{displayed.map(item=><button key={item.key} type="button" aria-pressed={visibleKeys.has(item.key)} disabled={!overviewOwner} onClick={()=>toggleOverview(item.key)}><i style={{background:item.color}}/>{item.label}</button>)}</div></div>
   {ready&&!decision&&<p className="comparison-notice">{t('Investment history or exchange rates are incomplete for this comparison.')}</p>}
   {ready&&visibleSeries.filter(item=>item.key!=='actual').map(item=>{const reason=ready.errors[item.key]??ready.errors.fx??(overviewResult?.unavailable.includes(item.key)?'Price data, exchange rates or funds needed for a matching withdrawal are unavailable.':null);return reason?<p key={item.key} className="comparison-note">{item.label}: {t(reason)}</p>:null;})}
   {comparisonsLoading?<ChartSkeleton label={t('Loading comparisons…')}/>:!!chartPoints.length&&<><InvestmentValueChart onPointSelect={setDetailDate} label={t('Investments')} points={chartPoints} currency={currency} series={chartSeries.map(item=>({...item,primary:item.key==='actual'}))} tooltip={<BenchmarkTooltip marketHistory={ready} fundingDetails={decision?.details} receipts={[]} currency={currency} series={chartSeries}/>}/></>}
-  {summary}
+  {summaryNode}
   <details className="overview-details"><summary>{t('Comparison settings')}</summary>
    <div className="form-grid"><label>{t('Benchmark funding')}<NativeSelect value={scope} disabled={!overviewOwner} onChange={event=>chooseScope(event.target.value as FundingScope)}><option value="investments">{t('Excluding expenses')}</option><option value="expenses">{t('Including expenses')}</option></NativeSelect></label></div>
    <p className="comparison-note">{chosenEarlier?t('Comparisons start on {date}, the day of your first investment, because nothing was invested before the tracking start you chose.',{date:formatDate(method.date,locale)}):trackingFrom?t('Tracking starts on {date}. Benchmarks start from your investment value that day, and nothing earlier is shown. Clear the date to track from your first investment.',{date:formatDate(trackingFrom,locale)}):t('Tracking starts with your first investment activity. Choose a tracking start date to begin later, for example after you finished entering existing holdings.')}</p>

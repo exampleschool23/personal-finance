@@ -12,7 +12,7 @@ import { PartialTotal } from '@/components/presentation-foundation/partial-total
 import { useLanguage } from '@/components/language-provider';
 import { categoryColor } from '@/lib/category-colors';
 import { estimatedCashFlow, financialTotals, income, type Entry } from '@/lib/finance';
-import { formatDate, formatMoney, formatPercent } from '@/lib/format';
+import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
 import { assetAllocation, nextPayments } from '@/lib/overview';
 import { upcomingPayments, type PlanningData } from '@/lib/planning';
 
@@ -31,7 +31,10 @@ export function useOverviewCards({ entries, currency, excludedCurrencies, foreca
  const percent = (value: number | null) => formatPercent(value ?? NaN, locale, 1, 1);
  const { totalAssets, totalDebt } = financialTotals(entries);
  const allocation = assetAllocation(entries);
- const due = planning ? nextPayments(upcomingPayments(planning.records, planning.occurrences, undefined, undefined, planning.debtPayments)) : [];
+ const upcomingItems = planning ? upcomingPayments(planning.records, planning.occurrences, undefined, undefined, planning.debtPayments) : [];
+ const due = nextPayments(upcomingItems);
+ // The pill counts every item, not just the rows shown, and never calls an overdue item "due soon".
+ const overdueCount = upcomingItems.filter(item => item.overdue).length;
  const figure = (value: string) => <span className="panel-figure">{value}</span>;
  const commitments = <section className="panel overview-panel" key="commitments">
   <PanelTitle title={<>{t("Monthly commitments")} {forecastReady && figure(t('{amount} left', { amount: money(forecast.forecast) }))}</>} hint={<>
@@ -56,7 +59,7 @@ export function useOverviewCards({ entries, currency, excludedCurrencies, foreca
   </> : <EmptyState icon={<Landmark/>} description={t("Add your first asset to see its allocation.")}/>}
  </section>;
  const upcoming = <section className="panel overview-panel" key="upcoming">
-  <PanelTitle title={<>{t('Upcoming payments')} {due.length > 0 && figure(t('{count} due soon', { count: due.length }))}</>}><DrawerLink href="/upcoming">{t('View all')}</DrawerLink></PanelTitle>
+  <PanelTitle title={<>{t('Upcoming payments')} {overdueCount > 0 ? <span className="panel-figure negative">{t('{count} overdue', { count: formatNumber(overdueCount, locale, 0) })}</span> : upcomingItems.length > 0 && figure(t('{count} due soon', { count: formatNumber(upcomingItems.length, locale, 0) }))}</>}><DrawerLink href="/upcoming">{t('View all')}</DrawerLink></PanelTitle>
   {due.length ? <ul className="overview-list overview-due">{due.map(item => {
    const incoming = income.includes(item.record.kind);
    return <li key={item.key}><CategoryIcon kind={item.record.kind}/><span>{item.record.name}<small className={item.overdue ? 'negative' : undefined}>{item.overdue ? t('Overdue') + ' · ' : ''}{formatDate(item.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{money(item.amount, item.record.currency)}</strong></li>;

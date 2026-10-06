@@ -94,3 +94,22 @@ test('opening holdings without a purchase and same-day principal repayments are 
  assert.equal(comparisonMethod(day,day,day,'investments').chosenEarlier,false);
  assert.equal(comparisonMethod(null,day,day,'investments').chosenEarlier,false);
 });
+
+// Live QA, 6 October 2026: EUR funding was converted at today's rate in the summary and at the day's rate in the
+// chart, so "Money invested" ($375,707) and the tooltip's funding ($375,711) disagreed by a few dollars.
+test('foreign-currency funding uses the chart’s dated rate, so the summary equals the chart',()=>{
+ const day='2026-09-01',today='2026-09-04';
+ const scenario={
+  records:[holding('cash','Cash',{currency:'EUR',amount:5000}),holding('QA Owe Klaus','Debt',{currency:'EUR',amount:250})],
+  events:[dated('pay','QA Owe Klaus',day,'withdrawal',50,250)],
+  cashflows:[],movements:[],today,currency:'USD',market:{quotes:{},rates:{USD:1,EUR:0.95}},
+ };
+ // On 1 September a dollar bought 0.90 euro; today it buys 0.95.
+ const market={start:day,end:today,fx:[{date:day,rates:{EUR:0.9}}],prices:{BTC:[{date:day,close:100},{date:today,close:100}]},errors:{}};
+ const chart=investmentDecisionComparison({...scenario,method:{mode:'purchases',date:day,scope:'investments'}},market).result.points.at(-1).contributed;
+ const summary=investmentPeriodTotals({...scenario,fx:market.fx},'0000-01-01').invested;
+ assert.ok(Math.abs(chart-50/0.9)<1e-9);
+ assert.ok(Math.abs(summary-chart)<1e-9,'the summary follows the dated rate');
+ // Before the dated rates load, the summary still shows a figure at today's rate.
+ assert.ok(Math.abs(investmentPeriodTotals(scenario,'0000-01-01').invested-50/0.95)<1e-9);
+});

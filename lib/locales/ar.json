@@ -1813,6 +1813,7 @@
   "Welcome back!": "مرحبًا بعودتك!",
   "{amount} left": "المتبقي {amount}",
   "{count} due soon": "{count} قريبًا",
+  "{count} overdue": "{count} متأخرة",
   "No transactions recorded this month or last.": "لا معاملات هذا الشهر ولا الشهر الماضي.",
   "Goals": "الأهداف",
   "{amount} target": "الهدف {amount}",

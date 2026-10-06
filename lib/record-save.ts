@@ -24,7 +24,8 @@ export function fitsExpensePlan(editing: Entry, plan: ExpensePlan | undefined) {
  return !!plan && editing.currency === plan.currency && editing.frequency === 'Once' && expenses.includes(editing.kind) && !editing.business_id && editing.date >= plan.start_date && (!plan.end_date || editing.date <= plan.end_date);
 }
 
-/** The name an expense is saved under when left blank: its note, its custom category, or its translated kind. */
+/** The name an expense is saved under when left blank: its note, its custom category, or its kind's key, which
+ * `shownName` reads in the current language. */
 export function expenseName(editing: Entry, categoryName: string | undefined, kindName: string) {
  return expenses.includes(editing.kind) && !editing.name.trim() ? (editing.notes.trim().slice(0, 120) || categoryName || kindName) : editing.name;
 }

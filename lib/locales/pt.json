@@ -1813,6 +1813,7 @@
   "Welcome back!": "Bem-vindo de volta!",
   "{amount} left": "Restam {amount}",
   "{count} due soon": "{count} em breve",
+  "{count} overdue": "{count} em atraso",
   "No transactions recorded this month or last.": "Nenhuma transação neste mês nem no anterior.",
   "Goals": "Metas",
   "{amount} target": "Meta de {amount}",

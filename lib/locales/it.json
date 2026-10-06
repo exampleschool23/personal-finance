@@ -1813,6 +1813,7 @@
   "Welcome back!": "Bentornato!",
   "{amount} left": "Restano {amount}",
   "{count} due soon": "{count} in scadenza",
+  "{count} overdue": "{count} scaduti",
   "No transactions recorded this month or last.": "Nessuna transazione questo mese o il mese scorso.",
   "Goals": "Obiettivi",
   "{amount} target": "Obiettivo {amount}",

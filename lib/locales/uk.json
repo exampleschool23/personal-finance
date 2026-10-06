@@ -1813,6 +1813,7 @@
   "Welcome back!": "З поверненням!",
   "{amount} left": "Залишилось {amount}",
   "{count} due soon": "Незабаром: {count}",
+  "{count} overdue": "Прострочено: {count}",
   "No transactions recorded this month or last.": "Цього й минулого місяця операцій немає.",
   "Goals": "Цілі",
   "{amount} target": "Ціль {amount}",

@@ -1813,6 +1813,7 @@
   "Welcome back!": "¡Hola de nuevo!",
   "{amount} left": "Quedan {amount}",
   "{count} due soon": "{count} próximos",
+  "{count} overdue": "{count} vencidos",
   "No transactions recorded this month or last.": "No hay transacciones este mes ni el anterior.",
   "Goals": "Metas",
   "{amount} target": "Meta {amount}",

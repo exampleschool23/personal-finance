@@ -1813,6 +1813,7 @@
   "Welcome back!": "Welcome back!",
   "{amount} left": "{amount} left",
   "{count} due soon": "{count} due soon",
+  "{count} overdue": "{count} overdue",
   "No transactions recorded this month or last.": "No transactions recorded this month or last.",
   "Goals": "Goals",
   "{amount} target": "{amount} target",

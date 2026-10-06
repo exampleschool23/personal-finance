@@ -1813,6 +1813,7 @@
   "Welcome back!": "ברוך שובך!",
   "{amount} left": "נותרו {amount}",
   "{count} due soon": "{count} בקרוב",
+  "{count} overdue": "{count} באיחור",
   "No transactions recorded this month or last.": "אין עסקאות החודש או בחודש שעבר.",
   "Goals": "יעדים",
   "{amount} target": "יעד {amount}",

@@ -1813,6 +1813,7 @@
   "Welcome back!": "Bine ai revenit!",
   "{amount} left": "Rămân {amount}",
   "{count} due soon": "{count} în curând",
+  "{count} overdue": "{count} restante",
   "No transactions recorded this month or last.": "Nicio tranzacție luna aceasta sau luna trecută.",
   "Goals": "Obiective",
   "{amount} target": "Obiectiv {amount}",

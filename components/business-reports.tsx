@@ -21,6 +21,7 @@ import { exportCSV } from '@/lib/csv';
 import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatSignedMoney, formatYear } from '@/lib/format';
 import { RollingText } from '@/components/presentation-foundation/rolling-text';
 import { signTone } from '@/components/presentation-foundation/tone';
+import { shownName } from '@/lib/record-names';
 
 /** How a report names things: categories (built-in kinds are translated), the key a category's icon and colour come
  * from (a built-in kind, or an added category's own name), category groups and businesses. */
@@ -174,11 +175,11 @@ export function ReportTransactions({ lines, drill, label, names, currency, onCle
   {lines.length ? <ul className="report-transaction-list">{lines.slice(0, limit).map(line => {
    const cells = <>
     <CategoryIcon kind={names.icon(line.category)} size="sm"/>
-    <span><strong>{line.name}</strong><small>{formatDate(line.date, locale)} · {names.category(line.category)}</small></span>
+    <span><strong>{shownName(line, t)}</strong><small>{formatDate(line.date, locale)} · {names.category(line.category)}</small></span>
     <BusinessName id={line.business} names={names}/>
     <strong className={line.direction === 'income' ? 'positive' : undefined}>{formatSignedMoney(line.direction === 'income' ? line.amount : -line.amount, currency, locale)}</strong>
    </>;
-   return <li key={line.id}>{onOpen && line.record ? <button type="button" aria-label={t('View details for {name}', { name: line.name })} onClick={() => onOpen(line)}>{cells}</button> : <div>{cells}</div>}</li>;
+   return <li key={line.id}>{onOpen && line.record ? <button type="button" aria-label={t('View details for {name}', { name: shownName(line, t) })} onClick={() => onOpen(line)}>{cells}</button> : <div>{cells}</div>}</li>;
   })}</ul> : <EmptyState icon={<ReceiptText/>} description={t('Nothing recorded in this period.')}/>}
   {lines.length > limit && <Button variant="outline" onClick={() => setLimit(limit + 50)}>{t('Show more')}</Button>}
  </section>;

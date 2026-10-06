@@ -1813,6 +1813,7 @@
   "Welcome back!": "Vítejte zpět!",
   "{amount} left": "Zbývá {amount}",
   "{count} due soon": "Brzy: {count}",
+  "{count} overdue": "{count} po splatnosti",
   "No transactions recorded this month or last.": "Tento ani minulý měsíc žádné transakce.",
   "Goals": "Cíle",
   "{amount} target": "Cíl {amount}",

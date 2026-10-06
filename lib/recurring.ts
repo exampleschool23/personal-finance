@@ -42,7 +42,7 @@ export function occurrencesBetween(records: Entry[], occurrences: Occurrence[], 
    if (archivedIn(record, date.slice(0, 7))) continue;
    const key = record.id + ':' + date;
    const done = status.get(key) === 'dismissed' ? 'skipped' : settled.has(key) ? 'paid' : null;
-   items.push({ key, record, date, status: done ?? (date < today ? 'overdue' : 'due'), direction: income.includes(record.kind) ? 'income' : 'expense', amount: Number(record.amount), recorded: done === 'paid' ? recorded.get(key) : undefined });
+   items.push({ key, record, date, status: done ?? (date < today && date >= installmentsFrom(record) ? 'overdue' : 'due'), direction: income.includes(record.kind) ? 'income' : 'expense', amount: Number(record.amount), recorded: done === 'paid' ? recorded.get(key) : undefined });
   }
  }
  if (paid) for (const record of records) {

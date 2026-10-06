@@ -103,7 +103,7 @@ function useWorkspaceState() {
     const planningMonth = section === 'Income & expenses' ? forecastMonth : expensePlanMonth();
     const expensePlans = useExpensePlans(user, demo, rows, reload, refreshRecords, planningMonth);
     const bin = useDemoBin({ demo, rows, setRows, expensePlans });
-    const actions = useRecordActions({ demo, rows, setRows, refreshRecords, splits: transactionTools.data.splits, household, demoHoldingAccounts, setDemoHoldingAccounts, stopping });
+    const actions = useRecordActions({ demo, rows, setRows, refreshRecords, splits: transactionTools.data.splits, categories: planning.data.categories, household, demoHoldingAccounts, setDemoHoldingAccounts, stopping });
     const archiveSchedule = useArchive({ demo, setRows, restoreDemoPlan: expensePlans.restoreDemo, refreshRecords });
     const deleteSchedule = useDeleteSchedule({ demo, rows, setRows, occurrences: planning.data.occurrences, bin, dropDemoPlan: expensePlans.dropDemo, refreshRecords });
     useRecordFormTool({ user, demo, openForm: () => { setRecordKinds(kinds); setEditing(fresh()); } });

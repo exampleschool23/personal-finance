@@ -1813,6 +1813,7 @@
   "Welcome back!": "Maligayang pagbabalik!",
   "{amount} left": "{amount} natitira",
   "{count} due soon": "{count} malapit nang bayaran",
+  "{count} overdue": "{count} lampas na sa takdang petsa",
   "No transactions recorded this month or last.": "Walang transaksyon ngayong buwan o noong nakaraang buwan.",
   "Goals": "Mga layunin",
   "{amount} target": "Target {amount}",

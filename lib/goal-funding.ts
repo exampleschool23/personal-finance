@@ -1,12 +1,18 @@
 import type { Goal } from './planning';
 import { convertAmount } from './market';
 export type GoalEvent={id:string;goal_id:string;operation_id:string|null;occurred_on:string;delta:number;balance:number;event_type:string;notes:string;source_name:string|null};
+/** Whether a goal takes part in monthly funding: included, active, not completed (unless it refills) and not paused. */
+export const inFundingPlan=(goal:Goal,today:string)=>!goal.archived&&!!goal.funding_enabled&&!(goal.funding_mode!=='refill'&&goal.completed_on)&&(!goal.paused_until||goal.paused_until<today);
+/** A funded goal's monthly budget in its own currency, never more than a savings goal still needs; null when unknown. */
+export function fundingBudget(goal:Goal){
+ const raw=goal.funding_monthly??(goal.kind!=='investment'?goal.monthly_contribution:null)??null;
+ return raw===null?null:goal.kind==='savings'?Math.min(raw,Math.max(0,goal.target-goal.allocated)):raw;
+}
 export function fundingPlan(goals:Goal[],surplus:number|null,currency:string,today:string,rates?:Record<string,number>){
- const active=goals.filter(goal=>!goal.archived&&goal.funding_enabled&&!(goal.funding_mode!=='refill'&&goal.completed_on)&&(!goal.paused_until||goal.paused_until<today)).sort((a,b)=>(a.funding_priority??100)-(b.funding_priority??100)||a.id.localeCompare(b.id));
+ const active=goals.filter(goal=>inFundingPlan(goal,today)).sort((a,b)=>(a.funding_priority??100)-(b.funding_priority??100)||a.id.localeCompare(b.id));
  let remaining=surplus===null?null:Math.max(0,surplus),requested=0,unknown=false;
  const rows=active.map(goal=>{
-  const raw=goal.funding_monthly??(goal.kind!=='investment'?goal.monthly_contribution:null)??null;
-  const budget=raw===null?null:goal.kind==='savings'?Math.min(raw,Math.max(0,goal.target-goal.allocated)):raw;
+  const budget=fundingBudget(goal);
   const amount=budget===null||!Number.isFinite(budget)||budget<0||!goal.currency?null:convertAmount(budget,goal.currency,currency,rates);
   if(amount===null){unknown=true;remaining=null;return {goal,requested:null,allocated:null,shortfall:null};}
   requested+=amount;const allocated=remaining===null?null:Math.min(remaining,amount);if(remaining!==null)remaining-=allocated!;

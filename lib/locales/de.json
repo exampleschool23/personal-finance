@@ -1813,6 +1813,7 @@
   "Welcome back!": "Willkommen zurück!",
   "{amount} left": "{amount} übrig",
   "{count} due soon": "{count} bald fällig",
+  "{count} overdue": "{count} überfällig",
   "No transactions recorded this month or last.": "Keine Buchungen in diesem oder im letzten Monat.",
   "Goals": "Ziele",
   "{amount} target": "Ziel {amount}",

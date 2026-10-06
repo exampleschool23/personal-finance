@@ -1,6 +1,7 @@
 import { shiftMonth } from './calendar-days';
 import { expenses, income, type Entry } from './finance';
 import { convertAmount } from './market';
+import { fundingBudget, inFundingPlan } from './goal-funding';
 import type { Category, Goal, PlanningData } from './planning';
 import { monthlyReview, type TransactionSplit } from './transaction-tools';
 
@@ -195,8 +196,9 @@ export function groupRows(rows: readonly BudgetRow[], byType: boolean): BudgetGr
  return [...groups.values()].sort((a, b) => typeOrder(a) - typeOrder(b));
 }
 
-/** A goal's planned monthly saving: the Contributions section. */
-export const goalContribution = (goal: Goal) => goal.archived || goal.completed_on ? 0 : Math.max(0, Number(goal.funding_monthly ?? goal.monthly_contribution ?? 0));
+/** A goal's planned monthly saving: the Contributions section. It is what Goals › Available for goals funds, so the
+ * two pages never disagree: only goals included in monthly funding count. */
+export const goalContribution = (goal: Goal, today: string) => inFundingPlan(goal, today) ? Math.max(0, Number(fundingBudget(goal) ?? 0)) : 0;
 
 const isFlexible = (row: BudgetRow) => row.direction === 'expense' && row.type === 'flexible' && !row.excluded;
 

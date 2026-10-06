@@ -39,6 +39,7 @@ import { emptyPlanning } from '@/lib/planning';
 import { chunks, emptyTransactionFilter, filtersTransactions, groupPageByDay, periodRange, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
 import { canRecategorize, canTakeCategory, categoryChoices, choiceKey, newRule, ruleFromBusiness, ruleFromChange, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
 import { RollingText } from '@/components/presentation-foundation/rolling-text';
+import { shownName } from '@/lib/record-names';
 
 const transactionsPerPage = 20;
 
@@ -81,6 +82,8 @@ export function TransactionsScreen() {
  // Twenty transactions a page; changing the period or a filter starts again at the first page.
  const listKey = JSON.stringify([period, filter, ownerFilter]);
  const [paging, setPaging] = useState({ key: listKey, page: 1 });
+ // Forget the old page as soon as the list changes, so coming back to an earlier period does not reopen its last page.
+ if (paging.key !== listKey) setPaging({ key: listKey, page: 1 });
  const pageCount = Math.max(1, Math.ceil(records.length / transactionsPerPage));
  const page = paging.key === listKey ? Math.min(paging.page, pageCount) : 1;
  const days = groupPageByDay(records, (page - 1) * transactionsPerPage, page * transactionsPerPage, convert);
@@ -114,8 +117,13 @@ export function TransactionsScreen() {
   // The database takes up to 500 transactions at a time.
   const each = async (ids: string[], run: (part: string[]) => Promise<number>) => { let sum = 0; for (const part of chunks(ids, 500)) sum += await run(part); return sum; };
   const ids = chosen.map(record => record.id);
-  let changed = 0, kept = 0;
-  if (change.choice) changed = Math.max(changed, await each(chosen.filter(record => canTakeCategory(record, change.choice!, splits)).map(record => record.id), part => categorize(part, change.choice!)));
+  let changed = 0, kept = 0, fixedCategory = 0;
+  if (change.choice) {
+   // Transfer fees, split and linked payments keep their category; say how many, rather than a bare count.
+   const choice = change.choice, movable = chosen.filter(record => canTakeCategory(record, choice, splits));
+   fixedCategory = chosen.length - movable.length;
+   changed = Math.max(changed, await each(movable.map(record => record.id), part => categorize(part, choice)));
+  }
   if (change.business !== undefined) {
    // Planned spending, business income and salary from a source keep their business; say how many stayed.
    const business = change.business;
@@ -124,7 +132,7 @@ export function TransactionsScreen() {
   }
   if (change.owner !== undefined) { const owner = change.owner; changed = Math.max(changed, await each(ids, part => assignRecordOwner(part, owner))); }
   if (change.add.length || change.remove.length) changed = Math.max(changed, await each(ids, part => tags.change(part, change.add, change.remove)));
-  showNotice(kept ? t('{changed} updated; {skipped} could not change business here.', { changed, skipped: kept }) : t('{changed} updated', { changed }));
+  showNotice(fixedCategory ? t('{changed} updated; {skipped} could not change category here.', { changed, skipped: fixedCategory }) : kept ? t('{changed} updated; {skipped} could not change business here.', { changed, skipped: kept }) : t('{changed} updated', { changed }));
   setSelected(new Set());
  }
  const toggle = (id: string) => setSelected(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next; });
@@ -162,9 +170,9 @@ export function TransactionsScreen() {
      {day.records.map(record => {
       const editable = canRecategorize(record, splits);
       const recordTags = tagsOf(record.id).map(id => tagById.get(id)).filter(tag => !!tag);
-      return <li key={record.id} className="transaction-row" data-selected={selected.has(record.id) || undefined} tabIndex={0} aria-label={transactionRowLabel(t('View details for {name}', { name: record.name }), record, nameOf(record), locale)} onClick={open(record)} onKeyDown={open(record)}>
+      return <li key={record.id} className="transaction-row" data-selected={selected.has(record.id) || undefined} tabIndex={0} aria-label={transactionRowLabel(t('View details for {name}', { name: shownName(record, t) }), record, nameOf(record), locale)} onClick={open(record)} onKeyDown={open(record)}>
        {selecting && <input type="checkbox" aria-label={t('Select {name}', { name: record.name })} checked={selected.has(record.id)} onChange={() => toggle(record.id)}/>}
-       <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span>{attachments.counts.get(record.id) ? <span className="transaction-name"><strong>{record.name}</strong><Paperclip className="transaction-attachment-mark" size={13} role="img" aria-label={t('Attachments: {count}', { count: attachments.counts.get(record.id)! })}/></span> : <strong>{record.name}</strong>}{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}<MortgageSplit record={record}/>{recordTags.length > 0 && <span className="transaction-tags">{recordTags.map(tag => <TagChip key={tag.id} name={tag.name} color={tag.color}/>)}</span>}</span></span>
+       <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span>{attachments.counts.get(record.id) ? <span className="transaction-name"><strong>{shownName(record, t)}</strong><Paperclip className="transaction-attachment-mark" size={13} role="img" aria-label={t('Attachments: {count}', { count: attachments.counts.get(record.id)! })}/></span> : <strong>{shownName(record, t)}</strong>}{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}<MortgageSplit record={record}/>{recordTags.length > 0 && <span className="transaction-tags">{recordTags.map(tag => <TagChip key={tag.id} name={tag.name} color={tag.color}/>)}</span>}</span></span>
        <span className="transaction-labels">{owners.length > 0 && <OwnerPicker record={record} owner={ownerOption(record)} owners={owners} disabled={readOnly || selecting} onChange={owner => void giveTo(record, owner)}/>}<CategoryPicker record={record} categories={data.categories} disabled={!editable || selecting || readOnly} onChange={choice => change([record], choice)}/>
        {businessList.length > 0 && <BusinessPicker record={record} businesses={businessList} disabled={selecting || readOnly || record.frequency !== 'Once' || !!record.history_event_id || !!record.earning_source_id || (record.kind === 'Salary' && !!record.income_source_id)} onChange={business => moveToBusiness(record, business)}/>}</span>
        <TransactionAmount record={record}/>

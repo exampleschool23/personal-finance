@@ -1,4 +1,12 @@
-import type { Entry } from './finance';
+import { expenses, income, type Entry } from './finance';
+const categoryKeys = new Set([...income, ...expenses]);
+const generatedNames = new Set(['Transaction fee', 'Transfer fee']);
+/** The name to show. A transaction saved without a name keeps its category's key, and transfer fees are named by the app;
+ * both read in the current language. A name the person typed is shown as typed. */
+export function shownName(record: Pick<Entry, 'name'> & Partial<Pick<Entry, 'movement_id' | 'operation_id'>>, translate: (key: string) => string) {
+  const name = record.name.trim();
+  return categoryKeys.has(name) || (generatedNames.has(name) && !!(record.movement_id || record.operation_id)) ? translate(name) : record.name;
+}
 const normalizeName = (name: string) => name.trim().replace(/\s+/g, ' ').toLowerCase();
 export function matchingNames(rows: Entry[], entry: Pick<Entry, 'id' | 'kind' | 'name'>, original?: Entry) {
   const query = normalizeName(entry.name);

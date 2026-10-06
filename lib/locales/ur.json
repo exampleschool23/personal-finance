@@ -1813,6 +1813,7 @@
   "Welcome back!": "خوش آمدید!",
   "{amount} left": "{amount} باقی",
   "{count} due soon": "{count} جلد واجب",
+  "{count} overdue": "{count} زائد المیعاد",
   "No transactions recorded this month or last.": "اس مہینے یا پچھلے مہینے کوئی لین دین نہیں۔",
   "Goals": "اہداف",
   "{amount} target": "ہدف {amount}",

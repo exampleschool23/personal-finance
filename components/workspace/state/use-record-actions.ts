@@ -17,6 +17,8 @@ type Change = { changed: number; records: Entry[] };
 export type RecordActionsInput = {
     demo: boolean; rows: Entry[]; setRows: Dispatch<SetStateAction<Entry[]>>; refreshRecords: () => void;
     splits: readonly TransactionSplit[];
+    /** Custom categories, so an unnamed transaction's name follows its category. */
+    categories: readonly { id: string; name: string }[];
     household: { attribute: (ids: string[], owner: string) => Promise<number>; setAccountOwner: (account: string, owner: string) => Promise<number> };
     demoHoldingAccounts: HoldingAccount[]; setDemoHoldingAccounts: Dispatch<SetStateAction<HoldingAccount[]>>;
     /** The scheduled record whose repetition is being ended. */
@@ -25,7 +27,7 @@ export type RecordActionsInput = {
 
 /** Changes to records outside the record form. In the sample workspace each one changes the local rows; signed in,
  * it is sent and the records are read again. The bulk changes resolve to how many records changed. */
-export function useRecordActions({ demo, rows, setRows, refreshRecords, splits, household, demoHoldingAccounts, setDemoHoldingAccounts, stopping }: RecordActionsInput) {
+export function useRecordActions({ demo, rows, setRows, refreshRecords, splits, categories, household, demoHoldingAccounts, setDemoHoldingAccounts, stopping }: RecordActionsInput) {
     /** Applies a change to the sample rows and returns how many it changed. */
     const changeRows = (apply: (records: Entry[]) => Change) => { const { changed } = apply(rows); setRows(previous => apply(previous).records); return changed; };
     /** Sends a bulk change of transactions and reloads; resolves to how many changed. */
@@ -72,7 +74,7 @@ export function useRecordActions({ demo, rows, setRows, refreshRecords, splits, 
     };
     /** Moves transactions to another category: the Transactions page's inline change, Edit multiple and rules. */
     async function categorize(ids: string[], choice: CategoryChoice) {
-        if (demo) return changeRows(records => recategorize(records, ids, choice, splits));
+        if (demo) return changeRows(records => recategorize(records, ids, choice, splits, categories));
         return sendChange('categorize', { ids, kind: choice.kind, category_id: choice.category_id });
     }
     /** Moves transactions to a business, or to the household with null. */

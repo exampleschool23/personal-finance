@@ -197,7 +197,8 @@ test('the shell, top bar and screens show sharing only where it applies',()=>{
  assert.match(fs.readFileSync('components/planning/accounts/accounts-overview.tsx','utf8'),/\{owners\.length>0&&<OwnerFilter owners=\{owners\} value=\{ownerFilter\} onChange=\{setOwnerFilter\}\/>\}/);
  assert.match(fs.readFileSync('components/reports/report-filters.tsx','utf8'),/owners\.length > 0 && <OwnerFilter owners=\{owners\}/);
  const settings=fs.readFileSync('components/settings-layout.tsx','utf8');
- assert.match(settings,/\{id:'household',label:'Household',areas:\['household'\]\}/);
+ // "Household" alone reads as household spending in several languages (Russian "Домашние расходы"); the tab names the sharing.
+ assert.match(settings,/\{id:'household',label:'Household sharing',areas:\['household'\]\}/);
  const panel=fs.readFileSync('components/household-panel.tsx','utf8');
  // The sample household lists its people and offers no invites.
  assert.match(panel,/\{!demo && state && <Button disabled=\{people \+ state\.invites\.length >= householdLimit\}/);

@@ -1813,6 +1813,7 @@
   "Welcome back!": "خوش برگشتی!",
   "{amount} left": "{amount} مانده",
   "{count} due soon": "{count} به‌زودی",
+  "{count} overdue": "{count} سررسید گذشته",
   "No transactions recorded this month or last.": "این ماه و ماه گذشته تراکنشی نیست.",
   "Goals": "اهداف",
   "{amount} target": "هدف {amount}",

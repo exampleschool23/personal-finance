@@ -54,8 +54,9 @@
 @media (max-width:560px){.goal-setup-steps{gap:4px 12px;font-size:var(--type-caption)}}
 
 /* Business tracking and tags */
-/* Owner, category and business each take an equal column, so every row lines up whatever its labels say. */
-.transaction-labels{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);justify-items:start;align-items:center;gap:4px 8px;min-width:0}
+/* Owner, category and business each take an equal column, so every row lines up whatever its labels say;
+   a column never narrows below its longest word, so a label wraps between words, never inside one. */
+.transaction-labels{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(min-content,1fr);justify-items:start;align-items:center;gap:4px 8px;min-width:0}
 .transaction-labels:has(>.transaction-member-button:first-child){grid-template-columns:auto}
 .transaction-business{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;color:var(--muted-foreground)}
 .transaction-business>span:last-child{min-width:0;white-space:normal;overflow-wrap:break-word}

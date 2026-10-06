@@ -113,7 +113,8 @@ test('row lists keep their columns lined up from row to row',()=>{
  }
  // A long amount (UZS 3,000,000) must not widen its own row: transactions keep a fixed minimum, and owner, category and business sit in equal columns.
  assert.match(template('.transaction-row'),/minmax\([\d.]+rem,[\d.]+fr\)$/);
- assert.match(css,/\.transaction-labels\{display:grid;grid-auto-flow:column;grid-auto-columns:minmax\(0,1fr\)/);
+ // Equal columns that never narrow below their longest word, so a label wraps between words (QA 2026-10-06: "Transpor t").
+ assert.match(css,/\.transaction-labels\{display:grid;grid-auto-flow:column;grid-auto-columns:minmax\(min-content,1fr\)/);
  assert.match(css,/\.recurring-row\{display:grid;grid-template-columns:subgrid/,'recurring and subscription rows share one set of columns per list');
  assert.match(css,/\.recurring-list>ul,\.subscription-list\{display:grid;grid-template-columns:/);
 });

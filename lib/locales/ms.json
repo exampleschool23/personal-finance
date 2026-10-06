@@ -1813,6 +1813,7 @@
   "Welcome back!": "Selamat kembali!",
   "{amount} left": "Baki {amount}",
   "{count} due soon": "{count} hampir tiba",
+  "{count} overdue": "{count} tertunggak",
   "No transactions recorded this month or last.": "Tiada transaksi bulan ini atau bulan lepas.",
   "Goals": "Matlamat",
   "{amount} target": "Sasaran {amount}",

@@ -1813,6 +1813,7 @@
   "Welcome back!": "আবার স্বাগতম!",
   "{amount} left": "{amount} বাকি",
   "{count} due soon": "{count}টি শিগগির",
+  "{count} overdue": "{count}টি বকেয়া",
   "No transactions recorded this month or last.": "এই মাসে বা গত মাসে কোনো লেনদেন নেই।",
   "Goals": "লক্ষ্য",
   "{amount} target": "লক্ষ্য {amount}",

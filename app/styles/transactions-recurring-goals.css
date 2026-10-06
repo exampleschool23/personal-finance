@@ -12,8 +12,8 @@
 .transaction-day-heading{display:flex;justify-content:space-between;gap:12px;padding:10px 16px;background:var(--muted);font-size:var(--type-caption);font-weight:500;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
 .transaction-day-heading h3{margin:0;font-size:var(--type-caption);font-weight:500}
 .transaction-day ul{margin:0;padding:0;list-style:none}
-.transaction-row{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.2fr) minmax(8.5rem,.45fr);align-items:center;gap:12px;padding:10px 16px;cursor:pointer;font-size:var(--type-small)}
-.transaction-row:has(>input){grid-template-columns:auto minmax(0,1.2fr) minmax(0,1.2fr) minmax(8.5rem,.45fr)}
+.transaction-row{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(min-content,1.2fr) minmax(8.5rem,.45fr);align-items:center;gap:12px;padding:10px 16px;cursor:pointer;font-size:var(--type-small)}
+.transaction-row:has(>input){grid-template-columns:auto minmax(0,1.2fr) minmax(min-content,1.2fr) minmax(8.5rem,.45fr)}
 .transaction-row+.transaction-row{border-top:1px solid var(--hairline)}
 .transaction-row:hover{background:color-mix(in srgb,var(--muted) 60%,transparent)}
 .transaction-row:focus-visible{outline:2px solid var(--ring);outline-offset:-2px}
@@ -211,13 +211,13 @@
 .goal-row+.goal-row{border-top:1px solid var(--hairline)}
 .goal-row>.drag-handle{flex-shrink:0;opacity:0;transition:opacity .15s}
 .goal-row:hover>.drag-handle,.goal-row>.drag-handle:focus-visible,.goal-row[data-dragging]>.drag-handle{opacity:1}
-/* Accounts: the drag handle sits at the leading edge of each account row. */
-.account-sortable-row{display:flex;align-items:center;border-top:1px solid var(--hairline);background:var(--card)}
-.account-sortable-row>.drag-handle{flex-shrink:0;margin-inline-start:8px;opacity:0;transition:opacity .15s}
+/* Accounts: each account is a bordered card, its drag handle in the top corner. */
+.account-sortable-row{position:relative;border:1px solid var(--hairline);border-radius:var(--radius-control);background:var(--card)}
+.account-sortable-row:has(>[aria-pressed=true]){border-color:var(--primary)}
+.account-sortable-row>.drag-handle{position:absolute;top:8px;inset-inline-end:6px;z-index:1;opacity:0;transition:opacity .15s}
 .account-sortable-row:hover>.drag-handle,.account-sortable-row>.drag-handle:focus-visible,.account-sortable-row[data-dragging]>.drag-handle{opacity:1}
 @media (hover:none){.account-sortable-row>.drag-handle{opacity:1}}
 .account-sortable-row[data-dragging]{box-shadow:var(--shadow-card)}
-.account-sortable-row>.account-list-row{border-top:0;padding-inline-start:6px}
 /* Categories: the handle sits before each badge. */
 .category-settings .category-badges .sortable-item{display:inline-flex;align-items:center;gap:2px}
 .category-settings .category-badges .sortable-item>.drag-handle{opacity:.55}

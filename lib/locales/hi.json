@@ -1813,6 +1813,7 @@
   "Welcome back!": "फिर से स्वागत है!",
   "{amount} left": "{amount} बचे",
   "{count} due soon": "{count} जल्द देय",
+  "{count} overdue": "{count} अतिदेय",
   "No transactions recorded this month or last.": "इस महीने या पिछले महीने कोई लेनदेन नहीं।",
   "Goals": "लक्ष्य",
   "{amount} target": "लक्ष्य {amount}",

@@ -1813,6 +1813,7 @@
   "Welcome back!": "Chào mừng trở lại!",
   "{amount} left": "Còn {amount}",
   "{count} due soon": "{count} sắp đến hạn",
+  "{count} overdue": "{count} quá hạn",
   "No transactions recorded this month or last.": "Không có giao dịch trong tháng này và tháng trước.",
   "Goals": "Mục tiêu",
   "{amount} target": "Mục tiêu {amount}",

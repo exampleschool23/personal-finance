@@ -1813,6 +1813,7 @@
   "Welcome back!": "Xush kelibsiz!",
   "{amount} left": "{amount} qoldi",
   "{count} due soon": "Yaqinda: {count}",
+  "{count} overdue": "{count} ta muddati o‘tgan",
   "No transactions recorded this month or last.": "Shu oy va o‘tgan oyda operatsiyalar yo‘q.",
   "Goals": "Maqsadlar",
   "{amount} target": "Maqsad {amount}",

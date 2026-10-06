@@ -1813,6 +1813,7 @@
   "Welcome back!": "ยินดีต้อนรับกลับ!",
   "{amount} left": "เหลือ {amount}",
   "{count} due soon": "ใกล้ถึงกำหนด {count} รายการ",
+  "{count} overdue": "เกินกำหนด {count} รายการ",
   "No transactions recorded this month or last.": "ไม่มีรายการในเดือนนี้และเดือนที่แล้ว",
   "Goals": "เป้าหมาย",
   "{amount} target": "เป้าหมาย {amount}",

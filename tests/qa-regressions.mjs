@@ -7,6 +7,7 @@ import React from 'react';
 import {loadTS} from './helpers/load-ts.mjs';
 import {apiFunction} from './helpers/api-function.mjs';
 import {sourceWithParts} from './helpers/source.mjs';
+import {stylesheet} from './helpers/stylesheet.mjs';
 
 const {decimalSum,decimalTotalEquals}=loadTS('lib/decimal-amounts.ts');
 const {requiresCashAccount,cashFlowAmountMissing}=loadTS('lib/cash-account-required.ts');
@@ -214,4 +215,67 @@ test('Cash flow, Dashboard and Goals estimate the monthly surplus from the same 
  const {estimatedCashFlow}=loadTS('lib/finance.ts');
  const loan={id:'l',name:'QA Car loan',kind:'Loan',currency:'USD',amount:7200,quantity:1,cost:0,rate:7.5,date:'2028-12-31',frequency:'Once',notes:'',estimated_monthly_payment:350};
  assert.equal(estimatedCashFlow([loan],0,'2026-10').forecast,-350);
+});
+
+// Full QA run, 6 October 2026.
+test('going back to an earlier Transactions period opens its first page, not the page left there',()=>{
+ const screen=fs.readFileSync('components/workspace/screens/transactions-screen.tsx','utf8');
+ assert.match(screen,/if \(paging\.key !== listKey\) setPaging\(\{ key: listKey, page: 1 \}\);/);
+});
+
+test('Edit multiple says how many rows kept their category instead of a bare "1 updated"',()=>{
+ const screen=fs.readFileSync('components/workspace/screens/transactions-screen.tsx','utf8');
+ assert.match(screen,/fixedCategory = chosen\.length - movable\.length;/);
+ assert.match(screen,/fixedCategory \? t\('\{changed\} updated; \{skipped\} could not change category here\.'/);
+});
+
+test('a transaction saved without a name reads in the current language and follows its category',()=>{
+ const {shownName}=loadTS('lib/record-names.ts');
+ const {renamedForCategory}=loadTS('lib/transaction-rules.ts');
+ const ru=key=>({'Other expense':'Прочие расходы','Transaction fee':'Комиссия'}[key]??key);
+ assert.equal(shownName({name:'Other expense'},ru),'Прочие расходы');
+ assert.equal(shownName({name:'QA Taxi home'},ru),'QA Taxi home','a typed name is shown as typed');
+ assert.equal(shownName({name:'Transaction fee',movement_id:'m'},ru),'Комиссия');
+ assert.equal(shownName({name:'Transaction fee'},ru),'Transaction fee','only an app-made fee is translated');
+ const categories=[{id:'c1',name:'Transport'},{id:'c2',name:'Utilities'}];
+ assert.equal(renamedForCategory({name:'Other expense',kind:'Other expense',custom_category_id:null},{kind:'Other expense',category_id:'c1'},categories),'Transport');
+ assert.equal(renamedForCategory({name:'utilities',kind:'Other expense',custom_category_id:'c2'},{kind:'Living expense',category_id:null},categories),'Living expense');
+ assert.equal(renamedForCategory({name:'QA Taxi home',kind:'Other expense',custom_category_id:null},{kind:'Other expense',category_id:'c1'},categories),'QA Taxi home');
+ assert.match(fs.readFileSync('components/workspace/state/use-record-save.ts','utf8'),/expenseName\(editing,[^;]*,editing\.kind\)/,'the key is stored, not a translation');
+});
+
+test('a back-dated schedule is not overdue for the months before it was added',()=>{
+ const {upcomingPayments}=loadTS('lib/planning.ts');
+ const {carriedOverdue}=loadTS('lib/recurring.ts');
+ const gym={id:'gym',name:'QA Gym',kind:'Living expense',currency:'USD',amount:45,quantity:1,cost:0,rate:0,date:'2023-02-05',frequency:'Monthly',notes:'',created_at:'2026-10-03T07:30:00Z'};
+ const due=upcomingPayments([gym],[],'2026-10-06');
+ assert.deepEqual(due.filter(item=>item.overdue).map(item=>item.date),['2026-10-05'],'only the payment due after it was added');
+ assert.deepEqual(carriedOverdue([gym],[],'2026-10','2026-10-06'),[],'no "Open from earlier months" backlog');
+ const old={...gym,created_at:'2023-01-01T00:00:00Z'};
+ assert.ok(upcomingPayments([old],[],'2026-10-06').filter(item=>item.overdue).length>40,'a schedule kept since 2023 still reminds');
+});
+
+test('Budget contributions are the goals Goals funds, so Left to budget and Available for goals agree',()=>{
+ const {goalContribution}=loadTS('lib/budget.ts');
+ const {fundingPlan}=loadTS('lib/goal-funding.ts');
+ const goal=(id,extra)=>({id,name:id,kind:'savings',account_id:'a',currency:'USD',target:10000,allocated:0,target_date:null,archived:false,monthly_contribution:500,...extra});
+ const goals=[goal('planner only',{}),goal('funded',{funding_enabled:true,funding_monthly:300}),goal('paused',{funding_enabled:true,paused_until:'2026-12-01'})];
+ const budget=goals.reduce((sum,item)=>sum+goalContribution(item,'2026-10-06'),0);
+ assert.equal(budget,300);
+ assert.equal(fundingPlan(goals,10000,'USD','2026-10-06').requested,budget);
+});
+
+test('goal pickers, recurring categories and deposit benchmarks follow the person, not internal order or one country',()=>{
+ assert.equal((fs.readFileSync('components/planning/goals-page.tsx','utf8').match(/<GoalFundingPanel data=\{\{\.\.\.data,goals:order\.goals\}\}/g)??[]).length,2);
+ const rows=fs.readFileSync('components/planning/recurring-rows.tsx','utf8');
+ assert.match(rows,/<CategoryIcon kind=\{category \?\? item\.record\.kind\}\/>/);
+ assert.match(rows,/category \?\? t\(item\.record\.kind\)/);
+ assert.match(fs.readFileSync('components/planning/upcoming-page.tsx','utf8'),/<OccurrenceRow [^>]*categories=\{data\.categories\}/);
+ assert.match(fs.readFileSync('components/investment-comparison-settings.tsx','utf8'),/currencies\.includes\(option\.key\.slice\('deposit'\.length\)\)\|\|draft\.benchmarks\.includes\(option\.key\)/);
+});
+
+test('transaction labels never narrow below a word',()=>{
+ const css=stylesheet();
+ assert.match(css,/\.transaction-labels\{[^}]*grid-auto-columns:minmax\(min-content,1fr\)/);
+ assert.match(css,/\.transaction-row:has\(>input\)\{grid-template-columns:auto minmax\(0,1\.2fr\) minmax\(min-content,1\.2fr\)/);
 });

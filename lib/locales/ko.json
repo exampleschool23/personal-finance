@@ -1813,6 +1813,7 @@
   "Welcome back!": "다시 오신 걸 환영해요!",
   "{amount} left": "{amount} 남음",
   "{count} due soon": "곧 {count}건",
+  "{count} overdue": "연체 {count}건",
   "No transactions recorded this month or last.": "이번 달과 지난달에 거래가 없습니다.",
   "Goals": "목표",
   "{amount} target": "목표 {amount}",
