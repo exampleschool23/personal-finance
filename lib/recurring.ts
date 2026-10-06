@@ -1,5 +1,5 @@
 import { daysBetween, monthDays, monthEnd, shiftDay } from './calendar-days';
-import { scheduleDates, income, type Entry } from './finance';
+import { archivedIn, scheduleDates, income, type Entry } from './finance';
 import { expensePlanTotals, type ExpensePlan } from './expense-plans';
 import { installmentDates, installmentsFrom, isRecurringCashFlow, paidInstallmentMonths, scheduleAssets, scheduleStart, settledOccurrences, type DebtPayment, type Occurrence } from './planning';
 
@@ -38,6 +38,8 @@ function occurrencesBetween(records: Entry[], occurrences: Occurrence[], from: s
   if (!record.date || record.source_paused || record.archived || !isRecurringCashFlow(record)) continue;
   const start = scheduleStart(record, assets);
   for (const date of scheduleDates(record, start > from ? start : from, to)) {
+   // Months it was archived have no payments; Restore resumes from its own month.
+   if (archivedIn(record, date.slice(0, 7))) continue;
    const key = record.id + ':' + date;
    const done = status.get(key) === 'dismissed' ? 'skipped' : settled.has(key) ? 'paid' : null;
    items.push({ key, record, date, status: done ?? (date < today ? 'overdue' : 'due'), direction: income.includes(record.kind) ? 'income' : 'expense', amount: Number(record.amount), recorded: done === 'paid' ? recorded.get(key) : undefined });
@@ -74,7 +76,7 @@ export type RecurringPlan = { plan: ExpensePlan; planned: number; spent: number 
 
 /** The spending plans running in a month, by name. */
 export function monthPlans(plans: readonly ExpensePlan[], month: string): RecurringPlan[] {
- return plans.flatMap(plan => { const totals = expensePlanTotals(plan, month); return totals.active ? [{ plan, planned: totals.planned, spent: totals.spent }] : []; })
+ return plans.flatMap(plan => { const totals = expensePlanTotals(plan, month); return totals.active && !archivedIn(plan, month) ? [{ plan, planned: totals.planned, spent: totals.spent }] : []; })
   .sort((a, b) => a.plan.name.localeCompare(b.plan.name));
 }
 

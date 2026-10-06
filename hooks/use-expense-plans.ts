@@ -5,6 +5,7 @@ import { refreshRead } from '@/lib/refresh-read';
 import { useEffect, useState, useRef } from 'react';
 import type { Entry } from '@/lib/finance';
 import { expensePlanMonth, type ExpensePlan } from '@/lib/expense-plans';
+import { plansOfMonth } from '@/lib/archive-pauses';
 
 export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reload:number,onSaved:()=>void,month=expensePlanMonth()) {
  const [saved,setSaved]=useState<ExpensePlan[]>([]),[demoPlans,setDemoPlans]=useState<ExpensePlan[]>([]);
@@ -28,7 +29,8 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
  if(previousDemo!==demo){setPreviousDemo(demo);if(!demo)setDemoPlans([]);}
  // Archived plans stay out of budgets, forecasts and the plan picker; Recurring lists them to restore.
  const all=demo?demoPlans.map(p=>({...p,spent:rows.filter(r=>r.expense_plan_id===p.id&&r.date.slice(0,7)===month).reduce((n,r)=>n+r.amount,0)})):user&&loadedScope===scope?saved:[];
- const plans=all.filter(plan=>!plan.archived),archivedPlans=all.filter(plan=>plan.archived);
+ // A month keeps the plans that were not archived in it, so earlier months still show a plan archived later.
+ const plans=plansOfMonth(all,month),archivedPlans=all.filter(plan=>plan.archived);
  async function save(plan:ExpensePlan) {
   if(demo){
    if(rows.some(r=>r.expense_plan_id===plan.id&&(r.currency!==plan.currency||r.date<plan.start_date||(plan.end_date&&r.date>plan.end_date))))throw Error('Keep the currency and dates compatible with recorded spending.');

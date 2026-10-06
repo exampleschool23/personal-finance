@@ -4,11 +4,14 @@ export type ExpensePlan = {
  amount: number; start_date: string; end_date: string | null; spent?: number; base_amount?: number; carryover?: number; rollover?: boolean;
  /** An archived plan leaves budgets, forecasts and the plan picker; its spending stays. */
  archived?: boolean;
+ /** When it was archived; see `archivedIn`. */
+ archive_pauses?: { from: string; to: string | null }[] | null;
 };
 export const expensePlanMonth = (now = new Date()) => new Date(now.getTime() + 5 * 60 * 60 * 1000).toISOString().slice(0, 7);
-// Full monthly allowance for every calendar month overlapping the plan's dates.
+// Full monthly allowance for every calendar month overlapping the plan's dates. Callers pass the plans of the month,
+// without those archived in it (`plansOfMonth` in archive-pauses); in those months the server's allowance is 0 too.
 export function expensePlanTotals(plan: ExpensePlan, month = expensePlanMonth()) {
- const active = !plan.archived && plan.start_date.slice(0, 7) <= month && (!plan.end_date || plan.end_date.slice(0, 7) >= month);
+ const active = plan.start_date.slice(0, 7) <= month && (!plan.end_date || plan.end_date.slice(0, 7) >= month);
  const planned = active ? Number(plan.amount) + Number(plan.carryover ?? 0) : 0;
  const spent = Number(plan.spent ?? 0);
  return { active, planned, spent, remaining: planned - spent, projected: Math.max(planned, spent) };

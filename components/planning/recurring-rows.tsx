@@ -88,6 +88,6 @@ export function ArchivedFold({ records, plans, busy, onRestore }: { records: Ent
  const restore = (target: ArchiveTarget, name: string, detail: string, amount: string) => <li key={target.source + (target.source === 'plan' ? target.plan.id : target.record.id)}><span>{[name, detail, amount].join(' · ')}</span><Button size="sm" variant="outline" disabled={busy} onClick={() => onRestore(target)}>{t('Restore')}</Button></li>;
  return <details className="panel tools-panel"><summary>{t('Archived')}<Count value={records.length + plans.length}/></summary><ul className="tool-list">
   {records.map(record => restore({ source: 'record', record }, record.name, t(record.kind), formatMoney(record.amount, record.currency, locale)))}
-  {plans.map(plan => restore({ source: 'plan', plan }, plan.name, t(plan.category), formatMoney(plan.amount, plan.currency, locale)))}
+  {plans.map(plan => restore({ source: 'plan', plan }, plan.name, t(plan.category), formatMoney(plan.base_amount ?? plan.amount, plan.currency, locale)))}
  </ul></details>;
 }

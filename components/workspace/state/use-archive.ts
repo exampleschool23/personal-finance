@@ -4,6 +4,8 @@ import { requestJson } from '@/lib/api-client';
 import { showSaved } from '@/lib/feedback';
 import type { Entry } from '@/lib/finance';
 import { applyRecordChange } from '@/lib/record-balance';
+import { nextArchivePauses } from '@/lib/archive-pauses';
+import { depositToday } from '@/lib/deposit-interest';
 import { scheduleHistory, type ArchiveTarget } from '@/lib/recurring';
 import type { Occurrence } from '@/lib/planning';
 import type { ExpensePlan } from '@/lib/expense-plans';
@@ -12,8 +14,10 @@ import type { ExpensePlan } from '@/lib/expense-plans';
 export function useArchive({ demo, setRows, restoreDemoPlan, refreshRecords }: { demo: boolean; setRows: Dispatch<SetStateAction<Entry[]>>; restoreDemoPlan: (plan: ExpensePlan) => void; refreshRecords: () => void }) {
  async function archive(target: ArchiveTarget, archived: boolean) {
   if (demo) {
-   if (target.source === 'plan') restoreDemoPlan({ ...target.plan, archived });
-   else setRows(previous => previous.map(row => row.id === target.record.id ? { ...row, archived } : row));
+   // The database keeps these pauses itself (migration 115); the sample copies follow the same rule.
+   const today = depositToday();
+   if (target.source === 'plan') restoreDemoPlan({ ...target.plan, archived, archive_pauses: nextArchivePauses(target.plan.archive_pauses, archived, today) });
+   else setRows(previous => previous.map(row => row.id === target.record.id ? { ...row, archived, archive_pauses: nextArchivePauses(row.archive_pauses, archived, today) } : row));
   } else {
    await requestJson('/api/planning', { body: { action: 'archive', data: { source: target.source, id: target.source === 'plan' ? target.plan.id : target.record.id, archived } } });
    refreshRecords();

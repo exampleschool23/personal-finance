@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {harness} from './helpers/hooks.mjs';
+import {loadTS} from './helpers/load-ts.mjs';
+const {plansOfMonth}=loadTS('lib/archive-pauses.ts');
 
 // Exercise hook state transitions with manually controlled network responses.
 function network(){const requests=[];return {requests,fetch:(url,options={})=>new Promise(resolve=>requests.push({url,options,reply:(data,status=200)=>resolve(Response.json(data,{status}))}))};}
@@ -55,7 +57,7 @@ test('superseded reads cannot undo a confirmed payment and a different user neve
 
 test('expense plans stay visible during same-month refreshes and isolate other months and users',async()=>{
  const net=network();
- const run=harness('hooks/use-expense-plans.ts','useExpensePlans',{fetch:net.fetch,expensePlanMonth:()=> '2026-09'});
+ const run=harness('hooks/use-expense-plans.ts','useExpensePlans',{fetch:net.fetch,expensePlanMonth:()=> '2026-09',plansOfMonth});
  const render=(revision=0,month='2026-09',user='owner')=>run(user,false,[],revision,()=>{},month);
  assert.equal(render().loading,true);net.requests[0].reply([{id:'rent',amount:'100',spent:'20'}]);await flush();
  assert.equal(render().plans[0].amount,100);
