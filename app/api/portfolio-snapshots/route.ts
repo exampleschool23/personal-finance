@@ -1,5 +1,5 @@
 import { loadMarket } from '@/lib/server-market';
-import { instrumentFor } from '@/lib/market';
+import { marketSymbols } from '@/lib/market';
 import { crossSite,signInAgain } from '@/lib/api-route';
 import { pagePath,readAllPages } from '@/lib/owner-rows';
 import { session,supa,sameOrigin } from '@/lib/supabase';
@@ -19,10 +19,8 @@ export async function POST(req:Request){
   const auth=await session();if(!auth)return signInAgain();
   const params=new URLSearchParams({select:'*',kind:`in.(${trackedKinds.join(',')})`,order:'id.asc'});
   const records=await readAllPages<Entry>(range=>supa(pagePath('/rest/v1/finance_records?'+params,range),{},auth.token));
-  const instruments=records.map(instrumentFor).filter(instrument=>instrument!==null);
-  const crypto=[...new Set(instruments.filter(i=>i.kind==='Crypto').map(i=>i.symbol))];
-  const stocks=[...new Set(instruments.filter(i=>i.kind==='Stock').map(i=>i.symbol))];
-  const market=await loadMarket(crypto,stocks,true);
+  const symbols=marketSymbols(records);
+  const market=await loadMarket(symbols.crypto,symbols.stocks,true,symbols.metals);
   const totals=snapshotTotals(records,market);
   if(!totals)return Response.json({error:'Complete prices and exchange rates are needed to save today’s portfolio.'},{status:409});
   const response=await supa('/rest/v1/rpc/capture_portfolio_snapshot',{method:'POST',body:JSON.stringify({p_assets:totals.assets,p_debt:totals.debt,p_rates:totals.rates})},auth.token);

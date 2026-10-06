@@ -268,8 +268,8 @@ test('editing an existing linked receipt preserves its source without duplicate 
 
 test('manage income sources is a prominent navigation button that closes the dialog and respects busy state',()=>{
  const render=component('components/income-record-form.tsx','IncomeRecordForm');
- let closed=0,prevented=0;
- const props={editing:{id:'new',kind:'Other income',frequency:'Once',currency:'USD',amount:0,name:'',notes:''},currencies:['USD'],rows:[],planning:{data:{records:[],categories:[]}},earningSources:{sources:[],loading:false,error:''},onNavigateToSources(){closed++;},setEditing(){throw Error('Navigation should close directly, not invoke the cancel guard');}};
+ let closed=0,prevented=0;const paths=[];
+ const props={editing:{id:'new',kind:'Other income',frequency:'Once',currency:'USD',amount:0,name:'',notes:''},currencies:['USD'],rows:[],planning:{data:{records:[],categories:[]}},earningSources:{sources:[],loading:false,error:''},onLeave(event,path){closed++;paths.push(path);},setEditing(){throw Error('Navigation should close directly, not invoke the cancel guard');}};
  const tree=render.tree(props);
  const button=find(tree,node=>node.props?.asChild&&node.props?.variant==='outline');
  assert.ok(button.props.className.includes('min-h-11'));
@@ -280,6 +280,9 @@ test('manage income sources is a prominent navigation button that closes the dia
  const busyLink=find(busyTree,node=>node.props?.href==='/income-expenses#income-sources');
  busyLink.props.onNavigate({preventDefault(){prevented++;}});
  assert.equal(closed,1);assert.equal(prevented,1);
+ // Manage categories also leaves the dialog instead of opening Settings behind it.
+ find(tree,node=>node.props?.href==='/settings#categories').props.onNavigate({preventDefault(){prevented++;}});
+ assert.equal(closed,2);assert.deepEqual(paths,['/income-expenses#income-sources','/settings#categories']);
 });
 
 

@@ -27,7 +27,7 @@ import { withAccountAndOwner } from './record-form';
 
 /** The expense form: spending against a monthly plan, a plain expense, or a payment on a debt. */
 /** What every part of the expense form reads: the dialog's props with the expense being entered, and the form's own state. */
-type ExpenseContext=Pick<RecordDialogProps,'onDebtSaved'|'onMortgageSave'|'onMortgageDone'|'onPaymentDraftState'|'requestPaymentSwitch'|'onDebtPayment'|'household'|'setEditing'|'busy'|'save'|'linkedExpensePlan'|'expensePlans'|'planning'|'error'|'demo'|'currencies'|'rows'>&{editing:Entry;addingPlan:boolean;setAddingPlan:(adding:boolean)=>void;noPlans:boolean;choosePlan:(plan?:ExpensePlan)=>void;locale:string;paymentId:string;setPaymentId:(id:string)=>void;debts:Entry[];selectedDebt?:Entry;mode:'plan'|'expense'|'debt';setMode:(mode:'plan'|'expense'|'debt')=>void;update:(patch:Partial<Entry>)=>void;savedCurrency?:string};
+type ExpenseContext=Pick<RecordDialogProps,'onLeave'|'onDebtSaved'|'onMortgageSave'|'onMortgageDone'|'onPaymentDraftState'|'requestPaymentSwitch'|'onDebtPayment'|'household'|'setEditing'|'busy'|'save'|'linkedExpensePlan'|'expensePlans'|'planning'|'error'|'demo'|'currencies'|'rows'>&{editing:Entry;addingPlan:boolean;setAddingPlan:(adding:boolean)=>void;noPlans:boolean;choosePlan:(plan?:ExpensePlan)=>void;locale:string;paymentId:string;setPaymentId:(id:string)=>void;debts:Entry[];selectedDebt?:Entry;mode:'plan'|'expense'|'debt';setMode:(mode:'plan'|'expense'|'debt')=>void;update:(patch:Partial<Entry>)=>void;savedCurrency?:string};
 
 /** A payment on a loan, debt or mortgage, chosen from the outstanding debts. */
 function DebtPayment({form}:{form:ExpenseContext}){
@@ -55,11 +55,11 @@ function PlanFields({form}:{form:ExpenseContext}){
 /** The category of a plain expense, and the amount spent in its currency. */
 function CategoryAmount({form}:{form:ExpenseContext}){
  const {t}=useLanguage();
- const {editing,setEditing,busy,planning,currencies,mode,update,savedCurrency}=form;
+ const {editing,setEditing,busy,planning,currencies,mode,update,savedCurrency,onLeave}=form;
  return <>   {mode==='expense'&&<div><label>{t('Category')}<NativeSelect disabled={busy||planning.loading||!!planning.error} value={editing.custom_category_id??editing.kind} onChange={event=>{
     const selected=event.target.value;
     setEditing(selectTransactionCategory(editing,selected,planning.data.categories,'expense'));
-   }}>{expenses.map(kind=><option key={kind} value={kind}>{t(kind)}</option>)}{planning.data.categories.filter(category=>category.direction==='expense').map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</NativeSelect></label><Link className="panel-link" href="/settings#categories">{t('Manage categories in Settings')}</Link></div>}
+   }}>{expenses.map(kind=><option key={kind} value={kind}>{t(kind)}</option>)}{planning.data.categories.filter(category=>category.direction==='expense').map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</NativeSelect></label><Link className="panel-link" href="/settings#categories" onNavigate={event=>{if(busy){event.preventDefault();return;}if(onLeave)onLeave(event,'/settings#categories');else setEditing(null);}}>{t('Manage categories in Settings')}</Link></div>}
    <AmountCurrencyFields amount={editing.amount} currency={editing.currency} currencies={currencies} savedCurrency={savedCurrency} disabled={busy} currencyLocked={mode==='plan'} onAmountChange={amount=>update({amount})} onCurrencyChange={currency=>update({currency,account_exchange_rate:null,account_rate_date:null,account_currency:null})}/></>;
 }
 /** The day, and for a plain expense the optional details: how it repeats, a business, an end date and notes. */
@@ -83,7 +83,7 @@ function ExpenseActions({form}:{form:ExpenseContext}){
  return <>  {!(mode==='debt'&&selectedDebt&&((selectedDebt.kind==='Mortgage'&&onMortgageSave)||(!demo&&selectedDebt.kind!=='Mortgage')))&&<div className="expense-form-actions"><ErrorPopup message={error}/><FormFooter busy={busy} onCancel={()=>setEditing(null)}>{mode!=='debt'&&<Button className="primary" disabled={busy||(mode==='plan'&&(!linkedExpensePlan||expensePlans.loading||!!expensePlans.error))}>{t(busy?'Saving…':demo?'Save in demo':'Save expense')}</Button>}</FormFooter></div>}</>;
 }
 
-export function ExpenseRecordForm({onDebtSaved,onMortgageSave,onMortgageDone,onPaymentDraftState,requestPaymentSwitch,onDebtPayment,household,editing,setEditing,busy,save,linkedExpensePlan,expensePlans,planning,error,demo,currencies,rows}:RecordDialogProps){
+export function ExpenseRecordForm({onLeave,onDebtSaved,onMortgageSave,onMortgageDone,onPaymentDraftState,requestPaymentSwitch,onDebtPayment,household,editing,setEditing,busy,save,linkedExpensePlan,expensePlans,planning,error,demo,currencies,rows}:RecordDialogProps){
  const [addingPlan,setAddingPlan]=useState(false);
  // Without a plan there is nothing to choose: offer to add one, then choose it.
  const noPlans=!expensePlans.loading&&!expensePlans.error&&!expensePlans.plans.length&&!!expensePlans.save;
@@ -96,7 +96,7 @@ export function ExpenseRecordForm({onDebtSaved,onMortgageSave,onMortgageDone,onP
  if(!editing)return null;
  const update=(patch:Partial<Entry>)=>setEditing({...editing,...patch});
  const savedCurrency=rows.find(row=>row.id===editing.id)?.currency;
- const form:ExpenseContext={onDebtSaved,onMortgageSave,onMortgageDone,onPaymentDraftState,requestPaymentSwitch,onDebtPayment,household,editing,setEditing,busy,save,linkedExpensePlan,expensePlans,planning,error,demo,currencies,rows,addingPlan,setAddingPlan,noPlans,choosePlan,locale,paymentId,setPaymentId,debts,selectedDebt,mode,setMode,update,savedCurrency};
+ const form:ExpenseContext={onLeave,onDebtSaved,onMortgageSave,onMortgageDone,onPaymentDraftState,requestPaymentSwitch,onDebtPayment,household,editing,setEditing,busy,save,linkedExpensePlan,expensePlans,planning,error,demo,currencies,rows,addingPlan,setAddingPlan,noPlans,choosePlan,locale,paymentId,setPaymentId,debts,selectedDebt,mode,setMode,update,savedCurrency};
  return <form className="record-form expense-form" onSubmit={event=>{if(mode==='debt'){event.preventDefault();return;}save(event);}}>
   <Tabs className="expense-mode-tabs" value={mode} onValueChange={next=>{const change=()=>{onPaymentDraftState?.(false,false);setMode(next as 'plan'|'expense'|'debt');if(next==='plan')update({frequency:'Once',recurrence_days:null,end_date:null});else if(next==='expense'&&editing.expense_plan_id)update({expense_plan_id:null,name:editing.name===linkedExpensePlan?.name?'':editing.name});};if(requestPaymentSwitch)requestPaymentSwitch(change);else change();}}>
    <TabsList aria-label={t('Expense type')}><TabsTrigger value="plan" disabled={busy}>{t('Plan')}</TabsTrigger><TabsTrigger value="expense" disabled={busy}>{t('Expense')}</TabsTrigger>{onDebtPayment&&<TabsTrigger value="debt" disabled={busy}>{t('Debt / mortgage')}</TabsTrigger>}</TabsList>

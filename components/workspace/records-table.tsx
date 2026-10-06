@@ -13,7 +13,8 @@ import { RecordFilters, emptyRecordFilters } from '@/components/record-filters';
 import { RecordIcon } from '@/components/presentation-foundation/record-icon';
 import { RowMenu } from '@/components/presentation-foundation/row-menu';
 import { Button } from '@/components/ui/button';
-import { expenses, income, kinds, lendingRecordKinds, liabilities, value, type Entry } from '@/lib/finance';
+import { expenses, income, kinds, lendingRecordKinds, liabilities, unitPricedKinds, value, type Entry } from '@/lib/finance'
+import { metalWeight } from '@/lib/precious-metals';
 import { formatDate, formatNumber, formatSignedMoney } from '@/lib/format';
 import { signedAmount } from '@/lib/transaction-list';
 import { trackedKinds } from '@/lib/investment-history';
@@ -47,7 +48,8 @@ export function RecordsTable({ title, transactions = false, limit, pagination = 
  // One line of context under each name: the fact that tells this record apart, or nothing.
  const detail = (r: (typeof visible)[number]) => r.mortgage_payment_id ? t("Mortgage payment · Principal: {principal} · Interest: {interest}", { principal: money(Number(r.payment_principal), r.currency), interest: money(Number(r.payment_interest), r.currency) })
   : r.kind === 'Mortgage' && (r.estimated_monthly_payment ?? 0) > 0 ? t("Estimated payment: {amount}/month", { amount: money(r.estimated_monthly_payment!, r.currency) })
-  : ['Stock', 'Crypto'].includes(r.kind) ? t(r.quantity === 1 ? '1 unit · Gain/loss {amount}' : '{quantity} units · Gain/loss {amount}', { quantity: formatNumber(r.quantity, locale), amount: money((r.amount - r.cost) * r.quantity, r.currency) })
+  : r.kind === 'Precious metals' ? t('{weight} · Gain/loss {amount}', { weight: metalWeight(r, locale, t), amount: money((r.amount - r.cost) * r.quantity, r.currency) })
+  : unitPricedKinds.includes(r.kind) ? t(r.quantity === 1 ? '1 unit · Gain/loss {amount}' : '{quantity} units · Gain/loss {amount}', { quantity: formatNumber(r.quantity, locale), amount: money((r.amount - r.cost) * r.quantity, r.currency) })
   : r.frequency !== 'Once' ? t(r.frequency)
   : r.rate ? t('{rate}% annual interest', { rate: formatNumber(r.rate, locale) })
   : r.notes && !r.notes.trim().startsWith(r.name.trim()) ? r.notes : null;

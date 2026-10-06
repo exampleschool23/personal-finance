@@ -14,6 +14,7 @@ import { Pagination } from '@/components/presentation-foundation/pagination';
 import { formatDate, formatDateTime, formatMoney, formatNumber } from '@/lib/format';
 import { requestJson } from '@/lib/api-client';
 import { deletedItemColorKind, deletedItemLabel, type DeletedItem } from '@/lib/deleted-items';
+import { unitPricedKinds } from '@/lib/finance';
 
 export function RecentlyDeleted({demo,demoItems,onRestore,onDelete,onSaved}:{demo:boolean;demoItems:DeletedItem[];onRestore:(item:DeletedItem)=>void;onDelete:(item:DeletedItem)=>void;onSaved:()=>void}) {
  const {t,locale}=useLanguage();
@@ -37,7 +38,7 @@ export function RecentlyDeleted({demo,demoItems,onRestore,onDelete,onSaved}:{dem
  {loading?<LoadingPlaceholder label={t('Loading records…')}/>:!visible.length?<EmptyState icon={<ArchiveRestore aria-hidden="true"/>} title={t('No deleted items')} description={t('Your deleted records will appear here for recovery.')}/>:<ul className="recovery-list">{visible.map(item=><li className="recovery-row" key={item.id} style={{'--recovery-color':categoryColor(deletedItemColorKind(item))} as CSSProperties}>
   <span className="recovery-icon"><ArchiveRestore size={20} aria-hidden="true"/></span>
   <div className="recovery-info"><strong>{item.data.name}</strong><p><CategoryBadge kind={deletedItemColorKind(item)} label={t(deletedItemLabel(item))}/>{item.source==='finance_records'&&item.data.date&&<span>{formatDate(item.data.date,locale)}</span>}</p></div>
-  <div className="recovery-value">{item.source==='finance_records'&&<strong>{formatMoney(Number(item.data.amount)*(['Stock','Crypto'].includes(item.data.kind)?Number(item.data.quantity||1):1),item.data.currency,locale)}</strong>}{item.source==='savings_goals'&&<strong>{t('Target amount')}: {formatMoney(Number(item.data.target),item.data.currency??'USD',locale)}</strong>}<small>{t('Deleted on')} · {formatDateTime(item.deleted_at,locale)}</small></div>
+  <div className="recovery-value">{item.source==='finance_records'&&<strong>{formatMoney(Number(item.data.amount)*(unitPricedKinds.includes(String(item.data.kind))?Number(item.data.quantity||1):1),item.data.currency,locale)}</strong>}{item.source==='savings_goals'&&<strong>{t('Target amount')}: {formatMoney(Number(item.data.target),item.data.currency??'USD',locale)}</strong>}<small>{t('Deleted on')} · {formatDateTime(item.deleted_at,locale)}</small></div>
   <div className="row-actions"><Button size="sm" variant="outline" disabled={busy} onClick={()=>{setError('');setPermanent(false);setRestoring(item);}}><RotateCcw size={15} aria-hidden="true"/>{t('Restore')}</Button><Button size="sm" variant="ghost" className="recovery-delete" disabled={busy} onClick={()=>{setError('');setPermanent(true);setRestoring(item);}}><Trash2 size={15} aria-hidden="true"/>{t('Delete permanently')}</Button></div>
  </li>)}</ul>}
 

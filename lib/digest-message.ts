@@ -24,7 +24,7 @@ export function paymentsSection(items:DueItem[],language:Language,today:string):
  const {locale,t,money}=messageKit(language);
  const line=(item:DueItem)=>{
   const amount=money(item.amount,item.record.currency);
-  const kind=item.type==='repayment'||item.type==='installment'?t('repayment'):item.type==='maturity'?t(item.record.kind==='Treasury bill'?'Treasury bill maturity':'deposit maturity'):income.includes(item.record.kind)?t('income'):null;
+  const kind=item.type==='repayment'||item.type==='installment'?t('repayment'):item.type==='maturity'?t(item.record.kind==='Treasury bill'?'Treasury bill maturity':item.record.kind==='Bond'?'bond maturity':'deposit maturity'):income.includes(item.record.kind)?t('income'):null;
   return `• ${escapeHtml(item.record.name)} · ${income.includes(item.record.kind)?'+':''}${amount}${kind?' · '+kind:''}`;
  };
  const groups:{title:string;lines:string[]}[]=[];

@@ -16,7 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useLanguage } from '@/components/language-provider';
 import { categoryColor } from '@/lib/category-colors';
 import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
-import { assetRecordKinds, interestKinds, value, totalValue, type Entry, type estimatedCashFlow } from '@/lib/finance';
+import { assetRecordKinds, interestKinds, unitPricedKinds, value, totalValue, type Entry, type estimatedCashFlow } from '@/lib/finance';
 import { sortAssetsByWorth } from '@/lib/asset-sort';
 import { marketEntry, type MarketData } from '@/lib/market';
 import { Segmented } from '@/components/presentation-foundation/segmented';
@@ -51,7 +51,7 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
  const renderCard = ({ original, converted }: (typeof holdings)[number]) => {
     const record = converted ?? original;
     const worth = value(record);
-    const hasQuote = ['Stock', 'Crypto'].includes(record.kind);
+    const hasQuote = unitPricedKinds.includes(record.kind);
     const gain = hasQuote && record.cost > 0 ? (record.amount - record.cost) * record.quantity : null;
     const fact = gain !== null ? { label: t('Gain/loss'), value: money(gain, record.currency), tone: signTone(gain) }
      : (record.estimated_monthly_income ?? 0) > 0 ? { label: t('Estimated monthly income'), value: money(record.estimated_monthly_income!, record.currency) }

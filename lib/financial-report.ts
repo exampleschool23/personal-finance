@@ -2,8 +2,8 @@ import { unwrapSignedBackup } from '@/lib/backup-envelope';
 import { dayMs, monthEnd, shiftMonth } from './calendar-days';
 import { depositToday } from './deposit-interest';
 import { projectGoal } from './goal-projection';
-import { convertAmount, instrumentFor, instrumentKey, type MarketData } from './market';
-import { assets, interestKinds, liabilities, income, expenses, value, normalizeEntry, monthly, type Entry } from './finance';
+import { convertAmount, instrumentFor, instrumentKey, quotedUnitPrice, type MarketData } from './market';
+import { assets, interestKinds, liabilities, income, expenses, value, normalizeEntry, monthly, unitPricedKinds, type Entry } from './finance';
 import { formatDate, formatDateTime, formatMoney, formatNumber } from './format';
 import { isCurrency, currencyLabel } from './currencies';
 import { locales, translate, type Language } from './i18n';
@@ -58,8 +58,9 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
  const wealth=records.filter(r=>assets.includes(r.kind)||liabilities.includes(r.kind)).map(record=>{
   const original=byId.get(record.id)!;
   const instrument=instrumentFor(record),quote=instrument?market?.quotes[instrumentKey(instrument)]:undefined;
-  const quoted=quote&&Number.isFinite(quote.usd)&&quote.usd>0?convertAmount(quote.usd,'USD',record.currency,rates):null;
-  const valid=number(original.amount)!==null&&(!['Stock','Crypto'].includes(record.kind)||number(original.quantity)!==null)&&isCurrency(record.currency);
+  const unitPrice=quotedUnitPrice(record,quote);
+  const quoted=unitPrice!==null?convertAmount(unitPrice,'USD',record.currency,rates):null;
+  const valid=number(original.amount)!==null&&(!unitPricedKinds.includes(record.kind)||number(original.quantity)!==null)&&isCurrency(record.currency);
   const amount=valid?value({...record,amount:quoted??record.amount}):null;
   // Record date is a due/acquisition date, not a valuation timestamp.
   const valuation=quoted!==null?quote!.marketTime??quote!.fetchedAt:original.valuation_date;

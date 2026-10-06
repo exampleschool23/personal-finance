@@ -10,7 +10,8 @@ import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-t
 import { signTone } from '@/components/presentation-foundation/tone';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { cashFlowReport, periodMonths, reportPeriods, sankeyFlows, trailingMonths, type ReportPeriod, type Share } from '@/lib/cash-flow-report';
-import { categoryColor } from '@/lib/category-colors';
+import { hueColor } from '@/lib/category-colors';
+import { useCategoryHue } from '@/components/category-icons-context';
 import { depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry } from '@/lib/finance';
 import { formatCompactMoney, formatMoney, formatMonthShort, formatMonthYear, formatPercent } from '@/lib/format';
@@ -54,7 +55,8 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
  const money = (amount: number) => formatMoney(amount, currency, locale);
  const categoryName = (key: string) => data.categories.find(category => category.id === key)?.name ?? t(key);
  const label = grouping === 'category' ? categoryName : (key: string) => key;
- const colorKey = (key: string) => grouping === 'category' ? categoryColor(data.categories.find(category => category.id === key)?.name ?? key) : 'var(--foreground)';
+ const categoryHue = useCategoryHue();
+ const colorKey = (key: string) => grouping === 'category' ? hueColor(categoryHue(data.categories.find(category => category.id === key)?.name ?? key)) : 'var(--foreground)';
  const flows = sankeyFlows(report, categoryName);
  const sankeyLabel = (name: string, value: number) => `${name} · ${formatCompactMoney(value, currency, locale)}`;
  // Each side gets exactly the room its longest label needs.

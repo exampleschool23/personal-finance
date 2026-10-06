@@ -1,12 +1,10 @@
 "use client";
 import { useCallback, useEffect, useState } from 'react';
 import type { Entry } from '@/lib/finance';
-import { instrumentFor, type MarketData } from '@/lib/market';
+import { instrumentFor, marketSymbols, type MarketData } from '@/lib/market';
 
-export async function fetchMarket(entries: Array<Pick<Entry, 'kind' | 'name'>>, signal?: AbortSignal): Promise<MarketData> {
-  const instruments = entries.map(instrumentFor).filter(i => i !== null);
-  const crypto = [...new Set(instruments.filter(i => i.kind === 'Crypto').map(i => i.symbol))];
-  const stocks = [...new Set(instruments.filter(i => i.kind === 'Stock').map(i => i.symbol))];
+export async function fetchMarket(entries: Array<Pick<Entry, 'kind' | 'name' | 'metal'>>, signal?: AbortSignal): Promise<MarketData> {
+  const { crypto, stocks, metals } = marketSymbols(entries);
   const combined: MarketData = { fx:null, quotes:{}, errors:{}, stocksConfigured:false };
   let completed=0;
   // Keep each request within the endpoint limits and avoid parallel quota spikes.
@@ -14,7 +12,8 @@ export async function fetchMarket(entries: Array<Pick<Entry, 'kind' | 'name'>>, 
   for(let index=0;index<batches;index++){
     if(signal?.aborted)throw signal.reason??new Error('Aborted');
     const coinBatch=crypto.slice(index*16,(index+1)*16),stockBatch=stocks.slice(index*20,(index+1)*20);
-    const params=new URLSearchParams({crypto:coinBatch.join(','),stocks:stockBatch.join(',')});
+    // The four metals fit in the first request.
+    const params=new URLSearchParams({crypto:coinBatch.join(','),stocks:stockBatch.join(','),...(index===0&&metals.length?{metals:metals.join(',')}:{})});
     try{
       const response=await fetch('/api/market?'+params,{signal});
       if(!response.ok)throw new Error('Market prices unavailable. Saved prices are shown.');
@@ -29,6 +28,7 @@ export async function fetchMarket(entries: Array<Pick<Entry, 'kind' | 'name'>>, 
       if(signal?.aborted)throw error;
       for(const symbol of coinBatch)combined.errors[`Crypto:${symbol}`]='Price unavailable. Saved price is shown.';
       for(const symbol of stockBatch)combined.errors[`Stock:${symbol}`]='Price unavailable. Saved price is shown.';
+      if(index===0)for(const symbol of metals)combined.errors[`Metal:${symbol}`]='Price unavailable. Saved price is shown.';
     }
   }
   if(!completed)throw new Error('Market prices unavailable. Saved prices are shown.');
@@ -41,7 +41,7 @@ export function useMarket(entries: Entry[], enabled: boolean) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [refreshId, setRefreshId] = useState(0);
-  const signature = JSON.stringify(entries.map(e => ({ kind: e.kind, name: e.name })).filter(e => instrumentFor(e)));
+  const signature = JSON.stringify(entries.map(e => ({ kind: e.kind, name: e.name, metal: e.metal })).filter(e => instrumentFor(e)));
   if (!enabled && market !== null) setMarket(null);
   const refresh = useCallback(() => setRefreshId(id => id + 1), []);
   useEffect(() => {

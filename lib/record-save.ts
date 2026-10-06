@@ -1,7 +1,7 @@
 import { cashFlowAmountMissing, requiresCashAccount } from './cash-account-required';
 import { depositToday } from './deposit-interest';
 import { isBusinessAccount } from './business';
-import { expenses, liabilities, type Entry } from './finance';
+import { expenses, liabilities, simpleInterestKinds, type Entry } from './finance';
 import type { ExpensePlan } from './expense-plans';
 
 const today = depositToday;
@@ -12,7 +12,7 @@ export const freshEntry = (): Entry => ({ id: crypto.randomUUID(), name: '', kin
 /** The rule a record breaks before it is sent, named as the server would name it; empty when it may be saved. */
 export function recordSaveProblem(editing: Entry) {
  const dateProblem = editing.kind === 'Money lent' ? (!editing.lent_date ? 'Date lent is required.' : editing.date && editing.date < editing.lent_date ? 'Due date must not precede lending date.' : '')
-  : !editing.date ? 'Date is required.' : editing.kind === 'Treasury bill' && editing.opened_on && editing.date < editing.opened_on ? 'The maturity date cannot be before the purchase date.' : '';
+  : !editing.date ? 'Date is required.' : simpleInterestKinds.includes(editing.kind) && editing.opened_on && editing.date < editing.opened_on ? 'The maturity date cannot be before the purchase date.' : '';
  if (dateProblem) return dateProblem;
  if (cashFlowAmountMissing(editing)) return 'Enter an amount greater than zero.';
  if (requiresCashAccount(editing) && editing.date > today()) return 'Actual income and expenses cannot be dated in the future.';

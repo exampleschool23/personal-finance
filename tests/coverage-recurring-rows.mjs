@@ -200,3 +200,14 @@ test('an overdue row due yesterday says Yesterday, never "1 days ago"', () => {
  assert.doesNotMatch(text(mount(OccurrenceRow, { ...props, item: item('overdue'), today: '2026-10-02' }).tree), /1 days ago/);
  assert.match(text(mount(OccurrenceRow, { ...props, item: item('overdue'), today: '2026-10-05' }).tree), /4 days ago/);
 });
+
+test('with a details view, tapping a row opens it and Edit moves into the ⋯ menu, a loan payment\'s too', () => {
+ const calls = [];
+ const props = { dated: false, today: '2026-10-05', busy: false, onEdit: record => calls.push('edit ' + record.id), onOpen: entry => calls.push('open ' + entry.key), onPay() {}, onSkip() {}, onArchive() {} };
+ const view = mount(OccurrenceRow, { ...props, item: item('overdue') });
+ assert.deepEqual(view.find(byType(RowMenu)).props.items.map(entry => entry.label), ['Edit', 'Skip this occurrence', 'Archive']);
+ view.find(byType('li')).props.onClick(tap);
+ view.find(byType(RowMenu)).props.items[0].onSelect();
+ assert.deepEqual(calls, ['open rent:2026-10-01', 'edit rent']);
+ assert.deepEqual(mount(OccurrenceRow, { ...props, item: item('due', { installment: true }) }).find(byType(RowMenu)).props.items.map(entry => entry.label), ['Edit']);
+});

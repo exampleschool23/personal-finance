@@ -6,6 +6,7 @@ import {formatDate,formatNumber} from './format';
 import type {Language} from './i18n';
 import {escapeHtml} from './telegram';
 import {messageKit} from './telegram-kit';
+import { unitPricedKinds } from './finance';
 export type ActionEvent=
  |{type:'record';created:boolean;kind:Kind;name:string;amount:number;currency:string;date:string|null;frequency:string;category_id?:string|null}
  |{type:'record_deleted';id:string}
@@ -26,7 +27,7 @@ export type NamedRecord={name:string;kind:string;currency:string};
 export type NamedGoal={name:string;currency:string};
 /** Names the caller must look up before the message can be written. `categories` maps a custom category id to its name. */
 export type ActionLookup={records:Record<string,NamedRecord>;goals:Record<string,NamedGoal>;deleted:Record<string,NamedRecord&{amount:number}>;categories?:Record<string,string>};
-const unitKinds=['Stock','Crypto'];
+const unitKinds=unitPricedKinds;
 export function actionMessage(event:ActionEvent,lookup:ActionLookup,language:Language):string{
  const kit=messageKit(language),{locale,t}=kit;
  // A record the lookup could not find has no currency; the amount still shows as a plain number.

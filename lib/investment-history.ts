@@ -1,4 +1,9 @@
-export const trackedKinds: readonly string[] = ['Cash','Stock','Crypto','Deposit','Treasury bill','Property','Business','Valuables','Money lent','Mortgage','Loan','Debt'];
+// Tests load this module directly, so it has no imports; tests/more-asset-kinds.mjs checks these lists equal lib/finance.ts.
+const interestKinds = ['Deposit','Treasury bill','Bond'], simpleInterestKinds = ['Treasury bill','Bond'];
+const unitPricedKinds = ['Stock','Crypto','Precious metals','Equity compensation'];
+const valuedKinds = ['Property','Business','Valuables','Vehicle','Retirement account'];
+export const trackedKinds: readonly string[] = ['Cash','Stock','Crypto','Precious metals','Equity compensation','Deposit','Treasury bill','Bond','Retirement account','Property','Business','Vehicle','Valuables','Money lent','Mortgage','Loan','Debt'];
+export const historyKindGroups = { interestKinds, simpleInterestKinds, unitPricedKinds, valuedKinds };
 export type HistoryEvent = {
  id:string; record_id:string; event_type:'baseline'|'valuation'|'contribution'|'withdrawal'|'income'|'expense'|'mortgage_payment';
  occurred_on:string; amount:number; balance:number|null; ownership_percentage:number; principal:number; interest:number; notes:string; created_at:string;
@@ -19,8 +24,8 @@ export function historyUpdateTypes(kind:string):HistoryUpdateType[] {
  if(kind==='Mortgage')return ['contribution'];
  if(isLendingKind(kind))return ['contribution','withdrawal'];
  if(kind==='Cash')return ['valuation'];
- if(['Deposit','Treasury bill','Stock','Crypto'].includes(kind))return ['valuation','income','expense'];
- if(['Property','Business','Valuables'].includes(kind))return ['valuation','contribution','withdrawal','income','expense'];
+ if([...interestKinds,...unitPricedKinds].includes(kind))return ['valuation','income','expense'];
+ if(valuedKinds.includes(kind))return ['valuation','contribution','withdrawal','income','expense'];
  return [];
 }
 export function historyEventLabel(kind:string,type:HistoryEvent['event_type']):string {
@@ -30,10 +35,10 @@ export function historyEventLabel(kind:string,type:HistoryEvent['event_type']):s
   if(type==='contribution')return kind==='Money lent'?'Lend more':kind==='Debt'?'Add to debt':'Additional borrowing';
   if(type==='withdrawal')return kind==='Money lent'?'Repayment received':'Repayment made';
  }
- if(type==='valuation'&&['Cash','Deposit','Treasury bill'].includes(kind))return 'Balance update';
- if(type==='income')return kind==='Deposit'||kind==='Treasury bill'||kind==='Money lent'?'Interest received':kind==='Stock'?'Dividends / income':kind==='Property'?'Rent income':historyLabels[type];
- if(type==='contribution')return kind==='Deposit'||kind==='Cash'?'Top-up':kind==='Stock'||kind==='Crypto'||kind==='Treasury bill'?'Buy':historyLabels[type];
- if(type==='withdrawal')return kind==='Treasury bill'?'Redeem':kind==='Deposit'||kind==='Cash'?'Withdraw':kind==='Stock'||kind==='Crypto'?'Sell / convert':historyLabels[type];
+ if(type==='valuation'&&['Cash',...interestKinds].includes(kind))return 'Balance update';
+ if(type==='income')return kind==='Bond'?'Coupon received':interestKinds.includes(kind)||kind==='Money lent'?'Interest received':kind==='Stock'||kind==='Equity compensation'?'Dividends / income':kind==='Property'?'Rent income':historyLabels[type];
+ if(type==='contribution')return kind==='Deposit'||kind==='Cash'?'Top-up':kind==='Retirement account'?'Contribution':unitPricedKinds.includes(kind)||simpleInterestKinds.includes(kind)?'Buy':historyLabels[type];
+ if(type==='withdrawal')return simpleInterestKinds.includes(kind)?'Redeem':kind==='Deposit'||kind==='Cash'?'Withdraw':unitPricedKinds.includes(kind)?'Sell / convert':historyLabels[type];
  return historyLabels[type];
 }
 export function historySeries(events:HistoryEvent[]) {

@@ -11,7 +11,7 @@ import { useLanguage } from '@/components/language-provider';
 import { formatMoney } from '@/lib/format';
 import { useExpensePlans } from '@/hooks/use-expense-plans';
 import { useCategoryIcons } from '@/hooks/use-category-icons';
-import { CategoryIconsContext } from '@/components/category-icons-context';
+import { CategoryHueContext, CategoryIconsContext } from '@/components/category-icons-context';
 import { expensePlanMonth, monthlyBudgetTotals } from '@/lib/expense-plans';
 import { useEarningSources } from '@/hooks/use-earning-sources';
 import { withAssetIncomePlans, legacyEarningSources, sourceSchedule } from '@/lib/earning-sources';
@@ -182,7 +182,7 @@ const WorkspaceContext = createContext<Workspace | null>(null);
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const workspace = useWorkspaceState();
     // Every category icon in the workspace shows the icon chosen for it in Settings.
-    return <WorkspaceContext.Provider value={workspace}><CategoryIconsContext.Provider value={workspace.categoryIcons.emojiOf}>{children}</CategoryIconsContext.Provider></WorkspaceContext.Provider>;
+    return <WorkspaceContext.Provider value={workspace}><CategoryIconsContext.Provider value={workspace.categoryIcons.emojiOf}><CategoryHueContext.Provider value={workspace.categoryIcons.hueOf}>{children}</CategoryHueContext.Provider></CategoryIconsContext.Provider></WorkspaceContext.Provider>;
 }
 
 export function useWorkspace() {

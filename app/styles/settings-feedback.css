@@ -42,7 +42,7 @@
 .category-icon-button:hover:not(:disabled){background:hsl(var(--category-hue,150) 40% 50% / .18)}
 .category-icon-button:focus-visible{outline:2px solid currentColor;outline-offset:1px}
 .category-icon-button:disabled{cursor:default}
-.category-settings .category-create-form>.category-icon-button{width:44px;height:44px;margin:0;border:1px solid var(--input);border-radius:var(--radius-control);background:var(--field);font-size:var(--type-title)}
+.category-settings .category-create-form>.category-icon-button,.category-edit-fields>.category-icon-button{width:44px;height:44px;margin:0;border:1px solid var(--input);border-radius:var(--radius-control);background:var(--field);font-size:var(--type-title)}
 .category-icon-picker{width:min(332px,calc(100vw - 32px));max-height:min(380px,60vh);overflow-y:auto;display:grid;gap:12px;padding:12px}
 .category-icon-picker h4{margin:0 0 6px;font-size:var(--type-caption);font-weight:500;color:var(--muted-foreground)}
 .category-icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:2px}
@@ -64,19 +64,18 @@
 .data-import-fields select{min-height:44px}
 @media(max-width:600px){.data-import-fields{grid-template-columns:1fr}.data-backup-actions{flex-direction:column}.data-backup-actions a{width:100%}}
 
-/* Compact category tags; remove buttons keep the same height as plain tags. */
+/* Compact category tags; each one is a button that opens its edit dialog, marked with a pencil. */
 .category-settings .category-badges{align-items:center;gap:8px;padding-top:0}
 .category-settings .category-badges .category-badge{position:relative;display:inline-flex;align-items:center;box-sizing:border-box;height:28px;padding:3px 9px;gap:5px;line-height:20px;vertical-align:middle}
-.category-settings .category-badges .category-remove{position:relative;display:inline-flex;flex-shrink:0;align-items:center;justify-content:center;width:20px;height:20px;min-width:20px;min-height:20px;padding:0;margin:0 -4px 0 0;border:0;border-radius:3px;background:transparent;color:var(--destructive)}
-.category-settings .category-remove:hover{opacity:.7}
-.category-settings .category-remove:focus-visible{outline:2px solid currentColor;outline-offset:2px}
-.category-settings .category-remove:disabled{opacity:.45;cursor:wait}
-@keyframes category-wiggle{from{transform:rotate(-1.2deg)}to{transform:rotate(1.2deg)}}
-@media(prefers-reduced-motion:no-preference){
- .category-settings .category-badge:has(.category-remove:not(:disabled)){animation:category-wiggle .3s ease-in-out infinite alternate;transform-origin:50% 60%}
- .category-settings .category-badges li:nth-child(even) .category-badge:has(.category-remove){animation-delay:-.15s}
- .category-settings .category-badge:has(.category-remove):is(:hover,:focus-within){animation-play-state:paused}
-}
+.category-settings .category-edit-button{display:inline-flex;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.category-settings .category-edit-button:hover:not(:disabled) .category-badge{filter:brightness(.97)}
+.category-settings .category-edit-button:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.category-settings .category-edit-button:disabled{cursor:default}
+.category-settings .category-edit-icon{flex-shrink:0;opacity:.6}
+.category-edit-fields{display:flex;align-items:flex-end;gap:12px}
+.category-edit-fields>label{flex:1;min-width:0}
+.category-color-field [role=radiogroup] button{width:28px;height:28px}
+.category-edit-dialog .record-form-footer .category-edit-delete{order:-1;margin-inline-end:auto}
 
 .tracker-value-choice{display:grid;gap:8px}
 .tracker-value-choice [data-slot="toggle-group"]{display:flex;width:100%;padding:4px;gap:4px;border:1px solid var(--border);border-radius:12px;background:var(--muted)}

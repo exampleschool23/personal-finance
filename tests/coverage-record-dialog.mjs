@@ -83,14 +83,14 @@ test('income records are handed to the income form, which can send the person to
  assert.equal(d.title(),'Add income');
  assert.equal(d.description(),'Enter an amount and choose how often it repeats.');
  const form=()=>d.r.find(byType('IncomeRecordForm'));
- const clean=event();d.r.fire(form(),'onNavigateToSources',clean);
+ const clean=event();d.r.fire(form(),'onLeave',clean,'/income-expenses#income-sources');
  assert.equal(d.state.editing,null,'a clean form closes before the link navigates');
  assert.equal(clean.defaultPrevented,false);
  const sources=dialog(t,record('pay','Salary'),{editingCashFlow:true,earningSources:{sources:[]}});
  assert.equal(sources.description(),'Choose an income source and record the amount received.');
  // A changed form asks first, then closes and navigates.
  sources.r.fire(sources.r.find(byType('IncomeRecordForm')),'setEditing',{...record('pay','Salary'),amount:250});
- const dirty=event();sources.r.fire(sources.r.find(byType('IncomeRecordForm')),'onNavigateToSources',dirty);
+ const dirty=event();sources.r.fire(sources.r.find(byType('IncomeRecordForm')),'onLeave',dirty,'/income-expenses#income-sources');
  assert.equal(dirty.defaultPrevented,true);
  assert.equal(sources.confirm().props.open,true);
  sources.r.fire(sources.confirm(),'onConfirm');
@@ -368,6 +368,10 @@ test('an expense opens on the expense tab with its category, amount, date and ac
  d.r.fire(category,'onChange',{target:{value:'c1'}});
  assert.equal(d.state.editing.custom_category_id,'c1');assert.equal(d.state.editing.kind,'Other expense');
  assert.equal(d.r.find(byType('Link')).props.href,'/settings#categories');
+ // Following Manage categories closes an untouched expense rather than leaving it over Settings.
+ const untouched=dialog(t,expense(),{editingCashFlow:true,planning:planning({categories,records:[record('acct','Cash')]})});
+ const follow=event();untouched.r.fire(untouched.r.find(byType('Link')),'onNavigate',follow);
+ assert.equal(untouched.state.editing,null);assert.equal(follow.defaultPrevented,false);
  const amount=d.r.find(byType('AmountCurrencyFields'));
  assert.equal(amount.props.currencyLocked,false);assert.equal(amount.props.savedCurrency,undefined);
  d.r.fire(amount,'onAmountChange',12.75);assert.equal(d.state.editing.amount,12.75);

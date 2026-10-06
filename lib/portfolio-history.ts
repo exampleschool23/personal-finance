@@ -1,5 +1,5 @@
 import { shiftDay } from './calendar-days';
-import { assets, liabilities, type Entry } from './finance';
+import { assets, liabilities, valuedKinds, type Entry } from './finance';
 import type { HistoryEvent } from './investment-history';
 import { convertAmount } from './market';
 
@@ -20,7 +20,7 @@ export function portfolioHistory(records: Entry[], events: HistoryEvent[], curre
  for (const event of sorted) if (!firstBalances.has(event.record_id)) firstBalances.set(event.record_id, event);
  for (const record of included) {
   const first = firstBalances.get(record.id);
-  const openedOn = record.opened_on || (['Business', 'Property', 'Valuables'].includes(record.kind) ? record.date : undefined);
+  const openedOn = record.opened_on || (valuedKinds.includes(record.kind) ? record.date : undefined);
   if (first?.event_type === 'baseline' && Number(first.balance) === 0 && openedOn === first.occurred_on
    && !events.some(event => event.record_id === record.id && event.occurred_on < openedOn)) balances.set(record.id, 0);
  }

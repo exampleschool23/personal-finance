@@ -1,4 +1,4 @@
-import { expenses, income, liabilities, type Entry } from './finance';
+import { assets, expenses, income, liabilities, unitPricedKinds, type Entry } from './finance';
 
 /** Legal structures whose profit flows through personal taxes. */
 export const businessStructures = ['sole_proprietorship', 'llc', 'partnership', 'rental_property', 'other'] as const;
@@ -11,6 +11,8 @@ export const businessStructureLabels: Record<BusinessStructure, string> = {
 const paletteHues = { teal: 175, blue: 215, indigo: 240, violet: 270, pink: 330, red: 0, orange: 25, amber: 42, green: 140, slate: 215 } as const;
 export type PaletteColor = keyof typeof paletteHues;
 export const paletteColors = Object.keys(paletteHues) as PaletteColor[];
+/** The hue of a palette colour, for surfaces tinted through `--category-hue`. */
+export const paletteHue = (color: PaletteColor) => paletteHues[color];
 export const paletteLabels: Record<PaletteColor, string> = { teal: 'Teal', blue: 'Blue', indigo: 'Indigo', violet: 'Violet', pink: 'Pink', red: 'Red', orange: 'Orange', amber: 'Amber', green: 'Green', slate: 'Grey' };
 const paletteKey = (color: string | null | undefined) => (color && Object.hasOwn(paletteHues, color) ? color : 'slate') as PaletteColor;
 export const paletteColor = (color: string | null | undefined) => {
@@ -29,13 +31,13 @@ export const HOUSEHOLD = 'household';
 export const businessesIn = (records: readonly Entry[]) => records.filter(record => record.kind === 'Business');
 
 /** Records that can belong to a business as its accounts and assets: everything held or owed except the Business record itself. */
-const businessAccountKinds: readonly string[] = ['Cash', 'Stock', 'Crypto', 'Deposit', 'Treasury bill', 'Property', 'Valuables', 'Money lent', ...liabilities];
+const businessAccountKinds: readonly string[] = assets.filter(kind => kind !== 'Business').concat(liabilities);
 export const isBusinessAccount = (record: Pick<Entry, 'kind'>) => businessAccountKinds.includes(record.kind);
 /** Those records by type, as lists that assign accounts to businesses show them. */
 export const businessAccountGroups: ReadonlyArray<readonly [label: string, matches: (record: Pick<Entry, 'kind'>) => boolean]> = [
- ['Cash and deposits', record => ['Cash', 'Deposit', 'Treasury bill'].includes(record.kind)],
- ['Holdings', record => ['Stock', 'Crypto'].includes(record.kind)],
- ['Property and other assets', record => ['Property', 'Valuables', 'Money lent'].includes(record.kind)],
+ ['Cash and deposits', record => ['Cash', 'Deposit', 'Treasury bill', 'Bond'].includes(record.kind)],
+ ['Holdings', record => [...unitPricedKinds, 'Retirement account'].includes(record.kind)],
+ ['Property and other assets', record => ['Property', 'Vehicle', 'Valuables', 'Money lent'].includes(record.kind)],
  ['Loans and debts', record => liabilities.includes(record.kind)],
 ];
 

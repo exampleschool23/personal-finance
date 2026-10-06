@@ -21,6 +21,7 @@ import { AccountOperation, type Operation } from './account-operation';
 import { ArchivedFold, OccurrenceRow, PlanRows, useDueLabel } from './recurring-rows';
 import { useScheduleDeletion } from './delete-schedule-dialog';
 import { useColumnsFit } from '@/hooks/use-columns-fit';
+import { useRecurringDetails } from './recurring-details';
 
 /** The Recurring page's views, switched from tabs beside its title: the month as a list or a calendar, subscriptions and reminders. */
 export type RecurringView = 'list' | 'calendar' | 'subscriptions' | 'reminders';
@@ -68,13 +69,15 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
  const payDebt = (record: RecurringItem['record']) => setOperation({ action: record.kind === 'Mortgage' ? 'mortgage' : 'repayment', target_id: record.id, date: today, amount: 0 });
  // A recorded occurrence takes another payment, starting at what is still to come.
  const pay = (item: RecurringItem) => item.installment ? payDebt(item.record) : setOperation({ action: 'occurrence', target_id: item.record.id, date: item.date, ...(item.status === 'paid' ? { extra: true, amount: Math.max(Math.ceil(item.amount - (item.recorded ?? item.amount)), 0) } : { amount: item.amount }) });
+ // Tapping a row shows its history and totals; Edit is in its ⋯ menu and in the dialog.
+ const details = useRecurringDetails(data, today, onEdit, pay);
  const archive = onArchive && ((target: ArchiveTarget, archived = true) => run(() => onArchive(target, archived)));
  const archived = archivedSchedules(data.records);
  const deletion = useScheduleDeletion(data, onDelete);
  // Rows stay on one line while their name keeps room beside status, amount and actions; two lines only when this month's content needs it.
  const rows = useColumnsFit<HTMLUListElement>('.recurring-row');
  const skip = (item: RecurringItem) => run(() => save('exception', { target_id: item.record.id, date: item.date, skip: true }));
- const row = (item: RecurringItem, dated = false) => <OccurrenceRow key={item.key} item={item} dated={dated} today={today} busy={busy} onEdit={onEdit} onPay={pay} onSkip={skip} onArchive={archive && (() => archive({ source: 'record', record: item.record }))} onDelete={deletion.open}/>;
+ const row = (item: RecurringItem, dated = false) => <OccurrenceRow key={item.key} item={item} dated={dated} today={today} busy={busy} onEdit={onEdit} onOpen={details.open} onPay={pay} onSkip={skip} onArchive={archive && (() => archive({ source: 'record', record: item.record }))} onDelete={deletion.open}/>;
  return <>
   <PageHeader title={t('Recurring')} tabs={<Segmented className="page-tabs" as="nav" label={t('Recurring view')} options={[{ value: 'list', label: t('List') }, { value: 'calendar', label: t('Calendar') }, { value: 'subscriptions', label: t('Subscriptions') }, { value: 'reminders', label: t('Reminders') }] as const} value={view} onChange={onView}/>} hint={<><p>{t('Every scheduled income and bill, month by month. Record a payment only after it happens; a reminder never moves money.')}</p><p>{t('Debt amounts show the outstanding balance; enter the actual principal and interest when paying.')}</p></>}>
    {scheduled && <div className="budget-month-nav">
@@ -119,6 +122,7 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
   {skipped.length > 0 && <details className="panel tools-panel"><summary>{t('Skipped occurrences')}<Count value={skipped.length}/></summary><ul className="tool-list">{skipped.map(o => <li key={o.id}><span>{data.records.find(r => r.id === o.record_id)?.name} · {formatDate(o.due_on, locale)}{o.notes && <> · {o.notes}</>}</span><Button size="sm" disabled={busy} variant="outline" onClick={() => run(() => save('exception', { target_id: o.record_id, date: o.due_on, skip: false }))}>{t('Restore occurrence')}</Button></li>)}</ul></details>}
   {archive && <ArchivedFold records={archived} plans={archivedPlans} busy={busy} onRestore={target => archive(target, false)}/>}
   </>}
+  {details.dialog}
   {deletion.dialog}
   {operation && <AccountOperation operation={operation} records={data.records} save={save} onClose={() => setOperation(null)}/>}
  </>;

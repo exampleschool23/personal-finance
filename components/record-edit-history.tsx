@@ -7,6 +7,7 @@ import {Button} from '@/components/ui/button';
 import {formatDateTime,formatDate,formatMoney,formatNumber} from '@/lib/format';
 import {recordChanges,recordChangeFields,type RecordEdit} from '@/lib/record-edit-history';
 import type {Entry} from '@/lib/finance';
+import { unitPricedKinds } from '@/lib/finance';
 const empty={items:[] as RecordEdit[],hasMore:false};
 export function RecordEditHistory({record}:{record:Entry}){
  const {t,locale}=useLanguage();const [open,setOpen]=useState(false),[page,setPage]=useState(1);
@@ -14,7 +15,7 @@ export function RecordEditHistory({record}:{record:Entry}){
  function display(entry:Entry|null,key:keyof typeof recordChangeFields){
   const value=entry?.[key];if(value===null||value===undefined||value==='')return '—';
   if(['date','lent_date','end_date'].includes(key))return formatDate(String(value),locale);
-  if(typeof value==='number')return ['amount','cost','estimated_monthly_income','estimated_monthly_payment'].includes(key)?formatMoney(value,entry!.currency,locale,['Stock','Crypto'].includes(entry!.kind)&&['amount','cost'].includes(key)):formatNumber(value,locale);
+  if(typeof value==='number')return ['amount','cost','estimated_monthly_income','estimated_monthly_payment'].includes(key)?formatMoney(value,entry!.currency,locale,unitPricedKinds.includes(entry!.kind)&&['amount','cost'].includes(key)):formatNumber(value,locale);
   return ['kind','frequency'].includes(key)?t(String(value)):String(value);
  }
  return <section><Button type="button" variant="ghost" aria-expanded={open} onClick={()=>setOpen(value=>!value)}>{t('Record history')}</Button>{open&&<>

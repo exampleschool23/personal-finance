@@ -22,7 +22,7 @@ import { historyCashDelta, historySeries, historyChartDate, historyEventLabel, h
 import { depositInterest, depositProjection, depositToday } from '@/lib/deposit-interest';
 import { AssetMovementDialog, type MovementDraft } from '@/components/planning/asset-movement-dialog';
 import type { AssetMovement } from '@/lib/asset-movements';
-import { interestCompounding, interestKinds, type Entry } from '@/lib/finance';
+import { interestCompounding, interestKinds, valuedKinds, type Entry } from '@/lib/finance';
 import { categoryColor } from '@/lib/category-colors';
 import { requestJson, type RequestError } from '@/lib/api-client';
 
@@ -53,7 +53,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
  useEffect(()=>{onDraftState?.(dirty,busy);},[dirty,busy,onDraftState]);
  const [movement,setMovement]=useState<MovementDraft|null>(null);
  // Mirrors delete_tracker_update: asset value/cash updates, and lending additions or repayments.
- const deletableUpdate=(type:string)=>['Business','Property','Valuables'].includes(record.kind)?['valuation','contribution','withdrawal'].includes(type):['Money lent','Loan','Debt'].includes(record.kind)&&['contribution','withdrawal'].includes(type);
+ const deletableUpdate=(type:string)=>valuedKinds.includes(record.kind)?['valuation','contribution','withdrawal'].includes(type):['Money lent','Loan','Debt'].includes(record.kind)&&['contribution','withdrawal'].includes(type);
  const mortgage=record.kind==='Mortgage';
  const deposit=interestKinds.includes(record.kind);
  const security=record.kind==='Stock'||record.kind==='Crypto';
@@ -71,7 +71,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
   return ()=>controller.abort();
  },[record.id,reload]);
  const stats=historySeries(events);
- const optionalValuation=['Business','Property','Valuables'].includes(record.kind)&&['contribution','withdrawal'].includes(draft.type);
+ const optionalValuation=valuedKinds.includes(record.kind)&&['contribution','withdrawal'].includes(draft.type);
  const hasBalance=!lending&&(draft.type==='valuation'||optionalValuation&&draft.balance!==null);
  const latestBalanceDate=events.filter(event=>event.balance!==null).reduce((latest,event)=>event.occurred_on>latest?event.occurred_on:latest,'');
  const currentBalance=stats.balance??Number(record.amount);
@@ -147,7 +147,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
   {(deposit||security)&&<div className="entry-actions"><Button variant="outline" onClick={()=>setMovement({kind:deposit?'transfer':'buy',target_id:record.id})}>{t(deposit?'Top-up':'Buy')}</Button><Button variant="outline" onClick={()=>setMovement({kind:deposit?'transfer':'sell',source_id:record.id})}>{t(deposit?'Withdraw':'Sell / convert')}</Button>{deposit&&<Button variant="outline" onClick={()=>setMovement({kind:'interest',source_id:record.id})}>{t('Record capitalized interest')}</Button>}</div>}
   {mortgage&&<Button type="button" variant="outline" disabled={busy} onClick={onPayment}>{t('Record payment')}</Button>}
   {paymentFields}
-  <div className="tracker-history"><h3>{t('History')}</h3>{(['Business','Property','Valuables'].includes(record.kind)||lending)&&<p className="muted">{t('Delete newer balance updates first. Starting snapshots and other transaction types are protected.')}</p>}{!events.length&&!loading&&<p>{t('No history yet.')}</p>}
+  <div className="tracker-history"><h3>{t('History')}</h3>{(valuedKinds.includes(record.kind)||lending)&&<p className="muted">{t('Delete newer balance updates first. Starting snapshots and other transaction types are protected.')}</p>}{!events.length&&!loading&&<p>{t('No history yet.')}</p>}
    <ul>{[...events].reverse().map(e=><li key={e.id}><div><strong>{t(eventLabel(e.event_type))}</strong><time>{formatDate(e.occurred_on,locale)}</time>{e.notes&&<p>{e.notes}</p>}{e.account_link&&<small>{t(Number(e.account_link.amount)<0?'Cash deducted from {account}: {amount}':'Cash added to {account}: {amount}',{account:accounts.find(account=>account.id===e.account_link?.account_id)?.name??t('Cash account'),amount:formatMoney(Math.abs(Number(e.account_link.amount)),e.account_link.account_currency??record.currency,locale)})}</small>}</div><div>{e.balance!==null&&<strong>{money(Number(e.balance)*Number(e.ownership_percentage)/100)}</strong>}{e.amount>0&&<span>{t(lending&&['contribution','withdrawal'].includes(e.event_type)?'Principal amount':'Cash amount (your share)')}: {money(Number(e.amount))}</span>}{e.event_type==='mortgage_payment'&&<small>{t('Principal repayment')}: {money(Number(e.principal))} · {t('Interest paid')}: {money(Number(e.interest))}</small>}{deletableUpdate(e.event_type)&&<Button type="button" variant="outline" disabled={busy||loading||submitted||dirty} onClick={()=>setDeleting(e)}>{t('Delete update')}</Button>}</div></li>)}</ul>
   </div>
  </DialogContent></Dialog>{guard.confirmation}<ConfirmDialog open={!!deleting} onClose={()=>setDeleting(null)} busy={busy} title={t('Delete this tracker update?')} description={<>{t('This removes the update. If it changed the asset value, the previous value and ownership are restored. Any linked cash movement is reversed using its original amount. This cannot be undone from the app.')}{deleting&&<> {t(eventLabel(deleting.event_type))} · {formatDate(deleting.occurred_on,locale)}{deleting.amount>0&&<> · {money(Number(deleting.amount))}</>}</>}</>} confirmLabel={t(busy?'Deleting…':'Delete update')} onConfirm={()=>void deleteUpdate()}/></>;

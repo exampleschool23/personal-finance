@@ -1,6 +1,6 @@
 import type { Entry } from '@/lib/finance';
 
-type AssetSymbol = 'home' | 'apartment' | 'cafe' | 'gaming' | 'solar' | 'livestock' | 'business' | 'cash' | 'stock' | 'crypto' | 'deposit' | 'watch' | 'gem';
+type AssetSymbol = 'home' | 'apartment' | 'cafe' | 'gaming' | 'solar' | 'livestock' | 'business' | 'cash' | 'stock' | 'crypto' | 'deposit' | 'watch' | 'gem' | 'bar' | 'car' | 'sunrise';
 function assetSymbol(record: Pick<Entry, 'kind' | 'name'>): AssetSymbol {
  const name = record.name.toLowerCase();
  if (record.kind === 'Property') return /rent|apartment|аренд|квартир|ijara|kvartira|ижара/u.test(name) ? 'apartment' : 'home';
@@ -12,7 +12,8 @@ function assetSymbol(record: Pick<Entry, 'kind' | 'name'>): AssetSymbol {
   return 'business';
  }
  if (record.kind === 'Valuables') return /watch|rolex|omega|час|soat|соат/u.test(name) ? 'watch' : 'gem';
- return ({ Cash: 'cash', Stock: 'stock', Crypto: 'crypto', Deposit: 'deposit', 'Treasury bill': 'deposit' } as const)[record.kind as 'Cash' | 'Stock' | 'Crypto' | 'Deposit' | 'Treasury bill'] ?? 'business';
+ const symbols: Record<string, AssetSymbol> = { Cash: 'cash', Stock: 'stock', 'Equity compensation': 'stock', Crypto: 'crypto', Deposit: 'deposit', 'Treasury bill': 'deposit', Bond: 'deposit', 'Precious metals': 'bar', Vehicle: 'car', 'Retirement account': 'sunrise' };
+ return symbols[record.kind] ?? 'business';
 }
 
 // A small, consistent duotone set. Names refine business/property symbols only;
@@ -33,6 +34,9 @@ export function AssetIcon({ record }: { record: Pick<Entry, 'kind' | 'name'> }) 
    {symbol === 'crypto' && <><circle cx="16" cy="16" r="12" fill="currentColor" fillOpacity=".12"/><path d="M12 9h6a3.5 3.5 0 0 1 0 7h-6m0 0h7a3.5 3.5 0 0 1 0 7h-7V9M14 6v3m4-3v3m-4 14v3m4-3v3"/></>}
    {symbol === 'watch' && <><circle cx="16" cy="16" r="8" fill="currentColor" fillOpacity=".12"/><circle cx="16" cy="16" r="8"/><path d="M12 8.9 13 3h6l1 5.9M12 23.1 13 29h6l1-5.9M16 12v4l2.5 2M24 16h1.5"/></>}
    {symbol === 'gem' && <><path d="M9 5h14l5 7-12 15L4 12Z" fill="currentColor" fillOpacity=".12"/><path d="M4 12h24M13 5l-3 7 6 15 6-15-3-7"/></>}
+   {symbol === 'bar' && <><path d="M9 11h14l4 8H5Z" fill="currentColor" fillOpacity=".12" stroke="none"/><path d="M9 11h14l4 8H5ZM5 19v5h22v-5M12 15h8"/></>}
+   {symbol === 'car' && <><path d="M5 17l3-7h16l3 7v6H5Z" fill="currentColor" fillOpacity=".12" stroke="none"/><path d="M5 23v-6l3-7h16l3 7v6M5 17h22M8 23v3m16-3v3M9 20h2m10 0h2"/></>}
+   {symbol === 'sunrise' && <><path d="M8 22a8 8 0 0 1 16 0Z" fill="currentColor" fillOpacity=".12" stroke="none"/><path d="M8 22a8 8 0 0 1 16 0M3 22h26M6 26h20M16 6v3M7 11l2 2m16-2-2 2"/></>}
    {symbol === 'deposit' && <><path d="m4 11 12-7 12 7v3H4Z" fill="currentColor" fillOpacity=".12"/><path d="M7 18v7m6-7v7m6-7v7m6-7v7M4 28h24M16 9h.01"/></>}
   </g>
  </svg>;

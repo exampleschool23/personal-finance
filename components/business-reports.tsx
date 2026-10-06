@@ -16,7 +16,7 @@ import { paletteColor } from '@/lib/business';
 import { measureLabel, sankeyLabelMargins } from '@/lib/sankey-labels';
 import { ledgerExportRows, summarizeLines, type BusinessSankey, type Drill, type Interval, type LedgerLine, type PnlLine, type ProfitAndLoss } from '@/lib/business-report';
 import type { Share } from '@/lib/cash-flow-report';
-import { categoryColor } from '@/lib/category-colors';
+import { categoryHue, hueColor } from '@/lib/category-colors';
 import { exportCSV } from '@/lib/csv';
 import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatSignedMoney, formatYear } from '@/lib/format';
 import { RollingText } from '@/components/presentation-foundation/rolling-text';
@@ -157,11 +157,11 @@ export function BreakdownDonut({ items, label, colorOf, currency, onSelect }: { 
  </div>;
 }
 
-/** The colour of a breakdown key: a business's own colour, a category's stable colour, otherwise the ink colour. */
-export function attributeColor(attribute: 'category' | 'group' | 'merchant' | 'business', key: string, names: ReportNames) {
+/** The colour of a breakdown key: a business's own colour, a category's colour (the one chosen for it, through `hueOf`), otherwise the ink colour. */
+export function attributeColor(attribute: 'category' | 'group' | 'merchant' | 'business', key: string, names: ReportNames, hueOf: (kind: string) => number = categoryHue) {
  if (attribute === 'business') return paletteColor(names.businessRecord(key === 'household' ? null : key)?.business_color ?? (key === 'household' ? 'slate' : null));
- if (attribute === 'category') return categoryColor(names.icon(key));
- if (attribute === 'group') return categoryColor(key);
+ if (attribute === 'category') return hueColor(hueOf(names.icon(key)));
+ if (attribute === 'group') return hueColor(hueOf(key));
  return 'var(--foreground)';
 }
 

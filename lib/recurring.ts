@@ -19,7 +19,7 @@ export function carriedOverdue(records: Entry[], occurrences: Occurrence[], mont
 }
 
 /** The occurrences from `from` (inclusive; empty for each schedule's start) to `to`. */
-function occurrencesBetween(records: Entry[], occurrences: Occurrence[], from: string, to: string, today: string, debtPayments?: DebtPayment[]): RecurringItem[] {
+export function occurrencesBetween(records: Entry[], occurrences: Occurrence[], from: string, to: string, today: string, debtPayments?: DebtPayment[]): RecurringItem[] {
  const settled = settledOccurrences(records, occurrences), paid = debtPayments && paidInstallmentMonths(debtPayments);
  const status = new Map(occurrences.map(item => [item.record_id + ':' + item.due_on, item.status]));
  const assets = scheduleAssets(records);

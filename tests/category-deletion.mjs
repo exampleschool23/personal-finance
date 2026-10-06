@@ -26,7 +26,7 @@ function harness(file,name){
  const loaded=loadTS(file,{
   react:{...React,useState(initial){const i=cursor++;if(!(i in values))values[i]=typeof initial==='function'?initial():initial;return [values[i],value=>{values[i]=typeof value==='function'?value(values[i]):value;}];},useEffect(effect){effects.push(effect);},useRef(initial){const i=refCursor++;return refs[i]??(refs[i]={current:initial});}},
   '@/components/language-provider':{useLanguage:()=>({t:(key,params={})=>key.replace(/\{(\w+)\}/g,(_,name)=>params[name]??name),locale:'en-US'})},
-  '@/components/discard-changes':{useUnsavedNavigation:()=>null},
+  '@/components/discard-changes':{useUnsavedNavigation:()=>null,useDiscardChanges:(dirty,onClose)=>({close:onClose,request:action=>action(),confirmation:null})},
  });
  return {render:props=>{cursor=0;refCursor=0;return loaded[name](props);},effects};
 }
@@ -48,35 +48,64 @@ test('delete dialog requires a loaded preview and explicit same-type replacement
   globalThis.fetch=async()=>Response.json({ok:true});find(tree,node=>node.props?.variant==='destructive').props.onClick();await new Promise(resolve=>setImmediate(resolve));assert.equal(closed,1);assert.equal(deleted,1);cleanup();
  }finally{globalThis.fetch=original;}
 });
-test('added category badges expose named delete buttons; text fields stay editable during loading',()=>{
+test('category pills are named edit buttons, disabled while loading; text fields stay editable',()=>{
  const h=harness('components/transaction-tools-panel.tsx','TransactionToolsPanel');const category={id:id(1),name:'Leisure',direction:'expense'};
  const props={categories:[category],saveCategory:async()=>{},icons:{icons:{},disabled:false,choose:async()=>{},emojiOf:kind=>kind==='food'?'🍕':'🏷️'},loading:true,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true};
  const panel=h.render(props);const group=find(panel,node=>node.type?.name==='CategoryGroup'&&node.props.direction==='expense');
  // The group uses hooks from the same mocked React module.
  const tree=group.type(group.props);
  assert.equal(find(tree,node=>node.type?.name==='Input').props.disabled,false);
- const remove=find(tree,node=>node.props?.className==='category-remove');assert.equal(remove.props['aria-label'],'Delete Leisure');assert.equal(remove.props.disabled,true);
+ const edit=find(tree,node=>node.props?.className==='category-edit-button'&&node.props['aria-label']==='Edit Leisure');assert.equal(edit.props.disabled,true);
+ assert.ok(find(edit,node=>node.props?.className==='category-edit-icon'),'a pencil shows the pill can be edited');
 });
-test('every category pill opens its icon picker, and a new category is saved with the icon chosen beside its name',async()=>{
+test('tapping a category pill edits its name and icon together; built-in names stay fixed and delete moves into the dialog',async()=>{
  const h=harness('components/transaction-tools-panel.tsx','TransactionToolsPanel');const category={id:id(1),name:'Leisure',direction:'expense'};
  const calls=[];
- const icons={icons:{[id(1)]:'🎬'},disabled:false,choose:async(key,icon)=>{calls.push(['icon',key,icon]);},emojiOf:kind=>kind==='Leisure'?'🎬':'🏷️'};
- const props={categories:[category],saveCategory:async(name,direction)=>{calls.push(['save',name,direction]);return id(5);},icons,loading:false,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true};
- const group=()=>{const panel=h.render(props);const node=find(panel,item=>item.type?.name==='CategoryGroup'&&item.props.direction==='expense');return node.type(node.props);};
+ const icons={icons:{[id(1)]:'🎬'},colors:{[id(1)]:'violet'},disabled:false,choose:async(key,icon)=>{calls.push(['icon',key,icon]);},update:async(key,look)=>{calls.push(['look',key,look]);},emojiOf:kind=>kind==='Leisure'?'🎬':'🏷️'};
+ const props={categories:[category],saveCategory:async(name,direction,existing)=>{calls.push(['save',name,direction,existing]);return existing??id(5);},icons,loading:false,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true};
+ let panel;const group=()=>{panel=h.render(props);const node=find(panel,item=>item.type?.name==='CategoryGroup'&&item.props.direction==='expense');return node.type(node.props);};
  let tree=group();
- const badges=[];(function walk(node){if(!node||typeof node!=='object')return;if(node.type?.name==='CategoryBadge')badges.push(node);for(const child of React.Children.toArray(node.props?.children))walk(child);})(tree);
- const pickers=badges.map(badge=>badge.props.icon.props);
- assert.equal(pickers.length,5,'built-in and added categories alike');
- const leisure=pickers.find(picker=>picker.label==='Change icon for Leisure');
- assert.deepEqual([leisure.icon,leisure.chosen],['🎬',true]);
- assert.equal(pickers.find(picker=>picker.label==='Change icon for Charity').chosen,false);
- leisure.onChoose('🎨');await new Promise(resolve=>setImmediate(resolve));
- assert.deepEqual(calls.at(-1),['icon',id(1),'🎨']);
+ const pills=[];(function walk(node){if(!node||typeof node!=='object')return;if(node.props?.className==='category-edit-button')pills.push(node);for(const child of React.Children.toArray(node.props?.children))walk(child);})(tree);
+ assert.equal(pills.length,5,'built-in and added categories alike');
+ const leisure=pills.find(pill=>pill.props['aria-label']==='Edit Leisure');
+ assert.equal(find(leisure,node=>node.type?.name==='CategoryBadge').props.icon.props.children,'🎬');
+ leisure.props.onClick();tree=group();
+ let dialog=find(tree,node=>node.type?.name==='EditCategoryDialog');
+ assert.deepEqual([dialog.props.item.label,dialog.props.icon,dialog.props.chosen,dialog.props.color],['Leisure','🎬',true,'violet']);
+ assert.equal(typeof dialog.props.onDelete,'function');
+ await dialog.props.onSave({name:'Hobbies',icon:'🎨',color:'teal'});
+ assert.deepEqual(calls.slice(-2),[['save','Hobbies','expense',id(1)],['look',id(1),{icon:'🎨',color:'teal'}]],'icon and colour are one save');
+ await dialog.props.onSave({color:null});assert.deepEqual(calls.at(-1),['look',id(1),{color:null}],'a colour-only change does not rename');
+ // A built-in category edits only its icon and cannot be deleted.
+ pills.find(pill=>pill.props['aria-label']==='Edit Charity').props.onClick();tree=group();
+ dialog=find(tree,node=>node.type?.name==='EditCategoryDialog');
+ assert.equal(dialog.props.item.category,undefined);assert.equal(dialog.props.onDelete,undefined);assert.equal(dialog.props.color,null);
  // A new category: the name, then its icon.
  find(tree,node=>node.type?.name==='Input').props.onChange({target:{value:'Travel'}});tree=group();
  const start=find(tree,node=>node.props?.label==='Choose an icon');assert.deepEqual([start.props.icon,start.props.chosen],['🏷️',false]);
  start.props.onChoose('✈️');tree=group();
  assert.equal(find(tree,node=>node.props?.label==='Choose an icon').props.icon,'✈️');
  await find(tree,node=>node.type==='form').props.onSubmit({preventDefault(){}});
- assert.deepEqual(calls.slice(-2),[['save','Travel','expense'],['icon',id(5),'✈️']]);
+ assert.deepEqual(calls.slice(-2),[['save','Travel','expense',undefined],['icon',id(5),'✈️']]);
+});
+test('the category edit dialog saves only what changed (name, icon and colour), refuses a taken name and offers delete for added categories',async()=>{
+ const h=harness('components/edit-category-dialog.tsx','EditCategoryDialog');const saved=[];let closed=0,deleted=0;
+ const props={item:{id:id(1),label:'Leisure',direction:'expense',category:{id:id(1),name:'Leisure',direction:'expense'}},icon:'🎬',chosen:true,color:null,defaultHue:290,iconsDisabled:false,categories:[{id:id(1),name:'Leisure',direction:'expense'},{id:id(2),name:'Travel',direction:'expense'}],builtInNames:['Charity'],onSave:async change=>{saved.push(change);},onDelete:()=>{deleted++;},onClose:()=>{closed++;}};
+ let tree=h.render(props);
+ const save=()=>find(tree,node=>node.type?.name==='Button'&&!node.props.type);
+ assert.equal(save().props.disabled,true,'nothing changed yet');
+ find(tree,node=>node.type?.name==='Input').props.onChange({target:{value:'travel'}});tree=h.render(props);
+ assert.equal(save().props.disabled,true,'a name in use is refused');assert.ok(find(tree,node=>node.props?.role==='alert'));
+ find(tree,node=>node.type?.name==='Input').props.onChange({target:{value:' Hobbies '}});tree=h.render(props);
+ find(tree,node=>node.type?.name==='CategoryIconPicker').props.onChoose('🎨');tree=h.render(props);
+ assert.equal(find(tree,node=>node.type?.name==='CategoryIconPicker').props.icon,'🎨');
+ const swatch=label=>find(tree,node=>node.props?.role==='radio'&&node.props['aria-label']===label);
+ assert.equal(swatch('Automatic').props['aria-checked'],true,'no colour chosen yet');assert.equal(swatch('Grey'),undefined);
+ swatch('Green').props.onClick();tree=h.render(props);assert.equal(swatch('Green').props['aria-checked'],true);
+ await find(tree,node=>node.type==='form').props.onSubmit({preventDefault(){}});
+ assert.deepEqual(saved,[{name:'Hobbies',icon:'🎨',color:'green'}]);assert.equal(closed,1);
+ find(tree,node=>node.props?.className==='category-edit-delete').props.onClick();assert.equal(deleted,1);
+ const builtIn=harness('components/edit-category-dialog.tsx','EditCategoryDialog').render({...props,item:{id:'Charity',label:'Charity',direction:'expense'},onDelete:undefined});
+ assert.equal(find(builtIn,node=>node.type?.name==='Input').props.disabled,true,'built-in names are translated and stay fixed');
+ assert.equal(find(builtIn,node=>node.props?.className==='category-edit-delete'),undefined);
 });

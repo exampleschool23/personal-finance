@@ -36,7 +36,7 @@ function ScheduledPaymentSummary({date,label}:{date:string;label:string}){
  </div>;
 }
 
-export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,planning,error,demo,earningSources,onNavigateToSources}:RecordDialogProps & {onNavigateToSources?:(event:{preventDefault:()=>void})=>void}){
+export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,planning,error,demo,earningSources,onLeave}:RecordDialogProps){
  const {t,locale}=useLanguage();
  const original=rows.find(row=>row.id===editing?.id);
  const [salaryPlan,setSalaryPlan]=useState(()=>editing?.kind==='Salary'&&editing.frequency!=='Once');
@@ -73,11 +73,11 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
    else if(id==='saved'&&original)update({custom_category_id:null,kind:original.kind,name:original.name,business_id:original.business_id,income_source_id:original.income_source_id,income_due_on:original.income_due_on,earning_source_id:null,earning_due_on:null,payment_type:'regular'});
    else setEditing({...changeIncomeKind(editing,'Other income'),custom_category_id:null,earning_source_id:null,earning_due_on:null,payment_type:'regular'});
   }}/>
-  <Button asChild variant="outline" className="mt-3 min-h-11 w-full" disabled={busy}><Link href="/income-expenses#income-sources" aria-disabled={busy} onNavigate={event=>{if(busy){event.preventDefault();return;}if(onNavigateToSources)onNavigateToSources(event);else setEditing(null);}}><Settings2 aria-hidden="true"/>{t('Manage income sources')}<ArrowRight aria-hidden="true"/></Link></Button>
+  <Button asChild variant="outline" className="mt-3 min-h-11 w-full" disabled={busy}><Link href="/income-expenses#income-sources" aria-disabled={busy} onNavigate={event=>{if(busy){event.preventDefault();return;}if(onLeave)onLeave(event,'/income-expenses#income-sources');else setEditing(null);}}><Settings2 aria-hidden="true"/>{t('Manage income sources')}<ArrowRight aria-hidden="true"/></Link></Button>
    {earningSources.loading&&<p className="muted" role="status">{t('Loading income sources…')}</p>}
    {earningSources.error&&<InlineError as="div" message={t(earningSources.error)} onRetry={earningSources.retry}/>}
   </div>}
-  <Link className="panel-link" href="/settings#categories">{t('Manage categories in Settings')}</Link>
+  <Link className="panel-link" href="/settings#categories" onNavigate={event=>{if(busy){event.preventDefault();return;}if(onLeave)onLeave(event,'/settings#categories');else setEditing(null);}}>{t('Manage categories in Settings')}</Link>
   {reusable&&<label>{t('Payment type')}<NativeSelect value={editing.payment_type??'regular'} disabled={busy} onChange={event=>update(selectEarningSource(editing,reusable,event.target.value==='bonus'))}><option value="regular">{t('Regular income')}</option><option value="bonus">{t('Bonus')}</option></NativeSelect></label>}
   {reusable&&editing.payment_type!=='bonus'&&reusable.mode==='fixed'&&<ScheduledPaymentSummary label={t('Scheduled payment date')} date={editing.earning_due_on??''}/>}
   {salaryPlan&&<p className="muted">{t('Set up the recurring salary plan you will select when recording payments.')}</p>}

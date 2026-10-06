@@ -24,9 +24,9 @@ export function AccountOwnersDialog({ records, accounts, market, household, owne
  // Holdings and cash inside an investment account follow it.
  const of = (kinds: readonly string[]) => records.filter(record => !record.holding_account_id && kinds.includes(record.kind)).map(recordRow);
  const groups: Array<[label: string, rows: Row[]]> = [
-  ['Cash and deposits', of(['Cash', 'Deposit', 'Treasury bill'])],
-  ['Investments', [...accounts.map(accountRow), ...of(['Stock', 'Crypto'])]],
-  ['Property and other assets', of(['Property', 'Business', 'Valuables', 'Money lent'])],
+  ['Cash and deposits', of(['Cash', 'Deposit', 'Treasury bill', 'Bond'])],
+  ['Investments', [...accounts.map(accountRow), ...of(['Stock', 'Crypto', 'Precious metals', 'Equity compensation', 'Retirement account'])]],
+  ['Property and other assets', of(['Property', 'Business', 'Vehicle', 'Valuables', 'Money lent'])],
   ['Loans and debts', of(liabilities)],
  ];
  async function change(row: Row, owner: string) {

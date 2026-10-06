@@ -174,3 +174,34 @@ summary.tax-line-heading>svg{flex-shrink:0;color:var(--muted-foreground);transit
 
 /* Reduced motion for transitions defined across the stylesheets (MOT-008). Last in the cascade, so it wins over each rule it switches off. */
 @media(prefers-reduced-motion:reduce){.sankey-link,.switch,.switch-thumb,.goal-method summary>svg:last-child,.goal-row>.drag-handle,.account-sortable-row>.drag-handle,.pos-day,.account-type-options>button,.goal-target-progress::-webkit-progress-value{transition:none}}
+
+/* A scheduled income or bill at a glance (Recurring: tap a row). */
+.recurring-details{gap:20px}
+.recurring-details-head{display:flex;align-items:center;gap:12px;padding-inline-end:24px}
+.recurring-details-head>div{display:grid;gap:2px;min-width:0}
+.recurring-details-head [data-slot=dialog-description]{font-size:var(--type-small)}
+.recurring-details .stat-tiles{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px}
+.recurring-details .stat-tile{padding:14px;box-shadow:none}
+.recurring-details .stat-tile>strong{font-size:var(--type-title)}
+.recurring-details-chart,.recurring-details-history{border:1px solid var(--hairline);border-radius:var(--radius-card);padding:16px}
+.recurring-details-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.recurring-details :is(.recurring-details-chart,.recurring-details-history) h3{font-size:var(--type-compact);font-weight:600}
+.recurring-details-chart .portfolio-chart{margin:12px 0 0;font-size:var(--type-caption)}
+.recurring-details-chart .comparison-legend{margin-top:8px}
+.recurring-details-history ul{display:grid;margin-top:8px}
+.recurring-details-history li{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 0;font-size:var(--type-small)}
+.recurring-details-history li+li{border-top:1px solid var(--hairline)}
+.recurring-details-history li>span{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}
+.recurring-details-history li>strong{font-weight:500;text-align:end}
+.recurring-details .recurring-details-key{background:transparent;border:1px dashed var(--muted-foreground);border-radius:2px}
+.recurring-details-history li>strong small{display:block;color:var(--muted-foreground);font-weight:400;font-size:var(--type-caption)}
+@media (max-width:560px){
+ .recurring-details .stat-tiles{grid-template-columns:minmax(0,1fr);gap:0;border:1px solid var(--hairline);border-radius:var(--radius-card)}
+ .recurring-details .stat-tile{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 12px;border:0;border-radius:0;background:none}
+ .recurring-details .stat-tile+.stat-tile{border-top:1px solid var(--hairline)}
+ .recurring-details .stat-tile>strong{font-size:var(--type-body);text-align:end}
+ .recurring-details .stat-tile>p{grid-column:1/-1;margin:0;text-align:end}
+ .recurring-details-bar .segmented{width:100%}
+ .recurring-details-bar .segmented>button{flex:1;min-width:0;padding-inline:6px}
+ .recurring-details-chart,.recurring-details-history{padding:12px}
+}

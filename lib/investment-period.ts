@@ -22,7 +22,7 @@ export function investmentPeriodTotals(input:InvestmentPortfolioInput&{movements
  for(const item of activity.items){
   if(item.payout||!inPeriod(item.date))continue;
   const kind=records.get(item.recordId)?.kind??'';
-  context={name:item.name,date:item.date,category:kind==='Property'?'Rental improvements':kind==='Valuables'?'Valuables purchase':kind==='Business'?'Business investment':kind};
+  context={name:item.name,date:item.date,category:kind==='Property'?'Rental improvements':kind==='Valuables'?'Valuables purchase':kind==='Vehicle'?'Vehicle purchase':kind==='Retirement account'?'Retirement contribution':kind==='Business'?'Business investment':kind};
   // Money moved from another investment is the same capital, not a new investment.
   add('invested',item.amount-item.reused,item.currency);
  }

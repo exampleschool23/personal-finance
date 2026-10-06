@@ -1,6 +1,6 @@
 import { shiftDay, shiftMonth } from './calendar-days';
 import { defaultComparisonPreferences, isInvestmentRecord } from './comparison-profile';
-import { assets, expenses, income, interestKinds, liabilities, scheduleDates, value, type Entry } from './finance';
+import { assets, expenses, income, interestKinds, liabilities, scheduleDates, unitPricedKinds, value, type Entry } from './finance';
 import { withAssetIncomePlans } from './earning-sources';
 import type { ExpensePlan } from './expense-plans';
 import type { HoldingAccount } from './holding-accounts';
@@ -26,6 +26,7 @@ const mine = ownedBy(demoPeople.me), partners = ownedBy(demoPeople.partner);
 const openings: Record<string, number> = {
  'demo-home': 498000, 'demo-condo': 262000, 'demo-studio': 171000, 'demo-business': 104000, 'demo-watches': 12500,
  'demo-checking': 11800, 'demo-savings': 41000, 'demo-mortgage': 189400, 'demo-car-loan': 24300, 'demo-credit-card': 3100,
+ 'demo-401k': 74000, 'demo-ira': 28500, 'demo-suv': 27500,
 };
 
 export function demoRecords(today: string): Entry[] {
@@ -49,6 +50,16 @@ export function demoRecords(today: string): Entry[] {
   record('tbill', '26-week Treasury bill', 'Treasury bill', 25000, { rate: 4.3, deposit_compounding: 'none', estimated_monthly_income: 25000 * .043 / 12, date: shiftDay(today, 75) }),
   record('tbill-short', '13-week Treasury bill', 'Treasury bill', 15000, { rate: 4.25, deposit_compounding: 'none', estimated_monthly_income: 15000 * .0425 / 12, date: shiftDay(today, 40) }),
   record('deposit-usd', '12-month CD', 'Deposit', 20000, { rate: 4.6, deposit_compounding: 'none', estimated_monthly_income: 20000 * .046 / 12, date: shiftDay(today, 160) }),
+  record('bond', '10-year Treasury note', 'Bond', 30000, { rate: 4.1, deposit_compounding: 'none', estimated_monthly_income: 30000 * .041 / 12, opened_on: shiftDay(today, -400), date: shiftDay(today, 3250) }),
+  // Precious metals are priced per unit of their own weight and purity: 200 g of fine gold, 50 troy ounces of silver coins.
+  record('gold', 'Gold bars', 'Precious metals', 76.5, { quantity: 200, cost: 61, metal: 'XAU', metal_unit: 'g', metal_purity: .9999, ...mine }),
+  record('silver', 'Silver coins', 'Precious metals', 28.2, { quantity: 50, cost: 23.5, metal: 'XAG', metal_unit: 'oz', metal_purity: .999, ...partners }),
+  // Vested employer shares; the date is the next vesting date.
+  record('rsu', 'GOOGL', 'Equity compensation', 165, { quantity: 60, cost: 0, date: shiftDay(today, 45), ...mine }),
+  // Retirement savings and a car, valued by hand.
+  record('401k', '401(k)', 'Retirement account', 86000, { date: shiftDay(today, -1800), ...mine }),
+  record('ira', 'Roth IRA', 'Retirement account', 32000, { date: shiftDay(today, -1200), ...partners }),
+  record('suv', 'Family SUV', 'Vehicle', 24000, { date: shiftDay(today, -900) }),
   // Real estate: the home and the condo appreciate, the studio dipped slightly.
   record('home', 'Family home', 'Property', 540000, { date: shiftDay(today, -2400) }),
   record('condo', 'Lakeside rental condo', 'Property', 285000, { estimated_monthly_income: 2100, date: shiftDay(today, -1500), business_id: 'demo-biz-rentals' }),
@@ -225,7 +236,7 @@ export function demoHistory(records: Entry[], today: string) {
   const investment = isInvestmentRecord(record);
   const amount = value(original);
   const share = record.kind === 'Business' ? (original.ownership_percentage ?? 100) / 100 : 1;
-  const opening = ['Stock', 'Crypto'].includes(record.kind) ? original.cost * original.quantity : (openings[record.id] ?? amount / share) * share;
+  const opening = unitPricedKinds.includes(record.kind) ? original.cost * original.quantity : (openings[record.id] ?? amount / share) * share;
   const add = (suffix: string, date: string, event_type: HistoryEvent['event_type'], amount: number, balance: number | null) => events.push({
    id: record.id + ':' + suffix, record_id: record.id, occurred_on: date, created_at: date + 'T12:00:00Z',
    event_type, amount, balance, ownership_percentage: 100, principal: 0, interest: 0, notes: 'Sample data',
@@ -235,7 +246,7 @@ export function demoHistory(records: Entry[], today: string) {
   for (let month = 1; month <= 12; month++) {
    const date = shiftDay(today, -365 + Math.floor(365 * month / 12));
    const progress = month / 12;
-   const swing = ['Stock', 'Crypto'].includes(record.kind) ? Math.sin(month * 1.8) * amount * .025 * (1 - progress) : 0;
+   const swing = unitPricedKinds.includes(record.kind) ? Math.sin(month * 1.8) * amount * .025 * (1 - progress) : 0;
    const balance = interestKinds.includes(record.kind) ? amount : opening + (amount - opening) * progress + swing;
    add('value-' + month, date, 'valuation', 0, balance);
    if (!investment) continue;

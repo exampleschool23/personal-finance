@@ -5,6 +5,7 @@ import type { CategoryKind } from './category-colors';
 export const categoryEmojis: Record<CategoryKind, string> = {
  Cash: '💵', Stock: '📈', Crypto: '🪙', Deposit: '🏦', 'Treasury bill': '🏛️',
  Property: '🏠', Business: '🏪', Valuables: '💎', 'Money lent': '🤝',
+ 'Precious metals': '🥇', 'Equity compensation': '🎫', Bond: '📜', 'Retirement account': '🌅', Vehicle: '🚗',
  Mortgage: '🏡', Loan: '💸', Debt: '💳',
  Salary: '💰', 'Rent income': '🏘️', 'Business income': '💼', 'Other income': '✨',
  'Rent expense': '🔑', 'Living expense': '🛒', Charity: '🤲', 'Other expense': '🧾',

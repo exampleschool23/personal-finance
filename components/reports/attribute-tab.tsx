@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { attributeColor, BreakdownDonut, TrendChart } from '@/components/business-reports';
+import { useCategoryHue } from '@/components/category-icons-context';
 import { ShareBars } from '@/components/cash-flow-report';
 import { useLanguage } from '@/components/language-provider';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
@@ -14,13 +15,14 @@ import { attributeLabels, intervalLabels, type TabProps } from './report-labels'
 /** Spending or income: the total, a breakdown by category, group, merchant or business (bars or a donut), and trends. */
 export function AttributeTab({ direction, lines, range, rangeLabel, names, groupOf, hasBusinesses, currency, onDrill }: TabProps & { direction: Direction; hasBusinesses: boolean }) {
  const { t, locale } = useLanguage();
+ const categoryHue = useCategoryHue();
  const [mode, setMode] = useState<'breakdown' | 'trends'>('breakdown');
  const [attribute, setAttribute] = useState<Attribute>('category');
  const [visual, setVisual] = useState<'bars' | 'donut'>('bars');
  const [stacked, setStacked] = useState(true), [interval, setInterval] = useState<Interval>('month');
  const keyOf = (line: LedgerLine) => attribute === 'category' ? line.category : attribute === 'group' ? groupOf(line.category) : attribute === 'merchant' ? line.name : businessKey(line);
  const label = (key: string) => attribute === 'category' ? names.category(key) : attribute === 'group' ? names.group(key) : attribute === 'merchant' ? key : names.business(key);
- const color = (key: string) => key === 'other' ? 'var(--muted-foreground)' : attributeColor(attribute, key, names);
+ const color = (key: string) => key === 'other' ? 'var(--muted-foreground)' : attributeColor(attribute, key, names, categoryHue);
  const drillOf = (key: string): Drill => attribute === 'category' ? { direction, category: key } : attribute === 'merchant' ? { direction, merchant: key } : attribute === 'business' ? { direction, business: key === HOUSEHOLD ? null : key } : { direction, categories: [...new Set(lines.filter(line => groupOf(line.category) === key).map(line => line.category))] };
  const items = sharesBy(lines, keyOf);
  const trend = attributeTrend(lines, range, interval, keyOf);

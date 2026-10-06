@@ -1,5 +1,5 @@
 import { assets, liabilities, value, type Entry } from './finance';
-import { convertAmount, instrumentFor, instrumentKey, type MarketData } from './market';
+import { convertAmount, instrumentFor, instrumentKey, quotedUnitPrice, type MarketData } from './market';
 import type { PortfolioPoint } from './portfolio-history';
 
 export type PortfolioSnapshot = { occurred_on: string; assets: number; debt: number; rates: Record<string,number>; updated_at: string };
@@ -12,10 +12,10 @@ export function snapshotTotals(records:Entry[],market:Pick<MarketData,'quotes'|'
   if(!assets.includes(record.kind)&&!liabilities.includes(record.kind))continue;
   const instrument=instrumentFor(record);
   let amount:number|null;
-  if(['Crypto','Stock'].includes(record.kind)&&Number(record.quantity)>0){
-   const quote=instrument?market.quotes[instrumentKey(instrument)]:undefined;
-   if(!quote||!Number.isFinite(quote.usd)||quote.usd<=0)return null;
-   amount=quote.usd*Number(record.quantity);
+  if(instrument&&Number(record.quantity)>0){
+   const price=quotedUnitPrice(record,market.quotes[instrumentKey(instrument)]);
+   if(price===null)return null;
+   amount=price*Number(record.quantity);
   }else amount=convertAmount(value(record),record.currency,'USD',rates);
   if(amount===null||!Number.isFinite(amount)||amount<0)return null;
   if(assets.includes(record.kind))assetTotal+=amount;else debt+=amount;

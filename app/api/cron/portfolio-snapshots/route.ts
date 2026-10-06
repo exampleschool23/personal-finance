@@ -4,7 +4,7 @@ import { loadMarket } from '@/lib/server-market';
 import { readAllPages } from '@/lib/owner-rows';
 import { serviceDatabase } from '@/lib/service-role';
 import { announceNetWorthHigh } from '@/lib/telegram-milestones';
-import { instrumentFor,type MarketData } from '@/lib/market';
+import { marketSymbols,type MarketData } from '@/lib/market';
 import { snapshotTotals } from '@/lib/portfolio-snapshots';
 import { depositToday } from '@/lib/deposit-interest';
 import type { Entry } from '@/lib/finance';
@@ -17,11 +17,9 @@ export async function GET(req:Request){
  try{
  // Every owner's records: a failed page stops the run rather than capturing a partial portfolio.
  const records=await readAllPages<Entry&{user_id:string}>(range=>db.read(`/rest/v1/finance_records?select=*&order=id.asc&${range}`));
- const instruments=records.map(instrumentFor).filter(i=>i!==null);
- const crypto=[...new Set(instruments.filter(i=>i?.kind==='Crypto').map(i=>i!.symbol))];
- const stocks=[...new Set(instruments.filter(i=>i?.kind==='Stock').map(i=>i!.symbol))];
+ const symbols=marketSymbols(records);
  // Upstream requests have bounded concurrency and named missing-price failures.
- const market:MarketData=await loadMarket(crypto,stocks,true);
+ const market:MarketData=await loadMarket(symbols.crypto,symbols.stocks,true,symbols.metals);
  const owners=new Map<string,Entry[]>();for(const r of records)owners.set(r.user_id,[...(owners.get(r.user_id)??[]),r]);
  let captured=0,skipped=0,celebrated=0;
  for(const [owner,holdings] of owners){const total=snapshotTotals(holdings,market);if(!total){skipped++;continue;}
