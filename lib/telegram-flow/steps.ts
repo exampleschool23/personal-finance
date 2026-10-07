@@ -1,5 +1,5 @@
 // The order of a conversation's questions, going back through them, and what each one depends on.
-import {isRecurringCashFlow} from '../planning';
+import {paymentSchedules} from '../planning';
 import type {Entry} from '../finance';
 import {formatDate,formatNumber} from '../format';
 import {locales,type Language} from '../i18n';
@@ -36,8 +36,7 @@ export const recordKind=(draft:Draft)=>draft.data.custom_category_id?(draft.kind
 /** The active schedules an expense or income may pay, by its category (and business, for business income). */
 export function schedulesFor(draft:Draft,ctx:Pick<FlowContext,'records'>):Entry[]{
  if(draft.kind!=='expense'&&draft.kind!=='income')return [];
- const d=draft.data,kind=recordKind(draft);
- return (ctx.records??[]).filter(record=>isRecurringCashFlow(record)&&!record.archived&&!record.source_paused&&record.kind===kind&&(record.custom_category_id??null)===(d.custom_category_id??null)&&(kind!=='Business income'||!d.business_id||record.business_id===d.business_id));
+ return paymentSchedules(ctx.records??[],{kind:recordKind(draft),custom_category_id:draft.data.custom_category_id,business_id:draft.data.business_id});
 }
 /** The name an expense or income is saved under: the one typed, else its schedule's, else its category's. */
 export const recordName=(draft:Draft,ctx:Pick<FlowContext,'records'>)=>(draft.data.name||(draft.data.schedule_id?find(ctx.records??[],draft.data.schedule_id)?.name:'')||draft.data.category_name||'').trim();

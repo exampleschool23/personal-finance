@@ -360,3 +360,12 @@ test('done tick marks a settled row and keeps the same space on an open one',()=
  assert.match(render(DoneTick,{done:true}),/^<span class="done-tick" data-done="true" aria-hidden="true"><svg/);
  assert.equal(render(DoneTick,{done:false}),'<span class="done-tick" aria-hidden="true"></span>');
 });
+
+test('the scheduled payment field offers each schedule by id, with its amount and how often it repeats',()=>{
+ const {ScheduledPaymentField}=load('scheduled-payment-field.tsx',{'@/components/ui/native-select':{NativeSelect:element('select')}});
+ const rent={id:'r1',name:'Flat rent',kind:'Rent expense',currency:'USD',amount:700,frequency:'Monthly',date:'2026-01-10',quantity:1,cost:0,rate:0,notes:''};
+ const html=render(ScheduledPaymentField,{schedules:[rent],value:'r1',onChange(){}});
+ assert.equal(html,'<label>Scheduled payment<select><option value="">Not a scheduled payment</option><option value="r1" selected="">Flat rent · $700 · Every month</option></select></label>');
+ // Nothing to offer: no field at all.
+ assert.equal(render(ScheduledPaymentField,{schedules:[],value:null,onChange(){}}),'');
+});

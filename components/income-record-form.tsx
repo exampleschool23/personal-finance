@@ -1,6 +1,8 @@
 "use client";
 import {ScheduleFields} from '@/components/presentation-foundation/schedule-fields';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
+import { ScheduledPaymentField } from '@/components/presentation-foundation/scheduled-payment-field';
+import { chooseSchedule, paymentSchedules } from '@/lib/planning';
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import {frequencyLabels} from '@/lib/finance';
@@ -56,6 +58,8 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
  const changeDate=(date:string)=>update({date,...(!original&&reusable&&editing.earning_due_on?{earning_due_on:selectEarningSource({...editing,date},reusable).earning_due_on}:{}),...(!original&&editing.kind==='Salary'&&source&&editing.income_due_on?{income_due_on:salaryDueDate(source,date)}:{})});
  const actual=editing.frequency==='Once'&&!salaryPlan;
  const latestDate=[actual?depositToday():undefined,editing.kind==='Salary'&&source?source.end_date??undefined:undefined].filter((date):date is string=>!!date).sort()[0];
+ // A new one-time income may pay a recurring income by id; schedules of income sources and salary plans are offered by their own pickers instead.
+ const schedules=!original&&actual&&!reusable&&!(editing.kind==='Salary'&&editing.income_source_id)?paymentSchedules(planning.data.records,editing).filter(schedule=>!earningSources?.sources.some(item=>item.schedule_id===schedule.id)):[];
  const sourceLabel=editing.kind==='Salary'?'Linked salary':editing.kind==='Rent income'?'Linked rental':'Linked business';
  const sourcePlaceholder=editing.kind==='Salary'?'Choose a salary plan':editing.kind==='Rent income'?'Choose a rental':'Choose a business';
  return <form className="record-form" onSubmit={save}>
@@ -87,6 +91,7 @@ export function IncomeRecordForm({editing,setEditing,busy,save,rows,currencies,p
    {editing.kind==='Salary'?earningSources?<Link href="/income-expenses#income-sources">{t('Add income source')}</Link>:!original&&<Button type="button" variant="outline" disabled={busy} onClick={()=>{setSalaryPlan(true);update({name:'',income_source_id:null,income_due_on:null,business_id:null,frequency:'Monthly',end_date:null,account_id:null});}}>{t('Add salary plan')}</Button>:<Link href="/assets">{t('Assets & investments')}</Link>}
   </div>)}
   {editing.kind==='Salary'&&source&&<ScheduledPaymentSummary label={t('Salary due date')} date={editing.income_due_on??''}/>}
+  <ScheduledPaymentField schedules={schedules} value={editing.occurrence_record_id} disabled={busy||planning.loading} onChange={schedule=>update(chooseSchedule(editing,schedule))}/>
   <AmountCurrencyFields amountPlaceholder={reusable?.mode==='fixed'&&editing.payment_type!=='bonus'&&reusable.currency===editing.currency&&reusable.amount!==null?formatNumber(reusable.amount,locale,0):undefined} amount={editing.amount} currency={editing.currency} currencies={currencies} savedCurrency={original?.currency} disabled={busy} label={t(salaryPlan?'Amount per occurrence':'Amount')} onAmountChange={amount=>update({amount})} onCurrencyChange={currency=>update({currency,account_exchange_rate:null,account_rate_date:null,account_currency:null})}/>
   <div className="form-grid"><label>{t(editing.frequency==='Once'?'Record date':'Start date')}<DatePicker value={editing.date} min={editing.kind==='Salary'&&source?source.date:undefined} max={latestDate} onChange={changeDate}/></label>
   {!simple&&!reusable&&(editing.kind!=='Salary'||salaryPlan)&&<ScheduleFields frequency={editing.frequency} days={editing.recurrence_days} disabled={busy} once={!salaryPlan} onChange={(frequency,recurrence_days)=>update({frequency,recurrence_days,account_id:null,end_date:frequency==='Once'?null:editing.end_date})}/>}</div>

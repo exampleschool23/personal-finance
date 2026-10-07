@@ -44,6 +44,7 @@ export { FormattedNumberInput } from './formatted-number-input';
 export { DatePicker } from './date-picker';
 export { AmountCurrencyFields } from './amount-currency-fields';
 export { ScheduleFields } from './schedule-fields';
+export { ScheduledPaymentField } from './scheduled-payment-field';
 export { ExchangeRatePreview } from './exchange-rate-preview';
 export { FormFooter } from './form-footer';
 export { Pagination } from './pagination';

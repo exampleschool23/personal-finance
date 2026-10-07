@@ -4,7 +4,7 @@ import { loadTS } from './helpers/load-ts.mjs';
 const { monthOccurrences, monthPlans, scheduleHistory, onlyDirection, archivedSchedules, recurringSummary, daysFrom, calendarWeeks } = loadTS('lib/recurring.ts');
 const { monthly } = loadTS('lib/finance.ts');
 const { planningSchemas } = loadTS('lib/planning-schemas.ts');
-const { upcomingPayments, debtPaymentsFrom, withExtraPayments } = loadTS('lib/planning.ts');
+const { upcomingPayments, debtPaymentsFrom, withExtraPayments, paymentSchedules, chooseSchedule } = loadTS('lib/planning.ts');
 const { monthlyIncomeCards } = loadTS('lib/monthly-income-cards.ts');
 
 const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Monthly', notes: '', ...extra });
@@ -160,4 +160,27 @@ test('Cash flow counts a payment toward the schedule it names by id', () => {
  const paid = { ...epam, id: 'p1', name: 'Salary', frequency: 'Once', date: '2026-10-06', occurrence_record_id: 'epam', occurrence_due_on: '2026-10-05' };
  const cards = monthlyIncomeCards([epam, snoonu, paid], '2026-10', [], '2026-10-07');
  assert.deepEqual(cards.filter(card => card.received).map(card => [card.entry.id, card.receivedAmount]), [['epam', 3450]]);
+});
+
+test('a one-time payment is offered the active schedules of its kind, business, property and currency, and names one by id', () => {
+ const base = { quantity: 1, cost: 0, rate: 0, date: '2026-01-01', notes: '', frequency: 'Monthly', currency: 'USD' };
+ const records = [
+  { ...base, id: 'shop', name: 'Shop payout', kind: 'Business income', amount: 900, business_id: 'b1' },
+  { ...base, id: 'cafe', name: 'Cafe payout', kind: 'Business income', amount: 500, business_id: 'b2' },
+  { ...base, id: 'flat', name: 'Flat rent', kind: 'Rent income', amount: 450, income_source_id: 'p1' },
+  { ...base, id: 'eur', name: 'Euro rent', kind: 'Rent income', amount: 300, income_source_id: 'p1', currency: 'EUR' },
+  { ...base, id: 'old', name: 'Old shop', kind: 'Business income', amount: 1, business_id: 'b1', archived: true },
+  { ...base, id: 'gym', name: 'Gym', kind: 'Other expense', amount: 30, custom_category_id: 'sport' },
+  { ...base, id: 'paid', name: 'One payment', kind: 'Business income', amount: 900, business_id: 'b1', frequency: 'Once' },
+ ];
+ const ids = payment => paymentSchedules(records, payment).map(record => record.id);
+ assert.deepEqual(ids({ kind: 'Business income', business_id: 'b1', currency: 'USD' }), ['shop']);
+ assert.deepEqual(ids({ kind: 'Rent income', income_source_id: 'p1', currency: 'USD' }), ['flat']);
+ assert.deepEqual(ids({ kind: 'Rent income', income_source_id: 'p1' }), ['flat', 'eur'], 'the bot asks before it knows the currency');
+ assert.deepEqual(ids({ kind: 'Other expense', custom_category_id: 'sport' }), ['gym']);
+ assert.deepEqual(ids({ kind: 'Other expense' }), [], 'a category of its own is a different category');
+ const payment = { ...base, id: 'p', name: '', kind: 'Rent income', amount: 0, frequency: 'Once' };
+ assert.deepEqual(chooseSchedule(payment, records[2]), { occurrence_record_id: 'flat', name: 'Flat rent', amount: 450, income_source_id: 'p1' });
+ assert.deepEqual(chooseSchedule({ ...payment, name: 'May rent', amount: 400 }, records[2]), { occurrence_record_id: 'flat', income_source_id: 'p1' }, 'typed values stay');
+ assert.deepEqual(chooseSchedule(payment, null), { occurrence_record_id: null });
 });

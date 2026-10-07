@@ -62,6 +62,22 @@ export function settledOccurrences(records:Entry[],occurrences:Occurrence[]){
  return new Set([...occurrences.map(o=>o.record_id+':'+o.due_on),...records.filter(r=>r.kind==='Salary'&&r.frequency==='Once'&&r.income_source_id).map(r=>r.income_source_id+':'+(r.income_due_on??r.date))]);
 }
 export const isRecurringCashFlow=(record:Entry)=>[...income,...expenses].includes(record.kind)&&record.frequency!=='Once';
+/** What a one-time payment is: its kind and category, its business or property, and its currency when known. */
+export type SchedulePayment={kind?:string;custom_category_id?:string|null;business_id?:string|null;income_source_id?:string|null;currency?:string};
+/** The active schedules a one-time payment may name by id: the same kind and category, the same business for business
+ * income or property for rent, and the same currency when the payment has one. The bot and the record forms offer these. */
+export function paymentSchedules(records:Entry[],payment:SchedulePayment):Entry[]{
+ return records.filter(record=>isRecurringCashFlow(record)&&!record.archived&&!record.source_paused&&record.kind===payment.kind
+  &&(record.custom_category_id??null)===(payment.custom_category_id??null)
+  &&(record.kind!=='Business income'||!payment.business_id||record.business_id===payment.business_id)
+  &&(record.kind!=='Rent income'||!payment.income_source_id||record.income_source_id===payment.income_source_id)
+  &&(!payment.currency||record.currency===payment.currency));
+}
+/** A payment naming `schedule` by id, or none. It takes the schedule's name and amount when it has none of its own, and rent its property. */
+export function chooseSchedule(payment:Entry,schedule:Entry|null):Partial<Entry>{
+ if(!schedule)return {occurrence_record_id:null};
+ return {occurrence_record_id:schedule.id,...(payment.name.trim()?{}:{name:schedule.name}),...(payment.amount>0?{}:{amount:Number(schedule.amount)}),...(schedule.kind==='Rent income'&&schedule.income_source_id?{income_source_id:schedule.income_source_id}:{})};
+}
 export const scheduleAssets=(records:Entry[])=>new Map(records.filter(record=>['Business','Property'].includes(record.kind)).map(record=>[record.id,record]));
 /** Income from a business or property starts no earlier than the asset itself. */
 export function scheduleStart(record:Entry,assetsById:Map<string,Entry>){

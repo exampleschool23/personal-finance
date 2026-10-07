@@ -237,7 +237,9 @@ name, amount or date that happens to match (migration 119).
 
 - A payment of a schedule carries the schedule's id (`occurrence_record_id`) and the
   due date it pays (`occurrence_due_on`). Entry points name the schedule: Record
-  payment, later payments, and the bot's "Which scheduled payment is this?" question.
+  payment, later payments, the bot's "Which scheduled payment is this?" question and
+  the record forms' "Scheduled payment" field (`ScheduledPaymentField`). Both offer
+  `paymentSchedules` from `lib/planning.ts` and apply a choice with `chooseSchedule`.
   A business or rent income that names none takes the id of the one active schedule
   of its business or property; with none or several it stays unlinked.
 - The database alone picks and checks the due date (`name_scheduled_payment`): the

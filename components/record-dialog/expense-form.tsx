@@ -3,6 +3,8 @@ import { LoadingPlaceholder } from '@/components/presentation-foundation/loading
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { ScheduleFields } from '@/components/presentation-foundation/schedule-fields';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
+import { ScheduledPaymentField } from '@/components/presentation-foundation/scheduled-payment-field';
+import { chooseSchedule, paymentSchedules } from '@/lib/planning';
 import { frequencyLabels } from '@/lib/finance';
 import { selectTransactionCategory } from '@/lib/transaction-categories';
 import { InvestmentTracker } from '@/components/investment-tracker';
@@ -60,6 +62,8 @@ function CategoryAmount({form}:{form:ExpenseContext}){
     const selected=event.target.value;
     setEditing(selectTransactionCategory(editing,selected,planning.data.categories,'expense'));
    }}>{expenses.map(kind=><option key={kind} value={kind}>{t(kind)}</option>)}{planning.data.categories.filter(category=>category.direction==='expense').map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</NativeSelect></label><Link className="panel-link" href="/settings#categories" onNavigate={event=>{if(busy){event.preventDefault();return;}if(onLeave)onLeave(event,'/settings#categories');else setEditing(null);}}>{t('Manage categories in Settings')}</Link></div>}
+   {/* A new one-time expense may pay a recurring bill, named by its id. Otherwise nothing is offered and a choice made earlier is cleared. */}
+   <ScheduledPaymentField schedules={mode==='expense'&&savedCurrency===undefined&&editing.frequency==='Once'?paymentSchedules(planning.data.records,editing):[]} value={editing.occurrence_record_id} disabled={busy||planning.loading} onChange={schedule=>update(chooseSchedule(editing,schedule))}/>
    <AmountCurrencyFields amount={editing.amount} currency={editing.currency} currencies={currencies} savedCurrency={savedCurrency} disabled={busy} currencyLocked={mode==='plan'} onAmountChange={amount=>update({amount})} onCurrencyChange={currency=>update({currency,account_exchange_rate:null,account_rate_date:null,account_currency:null})}/></>;
 }
 /** The day, and for a plain expense the optional details: how it repeats, a business, an end date and notes. */
