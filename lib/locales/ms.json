@@ -2593,5 +2593,12 @@
   "bond maturity": "kematangan bon",
   "Metal prices need a market-data API key.": "Harga logam memerlukan kunci API data pasaran.",
   "Sign in to fetch metal prices.": "Log masuk untuk mendapatkan harga logam.",
-  "Choose the metal, its weight unit and purity.": "Pilih logam, unit berat dan ketulenannya."
+  "Choose the metal, its weight unit and purity.": "Pilih logam, unit berat dan ketulenannya.",
+  "Which scheduled payment is this?": "Bayaran berjadual yang mana ini?",
+  "Not a scheduled payment": "Bukan bayaran berjadual",
+  "Change scheduled payment": "Tukar bayaran berjadual",
+  "Scheduled payment: {name}": "Bayaran berjadual: {name}",
+  "Record this payment in the currency of its schedule.": "Rekodkan bayaran ini dalam mata wang jadualnya.",
+  "Choose a scheduled payment.": "Pilih bayaran berjadual.",
+  "A scheduled payment keeps its schedule.": "Bayaran berjadual kekal pada jadualnya."
 }

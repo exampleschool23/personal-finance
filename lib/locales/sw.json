@@ -2593,5 +2593,12 @@
   "bond maturity": "kuiva kwa hati fungani",
   "Metal prices need a market-data API key.": "Bei za madini zinahitaji ufunguo wa API wa data ya soko.",
   "Sign in to fetch metal prices.": "Ingia ili kupata bei za madini.",
-  "Choose the metal, its weight unit and purity.": "Chagua madini, kipimo cha uzito na usafi wake."
+  "Choose the metal, its weight unit and purity.": "Chagua madini, kipimo cha uzito na usafi wake.",
+  "Which scheduled payment is this?": "Hili ni malipo gani yaliyopangwa?",
+  "Not a scheduled payment": "Si malipo yaliyopangwa",
+  "Change scheduled payment": "Badilisha malipo yaliyopangwa",
+  "Scheduled payment: {name}": "Malipo yaliyopangwa: {name}",
+  "Record this payment in the currency of its schedule.": "Rekodi malipo haya kwa sarafu ya ratiba yake.",
+  "Choose a scheduled payment.": "Chagua malipo yaliyopangwa.",
+  "A scheduled payment keeps its schedule.": "Malipo yaliyopangwa hubaki kwenye ratiba yake."
 }

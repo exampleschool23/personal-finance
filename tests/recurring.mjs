@@ -4,7 +4,8 @@ import { loadTS } from './helpers/load-ts.mjs';
 const { monthOccurrences, monthPlans, scheduleHistory, onlyDirection, archivedSchedules, recurringSummary, daysFrom, calendarWeeks } = loadTS('lib/recurring.ts');
 const { monthly } = loadTS('lib/finance.ts');
 const { planningSchemas } = loadTS('lib/planning-schemas.ts');
-const { upcomingPayments, debtPaymentsFrom } = loadTS('lib/planning.ts');
+const { upcomingPayments, debtPaymentsFrom, withExtraPayments } = loadTS('lib/planning.ts');
+const { monthlyIncomeCards } = loadTS('lib/monthly-income-cards.ts');
 
 const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Monthly', notes: '', ...extra });
 
@@ -97,6 +98,10 @@ test('later payments add to what an occurrence recorded, whether the read totall
  const later = { ...free, id: 't2', amount: 800, frequency: 'Once', date: '2026-10-04', occurrence_record_id: 'free', occurrence_due_on: '2026-10-01' };
  assert.equal(monthOccurrences([free, later], [first], '2026-10', '2026-10-05')[0].recorded, 1500);
  assert.equal(monthOccurrences([free, later], [{ ...first, extra: 800 }], '2026-10', '2026-10-05')[0].recorded, 1500, 'counted once when both carry it');
+ // Every payment names its schedule by id, the first one too: the first is counted once, through the occurrence.
+ const named = { ...free, id: 't1', amount: 700, frequency: 'Once', date: '2026-10-01', occurrence_record_id: 'free', occurrence_due_on: '2026-10-01' };
+ assert.equal(monthOccurrences([free, named, later], [first], '2026-10', '2026-10-05')[0].recorded, 1500);
+ assert.equal(withExtraPayments([first], [named, later])[0].extra, 800, 'the read leaves the first payment out of the later ones');
  const [due] = monthOccurrences([free, later], [], '2026-10', '2026-10-05');
  assert.deepEqual([due.status, due.recorded], ['overdue', undefined], 'nothing is added to an occurrence that is not recorded');
  assert.ok(planningSchemas.occurrence.safeParse({ id: '00000000-0000-4000-8000-000000000001', account_id: '00000000-0000-4000-8000-000000000002', target_id: '00000000-0000-4000-8000-000000000003', amount: 800, date: '2026-10-01', notes: '', extra: true }).success);
@@ -147,4 +152,12 @@ test('a schedule\'s history is each recorded payment and later payment for it; a
  assert.deepEqual(scheduleHistory({ source: 'record', record: rent }, records, occurrences), ['p1', 'p2'], 'a skipped month is not history, and nothing counts twice');
  assert.deepEqual(scheduleHistory({ source: 'plan', plan: { id: 'g' } }, records, occurrences), ['f1']);
  assert.deepEqual(scheduleHistory({ source: 'record', record: { ...rent, id: 'new' } }, records, occurrences), []);
+});
+
+test('Cash flow counts a payment toward the schedule it names by id', () => {
+ const epam = { id: 'epam', name: 'EPAM Systems', kind: 'Salary', currency: 'USD', amount: 3450, quantity: 1, cost: 0, rate: 0, date: '2026-01-05', frequency: 'Monthly', notes: '' };
+ const snoonu = { ...epam, id: 'snoonu', name: 'Snoonu', amount: 5700 };
+ const paid = { ...epam, id: 'p1', name: 'Salary', frequency: 'Once', date: '2026-10-06', occurrence_record_id: 'epam', occurrence_due_on: '2026-10-05' };
+ const cards = monthlyIncomeCards([epam, snoonu, paid], '2026-10', [], '2026-10-07');
+ assert.deepEqual(cards.filter(card => card.received).map(card => [card.entry.id, card.receivedAmount]), [['epam', 3450]]);
 });

@@ -1,4 +1,5 @@
 // The order of a conversation's questions, going back through them, and what each one depends on.
+import {isRecurringCashFlow} from '../planning';
 import type {Entry} from '../finance';
 import {formatDate,formatNumber} from '../format';
 import {locales,type Language} from '../i18n';
@@ -14,8 +15,8 @@ const backButton=(language:Language):TelegramButton=>back(language,'f:back');
 export const controls=(language:Language,canGoBack:boolean):TelegramButton[]=>canGoBack?[backButton(language),cancelButton(language)]:[cancelButton(language)];
 // The questions each conversation asks, in order. Currency-dependent steps are skipped when they do not apply.
 const stepOrder:Record<FlowKind,Step[]>={
- expense:['category','business','account','amount','name','date','confirm'],
- income:['category','business','account','amount','name','date','confirm'],
+ expense:['category','business','schedule','account','amount','name','date','confirm'],
+ income:['category','business','schedule','account','amount','name','date','confirm'],
  transfer:['account','target','amount','received','date','confirm'],
  repayment:['target','account','amount','date','confirm'],
  mortgage:['target','account','amount','interest','date','confirm'],
@@ -23,35 +24,48 @@ const stepOrder:Record<FlowKind,Step[]>={
  liability:['lkind','lname','currency','amount','duedate','rate','payment','confirm'],
 };
 // What each question stores, so going back can forget it and everything asked after it.
-const stepFields:Record<Step,Array<keyof DraftData>>={category:['category','custom_category_id','category_name'],account:['account_id'],target:['target_id'],amount:['amount'],received:['received'],interest:['interest'],name:['name'],date:['date'],confirm:['fx_rate','fx_rate_date'],fxamount:[],fxrate:[],accname:['account_name'],currency:['currency'],balance:[],lkind:['lkind'],lname:['name'],duedate:['date'],rate:['rate'],payment:['payment'],business:['business_id']};
+const stepFields:Record<Step,Array<keyof DraftData>>={category:['category','custom_category_id','category_name'],account:['account_id'],target:['target_id'],amount:['amount'],received:['received'],interest:['interest'],name:['name'],date:['date'],confirm:['fx_rate','fx_rate_date'],fxamount:[],fxrate:[],accname:['account_name'],currency:['currency'],balance:[],lkind:['lkind'],lname:['name'],duedate:['date'],rate:['rate'],payment:['payment'],business:['business_id'],schedule:['schedule_id']};
 export const find=(list:Entry[],id?:string)=>list.find(item=>item.id===id);
 export const isCash=(entry:Entry)=>entry.kind==='Cash';
 export const currencyList=(ctx:FlowContext)=>ctx.currencies?.length?ctx.currencies:['USD'];
 /** Expenses and income may name a business when the owner has one; business income must, as in the app. */
 export const asksBusiness=(draft:Draft,ctx:Pick<FlowContext,'businesses'>)=>(draft.kind==='expense'||draft.kind==='income')&&!!ctx.businesses?.length;
 export const needsBusiness=(draft:Draft)=>draft.kind==='income'&&draft.data.category==='Business income';
+/** The kind of record an expense or income saves: its built-in category, or Other income/expense for the owner's own. */
+export const recordKind=(draft:Draft)=>draft.data.custom_category_id?(draft.kind==='income'?'Other income':'Other expense'):draft.data.category;
+/** The active schedules an expense or income may pay, by its category (and business, for business income). */
+export function schedulesFor(draft:Draft,ctx:Pick<FlowContext,'records'>):Entry[]{
+ if(draft.kind!=='expense'&&draft.kind!=='income')return [];
+ const d=draft.data,kind=recordKind(draft);
+ return (ctx.records??[]).filter(record=>isRecurringCashFlow(record)&&!record.archived&&!record.source_paused&&record.kind===kind&&(record.custom_category_id??null)===(d.custom_category_id??null)&&(kind!=='Business income'||!d.business_id||record.business_id===d.business_id));
+}
+/** The name an expense or income is saved under: the one typed, else its schedule's, else its category's. */
+export const recordName=(draft:Draft,ctx:Pick<FlowContext,'records'>)=>(draft.data.name||(draft.data.schedule_id?find(ctx.records??[],draft.data.schedule_id)?.name:'')||draft.data.category_name||'').trim();
+/** A typed entry's schedule: the only one its category has, shown on the card where it can be changed. Otherwise none. */
+export const onlySchedule=(draft:Draft,ctx:Pick<FlowContext,'records'>)=>{const found=schedulesFor(draft,ctx);return found.length===1?found[0].id:null;};
 /** The questions of a typed entry that return to its confirmation card. */
-const cardSteps:Step[]=['category','business','account'];
+const cardSteps:Step[]=['category','business','schedule','account'];
 /** Questions answered with buttons only, where typed text would otherwise be ignored. */
-export const buttonSteps:Step[]=['category','business','account','target','lkind','currency','confirm'];
+export const buttonSteps:Step[]=['category','business','schedule','account','target','lkind','currency','confirm'];
 export const backToCard=(draft:Draft)=>!!draft.data.typed&&cardSteps.includes(draft.step)&&!!draft.data.account_id;
 /** A new account started from a loan or mortgage payment must use that loan's currency, so the question is not asked. */
 export const presetCurrency=(draft:Draft,ctx:Pick<FlowContext,'liabilities'>)=>{const from=draft.data.resume;return draft.kind==='account'&&from&&(from.kind==='repayment'||from.kind==='mortgage')?find(ctx.liabilities,from.data.target_id)?.currency:undefined;};
 /** A new liability started from the mortgage payment dead end is a mortgage, so its kind is not asked. */
 export const presetLiabilityKind=(draft:Draft):LiabilityKind|undefined=>draft.kind==='liability'&&draft.data.resume?.kind==='mortgage'?'Mortgage':undefined;
 /** Whether Back has somewhere to go: an earlier question, or the conversation a dead end interrupted. */
-export const canGoBack=(draft:Draft,ctx:Pick<FlowContext,'accounts'|'liabilities'|'businesses'>)=>backToCard(draft)||backStep(draft,ctx)!==null||!!draft.data.resume;
+export const canGoBack=(draft:Draft,ctx:Pick<FlowContext,'accounts'|'liabilities'|'businesses'|'records'>)=>backToCard(draft)||backStep(draft,ctx)!==null||!!draft.data.resume;
 /** A transfer between accounts in different currencies asks what arrived as well. */
 const crossCurrencyTransfer=(draft:Draft,ctx:Pick<FlowContext,'accounts'>)=>{const from=find(ctx.accounts,draft.data.account_id),to=find(ctx.accounts,draft.data.target_id);return !!from&&!!to&&from.currency!==to.currency;};
 /** Whether a question of the conversation is asked at all for this draft. */
-function asked(step:Step,draft:Draft,ctx:Pick<FlowContext,'accounts'|'liabilities'|'businesses'>){
+function asked(step:Step,draft:Draft,ctx:Pick<FlowContext,'accounts'|'liabilities'|'businesses'|'records'>){
  if(step==='business')return asksBusiness(draft,ctx);
+ if(step==='schedule')return schedulesFor(draft,ctx).length>0;
  if(step==='currency')return !presetCurrency(draft,ctx);
  if(step==='lkind')return !presetLiabilityKind(draft);
  return step!=='received'||crossCurrencyTransfer(draft,ctx);
 }
 /** The question asked before the current one, or null at the first question. */
-export function backStep(draft:Draft,ctx:Pick<FlowContext,'accounts'|'liabilities'|'businesses'>):Step|null{
+export function backStep(draft:Draft,ctx:Pick<FlowContext,'accounts'|'liabilities'|'businesses'|'records'>):Step|null{
  if(draft.data.typed)return null;
  // A missing exchange rate is asked after the date, so Back returns to the date.
  if(draft.step==='fxamount'||draft.step==='fxrate')return 'date';

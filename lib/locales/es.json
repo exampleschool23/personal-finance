@@ -2593,5 +2593,12 @@
   "bond maturity": "vencimiento de bono",
   "Metal prices need a market-data API key.": "Los precios de metales requieren una clave API de datos de mercado.",
   "Sign in to fetch metal prices.": "Inicia sesión para obtener los precios de metales.",
-  "Choose the metal, its weight unit and purity.": "Elige el metal, su unidad de peso y su pureza."
+  "Choose the metal, its weight unit and purity.": "Elige el metal, su unidad de peso y su pureza.",
+  "Which scheduled payment is this?": "¿Qué pago programado es este?",
+  "Not a scheduled payment": "No es un pago programado",
+  "Change scheduled payment": "Cambiar pago programado",
+  "Scheduled payment: {name}": "Pago programado: {name}",
+  "Record this payment in the currency of its schedule.": "Registra este pago en la moneda de su programación.",
+  "Choose a scheduled payment.": "Elige un pago programado.",
+  "A scheduled payment keeps its schedule.": "Un pago programado conserva su programación."
 }

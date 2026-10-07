@@ -2593,5 +2593,12 @@
   "bond maturity": "债券到期",
   "Metal prices need a market-data API key.": "金属价格需要市场数据 API 密钥。",
   "Sign in to fetch metal prices.": "登录以获取金属价格。",
-  "Choose the metal, its weight unit and purity.": "请选择金属、重量单位和纯度。"
+  "Choose the metal, its weight unit and purity.": "请选择金属、重量单位和纯度。",
+  "Which scheduled payment is this?": "这是哪一笔计划付款？",
+  "Not a scheduled payment": "不是计划付款",
+  "Change scheduled payment": "更改计划付款",
+  "Scheduled payment: {name}": "计划付款：{name}",
+  "Record this payment in the currency of its schedule.": "请以该计划的货币记录这笔付款。",
+  "Choose a scheduled payment.": "请选择一笔计划付款。",
+  "A scheduled payment keeps its schedule.": "计划付款不能更改其所属计划。"
 }

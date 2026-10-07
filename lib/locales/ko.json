@@ -2593,5 +2593,12 @@
   "bond maturity": "채권 만기",
   "Metal prices need a market-data API key.": "금속 가격을 가져오려면 시장 데이터 API 키가 필요합니다.",
   "Sign in to fetch metal prices.": "금속 가격을 가져오려면 로그인하세요.",
-  "Choose the metal, its weight unit and purity.": "금속, 무게 단위, 순도를 선택하세요."
+  "Choose the metal, its weight unit and purity.": "금속, 무게 단위, 순도를 선택하세요.",
+  "Which scheduled payment is this?": "어떤 예정 결제인가요?",
+  "Not a scheduled payment": "예정 결제 아님",
+  "Change scheduled payment": "예정 결제 변경",
+  "Scheduled payment: {name}": "예정 결제: {name}",
+  "Record this payment in the currency of its schedule.": "이 결제는 일정의 통화로 기록하세요.",
+  "Choose a scheduled payment.": "예정 결제를 선택하세요.",
+  "A scheduled payment keeps its schedule.": "예정 결제는 일정을 바꿀 수 없습니다."
 }

@@ -2593,5 +2593,12 @@
   "bond maturity": "wykup obligacji",
   "Metal prices need a market-data API key.": "Ceny metali wymagają klucza API danych rynkowych.",
   "Sign in to fetch metal prices.": "Zaloguj się, aby pobrać ceny metali.",
-  "Choose the metal, its weight unit and purity.": "Wybierz metal, jednostkę wagi i próbę."
+  "Choose the metal, its weight unit and purity.": "Wybierz metal, jednostkę wagi i próbę.",
+  "Which scheduled payment is this?": "Która to zaplanowana płatność?",
+  "Not a scheduled payment": "To nie jest zaplanowana płatność",
+  "Change scheduled payment": "Zmień zaplanowaną płatność",
+  "Scheduled payment: {name}": "Zaplanowana płatność: {name}",
+  "Record this payment in the currency of its schedule.": "Zapisz tę płatność w walucie jej harmonogramu.",
+  "Choose a scheduled payment.": "Wybierz zaplanowaną płatność.",
+  "A scheduled payment keeps its schedule.": "Zaplanowana płatność zachowuje swój harmonogram."
 }

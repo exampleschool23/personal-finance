@@ -2593,5 +2593,12 @@
   "bond maturity": "погашення облігації",
   "Metal prices need a market-data API key.": "Для цін на метали потрібен API-ключ ринкових даних.",
   "Sign in to fetch metal prices.": "Увійдіть, щоб отримати ціни на метали.",
-  "Choose the metal, its weight unit and purity.": "Оберіть метал, одиницю ваги та пробу."
+  "Choose the metal, its weight unit and purity.": "Оберіть метал, одиницю ваги та пробу.",
+  "Which scheduled payment is this?": "Який це запланований платіж?",
+  "Not a scheduled payment": "Не запланований платіж",
+  "Change scheduled payment": "Змінити запланований платіж",
+  "Scheduled payment: {name}": "Запланований платіж: {name}",
+  "Record this payment in the currency of its schedule.": "Запишіть цей платіж у валюті його графіка.",
+  "Choose a scheduled payment.": "Виберіть запланований платіж.",
+  "A scheduled payment keeps its schedule.": "Запланований платіж зберігає свій графік."
 }

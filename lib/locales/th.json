@@ -2593,5 +2593,12 @@
   "bond maturity": "พันธบัตรครบกำหนด",
   "Metal prices need a market-data API key.": "ราคาโลหะต้องใช้คีย์ API ข้อมูลตลาด",
   "Sign in to fetch metal prices.": "ลงชื่อเข้าใช้เพื่อดึงราคาโลหะ",
-  "Choose the metal, its weight unit and purity.": "เลือกโลหะ หน่วยน้ำหนัก และความบริสุทธิ์"
+  "Choose the metal, its weight unit and purity.": "เลือกโลหะ หน่วยน้ำหนัก และความบริสุทธิ์",
+  "Which scheduled payment is this?": "นี่คือการชำระตามกำหนดรายการใด?",
+  "Not a scheduled payment": "ไม่ใช่การชำระตามกำหนด",
+  "Change scheduled payment": "เปลี่ยนการชำระตามกำหนด",
+  "Scheduled payment: {name}": "การชำระตามกำหนด: {name}",
+  "Record this payment in the currency of its schedule.": "บันทึกการชำระนี้ในสกุลเงินของกำหนดการ",
+  "Choose a scheduled payment.": "เลือกการชำระตามกำหนด",
+  "A scheduled payment keeps its schedule.": "การชำระตามกำหนดเปลี่ยนกำหนดการไม่ได้"
 }

@@ -2593,5 +2593,12 @@
   "bond maturity": "פדיון אגרת חוב",
   "Metal prices need a market-data API key.": "מחירי מתכות דורשים מפתח API לנתוני שוק.",
   "Sign in to fetch metal prices.": "התחברו כדי לקבל מחירי מתכות.",
-  "Choose the metal, its weight unit and purity.": "בחרו מתכת, יחידת משקל וטוהר."
+  "Choose the metal, its weight unit and purity.": "בחרו מתכת, יחידת משקל וטוהר.",
+  "Which scheduled payment is this?": "איזה תשלום מתוזמן זה?",
+  "Not a scheduled payment": "לא תשלום מתוזמן",
+  "Change scheduled payment": "שינוי תשלום מתוזמן",
+  "Scheduled payment: {name}": "תשלום מתוזמן: {name}",
+  "Record this payment in the currency of its schedule.": "יש לרשום את התשלום במטבע של התזמון שלו.",
+  "Choose a scheduled payment.": "יש לבחור תשלום מתוזמן.",
+  "A scheduled payment keeps its schedule.": "תשלום מתוזמן שומר על התזמון שלו."
 }

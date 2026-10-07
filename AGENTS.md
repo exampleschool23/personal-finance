@@ -230,6 +230,25 @@ database, never by the app.
   no invites, and its owner changes run through the local copies
   (`assignOwner`, `moveAccountToOwner`).
 
+# Scheduled payments link by id
+
+A payment belongs to a recurring income or bill only through ids, never through a
+name, amount or date that happens to match (migration 119).
+
+- A payment of a schedule carries the schedule's id (`occurrence_record_id`) and the
+  due date it pays (`occurrence_due_on`). Entry points name the schedule: Record
+  payment, later payments, and the bot's "Which scheduled payment is this?" question.
+  A business or rent income that names none takes the id of the one active schedule
+  of its business or property; with none or several it stays unlinked.
+- The database alone picks and checks the due date (`name_scheduled_payment`): the
+  open payment of the payment's own month, else last month's, else it adds to this
+  month's recorded one. The first payment settles the due date
+  (`payment_occurrences.transaction_id`); a schedule id never changes afterwards.
+- Every screen totals a due date the same way: its first payment plus the other
+  payments naming it, through `laterPayments` in `lib/planning.ts` (Recurring and
+  the planning read). Cash flow joins a payment to its schedule's card by the same
+  id. Do not add another matching rule; extend this one.
+
 # DRY and regression coverage
 
 Reuse shared components, hooks, validators, and calculation helpers instead of duplicating behavior (DRY: Don’t Repeat Yourself). Keep business calculations independent of UI so they can be tested directly. Before introducing an abstraction, check for an existing helper; extract shared behavior when it has multiple real callers. Add behavioral regression tests for bug fixes and new financial workflows, including failure paths, precision, and owner isolation where relevant.

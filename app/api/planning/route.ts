@@ -13,7 +13,7 @@ import type { Category, ExtraPayment, Occurrence } from '@/lib/planning';
 import { queueMilestoneCheck } from '@/lib/notify-action';
 import type { ActionEvent } from '@/lib/action-messages';
 /** Later payments for recorded occurrences add to them; limited scopes leave those transactions out of `records`. Before migration 112 there are none. */
-const readExtraPayments=(scope:string,token:string)=>scope==='insights'?Promise.resolve([] as ExtraPayment[]):readOwnerRows<ExtraPayment>('finance_records',token,{select:'occurrence_record_id,occurrence_due_on,amount',occurrence_record_id:'not.is.null'}).catch(()=>[] as ExtraPayment[]);
+const readExtraPayments=(scope:string,token:string)=>scope==='insights'?Promise.resolve([] as ExtraPayment[]):readOwnerRows<ExtraPayment>('finance_records',token,{select:'id,occurrence_record_id,occurrence_due_on,amount',occurrence_record_id:'not.is.null'}).catch(()=>[] as ExtraPayment[]);
 export async function GET(req?:Request){
  try{const auth=await session();if(!auth)return signInAgain();
  const scope=req?new URL(req.url).searchParams.get('scope')??'full':'full';

@@ -10,7 +10,7 @@ import {t} from '../telegram-kit';
 import {commitFor} from './commit';
 import {mainMenu,menuChoice,moreMenu} from './menu';
 import {prompt} from './prompts';
-import {asksBusiness,backStep,backToCard,buttonSteps,currencyList,find,firstStep,futureExample,isCash,needsBusiness,needsRate,next,numberExamples,pastExample,presetCurrency,presetLiabilityKind,rewind} from './steps';
+import {asksBusiness,backStep,backToCard,buttonSteps,currencyList,find,firstStep,futureExample,isCash,needsBusiness,needsRate,next,numberExamples,onlySchedule,pastExample,presetCurrency,presetLiabilityKind,rewind,schedulesFor} from './steps';
 import {amountWithCurrency,parseAmount,parseAmountOrZero,parseRate,startTyped} from './typed';
 import {liabilityKinds,type Draft,type FlowContext,type FlowInput,type FlowResult,type LiabilityKind,type Step} from './types';
 
@@ -31,16 +31,25 @@ const answers:Record<Step,(answer:Answer)=>FlowResult>={
   if(callback==='f:flip'&&draft.data.typed&&(draft.kind==='expense'||draft.kind==='income'))return ask({kind:draft.kind==='expense'?'income':'expense',step:'category',data:{...draft.data,category:undefined,custom_category_id:undefined,category_name:undefined}});
   const answer=chosenCategory(value('f:cat:'),draft,ctx);
   if(!answer)return again();
-  // A typed entry returns to its card, unless business income still needs its business.
-  if(draft.data.typed)return ask(next(draft,answer.category==='Business income'&&!draft.data.business_id?'business':'confirm',answer));
-  return ask(next(draft,asksBusiness(draft,ctx)?'business':'account',answer));
+  // A typed entry returns to its card, unless business income still needs its business; another category has other schedules.
+  if(draft.data.typed){const moved=next(draft,answer.category==='Business income'&&!draft.data.business_id?'business':'confirm',answer);return ask(next(moved,moved.step,{schedule_id:onlySchedule(moved,ctx)}));}
+  const moved=next(draft,'account',answer);
+  return ask(next(moved,asksBusiness(moved,ctx)?'business':schedulesFor(moved,ctx).length?'schedule':'account'));
  },
  business:({draft,ctx,value,ask,again})=>{
   const chosen=value('f:biz:');
   const business=(ctx.businesses??[]).find(item=>item.id===chosen);
   // "No business" keeps the entry personal; business income cannot.
   if(!business&&(chosen!=='none'||needsBusiness(draft)))return again();
-  return ask(next(draft,draft.data.typed?'confirm':'account',{business_id:business?.id??null}));
+  const moved=next(draft,'account',{business_id:business?.id??null});
+  if(draft.data.typed)return ask(next(moved,'confirm',{schedule_id:onlySchedule(moved,ctx)}));
+  return ask(next(moved,schedulesFor(moved,ctx).length?'schedule':'account'));
+ },
+ schedule:({draft,ctx,value,ask,again})=>{
+  // The payment names its schedule by id; "Not a scheduled payment" names none.
+  const chosen=value('f:sch:'),schedule=schedulesFor(draft,ctx).find(item=>item.id===chosen);
+  if(!schedule&&chosen!=='none')return again();
+  return ask(next(draft,draft.data.typed?'confirm':'account',{schedule_id:schedule?.id??null}));
  },
  account:({draft,ctx,value,ask,again})=>{
   const chosen=value('f:acc:');const account=chosen?find(ctx.accounts,chosen):undefined;
@@ -211,7 +220,7 @@ function fromMenu(menuInput:string|undefined,input:FlowInput,ctx:FlowContext,cha
 function control(draft:Draft,callback:string,ctx:FlowContext,ask:(moved:Draft,page?:number)=>FlowResult):FlowResult|null{
  // On a typed entry's card each guess can be changed; the answer returns to the card.
  if(draft.data.typed&&draft.step==='confirm'){
-  const change:Partial<Record<string,Step>>={'f:chcat':'category','f:chacc':'account',...(ctx.businesses?.length?{'f:chbiz':'business'}:{})};
+  const change:Partial<Record<string,Step>>={'f:chcat':'category','f:chacc':'account',...(ctx.businesses?.length?{'f:chbiz':'business'}:{}),...(schedulesFor(draft,ctx).length?{'f:chsch':'schedule'}:{})};
   const step=change[callback];
   if(step)return ask({...draft,step});
  }

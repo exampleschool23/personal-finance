@@ -51,7 +51,8 @@ export function monthlyIncomeCards(entries: Entry[], month: string, sources: Ear
   // Reusable-source receipts link to the source, whose schedule is already folded
   // into its property/business card. Resolve that asset before the schedule.
   const assetId = entry.kind === 'Business income' ? entry.business_id ?? source?.linked_record_id : entry.kind === 'Rent income' ? entry.income_source_id ?? source?.linked_record_id : null;
-  const scheduleId = source?.schedule_id ?? (entry.kind === 'Salary' ? entry.income_source_id : null);
+  // A payment that names its schedule by id joins that schedule's card.
+  const scheduleId = entry.occurrence_record_id ?? source?.schedule_id ?? (entry.kind === 'Salary' ? entry.income_source_id : null);
   const candidates = cards.filter(card => (card.asset || card.entry.frequency !== 'Once') && card.entry.currency === entry.currency && (assetId ? card.entry.id === assetId : scheduleId ? card.entry.id === scheduleId : entry.earning_source_id ? card.entry.earning_source_id === entry.earning_source_id : !card.entry.earning_source_id && (card.entry.kind === entry.kind || (entry.kind === 'Rent income' && card.entry.kind === 'Property') || (entry.kind === 'Business income' && card.entry.kind === 'Business')) && card.entry.currency === entry.currency && !!entry.name.trim() && card.entry.name.trim().toLowerCase() === entry.name.trim().toLowerCase()));
   const existing = candidates.length === 1 ? candidates[0] : entry.frequency === 'Once'
    ? cards.find(card => card.excluded && card.entry.frequency === 'Once' && receiptKey(card.entry) === receiptKey(entry)) : undefined;

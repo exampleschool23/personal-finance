@@ -2593,5 +2593,12 @@
   "bond maturity": "tahvil vadesi",
   "Metal prices need a market-data API key.": "Metal fiyatları için piyasa verisi API anahtarı gerekir.",
   "Sign in to fetch metal prices.": "Metal fiyatlarını almak için giriş yapın.",
-  "Choose the metal, its weight unit and purity.": "Metali, ağırlık birimini ve saflığı seçin."
+  "Choose the metal, its weight unit and purity.": "Metali, ağırlık birimini ve saflığı seçin.",
+  "Which scheduled payment is this?": "Bu hangi planlı ödeme?",
+  "Not a scheduled payment": "Planlı ödeme değil",
+  "Change scheduled payment": "Planlı ödemeyi değiştir",
+  "Scheduled payment: {name}": "Planlı ödeme: {name}",
+  "Record this payment in the currency of its schedule.": "Bu ödemeyi planının para biriminde kaydedin.",
+  "Choose a scheduled payment.": "Bir planlı ödeme seçin.",
+  "A scheduled payment keeps its schedule.": "Planlı ödeme planını korur."
 }

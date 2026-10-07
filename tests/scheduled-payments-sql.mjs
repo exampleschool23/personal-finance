@@ -101,7 +101,8 @@ test('migration 112 adds later payments to a recorded occurrence: they add up, r
   await more(84,800);
   await assert.rejects(more(85,0),/Check the account fields/,'a later payment is more than 0');
   const rows=(await d.query('SELECT amount::float AS amount,occurrence_record_id,occurrence_due_on::text AS due FROM finance_records WHERE id IN ($1,$2) ORDER BY amount',[id(83),id(84)])).rows;
-  assert.deepEqual(rows,[{amount:700,occurrence_record_id:null,due:null},{amount:800,occurrence_record_id:id(81),due:month}]);
+  // Since migration 119 the first payment names its schedule and due date too.
+  assert.deepEqual(rows,[{amount:700,occurrence_record_id:id(81),due:month},{amount:800,occurrence_record_id:id(81),due:month}]);
   assert.equal(await cash(),2500,'both payments reach the account, the retry only once');
   await assert.rejects(more(84,900),/already saved with different details/);
   await d.exec(`SET request.jwt.claim.sub='${id(2)}';`);

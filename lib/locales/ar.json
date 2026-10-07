@@ -2593,5 +2593,12 @@
   "bond maturity": "استحقاق سند",
   "Metal prices need a market-data API key.": "أسعار المعادن تتطلب مفتاح API لبيانات السوق.",
   "Sign in to fetch metal prices.": "سجّل الدخول لجلب أسعار المعادن.",
-  "Choose the metal, its weight unit and purity.": "اختر المعدن ووحدة وزنه ونقاءه."
+  "Choose the metal, its weight unit and purity.": "اختر المعدن ووحدة وزنه ونقاءه.",
+  "Which scheduled payment is this?": "ما الدفعة المجدولة هذه؟",
+  "Not a scheduled payment": "ليست دفعة مجدولة",
+  "Change scheduled payment": "تغيير الدفعة المجدولة",
+  "Scheduled payment: {name}": "الدفعة المجدولة: {name}",
+  "Record this payment in the currency of its schedule.": "سجّل هذه الدفعة بعملة جدولها.",
+  "Choose a scheduled payment.": "اختر دفعة مجدولة.",
+  "A scheduled payment keeps its schedule.": "تحتفظ الدفعة المجدولة بجدولها."
 }

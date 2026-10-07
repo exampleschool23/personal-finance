@@ -3,7 +3,7 @@ import {formatDate,formatNumber,formatPercent} from '../format';
 import {locales} from '../i18n';
 import {escapeHtml} from '../telegram';
 import {moneyIn as money,t} from '../telegram-kit';
-import {currencies,find} from './steps';
+import {currencies,find,recordName} from './steps';
 import type {Entry} from '../finance';
 import type {Draft,FlowContext,FlowKind} from './types';
 
@@ -18,9 +18,14 @@ function businessLine({d,account,ctx,language}:Card):string[]{
  const businessId=d.business_id!==undefined?d.business_id:account?.business_id,business=businessId?find(ctx.businesses??[],businessId):undefined;
  return business?[t(language,'Business: {name}',{name:escapeHtml(business.name)})]:[];
 }
+/** The schedule the payment will be recorded against, named by its id. */
+function scheduleLine({d,ctx,language}:Card):string[]{
+ const schedule=d.schedule_id?find(ctx.records??[],d.schedule_id):undefined;
+ return schedule?[t(language,'Scheduled payment: {name}',{name:escapeHtml(schedule.name)})]:[];
+}
 const cashFlowLines=(card:Card)=>{
  const {draft,language,d,account,day,name,converted}=card;
- return [`${t(language,draft.kind==='expense'?'Expense':'Income')} · ${escapeHtml(d.category_name??'')}`,`${name(d.name||d.category_name)} · ${money(d.amount??0,d.currency??account?.currency??'',language)} · ${day}`,t(language,draft.kind==='income'?'into {account}':'from {account}',{account:escapeHtml(account?.name??'')})+converted(d.amount??0),...businessLine(card)];
+ return [`${t(language,draft.kind==='expense'?'Expense':'Income')} · ${escapeHtml(d.category_name??'')}`,`${name(recordName(draft,card.ctx))} · ${money(d.amount??0,d.currency??account?.currency??'',language)} · ${day}`,t(language,draft.kind==='income'?'into {account}':'from {account}',{account:escapeHtml(account?.name??'')})+converted(d.amount??0),...businessLine(card),...scheduleLine(card)];
 };
 const cardLines:Record<FlowKind,(card:Card)=>string[]>={
  expense:cashFlowLines,

@@ -2593,5 +2593,12 @@
   "bond maturity": "đáo hạn trái phiếu",
   "Metal prices need a market-data API key.": "Giá kim loại cần khóa API dữ liệu thị trường.",
   "Sign in to fetch metal prices.": "Đăng nhập để lấy giá kim loại.",
-  "Choose the metal, its weight unit and purity.": "Chọn kim loại, đơn vị khối lượng và độ tinh khiết."
+  "Choose the metal, its weight unit and purity.": "Chọn kim loại, đơn vị khối lượng và độ tinh khiết.",
+  "Which scheduled payment is this?": "Đây là khoản thanh toán định kỳ nào?",
+  "Not a scheduled payment": "Không phải thanh toán định kỳ",
+  "Change scheduled payment": "Đổi khoản thanh toán định kỳ",
+  "Scheduled payment: {name}": "Thanh toán định kỳ: {name}",
+  "Record this payment in the currency of its schedule.": "Hãy ghi khoản này bằng đơn vị tiền của lịch.",
+  "Choose a scheduled payment.": "Chọn một khoản thanh toán định kỳ.",
+  "A scheduled payment keeps its schedule.": "Khoản thanh toán định kỳ giữ nguyên lịch của nó."
 }

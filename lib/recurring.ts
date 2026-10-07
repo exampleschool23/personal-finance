@@ -1,7 +1,7 @@
 import { daysBetween, monthDays, monthEnd, shiftDay } from './calendar-days';
 import { archivedIn, scheduleDates, income, type Entry } from './finance';
 import { expensePlanTotals, type ExpensePlan } from './expense-plans';
-import { installmentDates, installmentsFrom, isRecurringCashFlow, paidInstallmentMonths, scheduleAssets, scheduleStart, settledOccurrences, type DebtPayment, type Occurrence } from './planning';
+import { installmentDates, installmentsFrom, isRecurringCashFlow, laterPayments, paidInstallmentMonths, scheduleAssets, scheduleStart, settledOccurrences, type DebtPayment, type Occurrence } from './planning';
 
 export type RecurringStatus = 'paid' | 'skipped' | 'due' | 'overdue';
 /** `installment` is a loan's monthly payment; it is paid by a repayment or mortgage payment in its month. */
@@ -29,8 +29,7 @@ export function occurrencesBetween(records: Entry[], occurrences: Occurrence[], 
  for (const item of occurrences) { const transaction = item.status !== 'paid' ? undefined : item.transaction ?? (item.transaction_id ? byId.get(item.transaction_id) : undefined); if (transaction) recorded.set(item.record_id + ':' + item.due_on, Number(transaction.amount)); }
  for (const record of records) if (record.kind === 'Salary' && record.frequency === 'Once' && record.income_source_id) recorded.set(record.income_source_id + ':' + (record.income_due_on ?? record.date), Number(record.amount));
  // Later payments add to what the first one recorded: totalled by the read, or found among the loaded records.
- const extras = new Map<string, number>();
- for (const record of records) if (record.occurrence_record_id && record.occurrence_due_on) { const key = record.occurrence_record_id + ':' + record.occurrence_due_on; extras.set(key, (extras.get(key) ?? 0) + Number(record.amount)); }
+ const extras = laterPayments(occurrences, records.flatMap(record => record.occurrence_record_id && record.occurrence_due_on ? [{ id: record.id, occurrence_record_id: record.occurrence_record_id, occurrence_due_on: record.occurrence_due_on, amount: record.amount }] : []));
  for (const item of occurrences) { const key = item.record_id + ':' + item.due_on; if (item.extra !== undefined) extras.set(key, item.extra); }
  for (const [key, extra] of extras) if (recorded.has(key)) recorded.set(key, recorded.get(key)! + extra);
  const items: RecurringItem[] = [];

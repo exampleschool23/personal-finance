@@ -2593,5 +2593,12 @@
   "bond maturity": "échéance d’obligation",
   "Metal prices need a market-data API key.": "Les prix des métaux nécessitent une clé API de données de marché.",
   "Sign in to fetch metal prices.": "Connectez-vous pour obtenir les prix des métaux.",
-  "Choose the metal, its weight unit and purity.": "Choisissez le métal, son unité de poids et sa pureté."
+  "Choose the metal, its weight unit and purity.": "Choisissez le métal, son unité de poids et sa pureté.",
+  "Which scheduled payment is this?": "De quel paiement planifié s’agit-il ?",
+  "Not a scheduled payment": "Pas un paiement planifié",
+  "Change scheduled payment": "Changer le paiement planifié",
+  "Scheduled payment: {name}": "Paiement planifié : {name}",
+  "Record this payment in the currency of its schedule.": "Enregistrez ce paiement dans la devise de sa planification.",
+  "Choose a scheduled payment.": "Choisissez un paiement planifié.",
+  "A scheduled payment keeps its schedule.": "Un paiement planifié garde sa planification."
 }

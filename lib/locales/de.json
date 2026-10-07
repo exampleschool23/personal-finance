@@ -2593,5 +2593,12 @@
   "bond maturity": "Fälligkeit der Anleihe",
   "Metal prices need a market-data API key.": "Metallpreise benötigen einen Marktdaten-API-Schlüssel.",
   "Sign in to fetch metal prices.": "Melden Sie sich an, um Metallpreise abzurufen.",
-  "Choose the metal, its weight unit and purity.": "Wählen Sie Metall, Gewichtseinheit und Feingehalt."
+  "Choose the metal, its weight unit and purity.": "Wählen Sie Metall, Gewichtseinheit und Feingehalt.",
+  "Which scheduled payment is this?": "Welche geplante Zahlung ist das?",
+  "Not a scheduled payment": "Keine geplante Zahlung",
+  "Change scheduled payment": "Geplante Zahlung ändern",
+  "Scheduled payment: {name}": "Geplante Zahlung: {name}",
+  "Record this payment in the currency of its schedule.": "Erfasse diese Zahlung in der Währung ihres Plans.",
+  "Choose a scheduled payment.": "Wähle eine geplante Zahlung.",
+  "A scheduled payment keeps its schedule.": "Eine geplante Zahlung behält ihren Plan."
 }

@@ -2593,5 +2593,12 @@
   "bond maturity": "splatnost dluhopisu",
   "Metal prices need a market-data API key.": "Ceny kovů vyžadují klíč API tržních dat.",
   "Sign in to fetch metal prices.": "Pro načtení cen kovů se přihlaste.",
-  "Choose the metal, its weight unit and purity.": "Vyberte kov, jednotku hmotnosti a ryzost."
+  "Choose the metal, its weight unit and purity.": "Vyberte kov, jednotku hmotnosti a ryzost.",
+  "Which scheduled payment is this?": "O kterou plánovanou platbu jde?",
+  "Not a scheduled payment": "Není plánovaná platba",
+  "Change scheduled payment": "Změnit plánovanou platbu",
+  "Scheduled payment: {name}": "Plánovaná platba: {name}",
+  "Record this payment in the currency of its schedule.": "Zaznamenejte tuto platbu v měně jejího plánu.",
+  "Choose a scheduled payment.": "Vyberte plánovanou platbu.",
+  "A scheduled payment keeps its schedule.": "Plánovaná platba si ponechává svůj plán."
 }

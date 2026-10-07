@@ -2593,5 +2593,12 @@
   "bond maturity": "scadența obligațiunii",
   "Metal prices need a market-data API key.": "Prețurile metalelor necesită o cheie API pentru date de piață.",
   "Sign in to fetch metal prices.": "Conectați-vă pentru a prelua prețurile metalelor.",
-  "Choose the metal, its weight unit and purity.": "Alegeți metalul, unitatea de greutate și puritatea."
+  "Choose the metal, its weight unit and purity.": "Alegeți metalul, unitatea de greutate și puritatea.",
+  "Which scheduled payment is this?": "Ce plată programată este aceasta?",
+  "Not a scheduled payment": "Nu este o plată programată",
+  "Change scheduled payment": "Schimbă plata programată",
+  "Scheduled payment: {name}": "Plată programată: {name}",
+  "Record this payment in the currency of its schedule.": "Înregistrează această plată în moneda programării ei.",
+  "Choose a scheduled payment.": "Alege o plată programată.",
+  "A scheduled payment keeps its schedule.": "O plată programată își păstrează programarea."
 }

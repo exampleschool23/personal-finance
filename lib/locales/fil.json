@@ -2593,5 +2593,12 @@
   "bond maturity": "maturity ng bond",
   "Metal prices need a market-data API key.": "Kailangan ng market-data API key para sa presyo ng metal.",
   "Sign in to fetch metal prices.": "Mag-sign in para makuha ang presyo ng metal.",
-  "Choose the metal, its weight unit and purity.": "Piliin ang metal, yunit ng timbang at kadalisayan nito."
+  "Choose the metal, its weight unit and purity.": "Piliin ang metal, yunit ng timbang at kadalisayan nito.",
+  "Which scheduled payment is this?": "Aling nakatakdang bayad ito?",
+  "Not a scheduled payment": "Hindi nakatakdang bayad",
+  "Change scheduled payment": "Palitan ang nakatakdang bayad",
+  "Scheduled payment: {name}": "Nakatakdang bayad: {name}",
+  "Record this payment in the currency of its schedule.": "Itala ang bayad na ito sa currency ng iskedyul nito.",
+  "Choose a scheduled payment.": "Pumili ng nakatakdang bayad.",
+  "A scheduled payment keeps its schedule.": "Nananatili sa iskedyul nito ang nakatakdang bayad."
 }

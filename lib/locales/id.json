@@ -2593,5 +2593,12 @@
   "bond maturity": "jatuh tempo obligasi",
   "Metal prices need a market-data API key.": "Harga logam memerlukan kunci API data pasar.",
   "Sign in to fetch metal prices.": "Masuk untuk mengambil harga logam.",
-  "Choose the metal, its weight unit and purity.": "Pilih logam, satuan berat, dan kemurniannya."
+  "Choose the metal, its weight unit and purity.": "Pilih logam, satuan berat, dan kemurniannya.",
+  "Which scheduled payment is this?": "Pembayaran terjadwal yang mana ini?",
+  "Not a scheduled payment": "Bukan pembayaran terjadwal",
+  "Change scheduled payment": "Ubah pembayaran terjadwal",
+  "Scheduled payment: {name}": "Pembayaran terjadwal: {name}",
+  "Record this payment in the currency of its schedule.": "Catat pembayaran ini dalam mata uang jadwalnya.",
+  "Choose a scheduled payment.": "Pilih pembayaran terjadwal.",
+  "A scheduled payment keeps its schedule.": "Pembayaran terjadwal tetap pada jadwalnya."
 }

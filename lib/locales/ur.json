@@ -2593,5 +2593,12 @@
   "bond maturity": "بانڈ کی میچورٹی",
   "Metal prices need a market-data API key.": "دھاتوں کی قیمتوں کے لیے مارکیٹ ڈیٹا API کلید درکار ہے۔",
   "Sign in to fetch metal prices.": "دھاتوں کی قیمتیں حاصل کرنے کے لیے سائن ان کریں۔",
-  "Choose the metal, its weight unit and purity.": "دھات، اس کے وزن کی اکائی اور خالصیت منتخب کریں۔"
+  "Choose the metal, its weight unit and purity.": "دھات، اس کے وزن کی اکائی اور خالصیت منتخب کریں۔",
+  "Which scheduled payment is this?": "یہ کون سی طے شدہ ادائیگی ہے؟",
+  "Not a scheduled payment": "طے شدہ ادائیگی نہیں",
+  "Change scheduled payment": "طے شدہ ادائیگی بدلیں",
+  "Scheduled payment: {name}": "طے شدہ ادائیگی: {name}",
+  "Record this payment in the currency of its schedule.": "یہ ادائیگی اس کے شیڈول کی کرنسی میں درج کریں۔",
+  "Choose a scheduled payment.": "ایک طے شدہ ادائیگی منتخب کریں۔",
+  "A scheduled payment keeps its schedule.": "طے شدہ ادائیگی اپنا شیڈول برقرار رکھتی ہے۔"
 }

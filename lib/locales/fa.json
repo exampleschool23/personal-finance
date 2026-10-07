@@ -2593,5 +2593,12 @@
   "bond maturity": "سررسید اوراق قرضه",
   "Metal prices need a market-data API key.": "قیمت فلزات به کلید API داده‌های بازار نیاز دارد.",
   "Sign in to fetch metal prices.": "برای دریافت قیمت فلزات وارد شوید.",
-  "Choose the metal, its weight unit and purity.": "فلز، واحد وزن و عیار آن را انتخاب کنید."
+  "Choose the metal, its weight unit and purity.": "فلز، واحد وزن و عیار آن را انتخاب کنید.",
+  "Which scheduled payment is this?": "این کدام پرداخت زمان‌بندی‌شده است؟",
+  "Not a scheduled payment": "پرداخت زمان‌بندی‌شده نیست",
+  "Change scheduled payment": "تغییر پرداخت زمان‌بندی‌شده",
+  "Scheduled payment: {name}": "پرداخت زمان‌بندی‌شده: {name}",
+  "Record this payment in the currency of its schedule.": "این پرداخت را با ارز برنامه‌اش ثبت کنید.",
+  "Choose a scheduled payment.": "یک پرداخت زمان‌بندی‌شده انتخاب کنید.",
+  "A scheduled payment keeps its schedule.": "پرداخت زمان‌بندی‌شده برنامه‌اش را نگه می‌دارد."
 }

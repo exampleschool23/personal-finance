@@ -2593,5 +2593,12 @@
   "bond maturity": "vervaldatum obligatie",
   "Metal prices need a market-data API key.": "Metaalprijzen vereisen een API-sleutel voor marktgegevens.",
   "Sign in to fetch metal prices.": "Meld je aan om metaalprijzen op te halen.",
-  "Choose the metal, its weight unit and purity.": "Kies het metaal, de gewichtseenheid en de zuiverheid."
+  "Choose the metal, its weight unit and purity.": "Kies het metaal, de gewichtseenheid en de zuiverheid.",
+  "Which scheduled payment is this?": "Welke geplande betaling is dit?",
+  "Not a scheduled payment": "Geen geplande betaling",
+  "Change scheduled payment": "Geplande betaling wijzigen",
+  "Scheduled payment: {name}": "Geplande betaling: {name}",
+  "Record this payment in the currency of its schedule.": "Leg deze betaling vast in de valuta van het schema.",
+  "Choose a scheduled payment.": "Kies een geplande betaling.",
+  "A scheduled payment keeps its schedule.": "Een geplande betaling houdt haar schema."
 }

@@ -2593,5 +2593,12 @@
   "bond maturity": "погашение облигации",
   "Metal prices need a market-data API key.": "Для цен на металлы нужен API-ключ рыночных данных.",
   "Sign in to fetch metal prices.": "Войдите, чтобы получить цены на металлы.",
-  "Choose the metal, its weight unit and purity.": "Выберите металл, единицу веса и пробу."
+  "Choose the metal, its weight unit and purity.": "Выберите металл, единицу веса и пробу.",
+  "Which scheduled payment is this?": "Какой это плановый платёж?",
+  "Not a scheduled payment": "Не плановый платёж",
+  "Change scheduled payment": "Изменить плановый платёж",
+  "Scheduled payment: {name}": "Плановый платёж: {name}",
+  "Record this payment in the currency of its schedule.": "Запишите этот платёж в валюте его графика.",
+  "Choose a scheduled payment.": "Выберите плановый платёж.",
+  "A scheduled payment keeps its schedule.": "Плановый платёж сохраняет свой график."
 }

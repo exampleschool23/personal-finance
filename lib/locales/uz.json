@@ -2593,5 +2593,12 @@
   "bond maturity": "obligatsiya muddati",
   "Metal prices need a market-data API key.": "Metall narxlari uchun bozor ma’lumotlari API kaliti kerak.",
   "Sign in to fetch metal prices.": "Metall narxlarini olish uchun tizimga kiring.",
-  "Choose the metal, its weight unit and purity.": "Metall, og‘irlik birligi va sof og‘irligini tanlang."
+  "Choose the metal, its weight unit and purity.": "Metall, og‘irlik birligi va sof og‘irligini tanlang.",
+  "Which scheduled payment is this?": "Bu qaysi rejalashtirilgan to‘lov?",
+  "Not a scheduled payment": "Rejalashtirilgan to‘lov emas",
+  "Change scheduled payment": "Rejalashtirilgan to‘lovni o‘zgartirish",
+  "Scheduled payment: {name}": "Rejalashtirilgan to‘lov: {name}",
+  "Record this payment in the currency of its schedule.": "Bu to‘lovni jadval valyutasida yozing.",
+  "Choose a scheduled payment.": "Rejalashtirilgan to‘lovni tanlang.",
+  "A scheduled payment keeps its schedule.": "Rejalashtirilgan to‘lov o‘z jadvalini saqlaydi."
 }

@@ -7,11 +7,23 @@ export type Category = {id:string;name:string;direction:'income'|'expense'};
 export type InvestmentTarget = {holding_account_id:string;asset_kind:'Stock'|'Crypto';asset_symbol:string;target:number;monthly_contribution?:number|null};
 export type Goal = {completed_on?:string|null;funding_priority?:number;funding_monthly?:number|null;funding_enabled?:boolean;paused_until?:string|null;funding_mode?:'one_time'|'refill';investment_targets?:InvestmentTarget[];id:string;name:string;account_id:string|null;target:number;allocated:number;target_date:string|null;archived:boolean;kind?:'savings'|'net_worth'|'investment';holding_account_id?:string|null;asset_kind?:'Stock'|'Crypto'|null;asset_symbol?:string|null;currency?:string;monthly_contribution?:number|null;annual_return?:number};
 export type Occurrence = {id:string;record_id:string;due_on:string;status:'paid'|'dismissed';notes?:string|null;transaction_id?:string|null;transaction?:{amount:number;date:string}|null;/** What later payments added, when the read attached them. */extra?:number};
-export type ExtraPayment = {occurrence_record_id:string;occurrence_due_on:string;amount:number};
+/** A payment that names its schedule by id: the schedule (`occurrence_record_id`) and the due date it pays. */
+export type ExtraPayment = {id?:string;occurrence_record_id:string;occurrence_due_on:string;amount:number};
+/** What the payments naming each paid due date added after its first one. The first payment settles the due date
+ * (`transaction_id`) and may name it too, so it is left out here; every payment is counted once. */
+export function laterPayments(occurrences:Occurrence[],payments:ExtraPayment[]):Map<string,number> {
+ const first=new Set(occurrences.flatMap(item=>item.transaction_id?[item.transaction_id]:[]));
+ const totals=new Map<string,number>();
+ for(const payment of payments){
+  if(!payment.occurrence_record_id||!payment.occurrence_due_on||(payment.id&&first.has(payment.id)))continue;
+  const key=payment.occurrence_record_id+':'+payment.occurrence_due_on;
+  totals.set(key,(totals.get(key)??0)+Number(payment.amount));
+ }
+ return totals;
+}
 /** Each paid occurrence with the total of the later payments made for it. */
 export function withExtraPayments(occurrences:Occurrence[],payments:ExtraPayment[]):Occurrence[] {
- const totals=new Map<string,number>();
- for(const payment of payments){const key=payment.occurrence_record_id+':'+payment.occurrence_due_on;totals.set(key,(totals.get(key)??0)+Number(payment.amount));}
+ const totals=laterPayments(occurrences,payments);
  return occurrences.map(item=>item.status==='paid'?{...item,extra:totals.get(item.record_id+':'+item.due_on)??0}:item);
 }
 export type Activity = {id:string;action:string;account_id:string;target_id:string|null;amount:number;received:number;fee:number;occurred_on:string;notes:string;before_balance:number;after_balance:number};

@@ -4,7 +4,7 @@ import {formatDate} from '../format';
 import {locales,type Language} from '../i18n';
 import {escapeHtml,type TelegramButton,type TelegramKeyboard,type TelegramMessage} from '../telegram';
 import {keyboardRows,moneyIn as money,t} from '../telegram-kit';
-import {canGoBack,cancelButton,controls,currencies,currencyList,find,futureExample,isCash,needsBusiness,newAccountButton,newLiabilityButton,pastExample} from './steps';
+import {canGoBack,cancelButton,controls,currencies,currencyList,find,futureExample,isCash,needsBusiness,newAccountButton,newLiabilityButton,pastExample,schedulesFor} from './steps';
 import {summary} from './summary';
 import {liabilityKinds,type Draft,type FlowContext,type Step} from './types';
 
@@ -82,6 +82,10 @@ const prompts:Record<Step,(ask:Ask)=>TelegramMessage>={
   const options=[...(ask.ctx.businesses??[]).map(business=>({text:business.name,callback_data:'f:biz:'+business.id})),...(needsBusiness(ask.draft)?[]:[{text:t(ask.language,'No business'),callback_data:'f:biz:none'}])];
   return choicePage(ask,t(ask.language,'Choose a business'),options);
  },
+ schedule:ask=>{
+  const options=[...schedulesFor(ask.draft,ask.ctx).map(item=>({text:`${item.name} · ${money(item.amount,item.currency,ask.language)}`,callback_data:'f:sch:'+item.id})),{text:t(ask.language,'Not a scheduled payment'),callback_data:'f:sch:none'}];
+  return choicePage(ask,t(ask.language,'Which scheduled payment is this?'),options);
+ },
  lkind:ask=>question(ask,t(ask.language,'Is it a loan, a debt or a mortgage?'),[liabilityKinds.map(kind=>({text:t(ask.language,kind),callback_data:'f:lkind:'+kind}))]),
  lname:ask=>{const kind=ask.draft.data.lkind;return question(ask,t(ask.language,kind==='Mortgage'?'Name it, for example Home mortgage.':kind==='Debt'?'Name it, for example Credit card.':'Name it, for example Car loan.'));},
  duedate:ask=>question(ask,t(ask.language,'When is it due? Type a date like {date}',{date:futureExample(ask.ctx)})),
@@ -103,6 +107,7 @@ const prompts:Record<Step,(ask:Ask)=>TelegramMessage>={
   // A typed entry is checked on one card: every guess can be changed before saving.
   const changes:TelegramButton[]=[{text:t(language,'Change category'),callback_data:'f:chcat'},{text:t(language,'Change account'),callback_data:'f:chacc'}];
   if(ctx.businesses?.length)changes.push({text:t(language,'Change business'),callback_data:'f:chbiz'});
+  if(schedulesFor(draft,ctx).length)changes.push({text:t(language,'Change scheduled payment'),callback_data:'f:chsch'});
   return {chat_id:ask.chat,text:summary(draft,ctx),keyboard:{inline:[save,...keyboardRows(changes,2),[cancelButton(language)]]}};
  },
 };

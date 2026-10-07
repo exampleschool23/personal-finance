@@ -4,7 +4,7 @@ import {locales,type Language} from '../i18n';
 import {currencyCandidates,guessCategory,looseNumber,parseTypedAmount,parseTypedEntry} from '../telegram-entry';
 import {t} from '../telegram-kit';
 import {directionOf} from '../transaction-rules';
-import {find,isCash} from './steps';
+import {find,isCash,onlySchedule} from './steps';
 import type {Draft,DraftData,FlowContext,Step} from './types';
 
 /** A positive amount read by the same rules as a typed entry, so 12,75 is 12.75 in every language and never 1275. */
@@ -51,5 +51,6 @@ export function startTyped(text:string,ctx:FlowContext):{draft:Draft}|{error:'em
  const category=custom?{category:undefined,custom_category_id:custom.id,category_name:custom.name}:{category:guess.kind,custom_category_id:null,category_name:t(ctx.language,guess.kind)};
  const data:DraftData={typed:true,id:ctx.newId,...category,amount:parsed.amount,name,date:parsed.date,...(account?{account_id:account}:{}),...(parsed.currency?{currency:parsed.currency}:{}),...(guess.business_id?{business_id:guess.business_id}:{})};
  const step:Step=parsed.currencyChoices?'currency':account?'confirm':'account';
- return {draft:{kind:guess.direction,step,data}};
+ // The only schedule of its category is shown on the card, by id; with several the owner chooses.
+ return {draft:{kind:guess.direction,step,data:{...data,schedule_id:onlySchedule({kind:guess.direction,step,data},ctx)}}};
 }

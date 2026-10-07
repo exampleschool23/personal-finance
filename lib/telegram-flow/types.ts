@@ -8,10 +8,10 @@ import type {TelegramMessage} from '../telegram';
 import type {TransactionRule} from '../transaction-rules';
 
 export type FlowKind='expense'|'income'|'transfer'|'repayment'|'mortgage'|'account'|'liability';
-export type Step='category'|'account'|'target'|'amount'|'received'|'interest'|'name'|'date'|'confirm'|'accname'|'currency'|'balance'|'lkind'|'lname'|'duedate'|'rate'|'payment'|'business'|'fxamount'|'fxrate';
+export type Step='category'|'account'|'target'|'amount'|'received'|'interest'|'name'|'date'|'confirm'|'accname'|'currency'|'balance'|'lkind'|'lname'|'duedate'|'rate'|'payment'|'business'|'schedule'|'fxamount'|'fxrate';
 /** `typed` marks an entry read from a typed message: its questions return to the confirmation card. `fx_rate` is how many
  * units of the record's currency one unit of the account's currency buys, as `account_exchange_rate` stores it. */
-export type DraftData={typed?:boolean;fx_rate?:number;fx_rate_date?:string;id?:string;business_id?:string|null;category?:string;custom_category_id?:string|null;category_name?:string;account_id?:string;target_id?:string;amount?:number;received?:number;interest?:number;name?:string;date?:string;account_name?:string;currency?:string;lkind?:LiabilityKind;rate?:number;payment?:number;resume?:Draft};
+export type DraftData={typed?:boolean;fx_rate?:number;fx_rate_date?:string;id?:string;business_id?:string|null;/** The schedule this payment belongs to, by id; null when it is not a scheduled payment. */schedule_id?:string|null;category?:string;custom_category_id?:string|null;category_name?:string;account_id?:string;target_id?:string;amount?:number;received?:number;interest?:number;name?:string;date?:string;account_name?:string;currency?:string;lkind?:LiabilityKind;rate?:number;payment?:number;resume?:Draft};
 export type LiabilityKind='Loan'|'Debt'|'Mortgage';
 export const liabilityKinds:LiabilityKind[]=['Loan','Debt','Mortgage'];
 export type Draft={kind:FlowKind;step:Step;data:DraftData};

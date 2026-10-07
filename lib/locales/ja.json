@@ -2593,5 +2593,12 @@
   "bond maturity": "債券の満期",
   "Metal prices need a market-data API key.": "金属価格には市場データのAPIキーが必要です。",
   "Sign in to fetch metal prices.": "金属価格を取得するにはサインインしてください。",
-  "Choose the metal, its weight unit and purity.": "金属、重量の単位、純度を選んでください。"
+  "Choose the metal, its weight unit and purity.": "金属、重量の単位、純度を選んでください。",
+  "Which scheduled payment is this?": "どの予定支払いですか？",
+  "Not a scheduled payment": "予定支払いではない",
+  "Change scheduled payment": "予定支払いを変更",
+  "Scheduled payment: {name}": "予定支払い：{name}",
+  "Record this payment in the currency of its schedule.": "この支払いは予定と同じ通貨で記録してください。",
+  "Choose a scheduled payment.": "予定支払いを選んでください。",
+  "A scheduled payment keeps its schedule.": "予定支払いの予定は変更できません。"
 }

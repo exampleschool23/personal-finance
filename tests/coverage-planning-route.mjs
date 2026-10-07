@@ -44,7 +44,7 @@ test('GET full scope reads every table, adds debt payments and deposit estimates
  assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');
  const body=await response.json();
  assert.deepEqual(tables(state).slice(0,8),['asset_movements','holding_accounts','finance_records','transaction_categories','savings_goals','payment_occurrences','account_activity','investment_account_links']);
- assert.deepEqual(state.reads.slice(8).map(read=>[read.table,read.extra]),[['finance_records',{select:'occurrence_record_id,occurrence_due_on,amount',occurrence_record_id:'not.is.null'}],['account_activity',{select:'action,target_id,occurred_on',action:'in.(repayment,mortgage)'}],['mortgage_payments',{select:'id,mortgage_id,paid_on'}]]);
+ assert.deepEqual(state.reads.slice(8).map(read=>[read.table,read.extra]),[['finance_records',{select:'id,occurrence_record_id,occurrence_due_on,amount',occurrence_record_id:'not.is.null'}],['account_activity',{select:'action,target_id,occurred_on',action:'in.(repayment,mortgage)'}],['mortgage_payments',{select:'id,mortgage_id,paid_on'}]]);
  assert.ok(state.reads.every(read=>read.token==='owner-token'));
  assert.deepEqual(state.reads[2].extra,{},'a full read keeps every record');
  assert.deepEqual(body.debtPayments,[{record_id:'loan',date:'2026-09-05'},{record_id:'home',date:'2026-09-10'}]);

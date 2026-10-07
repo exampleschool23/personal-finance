@@ -2593,5 +2593,12 @@
   "bond maturity": "bond maturity",
   "Metal prices need a market-data API key.": "Metal prices need a market-data API key.",
   "Sign in to fetch metal prices.": "Sign in to fetch metal prices.",
-  "Choose the metal, its weight unit and purity.": "Choose the metal, its weight unit and purity."
+  "Choose the metal, its weight unit and purity.": "Choose the metal, its weight unit and purity.",
+  "Which scheduled payment is this?": "Which scheduled payment is this?",
+  "Not a scheduled payment": "Not a scheduled payment",
+  "Change scheduled payment": "Change scheduled payment",
+  "Scheduled payment: {name}": "Scheduled payment: {name}",
+  "Record this payment in the currency of its schedule.": "Record this payment in the currency of its schedule.",
+  "Choose a scheduled payment.": "Choose a scheduled payment.",
+  "A scheduled payment keeps its schedule.": "A scheduled payment keeps its schedule."
 }

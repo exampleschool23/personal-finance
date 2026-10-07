@@ -2593,5 +2593,12 @@
   "bond maturity": "বন্ডের মেয়াদপূর্তি",
   "Metal prices need a market-data API key.": "ধাতুর দামের জন্য মার্কেট-ডেটা API কী দরকার।",
   "Sign in to fetch metal prices.": "ধাতুর দাম আনতে সাইন ইন করুন।",
-  "Choose the metal, its weight unit and purity.": "ধাতু, ওজনের একক ও বিশুদ্ধতা বেছে নিন।"
+  "Choose the metal, its weight unit and purity.": "ধাতু, ওজনের একক ও বিশুদ্ধতা বেছে নিন।",
+  "Which scheduled payment is this?": "এটি কোন নির্ধারিত পেমেন্ট?",
+  "Not a scheduled payment": "নির্ধারিত পেমেন্ট নয়",
+  "Change scheduled payment": "নির্ধারিত পেমেন্ট বদলান",
+  "Scheduled payment: {name}": "নির্ধারিত পেমেন্ট: {name}",
+  "Record this payment in the currency of its schedule.": "এই পেমেন্টটি এর সময়সূচির মুদ্রায় লিখুন।",
+  "Choose a scheduled payment.": "একটি নির্ধারিত পেমেন্ট বেছে নিন।",
+  "A scheduled payment keeps its schedule.": "নির্ধারিত পেমেন্ট তার সময়সূচি বদলায় না।"
 }

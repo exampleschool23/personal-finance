@@ -2593,5 +2593,12 @@
   "bond maturity": "बॉन्ड की परिपक्वता",
   "Metal prices need a market-data API key.": "धातु की कीमतों के लिए मार्केट-डेटा API कुंजी चाहिए।",
   "Sign in to fetch metal prices.": "धातु की कीमतें पाने के लिए साइन इन करें।",
-  "Choose the metal, its weight unit and purity.": "धातु, उसके वज़न की इकाई और शुद्धता चुनें।"
+  "Choose the metal, its weight unit and purity.": "धातु, उसके वज़न की इकाई और शुद्धता चुनें।",
+  "Which scheduled payment is this?": "यह कौन-सा निर्धारित भुगतान है?",
+  "Not a scheduled payment": "निर्धारित भुगतान नहीं",
+  "Change scheduled payment": "निर्धारित भुगतान बदलें",
+  "Scheduled payment: {name}": "निर्धारित भुगतान: {name}",
+  "Record this payment in the currency of its schedule.": "इस भुगतान को उसके शेड्यूल की मुद्रा में दर्ज करें।",
+  "Choose a scheduled payment.": "एक निर्धारित भुगतान चुनें।",
+  "A scheduled payment keeps its schedule.": "निर्धारित भुगतान अपना शेड्यूल नहीं बदलता।"
 }
