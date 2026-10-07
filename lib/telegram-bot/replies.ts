@@ -5,6 +5,7 @@ import type {Entry} from '../finance';
 import type {Language} from '../i18n';
 import {legalPaths} from '../legal';
 import {debtPaymentsFrom,upcomingPayments,type Occurrence} from '../planning';
+import {ownerRows} from '../owner-rows';
 import type {ServiceDatabase} from '../service-role';
 import {createLoginToken} from '../telegram-account';
 import {connectMinutes,connectStartPath,createConnectRequest,unlinkChat} from '../telegram-connect';
@@ -30,8 +31,8 @@ export async function signOut(db:ServiceDatabase,subscription:TelegramSubscripti
 /** Payments due in the next 31 days, as the morning digest lists them. */
 export async function upcomingReply(db:ServiceDatabase,owner:string,language:Language,today:string){
  const [records,occurrences,repayments,mortgagePayments]=await Promise.all([
-  db.read<Entry[]>(`/rest/v1/finance_records?select=*&user_id=eq.${owner}&order=id.asc`),
-  db.read<Occurrence[]>(`/rest/v1/payment_occurrences?select=id,record_id,due_on,status&user_id=eq.${owner}`),
+  ownerRows<Entry>(db,'finance_records',owner),
+  ownerRows<Occurrence>(db,'payment_occurrences',owner,'id,record_id,due_on,status'),
   db.read<Array<{action:string;target_id:string|null;occurred_on:string}>>(`/rest/v1/account_activity?select=action,target_id,occurred_on&action=in.(repayment,mortgage)&user_id=eq.${owner}`),
   db.read<Array<{mortgage_id:string;paid_on:string}>>(`/rest/v1/mortgage_payments?select=mortgage_id,paid_on&user_id=eq.${owner}`),
  ]);

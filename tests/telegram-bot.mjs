@@ -19,7 +19,11 @@ function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurren
     return subscriptions.filter(s=>chat?s.chat_id===Number(chat[1]):true);
    }
    if(path.startsWith('/rest/v1/user_preferences'))return owner in languages?[{language:languages[owner],...(currencies?{currencies}:{})}]:[];
-   if(path.startsWith('/rest/v1/finance_records'))return records.filter(r=>r.user_id===owner);
+   if(path.startsWith('/rest/v1/finance_records')){
+    // Pages like PostgREST: a read without a range still stops at 1,000 rows.
+    const rows=records.filter(r=>r.user_id===owner),range=/limit=(\d+)&offset=(\d+)/.exec(path);
+    return range?rows.slice(Number(range[2]),Number(range[2])+Number(range[1])):rows.slice(0,1000);
+   }
    if(path.startsWith('/rest/v1/transaction_categories'))return categories;
    if(path.startsWith('/rest/v1/payment_occurrences'))return occurrences;
    if(path.startsWith('/rest/v1/account_activity'))return activity;
@@ -102,7 +106,8 @@ test('a linked chat walks the expense flow across updates, keeps the draft in th
 });
 
 test('stale drafts are ignored, database refusals are relayed, and the loan flow goes through the planning wrapper',async()=>{
- const stale=fakeDb({...workspace(),drafts:[{user_id:owner,step:'expense:amount',data:{account_id:id(1)},updated_at:'2026-09-30T08:00:00Z'}]});
+ // Records reach the bot sorted by name; the primary currency (UZS) picks the account of a typed entry.
+ const stale=fakeDb({...workspace(),currencies:['UZS'],drafts:[{user_id:owner,step:'expense:amount',data:{account_id:id(1)},updated_at:'2026-09-30T08:00:00Z'}]});
  // The old question is gone, so the number is read as a new typed entry and only proposed, never saved.
  const fresh=await handleTelegramUpdate(message(500,'250000'),stale,clock);
  assert.match(fresh.replies[0].text,/^<b>Save this\?<\/b>\nExpense · Other expense\n<b>Other expense<\/b> · UZS\s250,000/);
@@ -239,4 +244,14 @@ test('a loan paid from an account in another currency goes through the dated-rat
  for(const step of [message(500,'Pay loan or debt'),press(500,'f:tgt:'+id(10)),press(500,'f:acc:'+id(1)),message(500,'100'),press(500,'f:date:today')])await handleTelegramUpdate(step,short,clock,rates);
  const refused=await handleTelegramUpdate(press(500,'f:save'),short,clock,rates);
  assert.match(refused.replies[0].text,/Insufficient balance: Wallet has UZS\s900,000\./);
+});
+
+test('a long history does not hide schedules: the bot reads every record page by page',async()=>{
+ const history=Array.from({length:1200},(_,n)=>({...entry(100+n,'A coffee '+n,'Other expense',10),id:`33333333-3333-4333-8333-${String(n).padStart(12,'0')}`}));
+ const salary={...entry(11,'Zeta salary','Salary',5000),frequency:'Monthly'};
+ const db=fakeDb({...workspace(),records:[...history,...workspace().records,salary]});
+ await handleTelegramUpdate(message(500,'Income'),db,clock);
+ const asked=await handleTelegramUpdate(press(500,'f:cat:Salary'),db,clock);
+ assert.equal(asked.replies[0].text,'Which scheduled payment is this?');
+ assert.ok(asked.replies[0].keyboard.inline.flat().some(button=>button.callback_data==='f:sch:'+id(11)));
 });

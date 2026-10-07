@@ -2,6 +2,7 @@
 import type {Entry} from '../finance';
 import type {Language} from '../i18n';
 import type {Category} from '../planning';
+import {ownerRows} from '../owner-rows';
 import type {ServiceDatabase} from '../service-role';
 import {advance,mainMenu,needsRate,prompt,retryKeyboard,withRate,type Draft,type FlowContext,type FlowResult} from '../telegram-flow';
 import type {TelegramSubscription} from '../telegram-link';
@@ -18,7 +19,8 @@ import type {BotClock,FlowInput,Turn} from './types';
 type Context=FlowContext&{records:Entry[]};
 async function loadContext(db:ServiceDatabase,owner:string,language:Language,clock:BotClock,typed=false):Promise<Context>{
  const [records,categories,preferences,rules]=await Promise.all([
-  db.read<Entry[]>(`/rest/v1/finance_records?select=*&user_id=eq.${owner}&order=name.asc`),
+  // Every record, read in pages: a long history must not push accounts or schedules past the first page.
+  ownerRows<Entry>(db,'finance_records',owner).then(rows=>rows.sort((a,b)=>a.name.localeCompare(b.name))),
   db.read<Category[]>(`/rest/v1/transaction_categories?select=id,name,direction&user_id=eq.${owner}`),
   db.read<Array<{currencies?:string[]}>>('/rest/v1/user_preferences?select=currencies&user_id=eq.'+owner),
   // Typed text may be an entry, which the owner's rules help categorise. Without the rules table it is guessed from history alone.
