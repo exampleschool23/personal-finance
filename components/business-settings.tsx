@@ -42,7 +42,7 @@ export function BusinessSettings({ businesses, records, preferences, owner, demo
      <BusinessMark name={business.name} color={business.business_color} logo={business.business_logo}/>
      <span className="settings-list-name">{business.name}<small>{[business.business_structure ? t(businessStructureLabels[business.business_structure as BusinessStructure]) : null, t('{count} accounts', { count: formatNumber(accounts, locale, 0) })].filter(Boolean).join(' · ')}</small></span>
      <Link className="panel-link" href={`/reports?tab=cash_flow&business=${business.id}&view=pnl`}>{t('View P&L')}</Link>
-     <RowMenu label={t('Actions for {name}', { name: business.name })} items={[{ label: t('Edit'), onSelect: () => onEdit(business) }, { label: t('Delete'), destructive: true, onSelect: () => onDelete(business) }]}/>
+     <RowMenu label={t('Actions for {name}', { name: business.name })} items={[{ label: t('Edit'), onSelect: () => onEdit(business) }, { label: t('Delete'), deletes: true, onSelect: () => onDelete(business) }]}/>
     </SortableItem>;
    })}</ul>
   </SortableList> : <EmptyState icon={<Briefcase/>} description={t('No businesses yet.')}/>}
@@ -90,11 +90,11 @@ export function TagSettings({ tags, preferences, owner, demo }: { tags: TagsReso
     <TagChip name={tag.name} color={tag.color}/>
     <span className="settings-list-name"/>
     <Link className="panel-link" href={`/transactions?tag=${tag.id}`}>{t('{count} transactions', { count: formatNumber(counts.get(tag.id) ?? 0, locale, 0) })}</Link>
-    <RowMenu label={t('Actions for {name}', { name: tag.name })} items={[{ label: t('Edit'), onSelect: () => setEditing(tag) }, { label: t('Delete'), destructive: true, onSelect: () => { setError(''); setDeleting(tag); } }]}/>
+    <RowMenu label={t('Actions for {name}', { name: tag.name })} items={[{ label: t('Edit'), onSelect: () => setEditing(tag) }, { label: t('Delete'), deletes: true, onSelect: () => { setError(''); setDeleting(tag); } }]}/>
    </SortableItem>)}</ul>
   </SortableList> : <EmptyState icon={<TagIcon/>} description={t('No tags yet.')}/>}
   <ErrorPopup message={order.error}/>
   {editing && <TagDialog tag={editing} onSave={tags.save} onClose={() => setEditing(null)}/>}
-  <ConfirmDialog open={!!deleting} onClose={() => setDeleting(null)} busy={busy} destructive error={error} title={t('Delete {name}?', { name: deleting?.name ?? '' })} description={t('The tag is removed from its transactions and rules. The transactions themselves are kept.')} confirmLabel={t(busy ? 'Deleting…' : 'Delete tag')} onConfirm={remove}/>
+  <ConfirmDialog deletes open={!!deleting} onClose={() => setDeleting(null)} busy={busy} error={error} title={t('Delete {name}?', { name: deleting?.name ?? '' })} description={t('The tag is removed from its transactions and rules. The transactions themselves are kept.')} confirmLabel={t(busy ? 'Deleting…' : 'Delete tag')} onConfirm={remove}/>
  </section>;
 }

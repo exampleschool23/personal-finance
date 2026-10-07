@@ -1,4 +1,5 @@
 "use client";
+import { DeleteButton } from '@/components/presentation-foundation/delete-button';
 import { ExpensePlanChart } from '@/components/expense-plan-chart';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { CurrencySelect } from '@/components/presentation-foundation/currency-select';
@@ -6,7 +7,7 @@ import { useDraftDialog } from '@/components/discard-changes';
 import { StopScheduleDialog } from '@/components/stop-schedule-dialog';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -41,12 +42,12 @@ export function ExpensePlans({plans,month,currency,currencies,loading,error,save
     <td><div className="expense-plan-name"><strong>{plan.name}</strong><div className="expense-plan-meta"><CategoryBadge kind={plan.category} label={t(plan.category)}/><small className="muted">{formatDate(plan.start_date,locale)}{plan.end_date?` – ${formatDate(plan.end_date,locale)}`:''}</small></div>{!totals.active&&<small className="muted">{t('Not active in the selected month')}</small>}</div></td>
     <td>{money(totals.planned,plan.currency)}{Number(plan.carryover)>0&&<small className="block">{t('Carried over')}: {money(Number(plan.carryover),plan.currency)}</small>}</td><td>{money(totals.spent,plan.currency)}</td><td className={totals.remaining<0?'negative':''}>{totals.remaining<0?t('Over budget by {amount}',{amount:money(-totals.remaining,plan.currency)}):money(totals.remaining,plan.currency)}</td>
     <td><ExpensePlanChart name={plan.name} category={plan.category} planned={totals.planned} spent={totals.spent}/></td>
-    <td><div className="row-actions">{!plan.end_date&&<Button size="sm" variant="outline" onClick={()=>setStopping(plan)}>{t('Stop')}</Button>}<Button size="sm" variant="outline" onClick={()=>onSpend(plan)}>{t('Record spending')}</Button><Button size="icon" variant="ghost" aria-label={t('Edit {name}',{name:plan.name})} onClick={()=>open(plan)}><Pencil size={15}/></Button><Button size="icon" variant="ghost" aria-label={t('Delete {name}',{name:plan.name})} onClick={()=>{setFailure('');setDeleting(plan);}}><Trash2 size={15}/></Button></div></td>
+    <td><div className="row-actions">{!plan.end_date&&<Button size="sm" variant="outline" onClick={()=>setStopping(plan)}>{t('Stop')}</Button>}<Button size="sm" variant="outline" onClick={()=>onSpend(plan)}>{t('Record spending')}</Button><Button size="icon" variant="ghost" aria-label={t('Edit {name}',{name:plan.name})} onClick={()=>open(plan)}><Pencil size={15}/></Button><DeleteButton variant="ghost" label={t('Delete {name}',{name:plan.name})} onClick={()=>{setFailure('');setDeleting(plan);}}/></div></td>
    </tr>;})}
   </tbody></table></div>}
   {stopping&&<StopScheduleDialog name={stopping.name} start={stopping.start_date} onClose={()=>setStopping(null)} onSave={end_date=>save({...stopping,end_date})}/>}
   {draft&&<ExpensePlanDialog plan={draft} editing={plans.some(p=>p.id===draft.id)} savedCurrency={plans.find(plan=>plan.id===draft.id)?.currency} currencies={currencies} save={save} onClose={()=>setDraft(null)}/>}
-  <ConfirmDialog open={!!deleting} onClose={()=>setDeleting(null)} busy={busy} title={t('Delete monthly plan?')} description={t('This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.')} error={failure} confirmLabel={t('Delete plan')} onConfirm={async()=>{if(!deleting)return;setBusy(true);setFailure('');try{await remove(deleting.id);setDeleting(null);}catch(e){setFailure((e as Error).message);}finally{setBusy(false);}}}/>
+  <ConfirmDialog deletes open={!!deleting} onClose={()=>setDeleting(null)} busy={busy} title={t('Delete monthly plan?')} description={t('This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.')} error={failure} confirmLabel={t('Delete plan')} onConfirm={async()=>{if(!deleting)return;setBusy(true);setFailure('');try{await remove(deleting.id);setDeleting(null);}catch(e){setFailure((e as Error).message);}finally{setBusy(false);}}}/>
  </section>;
 }
 

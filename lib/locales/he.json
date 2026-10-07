@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "תשלום מתוזמן שומר על התזמון שלו.",
   "Lent from account (optional)": "הולווה מחשבון (לא חובה)",
   "Not from an account": "לא מחשבון",
-  "No cash account in {currency}.": "אין חשבון מזומן ב־{currency}."
+  "No cash account in {currency}.": "אין חשבון מזומן ב־{currency}.",
+  "Built-in categories cannot be deleted.": "לא ניתן למחוק קטגוריות מובנות."
 }

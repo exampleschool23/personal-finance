@@ -1,4 +1,5 @@
 "use client";
+import { Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
@@ -52,6 +53,6 @@ export function DeleteCategoryDialog({category,categories,onClose,onDeleted}:{ca
   <p className="muted">{t('Only categories of the same type can receive these records. Split allocations and Recently deleted records are moved too.')}</p></>}
   {usage&&!inUse&&<p>{t('No linked records. Your transactions will not be changed.')}</p>}
   {error&&!usage&&<InlineError message={t(error)} onRetry={()=>{setError('');setUsage(null);setRetry(value=>value+1);}}/>}<ErrorPopup message={usage?error:''}/>
-  <AlertDialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t('Cancel')}</Button><Button type="button" variant="destructive" disabled={!valid||busy} onClick={()=>void remove()}>{t(busy?'Saving…':inUse?'Move records and delete':'Delete category')}</Button></AlertDialogFooter>
+  <AlertDialogFooter><Button type="button" variant="outline" disabled={busy} onClick={onClose}>{t('Cancel')}</Button><Button type="button" variant="destructive" disabled={!valid||busy} onClick={()=>void remove()}><Trash2 aria-hidden="true"/>{t(busy?'Saving…':inUse?'Move records and delete':'Delete category')}</Button></AlertDialogFooter>
  </AlertDialogContent></AlertDialog>;
 }

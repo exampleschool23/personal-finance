@@ -283,7 +283,7 @@ test('transaction labels never narrow below a word',()=>{
 // 7 October 2026: a transaction opened from the list can be deleted, not only edited.
 test('the transaction details dialog offers a bin to delete and a pencil to edit, with no Close button beside the ×',()=>{
  const dialog=fs.readFileSync('components/transaction-details-dialog.tsx','utf8');
- assert.match(dialog,/aria-label=\{t\('Delete \{name\}',\{name:shownName\(record,t\)\}\)\} onClick=\{onDelete\}><Trash2 /);
+ assert.match(dialog,/<DeleteButton label=\{t\('Delete \{name\}',\{name:shownName\(record,t\)\}\)\} onClick=\{onDelete\}\/>/);
  assert.match(dialog,/aria-label=\{t\('Edit \{name\}',\{name:shownName\(record,t\)\}\)\} onClick=\{onEdit\}><Pencil /);
  assert.doesNotMatch(dialog,/t\('Close'\)/);
  const dialogs=fs.readFileSync('components/workspace/workspace-dialogs.tsx','utf8');

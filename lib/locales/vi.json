@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "Khoản thanh toán định kỳ giữ nguyên lịch của nó.",
   "Lent from account (optional)": "Cho vay từ tài khoản (tùy chọn)",
   "Not from an account": "Không từ tài khoản",
-  "No cash account in {currency}.": "Không có tài khoản tiền mặt bằng {currency}."
+  "No cash account in {currency}.": "Không có tài khoản tiền mặt bằng {currency}.",
+  "Built-in categories cannot be deleted.": "Không thể xóa các danh mục có sẵn."
 }

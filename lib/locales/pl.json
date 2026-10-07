@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "Zaplanowana płatność zachowuje swój harmonogram.",
   "Lent from account (optional)": "Pożyczone z konta (opcjonalnie)",
   "Not from an account": "Nie z konta",
-  "No cash account in {currency}.": "Brak konta gotówkowego w {currency}."
+  "No cash account in {currency}.": "Brak konta gotówkowego w {currency}.",
+  "Built-in categories cannot be deleted.": "Wbudowanych kategorii nie można usunąć."
 }

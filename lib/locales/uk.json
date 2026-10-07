@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "Запланований платіж зберігає свій графік.",
   "Lent from account (optional)": "Рахунок, з якого позичено (необов’язково)",
   "Not from an account": "Не з рахунку",
-  "No cash account in {currency}.": "Немає грошового рахунку в {currency}."
+  "No cash account in {currency}.": "Немає грошового рахунку в {currency}.",
+  "Built-in categories cannot be deleted.": "Вбудовані категорії не можна видалити."
 }

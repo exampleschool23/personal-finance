@@ -77,6 +77,10 @@
 .record-dialog .record-form-footer button{min-height:44px;border-radius:10px;padding-inline:22px}
 .record-dialog .record-form-footer .primary{min-width:160px}
 .transaction-details-actions{display:flex;justify-content:flex-end;gap:8px}
+/* Every delete is a bin (DeleteButton); in a form footer it stands apart at the start. */
+.delete-button:not(:disabled){color:var(--negative)}
+.record-form-footer :is(.delete-button,.delete-button-reason){order:-1;margin-inline-end:auto}
+.delete-button-reason{display:inline-flex;cursor:not-allowed}
 @media(max-width:480px){.record-dialog{padding:20px;width:calc(100vw - 20px);max-height:calc(100dvh - 20px)}.record-dialog .record-form .form-grid{grid-template-columns:1fr;gap:18px}.record-dialog .record-form-footer button{flex:1;min-width:0!important}}
 
 .settings-page{max-width:880px;margin:auto}

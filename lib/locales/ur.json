@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "طے شدہ ادائیگی اپنا شیڈول برقرار رکھتی ہے۔",
   "Lent from account (optional)": "کس اکاؤنٹ سے قرض دیا (اختیاری)",
   "Not from an account": "کسی اکاؤنٹ سے نہیں",
-  "No cash account in {currency}.": "{currency} میں کوئی نقد اکاؤنٹ نہیں۔"
+  "No cash account in {currency}.": "{currency} میں کوئی نقد اکاؤنٹ نہیں۔",
+  "Built-in categories cannot be deleted.": "بلٹ اِن زمرے حذف نہیں کیے جا سکتے۔"
 }

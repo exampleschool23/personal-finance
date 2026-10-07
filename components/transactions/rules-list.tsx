@@ -1,6 +1,7 @@
 "use client";
+import { DeleteButton } from '@/components/presentation-foundation/delete-button';
 import { useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { BusinessMark } from '@/components/presentation-foundation/business-mark';
@@ -44,7 +45,7 @@ function useRuleCriteriaText() {
 function ruleList({ rules, categories, businesses, tags, onEdit }: RulesProps, t: ReturnType<typeof useLanguage>['t'], criteria: (rule: TransactionRule) => string, onDelete: (rule: TransactionRule) => void) {
  return rules.length ? <ul className="rule-list">{rules.map(rule => <li key={rule.id}>
   <button type="button" onClick={() => onEdit(rule)}><span>{criteria(rule)}</span><span className="rule-arrow" aria-hidden="true">→</span><RuleActionsSummary rule={rule} categories={categories} businesses={businesses} tags={tags}/></button>
-  <Button size="icon" variant="ghost" aria-label={t('Delete {name}', { name: criteria(rule) })} onClick={() => onDelete(rule)}><Trash2 size={15}/></Button>
+  <DeleteButton variant="ghost" label={t('Delete {name}', { name: criteria(rule) })} onClick={() => onDelete(rule)}/>
  </li>)}</ul> : <p className="budget-left-empty">{t('No rules yet. Change a transaction’s category or business and choose Create rule, or add one here.')}</p>;
 }
 
@@ -61,7 +62,7 @@ function useRuleRemoval(onRemove: (rule: TransactionRule) => Promise<void>) {
   finally { setBusy(false); }
  }
  const ask = (rule: TransactionRule) => { setError(''); setDeleting(rule); };
- const dialog = <ConfirmDialog open={!!deleting} onClose={() => setDeleting(null)} busy={busy} destructive error={error} title={t('Delete {name}?', { name: deleting ? criteria(deleting) : '' })} description={t('New transactions will no longer follow this rule. Transactions it already changed keep their changes.')} confirmLabel={t(busy ? 'Deleting…' : 'Delete rule')} onConfirm={remove}/>;
+ const dialog = <ConfirmDialog deletes open={!!deleting} onClose={() => setDeleting(null)} busy={busy} error={error} title={t('Delete {name}?', { name: deleting ? criteria(deleting) : '' })} description={t('New transactions will no longer follow this rule. Transactions it already changed keep their changes.')} confirmLabel={t(busy ? 'Deleting…' : 'Delete rule')} onConfirm={remove}/>;
  return { ask, dialog, criteria };
 }
 

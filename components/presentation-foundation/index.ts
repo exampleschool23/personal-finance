@@ -20,6 +20,7 @@ export { LoadingPlaceholder, PageSkeleton, WorkspaceSkeleton, ChartSkeleton, Net
 export { Segmented, type SegmentedOption } from './segmented';
 export { SeriesLegend, toggleKey, type SeriesLegendItem } from './series-legend';
 export { RowMenu, type RowMenuItem } from './row-menu';
+export { DeleteButton } from './delete-button';
 export { AssetCard } from './asset-card';
 export { AssetIcon } from './asset-icon';
 export { RecordIcon } from './record-icon';

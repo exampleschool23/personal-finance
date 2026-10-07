@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "Planlı ödeme planını korur.",
   "Lent from account (optional)": "Ödünç verilen hesap (isteğe bağlı)",
   "Not from an account": "Bir hesaptan değil",
-  "No cash account in {currency}.": "{currency} cinsinden nakit hesabı yok."
+  "No cash account in {currency}.": "{currency} cinsinden nakit hesabı yok.",
+  "Built-in categories cannot be deleted.": "Yerleşik kategoriler silinemez."
 }

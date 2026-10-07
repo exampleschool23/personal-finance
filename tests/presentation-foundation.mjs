@@ -99,10 +99,22 @@ test('row menu keeps rare actions behind one labelled ⋯ button and disappears 
  const passthrough=tag=>function Part({children,...props}){delete props.asChild;delete props.align;delete props.onSelect;delete props.variant;return React.createElement(tag,props,children);};
  const menu={DropdownMenu:({children})=>React.createElement(React.Fragment,null,children),DropdownMenuTrigger:passthrough('span'),DropdownMenuContent:passthrough('div'),DropdownMenuItem:passthrough('button')};
  const {RowMenu}=load('row-menu.tsx',{'@/components/ui/dropdown-menu':menu});
- const html=render(RowMenu,{label:'Actions for Rent',items:[false,{label:'Edit',onSelect:()=>{}},null,{label:'Delete',destructive:true,onSelect:()=>{}}]});
+ const html=render(RowMenu,{label:'Actions for Rent',items:[false,{label:'Edit',onSelect:()=>{}},null,{label:'Delete',deletes:true,onSelect:()=>{}}]});
  assert.match(html,/aria-label="Actions for Rent"/);
- assert.deepEqual([...html.matchAll(/<button[^>]*>(Edit|Delete)<\/button>/g)].map(match=>match[1]),['Edit','Delete']);
+ assert.deepEqual([...html.replace(/<svg[^>]*>.*?<\/svg>/g,'').matchAll(/<button[^>]*>(Edit|Delete)<\/button>/g)].map(match=>match[1]),['Edit','Delete']);
+ assert.match(html,/<button[^>]*><svg[^>]*lucide-trash[^]*?<\/svg>Delete<\/button>/,'a delete carries the bin');
+ assert.doesNotMatch(html,/<svg[^>]*lucide-trash[^]*?<\/svg>Edit/);
  assert.equal(render(RowMenu,{label:'Actions',items:[false,null]}),'');
+});
+
+test('every delete button is a labelled bin with no text',()=>{
+ const {DeleteButton}=load('delete-button.tsx');
+ const html=render(DeleteButton,{label:'Delete Insurance',onClick:()=>{}});
+ assert.match(html,/aria-label="Delete Insurance"/);assert.match(html,/title="Delete Insurance"/);assert.match(html,/lucide-trash/);
+ assert.doesNotMatch(html.replace(/<[^>]*>/g,''),/\S/,'no visible text');
+ const fixed=render(DeleteButton,{label:'Delete Charity',reason:'Built-in categories cannot be deleted.'});
+ assert.match(fixed,/<span[^>]*title="Built-in categories cannot be deleted."><button[^>]*disabled=""/,'an undeletable item keeps a disabled bin with its reason');
+ assert.match(fixed,/aria-label="Delete Charity. Built-in categories cannot be deleted."/);
 });
 
 test('segmented control presses exactly the current option and reports the chosen value',()=>{

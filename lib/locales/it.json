@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "Un pagamento programmato mantiene la sua programmazione.",
   "Lent from account (optional)": "Prestato dal conto (facoltativo)",
   "Not from an account": "Non da un conto",
-  "No cash account in {currency}.": "Nessun conto di liquidità in {currency}."
+  "No cash account in {currency}.": "Nessun conto di liquidità in {currency}.",
+  "Built-in categories cannot be deleted.": "Le categorie predefinite non possono essere eliminate."
 }

@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "নির্ধারিত পেমেন্ট তার সময়সূচি বদলায় না।",
   "Lent from account (optional)": "যে অ্যাকাউন্ট থেকে ধার দেওয়া হয়েছে (ঐচ্ছিক)",
   "Not from an account": "কোনো অ্যাকাউন্ট থেকে নয়",
-  "No cash account in {currency}.": "{currency}-এ কোনো নগদ অ্যাকাউন্ট নেই।"
+  "No cash account in {currency}.": "{currency}-এ কোনো নগদ অ্যাকাউন্ট নেই।",
+  "Built-in categories cannot be deleted.": "অন্তর্নির্মিত বিভাগগুলি মুছে ফেলা যায় না।"
 }

@@ -67,7 +67,7 @@
 /* Compact category tags; each one is a button that opens its edit dialog, marked with a pencil. */
 .category-settings .category-badges{align-items:center;gap:8px;padding-top:0}
 .category-settings .category-badges .category-badge{position:relative;display:inline-flex;align-items:center;box-sizing:border-box;height:28px;padding:3px 9px;gap:5px;line-height:20px;vertical-align:middle}
-.category-settings .category-edit-button{display:inline-flex;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.category-settings .category-edit-button{display:inline-flex;align-items:center;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;font:inherit;cursor:pointer}
 .category-settings .category-edit-button:hover:not(:disabled) .category-badge{filter:brightness(.97)}
 .category-settings .category-edit-button:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
 .category-settings .category-edit-button:disabled{cursor:default}
@@ -75,7 +75,6 @@
 .category-edit-fields{display:flex;align-items:flex-end;gap:12px}
 .category-edit-fields>label{flex:1;min-width:0}
 .category-color-field [role=radiogroup] button{width:28px;height:28px}
-.category-edit-dialog .record-form-footer .category-edit-delete{order:-1;margin-inline-end:auto}
 
 .tracker-value-choice{display:grid;gap:8px}
 .tracker-value-choice [data-slot="toggle-group"]{display:flex;width:100%;padding:4px;gap:4px;border:1px solid var(--border);border-radius:12px;background:var(--muted)}

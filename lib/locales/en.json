@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "A scheduled payment keeps its schedule.",
   "Lent from account (optional)": "Lent from account (optional)",
   "Not from an account": "Not from an account",
-  "No cash account in {currency}.": "No cash account in {currency}."
+  "No cash account in {currency}.": "No cash account in {currency}.",
+  "Built-in categories cannot be deleted.": "Built-in categories cannot be deleted."
 }

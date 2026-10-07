@@ -1,4 +1,5 @@
 "use client";
+import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
@@ -18,7 +19,7 @@ export function DeleteScheduleDialog({ target, history, onDelete, onClose }: { t
   setBusy(true); setError('');
   try { await onDelete(removeHistory); onClose(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
  }
- const action = (label: string, removeHistory: boolean, variant: 'outline' | 'destructive') => <AlertDialogAction variant={variant} disabled={busy} onClick={event => { event.preventDefault(); void remove(removeHistory); }}>{t(label)}</AlertDialogAction>;
+ const action = (label: string, removeHistory: boolean, variant: 'outline' | 'destructive') => <AlertDialogAction variant={variant} disabled={busy} onClick={event => { event.preventDefault(); void remove(removeHistory); }}><Trash2 aria-hidden="true"/>{t(label)}</AlertDialogAction>;
  return <AlertDialog open={!!target} onOpenChange={next => { if (!next && !busy) { setError(''); onClose(); } }}><AlertDialogContent>
   <AlertDialogTitle>{t('Delete {name}?', { name })}</AlertDialogTitle>
   <AlertDialogDescription>{history > 0

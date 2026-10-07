@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "Plánovaná platba si ponechává svůj plán.",
   "Lent from account (optional)": "Půjčeno z účtu (volitelné)",
   "Not from an account": "Ne z účtu",
-  "No cash account in {currency}.": "Žádný hotovostní účet v {currency}."
+  "No cash account in {currency}.": "Žádný hotovostní účet v {currency}.",
+  "Built-in categories cannot be deleted.": "Vestavěné kategorie nelze smazat."
 }

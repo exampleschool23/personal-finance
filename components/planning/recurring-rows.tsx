@@ -38,7 +38,7 @@ type OccurrenceProps = { item: RecurringItem; dated: boolean; today: string; bus
 
 /** A schedule's or plan's ⋯ menu: Edit, Skip while an occurrence is open, then Archive and Delete where they are offered. */
 function scheduleMenu(t: (key: string) => string, busy: boolean, { edit, skip, archive, remove }: { edit?: () => void; skip?: () => void; archive?: () => void; remove?: () => void }): RowMenuItem[] {
- return [...(edit ? [{ label: t('Edit'), onSelect: edit }] : []), ...(skip ? [{ label: t('Skip this occurrence'), disabled: busy, onSelect: skip }] : []), ...(archive ? [{ label: t('Archive'), disabled: busy, onSelect: archive }] : []), ...(remove ? [{ label: t('Delete'), destructive: true, disabled: busy, onSelect: remove }] : [])];
+ return [...(edit ? [{ label: t('Edit'), onSelect: edit }] : []), ...(skip ? [{ label: t('Skip this occurrence'), disabled: busy, onSelect: skip }] : []), ...(archive ? [{ label: t('Archive'), disabled: busy, onSelect: archive }] : []), ...(remove ? [{ label: t('Delete'), deletes: true, disabled: busy, onSelect: remove }] : [])];
 }
 
 /** An occurrence's ⋯ menu. Archiving takes the whole schedule out of Recurring; its recorded payments stay. Loan payments follow their loan instead, so they offer only Edit. */

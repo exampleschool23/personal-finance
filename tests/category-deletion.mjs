@@ -107,5 +107,5 @@ test('the category edit dialog saves only what changed (name, icon and colour), 
  find(tree,node=>node.props?.className==='category-edit-delete').props.onClick();assert.equal(deleted,1);
  const builtIn=harness('components/edit-category-dialog.tsx','EditCategoryDialog').render({...props,item:{id:'Charity',label:'Charity',direction:'expense'},onDelete:undefined});
  assert.equal(find(builtIn,node=>node.type?.name==='Input').props.disabled,true,'built-in names are translated and stay fixed');
- assert.equal(find(builtIn,node=>node.props?.className==='category-edit-delete'),undefined);
+ assert.equal(find(builtIn,node=>node.props?.className==='category-edit-delete').props.reason,'Built-in categories cannot be deleted.','a built-in category shows the bin, disabled, with the reason');
 });

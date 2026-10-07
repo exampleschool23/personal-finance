@@ -75,7 +75,7 @@ export function RecordsTable({ title, transactions = false, limit, pagination = 
       ...(!r.movement_id && !r.operation_id && !r.mortgage_payment_id && !r.history_event_id ? [
        isTransactionHistory(r) && { label: t('Split'), disabled: transactionTools.loading || !!transactionTools.error, onSelect: () => setSplitting(storedRecord(r)) },
        { label: t('Edit'), onSelect: () => editRecord(r) },
-       { label: t('Delete'), destructive: true, onSelect: () => requestDelete(r) },
+       { label: t('Delete'), deletes: true, onSelect: () => requestDelete(r) },
       ] : []),
      ]}/></div></td>
    </tr>)}</tbody>

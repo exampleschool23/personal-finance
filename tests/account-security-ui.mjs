@@ -10,7 +10,7 @@ function render(settings,deletion=false,mode){
   'next/navigation':{useRouter:()=>({})},
   'next/link':{__esModule:true,default:({children})=>React.createElement('a',null,children)},
   '@/components/language-provider':{useLanguage:()=>({t:(key,values={})=>key.replace(/\{(\w+)\}/g,(_,name)=>values[name]??name)})},
-  'lucide-react':{MailCheck:()=>React.createElement('svg',{className:'mail'})},
+  'lucide-react':{MailCheck:()=>React.createElement('svg',{className:'mail'}),Trash2:()=>React.createElement('svg',{className:'bin'})},
   '@/components/ui/button':{Button:props=>React.createElement('button',props)},
   '@/components/ui/input':{Input:props=>React.createElement('input',props)},
  });
@@ -56,7 +56,7 @@ function renderCard(intent,sent=''){
   react:{...React,useState(initial){const key=order[call++%order.length];return [key==='sent'?sent:initial,()=>{}];}},
   'next/link':{__esModule:true,default:({children})=>React.createElement('a',null,children)},
   '@/components/language-provider':{useLanguage:()=>({t:(key,values={})=>key.replace(/\{(\w+)\}/g,(_,name)=>values[name]??name)})},
-  'lucide-react':{MailCheck:()=>React.createElement('svg',{className:'mail'})},
+  'lucide-react':{MailCheck:()=>React.createElement('svg',{className:'mail'}),Trash2:()=>React.createElement('svg',{className:'bin'})},
   '@/components/ui/button':{Button:props=>React.createElement('button',props)},
   '@/components/ui/input':{Input:props=>React.createElement('input',props)},
   '@/components/presentation-foundation/error-popup':{ErrorPopup:()=>null},
@@ -136,7 +136,7 @@ test('settings for a phone-only account offers adding an email and password, and
    '@/components/language-provider':{useLanguage:()=>({t:key=>key})},
    '@/components/ui/button':{Button:props=>React.createElement('button',props)},
    '@/components/ui/input':{Input:props=>React.createElement('input',props)},
-   'lucide-react':{MailCheck:()=>null},
+   'lucide-react':{MailCheck:()=>null,Trash2:()=>null},
   });
   return renderToStaticMarkup(React.createElement(AccountAccessPanel,{settings:true}));
  };

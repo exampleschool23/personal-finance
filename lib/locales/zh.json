@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "计划付款不能更改其所属计划。",
   "Lent from account (optional)": "借出账户（可选）",
   "Not from an account": "不从账户支出",
-  "No cash account in {currency}.": "没有 {currency} 现金账户。"
+  "No cash account in {currency}.": "没有 {currency} 现金账户。",
+  "Built-in categories cannot be deleted.": "内置类别无法删除。"
 }

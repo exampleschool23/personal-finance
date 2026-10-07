@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "O plată programată își păstrează programarea.",
   "Lent from account (optional)": "Împrumutat din contul (opțional)",
   "Not from an account": "Nu dintr-un cont",
-  "No cash account in {currency}.": "Niciun cont de numerar în {currency}."
+  "No cash account in {currency}.": "Niciun cont de numerar în {currency}.",
+  "Built-in categories cannot be deleted.": "Categoriile implicite nu pot fi șterse."
 }

@@ -1,6 +1,7 @@
 "use client";
+import { DeleteButton } from '@/components/presentation-foundation/delete-button';
 import { useEffect, useRef, useState } from 'react';
-import { FileText, Paperclip, X } from 'lucide-react';
+import { FileText, Paperclip } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { Button } from '@/components/ui/button';
@@ -77,7 +78,7 @@ export function RecordAttachments({ recordId, available, onChange }: { recordId:
       <span className="attachment-name">{item.file_name}</span>
       <small>{size(item.size)}</small>
      </a>
-     <Button type="button" variant="ghost" size="icon" className="attachment-remove" aria-label={t('Remove {name}', { name: item.file_name })} onClick={() => setRemoving(item)}><X size={14} aria-hidden="true"/></Button>
+     <DeleteButton variant="ghost" className="attachment-remove" label={t('Remove {name}', { name: item.file_name })} onClick={() => setRemoving(item)}/>
     </li>)}
    </ul>}
   {available
@@ -86,6 +87,6 @@ export function RecordAttachments({ recordId, available, onChange }: { recordId:
     <Button type="button" variant="outline" size="sm" disabled={uploading > 0 || state === 'loading'} onClick={() => input.current?.click()}><Paperclip size={14} aria-hidden="true"/>{uploading > 0 ? t('Uploading…') : t('Attach receipt')}</Button>
    </>
    : <p className="muted">{t('Attachments are not available in the sample workspace.')}</p>}
-  <ConfirmDialog open={!!removing} busy={busy} onClose={() => setRemoving(null)} destructive title={t('Remove attachment?')} description={t('{name} will be deleted permanently.', { name: removing?.file_name ?? '' })} confirmLabel={t('Remove')} onConfirm={() => removing ? remove(removing) : undefined}/>
+  <ConfirmDialog deletes open={!!removing} busy={busy} onClose={() => setRemoving(null)} title={t('Remove attachment?')} description={t('{name} will be deleted permanently.', { name: removing?.file_name ?? '' })} confirmLabel={t('Remove')} onConfirm={() => removing ? remove(removing) : undefined}/>
  </div>;
 }

@@ -1,5 +1,5 @@
 "use client";
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { AnimatedMoney } from '@/components/presentation-foundation/animated-money';
 import { useLanguage } from '@/components/language-provider';
@@ -38,7 +38,7 @@ export function BalanceAccountCard({ account, goals, onEdit, onTrack, onDelete, 
  const { t, locale } = useLanguage();
  const deposit=account.kind==='Deposit';
  return <article className="panel account-card">
-  <header><CategoryIcon kind={account.kind}/><div className="account-card-heading"><h2>{account.name}</h2><small>{t(deposit?'Deposit':'Cash account')}</small></div><AccountMenu name={account.name}><DropdownMenuItem onSelect={()=>onEdit(account)}>{t('Edit')}</DropdownMenuItem>{deposit&&<DropdownMenuItem onSelect={()=>onMove({kind:'interest',source_id:account.id})}>{t('Record capitalized interest')}</DropdownMenuItem>}{deposit&&onTrack&&<DropdownMenuItem onSelect={()=>onTrack(account)}>{t('Manage deposit')}</DropdownMenuItem>}<DropdownMenuItem variant="destructive" onSelect={()=>onDelete(account)}>{t('Delete')}</DropdownMenuItem></AccountMenu></header>
+  <header><CategoryIcon kind={account.kind}/><div className="account-card-heading"><h2>{account.name}</h2><small>{t(deposit?'Deposit':'Cash account')}</small></div><AccountMenu name={account.name}><DropdownMenuItem onSelect={()=>onEdit(account)}>{t('Edit')}</DropdownMenuItem>{deposit&&<DropdownMenuItem onSelect={()=>onMove({kind:'interest',source_id:account.id})}>{t('Record capitalized interest')}</DropdownMenuItem>}{deposit&&onTrack&&<DropdownMenuItem onSelect={()=>onTrack(account)}>{t('Manage deposit')}</DropdownMenuItem>}<DropdownMenuItem variant="destructive" onSelect={()=>onDelete(account)}><Trash2 aria-hidden="true"/>{t('Delete')}</DropdownMenuItem></AccountMenu></header>
   <strong className="account-card-value"><AnimatedMoney value={account.amount} currency={account.currency}/></strong>
   <BalanceFacts account={account} goals={goals}/>
   <div className="account-card-actions">{!deposit&&<Button aria-disabled={!onStatement||undefined} title={onStatement?undefined:t('Available after you sign in.')} onClick={()=>onStatement?.(account)}>{t('Reconcile statement')}</Button>}{deposit?<><Button onClick={()=>onMove({kind:'transfer',target_id:account.id})}><Plus size={16} aria-hidden="true" />{t('Top-up')}</Button><Button variant="outline" onClick={()=>onMove({kind:'transfer',source_id:account.id})}>{t('Withdraw')}</Button></>:<Button variant="outline" onClick={()=>onOperation({action:'reconcile',account_id:account.id,amount:account.amount})}>{t('Adjust balance')}</Button>}</div>

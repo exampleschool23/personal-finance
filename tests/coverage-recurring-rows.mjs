@@ -87,11 +87,11 @@ test('archiving changes the sample copies locally and sends signed-in changes be
  assert.deepEqual([refreshed, saved.length], [1, 3]);
 });
 
-test('Delete sits last in a schedule\'s and a plan\'s menu, marked destructive, only where deleting is offered', () => {
+test('Delete sits last in a schedule\'s and a plan\'s menu, marked as a delete (the bin), only where deleting is offered', () => {
  const calls = [];
  const view = mount(OccurrenceRow, { item: item('paid', { recorded: 900 }), dated: false, today: '2026-10-05', busy: false, onPay() {}, onSkip() {}, onArchive: () => calls.push('archive'), onDelete: target => calls.push(target.source + ' ' + target.record.id) });
  const items = view.find(byType(RowMenu)).props.items;
- assert.deepEqual(items.map(entry => [entry.label, !!entry.destructive]), [['Archive', false], ['Delete', true]]);
+ assert.deepEqual(items.map(entry => [entry.label, !!entry.deletes]), [['Archive', false], ['Delete', true]]);
  items[1].onSelect();
  const busy = mount(OccurrenceRow, { item: item('due'), dated: false, today: '2026-10-05', busy: true, onPay() {}, onSkip() {}, onDelete() {} });
  assert.equal(busy.find(byType(RowMenu)).props.items.at(-1).disabled, true, 'not while something is saving');

@@ -255,7 +255,7 @@ test('money lent tracks additions and repayments against the outstanding balance
  assert.ok(html.includes(`Cash added to Cash account: ${money(90, 'EUR')}`));
  assert.ok(html.includes(`Principal amount: ${money(200)}`));
  assert.ok(html.includes(`<time>${formatDate('2026-03-01', 'en-US')}</time><p>Opening</p>`));
- assert.equal(view.all(element => element.type === ui.Button && text(element) === 'Delete update').length, 2);
+ assert.equal(view.all(element => element.props?.label === 'Delete update').length, 2);
  assert.equal(view.find(byType(ui.DatePicker)).props.min, '2026-05-01');
  assert.match(text(label('Pay from cash account')), /Pay from cash account/);
  assert.ok(html.includes(`Outstanding balance after update: ${money(1100)}`));
@@ -355,7 +355,7 @@ test('stocks plot value, contributions and income, and format chart axes through
  assert.match(html, /Dated values and actual cash movements. Estimates stay separate./);
  assert.match(html, /History starts with a current snapshot/);
  assert.ok(html.includes(`<strong>${money(1000)}</strong><span>`) || html.includes(`<strong>${money(1000)}</strong></div>`));
- assert.equal(view.all(element => element.type === ui.Button && text(element) === 'Delete update').length, 0);
+ assert.equal(view.all(element => element.props?.label === 'Delete update').length, 0);
  const timestamp = Date.parse('2026-03-10T00:00:00Z');
  assert.equal(view.find(byType(chart.XAxis)).props.tickFormatter(timestamp), formatDate('2026-03-10', 'en-US'));
  assert.equal(view.find(byType(chart.YAxis)).props.tickFormatter(1234.4), money(1234));
@@ -384,7 +384,7 @@ test('mortgages show principal and interest paid and hand payments to the paymen
  assert.match(html, /Receive into cash account/);
  button('Record payment').props.onClick();
  assert.equal(calls.payments, 1);
- assert.equal(view.all(element => element.type === ui.Button && text(element) === 'Delete update').length, 0);
+ assert.equal(view.all(element => element.props?.label === 'Delete update').length, 0);
 });
 
 test('business updates can be deleted after confirmation, and a failed delete reports its error', async () => {
@@ -394,7 +394,7 @@ test('business updates can be deleted after confirmation, and a failed delete re
  const confirm = () => view.find(byType(ConfirmDialog));
  await confirm().props.onConfirm();
  assert.equal(api.calls.filter(call => call.method === 'DELETE').length, 0);
- const remove = () => view.find(byType(ui.Button, 'Delete update'));
+ const remove = () => view.find((element => element.props?.label === 'Delete update'));
  assert.equal(remove().props.disabled, false);
  remove().props.onClick();
  view.update();
@@ -424,10 +424,10 @@ test('business updates can be deleted after confirmation, and a failed delete re
  assert.equal(confirm().props.open, false);
  await view.flush();
  assert.equal(requests.length, 1);
- assert.equal(view.all(element => element.type === ui.Button && text(element) === 'Delete update').length, 0);
+ assert.equal(view.all(element => element.props?.label === 'Delete update').length, 0);
 
  const second = await open(record('Valuables'), [event('v', 'valuation', '2026-02-01', { balance: 10 })]);
- second.view.find(byType(ui.Button, 'Delete update')).props.onClick();
+ second.view.find((element => element.props?.label === 'Delete update')).props.onClick();
  second.view.update();
  assert.ok(second.view.html().includes(`Value update · ${formatDate('2026-02-01', 'en-US')}</p>`));
  api.handler = async () => { throw Error('Newer updates exist'); };
@@ -444,7 +444,7 @@ test('an edited draft locks deletes, and the dialog closes through the guard unl
  view.find(byType('textarea')).props.onChange({ target: { value: 'Sold a room' } });
  view.update();
  assert.equal(view.find(byType('textarea')).props.value, 'Sold a room');
- assert.equal(view.find(byType(ui.Button, 'Delete update')).props.disabled, true);
+ assert.equal(view.find((element => element.props?.label === 'Delete update')).props.disabled, true);
  setType('valuation');
  assert.equal(view.all(element => element.type === ToggleGroup).length, 0);
  setType('withdrawal');

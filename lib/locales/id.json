@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "Pembayaran terjadwal tetap pada jadwalnya.",
   "Lent from account (optional)": "Dipinjamkan dari akun (opsional)",
   "Not from an account": "Bukan dari akun",
-  "No cash account in {currency}.": "Tidak ada akun kas dalam {currency}."
+  "No cash account in {currency}.": "Tidak ada akun kas dalam {currency}.",
+  "Built-in categories cannot be deleted.": "Kategori bawaan tidak dapat dihapus."
 }

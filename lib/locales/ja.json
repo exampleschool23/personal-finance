@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "予定支払いの予定は変更できません。",
   "Lent from account (optional)": "貸し出し元の口座（任意）",
   "Not from an account": "口座からではない",
-  "No cash account in {currency}.": "{currency} の現金口座がありません。"
+  "No cash account in {currency}.": "{currency} の現金口座がありません。",
+  "Built-in categories cannot be deleted.": "標準のカテゴリは削除できません。"
 }

@@ -1,4 +1,5 @@
 "use client";
+import { DeleteButton } from '@/components/presentation-foundation/delete-button';
 import { useState, type CSSProperties } from 'react';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
@@ -56,7 +57,7 @@ export function EditCategoryDialog({item,icon,chosen,color,defaultHue,iconsDisab
    {taken&&<p role="alert" className="error">{t(duplicateCategoryMessage)}</p>}
    <ErrorPopup message={error}/>
    <FormFooter busy={busy} onCancel={guard.close}>
-    {onDelete&&<Button type="button" variant="destructive" className="category-edit-delete" disabled={busy} onClick={onDelete}>{t('Delete')}</Button>}
+    <DeleteButton className="category-edit-delete" disabled={busy} label={t('Delete {name}',{name:item.label})} reason={onDelete?undefined:t('Built-in categories cannot be deleted.')} onClick={onDelete}/>
     <Button disabled={busy||!dirty||taken||!name.trim()}>{t(busy?'Saving…':'Save')}</Button>
    </FormFooter>
   </form>

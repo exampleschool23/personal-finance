@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "پرداخت زمان‌بندی‌شده برنامه‌اش را نگه می‌دارد.",
   "Lent from account (optional)": "از کدام حساب قرض داده شد (اختیاری)",
   "Not from an account": "نه از یک حساب",
-  "No cash account in {currency}.": "هیچ حساب نقدی به {currency} وجود ندارد."
+  "No cash account in {currency}.": "هیچ حساب نقدی به {currency} وجود ندارد.",
+  "Built-in categories cannot be deleted.": "دسته‌های پیش‌فرض را نمی‌توان حذف کرد."
 }

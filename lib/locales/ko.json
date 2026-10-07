@@ -2603,5 +2603,6 @@
   "A scheduled payment keeps its schedule.": "예정 결제는 일정을 바꿀 수 없습니다.",
   "Lent from account (optional)": "빌려준 계좌 (선택)",
   "Not from an account": "계좌에서 나가지 않음",
-  "No cash account in {currency}.": "{currency} 현금 계좌가 없습니다."
+  "No cash account in {currency}.": "{currency} 현금 계좌가 없습니다.",
+  "Built-in categories cannot be deleted.": "기본 카테고리는 삭제할 수 없습니다."
 }

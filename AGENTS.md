@@ -107,6 +107,11 @@ it instead of styling a page on its own.
 - Income amounts are green; expenses stay in the ink colour. Red marks overdue,
   overspent or owed amounts only.
 - Rare row actions go in a ⋯ menu rather than a row of buttons.
+- Delete is always a bin. A delete button is `DeleteButton`
+  (`presentation-foundation/delete-button.tsx`): icon only, its label naming what
+  it deletes; in a form footer it sits apart at the start. A ⋯ menu's delete is a
+  `RowMenu` item with `deletes: true`, and a confirmation that deletes passes
+  `deletes` to `ConfirmDialog`; both show the bin beside the label.
 - Every list whose order the person chooses (goals, accounts, categories, cards,
   templates and the like) is reorderable by drag and drop with `SortableList` /
   `SortableItem` from `presentation-foundation/sortable.tsx`; chronological or
