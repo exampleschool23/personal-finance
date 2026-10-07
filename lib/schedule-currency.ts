@@ -1,24 +1,30 @@
+import { convertMoney } from './money';
 import type { ExtraPayment, Occurrence } from './planning';
 
 /** The official rate of a day: units of `to` for one unit of `from`. */
 export type DayRate = (from: string, to: string, date: string) => Promise<number>;
 
-/** Payments made in another currency than their schedule count in the schedule's currency at the official rate of the
- * payment's day (migration 120); what was saved keeps its own amount and currency. Without a rate, a first payment's
- * amount is unknown (null) and a later payment is left out, rather than counted in the wrong currency. */
+/** Payments made in another currency than their schedule are counted in the schedule's currency at the official rate
+ * of the payment's day (migration 120): the read hands them on as money in the schedule's currency, while the saved
+ * transactions keep their own. Without a rate a payment keeps its own currency, which Recurring then leaves uncounted. */
 export async function inScheduleCurrency(occurrences: Occurrence[], payments: ExtraPayment[], currencyOf: Map<string, string>, rate: DayRate): Promise<{ occurrences: Occurrence[]; payments: ExtraPayment[] }> {
  const quotes = new Map<string, Promise<number | null>>();
- const convert = async (amount: number, from: string | null | undefined, to: string | undefined, date: string | null | undefined): Promise<number | null> => {
-  if (!from || !to || from === to) return Number(amount);
-  if (!date) return null;
+ const quote = (from: string, to: string, date: string) => {
   const key = from + ':' + to + ':' + date;
-  if (!quotes.has(key)) quotes.set(key, rate(from, to, date).then(value => Number.isFinite(value) && value > 0 ? value : null, () => null));
-  const value = await quotes.get(key)!;
-  return value === null ? null : Number(amount) * value;
+  if (!quotes.has(key)) quotes.set(key, rate(from, to, date).then(value => value, () => null));
+  return quotes.get(key)!;
+ };
+ /** The payment as money in its schedule's currency, or unchanged when it already is, or no rate converts it. */
+ const counted = async <T extends { amount: number | null; currency?: string; date?: string }>(payment: T, scheduleId: string): Promise<T> => {
+  const to = currencyOf.get(scheduleId), from = payment.currency;
+  if (!to || !from || from === to || !payment.date || payment.amount === null) return payment;
+  const value = await quote(from, to, payment.date);
+  const money = convertMoney({ amount: payment.amount, currency: from }, to, () => value);
+  return money ? { ...payment, ...money } : payment;
  };
  const [converted, later] = await Promise.all([
-  Promise.all(occurrences.map(async item => item.transaction ? { ...item, transaction: { ...item.transaction, amount: await convert(item.transaction.amount ?? 0, item.transaction.currency, currencyOf.get(item.record_id), item.transaction.date) } } : item)),
-  Promise.all(payments.map(async payment => ({ ...payment, amount: await convert(payment.amount, payment.currency, currencyOf.get(payment.occurrence_record_id), payment.date) }))),
+  Promise.all(occurrences.map(async item => item.transaction ? { ...item, transaction: await counted(item.transaction, item.record_id) } : item)),
+  Promise.all(payments.map(payment => counted(payment, payment.occurrence_record_id))),
  ]);
- return { occurrences: converted, payments: later.filter((payment): payment is ExtraPayment => payment.amount !== null) };
+ return { occurrences: converted, payments: later };
 }

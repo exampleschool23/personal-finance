@@ -4,12 +4,8 @@ import {createRenderer,hostModule,language,text,byLabel,byText,event} from './he
 
 // Today is 30 September 2026 for every test here.
 const now=new Date('2026-09-30T07:00:00Z');
-function mount(t,props,{narrow=true,locale='en'}={}){
+function mount(t,props,{locale='en'}={}){
  if(!t.dateMocked){t.mock.timers.enable({apis:['Date'],now});t.dateMocked=true;}
- const listeners=new Set();
- const media={matches:narrow,addEventListener:(type,listener)=>listeners.add(listener),removeEventListener:(type,listener)=>listeners.delete(listener)};
- globalThis.window={matchMedia:query=>{assert.equal(query,'(max-width: 720px)');return media;}};
- t.after(()=>{delete globalThis.window;});
  const r=createRenderer();
  const {DatePicker}=r.load('components/presentation-foundation/date-picker.tsx',{
   '@/components/language-provider':language(locale),
@@ -18,7 +14,7 @@ function mount(t,props,{narrow=true,locale='en'}={}){
  const changes=[];
  const view=next=>r.render(r.react.createElement(DatePicker,{onChange:value=>changes.push(value),...next}));
  view(props);
- return {r,view,changes,media,listeners,popover:()=>r.find(node=>node.type==='Popover')};
+ return {r,view,changes,popover:()=>r.find(node=>node.type==='Popover')};
 }
 const grids=r=>r.all(node=>node.props.className==='pos-month-grid');
 // Simulated DOM for the keyboard handlers: the grid's buttons, with focus recorded.
@@ -35,7 +31,7 @@ test('day picker shows the formatted value, today and the selected day, and clos
  const {r,changes,popover}=mount(t,{value:'2026-09-16'});
  const trigger=r.find(node=>node.props.className==='date-picker-trigger');
  assert.equal(trigger.props['aria-label'],'16 September 2026');assert.equal(text(trigger),'16 September 2026');
- assert.equal(grids(r).length,1,'a narrow screen shows one month');
+ assert.equal(grids(r).length,1,'the picker shows one month');
  assert.equal(r.find(node=>node.props['aria-pressed']===true&&node.type==='button').props['aria-label'],'16 September 2026');
  const today=r.find(node=>node.props['aria-current']==='date');
  assert.equal(today.props['aria-label'],'30 September 2026');assert.match(today.props.className,/pos-today/);
@@ -137,31 +133,21 @@ test('arrow keys move focus by a day or a week and skip disabled days',t=>{
  assert.equal(press('16 September 2026','Enter').defaultPrevented,false,'other keys keep their default');
 });
 
-test('a wide screen shows two months side by side, capped at today by showing the previous month first',t=>{
- const {r,popover,media,listeners}=mount(t,{value:'',max:'2026-09-30'},{narrow:false});
+test('the picker shows one month: today\'s when the field is capped at today, the chosen day\'s otherwise',t=>{
+ // A record dated "3" is picked in the current month, not in last month shown beside it.
+ const {r,popover,view}=mount(t,{value:'',max:'2026-09-30'});
  r.fire(popover(),'onOpenChange',true);
- assert.deepEqual(r.all(node=>node.props.className==='pos-year-trigger').map(text),['August 2026','September 2026']);
- assert.equal(r.all(byLabel('Previous month')).length,1);assert.equal(r.all(byLabel('Next month')).length,1);
+ const shown=()=>r.all(node=>node.props.className==='pos-year-trigger').map(text);
+ assert.deepEqual(shown(),['September 2026']);assert.equal(grids(r).length,1);
+ assert.equal(r.find(byLabel('Next month')).props.disabled,true,'no month after today');
+ r.fire(r.find(byLabel('Previous month')),'onClick');
+ assert.deepEqual(shown(),['August 2026']);
  r.fire(r.find(byLabel('Next month')),'onClick');
- assert.deepEqual(r.all(node=>node.props.className==='pos-year-trigger').map(text),['September 2026','October 2026']);
- // Choosing a year on the right-hand month keeps that month on the right.
- r.fire(r.all(node=>node.props.className==='pos-year-trigger')[1],'onClick');
- r.fire(r.find(byText('button','2024')),'onClick');
- assert.deepEqual(r.all(node=>node.props.className==='pos-year-trigger').map(text),['September 2024','October 2024']);
- // And on the left-hand month, that month stays on the left.
- r.fire(r.all(node=>node.props.className==='pos-year-trigger')[0],'onClick');
- r.fire(r.find(byText('button','2025')),'onClick');
- assert.deepEqual(r.all(node=>node.props.className==='pos-year-trigger').map(text),['September 2025','October 2025']);
- // Narrowing the window switches to one month; unmounting stops listening.
- media.matches=true;for(const listener of listeners)listener();r.update();
- assert.equal(grids(r).length,1);
- r.unmount();assert.equal(listeners.size,0);
-});
-
-test('a wide picker whose maximum is today keeps the current month when the minimum forbids the previous one',t=>{
- const {r,popover}=mount(t,{value:'',min:'2026-09-05',max:'2026-09-30'},{narrow:false});
+ assert.deepEqual(shown(),['September 2026']);
+ r.fire(popover(),'onOpenChange',false);
+ view({value:'2026-07-03',max:'2026-09-30'});
  r.fire(popover(),'onOpenChange',true);
- assert.deepEqual(r.all(node=>node.props.className==='pos-year-trigger').map(text),['September 2026','October 2026']);
+ assert.deepEqual(shown(),['July 2026']);
 });
 
 test('month mode lists the twelve months of the year with limits and closes on a pick',t=>{

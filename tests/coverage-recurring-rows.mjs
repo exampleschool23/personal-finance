@@ -42,6 +42,7 @@ test('a settled row keeps only Archive; a loan payment and a read-only row have 
  assert.equal(early.find(byType(ui.Button)).props.disabled, true, 'a payment waits for its day');
  assert.equal(early.find(byType(RowMenu)).props.items.length, 1);
  assert.match(text(mount(OccurrenceRow, { item: item('skipped'), dated: false, today: '2026-10-05', busy: false, onPay() {}, onSkip() {} }).tree), /Skipped/);
+ assert.match(text(mount(OccurrenceRow, { item: item('paid', { recorded: null }), dated: false, today: '2026-10-05', busy: false, onPay() {}, onSkip() {} }).tree), /Paid · Exchange rate unavailable\./, 'a payment that could not be converted shows no figure');
 });
 
 test('spending plans show spent over planned with a bar that turns red when overspent, and are tapped to record spending', () => {

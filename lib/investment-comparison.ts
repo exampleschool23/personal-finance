@@ -1,15 +1,16 @@
 import { portfolioAssets, portfolioAssetKey, portfolioAssetCurrency, type DiversifiedPortfolio } from './diversified-portfolio';
 import { historicalRate, latestOn, type BenchmarkData, type FxPoint, type PricePoint } from './benchmark-data';
 import { daysBetween, shiftDay } from './calendar-days';
+import { convertMoney } from './money';
 
 export type CashFlow = { date: string; amount: number };
 export type WealthPoint = { date: string; amount: number | null };
 export type ComparisonPoint = { date: string; actual: number | null; contributed: number; [key: string]: string | number | null };
+/** An amount on a past day with the benchmark feed's rates; see `convertMoney`. */
 export function convertHistorical(amount: number, from: string, to: string, date: string, fx: FxPoint[]) {
  if (!Number.isFinite(amount)) return null;
  if (amount === 0 || from === to) return amount;
- const source = historicalRate(fx, from, date), target = historicalRate(fx, to, date);
- return source && target ? amount / source * target : null;
+ return convertMoney({ amount, currency: from }, to, { [from]: historicalRate(fx, from, date), [to]: historicalRate(fx, to, date) })?.amount ?? null;
 }
 export function benchmarkUnitPrice(prices: PricePoint[], date: string, currency: string, fx: FxPoint[]) {
  const quote = latestOn(prices,date);

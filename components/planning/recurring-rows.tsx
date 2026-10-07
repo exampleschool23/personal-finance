@@ -61,16 +61,12 @@ const occurrenceDetail = (t: (key: string) => string, locale: string, item: Recu
 /** One scheduled income or bill on its day: its status, the scheduled amount, and recording, skipping or archiving it. */
 export function OccurrenceRow({ item, dated, today, busy, categories = [], onEdit, onOpen, onPay, onSkip, onArchive, onDelete }: OccurrenceProps) {
  const { t, locale } = useLanguage();
- const dueLabel = useDueLabel();
  // A payment is recorded once it happens: before its date the button waits and says when. A recorded one takes further payments; a skipped one none.
  const early = !item.installment && item.date > today, pending = item.status === 'due' || item.status === 'overdue';
  const { edit, open, openLabel } = rowActions(t, item, onEdit, onOpen);
- // A settled payment names what actually arrived or left, beside the scheduled amount.
- const paid = item.status === 'paid', recorded = item.recorded ?? item.amount;
+ const paid = item.status === 'paid';
  const category = customCategory(item.record, categories);
- const status = paid ? <ProgressLine value={recorded} target={item.amount} tone={item.direction} label={t(item.direction === 'income' ? 'Received' : 'Paid') + ' · ' + formatMoney(recorded, item.record.currency, locale)}/>
-  : item.status === 'skipped' ? <span className="status-badge">{t('Skipped')}</span>
-  : <span className={item.status === 'overdue' ? 'status-badge is-overdue' : 'status-badge'}>{dueLabel(today, item.date)}</span>;
+ const status = <OccurrenceStatus item={item} today={today}/>;
  const menu = occurrenceMenu(t, busy, item, { edit: onOpen && edit, skip: pending ? () => onSkip(item) : undefined, archive: onArchive, remove: onDelete && (() => onDelete({ source: 'record', record: item.record })) });
  return <li className="recurring-row" data-status={item.status} data-editable={open ? '' : undefined} onClick={rowTap(open)}>
   <span className="transaction-merchant"><DoneTick done={paid}/><CategoryIcon kind={category ?? item.record.kind}/><RowName name={shownName(item.record, t)} label={openLabel} onOpen={open} detail={occurrenceDetail(t, locale, item, category, dated)}/></span>
@@ -80,6 +76,18 @@ export function OccurrenceRow({ item, dated, today, busy, categories = [], onEdi
    {menu.length > 0 && <RowMenu label={t('Actions for {name}', { name: item.record.name })} items={menu}/>}
   </div>
  </li>;
+}
+
+/** What a settled payment brought in or paid out against its schedule, beside the scheduled amount; one in another
+ * currency that could not be converted says so rather than showing a figure in the wrong currency. Open ones say when. */
+function OccurrenceStatus({ item, today }: { item: RecurringItem; today: string }) {
+ const { t, locale } = useLanguage();
+ const dueLabel = useDueLabel();
+ const label = t(item.direction === 'income' ? 'Received' : 'Paid');
+ if (item.status === 'paid' && item.recorded === null) return <span className="status-badge">{label} · {t('Exchange rate unavailable.')}</span>;
+ if (item.status === 'paid') { const recorded = item.recorded ?? item.amount; return <ProgressLine value={recorded} target={item.amount} tone={item.direction} label={label + ' · ' + formatMoney(recorded, item.record.currency, locale)}/>; }
+ if (item.status === 'skipped') return <span className="status-badge">{t('Skipped')}</span>;
+ return <span className={item.status === 'overdue' ? 'status-badge is-overdue' : 'status-badge'}>{dueLabel(today, item.date)}</span>;
 }
 
 /** The month's spending plans under the dated bills, as on the Spending tab: spent against planned with a progress bar, tapped to record spending. */

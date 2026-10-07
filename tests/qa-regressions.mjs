@@ -279,3 +279,13 @@ test('transaction labels never narrow below a word',()=>{
  assert.match(css,/\.transaction-labels\{[^}]*grid-auto-columns:minmax\(min-content,1fr\)/);
  assert.match(css,/\.transaction-row:has\(>input\)\{grid-template-columns:auto minmax\(0,1\.2fr\) minmax\(min-content,1\.2fr\)/);
 });
+
+// 7 October 2026: a transaction opened from the list can be deleted, not only edited.
+test('the transaction details dialog offers a bin to delete and a pencil to edit, with no Close button beside the ×',()=>{
+ const dialog=fs.readFileSync('components/transaction-details-dialog.tsx','utf8');
+ assert.match(dialog,/aria-label=\{t\('Delete \{name\}',\{name:shownName\(record,t\)\}\)\} onClick=\{onDelete\}><Trash2 /);
+ assert.match(dialog,/aria-label=\{t\('Edit \{name\}',\{name:shownName\(record,t\)\}\)\} onClick=\{onEdit\}><Pencil /);
+ assert.doesNotMatch(dialog,/t\('Close'\)/);
+ const dialogs=fs.readFileSync('components/workspace/workspace-dialogs.tsx','utf8');
+ assert.match(dialogs,/onDelete=\{\(\)=>\{const r=viewing;setViewing\(null\);requestDelete\(r\);\}\}/);
+});

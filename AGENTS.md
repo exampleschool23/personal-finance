@@ -17,7 +17,7 @@ keep ISO dates and plain numbers. `tests/formatting-rules.mjs` scans the whole c
 - Use `formatNumber` for exchange rates, quantities, and rates. Always pass the current language locale from `useLanguage()`.
 - Use `FormattedNumberInput` from `components/presentation-foundation/formatted-number-input.tsx` for editable amounts, prices, quantities, and interest rates. It groups digits while typing, accepts locale decimal separators, and emits plain numbers. Zero defaults must render as empty fields with a `0` placeholder, so typing replaces the placeholder immediately. Optional numeric fields (such as interest or purchase cost) must permit blank input and retain numeric zero. Never replace it with a raw number input for monetary fields.
 - Use `formatDate` for date-only values and `formatDateTime` for timestamps. These wrap the actual Zarkebab POS formatter copied to `lib/pos-date-format.js`: display `16 September 2026`, `16 сентября 2026`, or `16 sentabr 2026`; month titles use its explicit translated month tables. Timestamps use Asia/Tashkent (+05:00), with 24-hour time. Do not substitute locale-default numeric dates or browser-local timestamp formatting. Date-only values must stay on their original calendar day, independent of timezone. Missing or invalid display dates use an em dash.
-- Every date-entry field must use `DatePicker` from `components/presentation-foundation/date-picker.tsx`. Never use native `type="date"` inputs or create a separate picker. Use the actual hand-built `MonthCalendar` grid and month arithmetic ported from `zar-kebab-pos/src/components/DateRangePicker.jsx`; do not replace it with shadcn Calendar/react-day-picker or a visually approximate calendar. Radix Popover may handle positioning and focus. This component uses the Zarkebab POS picker: two months on desktop, one on mobile, rounded days and presets. Selecting a day, preset, or Clear date must immediately update the field and close the picker. Do not add an Apply/Cancel confirmation footer. Use finance theme colors and translated labels. Optional dates must allow clearing; minimum dates must be enforced. Store ISO `YYYY-MM-DD` through the shared calendar helpers; use shared formatters for visible dates. Preserve keyboard navigation, Escape dismissal, and focus return.
+- Every date-entry field must use `DatePicker` from `components/presentation-foundation/date-picker.tsx`. Never use native `type="date"` inputs or create a separate picker. Use the actual hand-built `MonthCalendar` grid and month arithmetic ported from `zar-kebab-pos/src/components/DateRangePicker.jsx`; do not replace it with shadcn Calendar/react-day-picker or a visually approximate calendar. Radix Popover may handle positioning and focus. This component uses the Zarkebab POS picker: one month at a time on every screen, opening on the chosen day's month (or today's), with arrows to step to the months around it, rounded days and presets. Selecting a day, preset, or Clear date must immediately update the field and close the picker. Do not add an Apply/Cancel confirmation footer. Use finance theme colors and translated labels. Optional dates must allow clearing; minimum dates must be enforced. Store ISO `YYYY-MM-DD` through the shared calendar helpers; use shared formatters for visible dates. Preserve keyboard navigation, Escape dismissal, and focus return.
 - Store numbers and ISO dates, never formatted display strings. Formatting must not mutate amounts, purchase costs, or exchange-rate calculations.
 - Add regression coverage to `tests/format.mjs` when changing shared formatting. Check EN, RU, and UZ, grouping, decimals, small crypto prices, missing dates, and date-only timezone behavior.
 
@@ -184,6 +184,13 @@ Removing a preferred currency must never delete or change existing records.
 
 Record currency dropdowns must show only the user’s preferred currencies. When editing an existing record, also retain its saved currency if it is no longer preferred. The full fiat catalogue belongs only in Settings.
 
+An amount whose currency can differ from where it is shown or added travels as
+`Money` (`{ amount, currency }`, `lib/money.ts`) and changes currency only through
+`convertMoney` / `amountIn`, which return null without a usable rate. Never add or
+show an amount under another currency's label; count it as missing instead.
+(`convertAmount` in `lib/market.ts` keeps its own copy of the arithmetic because
+that file has no runtime imports.)
+
 Category colors must come from `lib/category-colors.ts`. Use `CategoryBadge` for category labels and `categoryColor` for category charts. Keep colors stable across sorting and languages, with readable light/dark badge styles.
 
 # Git destination and standing authorization
@@ -245,8 +252,9 @@ name, amount or date that happens to match (migration 119).
 - A payment may be in another currency than its schedule (migration 120). It keeps
   its own amount and currency; the planning read counts it in the schedule's
   currency at the official rate of the payment's day (`inScheduleCurrency`,
-  `lib/schedule-currency.ts`). Without a rate the received amount is unknown,
-  never the raw figure in the wrong currency.
+  `lib/schedule-currency.ts`). Recurring counts a payment only in its schedule's
+  currency; one it cannot convert shows "Exchange rate unavailable." and is
+  missing from the month's totals, never the raw figure in the wrong currency.
 - The database alone picks and checks the due date (`name_scheduled_payment`): the
   open payment of the payment's own month, else last month's, else it adds to this
   month's recorded one. The first payment settles the due date

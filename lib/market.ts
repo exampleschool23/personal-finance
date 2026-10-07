@@ -93,6 +93,8 @@ export function marketSymbols(entries: ReadonlyArray<Pick<Entry, 'kind' | 'name'
   const of = (kind: Instrument['kind']) => [...new Set(instruments.filter(instrument => instrument.kind === kind).map(instrument => instrument.symbol))];
   return { crypto: of('Crypto'), stocks: of('Stock'), metals: of('Metal') };
 }
+/** A bare amount through the market feed's USD table. This file stays free of runtime imports, so it keeps its own
+ * arithmetic; it matches `convertMoney` in lib/money.ts, which new code uses so an amount travels with its currency. */
 export function convertAmount(amount: number, from: Entry['currency'], to: Entry['currency'], rate?: number | Record<string, number>) {
   if (from === to) return amount;
   const rates = typeof rate === 'number' ? { USD: 1, UZS: rate } as Record<string, number> : rate;

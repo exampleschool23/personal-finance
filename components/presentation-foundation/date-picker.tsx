@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { availablePresets, buildRangeCalendar, shiftCalendarMonth, calendarYearAnchor, datePresetLabels, defaultDatePresets, openingCalendarDay, type DatePreset } from '@/lib/date-picker-calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -48,23 +48,17 @@ function DayPicker({ value, onChange, min, max, required = true, presets = defau
   const { locale, t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState<Date>(() => parseCalendarDate(value) || new Date());
-  const [compact, setCompact] = useState(true);
-  useEffect(() => { const media = window.matchMedia('(max-width: 720px)'); const update = () => setCompact(media.matches); update(); media.addEventListener('change', update); return () => media.removeEventListener('change', update); }, []);
   const selectDate = (date: string) => {
     if (date ? !parseCalendarDate(date) || (!!min && date < min) || (!!max && date > max) : required) return;
     onChange(date);
     setOpen(false);
   };
-  // With two months side by side, a field capped at today shows the month before and this one, never a fully disabled next month.
-  const openingMonth = () => {
-    const opening = openingCalendarDay(parseCalendarDate(value) ? value : '', calendarIso(new Date()), min, max).slice(0, 7);
-    const shown = !compact && max && shiftCalendarMonth(opening, 1) + '-01' > max && !(min && shiftCalendarMonth(opening, -1) < min.slice(0, 7)) ? shiftCalendarMonth(opening, -1) : opening;
-    return parseCalendarDate(shown + '-01') || new Date();
-  };
+  // One month at a time, opening on the chosen day's month (or today's); the arrows step to the months around it.
+  const openingMonth = () => parseCalendarDate(openingCalendarDay(parseCalendarDate(value) ? value : '', calendarIso(new Date()), min, max).slice(0, 7) + '-01') || new Date();
   return <Popover open={open} onOpenChange={next => { if (next) setMonth(openingMonth()); setOpen(next); }}>
     <PopoverTrigger asChild><button type="button" className="date-picker-trigger" aria-label={value ? formatDate(value, locale) : t('Select date')}><span>{value ? formatDate(value, locale) : t('Select date')}</span><CalendarDays size={17}/></button></PopoverTrigger>
     <PopoverContent className="finance-date-picker" align="start" collisionPadding={12} aria-label={t('Select date')}>
-      <div className="date-picker-body"><MonthCalendar monthKey={calendarIso(month).slice(0, 7)} draft={value} min={min} max={max} onSelect={selectDate} onYearChange={year => setMonth(parseCalendarDate(calendarYearAnchor(calendarIso(month).slice(0, 7), year, 0) + '-01')!)} previous={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), -1) + '-01')!)} next={compact ? () => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!) : undefined}/>{!compact && <MonthCalendar monthKey={shiftCalendarMonth(calendarIso(month).slice(0, 7), 1)} draft={value} min={min} max={max} onSelect={selectDate} onYearChange={year => setMonth(parseCalendarDate(calendarYearAnchor(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1), year, 1) + '-01')!)} next={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!)}/>}
+      <div className="date-picker-body"><MonthCalendar monthKey={calendarIso(month).slice(0, 7)} draft={value} min={min} max={max} onSelect={selectDate} onYearChange={year => setMonth(parseCalendarDate(calendarYearAnchor(calendarIso(month).slice(0, 7), year, 0) + '-01')!)} previous={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), -1) + '-01')!)} next={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!)}/>
       <aside className="date-picker-presets"><strong>{t('Presets')}</strong>{availablePresets(presets, calendarIso(new Date()), min, max).map(({ preset, date }) => <Button key={preset} type="button" variant="ghost" onClick={() => selectDate(date)}>{t(datePresetLabels[preset])}</Button>)}{!required && <Button type="button" variant="ghost" onClick={() => selectDate('')}>{t('Clear date')}</Button>}</aside></div>
     </PopoverContent>
   </Popover>;

@@ -33,8 +33,9 @@ export async function GET(req?:Request){
  // Loan repayments and mortgage payments settle a loan's monthly payment on Recurring and Upcoming payments.
  if(scope==='full'||scope==='workspace'){const [repayments,mortgagePayments]=await Promise.all([readOwnerRows<{action:string;target_id:string|null;occurred_on:string}>('account_activity',auth.token,{select:'action,target_id,occurred_on',action:'in.(repayment,mortgage)'}),readOwnerRows<{mortgage_id:string;paid_on:string}>('mortgage_payments',auth.token,{select:'id,mortgage_id,paid_on'})]);data.debtPayments=debtPaymentsFrom(repayments,mortgagePayments);}
  // Payments in another currency than their schedule count in its currency at the rate of the payment's day.
- const counted=await inScheduleCurrency(data.occurrences as Occurrence[],await extraPayments,new Map((data.records as Entry[]).map(record=>[record.id,record.currency])),async(from,to,date)=>(await loadDatedExchangeRate(from,to,date)).rate);
- data.occurrences=withExtraPayments(counted.occurrences,counted.payments);
+ const currencyOf=new Map((data.records as Entry[]).map(record=>[record.id,record.currency]));
+ const counted=await inScheduleCurrency(data.occurrences as Occurrence[],await extraPayments,currencyOf,async(from,to,date)=>(await loadDatedExchangeRate(from,to,date)).rate);
+ data.occurrences=withExtraPayments(counted.occurrences,counted.payments,currencyOf);
  // Every scope but insights reads every holding (only income and expense history is period-limited), so the
  // deposits are already here and are not read again.
  const estimates=new Map((scope==='insights'?[]:await depositForecasts(auth.token,data.records as Entry[])).map(record=>[record.id,record.estimated_monthly_income]));

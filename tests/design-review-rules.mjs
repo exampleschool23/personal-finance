@@ -218,9 +218,11 @@ test('pages and dialogs never grow wider than the screen, and fit short screens 
 test('switches, chips and names show their whole text (SCR-085, LIST-024, LIST-025, LIST-007)',()=>{
  const css=stylesheet();
  assert.match(css,/\.budget-left-tabs\{display:flex;width:100%;flex-wrap:wrap;overflow:visible\}/,'Summary, Income and Expenses never scroll');
- // Account rows wrap by themselves: the balance moves under the name before the name breaks between letters.
- assert.match(css,/\.account-list-row\{display:flex;flex-wrap:wrap;/);
- assert.match(css,/\.account-list-name\{flex:1 1 9rem;min-width:0;font-weight:600;overflow-wrap:break-word\}/);
+ // Account cards stack icon, name and balance, so the name has the card's whole width and never breaks between letters.
+ assert.match(css,/\.account-list-row\{display:flex;flex-direction:column;/);
+ assert.match(css,/\.account-list-row>strong\{margin-top:auto;max-width:100%;/);
+ assert.match(css,/\.account-list-name\{max-width:100%;padding-inline-end:20px;font-weight:600;overflow-wrap:break-word\}/);
+ assert.match(css,/\.account-card-grid\{display:grid;grid-template-columns:repeat\(auto-fill,minmax\(min\(100%,220px\),1fr\)\);/);
  assert.match(css,/\.account-group>summary\{display:flex;flex-wrap:wrap;/);
  // Transaction chips keep their equal columns, and a long name wraps inside its column.
  for(const chip of ['.transaction-category>span:last-child','.transaction-business>span:last-child','.report-transaction-list>li>*>span:nth-child(2)>*']){
