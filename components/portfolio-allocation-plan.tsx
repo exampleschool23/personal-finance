@@ -10,6 +10,7 @@ import {Button} from '@/components/ui/button';
 import {useUnsavedNavigation} from '@/components/discard-changes';
 import {assets,value,type Entry} from '@/lib/finance';
 import {marketEntry,type MarketData} from '@/lib/market';
+import {isInvestmentRecord} from '@/lib/comparison-profile';
 import {allocationDrift,currentAllocationWeights} from '@/lib/portfolio-performance';
 import {formatMoney,formatNumber,formatPercent} from '@/lib/format';
 import {CategoryBadge} from '@/components/presentation-foundation/category-badge';
@@ -20,7 +21,7 @@ export function PortfolioAllocationPlan({records,currency,currencies,market,pref
 }
 function AllocationEditor({records,currency,currencies,market,initial,initialTarget,save}:{currencies:string[];initialTarget:{amount:number;currency:string;date?:string|null}|null;records:Entry[];currency:string;market:MarketData|null;initial:Record<string,number>|null;save:PreferenceResource['save']}){
  const {t,locale}=useLanguage();const [chosen,setWeights]=useState(initial),[saved,setSaved]=useState(initial),[cash,setCash]=useState(0),[busy,setBusy]=useState(false),[error,setError]=useState('');const [targetAmount,setTargetAmount]=useState(initialTarget?.amount??0),[targetCurrency,setTargetCurrency]=useState(initialTarget?.currency??currency),[targetDate,setTargetDate]=useState(initialTarget?.date??''),[savedTarget,setSavedTarget]=useState(initialTarget?{...initialTarget,date:initialTarget.date??null}:null);const target=targetAmount>0?{amount:targetAmount,currency:targetCurrency,date:targetDate||null}:null;const guard=useUnsavedNavigation(JSON.stringify(chosen)!==JSON.stringify(saved)||JSON.stringify(target)!==JSON.stringify(savedTarget));
- const values:Record<string,number|null>={};for(const row of records.filter(r=>assets.includes(r.kind))){const converted=marketEntry(row,currency,market);values[row.kind]=values[row.kind]===null||!converted?null:(values[row.kind]??0)+value(converted);}
+ const values:Record<string,number|null>={};for(const row of records.filter(r=>assets.includes(r.kind)&&(r.kind!=='Cash'||isInvestmentRecord(r)))){const converted=marketEntry(row,currency,market);values[row.kind]=values[row.kind]===null||!converted?null:(values[row.kind]??0)+value(converted);}
  // Until targets are saved, they start from today's mix rather than an arbitrary split.
  const weights=chosen??currentAllocationWeights(values)??{Cash:100};
  const plan=allocationDrift(values,weights,cash);const total=Object.values(weights).reduce((sum,n)=>sum+n,0),valid=Math.abs(total-100)<1e-8;const money=(n:number)=>formatMoney(n,currency,locale);

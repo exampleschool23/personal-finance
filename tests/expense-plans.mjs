@@ -63,3 +63,8 @@ test('the month preview lists plans in every currency, only those running that m
  assert.deepEqual(previewPlans(plans,'2026-09').map(item=>item.id),['usd','uzs','a','b','c'],'a plan in another currency is not hidden');
  assert.deepEqual(previewPlans(plans,'2026-09',10).map(item=>item.id),['usd','uzs','a','b','c','d']);
 });
+test('plan totals are listed per currency, never added across currencies',async()=>{
+ const {planTotalsByCurrency}=await import('../lib/expense-plans.ts');
+ const lines=planTotalsByCurrency([plan,{...plan,id:'q',amount:300,spent:50},{...plan,id:'u',currency:'UZS',amount:2000000,spent:0},{...plan,id:'f',start_date:'2026-11-01'}],'2026-09');
+ assert.deepEqual(lines,[{currency:'USD',spent:150,planned:800},{currency:'UZS',spent:0,planned:2000000}]);
+});

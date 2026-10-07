@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Dipinjamkan dari akaun (pilihan)",
   "Not from an account": "Bukan dari akaun",
   "No cash account in {currency}.": "Tiada akaun tunai dalam {currency}.",
-  "Built-in categories cannot be deleted.": "Kategori terbina dalam tidak boleh dipadam."
+  "Built-in categories cannot be deleted.": "Kategori terbina dalam tidak boleh dipadam.",
+  "Restored": "Dipulihkan",
+  "Import undone": "Import dibatalkan",
+  "Add recurring": "Tambah berulang",
+  "Recurring income": "Pendapatan berulang",
+  "Recurring bill": "Bil berulang",
+  "Monthly spending plan": "Pelan perbelanjaan bulanan"
 }

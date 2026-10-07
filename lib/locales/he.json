@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "הולווה מחשבון (לא חובה)",
   "Not from an account": "לא מחשבון",
   "No cash account in {currency}.": "אין חשבון מזומן ב־{currency}.",
-  "Built-in categories cannot be deleted.": "לא ניתן למחוק קטגוריות מובנות."
+  "Built-in categories cannot be deleted.": "לא ניתן למחוק קטגוריות מובנות.",
+  "Restored": "שוחזר",
+  "Import undone": "הייבוא בוטל",
+  "Add recurring": "הוספת פריט קבוע",
+  "Recurring income": "הכנסה קבועה",
+  "Recurring bill": "חשבון קבוע",
+  "Monthly spending plan": "תוכנית הוצאות חודשית"
 }

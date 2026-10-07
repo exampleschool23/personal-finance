@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Счёт, с которого дали в долг (необязательно)",
   "Not from an account": "Не со счёта",
   "No cash account in {currency}.": "Нет денежного счёта в {currency}.",
-  "Built-in categories cannot be deleted.": "Встроенные категории нельзя удалить."
+  "Built-in categories cannot be deleted.": "Встроенные категории нельзя удалить.",
+  "Restored": "Восстановлено",
+  "Import undone": "Импорт отменён",
+  "Add recurring": "Добавить регулярный",
+  "Recurring income": "Регулярный доход",
+  "Recurring bill": "Регулярный счёт",
+  "Monthly spending plan": "Ежемесячный план расходов"
 }

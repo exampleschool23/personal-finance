@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Pożyczone z konta (opcjonalnie)",
   "Not from an account": "Nie z konta",
   "No cash account in {currency}.": "Brak konta gotówkowego w {currency}.",
-  "Built-in categories cannot be deleted.": "Wbudowanych kategorii nie można usunąć."
+  "Built-in categories cannot be deleted.": "Wbudowanych kategorii nie można usunąć.",
+  "Restored": "Przywrócono",
+  "Import undone": "Cofnięto import",
+  "Add recurring": "Dodaj cykliczne",
+  "Recurring income": "Dochód cykliczny",
+  "Recurring bill": "Rachunek cykliczny",
+  "Monthly spending plan": "Miesięczny plan wydatków"
 }

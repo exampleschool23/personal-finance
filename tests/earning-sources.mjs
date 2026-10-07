@@ -116,3 +116,13 @@ test('migration 082 adds the column, limits it to variable sources and is part o
  assert.match(migration,/approx_monthly=EXCLUDED\.approx_monthly/);
  assert.ok(fs.readFileSync('database/setup.sql','utf8').includes(migration.split('\n').slice(3).join('\n').trimEnd()));
 });
+test('a new fixed source repeats monthly from today and passes the schema once named and priced; a variable one has no schedule', () => {
+ const { newEarningSource, earningSourceSchema } = loadTS('lib/earning-sources.ts');
+ const fixed = newEarningSource('EUR', 'fixed', '2026-10-07', '7b0d9a1e-2f4c-4c55-9b0a-1f2e3d4c5b6a');
+ assert.equal(fixed.frequency, 'Monthly'); assert.equal(fixed.start_date, '2026-10-07'); assert.equal(fixed.currency, 'EUR');
+ assert.equal(earningSourceSchema.safeParse(fixed).success, false);
+ assert.equal(earningSourceSchema.safeParse({ ...fixed, name: 'Side job', amount: 400 }).success, true);
+ const variable = newEarningSource('USD', 'variable', '2026-10-07', '7b0d9a1e-2f4c-4c55-9b0a-1f2e3d4c5b6b');
+ assert.equal(earningSourceSchema.safeParse({ ...variable, name: 'Freelance' }).success, true);
+ assert.equal(variable.start_date, null);
+});

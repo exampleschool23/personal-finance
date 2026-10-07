@@ -1,4 +1,5 @@
 "use client";
+import { showSaved } from '@/lib/feedback';
 import {useEffect,useRef,useState} from 'react';
 import {appendGoals,moveGoal,orderedGoals,reorderGoal,savedGoalOrder} from '@/lib/goal-order';
 import type {Goal} from '@/lib/planning';
@@ -18,7 +19,7 @@ export function useGoalOrder(goals:Goal[],preferences:PreferenceResource,owner:s
   const before=ordered.map(goal=>goal.id);
   if(next.length===ids.length&&next.every((value,index)=>value===ids[index]))return;
   pending.current=true;setBusy(true);setState({scope,ids:next,error:''});
-  try{if(!demo)await preferences.save({key:'goal_order',data:{ids:next}});}
+  try{if(demo)showSaved();else await preferences.save({key:'goal_order',data:{ids:next}});}
   catch{if(currentScope.current===scope)setState({scope,ids:before,error:'Could not save goal order. Please try again.'});}
   finally{pending.current=false;setBusy(false);}
  }

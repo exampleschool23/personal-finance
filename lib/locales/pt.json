@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Emprestado da conta (opcional)",
   "Not from an account": "Não de uma conta",
   "No cash account in {currency}.": "Nenhuma conta em dinheiro em {currency}.",
-  "Built-in categories cannot be deleted.": "As categorias padrão não podem ser excluídas."
+  "Built-in categories cannot be deleted.": "As categorias padrão não podem ser excluídas.",
+  "Restored": "Restaurado",
+  "Import undone": "Importação desfeita",
+  "Add recurring": "Adicionar recorrente",
+  "Recurring income": "Receita recorrente",
+  "Recurring bill": "Conta recorrente",
+  "Monthly spending plan": "Plano de gastos mensal"
 }

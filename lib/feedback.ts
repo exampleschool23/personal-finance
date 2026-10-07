@@ -17,6 +17,15 @@ export function showSaved(language?: Language) {
   });
 }
 
+/** Call only after a user-initiated delete has succeeded: the same popup as Saved, saying Deleted. */
+export function showDeleted(language?: Language) {
+  toast.success(translate(currentLanguage(language), 'Deleted'), {
+    id: 'save-confirmation',
+    duration: 3000,
+    className: 'app-feedback save-confirmation',
+  });
+}
+
 /** Shows a failed user action in the same popup as save confirmations. Messages are translation keys. */
 export function showError(message: string, options: { detail?: string; language?: Language } = {}) {
   if (!message) return;

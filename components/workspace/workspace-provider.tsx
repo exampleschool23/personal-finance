@@ -115,8 +115,8 @@ function useWorkspaceState() {
     function clearLocalSession() { setEditing(null); setDeleting(null); closeRecordDialogs(); setRecordKinds(kinds); price.resetPrice(); settings.resetSettings(); table.resetTable(); setSummary([]); setUser(null); setDemo(false); sample.clearSample(); bin.emptyBin(); setRows([]); setError(''); }
     async function logout() {
         if (!demo) {
-            const r = await fetch('/api/auth', { method: 'DELETE' });
-            if (!r.ok) { setError('Could not sign out. Please try again.'); return; }
+            const r = await fetch('/api/auth', { method: 'DELETE' }).catch(() => null);
+            if (!r?.ok) { setError('Could not sign out. Please try again.'); showError('Could not sign out. Please try again.'); return; }
         }
         clearLocalSession();
     }

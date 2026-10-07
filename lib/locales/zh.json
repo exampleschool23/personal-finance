@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "借出账户（可选）",
   "Not from an account": "不从账户支出",
   "No cash account in {currency}.": "没有 {currency} 现金账户。",
-  "Built-in categories cannot be deleted.": "内置类别无法删除。"
+  "Built-in categories cannot be deleted.": "内置类别无法删除。",
+  "Restored": "已恢复",
+  "Import undone": "已撤销导入",
+  "Add recurring": "添加定期项目",
+  "Recurring income": "定期收入",
+  "Recurring bill": "定期账单",
+  "Monthly spending plan": "每月支出计划"
 }

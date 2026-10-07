@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { requestJson } from '@/lib/api-client';
 import type { Entry } from '@/lib/finance';
-import { showNotice, showSaved } from '@/lib/feedback';
+import { showDeleted, showSaved } from '@/lib/feedback';
 import type { TransactionSplit } from '@/lib/transaction-tools';
 import { openCriteria, ruleChoice, ruleTargets, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
 
@@ -55,7 +55,7 @@ export function useTransactionRules(owner: string | null, demo: boolean, revisio
   async remove(id: string) {
    if (demo) setSample(previous => previous.filter(item => item.id !== id));
    else { await post('delete_rule', { id }); remote.invalidate(); }
-   showNotice('Deleted');
+   showDeleted();
   },
  };
 }

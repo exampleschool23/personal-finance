@@ -1,6 +1,6 @@
 "use client";
 import { Fragment, useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Repeat } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { TodayButton } from '@/components/presentation-foundation/today-button';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
@@ -22,10 +22,11 @@ import { ArchivedFold, OccurrenceRow, PlanRows, useDueLabel } from './recurring-
 import { useScheduleDeletion } from './delete-schedule-dialog';
 import { useColumnsFit } from '@/hooks/use-columns-fit';
 import { useRecurringDetails } from './recurring-details';
+import { AddRecurringMenu, type RecurringKind } from './add-recurring-menu';
 
 /** The Recurring page's views, switched from tabs beside its title: the month as a list or a calendar, subscriptions and reminders. */
 export type RecurringView = 'list' | 'calendar' | 'subscriptions' | 'reminders';
-type Props = { data: PlanningData; save: (action: string, data: unknown) => Promise<void>; currency: string; rates?: number | Record<string, number>; view: RecurringView; onView: (view: RecurringView) => void; onAdd?: (direction: 'income' | 'expense') => void; onEdit?: (record: RecurringItem['record']) => void;
+type Props = { data: PlanningData; save: (action: string, data: unknown) => Promise<void>; currency: string; rates?: number | Record<string, number>; view: RecurringView; onView: (view: RecurringView) => void; onEdit?: (record: RecurringItem['record']) => void; onAddRecurring?: (kind: RecurringKind) => void;
  /** The monthly spending plans (groceries, family support) and the month their spending is known for; tapping one records spending from it. */
  plans?: readonly ExpensePlan[]; plansMonth?: string; onSpend?: (plan: ExpensePlan) => void;
  /** Archived plans, listed to restore; archiving moves a schedule or plan out of the month and back. */
@@ -46,7 +47,7 @@ function SummaryBar({ label, done, remaining, doneLabel, currency, tone, pressed
 }
 
 /** The month's spending plans under the dated bills: spent against planned, tapped to record spending. */
-export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd, onEdit, plans = [], plansMonth, onSpend, archivedPlans = [], onArchive, onDelete }: Props) {
+export function UpcomingPage({ data, save, currency, rates, view, onView, onEdit, onAddRecurring, plans = [], plansMonth, onSpend, archivedPlans = [], onArchive, onDelete }: Props) {
  const { t, locale } = useLanguage(), today = depositToday();
  const dueLabel = useDueLabel();
  const [operation, setOperation] = useState<Operation | null>(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
@@ -85,8 +86,7 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onAdd,
     <Button variant="outline" size="icon" aria-label={t('Next month')} onClick={() => setMonth(shiftMonth(month, 1))}><ChevronRight size={16}/></Button>
     <TodayButton current={month === today.slice(0, 7)} onClick={() => setMonth(today.slice(0, 7))}/>
    </div>}
-   {/* Adding opens the usual income or expense form as a one-time entry, so its cash account can be chosen; Repeats makes it a schedule. */}
-   {onAdd && <><Button variant="outline" onClick={() => onAdd('income')}><Plus size={17} aria-hidden="true"/>{t('Add income')}</Button><Button onClick={() => onAdd('expense')}><Plus size={17} aria-hidden="true"/>{t('Add expense')}</Button></>}
+   {onAddRecurring && <AddRecurringMenu onAdd={onAddRecurring}/>}
   </PageHeader>
   <ErrorPopup message={error}/>
   {scheduled && <>

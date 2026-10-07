@@ -1,6 +1,6 @@
 "use client";
 import { DeleteButton } from '@/components/presentation-foundation/delete-button';
-import { showSaved } from '@/lib/feedback';
+import { showDeleted, showSaved } from '@/lib/feedback';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { useDraftDialog } from '@/components/discard-changes';
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
@@ -36,7 +36,7 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
   if(!deleting||busy)return;setBusy(true);setError('');
   try{
    await requestJson('/api/investment-history',{method:'DELETE',body:{id:deleting.id,record_id:record.id}});
-   setDeleting(null);setLoading(true);setReload(n=>n+1);onSaved();
+   setDeleting(null);setLoading(true);setReload(n=>n+1);onSaved();showDeleted();
   }catch(reason){setError((reason as Error).message);setDeleting(null);}finally{setBusy(false);}
  }
  const lending=isLendingKind(record.kind);

@@ -168,7 +168,7 @@
 .account-security-panel h2{margin-bottom:4px}
 .account-security-panel>p:not(.error){font-size:var(--type-small);color:var(--muted-foreground);margin:4px 0 16px}
 .account-security-panel .record-form{margin:0}
-.account-security-panel .tracker-fields{gap:12px;margin-bottom:14px}
+.account-security-panel .tracker-fields{gap:12px;align-items:start;margin-bottom:14px}
 .account-security-panel[data-mode="change_password"] .tracker-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
 .account-security-panel .tracker-fields label{min-width:0;margin:0;gap:6px;font-size:var(--type-compact)}
 .account-security-panel .tracker-fields input{width:100%;min-width:0}

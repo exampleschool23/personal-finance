@@ -124,3 +124,7 @@ test('a variable source shows its approximate monthly income as the estimate, an
  assert.deepEqual(sourcesIn([{ ...source, currency: 'UZS', approx_monthly: 12500000 }], 'USD', { UZS: 12500 }).map(item => [item.currency, item.approx_monthly]), [['USD', 1000]]);
  assert.equal(sourcesIn([{ ...source, currency: 'EUR' }], 'USD', {})[0].approx_monthly, null);
 });
+test('income totals add every card received and only included estimates', () => {
+ const { incomeCardTotals } = loadTS('lib/monthly-income-cards.ts');
+ assert.deepEqual(incomeCardTotals([{ amount: 5700, excluded: false, receivedAmount: 5700 }, { amount: 1000, excluded: false, receivedAmount: 424 }, { amount: 200, excluded: true, receivedAmount: 200 }]), { estimate: 6700, received: 6324 });
+});

@@ -5,7 +5,7 @@ import { FileText, Paperclip } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { Button } from '@/components/ui/button';
-import { showError, showSaved } from '@/lib/feedback';
+import { showDeleted, showError, showSaved } from '@/lib/feedback';
 import { formatNumber } from '@/lib/format';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { requestJson, type RequestError } from '@/lib/api-client';
@@ -60,7 +60,7 @@ export function RecordAttachments({ recordId, available, onChange }: { recordId:
    // An attachment that is already gone counts as removed.
    await requestJson('/api/record-attachments', { body: { action: 'delete', data: { id: item.id } }, fallback: 'Could not save changes.' }).catch((reason: RequestError) => { if (reason.status !== 404) throw reason; });
    setItems(previous => previous.filter(entry => entry.id !== item.id));
-   setRemoving(null); onChange();
+   setRemoving(null); onChange(); showDeleted();
   } catch (reason) { showError((reason as Error).message || 'Could not save changes.'); }
   finally { setBusy(false); }
  }

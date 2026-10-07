@@ -403,9 +403,10 @@ test('a recurring expense shows its schedule, end date and plan summary through 
  const schedule=d.r.find(byType('ScheduleFields'));
  d.r.fire(schedule,'onChange','Custom',10);
  assert.equal(d.state.editing.frequency,'Custom');assert.equal(d.state.editing.recurrence_days,10);
- d.r.fire(d.labelled('End date (optional)','DatePicker'),'onChange','2027-01-01');
- d.r.fire(d.r.find(byType('ScheduleFields')),'onChange','Once',null);
- assert.equal(d.state.editing.end_date,null,'a one-time expense has no end date');
+ // A bill opened as a schedule cannot turn into one payment, and takes no cash account.
+ assert.ok(!d.r.find(byType('ScheduleFields')).props.once);
+ assert.equal(d.r.all(byType('CashAccountField')).length,0);
+ assert.equal(d.r.all(node=>node.props?.['aria-label']==='Expense type').length,0,'no Plan or Debt tabs on a schedule');
  d.r.fire(d.r.find(byType('ScheduleFields')),'onChange','Weekly',null);
  d.r.fire(d.labelled('End date (optional)','DatePicker'),'onChange','2027-02-01');
  d.r.fire(d.r.find(byType('ScheduleFields')),'onChange','Monthly',null);
@@ -554,4 +555,10 @@ test('a debt payment from a changed expense asks before leaving the expense',t=>
  assert.deepEqual(payments,[]);assert.equal(d.confirm().props.open,true);
  d.r.fire(d.confirm(),'onConfirm');
  assert.deepEqual(payments,['home']);
+});
+test('Add expense records one payment: no Repeats, a cash account, and the Plan and Debt tabs',t=>{
+ const d=dialog(t,expense({frequency:'Once'}),{editingCashFlow:true});
+ assert.equal(d.r.all(byType('ScheduleFields')).length,0);
+ assert.equal(d.r.all(byType('CashAccountField')).length,1);
+ assert.equal(d.r.all(byType('RecordNameInput')).length,0);
 });

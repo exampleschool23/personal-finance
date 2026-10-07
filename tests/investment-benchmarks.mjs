@@ -235,12 +235,13 @@ test('cash marked for investments is never a holding, a funding source or procee
 });
 const near=(actual,expected,label='')=>assert.ok(Math.abs(actual-expected)<1e-8,`${label} ${actual} != ${expected}`);
 const dated={...data,fx:[{date:'2026-09-01',rates:{UZS:12000,EUR:.8}}]};
-test('changing the display currency rescales every series at current rates, never the hypothetical purchases',()=>{
+test('changing the display currency converts each day at that day\'s rate, never the hypothetical purchases',()=>{
  const market={quotes:{},rates:{USD:1,EUR:.9,UZS:12500}};
  const allocation={crypto:0,stock:0,deposit:20,business:20,cash:60,cryptoSymbol:'BTC',stockSymbol:'SPY',businessRate:12};
  const usd=investmentDecisionComparison({...base,market},dated,allocation).result;
  assert.ok(usd.points.at(-1).PORTFOLIO>0);
- for(const [currency,rate] of [['EUR',.9],['UZS',12500]]){
+ // Each day returns from USD at the rate it entered at (the feed's 12000 UZS, 0.8 EUR), not today's.
+ for(const [currency,rate] of [['EUR',.8],['UZS',12000]]){
   const shown=investmentDecisionComparison({...base,market,currency},dated,allocation).result;
   assert.deepEqual(shown.points.map(point=>point.date),usd.points.map(point=>point.date));
   usd.points.forEach((point,index)=>{for(const key of ['actual','contributed','BTC','depositUZS','depositUSD','PORTFOLIO'])near(shown.points[index][key],point[key]*rate,currency+' '+key);});
@@ -296,4 +297,14 @@ test('cash is an investment record only when explicitly marked for investments',
  assert.equal(isInvestmentRecord({...cash,is_investment:false}),false);
  assert.equal(isInvestmentRecord({...cash,is_investment:true}),true);
  assert.equal(isInvestmentRecord(record('asset','Business')),true);
+});
+test('a UZS deposit benchmark shown in UZS only grows while the dollar rate swings',()=>{
+ const fx=[['2026-09-01',12000],['2026-09-02',12600],['2026-09-03',11800],['2026-09-04',12300]].map(([date,uzs])=>({date,rates:{UZS:uzs}}));
+ const uzs=(id,kind,amount)=>({...record(id,kind,amount),currency:'UZS'});
+ const input={...base,records:[uzs('cash','Cash',0),uzs('asset','Business',12000000)],events:[event('p','asset','2026-09-01','contribution',12000000,12000000)],market:{quotes:{},rates:{USD:1,UZS:12300}},currency:'UZS'};
+ const points=investmentDecisionComparison(input,{...data,fx}).result.points;
+ const deposit=points.map(point=>point.depositUZS);
+ for(let day=1;day<deposit.length;day++)assert.ok(deposit[day]>deposit[day-1],`day ${day}: ${deposit[day-1]} → ${deposit[day]}`);
+ assert.ok(Math.abs(deposit.at(-1)-12000000*1.21**(3/365))<0.01);
+ assert.ok(points.every(point=>Math.abs(point.actual-12000000)<0.01));
 });

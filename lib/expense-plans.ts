@@ -37,3 +37,16 @@ export function monthlyBudgetTotals(plans: readonly ExpensePlan[], month: string
 
 /** The spending plans a month's preview lists: every plan running that month, in its own currency, at most `limit`; View all shows the rest. */
 export const previewPlans = (plans: readonly ExpensePlan[], month: string, limit = 5) => plans.filter(plan => expensePlanTotals(plan, month).active).slice(0, limit);
+
+/** Spent and planned over every plan running that month, one line per currency: totals in different currencies are listed, never added. */
+export function planTotalsByCurrency(plans: readonly ExpensePlan[], month: string) {
+ const lines = new Map<string, { currency: string; spent: number; planned: number }>();
+ for (const plan of plans) {
+  const totals = expensePlanTotals(plan, month);
+  if (!totals.active) continue;
+  const line = lines.get(plan.currency) ?? { currency: plan.currency, spent: 0, planned: 0 };
+  line.spent += totals.spent; line.planned += totals.planned;
+  lines.set(plan.currency, line);
+ }
+ return [...lines.values()];
+}

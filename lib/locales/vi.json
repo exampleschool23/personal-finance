@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Cho vay từ tài khoản (tùy chọn)",
   "Not from an account": "Không từ tài khoản",
   "No cash account in {currency}.": "Không có tài khoản tiền mặt bằng {currency}.",
-  "Built-in categories cannot be deleted.": "Không thể xóa các danh mục có sẵn."
+  "Built-in categories cannot be deleted.": "Không thể xóa các danh mục có sẵn.",
+  "Restored": "Đã khôi phục",
+  "Import undone": "Đã hoàn tác nhập dữ liệu",
+  "Add recurring": "Thêm khoản định kỳ",
+  "Recurring income": "Thu nhập định kỳ",
+  "Recurring bill": "Hóa đơn định kỳ",
+  "Monthly spending plan": "Kế hoạch chi tiêu hằng tháng"
 }

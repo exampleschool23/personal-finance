@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useEffectEvent, useState } from 'react';
+import { requestJson } from '@/lib/api-client';
 import { useLanguage } from '@/components/language-provider';
 import { defaultPreferences, type Preferences } from '@/lib/currencies';
 import { applyFont, resolveFont } from '@/lib/fonts';
@@ -20,10 +21,7 @@ export function useAccountSettings(user: string | null, demo: boolean) {
     const receivePreferences = useEffectEvent((loaded: Preferences) => applyPreferences(loaded.onboarded === false ? { ...loaded, language } : loaded));
     /** Stores preferences without applying them, so the welcome setup can show its closing screen first. */
     async function savePreferences(next: Preferences) {
-        const response = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) });
-        const data = await response.json() as Preferences & { error?: string };
-        if (!response.ok) throw Error(data.error);
-        return data;
+        return requestJson<Preferences>('/api/settings', { method: 'PUT', body: next, fallback: 'Could not save changes.' });
     }
     const onboardingNeeded = needsOnboarding({ user, demo, loading: settingsLoading, error: settingsError, preferences: preferencesData });
     const restartOnboarding = async () => applyPreferences(await savePreferences({ ...preferencesData, onboarded: false }));

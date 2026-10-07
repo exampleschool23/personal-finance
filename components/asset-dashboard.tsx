@@ -18,6 +18,7 @@ import { categoryColor } from '@/lib/category-colors';
 import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
 import { assetRecordKinds, interestKinds, unitPricedKinds, value, totalValue, type Entry, type estimatedCashFlow } from '@/lib/finance';
 import { sortAssetsByWorth } from '@/lib/asset-sort';
+import { isInvestmentRecord } from '@/lib/comparison-profile';
 import { marketEntry, type MarketData } from '@/lib/market';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 
@@ -35,7 +36,7 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
  const [category, setCategory] = useState('all');
  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
  const [limit, setLimit] = useState(12);
- const holdings = useMemo(() => sortAssetsByWorth(records.filter(record => assetRecordKinds.includes(record.kind)), record => marketEntry(record, currency, market)).map(original => ({ original, converted: marketEntry(original, currency, market) })), [records, currency, market]);
+ const holdings = useMemo(() => sortAssetsByWorth(records.filter(record => assetRecordKinds.includes(record.kind) && (record.kind !== 'Cash' || isInvestmentRecord(record))), record => marketEntry(record, currency, market)).map(original => ({ original, converted: marketEntry(original, currency, market) })), [records, currency, market]);
  const total = totalValue(holdings.flatMap(holding => holding.converted ? [holding.converted] : []));
  const categories = assetRecordKinds.map(kind => ({ kind, count: holdings.filter(h => h.original.kind === kind).length, amount: totalValue(holdings.flatMap(holding => holding.converted ? [holding.converted] : []), [kind]) })).filter(group => group.count).sort((a, b) => b.amount - a.amount);
  const groupedIds = new Set(records.filter(record=>accounts.some(account=>account.id===record.holding_account_id&&(record.kind===account.kind||record.kind==='Cash'))).map(record=>record.id));

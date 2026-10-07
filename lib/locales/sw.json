@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Imekopeshwa kutoka akaunti (si lazima)",
   "Not from an account": "Si kutoka akaunti",
   "No cash account in {currency}.": "Hakuna akaunti ya pesa taslimu kwa {currency}.",
-  "Built-in categories cannot be deleted.": "Kategoria zilizojengwa ndani haziwezi kufutwa."
+  "Built-in categories cannot be deleted.": "Kategoria zilizojengwa ndani haziwezi kufutwa.",
+  "Restored": "Imerejeshwa",
+  "Import undone": "Uingizaji umetenguliwa",
+  "Add recurring": "Ongeza inayojirudia",
+  "Recurring income": "Mapato yanayojirudia",
+  "Recurring bill": "Bili inayojirudia",
+  "Monthly spending plan": "Mpango wa matumizi wa kila mwezi"
 }

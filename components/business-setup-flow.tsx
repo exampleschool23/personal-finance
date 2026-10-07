@@ -47,6 +47,7 @@ export function BusinessSetupFlow({ businesses, records, newBusiness, saveBusine
      const saved = businesses.find(item => item.id === draft.id);
      if (!saved || JSON.stringify(saved) !== JSON.stringify(draft)) await saveBusiness({ ...draft, name: draft.name.trim() });
     }
+    if (named.some(draft => JSON.stringify(businesses.find(item => item.id === draft.id)) !== JSON.stringify({ ...draft, name: draft.name.trim() }))) showSaved();
     setDrafts(named); setStep(step + 1);
    } catch (reason) { setError(t((reason as Error).message || 'Could not save changes.')); }
    finally { setBusy(false); }

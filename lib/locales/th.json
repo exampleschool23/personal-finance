@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "ให้ยืมจากบัญชี (ไม่บังคับ)",
   "Not from an account": "ไม่ได้มาจากบัญชี",
   "No cash account in {currency}.": "ไม่มีบัญชีเงินสดสกุล {currency}",
-  "Built-in categories cannot be deleted.": "ไม่สามารถลบหมวดหมู่ในตัวได้"
+  "Built-in categories cannot be deleted.": "ไม่สามารถลบหมวดหมู่ในตัวได้",
+  "Restored": "กู้คืนแล้ว",
+  "Import undone": "ยกเลิกการนำเข้าแล้ว",
+  "Add recurring": "เพิ่มรายการประจำ",
+  "Recurring income": "รายได้ประจำ",
+  "Recurring bill": "บิลประจำ",
+  "Monthly spending plan": "แผนการใช้จ่ายรายเดือน"
 }

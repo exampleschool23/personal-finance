@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Рахунок, з якого позичено (необов’язково)",
   "Not from an account": "Не з рахунку",
   "No cash account in {currency}.": "Немає грошового рахунку в {currency}.",
-  "Built-in categories cannot be deleted.": "Вбудовані категорії не можна видалити."
+  "Built-in categories cannot be deleted.": "Вбудовані категорії не можна видалити.",
+  "Restored": "Відновлено",
+  "Import undone": "Імпорт скасовано",
+  "Add recurring": "Додати регулярний",
+  "Recurring income": "Регулярний дохід",
+  "Recurring bill": "Регулярний рахунок",
+  "Monthly spending plan": "Щомісячний план витрат"
 }

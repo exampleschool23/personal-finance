@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { requestJson } from '@/lib/api-client';
 import { withAssetIncomePlans, resolveEarningSource, type EarningSource } from '@/lib/earning-sources';
 import type { ExpensePlan } from '@/lib/expense-plans';
-import { showSaved } from '@/lib/feedback';
+import { showDeleted, showSaved } from '@/lib/feedback';
 import { liabilities, type Entry } from '@/lib/finance';
 import { resolveIncomeSource } from '@/lib/income-sources';
 import type { Category } from '@/lib/planning';
@@ -81,6 +81,7 @@ export function useRecordSave(input: RecordSaveInput) {
             }
             else { await requestJson('/api/records', { method: 'DELETE', body: { id: deleting.id } }); input.refreshRecords(); }
             setDeleting(null);
+            showDeleted();
         }
         catch (e) { fail((e as Error).message); }
         finally { setBusy(false); }

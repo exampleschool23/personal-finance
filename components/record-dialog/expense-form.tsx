@@ -2,6 +2,7 @@
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { ScheduleFields } from '@/components/presentation-foundation/schedule-fields';
+import { RecordNameInput } from '@/components/record-name-input';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { ScheduledPaymentField } from '@/components/presentation-foundation/scheduled-payment-field';
 import { chooseSchedule, paymentSchedules } from '@/lib/planning';
@@ -29,7 +30,7 @@ import { withAccountAndOwner } from './record-form';
 
 /** The expense form: spending against a monthly plan, a plain expense, or a payment on a debt. */
 /** What every part of the expense form reads: the dialog's props with the expense being entered, and the form's own state. */
-type ExpenseContext=Pick<RecordDialogProps,'onLeave'|'onDebtSaved'|'onMortgageSave'|'onMortgageDone'|'onPaymentDraftState'|'requestPaymentSwitch'|'onDebtPayment'|'household'|'setEditing'|'busy'|'save'|'linkedExpensePlan'|'expensePlans'|'planning'|'error'|'demo'|'currencies'|'rows'>&{editing:Entry;addingPlan:boolean;setAddingPlan:(adding:boolean)=>void;noPlans:boolean;choosePlan:(plan?:ExpensePlan)=>void;locale:string;paymentId:string;setPaymentId:(id:string)=>void;debts:Entry[];selectedDebt?:Entry;mode:'plan'|'expense'|'debt';setMode:(mode:'plan'|'expense'|'debt')=>void;update:(patch:Partial<Entry>)=>void;savedCurrency?:string};
+type ExpenseContext=Pick<RecordDialogProps,'onLeave'|'onDebtSaved'|'onMortgageSave'|'onMortgageDone'|'onPaymentDraftState'|'requestPaymentSwitch'|'onDebtPayment'|'household'|'setEditing'|'busy'|'save'|'linkedExpensePlan'|'expensePlans'|'planning'|'error'|'demo'|'currencies'|'rows'>&{schedule:boolean;editing:Entry;addingPlan:boolean;setAddingPlan:(adding:boolean)=>void;noPlans:boolean;choosePlan:(plan?:ExpensePlan)=>void;locale:string;paymentId:string;setPaymentId:(id:string)=>void;debts:Entry[];selectedDebt?:Entry;mode:'plan'|'expense'|'debt';setMode:(mode:'plan'|'expense'|'debt')=>void;update:(patch:Partial<Entry>)=>void;savedCurrency?:string};
 
 /** A payment on a loan, debt or mortgage, chosen from the outstanding debts. */
 function DebtPayment({form}:{form:ExpenseContext}){
@@ -57,8 +58,9 @@ function PlanFields({form}:{form:ExpenseContext}){
 /** The category of a plain expense, and the amount spent in its currency. */
 function CategoryAmount({form}:{form:ExpenseContext}){
  const {t}=useLanguage();
- const {editing,setEditing,busy,planning,currencies,mode,update,savedCurrency,onLeave}=form;
- return <>   {mode==='expense'&&<div><label>{t('Category')}<NativeSelect disabled={busy||planning.loading||!!planning.error} value={editing.custom_category_id??editing.kind} onChange={event=>{
+ const {editing,setEditing,busy,planning,currencies,mode,update,savedCurrency,onLeave,schedule,rows}=form;
+ return <>   {schedule&&<RecordNameInput label={t('Name')} entry={editing} rows={planning.data.records} original={rows.find(row=>row.id===editing.id)} placeholder={t('e.g. Rent or internet subscription')} onChange={name=>update({name})}/>}
+   {mode==='expense'&&<div><label>{t('Category')}<NativeSelect disabled={busy||planning.loading||!!planning.error} value={editing.custom_category_id??editing.kind} onChange={event=>{
     const selected=event.target.value;
     setEditing(selectTransactionCategory(editing,selected,planning.data.categories,'expense'));
    }}>{expenses.map(kind=><option key={kind} value={kind}>{t(kind)}</option>)}{planning.data.categories.filter(category=>category.direction==='expense').map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</NativeSelect></label><Link className="panel-link" href="/settings#categories" onNavigate={event=>{if(busy){event.preventDefault();return;}if(onLeave)onLeave(event,'/settings#categories');else setEditing(null);}}>{t('Manage categories in Settings')}</Link></div>}
@@ -69,11 +71,10 @@ function CategoryAmount({form}:{form:ExpenseContext}){
 /** The day, and for a plain expense the optional details: how it repeats, a business, an end date and notes. */
 function DateDetails({form}:{form:ExpenseContext}){
  const {t}=useLanguage();
- const {household,editing,setEditing,busy,linkedExpensePlan,planning,locale,mode,update}=form;
- return <>   <div className="form-grid"><label>{t(editing.frequency==='Once'?'Record date':'Start date')}<DatePicker value={editing.date} min={linkedExpensePlan?.start_date} max={[editing.frequency==='Once'?today():undefined,linkedExpensePlan?.end_date??undefined].filter((date):date is string=>!!date).sort()[0]} onChange={date=>update({date})}/></label>{<CashAccountField entry={editing} records={planning.data.records} loading={planning.loading} error={planning.error} busy={busy} onChange={account_id=>setEditing(withAccountAndOwner(editing,account_id,planning.data.records,household))}/>}</div>
+ const {household,editing,setEditing,busy,linkedExpensePlan,planning,locale,mode,update,schedule}=form;
+ return <>   <div className="form-grid"><label>{t(editing.frequency==='Once'?'Record date':'Start date')}<DatePicker value={editing.date} min={linkedExpensePlan?.start_date} max={[editing.frequency==='Once'?today():undefined,linkedExpensePlan?.end_date??undefined].filter((date):date is string=>!!date).sort()[0]} onChange={date=>update({date})}/></label>{schedule?<ScheduleFields frequency={editing.frequency} days={editing.recurrence_days} disabled={busy} onChange={(frequency,recurrence_days)=>update({frequency,recurrence_days})}/>:<CashAccountField entry={editing} records={planning.data.records} loading={planning.loading} error={planning.error} busy={busy} onChange={account_id=>setEditing(withAccountAndOwner(editing,account_id,planning.data.records,household))}/>}</div>
    {planning.error&&<p className="error" role="alert">{t(planning.error)}</p>}
    {mode==='expense'&&<section className="expense-optional-details"><h3>{t('Optional details')}</h3><div className="expense-optional-fields">
-   {mode==='expense'&&<ScheduleFields frequency={editing.frequency} days={editing.recurrence_days} once disabled={busy} onChange={(frequency,recurrence_days)=>update({frequency,recurrence_days,account_id:null,end_date:frequency==='Once'?null:editing.end_date})}/>}
     {!editing.expense_plan_id&&<><label>{t('Linked business (optional)')}<NativeSelect value={editing.business_id||''} onChange={event=>update({business_id:event.target.value||null})}><option value="">{t('No linked business')}</option>{planning.data.records.filter(record=>record.kind==='Business').map(business=><option key={business.id} value={business.id}>{business.name}</option>)}</NativeSelect></label></>}
     {editing.frequency!=='Once'&&<label>{t('End date (optional)')}<DatePicker value={editing.end_date||''} required={false} min={editing.date} onChange={end_date=>update({end_date:end_date||null})}/></label>}
     <label>{t('Notes (optional)')}<textarea value={editing.notes} maxLength={2000} rows={2} onChange={event=>update({notes:event.target.value})}/></label>
@@ -97,13 +98,16 @@ export function ExpenseRecordForm({onLeave,onDebtSaved,onMortgageSave,onMortgage
  const debts=planning.data.records.filter(record=>liabilities.includes(record.kind)&&record.amount>0);
  const selectedDebt=debts.find(record=>record.id===paymentId);
  const [mode,setMode]=useState<'plan'|'expense'|'debt'>(()=>editing?.expense_plan_id?'plan':'expense');
+ // A bill opened as a schedule (Recurring's Add recurring, or editing one) sets how it repeats and takes no cash account;
+ // every other expense form records one payment.
+ const [schedule]=useState(()=>!!editing&&editing.frequency!=='Once');
  if(!editing)return null;
  const update=(patch:Partial<Entry>)=>setEditing({...editing,...patch});
  const savedCurrency=rows.find(row=>row.id===editing.id)?.currency;
- const form:ExpenseContext={onLeave,onDebtSaved,onMortgageSave,onMortgageDone,onPaymentDraftState,requestPaymentSwitch,onDebtPayment,household,editing,setEditing,busy,save,linkedExpensePlan,expensePlans,planning,error,demo,currencies,rows,addingPlan,setAddingPlan,noPlans,choosePlan,locale,paymentId,setPaymentId,debts,selectedDebt,mode,setMode,update,savedCurrency};
+ const form:ExpenseContext={schedule,onLeave,onDebtSaved,onMortgageSave,onMortgageDone,onPaymentDraftState,requestPaymentSwitch,onDebtPayment,household,editing,setEditing,busy,save,linkedExpensePlan,expensePlans,planning,error,demo,currencies,rows,addingPlan,setAddingPlan,noPlans,choosePlan,locale,paymentId,setPaymentId,debts,selectedDebt,mode,setMode,update,savedCurrency};
  return <form className="record-form expense-form" onSubmit={event=>{if(mode==='debt'){event.preventDefault();return;}save(event);}}>
   <Tabs className="expense-mode-tabs" value={mode} onValueChange={next=>{const change=()=>{onPaymentDraftState?.(false,false);setMode(next as 'plan'|'expense'|'debt');if(next==='plan')update({frequency:'Once',recurrence_days:null,end_date:null});else if(next==='expense'&&editing.expense_plan_id)update({expense_plan_id:null,name:editing.name===linkedExpensePlan?.name?'':editing.name});};if(requestPaymentSwitch)requestPaymentSwitch(change);else change();}}>
-   <TabsList aria-label={t('Expense type')}><TabsTrigger value="plan" disabled={busy}>{t('Plan')}</TabsTrigger><TabsTrigger value="expense" disabled={busy}>{t('Expense')}</TabsTrigger>{onDebtPayment&&<TabsTrigger value="debt" disabled={busy}>{t('Debt / mortgage')}</TabsTrigger>}</TabsList>
+   {!schedule&&<TabsList aria-label={t('Expense type')}><TabsTrigger value="plan" disabled={busy}>{t('Plan')}</TabsTrigger><TabsTrigger value="expense" disabled={busy}>{t('Expense')}</TabsTrigger>{onDebtPayment&&<TabsTrigger value="debt" disabled={busy}>{t('Debt / mortgage')}</TabsTrigger>}</TabsList>}
     <TabsContent value="debt" className="expense-form-scroll"><DebtPayment form={form}/></TabsContent>
    <TabsContent value={mode==='debt'?'expense':mode} className="expense-form-scroll">
     <PlanFields form={form}/><CategoryAmount form={form}/><DateDetails form={form}/>

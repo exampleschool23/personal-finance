@@ -20,3 +20,11 @@ test('creation checkbox emits a choice; existing account has a disabled checkbox
  assert.equal(input.props.disabled,false);input.props.onChange({target:{checked:true}});assert.equal(value,true);
  assert.equal(CashInvestmentOption({record:{is_investment:true}}).props.children[0].props.children[0].props.disabled,true);
 });
+test('plain cash is not an investment; opted-in or broker-linked cash is',()=>{
+ const {isInvestmentRecord}=loadTS('lib/comparison-profile.ts');
+ const cash=extra=>({kind:'Cash',holding_account_id:null,is_investment:false,...extra});
+ assert.equal(isInvestmentRecord(cash()),false);
+ assert.equal(isInvestmentRecord(cash({is_investment:true})),true);
+ assert.equal(isInvestmentRecord(cash({holding_account_id:'broker'})),true);
+ assert.equal(isInvestmentRecord({kind:'Deposit'}),true);
+});

@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Qaysi hisobdan qarz berildi (ixtiyoriy)",
   "Not from an account": "Hisobdan emas",
   "No cash account in {currency}.": "{currency} da naqd hisob yo‘q.",
-  "Built-in categories cannot be deleted.": "Standart toifalarni o‘chirib bo‘lmaydi."
+  "Built-in categories cannot be deleted.": "Standart toifalarni o‘chirib bo‘lmaydi.",
+  "Restored": "Tiklandi",
+  "Import undone": "Import bekor qilindi",
+  "Add recurring": "Takroriy qo‘shish",
+  "Recurring income": "Takroriy daromad",
+  "Recurring bill": "Takroriy to‘lov",
+  "Monthly spending plan": "Oylik xarajat rejasi"
 }

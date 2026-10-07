@@ -176,18 +176,16 @@ test('all income forms select preferred currencies and retain saved currency and
  }
 });
 
-test('missing salary sources block receipts but allow creating the first salary plan',()=>{
+test('missing salary sources block receipts and point to income sources; a payment form never becomes a salary plan',()=>{
  let editing={id:'new',kind:'Salary',name:'',currency:'USD',amount:0,frequency:'Once',date:'2026-09-18',notes:''};
  const render=component('components/income-record-form.tsx','IncomeRecordForm');
  const props={currencies:['USD'],rows:[],planning:{data:{records:[],categories:[]}},setEditing:value=>{editing=value;}};
  let tree=render.tree({...props,editing});
  assert.equal(find(tree,node=>node.props?.children==='Save income').props.disabled,true);
- const add=find(tree,node=>node.props?.children==='Add salary plan');add.props.onClick();
- tree=render.tree({...props,editing});
- assert.equal(editing.frequency,'Monthly');assert.equal(editing.income_source_id,null);assert.equal(editing.account_id,null);
- assert.equal(find(tree,node=>node.type?.name==='RecordNameInput').props.label,'Salary plan name');
- assert.ok(find(tree,node=>node.props?.children==='Save salary plan'));
- assert.equal(find(tree,node=>node.type?.name==='CashAccountField'),undefined);
+ assert.equal(find(tree,node=>node.props?.children==='Add salary plan'),undefined);
+ assert.equal(find(tree,node=>node.props?.children==='Add income source').props.href,'/income-expenses#income-sources');
+ assert.equal(find(tree,node=>node.type?.name==='ScheduleFields'),undefined,'one payment has no Repeats');
+ assert.ok(find(tree,node=>node.type?.name==='CashAccountField'));
 });
 
 test('reusable sources expose variable receipts and bonuses without scheduled dates',()=>{

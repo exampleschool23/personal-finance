@@ -1,4 +1,5 @@
 "use client";
+import { showSaved } from '@/lib/feedback';
 import { useMemo, useState } from 'react';
 import type { ReportNames } from '@/components/business-reports';
 import { useLanguage } from '@/components/language-provider';
@@ -30,5 +31,5 @@ export function TaxTab({ preferences, save, names, onOpen }: { preferences: read
  const { t } = useLanguage();
  if (error) return <InlineError message={t(error)} onRetry={retry}/>;
  if (loading) return <PanelSkeleton label={t('Loading records…')} rows={6}/>;
- return <TaxPrepSheet lines={lines} businesses={businessList} business={businessList.some(item => item.id === business) ? business : businessList[0]?.id ?? ''} onBusiness={setBusiness} year={year} years={[0, 1, 2, 3, 4].map(back => thisYear - back)} onYear={setYear} period={period} onPeriod={setPeriod} categories={categories} settings={settings} onSettings={async next => { if (demo) setSample(next); else await save({ key: 'tax_lines', data: next }); }} names={names} currency={currency} onOpen={onOpen}/>;
+ return <TaxPrepSheet lines={lines} businesses={businessList} business={businessList.some(item => item.id === business) ? business : businessList[0]?.id ?? ''} onBusiness={setBusiness} year={year} years={[0, 1, 2, 3, 4].map(back => thisYear - back)} onYear={setYear} period={period} onPeriod={setPeriod} categories={categories} settings={settings} onSettings={async next => { if (demo) { setSample(next); showSaved(); } else await save({ key: 'tax_lines', data: next }); }} names={names} currency={currency} onOpen={onOpen}/>;
 }

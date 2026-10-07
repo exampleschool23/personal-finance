@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "کس اکاؤنٹ سے قرض دیا (اختیاری)",
   "Not from an account": "کسی اکاؤنٹ سے نہیں",
   "No cash account in {currency}.": "{currency} میں کوئی نقد اکاؤنٹ نہیں۔",
-  "Built-in categories cannot be deleted.": "بلٹ اِن زمرے حذف نہیں کیے جا سکتے۔"
+  "Built-in categories cannot be deleted.": "بلٹ اِن زمرے حذف نہیں کیے جا سکتے۔",
+  "Restored": "بحال کر دیا گیا",
+  "Import undone": "امپورٹ واپس لے لیا گیا",
+  "Add recurring": "بار بار ہونے والا شامل کریں",
+  "Recurring income": "باقاعدہ آمدنی",
+  "Recurring bill": "باقاعدہ بل",
+  "Monthly spending plan": "ماہانہ اخراجات کا منصوبہ"
 }

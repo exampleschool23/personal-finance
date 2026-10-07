@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "빌려준 계좌 (선택)",
   "Not from an account": "계좌에서 나가지 않음",
   "No cash account in {currency}.": "{currency} 현금 계좌가 없습니다.",
-  "Built-in categories cannot be deleted.": "기본 카테고리는 삭제할 수 없습니다."
+  "Built-in categories cannot be deleted.": "기본 카테고리는 삭제할 수 없습니다.",
+  "Restored": "복원됨",
+  "Import undone": "가져오기를 취소했습니다",
+  "Add recurring": "반복 항목 추가",
+  "Recurring income": "반복 수입",
+  "Recurring bill": "반복 청구서",
+  "Monthly spending plan": "월별 지출 계획"
 }

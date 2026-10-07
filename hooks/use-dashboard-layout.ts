@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import type { PreferenceResource } from '@/hooks/use-workspace-preferences';
 import { defaultDashboardLayout, normalizeLayout, type DashboardLayout } from '@/lib/dashboard-layout';
-import { showError } from '@/lib/feedback';
+import { showError, showSaved } from '@/lib/feedback';
 
 /** The saved dashboard layout. Changes show at once and are saved as a workspace preference; the sample workspace keeps them in memory. */
 export function useDashboardLayout(preferences: PreferenceResource, demo: boolean) {
@@ -11,7 +11,7 @@ export function useDashboardLayout(preferences: PreferenceResource, demo: boolea
  const layout = local ?? normalizeLayout(saved?.key === 'dashboard' ? saved.data as Partial<DashboardLayout> : defaultDashboardLayout);
  function change(next: DashboardLayout) {
   setLocal(next);
-  if (demo) return;
+  if (demo) { showSaved(); return; }
   preferences.save({ key: 'dashboard', data: next }).catch(error => { setLocal(null); showError((error as Error).message); });
  }
  return { layout, change };

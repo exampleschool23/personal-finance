@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Uitgeleend van rekening (optioneel)",
   "Not from an account": "Niet van een rekening",
   "No cash account in {currency}.": "Geen kasrekening in {currency}.",
-  "Built-in categories cannot be deleted.": "Ingebouwde categorieën kunnen niet worden verwijderd."
+  "Built-in categories cannot be deleted.": "Ingebouwde categorieën kunnen niet worden verwijderd.",
+  "Restored": "Hersteld",
+  "Import undone": "Import ongedaan gemaakt",
+  "Add recurring": "Terugkerend toevoegen",
+  "Recurring income": "Terugkerend inkomen",
+  "Recurring bill": "Terugkerende rekening",
+  "Monthly spending plan": "Maandelijks uitgavenplan"
 }

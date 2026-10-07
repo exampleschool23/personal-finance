@@ -9,4 +9,5 @@ export type ComparisonBaseline = { starting_amount: number; currency: string; ca
 export type ComparisonProfile = { owner_id?: string; activity: { started_at: string; source:'first_visit'|'earliest_record' }; preferences: ComparisonPreferences; baseline: ComparisonBaseline | null; tracking_start: string | null };
 export const defaultComparisonPreferences: ComparisonPreferences = { benchmarks:['BTC','SPY','depositUSD'],custom_symbol:'' };
 
-export const isInvestmentRecord = (record:Entry) => record.kind==='Cash' ? record.is_investment===true : (investmentKinds as readonly string[]).includes(record.kind);
+/** Cash is an investment only when it was opted in or sits in an investment account; a plain bank account or wallet is not. */
+export const isInvestmentRecord = (record:Entry) => record.kind==='Cash' ? record.is_investment===true||!!record.holding_account_id : (investmentKinds as readonly string[]).includes(record.kind);

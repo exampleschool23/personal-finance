@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Împrumutat din contul (opțional)",
   "Not from an account": "Nu dintr-un cont",
   "No cash account in {currency}.": "Niciun cont de numerar în {currency}.",
-  "Built-in categories cannot be deleted.": "Categoriile implicite nu pot fi șterse."
+  "Built-in categories cannot be deleted.": "Categoriile implicite nu pot fi șterse.",
+  "Restored": "Restaurat",
+  "Import undone": "Importul a fost anulat",
+  "Add recurring": "Adaugă recurent",
+  "Recurring income": "Venit recurent",
+  "Recurring bill": "Factură recurentă",
+  "Monthly spending plan": "Plan lunar de cheltuieli"
 }

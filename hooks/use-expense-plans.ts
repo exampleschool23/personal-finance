@@ -1,5 +1,5 @@
 "use client";
-import { showSaved } from '@/lib/feedback';
+import { showDeleted, showSaved } from '@/lib/feedback';
 import { requestJson } from '@/lib/api-client';
 import { refreshRead } from '@/lib/refresh-read';
 import { useEffect, useState, useRef } from 'react';
@@ -51,7 +51,7 @@ export function useExpensePlans(user:string|null,demo:boolean,rows:Entry[],reloa
  async function remove(id:string) {
   if(demo){if(rows.some(r=>r.expense_plan_id===id))throw Error('This plan has spending. Set an end date instead of deleting it.');setDemoPlans(prev=>prev.filter(p=>p.id!==id));}
   else await requestJson('/api/expense-plans',{method:'DELETE',body:{id}});
-  onSaved();
+  onSaved();showDeleted();
  }
  return {seedDemo,restoreDemo,dropDemo,plans,archivedPlans,month,loading:!!user&&!demo&&loadedScope!==scope,refreshing:!!user&&!demo&&loading,error:!demo&&user&&loadedScope===scope?error:'',save,remove};
 }

@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react';
 import type { BusinessOption } from '@/components/presentation-foundation/business-filter';
 import { BusinessPicker } from '@/components/transactions/pickers';
 import { TagSelector } from '@/components/transactions/tags';
-import { showError } from '@/lib/feedback';
+import { showError, showNotice, showSaved } from '@/lib/feedback';
 import { canAssignBusiness } from '@/lib/business';
 import { canTag, type Tag } from '@/lib/tags';
 import { Button } from '@/components/ui/button';
@@ -22,8 +22,8 @@ export function TransactionDetailsDialog({record:initial,incoming,categoryName,b
  const {t,locale}=useLanguage();
  const [record,setRecord]=useState(initial),[tagIds,setTagIds]=useState<readonly string[]>(tagging.tagIds);
  const business=businesses.find(item=>item.id===record.business_id);
- async function changeBusiness(next:string|null){try{if(await onBusiness(next))setRecord({...record,business_id:next});}catch(reason){showError((reason as Error).message||'Could not save changes.');}}
- async function toggleTag(id:string){const has=tagIds.includes(id);try{await tagging.onTags(has?[]:[id],has?[id]:[]);setTagIds(has?tagIds.filter(item=>item!==id):[...tagIds,id]);}catch(reason){showError((reason as Error).message||'Could not save changes.');}}
+ async function changeBusiness(next:string|null){try{if(await onBusiness(next)){setRecord({...record,business_id:next});showSaved();}else showNotice('This transaction keeps its business.');}catch(reason){showError((reason as Error).message||'Could not save changes.');}}
+ async function toggleTag(id:string){const has=tagIds.includes(id);try{await tagging.onTags(has?[]:[id],has?[id]:[]);setTagIds(has?tagIds.filter(item=>item!==id):[...tagIds,id]);showSaved();}catch(reason){showError((reason as Error).message||'Could not save changes.');}}
  const money=(value:number)=>formatMoney(value,record.currency,locale);
  const rows:[string,ReactNode][]=[
   [t('Amount'),<strong key="a" className={incoming?'positive':undefined}>{`${incoming?'+':'−'}${money(record.amount)}`}</strong>],

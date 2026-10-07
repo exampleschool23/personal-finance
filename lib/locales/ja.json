@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "貸し出し元の口座（任意）",
   "Not from an account": "口座からではない",
   "No cash account in {currency}.": "{currency} の現金口座がありません。",
-  "Built-in categories cannot be deleted.": "標準のカテゴリは削除できません。"
+  "Built-in categories cannot be deleted.": "標準のカテゴリは削除できません。",
+  "Restored": "復元しました",
+  "Import undone": "インポートを取り消しました",
+  "Add recurring": "定期項目を追加",
+  "Recurring income": "定期収入",
+  "Recurring bill": "定期支払い",
+  "Monthly spending plan": "毎月の支出プラン"
 }

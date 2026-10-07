@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Půjčeno z účtu (volitelné)",
   "Not from an account": "Ne z účtu",
   "No cash account in {currency}.": "Žádný hotovostní účet v {currency}.",
-  "Built-in categories cannot be deleted.": "Vestavěné kategorie nelze smazat."
+  "Built-in categories cannot be deleted.": "Vestavěné kategorie nelze smazat.",
+  "Restored": "Obnoveno",
+  "Import undone": "Import byl vrácen",
+  "Add recurring": "Přidat opakovanou položku",
+  "Recurring income": "Opakovaný příjem",
+  "Recurring bill": "Opakovaná platba",
+  "Monthly spending plan": "Měsíční plán výdajů"
 }

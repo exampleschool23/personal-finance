@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { selectEarningSource, type EarningSource } from '@/lib/earning-sources';
+import { newEarningSource, selectEarningSource, type EarningSource } from '@/lib/earning-sources';
 import type { ExpensePlan } from '@/lib/expense-plans';
 import { assetRecordKinds, expenses, income, kinds, lendingRecordKinds, type Entry } from '@/lib/finance';
 import type { HoldingAccount } from '@/lib/holding-accounts';
@@ -22,7 +22,7 @@ export type RecordFormsInput = {
 /** Opening and closing the record form and the delete confirmation. Each form offers only the kinds that fit where it
  * was opened from, and starts in the workspace currency. */
 export function recordForms({ editable, setError, setRecordKinds, setEditing, setDeleting, setEditingIncomeSource, currency, section, cashFlowSection, holdingAccounts, preferredCurrencies, sources, storedRecord }: RecordFormsInput) {
-    /** Opens the income or expense form; Recurring opens it already repeating. */
+    /** Opens the income or expense form; Recurring's Add recurring › Bill opens it already repeating, as a schedule. */
     const addCashFlow = (kind: Entry['kind'], frequency: Entry['frequency'] = 'Once') => { if (!editable()) return; setError(''); setRecordKinds(income.includes(kind) ? income : expenses); setEditing({ ...fresh(), currency, kind, frequency }); };
     const addRecord = () => {
         if (!editable()) return;
@@ -52,6 +52,8 @@ export function recordForms({ editable, setError, setRecordKinds, setEditing, se
         const date = depositToday() < plan.start_date ? plan.start_date : plan.end_date && depositToday() > plan.end_date ? plan.end_date : depositToday();
         setEditing({ ...fresh(), name: plan.name, kind: plan.category === 'Groceries' || plan.category === 'Household' ? 'Living expense' : 'Other expense', currency: plan.currency, frequency: 'Once', expense_plan_id: plan.id, date });
     };
+    /** Recurring's Add recurring › Income: the income source form, already a fixed schedule. */
+    const addRecurringIncome = () => { if (!editable()) return; setError(''); setEditingIncomeSource(newEarningSource(currency, 'fixed', depositToday())); };
     const quickExpense = () => { if (!editable()) return; setError(''); setRecordKinds(expenses); setEditing({ ...fresh(), currency, kind: 'Other expense', frequency: 'Once' }); };
     const recordFromSource = (source: EarningSource, bonus?: boolean) => { setError(''); const entry = { ...fresh(), kind: source.kind, currency: source.currency, frequency: 'Once' as const }; setRecordKinds(income); setEditing({ ...entry, ...selectEarningSource(entry, source, bonus) }); };
     const reviewRecurring = (record: Entry) => { setError(''); setRecordKinds([...income, ...expenses]); setEditing(record); };
@@ -60,5 +62,5 @@ export function recordForms({ editable, setError, setRecordKinds, setEditing, se
     const closeDeleting = () => { setError(''); setDeleting(null); };
     const field = (key: keyof Entry, v: string | number) => setEditing(p => p ? { ...p, [key]: v, ...(key === 'currency' ? {account_id: null} : {}) } : p);
     const newBusiness = (name = ''): Entry => ({ ...fresh(), name, kind: 'Business', currency, amount: 0 });
-    return { addCashFlow, addRecord, addAccountRecord, editRecord, spendFromPlan, quickExpense, recordFromSource, reviewRecurring, requestDelete, closeEditing, closeDeleting, field, newBusiness };
+    return { addCashFlow, addRecurringIncome, addRecord, addAccountRecord, editRecord, spendFromPlan, quickExpense, recordFromSource, reviewRecurring, requestDelete, closeEditing, closeDeleting, field, newBusiness };
 }

@@ -1,4 +1,5 @@
 "use client";
+import { showSaved } from '@/lib/feedback';
 import { useEffect, useRef, useState } from 'react';
 import { orderedGoals as orderById, reorderGoal as reorderIds } from '@/lib/goal-order';
 import type { WorkspacePreference } from '@/lib/workspace-preferences';
@@ -26,7 +27,7 @@ export function useDisplayOrder<T extends { id: string }>(key: OrderKey, items: 
   const next = reorderIds(before, id, target, visible);
   if (next.every((value, index) => value === before[index])) return;
   pending.current = true; setBusy(true); setState({ scope, ids: next, error: '' });
-  try { if (!demo) await preferences.save({ key, data: { ids: next } } as OrderPreference); }
+  try { if (demo) showSaved(); else await preferences.save({ key, data: { ids: next } } as OrderPreference); }
   catch { if (currentScope.current === scope) setState({ scope, ids: before, error: 'Could not save the order. Please try again.' }); }
   finally { pending.current = false; setBusy(false); }
  }

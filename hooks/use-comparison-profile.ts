@@ -19,7 +19,7 @@ export function useComparisonProfile(demo:boolean){
  const [demoStart,setDemoStart]=useState<string|null>(null);
  useEffect(()=>{const refresh=()=>setRevision(value=>value+1);window.addEventListener('comparison-settings-saved',refresh);window.addEventListener('focus',refresh);return()=>{window.removeEventListener('comparison-settings-saved',refresh);window.removeEventListener('focus',refresh);};},[]);
  async function saveTrackingStart(date:string|null){
-  if(demo){setDemoStart(date);return;}
+  if(demo){setDemoStart(date);showSaved();return;}
   await saveTrackingStartRequest(date);
   remote.update(current=>current&&{...current,tracking_start:date});
   showSaved();

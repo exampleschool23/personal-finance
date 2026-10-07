@@ -1,4 +1,5 @@
 "use client";
+import { showDeleted } from '@/lib/feedback';
 import { Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
@@ -32,7 +33,7 @@ export function DeleteCategoryDialog({category,categories,onClose,onDeleted}:{ca
   submitting.current=true;setBusy(true);setError('');
   try{
    await requestJson('/api/categories',{method:'DELETE',body:{id:category.id,...(inUse?(replacement==='new'?{new_name:name.trim()}:{replacement_id:replacement}):{})}});
-   onDeleted();onClose();
+   onDeleted();onClose();showDeleted();
   }catch(reason){
    const message=(reason as Error).message;
    // The category gained records since the preview: read its usage again so a replacement can be chosen.

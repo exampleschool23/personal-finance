@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "أُقرض من الحساب (اختياري)",
   "Not from an account": "ليس من حساب",
   "No cash account in {currency}.": "لا يوجد حساب نقدي بعملة {currency}.",
-  "Built-in categories cannot be deleted.": "لا يمكن حذف الفئات المضمّنة."
+  "Built-in categories cannot be deleted.": "لا يمكن حذف الفئات المضمّنة.",
+  "Restored": "تمت الاستعادة",
+  "Import undone": "تم التراجع عن الاستيراد",
+  "Add recurring": "إضافة متكرر",
+  "Recurring income": "دخل متكرر",
+  "Recurring bill": "فاتورة متكررة",
+  "Monthly spending plan": "خطة إنفاق شهرية"
 }

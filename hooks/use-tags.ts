@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { requestJson } from '@/lib/api-client';
-import { showNotice, showSaved } from '@/lib/feedback';
+import { showDeleted, showSaved } from '@/lib/feedback';
 import type { Entry } from '@/lib/finance';
 import { changeTags, emptyTags, type Tag, type TagData } from '@/lib/tags';
 
@@ -28,7 +28,7 @@ export function useTags(owner: string | null, demo: boolean, revision: number, r
   async remove(id: string) {
    if (demo) setSample(previous => ({ ...previous, data: { tags: previous.data.tags.filter(item => item.id !== id), links: previous.data.links.filter(link => link.tag_id !== id) } }));
    else { await post('/api/tags', 'delete', { id }); remote.invalidate(); }
-   showNotice('Deleted');
+   showDeleted();
   },
   /** Adds and removes tags on transactions; resolves to how many changed. */
   async change(ids: string[], add: string[], remove: string[]) {

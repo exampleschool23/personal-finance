@@ -132,7 +132,7 @@ test('deleting a rule asks first and confirms with Deleted, never Saved',async()
  assert.equal(find(render(),node=>node.type?.name==='ConfirmDialog').props.open,false);
  const hook=fs.readFileSync('hooks/use-transaction-rules.ts','utf8');
  const removal=hook.slice(hook.indexOf('async remove('));const body=removal.slice(0,removal.indexOf('\n  },'));
- assert.match(body,/showNotice\('Deleted'\)/);assert.doesNotMatch(body,/showSaved/);
+ assert.match(body,/showDeleted\(\)/);assert.doesNotMatch(body,/showSaved/);
 });
 
 test('the assistant reports whether it is set up, and the screen waits for that before taking questions',async()=>{

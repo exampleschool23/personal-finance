@@ -258,5 +258,8 @@ export function investmentDecisionComparison(input:DecisionInput,data:BenchmarkD
  const result=compareInvestments(0,flows,points,{...data,start},'USD',true,portfolio);
  const rates=input.market?.rates??(input.market?.fx?{UZS:input.market.fx.rate}:{});
  if(convertAmount(1,'USD',input.currency,rates)===null)return null;
- return {missingPurchases:[...observed].map(id=>byId.get(id)!.name),details,result:{...result,points:result.points.map(point=>Object.fromEntries(Object.entries(point).map(([key,amount])=>[key,key==='date'||amount===null?amount:convertAmount(Number(amount),'USD',input.currency,rates)])) as typeof point)}};
+ // Each day leaves USD at that day's rate, the one it entered at: a UZS deposit shown in UZS only grows,
+ // instead of moving with today's dollar. Today's live rate covers a day the feed has no rate for.
+ const shown=(amount:number,date:string)=>convertHistorical(amount,'USD',input.currency,date,data.fx)??convertAmount(amount,'USD',input.currency,rates);
+ return {missingPurchases:[...observed].map(id=>byId.get(id)!.name),details,result:{...result,points:result.points.map(point=>Object.fromEntries(Object.entries(point).map(([key,amount])=>[key,key==='date'||amount===null?amount:shown(Number(amount),point.date)])) as typeof point)}};
 }

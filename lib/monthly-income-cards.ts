@@ -71,3 +71,8 @@ export function monthlyIncomeCards(entries: Entry[], month: string, sources: Ear
  }
  return cards.sort((a, b) => Number(a.excluded) - Number(b.excluded) || Number(b.entry.kind === 'Salary') - Number(a.entry.kind === 'Salary') || b.amount - a.amount);
 }
+
+/** A month's income headline: what was received against the estimate, over every card (not only the previewed five). */
+export function incomeCardTotals(cards: readonly IncomeCard[]) {
+ return cards.reduce((sum, card) => ({ estimate: sum.estimate + (card.excluded ? 0 : card.amount), received: sum.received + card.receivedAmount }), { estimate: 0, received: 0 });
+}

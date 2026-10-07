@@ -1,4 +1,5 @@
 "use client";
+import { showSaved } from '@/lib/feedback';
 import { useCallback, useState } from 'react';
 import { chosenCategoryEmoji, type CategoryIcons } from '@/lib/category-icons';
 import { chosenCategoryHue, type CategoryColors } from '@/lib/category-colors';
@@ -26,7 +27,7 @@ export function useCategoryIcons(preferences: PreferenceResource, owner: string 
   if (disabled) return;
   const next = { icons: withChoice(icons, id, change.icon), colors: withChoice(colors, id, change.color) };
   setBusy(true); setLocal({ scope, looks: next });
-  try { if (!demo) await preferences.save({ key: 'category_icons', data: Object.keys(next.colors).length ? next : { icons: next.icons } }); }
+  try { if (demo) showSaved(); else await preferences.save({ key: 'category_icons', data: Object.keys(next.colors).length ? next : { icons: next.icons } }); }
   catch (error) { setLocal({ scope, looks }); throw error; }
   finally { setBusy(false); }
  }

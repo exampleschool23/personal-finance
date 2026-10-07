@@ -18,6 +18,8 @@ export const earningSourceSchema=z.object({
  if(!['Business income','Rent income'].includes(source.kind)&&source.linked_record_id)ctx.addIssue({code:'custom',message:'Choose a matching income source.'});
 });
 export type EarningSource=z.infer<typeof earningSourceSchema>&{schedule_id?:string|null};
+/** A blank source for the editor. A fixed one repeats monthly from `today`; a variable one has no schedule. */
+export const newEarningSource=(currency:string,mode:EarningSource['mode'],today:string,id=crypto.randomUUID()):EarningSource=>({id,name:'',kind:'Other income',currency,mode,archived:false,linked_record_id:null,...(mode==='fixed'?{amount:0,frequency:'Monthly',recurrence_days:null,start_date:today,end_date:null,approx_monthly:null}:{amount:null,frequency:null,start_date:null,end_date:null})});
 export function sourceSchedule(source:EarningSource):Entry|null{
  if(source.mode!=='fixed'||source.archived)return null;
  return {id:source.schedule_id??source.id,name:source.name,kind:source.kind,currency:source.currency,amount:source.amount!,date:source.start_date!,recurrence_days:source.recurrence_days,frequency:source.frequency!,end_date:source.end_date,quantity:1,cost:0,rate:0,notes:'',business_id:source.kind==='Business income'?source.linked_record_id:null,income_source_id:source.kind==='Rent income'?source.linked_record_id:null};

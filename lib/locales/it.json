@@ -2604,5 +2604,11 @@
   "Lent from account (optional)": "Prestato dal conto (facoltativo)",
   "Not from an account": "Non da un conto",
   "No cash account in {currency}.": "Nessun conto di liquidità in {currency}.",
-  "Built-in categories cannot be deleted.": "Le categorie predefinite non possono essere eliminate."
+  "Built-in categories cannot be deleted.": "Le categorie predefinite non possono essere eliminate.",
+  "Restored": "Ripristinato",
+  "Import undone": "Importazione annullata",
+  "Add recurring": "Aggiungi ricorrente",
+  "Recurring income": "Entrata ricorrente",
+  "Recurring bill": "Bolletta ricorrente",
+  "Monthly spending plan": "Piano di spesa mensile"
 }
