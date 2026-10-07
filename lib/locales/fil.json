@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Nakatakdang bayad: {name}",
   "Record this payment in the currency of its schedule.": "Itala ang bayad na ito sa currency ng iskedyul nito.",
   "Choose a scheduled payment.": "Pumili ng nakatakdang bayad.",
-  "A scheduled payment keeps its schedule.": "Nananatili sa iskedyul nito ang nakatakdang bayad."
+  "A scheduled payment keeps its schedule.": "Nananatili sa iskedyul nito ang nakatakdang bayad.",
+  "Lent from account (optional)": "Ipinahiram mula sa account (opsyonal)",
+  "Not from an account": "Hindi mula sa account",
+  "No cash account in {currency}.": "Walang cash account sa {currency}."
 }

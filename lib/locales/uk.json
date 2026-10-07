@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Запланований платіж: {name}",
   "Record this payment in the currency of its schedule.": "Запишіть цей платіж у валюті його графіка.",
   "Choose a scheduled payment.": "Виберіть запланований платіж.",
-  "A scheduled payment keeps its schedule.": "Запланований платіж зберігає свій графік."
+  "A scheduled payment keeps its schedule.": "Запланований платіж зберігає свій графік.",
+  "Lent from account (optional)": "Рахунок, з якого позичено (необов’язково)",
+  "Not from an account": "Не з рахунку",
+  "No cash account in {currency}.": "Немає грошового рахунку в {currency}."
 }

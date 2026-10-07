@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Paiement planifié : {name}",
   "Record this payment in the currency of its schedule.": "Enregistrez ce paiement dans la devise de sa planification.",
   "Choose a scheduled payment.": "Choisissez un paiement planifié.",
-  "A scheduled payment keeps its schedule.": "Un paiement planifié garde sa planification."
+  "A scheduled payment keeps its schedule.": "Un paiement planifié garde sa planification.",
+  "Lent from account (optional)": "Prêté depuis le compte (facultatif)",
+  "Not from an account": "Pas depuis un compte",
+  "No cash account in {currency}.": "Aucun compte de trésorerie en {currency}."
 }

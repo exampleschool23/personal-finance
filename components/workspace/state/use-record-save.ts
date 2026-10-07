@@ -7,7 +7,7 @@ import { showSaved } from '@/lib/feedback';
 import { liabilities, type Entry } from '@/lib/finance';
 import { resolveIncomeSource } from '@/lib/income-sources';
 import type { Category } from '@/lib/planning';
-import { applyRecordChange } from '@/lib/record-balance';
+import { applyRecordChange, lendFromAccount } from '@/lib/record-balance';
 import { businessMoveFrom, cashAccountProblem, debtDatesProblem, duplicateSalaryPayment, duplicateScheduledPayment, expenseName, fitsExpensePlan, recordSaveProblem } from '@/lib/record-save';
 import { depositToday } from '@/lib/deposit-interest';
 
@@ -39,7 +39,9 @@ export function useRecordSave(input: RecordSaveInput) {
         if(demo&&duplicateSalaryPayment(editing,rows,incomeSourcePatch.income_due_on))throw Error('This salary payment is already recorded.');
         const name=expenseName(editing,planning.data.categories.find(category=>category.id===editing.custom_category_id)?.name,editing.kind);
         const opened=liabilities.includes(editing.kind)&&!rows.some(row=>row.id===editing.id)?{opened_on:editing.opened_on??today()}:{};
-        return {...editing,name,account_exchange_rate:converted?rate:undefined,...opened,...incomeSourcePatch,...earningPatch};
+        // Only new money lent leaves a cash account.
+        const lentFrom=editing.kind==='Money lent'&&!rows.some(row=>row.id===editing.id)?editing.lent_from??null:null;
+        return {...editing,name,lent_from:lentFrom||undefined,account_exchange_rate:converted?rate:undefined,...opened,...incomeSourcePatch,...earningPatch};
     }
     async function save(e: React.FormEvent) {
         e.preventDefault(); if (!editing) return;
@@ -58,7 +60,7 @@ export function useRecordSave(input: RecordSaveInput) {
             if(move)savedRecord.business_id=move.from;
             const datesProblem=debtDatesProblem(savedRecord);
             if(datesProblem)throw Error(datesProblem);
-            if (demo) setRows(withAssetIncomePlans(applyRecordChange(rows,rows.find(record=>record.id===savedRecord.id),savedRecord),input.sources));
+            if (demo) { const lent=lendFromAccount(rows,savedRecord); setRows(withAssetIncomePlans(applyRecordChange(lent.rows,lent.rows.find(record=>record.id===savedRecord.id),lent.loan),input.sources)); }
             else { await requestJson('/api/records', { body: savedRecord }); input.refreshRecords(); }
             if(move)await input.setAccountBusiness(editing.id,editing.business_id??null);
             setEditing(null);

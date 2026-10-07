@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Pembayaran terjadwal: {name}",
   "Record this payment in the currency of its schedule.": "Catat pembayaran ini dalam mata uang jadwalnya.",
   "Choose a scheduled payment.": "Pilih pembayaran terjadwal.",
-  "A scheduled payment keeps its schedule.": "Pembayaran terjadwal tetap pada jadwalnya."
+  "A scheduled payment keeps its schedule.": "Pembayaran terjadwal tetap pada jadwalnya.",
+  "Lent from account (optional)": "Dipinjamkan dari akun (opsional)",
+  "Not from an account": "Bukan dari akun",
+  "No cash account in {currency}.": "Tidak ada akun kas dalam {currency}."
 }

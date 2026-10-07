@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Scheduled payment: {name}",
   "Record this payment in the currency of its schedule.": "Record this payment in the currency of its schedule.",
   "Choose a scheduled payment.": "Choose a scheduled payment.",
-  "A scheduled payment keeps its schedule.": "A scheduled payment keeps its schedule."
+  "A scheduled payment keeps its schedule.": "A scheduled payment keeps its schedule.",
+  "Lent from account (optional)": "Lent from account (optional)",
+  "Not from an account": "Not from an account",
+  "No cash account in {currency}.": "No cash account in {currency}."
 }

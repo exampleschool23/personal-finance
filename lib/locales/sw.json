@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Malipo yaliyopangwa: {name}",
   "Record this payment in the currency of its schedule.": "Rekodi malipo haya kwa sarafu ya ratiba yake.",
   "Choose a scheduled payment.": "Chagua malipo yaliyopangwa.",
-  "A scheduled payment keeps its schedule.": "Malipo yaliyopangwa hubaki kwenye ratiba yake."
+  "A scheduled payment keeps its schedule.": "Malipo yaliyopangwa hubaki kwenye ratiba yake.",
+  "Lent from account (optional)": "Imekopeshwa kutoka akaunti (si lazima)",
+  "Not from an account": "Si kutoka akaunti",
+  "No cash account in {currency}.": "Hakuna akaunti ya pesa taslimu kwa {currency}."
 }

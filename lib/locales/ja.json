@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "予定支払い：{name}",
   "Record this payment in the currency of its schedule.": "この支払いは予定と同じ通貨で記録してください。",
   "Choose a scheduled payment.": "予定支払いを選んでください。",
-  "A scheduled payment keeps its schedule.": "予定支払いの予定は変更できません。"
+  "A scheduled payment keeps its schedule.": "予定支払いの予定は変更できません。",
+  "Lent from account (optional)": "貸し出し元の口座（任意）",
+  "Not from an account": "口座からではない",
+  "No cash account in {currency}.": "{currency} の現金口座がありません。"
 }

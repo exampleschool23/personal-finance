@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Bayaran berjadual: {name}",
   "Record this payment in the currency of its schedule.": "Rekodkan bayaran ini dalam mata wang jadualnya.",
   "Choose a scheduled payment.": "Pilih bayaran berjadual.",
-  "A scheduled payment keeps its schedule.": "Bayaran berjadual kekal pada jadualnya."
+  "A scheduled payment keeps its schedule.": "Bayaran berjadual kekal pada jadualnya.",
+  "Lent from account (optional)": "Dipinjamkan dari akaun (pilihan)",
+  "Not from an account": "Bukan dari akaun",
+  "No cash account in {currency}.": "Tiada akaun tunai dalam {currency}."
 }

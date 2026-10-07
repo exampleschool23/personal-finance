@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "निर्धारित भुगतान: {name}",
   "Record this payment in the currency of its schedule.": "इस भुगतान को उसके शेड्यूल की मुद्रा में दर्ज करें।",
   "Choose a scheduled payment.": "एक निर्धारित भुगतान चुनें।",
-  "A scheduled payment keeps its schedule.": "निर्धारित भुगतान अपना शेड्यूल नहीं बदलता।"
+  "A scheduled payment keeps its schedule.": "निर्धारित भुगतान अपना शेड्यूल नहीं बदलता।",
+  "Lent from account (optional)": "किस खाते से उधार दिया (वैकल्पिक)",
+  "Not from an account": "किसी खाते से नहीं",
+  "No cash account in {currency}.": "{currency} में कोई नकद खाता नहीं।"
 }

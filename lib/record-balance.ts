@@ -28,3 +28,18 @@ export function applyRecordChange(rows: Entry[], previous?: Entry, next?: Entry)
  });
  return next ? [next, ...result] : result;
 }
+
+/** The cash accounts money lent in `currency` can be paid from: only one in the loan's own currency. */
+export const lendingAccounts = (rows: readonly Entry[], currency: string) => rows.filter(row => row.kind === 'Cash' && row.currency === currency);
+
+/** New money lent paid from a cash account (`lent_from`): the account loses the lent amount, as `lend_from_account`
+ * does in the database (migration 121). The saved loan does not keep the account. */
+export function lendFromAccount(rows: Entry[], loan: Entry): { rows: Entry[]; loan: Entry } {
+ const { lent_from, ...saved } = loan;
+ if (!lent_from) return { rows, loan: saved };
+ const account = lendingAccounts(rows, loan.currency).find(row => row.id === lent_from);
+ if (loan.kind !== 'Money lent' || !account) throw Error('Choose a cash account in the record currency.');
+ const amount = Number(account.amount) - loan.amount;
+ if (!(loan.amount > 0) || amount < 0) throw Error('Not enough money in the selected cash account.');
+ return { rows: rows.map(row => row.id === account.id ? { ...row, amount } : row), loan: saved };
+}

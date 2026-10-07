@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "תשלום מתוזמן: {name}",
   "Record this payment in the currency of its schedule.": "יש לרשום את התשלום במטבע של התזמון שלו.",
   "Choose a scheduled payment.": "יש לבחור תשלום מתוזמן.",
-  "A scheduled payment keeps its schedule.": "תשלום מתוזמן שומר על התזמון שלו."
+  "A scheduled payment keeps its schedule.": "תשלום מתוזמן שומר על התזמון שלו.",
+  "Lent from account (optional)": "הולווה מחשבון (לא חובה)",
+  "Not from an account": "לא מחשבון",
+  "No cash account in {currency}.": "אין חשבון מזומן ב־{currency}."
 }

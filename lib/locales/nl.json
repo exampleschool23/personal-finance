@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Geplande betaling: {name}",
   "Record this payment in the currency of its schedule.": "Leg deze betaling vast in de valuta van het schema.",
   "Choose a scheduled payment.": "Kies een geplande betaling.",
-  "A scheduled payment keeps its schedule.": "Een geplande betaling houdt haar schema."
+  "A scheduled payment keeps its schedule.": "Een geplande betaling houdt haar schema.",
+  "Lent from account (optional)": "Uitgeleend van rekening (optioneel)",
+  "Not from an account": "Niet van een rekening",
+  "No cash account in {currency}.": "Geen kasrekening in {currency}."
 }

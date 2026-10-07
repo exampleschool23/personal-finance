@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Planlı ödeme: {name}",
   "Record this payment in the currency of its schedule.": "Bu ödemeyi planının para biriminde kaydedin.",
   "Choose a scheduled payment.": "Bir planlı ödeme seçin.",
-  "A scheduled payment keeps its schedule.": "Planlı ödeme planını korur."
+  "A scheduled payment keeps its schedule.": "Planlı ödeme planını korur.",
+  "Lent from account (optional)": "Ödünç verilen hesap (isteğe bağlı)",
+  "Not from an account": "Bir hesaptan değil",
+  "No cash account in {currency}.": "{currency} cinsinden nakit hesabı yok."
 }

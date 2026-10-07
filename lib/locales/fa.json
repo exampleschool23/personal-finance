@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "پرداخت زمان‌بندی‌شده: {name}",
   "Record this payment in the currency of its schedule.": "این پرداخت را با ارز برنامه‌اش ثبت کنید.",
   "Choose a scheduled payment.": "یک پرداخت زمان‌بندی‌شده انتخاب کنید.",
-  "A scheduled payment keeps its schedule.": "پرداخت زمان‌بندی‌شده برنامه‌اش را نگه می‌دارد."
+  "A scheduled payment keeps its schedule.": "پرداخت زمان‌بندی‌شده برنامه‌اش را نگه می‌دارد.",
+  "Lent from account (optional)": "از کدام حساب قرض داده شد (اختیاری)",
+  "Not from an account": "نه از یک حساب",
+  "No cash account in {currency}.": "هیچ حساب نقدی به {currency} وجود ندارد."
 }

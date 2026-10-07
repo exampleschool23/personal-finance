@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Rejalashtirilgan to‘lov: {name}",
   "Record this payment in the currency of its schedule.": "Bu to‘lovni jadval valyutasida yozing.",
   "Choose a scheduled payment.": "Rejalashtirilgan to‘lovni tanlang.",
-  "A scheduled payment keeps its schedule.": "Rejalashtirilgan to‘lov o‘z jadvalini saqlaydi."
+  "A scheduled payment keeps its schedule.": "Rejalashtirilgan to‘lov o‘z jadvalini saqlaydi.",
+  "Lent from account (optional)": "Qaysi hisobdan qarz berildi (ixtiyoriy)",
+  "Not from an account": "Hisobdan emas",
+  "No cash account in {currency}.": "{currency} da naqd hisob yo‘q."
 }

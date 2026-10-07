@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "计划付款：{name}",
   "Record this payment in the currency of its schedule.": "请以该计划的货币记录这笔付款。",
   "Choose a scheduled payment.": "请选择一笔计划付款。",
-  "A scheduled payment keeps its schedule.": "计划付款不能更改其所属计划。"
+  "A scheduled payment keeps its schedule.": "计划付款不能更改其所属计划。",
+  "Lent from account (optional)": "借出账户（可选）",
+  "Not from an account": "不从账户支出",
+  "No cash account in {currency}.": "没有 {currency} 现金账户。"
 }

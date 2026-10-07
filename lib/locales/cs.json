@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Plánovaná platba: {name}",
   "Record this payment in the currency of its schedule.": "Zaznamenejte tuto platbu v měně jejího plánu.",
   "Choose a scheduled payment.": "Vyberte plánovanou platbu.",
-  "A scheduled payment keeps its schedule.": "Plánovaná platba si ponechává svůj plán."
+  "A scheduled payment keeps its schedule.": "Plánovaná platba si ponechává svůj plán.",
+  "Lent from account (optional)": "Půjčeno z účtu (volitelné)",
+  "Not from an account": "Ne z účtu",
+  "No cash account in {currency}.": "Žádný hotovostní účet v {currency}."
 }

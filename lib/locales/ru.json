@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Плановый платёж: {name}",
   "Record this payment in the currency of its schedule.": "Запишите этот платёж в валюте его графика.",
   "Choose a scheduled payment.": "Выберите плановый платёж.",
-  "A scheduled payment keeps its schedule.": "Плановый платёж сохраняет свой график."
+  "A scheduled payment keeps its schedule.": "Плановый платёж сохраняет свой график.",
+  "Lent from account (optional)": "Счёт, с которого дали в долг (необязательно)",
+  "Not from an account": "Не со счёта",
+  "No cash account in {currency}.": "Нет денежного счёта в {currency}."
 }

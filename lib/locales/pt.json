@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Pagamento programado: {name}",
   "Record this payment in the currency of its schedule.": "Registre este pagamento na moeda da sua programação.",
   "Choose a scheduled payment.": "Escolha um pagamento programado.",
-  "A scheduled payment keeps its schedule.": "Um pagamento programado mantém a sua programação."
+  "A scheduled payment keeps its schedule.": "Um pagamento programado mantém a sua programação.",
+  "Lent from account (optional)": "Emprestado da conta (opcional)",
+  "Not from an account": "Não de uma conta",
+  "No cash account in {currency}.": "Nenhuma conta em dinheiro em {currency}."
 }

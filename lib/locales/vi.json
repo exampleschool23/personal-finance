@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Thanh toán định kỳ: {name}",
   "Record this payment in the currency of its schedule.": "Hãy ghi khoản này bằng đơn vị tiền của lịch.",
   "Choose a scheduled payment.": "Chọn một khoản thanh toán định kỳ.",
-  "A scheduled payment keeps its schedule.": "Khoản thanh toán định kỳ giữ nguyên lịch của nó."
+  "A scheduled payment keeps its schedule.": "Khoản thanh toán định kỳ giữ nguyên lịch của nó.",
+  "Lent from account (optional)": "Cho vay từ tài khoản (tùy chọn)",
+  "Not from an account": "Không từ tài khoản",
+  "No cash account in {currency}.": "Không có tài khoản tiền mặt bằng {currency}."
 }

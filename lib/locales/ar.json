@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "الدفعة المجدولة: {name}",
   "Record this payment in the currency of its schedule.": "سجّل هذه الدفعة بعملة جدولها.",
   "Choose a scheduled payment.": "اختر دفعة مجدولة.",
-  "A scheduled payment keeps its schedule.": "تحتفظ الدفعة المجدولة بجدولها."
+  "A scheduled payment keeps its schedule.": "تحتفظ الدفعة المجدولة بجدولها.",
+  "Lent from account (optional)": "أُقرض من الحساب (اختياري)",
+  "Not from an account": "ليس من حساب",
+  "No cash account in {currency}.": "لا يوجد حساب نقدي بعملة {currency}."
 }

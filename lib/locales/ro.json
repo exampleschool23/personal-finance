@@ -2600,5 +2600,8 @@
   "Scheduled payment: {name}": "Plată programată: {name}",
   "Record this payment in the currency of its schedule.": "Înregistrează această plată în moneda programării ei.",
   "Choose a scheduled payment.": "Alege o plată programată.",
-  "A scheduled payment keeps its schedule.": "O plată programată își păstrează programarea."
+  "A scheduled payment keeps its schedule.": "O plată programată își păstrează programarea.",
+  "Lent from account (optional)": "Împrumutat din contul (opțional)",
+  "Not from an account": "Nu dintr-un cont",
+  "No cash account in {currency}.": "Niciun cont de numerar în {currency}."
 }
