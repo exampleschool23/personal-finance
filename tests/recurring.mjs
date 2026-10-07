@@ -162,7 +162,7 @@ test('Cash flow counts a payment toward the schedule it names by id', () => {
  assert.deepEqual(cards.filter(card => card.received).map(card => [card.entry.id, card.receivedAmount]), [['epam', 3450]]);
 });
 
-test('a one-time payment is offered the active schedules of its kind, business, property and currency, and names one by id', () => {
+test('a one-time payment is offered the active schedules of its kind, business and property in any currency, and names one by id', () => {
  const base = { quantity: 1, cost: 0, rate: 0, date: '2026-01-01', notes: '', frequency: 'Monthly', currency: 'USD' };
  const records = [
   { ...base, id: 'shop', name: 'Shop payout', kind: 'Business income', amount: 900, business_id: 'b1' },
@@ -175,12 +175,12 @@ test('a one-time payment is offered the active schedules of its kind, business, 
  ];
  const ids = payment => paymentSchedules(records, payment).map(record => record.id);
  assert.deepEqual(ids({ kind: 'Business income', business_id: 'b1', currency: 'USD' }), ['shop']);
- assert.deepEqual(ids({ kind: 'Rent income', income_source_id: 'p1', currency: 'USD' }), ['flat']);
- assert.deepEqual(ids({ kind: 'Rent income', income_source_id: 'p1' }), ['flat', 'eur'], 'the bot asks before it knows the currency');
+ assert.deepEqual(ids({ kind: 'Rent income', income_source_id: 'p1', currency: 'UZS' }), ['flat', 'eur'], 'a payment in any currency may settle its schedule');
  assert.deepEqual(ids({ kind: 'Other expense', custom_category_id: 'sport' }), ['gym']);
  assert.deepEqual(ids({ kind: 'Other expense' }), [], 'a category of its own is a different category');
  const payment = { ...base, id: 'p', name: '', kind: 'Rent income', amount: 0, frequency: 'Once' };
  assert.deepEqual(chooseSchedule(payment, records[2]), { occurrence_record_id: 'flat', name: 'Flat rent', amount: 450, income_source_id: 'p1' });
- assert.deepEqual(chooseSchedule({ ...payment, name: 'May rent', amount: 400 }, records[2]), { occurrence_record_id: 'flat', income_source_id: 'p1' }, 'typed values stay');
+ assert.deepEqual(chooseSchedule(payment, records[3]), { occurrence_record_id: 'eur', name: 'Euro rent', income_source_id: 'p1' }, 'an amount in another currency is never copied');
+ assert.deepEqual(chooseSchedule({ ...payment, name: 'May rent', amount: 400, currency: 'UZS' }, records[2]), { occurrence_record_id: 'flat', income_source_id: 'p1' }, 'typed values and their currency stay');
  assert.deepEqual(chooseSchedule(payment, null), { occurrence_record_id: null });
 });

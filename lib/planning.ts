@@ -6,9 +6,9 @@ import { depositToday } from './deposit-interest';
 export type Category = {id:string;name:string;direction:'income'|'expense'};
 export type InvestmentTarget = {holding_account_id:string;asset_kind:'Stock'|'Crypto';asset_symbol:string;target:number;monthly_contribution?:number|null};
 export type Goal = {completed_on?:string|null;funding_priority?:number;funding_monthly?:number|null;funding_enabled?:boolean;paused_until?:string|null;funding_mode?:'one_time'|'refill';investment_targets?:InvestmentTarget[];id:string;name:string;account_id:string|null;target:number;allocated:number;target_date:string|null;archived:boolean;kind?:'savings'|'net_worth'|'investment';holding_account_id?:string|null;asset_kind?:'Stock'|'Crypto'|null;asset_symbol?:string|null;currency?:string;monthly_contribution?:number|null;annual_return?:number};
-export type Occurrence = {id:string;record_id:string;due_on:string;status:'paid'|'dismissed';notes?:string|null;transaction_id?:string|null;transaction?:{amount:number;date:string}|null;/** What later payments added, when the read attached them. */extra?:number};
+export type Occurrence = {id:string;record_id:string;due_on:string;status:'paid'|'dismissed';notes?:string|null;transaction_id?:string|null;transaction?:{amount:number|null;date:string;currency?:string}|null;/** What later payments added, when the read attached them. */extra?:number};
 /** A payment that names its schedule by id: the schedule (`occurrence_record_id`) and the due date it pays. */
-export type ExtraPayment = {id?:string;occurrence_record_id:string;occurrence_due_on:string;amount:number};
+export type ExtraPayment = {id?:string;occurrence_record_id:string;occurrence_due_on:string;amount:number;currency?:string;date?:string};
 /** What the payments naming each paid due date added after its first one. The first payment settles the due date
  * (`transaction_id`) and may name it too, so it is left out here; every payment is counted once. */
 export function laterPayments(occurrences:Occurrence[],payments:ExtraPayment[]):Map<string,number> {
@@ -62,21 +62,21 @@ export function settledOccurrences(records:Entry[],occurrences:Occurrence[]){
  return new Set([...occurrences.map(o=>o.record_id+':'+o.due_on),...records.filter(r=>r.kind==='Salary'&&r.frequency==='Once'&&r.income_source_id).map(r=>r.income_source_id+':'+(r.income_due_on??r.date))]);
 }
 export const isRecurringCashFlow=(record:Entry)=>[...income,...expenses].includes(record.kind)&&record.frequency!=='Once';
-/** What a one-time payment is: its kind and category, its business or property, and its currency when known. */
-export type SchedulePayment={kind?:string;custom_category_id?:string|null;business_id?:string|null;income_source_id?:string|null;currency?:string};
-/** The active schedules a one-time payment may name by id: the same kind and category, the same business for business
- * income or property for rent, and the same currency when the payment has one. The bot and the record forms offer these. */
+/** What a one-time payment is: its kind and category, and its business or property. */
+export type SchedulePayment={kind?:string;custom_category_id?:string|null;business_id?:string|null;income_source_id?:string|null};
+/** The active schedules a one-time payment may name by id: the same kind and category, and the same business for
+ * business income or property for rent, in any currency (migration 120). The bot and the record forms offer these. */
 export function paymentSchedules(records:Entry[],payment:SchedulePayment):Entry[]{
  return records.filter(record=>isRecurringCashFlow(record)&&!record.archived&&!record.source_paused&&record.kind===payment.kind
   &&(record.custom_category_id??null)===(payment.custom_category_id??null)
   &&(record.kind!=='Business income'||!payment.business_id||record.business_id===payment.business_id)
-  &&(record.kind!=='Rent income'||!payment.income_source_id||record.income_source_id===payment.income_source_id)
-  &&(!payment.currency||record.currency===payment.currency));
+  &&(record.kind!=='Rent income'||!payment.income_source_id||record.income_source_id===payment.income_source_id));
 }
-/** A payment naming `schedule` by id, or none. It takes the schedule's name and amount when it has none of its own, and rent its property. */
+/** A payment naming `schedule` by id, or none. It takes the schedule's name when it has none, its amount when it has none and
+ * is in the schedule's currency, and rent its property. A payment in another currency keeps its own: the schedule counts it at the day's rate. */
 export function chooseSchedule(payment:Entry,schedule:Entry|null):Partial<Entry>{
  if(!schedule)return {occurrence_record_id:null};
- return {occurrence_record_id:schedule.id,...(payment.name.trim()?{}:{name:schedule.name}),...(payment.amount>0?{}:{amount:Number(schedule.amount)}),...(schedule.kind==='Rent income'&&schedule.income_source_id?{income_source_id:schedule.income_source_id}:{})};
+ return {occurrence_record_id:schedule.id,...(payment.name.trim()?{}:{name:schedule.name}),...(payment.amount>0||payment.currency!==schedule.currency?{}:{amount:Number(schedule.amount)}),...(schedule.kind==='Rent income'&&schedule.income_source_id?{income_source_id:schedule.income_source_id}:{})};
 }
 export const scheduleAssets=(records:Entry[])=>new Map(records.filter(record=>['Business','Property'].includes(record.kind)).map(record=>[record.id,record]));
 /** Income from a business or property starts no earlier than the asset itself. */

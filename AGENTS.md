@@ -242,6 +242,11 @@ name, amount or date that happens to match (migration 119).
   `paymentSchedules` from `lib/planning.ts` and apply a choice with `chooseSchedule`.
   A business or rent income that names none takes the id of the one active schedule
   of its business or property; with none or several it stays unlinked.
+- A payment may be in another currency than its schedule (migration 120). It keeps
+  its own amount and currency; the planning read counts it in the schedule's
+  currency at the official rate of the payment's day (`inScheduleCurrency`,
+  `lib/schedule-currency.ts`). Without a rate the received amount is unknown,
+  never the raw figure in the wrong currency.
 - The database alone picks and checks the due date (`name_scheduled_payment`): the
   open payment of the payment's own month, else last month's, else it adds to this
   month's recorded one. The first payment settles the due date

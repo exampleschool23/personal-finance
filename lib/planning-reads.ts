@@ -14,7 +14,7 @@ export function planningReadFilters(scope:string,month:string,first?:string):Rec
   records:scope==='full'||scope==='insights'?{}:{or:`(${essential}${scope==='review'||scope==='budget'?`,and(date.gte.${from},date.lt.${to})`:''})`},
   activity:scope==='review'||scope==='budget'?{and:`(occurred_on.gte.${from},occurred_on.lt.${to})`}:{},
   // A settled occurrence carries what was recorded for it: limited scopes leave its transaction out of `records`.
-  occurrences:{select:'*,transaction:finance_records!transaction_id(amount,date)'},
+  occurrences:{select:'*,transaction:finance_records!transaction_id(amount,date,currency)'},
   investmentLinks:scope==='review'||scope==='budget'?{select:'*,investment_history!inner(occurred_on,record_id,event_type)','investment_history.and':`(occurred_on.gte.${from},occurred_on.lt.${to})`}:{select:'*,investment_history(occurred_on,record_id,event_type)'},
  };
 }

@@ -5,6 +5,7 @@ import { interestKinds, type Entry } from '@/lib/finance';
 import { isoDate } from '@/lib/api-validation';
 import { planningSchemas } from '@/lib/planning-schemas';
 import { debtPaymentsFrom, withExtraPayments } from '@/lib/planning';
+import { inScheduleCurrency } from '@/lib/schedule-currency';
 import { crossSite,parseAction,postgrestFailure,readJson,signInAgain } from '@/lib/api-route';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { readOwnerRows } from '@/lib/server-records';
@@ -13,7 +14,7 @@ import type { Category, ExtraPayment, Occurrence } from '@/lib/planning';
 import { queueMilestoneCheck } from '@/lib/notify-action';
 import type { ActionEvent } from '@/lib/action-messages';
 /** Later payments for recorded occurrences add to them; limited scopes leave those transactions out of `records`. Before migration 112 there are none. */
-const readExtraPayments=(scope:string,token:string)=>scope==='insights'?Promise.resolve([] as ExtraPayment[]):readOwnerRows<ExtraPayment>('finance_records',token,{select:'id,occurrence_record_id,occurrence_due_on,amount',occurrence_record_id:'not.is.null'}).catch(()=>[] as ExtraPayment[]);
+const readExtraPayments=(scope:string,token:string)=>scope==='insights'?Promise.resolve([] as ExtraPayment[]):readOwnerRows<ExtraPayment>('finance_records',token,{select:'id,occurrence_record_id,occurrence_due_on,amount,currency,date',occurrence_record_id:'not.is.null'}).catch(()=>[] as ExtraPayment[]);
 export async function GET(req?:Request){
  try{const auth=await session();if(!auth)return signInAgain();
  const scope=req?new URL(req.url).searchParams.get('scope')??'full':'full';
@@ -31,7 +32,9 @@ export async function GET(req?:Request){
  const data={records:[],categories:[],goals:[],occurrences:[],activity:[],movements:[],investmentLinks:[],...Object.fromEntries(results)} as Record<string,unknown>;
  // Loan repayments and mortgage payments settle a loan's monthly payment on Recurring and Upcoming payments.
  if(scope==='full'||scope==='workspace'){const [repayments,mortgagePayments]=await Promise.all([readOwnerRows<{action:string;target_id:string|null;occurred_on:string}>('account_activity',auth.token,{select:'action,target_id,occurred_on',action:'in.(repayment,mortgage)'}),readOwnerRows<{mortgage_id:string;paid_on:string}>('mortgage_payments',auth.token,{select:'id,mortgage_id,paid_on'})]);data.debtPayments=debtPaymentsFrom(repayments,mortgagePayments);}
- data.occurrences=withExtraPayments(data.occurrences as Occurrence[],await extraPayments);
+ // Payments in another currency than their schedule count in its currency at the rate of the payment's day.
+ const counted=await inScheduleCurrency(data.occurrences as Occurrence[],await extraPayments,new Map((data.records as Entry[]).map(record=>[record.id,record.currency])),async(from,to,date)=>(await loadDatedExchangeRate(from,to,date)).rate);
+ data.occurrences=withExtraPayments(counted.occurrences,counted.payments);
  // Every scope but insights reads every holding (only income and expense history is period-limited), so the
  // deposits are already here and are not read again.
  const estimates=new Map((scope==='insights'?[]:await depositForecasts(auth.token,data.records as Entry[])).map(record=>[record.id,record.estimated_monthly_income]));

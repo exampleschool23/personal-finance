@@ -56,7 +56,6 @@ test('salary and bills link only by the schedule id they name, never by name',as
   await insert(d,22,{name:'Rent',kind:'Rent expense',currency:'USD',amount:700,date:'2026-10-09',frequency:'Once',occurrence_record_id:id(13)});
   assert.deepEqual([await named(d,20),await named(d,21),await named(d,22)],[[null,null],[id(12),'2026-10-05'],[id(13),'2026-10-10']]);
   assert.deepEqual(await occurrences(d),[[id(12),'2026-10-05','paid',id(21)],[id(13),'2026-10-10','paid',id(22)]]);
-  await assert.rejects(insert(d,23,{name:'Salary',kind:'Salary',currency:'UZS',amount:1,date:'2026-10-06',frequency:'Once',occurrence_record_id:id(12)}),/currency of its schedule/);
   await assert.rejects(insert(d,24,{name:'Gift',kind:'Other income',currency:'USD',amount:1,date:'2026-10-06',frequency:'Once',occurrence_record_id:id(13)}),/Choose a scheduled payment/);
   await assert.rejects(d.query('UPDATE finance_records SET occurrence_record_id=NULL WHERE id=$1',[id(21)]),/keeps its schedule/);
  }finally{await d.close();}
@@ -75,11 +74,10 @@ test('Record payment names its schedule and due date and settles it once',async(
  }finally{await d.close();}
 });
 
-test('nothing is linked without exactly one active schedule for the business in that currency',async()=>{
+test('nothing is linked without exactly one active schedule for the business',async()=>{
  const d=await db(setup);
  try{
   await workspace(d);
-  await pixel(d,20,'2026-10-06',425,{currency:'UZS'});
   await insert(d,14,{name:'Pixel weekend',kind:'Business income',currency:'USD',amount:200,date:'2026-01-03',frequency:'Monthly',business_id:id(10)});
   await pixel(d,21,'2026-10-06',425);
   assert.deepEqual(await occurrences(d),[]);
@@ -97,6 +95,37 @@ test('applying the migration settles this month’s business payments saved befo
   await pixel(d,20,today,425);
   await pixel(d,21,'2025-01-15',300);
   await d.exec(migration);
+  assert.deepEqual((await occurrences(d)).map(row=>[row[1],row[3]]),[[today.slice(0,8)+'01',id(20)]]);
+ }finally{await d.close();}
+});
+
+const anyCurrency=fs.readFileSync('migrations/120_schedule_payments_any_currency.sql','utf8');
+test('migration 120 is in setup.sql and safe to re-run',async()=>{
+ assert.ok(setup.includes(anyCurrency),'setup.sql includes migration 120');
+ const d=await db(setup.slice(0,setup.indexOf(anyCurrency)));
+ try{await d.exec(anyCurrency);await d.exec(anyCurrency);}finally{await d.close();}
+});
+
+test('a payment in another currency settles its schedule and keeps its own amount and currency',async()=>{
+ const d=await db(setup);
+ try{
+  await workspace(d);
+  await pixel(d,20,'2026-10-06',5000000,{currency:'UZS'});
+  await insert(d,21,{name:'Salary',kind:'Salary',currency:'UZS',amount:44000000,date:'2026-10-06',frequency:'Once',occurrence_record_id:id(12)});
+  assert.deepEqual([await named(d,20),await named(d,21)],[[id(11),'2026-10-01'],[id(12),'2026-10-05']]);
+  assert.deepEqual(await occurrences(d),[[id(11),'2026-10-01','paid',id(20)],[id(12),'2026-10-05','paid',id(21)]]);
+  assert.deepEqual((await d.query('SELECT currency,amount::float AS amount FROM finance_records WHERE id=$1',[id(20)])).rows,[{currency:'UZS',amount:5000000}]);
+ }finally{await d.close();}
+});
+
+test('applying migration 120 settles this month’s payments in another currency saved before it',async()=>{
+ const d=await db(setup.slice(0,setup.indexOf(anyCurrency)));
+ try{
+  const today=new Date(Date.now()+5*3600000).toISOString().slice(0,10);
+  await workspace(d);
+  await pixel(d,20,today,5000000,{currency:'UZS'});
+  assert.deepEqual(await occurrences(d),[]);
+  await d.exec(anyCurrency);
   assert.deepEqual((await occurrences(d)).map(row=>[row[1],row[3]]),[[today.slice(0,8)+'01',id(20)]]);
  }finally{await d.close();}
 });
