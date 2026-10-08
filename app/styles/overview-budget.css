@@ -96,6 +96,7 @@
 .overview-list i{width:8px;height:8px;border-radius:50%}
 .overview-list strong{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .overview-list small{min-width:48px;text-align:end;font-size:var(--type-caption);color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.overview-list small.negative{color:var(--negative)}
 .overview-list:is(.overview-due,.overview-commitments) li{grid-template-columns:auto minmax(0,1fr) auto}
 .overview-due li>span:nth-child(2){display:grid;min-width:0;overflow-wrap:anywhere}
 .overview-due small{min-width:0;text-align:start}

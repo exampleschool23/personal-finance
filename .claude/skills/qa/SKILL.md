@@ -15,6 +15,10 @@ keep `references/cases.md` (the regression catalog) open: it is the plan.
   only for the first load of the app and for a reload. Switching a tab or a drawer page must show shimmer
   (`NavigationShimmer`, the in-screen skeleton rows), never the big loader. Any tab or page switch that shows the
   big loader is a P1 finding; guarded by `tests/navigation-shimmer.mjs`.
+- **Reading every row for expected values:** the records API returns 10 rows a page and clamps an out-of-range page
+  to the last page (seen 2026-10-08), so a short page or an empty-looking loop is not "the end". Read the response
+  `total`, request `ceil(total / pageSize)` pages, and deduplicate by `id`. Filter by `section` (and `currency`) to
+  narrow the set; do not derive expected totals from one page or from the summary (the summary leaves out older rows).
 - **Credentials:** never type a password, create an account or share a phone number.
   When a session is needed, front the tab and ask the user to sign in. Test account:
   `user1@gmail.com` (the user signs in; never store its password anywhere).

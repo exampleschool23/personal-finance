@@ -38,7 +38,7 @@
 .account-list-row[aria-pressed=true]{background:color-mix(in srgb,var(--accent) 70%,transparent)}
 .account-list-row:focus-visible{outline:2px solid var(--ring);outline-offset:-3px}
 .account-list-row>strong{margin-top:auto;max-width:100%;font-size:var(--type-title);font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.account-list-name{max-width:100%;padding-inline-end:20px;font-weight:600;overflow-wrap:break-word}
+.account-list-name{max-width:100%;min-width:0;padding-inline-end:20px;font-weight:600;overflow-wrap:anywhere}
 .account-list-name small{display:block;margin-top:1px;font-size:var(--type-caption);font-weight:400;color:var(--muted-foreground)}
 .account-search-empty{padding:28px 20px;font-size:var(--type-small)}
 .account-selected-panel{position:sticky;top:84px;min-width:0}

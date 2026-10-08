@@ -178,7 +178,10 @@ JavaScript runs. Report the file and line.
 
 ## 4. Method
 
-0. Loading state is a design rule: the big "Loading your workspace…" layout shows only on the first load and on a
+0. Data read for a check is complete: when a screen's expected figures come from the API, read every page using the
+   response `total` (10 rows a page, out-of-range pages return the last page) and deduplicate by `id`; never stop on
+   a short page or take the summary as the whole set.
+0b. Loading state is a design rule: the big "Loading your workspace…" layout shows only on the first load and on a
    reload. A tab or drawer page switch shows shimmer. Flag any switch that shows the big loader as a finding
    (guarded by `tests/navigation-shimmer.mjs`).
 1. Scope the screens (argument; `git diff --name-only HEAD~1` plus uncommitted
