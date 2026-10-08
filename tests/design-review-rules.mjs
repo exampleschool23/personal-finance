@@ -221,7 +221,7 @@ test('switches, chips and names show their whole text (SCR-085, LIST-024, LIST-0
  // Account cards stack icon, name and balance, so the name has the card's whole width and never breaks between letters.
  assert.match(css,/\.account-list-row\{display:flex;flex-direction:column;/);
  assert.match(css,/\.account-list-row>strong\{margin-top:auto;max-width:100%;/);
- assert.match(css,/\.account-list-name\{max-width:100%;padding-inline-end:20px;font-weight:600;overflow-wrap:break-word\}/);
+ assert.match(css,/\.account-list-name\{max-width:100%;min-width:0;padding-inline-end:20px;font-weight:600;overflow-wrap:anywhere\}/);
  assert.match(css,/\.account-card-grid\{display:grid;grid-template-columns:repeat\(auto-fill,minmax\(min\(100%,220px\),1fr\)\);/);
  assert.match(css,/\.account-group>summary\{display:flex;flex-wrap:wrap;/);
  // Transaction chips keep their equal columns, and a long name wraps inside its column.
