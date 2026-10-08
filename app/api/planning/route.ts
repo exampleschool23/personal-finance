@@ -4,7 +4,7 @@ import { depositForecasts } from '@/lib/deposit-forecasts';
 import { interestKinds, type Entry } from '@/lib/finance';
 import { isoDate } from '@/lib/api-validation';
 import { planningSchemas } from '@/lib/planning-schemas';
-import { debtPaymentsFrom, withExtraPayments } from '@/lib/planning';
+import { debtPaymentsFrom, debtPaymentsInLoanCurrency, withExtraPayments } from '@/lib/planning';
 import { inScheduleCurrency } from '@/lib/schedule-currency';
 import { crossSite,parseAction,postgrestFailure,readJson,signInAgain } from '@/lib/api-route';
 import { session,supa,sameOrigin } from '@/lib/supabase';
@@ -31,7 +31,10 @@ export async function GET(req?:Request){
  const results=await reads;
  const data={records:[],categories:[],goals:[],occurrences:[],activity:[],movements:[],investmentLinks:[],...Object.fromEntries(results)} as Record<string,unknown>;
  // Loan repayments and mortgage payments settle a loan's monthly payment on Recurring and Upcoming payments.
- if(scope==='full'||scope==='workspace'){const [repayments,mortgagePayments]=await Promise.all([readOwnerRows<{action:string;target_id:string|null;occurred_on:string}>('account_activity',auth.token,{select:'action,target_id,occurred_on',action:'in.(repayment,mortgage)'}),readOwnerRows<{mortgage_id:string;paid_on:string}>('mortgage_payments',auth.token,{select:'id,mortgage_id,paid_on'})]);data.debtPayments=debtPaymentsFrom(repayments,mortgagePayments);}
+ if(scope==='full'||scope==='workspace'){const [repayments,mortgagePayments]=await Promise.all([readOwnerRows<{id:string;action:string;target_id:string|null;occurred_on:string;amount:number;fee:number;account_id:string}>('account_activity',auth.token,{select:'id,action,target_id,occurred_on,amount,fee,account_id',action:'in.(repayment,mortgage)'}),readOwnerRows<{id:string;mortgage_id:string;paid_on:string;principal:number;interest:number}>('mortgage_payments',auth.token,{select:'id,mortgage_id,paid_on,principal,interest'})]);
+  // Each payment says how much it paid, in its loan's currency, so a partial payment never shows the installment paid in full.
+  const loanCurrency=new Map((data.records as Entry[]).map(record=>[record.id,record.currency]));
+  data.debtPayments=await debtPaymentsInLoanCurrency(debtPaymentsFrom(repayments,mortgagePayments,loanCurrency),loanCurrency,async(from,to,date)=>(await loadDatedExchangeRate(from,to,date)).rate);}
  // Payments in another currency than their schedule count in its currency at the rate of the payment's day.
  const currencyOf=new Map((data.records as Entry[]).map(record=>[record.id,record.currency]));
  const counted=await inScheduleCurrency(data.occurrences as Occurrence[],await extraPayments,currencyOf,async(from,to,date)=>(await loadDatedExchangeRate(from,to,date)).rate);

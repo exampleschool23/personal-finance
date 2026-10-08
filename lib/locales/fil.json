@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Piliin ang cash account na ginamit sa transaksyong ito. Sabay na nagbabago ang balanse ng cash at natitirang principal; hindi kita o gastos ang principal.",
   "Choose a cash account in the record currency.": "Pumili ng cash account sa currency ng record.",
   "Enter transactions on or after the latest cash balance date.": "Maglagay ng mga transaksyong kapareho o pagkatapos ng pinakahuling petsa ng balanse ng cash.",
-  "The start date is fixed once the record is saved to preserve its history.": "Nakapirmi ang petsa ng simula kapag na-save na ang record para mapanatili ang kasaysayan nito.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Kailan nagsimula ang utang o pautang na ito. Ilagay ang principal na natitira sa petsang iyon, saka itala ang mga susunod na pagbabayad sa Tracker.",
   "Check the start and due dates.": "Suriin ang mga petsa ng simula at takda.",
   "The start date cannot change after creation.": "Hindi na mababago ang petsa ng simula pagkatapos gawin.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Babalik sa backup na ito ang mga record, balanse, kasaysayan, layunin at setting. Papalitan ang mga pagbabagong ginawa pagkatapos ng petsa nito. Mababawi mo ang kasalukuyang data gamit ang awtomatikong na-save na backup bago mag-restore.",
   "Restoring…": "Nire-restore…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "Para sa sanggunian ang mga CSV export. Gumamit ng na-verify na JSON backup para i-restore ang account na ito.",
-  "Record history": "Kasaysayan ng record",
-  "No recorded edits yet. History starts when this feature is enabled.": "Wala pang naitalang pag-edit. Nagsisimula ang kasaysayan kapag na-enable ang feature na ito.",
   "Record details updated": "Na-update ang mga detalye ng record",
   "This record changed since you opened it. Reload it before saving.": "Nagbago ang record na ito mula nang buksan mo. I-reload ito bago i-save.",
   "The app database needs an update before records can be saved.": "Kailangang ma-update ang database ng app bago ma-save ang mga record.",
@@ -2619,5 +2616,9 @@
   "All other income": "Lahat ng iba pang kita",
   "All other expenses": "Lahat ng iba pang gastos",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "Kasaysayan ng mga pagbabago",
+  "No changes yet.": "Wala pang pagbabago.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Ang buwanang bayad ay tumatapat sa araw na ito bawat buwan. Hindi ito maaaring lumampas sa isang naitalang bayad.",
+  "The start date cannot be after a recorded payment.": "Hindi maaaring mas huli ang petsa ng simula kaysa sa isang naitalang bayad."
 }

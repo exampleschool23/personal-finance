@@ -289,3 +289,29 @@ test('the transaction details dialog offers a bin to delete and a pencil to edit
  const dialogs=fs.readFileSync('components/workspace/workspace-dialogs.tsx','utf8');
  assert.match(dialogs,/onDelete=\{\(\)=>\{const r=viewing;setViewing\(null\);requestDelete\(r\);\}\}/);
 });
+
+test('every Notes field is a multi-line textarea, never a one-line input', () => {
+ const files = fs.globSync('{components,app}/**/*.tsx');
+ const notes = files.flatMap(file => [...fs.readFileSync(file, 'utf8').matchAll(/t\(['"]Notes[^'"]*['"]\)\}\s*<(\w+)/g)].map(match => [file, match[1]]));
+ assert.ok(notes.length >= 10, 'finds the Notes fields');
+ assert.deepEqual(notes.filter(([, tag]) => tag !== 'textarea'), []);
+});
+
+test('Record payment starts from the account that last paid the loan or bill, else the only one in its currency', () => {
+ const { suggestedPaymentAccount } = loadTS('lib/payment-account.ts');
+ const cash = (id, currency) => ({ id, kind: 'Cash', currency });
+ const usd = cash('usd', 'USD'), card = cash('card', 'USD'), som = cash('som', 'UZS'), home = { id: 'home', kind: 'Mortgage', currency: 'USD' };
+ const activity = [{ account_id: 'usd', target_id: 'home', occurred_on: '2026-09-12' }, { account_id: 'card', target_id: 'home', occurred_on: '2026-10-08' }, { account_id: 'som', target_id: 'other', occurred_on: '2026-10-09' }];
+ assert.equal(suggestedPaymentAccount([usd, card, som], home, [], activity), 'card', 'the latest payment of this mortgage');
+ assert.equal(suggestedPaymentAccount([usd, som], home, [], []), 'usd', 'the only account in its currency');
+ assert.equal(suggestedPaymentAccount([usd, card, som], home, [], []), '', 'a real choice stays the person\'s');
+ const bill = { id: 'bill', kind: 'Living expense', currency: 'UZS' };
+ assert.equal(suggestedPaymentAccount([usd, som, cash('som2', 'UZS')], bill, [{ id: 'p', occurrence_record_id: 'bill', account_id: 'som2', date: '2026-09-01' }]), 'som2', 'a bill follows its last payment');
+ assert.equal(suggestedPaymentAccount([usd], undefined, []), '');
+});
+
+test('a disabled Save in an account operation says why beside it', () => {
+ const source = fs.readFileSync('components/planning/account-operation.tsx', 'utf8');
+ assert.match(source, /\{blocked&&!busy&&<p className="muted" role="status">\{t\(blocked\)\}<\/p>\}/);
+ assert.match(source, /'Choose a cash account\.'/);
+});

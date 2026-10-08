@@ -5,6 +5,7 @@ import type { LinkProps } from 'recharts/types/chart/Sankey';
 import { ChevronDown, Download, ReceiptText, X } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { ShareBars } from '@/components/cash-flow-report';
+import { chartAxis, chartBar, chartColors, chartDonut, chartGrid, chartHeight, chartLegend, chartMargin, chartSankey, chartTooltip, chartValueAxis, groupedBar, moneyTick, sankeyNodeRadius, stackTop } from '@/components/presentation-foundation/chart';
 import { BusinessMark } from '@/components/presentation-foundation/business-mark';
 import type { BusinessOption } from '@/components/presentation-foundation/business-filter';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
@@ -107,7 +108,7 @@ export function BusinessSankeyChart({ data, currency, onDrill }: { data: Busines
  // Each side gets exactly the room its longest label needs; the chart scrolls only when that and its columns do not fit.
  const room = sankeyLabelMargins(data, label, measureLabel);
  return <div className="cash-flow-sankey"><ResponsiveContainer width="100%" minWidth={sankeyMinWidth(data, room)} height={Math.max(300, data.nodes.length * 30)}>
-  <Sankey data={data} nodePadding={16} nodeWidth={10} margin={{ top: 8, right: room.right, bottom: 8, left: room.left }}
+  <Sankey data={data} {...chartSankey} margin={{ top: 8, right: room.right, bottom: 8, left: room.left }}
    link={({ sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, index }: LinkProps) => {
     const link = data.links[index], drill = link && (drillOf(link.target) ?? drillOf(link.source));
     return <path className="sankey-link" d={`M${sourceX},${sourceY} C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}`} strokeWidth={Math.max(1, linkWidth)} onClick={drill ? () => onDrill(drill) : undefined} data-clickable={!!drill || undefined}/>;
@@ -116,11 +117,11 @@ export function BusinessSankeyChart({ data, currency, onDrill }: { data: Busines
     const node = data.nodes[index], left = !data.links.some(link => link.target === index);
     const drill = node?.drill;
     return <g className="sankey-node" onClick={drill ? () => onDrill(drill) : undefined} data-clickable={!!drill || undefined}>
-     <rect x={x} y={y} width={width} height={Math.max(2, height)} rx={3} fill={fill(node?.kind ?? 'expense')}/>
+     <rect x={x} y={y} width={width} height={Math.max(2, height)} rx={sankeyNodeRadius} fill={fill(node?.kind ?? 'expense')}/>
      <text x={left ? x - 8 : x + width + 8} y={y + height / 2} dy="0.35em" textAnchor={left ? 'end' : 'start'} className="sankey-label">{label(payload.name, payload.value)}</text>
     </g>;
    }}>
-   <Tooltip formatter={value => formatMoney(Number(value), currency, locale)}/>
+   <Tooltip {...chartTooltip} formatter={value => formatMoney(Number(value), currency, locale)}/>
   </Sankey>
  </ResponsiveContainer></div>;
 }
@@ -130,14 +131,14 @@ export function TrendChart({ rows, series, stacked, interval, currency }: { rows
  const { locale } = useLanguage();
  const [hidden, setHidden] = useState<string[]>([]);
  const label = useIntervalLabel(interval), longLabel = useIntervalLabel(interval, true);
- return <div className="cash-flow-chart"><ResponsiveContainer width="100%" height={280}>
-  <BarChart data={rows} barGap={2} stackOffset="sign" accessibilityLayer margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
-   <CartesianGrid stroke="var(--border)" strokeOpacity={.6} strokeDasharray="2 6" vertical={false}/>
-   <XAxis dataKey="period" tickFormatter={value => label(String(value))} axisLine={false} tickLine={false} tickMargin={10}/>
-   <YAxis width="auto" tickFormatter={value => formatCompactMoney(Number(value), currency, locale)} axisLine={false} tickLine={false} tickMargin={8}/>
-   <Tooltip cursor={{ fill: 'var(--accent)', fillOpacity: .45 }} labelFormatter={value => longLabel(String(value))} formatter={(value, name) => [formatMoney(Number(value), currency, locale), String(name)]}/>
-   <Legend iconType="circle" iconSize={8} onClick={entry => { const key = String((entry as { dataKey?: unknown }).dataKey ?? ''); setHidden(list => toggleKey(list, key)); }} formatter={(value, entry) => <span className="trend-legend" data-hidden={hidden.includes(String((entry as { dataKey?: unknown }).dataKey)) || undefined}>{value}</span>}/>
-   {series.map((item, index) => <Bar key={item.key} dataKey={item.key} name={item.label} hide={hidden.includes(item.key)} stackId={stacked ? 'total' : undefined} fill={item.color} radius={stacked ? (index === series.length - 1 ? [4, 4, 0, 0] : 0) : [4, 4, 0, 0]} maxBarSize={stacked ? 28 : 18}/>)}
+ return <div className="cash-flow-chart"><ResponsiveContainer width="100%" height={chartHeight.regular}>
+  <BarChart data={rows} barGap={2} stackOffset="sign" accessibilityLayer margin={chartMargin}>
+   <CartesianGrid {...chartGrid}/>
+   <XAxis dataKey="period" tickFormatter={value => label(String(value))} {...chartAxis}/>
+   <YAxis tickFormatter={moneyTick(currency, locale)} {...chartValueAxis}/>
+   <Tooltip {...chartTooltip} labelFormatter={value => longLabel(String(value))} formatter={(value, name) => [formatMoney(Number(value), currency, locale), String(name)]}/>
+   <Legend {...chartLegend} onClick={entry => { const key = String((entry as { dataKey?: unknown }).dataKey ?? ''); setHidden(list => toggleKey(list, key)); }} formatter={(value, entry) => <span className="trend-legend" data-hidden={hidden.includes(String((entry as { dataKey?: unknown }).dataKey)) || undefined}>{value}</span>}/>
+   {series.map((item, index) => <Bar key={item.key} dataKey={item.key} name={item.label} hide={hidden.includes(item.key)} stackId={stacked ? 'total' : undefined} {...(stacked ? { ...chartBar, ...stackTop(index === series.length - 1) } : groupedBar)} fill={item.color}/>)}
   </BarChart>
  </ResponsiveContainer></div>;
 }
@@ -149,11 +150,11 @@ export function BreakdownDonut({ items, label, colorOf, currency, onSelect }: { 
  const top = topShares(items);
  const name = (key: string) => key === otherShareKey ? t('Other') : label(key);
  return <div className="breakdown-donut">
-  <ResponsiveContainer width="100%" height={240}><PieChart>
-   <Pie data={top} dataKey="amount" nameKey="key" innerRadius="58%" outerRadius="92%" paddingAngle={1} stroke="var(--card)" onClick={entry => { const key = (entry.payload as Share | undefined)?.key; if (key && key !== otherShareKey) onSelect(key); }}>
-    {top.map(item => <Cell key={item.key} fill={item.key === otherShareKey ? 'var(--muted-foreground)' : colorOf(item.key)} className="donut-slice"/>)}
+  <ResponsiveContainer width="100%" height={chartHeight.compact}><PieChart>
+   <Pie data={top} dataKey="amount" nameKey="key" {...chartDonut} onClick={entry => { const key = (entry.payload as Share | undefined)?.key; if (key && key !== otherShareKey) onSelect(key); }}>
+    {top.map(item => <Cell key={item.key} fill={item.key === otherShareKey ? chartColors.other : colorOf(item.key)} className="donut-slice"/>)}
    </Pie>
-   <Tooltip formatter={(value, key) => [formatMoney(Number(value), currency, locale), name(String(key))]}/>
+   <Tooltip {...chartTooltip} formatter={(value, key) => [formatMoney(Number(value), currency, locale), name(String(key))]}/>
   </PieChart></ResponsiveContainer>
   <ShareBars items={items} label={label} colorKey={colorOf} currency={currency} onSelect={onSelect}/>
  </div>;

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { niceAxis } from '@/lib/chart-scale';
 import { InfoHint } from '@/components/presentation-foundation/info-hint';
+import { ChartGradient, chartAxis, chartDot, chartGrid, chartLine, chartTooltip, chartValueAxis, guideLine, leadArea, referenceLine } from '@/components/presentation-foundation/chart';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { SeriesLegend, toggleKey } from '@/components/presentation-foundation/series-legend';
 import { useLanguage } from '@/components/language-provider';
@@ -134,15 +135,15 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
     <SeriesLegend className="goal-chart-legend" items={lines.map(line => ({ key: line.key, label: t(line.label), swatch: <svg width="24" height="12" viewBox="0 0 24 12" aria-hidden="true">{line.key === 'actual' ? <circle cx="12" cy="6" r="4" fill={line.color} /> : <line x1="0" y1="6" x2="24" y2="6" stroke={line.color} strokeWidth="2" strokeDasharray={line.dash} />}</svg> }))} hidden={hidden} onToggle={key => setHidden(previous => toggleKey(previous, key))} />
     {goal.kind === 'net_worth' && <p className="goal-help">{t('Actual net worth today: {amount}. Actual values stop at today; future values are forecasts.', { amount: starting === null ? '—' : money(starting) })}</p>}
     <div className="goal-projection-chart" role="region" aria-label={t('Your path to the goal')} tabIndex={0}><div className="goal-chart-canvas"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={points} accessibilityLayer margin={{ top: 24, right: compact?8:24, left: compact?0:8, bottom: 12 }}>
-     <defs><linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity={0.18} /><stop offset="100%" stopColor="var(--primary)" stopOpacity={0.01} /></linearGradient></defs>
-     <CartesianGrid stroke="var(--border)" strokeDasharray="3 5" vertical={false} />
-     <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={time => formatMonthYear(isoDate(Number(time)), locale)} minTickGap={compact?40:80} tickCount={compact?2:5} height={64} tickLine={false} axisLine={false} tickMargin={16} tick={{ fill: 'var(--muted-foreground)', fontSize: 13 }} />
-     <YAxis hide={compact} width="auto" tickMargin={12} tickFormatter={money} domain={axis.domain} ticks={axis.ticks} tickLine={false} axisLine={false} tick={{ fill: 'var(--muted-foreground)', fontSize: 13 }} />
-     <Tooltip labelFormatter={time => formatDate(isoDate(Number(time)), locale)} formatter={(amount, name) => [money(Number(amount)), t(lines.find(line => line.key === name)?.label ?? String(name))]} contentStyle={{ background: 'var(--popover)', color: 'var(--popover-foreground)', borderColor: 'var(--border)', borderRadius: 14, boxShadow: '0 8px 32px #00000014', fontSize: 16, lineHeight: 1.7, padding: 16 }} />
-     <ReferenceLine x={Date.parse(today + 'T00:00:00Z')} stroke="var(--muted-foreground)" strokeDasharray="4 4" label={{ value: t('Today'), position: 'insideBottomLeft', offset: 8, fill: 'var(--muted-foreground)', fontSize: 13 }} />
-     {!hidden.includes('projected') && <Area dataKey="projected" stroke="var(--primary)" strokeWidth={3} fill={`url(#${id}-fill)`} isAnimationActive={false} />}
-     {lines.filter(line => line.key !== 'projected' && line.key !== 'actual' && !hidden.includes(line.key)).map(line => <Line key={line.key} dataKey={line.key} stroke={line.color} strokeDasharray={line.dash} strokeWidth={line.key === 'target' ? 1.5 : 2} dot={false} connectNulls={false} isAnimationActive={false} />)}
-     {!hidden.includes('actual') && <Line dataKey="actual" stroke="var(--foreground)" strokeWidth={2} dot={{ r: 5, stroke: 'var(--card)', strokeWidth: 2, fill: 'var(--foreground)' }} connectNulls={false} isAnimationActive={false} />}
+     <ChartGradient id={`${id}-fill`}/>
+     <CartesianGrid {...chartGrid}/>
+     <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={time => formatMonthYear(isoDate(Number(time)), locale)} minTickGap={compact?40:80} tickCount={compact?2:5} height={64} {...chartAxis}/>
+     <YAxis hide={compact} tickFormatter={money} domain={axis.domain} ticks={axis.ticks} {...chartValueAxis}/>
+     <Tooltip {...chartTooltip} labelFormatter={time => formatDate(isoDate(Number(time)), locale)} formatter={(amount, name) => [money(Number(amount)), t(lines.find(line => line.key === name)?.label ?? String(name))]}/>
+     <ReferenceLine x={Date.parse(today + 'T00:00:00Z')} {...referenceLine} label={{ value: t('Today'), position: 'insideBottomLeft', offset: 8, fill: 'var(--muted-foreground)', fontSize: 13 }} />
+     {!hidden.includes('projected') && <Area dataKey="projected" {...leadArea(`${id}-fill`)}/>}
+     {lines.filter(line => line.key !== 'projected' && line.key !== 'actual' && !hidden.includes(line.key)).map(line => <Line key={line.key} dataKey={line.key} {...(line.key === 'target' ? guideLine : chartLine)} stroke={line.color} strokeDasharray={line.dash} connectNulls={false}/>)}
+     {!hidden.includes('actual') && <Line dataKey="actual" {...chartLine} stroke="var(--foreground)" dot={chartDot} connectNulls={false}/>}
     </ComposedChart></ResponsiveContainer></div></div>
     {goal.kind === 'net_worth' && historyError && <p className="goal-help">{t(historyError)}</p>}
     {goal.kind === 'net_worth' && !history.length && <p className="goal-help">{t('Your net-worth history starts with today’s value. Saved snapshots will extend the actual line.')}</p>}

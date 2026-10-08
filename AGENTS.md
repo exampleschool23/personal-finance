@@ -127,6 +127,14 @@ it instead of styling a page on its own.
   A failed load is `InlineError` with its Retry callback; a fetched resource's
   loading, failed and ready states are `ResourceState`. Confirmations use
   `ConfirmDialog`; dialog forms close with `FormFooter`.
+- Every chart takes its look from the chart kit, `presentation-foundation/chart.tsx`: spread
+  `chartGrid`, `chartAxis` / `chartValueAxis`, `chartTooltip`, `chartBar` (`groupedBar`, `stackTop`),
+  `plannedBar` for anything scheduled or estimated (legend swatch `.chart-planned-key`), `leadLine` /
+  `leadArea` with `ChartGradient`, `chartLine`, `guideLine`, `referenceLine`, `chartDonut`, `chartSankey`
+  and `chartHeight`; label ticks with `moneyTick`, `monthTick`, `monthLabel`. Never write grid dashes,
+  axis lines, tooltip boxes, bar widths or gradients inline; change the kit and every chart follows.
+  Charts over months show the whole period: months not reached yet are filled with what is planned.
+  `tests/presentation-foundation.mjs` enforces this.
 - Percentages go through `formatPercent` from `lib/format.ts`.
 - Page children are spaced by the `.content` flex gap. Do not add outer margins
   to page sections, and give a centred child an explicit `width:100%`.

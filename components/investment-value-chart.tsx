@@ -3,7 +3,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useId, type ReactElement } from 'react';
 import { Area, CartesianGrid, ComposedChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useLanguage } from '@/components/language-provider';
-import { formatCompactMoney, formatDate, formatMoney } from '@/lib/format';
+import { formatDate, formatMoney } from '@/lib/format';
+import { ChartGradient, chartAxis, chartGrid, chartLine, chartTooltip, chartValueAxis, leadArea, moneyTick } from '@/components/presentation-foundation/chart';
 import { niceAxis } from '@/lib/chart-scale';
 import { historyChartDate } from '@/lib/investment-history';
 
@@ -32,11 +33,11 @@ export function InvestmentValueChart({points,series,currency,tooltip,onPointSele
    const point=data[Number(index)];
    if(point&&series.length)onPointSelect?.(point.date);
   }} margin={{top:15,right:15,left:5,bottom:20}}>
-  <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity={.18}/><stop offset="100%" stopColor="var(--primary)" stopOpacity={.01}/></linearGradient></defs>
-  <CartesianGrid stroke="var(--border)" strokeOpacity={.6} strokeDasharray="2 6" vertical={false}/>
-  <XAxis dataKey="timestamp" type="number" scale="time" domain={first===undefined?['dataMin','dataMax']:[first,single?first+86400000:last!]} ticks={single?[first!]:undefined} tickFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} minTickGap={80} axisLine={false} tickLine={false} tickMargin={14}/>
-  <YAxis width="auto" domain={axis.domain} ticks={axis.ticks} allowDataOverflow tickFormatter={amount=>formatCompactMoney(Number(amount),currency,locale)} axisLine={false} tickLine={false} tickMargin={12}/>
-  <Tooltip position={mobile?{x:0,y:40}:undefined} offset={{x:0,y:20}} allowEscapeViewBox={{x:false,y:true}} isAnimationActive={false} content={tapOpensDetails?noTooltip:tooltip} labelFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} formatter={amount=>money(Number(amount))} wrapperStyle={{zIndex:20,pointerEvents:'auto',maxWidth:'100%',...(mobile?{width:'100%',whiteSpace:'normal' as const}:{})}} contentStyle={{background:'var(--background)',borderColor:'var(--border)',borderRadius:16}}/>
-  {series.map(item=><Area key={item.key} type="monotone" dataKey={item.key} name={item.label} baseValue="dataMin" fill={item.primary?`url(#${id})`:'none'} stroke={item.color} strokeDasharray={item.dash} strokeWidth={item.primary?3:2} strokeLinecap="round" strokeLinejoin="round" isAnimationActive={false} connectNulls={false} dot={false} activeDot={false}/>)}
+  <ChartGradient id={id}/>
+  <CartesianGrid {...chartGrid}/>
+  <XAxis dataKey="timestamp" type="number" scale="time" domain={first===undefined?['dataMin','dataMax']:[first,single?first+86400000:last!]} ticks={single?[first!]:undefined} tickFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} minTickGap={80} {...chartAxis}/>
+  <YAxis domain={axis.domain} ticks={axis.ticks} allowDataOverflow tickFormatter={moneyTick(currency,locale)} {...chartValueAxis}/>
+  <Tooltip {...chartTooltip} position={mobile?{x:0,y:40}:undefined} offset={{x:0,y:20}} allowEscapeViewBox={{x:false,y:true}} content={tapOpensDetails?noTooltip:tooltip} labelFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} formatter={amount=>money(Number(amount))} wrapperStyle={{zIndex:20,pointerEvents:'auto',maxWidth:'100%',...(mobile?{width:'100%',whiteSpace:'normal' as const}:{})}}/>
+  {series.map(item=><Area key={item.key} type="monotone" dataKey={item.key} name={item.label} baseValue="dataMin" {...(item.primary?leadArea(id):{...chartLine,fill:'none'})} stroke={item.color} strokeDasharray={item.dash} connectNulls={false} activeDot={false}/>)}
  </ComposedChart></ResponsiveContainer></div>;
 }

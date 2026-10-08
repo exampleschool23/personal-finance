@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Bu işlem için kullanılan nakit hesabını seçin. Nakit bakiye ve kalan anapara birlikte değişir; anapara gelir veya gider değildir.",
   "Choose a cash account in the record currency.": "Kayıt para biriminde bir nakit hesabı seçin.",
   "Enter transactions on or after the latest cash balance date.": "İşlemleri son nakit bakiyesi tarihinde veya sonrasında girin.",
-  "The start date is fixed once the record is saved to preserve its history.": "Başlangıç tarihi, geçmişi korumak için kayıt kaydedildikten sonra sabittir.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Bu borcun veya kredinin başladığı tarih. O tarihte kalan anaparayı girin, ardından sonraki geri ödemeleri Takipçi'de kaydedin.",
   "Check the start and due dates.": "Başlangıç ve vade tarihlerini kontrol edin.",
   "The start date cannot change after creation.": "Başlangıç tarihi oluşturulduktan sonra değiştirilemez.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Kayıtlar, bakiyeler, geçmiş, hedefler ve ayarlar bu yedeğe dönecek. Tarihinden sonra yapılan değişiklikler değiştirilecek. Otomatik kaydedilen geri yükleme öncesi yedeği kullanarak mevcut verileri kurtarabilirsiniz.",
   "Restoring…": "Geri yükleniyor…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "CSV dışa aktarımları referans amaçlıdır. Bu hesabı geri yüklemek için doğrulanmış bir JSON yedeği kullanın.",
-  "Record history": "Kayıt geçmişi",
-  "No recorded edits yet. History starts when this feature is enabled.": "Henüz kayıtlı düzenleme yok. Geçmiş, bu özellik etkinleştirildiğinde başlar.",
   "Record details updated": "Kayıt ayrıntıları güncellendi",
   "This record changed since you opened it. Reload it before saving.": "Bu kayıt, açtığınızdan beri değişti. Kaydetmeden önce yeniden yükleyin.",
   "The app database needs an update before records can be saved.": "Kayıtların kaydedilebilmesi için uygulama veritabanının güncellenmesi gerekiyor.",
@@ -2619,5 +2616,9 @@
   "All other income": "Diğer tüm gelirler",
   "All other expenses": "Diğer tüm giderler",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "Değişiklik geçmişi",
+  "No changes yet.": "Henüz değişiklik yok.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Aylık ödemeler her ayın bu gününe denk gelir. Kaydedilmiş bir ödemeden sonra olamaz.",
+  "The start date cannot be after a recorded payment.": "Başlangıç tarihi kaydedilmiş bir ödemeden sonra olamaz."
 }

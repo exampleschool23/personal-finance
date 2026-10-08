@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Sankey, Tooltip, XAxis, YAxis } from 'recharts';
 import { useLanguage } from '@/components/language-provider';
+import { chartAxis, chartColors, chartGrid, chartHeight, chartLegend, chartMargin, chartSankey, chartTooltip, chartValueAxis, groupedBar, monthLabel, monthTick, moneyTick, sankeyLink, sankeyNodeRadius } from '@/components/presentation-foundation/chart';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { ChartSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
@@ -14,7 +15,7 @@ import { hueColor } from '@/lib/category-colors';
 import { useCategoryHue } from '@/components/category-icons-context';
 import { depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry } from '@/lib/finance';
-import { formatCompactMoney, formatMoney, formatMonthShort, formatMonthYear, formatPercent } from '@/lib/format';
+import { formatCompactMoney, formatMoney, formatMonthYear, formatPercent } from '@/lib/format';
 import type { MarketData } from '@/lib/market';
 import { emptyPlanning, type PlanningData } from '@/lib/planning';
 import type { TransactionSplit } from '@/lib/transaction-tools';
@@ -79,15 +80,15 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
   </StatTiles>}
   <section className="panel">
    <PanelTitle title={t('Income and spending by month')}/>
-   <div className="cash-flow-chart"><ResponsiveContainer width="100%" height={260}>
-    <BarChart data={trend} barGap={2} accessibilityLayer margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
-     <CartesianGrid stroke="var(--border)" strokeOpacity={.6} strokeDasharray="2 6" vertical={false}/>
-     <XAxis dataKey="month" tickFormatter={value => formatMonthShort(String(value), locale)} axisLine={false} tickLine={false} tickMargin={10}/>
-     <YAxis width="auto" tickFormatter={value => formatCompactMoney(Number(value), currency, locale)} axisLine={false} tickLine={false} tickMargin={8}/>
-     <Tooltip cursor={{ fill: 'var(--accent)', fillOpacity: .45 }} labelFormatter={value => formatMonthYear(String(value), locale)} formatter={(value, name) => [money(Number(value)), String(name)]}/>
-     <Legend iconType="circle" iconSize={8}/>
-     <Bar dataKey="income" name={t('Income')} fill="var(--positive)" radius={[4, 4, 0, 0]} maxBarSize={18}/>
-     <Bar dataKey="expenses" name={t('Expenses')} fill="color-mix(in srgb, var(--foreground) 55%, transparent)" radius={[4, 4, 0, 0]} maxBarSize={18}/>
+   <div className="cash-flow-chart"><ResponsiveContainer width="100%" height={chartHeight.regular}>
+    <BarChart data={trend} barGap={2} accessibilityLayer margin={chartMargin}>
+     <CartesianGrid {...chartGrid}/>
+     <XAxis dataKey="month" tickFormatter={monthTick(locale)} {...chartAxis}/>
+     <YAxis tickFormatter={moneyTick(currency, locale)} {...chartValueAxis}/>
+     <Tooltip {...chartTooltip} labelFormatter={monthLabel(locale)} formatter={(value, name) => [money(Number(value)), String(name)]}/>
+     <Legend {...chartLegend}/>
+     <Bar dataKey="income" name={t('Income')} {...groupedBar} fill={chartColors.income}/>
+     <Bar dataKey="expenses" name={t('Expenses')} {...groupedBar} fill={chartColors.expense}/>
     </BarChart>
    </ResponsiveContainer></div>
   </section>
@@ -102,13 +103,13 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
     <div><h3>{t('Income')}</h3><ShareBars items={report[grouping === 'category' ? 'categories' : 'merchants'].income} label={label} colorKey={() => 'var(--positive)'} currency={currency}/></div>
     <div><h3>{t('Expenses')}</h3><ShareBars items={report[grouping === 'category' ? 'categories' : 'merchants'].expense} label={label} colorKey={colorKey} currency={currency}/></div>
    </div> : flows.links.length ? <div className="cash-flow-sankey"><ResponsiveContainer width="100%" height={Math.max(280, flows.nodes.length * 34)}>
-    <Sankey data={flows} nodePadding={18} nodeWidth={10} margin={{ top: 8, right: room.right, bottom: 8, left: room.left }} link={{ stroke: 'var(--border)', strokeOpacity: .9 }} node={({ x, y, width, height, index, payload }: { x: number; y: number; width: number; height: number; index: number; payload: { name: string; value: number } }) => {
+    <Sankey data={flows} {...chartSankey} margin={{ top: 8, right: room.right, bottom: 8, left: room.left }} link={sankeyLink} node={({ x, y, width, height, index, payload }: { x: number; y: number; width: number; height: number; index: number; payload: { name: string; value: number } }) => {
      const kind = flows.nodes[index]?.kind;
-     const fill = kind === 'income' || kind === 'savings' ? 'var(--positive)' : kind === 'total' ? 'var(--mark-bg)' : 'color-mix(in srgb, var(--foreground) 55%, transparent)';
+     const fill = kind === 'income' || kind === 'savings' ? chartColors.income : kind === 'total' ? 'var(--mark-bg)' : chartColors.expense;
      const left = kind === 'income';
-     return <g><rect x={x} y={y} width={width} height={Math.max(2, height)} rx={3} fill={fill}/><text x={left ? x - 8 : x + width + 8} y={y + height / 2} dy="0.35em" textAnchor={left ? 'end' : 'start'} className="sankey-label">{sankeyLabel(payload.name, payload.value)}</text></g>;
+     return <g><rect x={x} y={y} width={width} height={Math.max(2, height)} rx={sankeyNodeRadius} fill={fill}/><text x={left ? x - 8 : x + width + 8} y={y + height / 2} dy="0.35em" textAnchor={left ? 'end' : 'start'} className="sankey-label">{sankeyLabel(payload.name, payload.value)}</text></g>;
     }}>
-     <Tooltip formatter={value => money(Number(value))}/>
+     <Tooltip {...chartTooltip} formatter={value => money(Number(value))}/>
     </Sankey>
    </ResponsiveContainer></div> : <p className="budget-left-empty">{t('Nothing recorded in this period.')}</p>}
   </section>

@@ -34,11 +34,43 @@ export type Activity = {id:string;action:string;account_id:string;target_id:stri
 export type PlanningData = {/** Built-in categories this workspace deleted (migration 122): set by the workspace, never by the planning read. */removedKinds?:string[];debtPayments?:DebtPayment[];movements?:Array<Omit<AssetMovement,'date'> & {occurred_on:string;realized_gain:number|null}>;holdingAccounts?:HoldingAccount[];records:Entry[];categories:Category[];goals:Goal[];occurrences:Occurrence[];activity:Activity[];investmentLinks?:Array<{id:string;account_id:string;account_currency?:string|null;amount:number;investment_history:{occurred_on:string;record_id:string;event_type:string}}>};
 export const emptyPlanning:PlanningData={records:[],categories:[],goals:[],occurrences:[],activity:[]};
 export type DueItem = {key:string;record:Entry;date:string;overdue:boolean;type:'scheduled'|'repayment'|'maturity'|'installment';amount:number};
-/** A repayment or mortgage payment made against a loan, debt or mortgage on a day. */
-export type DebtPayment = {record_id:string;date:string};
-/** Repayments from account activity and mortgage payments, as one list. */
-export function debtPaymentsFrom(activity:Array<{action:string;target_id:string|null;occurred_on:string}>,mortgagePayments:Array<{mortgage_id:string;paid_on:string}>=[]):DebtPayment[]{
- return [...activity.filter(row=>(row.action==='repayment'||row.action==='mortgage')&&row.target_id).map(row=>({record_id:row.target_id!,date:row.occurred_on})),...mortgagePayments.map(row=>({record_id:row.mortgage_id,date:row.paid_on}))];
+/** A repayment or mortgage payment made against a loan, debt or mortgage on a day. `amount` is what it paid (principal
+ * and interest) in `currency`, when the read knows it; null when it could not be counted in the loan's currency. */
+export type DebtPayment = {record_id:string;date:string;amount?:number|null;currency?:string;/** The cash account it was paid from, when known. */account_id?:string};
+type RepaymentRow={id?:string;action:string;target_id:string|null;occurred_on:string;amount?:number;fee?:number;account_id?:string};
+type MortgagePaymentRow={id?:string;mortgage_id:string;paid_on:string;principal?:number;interest?:number};
+/** Repayments from account activity and mortgage payments, as one list. A mortgage payment from an account is in both
+ * under one id; it is counted once. Given the records' currencies, each payment carries what it paid: a repayment in
+ * its account's currency, a mortgage payment in the mortgage's. */
+export function debtPaymentsFrom(activity:RepaymentRow[],mortgagePayments:MortgagePaymentRow[]=[],currencyOf?:Map<string,string>):DebtPayment[]{
+ const mortgageIds=new Set(mortgagePayments.flatMap(row=>row.id?[row.id]:[]));
+ const accountOf=new Map(activity.flatMap(row=>row.id&&row.account_id?[[row.id,row.account_id] as const]:[]));
+ const paid=(amount:number|undefined,extra:number|undefined,currency:string|undefined)=>amount===undefined||!currency?{}:{amount:Number(amount)+Number(extra??0),currency};
+ const from=(account:string|undefined)=>account?{account_id:account}:{};
+ return [...activity.filter(row=>(row.action==='repayment'||row.action==='mortgage')&&row.target_id&&!(row.id&&mortgageIds.has(row.id))).map(row=>({record_id:row.target_id!,date:row.occurred_on,...paid(row.amount,row.fee,currencyOf?.get(row.account_id??'')),...from(row.account_id)})),
+  ...mortgagePayments.map(row=>({record_id:row.mortgage_id,date:row.paid_on,...paid(row.principal,row.interest,currencyOf?.get(row.mortgage_id)),...from(row.id?accountOf.get(row.id):undefined)}))];
+}
+/** Each payment's amount in its loan's currency, at the official rate of the payment's day; null when no rate is found. */
+export async function debtPaymentsInLoanCurrency(payments:DebtPayment[],currencyOf:Map<string,string>,rate:(from:string,to:string,date:string)=>Promise<number>):Promise<DebtPayment[]>{
+ return Promise.all(payments.map(async payment=>{
+  const loan=currencyOf.get(payment.record_id);
+  if(payment.amount==null||!payment.currency||!loan||payment.currency===loan)return payment;
+  try{return {...payment,amount:payment.amount*await rate(payment.currency,loan,payment.date),currency:loan};}catch{return {...payment,amount:null,currency:loan};}
+ }));
+}
+/** What was paid towards each loan month (`id:YYYY-MM`) in the loan's currency: null when a payment could not be counted
+ * in it, absent when the read did not say how much was paid. */
+export function paidInstallmentAmounts(payments:DebtPayment[],currencyOf:Map<string,string>):Map<string,number|null>{
+ const totals=new Map<string,number|null>(),unknown=new Set<string>();
+ for(const payment of payments){
+  const key=payment.record_id+':'+payment.date.slice(0,7),loan=currencyOf.get(payment.record_id);
+  if(payment.amount===undefined){unknown.add(key);continue;}
+  const amount=payment.amount===null||!loan?null:amountIn({amount:payment.amount,currency:payment.currency??loan},loan);
+  const total=totals.has(key)?totals.get(key)!:0;
+  totals.set(key,total===null||amount===null?null:total+amount);
+ }
+ for(const key of unknown)totals.delete(key);
+ return totals;
 }
 const liabilityKinds=['Loan','Debt','Mortgage'];
 /** A loan, debt or mortgage with an outstanding balance and a positive monthly payment is due every month. */

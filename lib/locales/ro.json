@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Selectează contul de numerar folosit pentru această tranzacție. Soldul de numerar și principalul restant se modifică împreună; principalul nu este venit sau cheltuială.",
   "Choose a cash account in the record currency.": "Alege un cont de numerar în moneda înregistrării.",
   "Enter transactions on or after the latest cash balance date.": "Introdu tranzacții la data ultimului sold de numerar sau după aceasta.",
-  "The start date is fixed once the record is saved to preserve its history.": "Data de început este fixă după salvarea înregistrării, pentru a-i păstra istoricul.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Când a început această datorie sau acest împrumut. Introdu principalul restant la acea dată, apoi înregistrează rambursările ulterioare în Monitorizare.",
   "Check the start and due dates.": "Verifică datele de început și scadență.",
   "The start date cannot change after creation.": "Data de început nu poate fi schimbată după creare.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Înregistrările, soldurile, istoricul, obiectivele și setările vor reveni la acest backup. Modificările făcute după data lui vor fi înlocuite. Poți recupera datele curente folosind backup-ul dinaintea restaurării, salvat automat.",
   "Restoring…": "Se restaurează…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "Exporturile CSV sunt doar pentru referință. Folosește un backup JSON verificat pentru a restaura acest cont.",
-  "Record history": "Istoricul înregistrării",
-  "No recorded edits yet. History starts when this feature is enabled.": "Încă nu există modificări înregistrate. Istoricul începe când această funcție este activată.",
   "Record details updated": "Detaliile înregistrării au fost actualizate",
   "This record changed since you opened it. Reload it before saving.": "Această înregistrare s-a schimbat de când ai deschis-o. Reîncarc-o înainte de a salva.",
   "The app database needs an update before records can be saved.": "Baza de date a aplicației necesită o actualizare înainte ca înregistrările să poată fi salvate.",
@@ -2619,5 +2616,9 @@
   "All other income": "Toate celelalte venituri",
   "All other expenses": "Toate celelalte cheltuieli",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "Istoricul modificărilor",
+  "No changes yet.": "Încă nu există modificări.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Plățile lunare cad în această zi a fiecărei luni. Nu poate fi după o plată înregistrată.",
+  "The start date cannot be after a recorded payment.": "Data de început nu poate fi după o plată înregistrată."
 }

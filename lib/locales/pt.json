@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Selecione a conta de dinheiro usada nesta transação. O saldo em dinheiro e o principal devedor mudam juntos; o principal não é receita nem despesa.",
   "Choose a cash account in the record currency.": "Escolha uma conta de dinheiro na moeda do registro.",
   "Enter transactions on or after the latest cash balance date.": "Informe transações em data igual ou posterior à do último saldo em dinheiro.",
-  "The start date is fixed once the record is saved to preserve its history.": "A data de início fica fixa depois que o registro é salvo, para preservar o histórico.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Quando esta dívida ou empréstimo começou. Informe o principal em aberto nessa data e registre os pagamentos posteriores no Acompanhamento.",
   "Check the start and due dates.": "Verifique as datas de início e de vencimento.",
   "The start date cannot change after creation.": "A data de início não pode ser alterada após a criação.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Registros, saldos, histórico, metas e configurações voltarão ao estado deste backup. As alterações feitas após a data dele serão substituídas. Você pode recuperar os dados atuais usando o backup anterior à restauração, salvo automaticamente.",
   "Restoring…": "Restaurando…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "As exportações em CSV servem apenas de referência. Use um backup JSON verificado para restaurar esta conta.",
-  "Record history": "Histórico do registro",
-  "No recorded edits yet. History starts when this feature is enabled.": "Ainda não há edições registradas. O histórico começa quando este recurso é ativado.",
   "Record details updated": "Detalhes do registro atualizados",
   "This record changed since you opened it. Reload it before saving.": "Este registro mudou desde que você o abriu. Recarregue-o antes de salvar.",
   "The app database needs an update before records can be saved.": "O banco de dados do aplicativo precisa de uma atualização antes que os registros possam ser salvos.",
@@ -2619,5 +2616,9 @@
   "All other income": "Demais receitas",
   "All other expenses": "Demais despesas",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "Histórico de alterações",
+  "No changes yet.": "Ainda não há alterações.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Os pagamentos mensais caem neste dia de cada mês. Não pode ser posterior a um pagamento registrado.",
+  "The start date cannot be after a recorded payment.": "A data de início não pode ser posterior a um pagamento registrado."
 }

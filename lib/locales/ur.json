@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "اس لین دین کے لیے استعمال ہونے والا نقد اکاؤنٹ منتخب کریں۔ نقد بیلنس اور بقایا اصل رقم ایک ساتھ بدلتے ہیں؛ اصل رقم آمدنی یا خرچ نہیں ہے۔",
   "Choose a cash account in the record currency.": "ریکارڈ کی کرنسی میں نقد اکاؤنٹ منتخب کریں۔",
   "Enter transactions on or after the latest cash balance date.": "تازہ ترین نقد بیلنس کی تاریخ یا اس کے بعد لین دین درج کریں۔",
-  "The start date is fixed once the record is saved to preserve its history.": "ریکارڈ محفوظ ہونے کے بعد اس کی تاریخ برقرار رکھنے کے لیے شروع کی تاریخ طے ہو جاتی ہے۔",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "یہ قرض یا لون کب شروع ہوا۔ اس تاریخ پر بقایا اصل رقم درج کریں، پھر بعد کی واپسیاں ٹریکر میں درج کریں۔",
   "Check the start and due dates.": "شروع اور آخری تاریخیں چیک کریں۔",
   "The start date cannot change after creation.": "شروع کی تاریخ بنانے کے بعد تبدیل نہیں ہو سکتی۔",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "ریکارڈ، بیلنس، تاریخ، اہداف اور ترتیبات اس بیک اپ پر واپس آ جائیں گی۔ اس کی تاریخ کے بعد کی گئی تبدیلیاں بدل دی جائیں گی۔ آپ خود بخود محفوظ ہونے والے بحالی سے پہلے کے بیک اپ سے موجودہ ڈیٹا واپس لا سکتے ہیں۔",
   "Restoring…": "بحال ہو رہا ہے…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "CSV برآمدات صرف حوالے کے لیے ہیں۔ اس اکاؤنٹ کو بحال کرنے کے لیے تصدیق شدہ JSON بیک اپ استعمال کریں۔",
-  "Record history": "ریکارڈ کی تاریخ",
-  "No recorded edits yet. History starts when this feature is enabled.": "ابھی کوئی درج شدہ ترمیم نہیں۔ تاریخ اس فیچر کے فعال ہونے سے شروع ہوتی ہے۔",
   "Record details updated": "ریکارڈ کی تفصیلات اپ ڈیٹ ہوئیں",
   "This record changed since you opened it. Reload it before saving.": "آپ کے کھولنے کے بعد یہ ریکارڈ بدل گیا ہے۔ محفوظ کرنے سے پہلے اسے دوبارہ لوڈ کریں۔",
   "The app database needs an update before records can be saved.": "ریکارڈ محفوظ کرنے سے پہلے ایپ کے ڈیٹا بیس کو اپ ڈیٹ کی ضرورت ہے۔",
@@ -2619,5 +2616,9 @@
   "All other income": "باقی تمام آمدنی",
   "All other expenses": "باقی تمام اخراجات",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "تبدیلیوں کی تاریخ",
+  "No changes yet.": "ابھی کوئی تبدیلی نہیں۔",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "ماہانہ ادائیگیاں ہر مہینے اسی دن ہوتی ہیں۔ یہ کسی درج شدہ ادائیگی کے بعد نہیں ہو سکتی۔",
+  "The start date cannot be after a recorded payment.": "شروع کی تاریخ کسی درج شدہ ادائیگی کے بعد نہیں ہو سکتی۔"
 }

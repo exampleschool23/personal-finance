@@ -22,6 +22,7 @@ import { ArchivedFold, OccurrenceRow, PlanRows, useDueLabel } from './recurring-
 import { useScheduleDeletion } from './delete-schedule-dialog';
 import { useColumnsFit } from '@/hooks/use-columns-fit';
 import { useRecurringDetails } from './recurring-details';
+import { paymentsFrom } from '@/lib/payment-account';
 import { AddRecurringMenu, type RecurringKind } from './add-recurring-menu';
 
 /** The Recurring page's views, switched from tabs beside its title: the month as a list or a calendar, subscriptions and reminders. */
@@ -70,8 +71,8 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onEdit
  const payDebt = (record: RecurringItem['record']) => setOperation({ action: record.kind === 'Mortgage' ? 'mortgage' : 'repayment', target_id: record.id, date: today, amount: 0 });
  // A recorded occurrence takes another payment, starting at what is still to come.
  const pay = (item: RecurringItem) => item.installment ? payDebt(item.record) : setOperation({ action: 'occurrence', target_id: item.record.id, date: item.date, ...(item.status === 'paid' ? { extra: true, amount: Math.max(Math.ceil(item.amount - (item.recorded ?? item.amount)), 0) } : { amount: item.amount }) });
- // Tapping a row shows its history and totals; Edit is in its ⋯ menu and in the dialog.
- const details = useRecurringDetails(data, today, onEdit, pay);
+ // Tapping a row shows its history and totals; Edit is in its ⋯ menu and Record payment on the row.
+ const details = useRecurringDetails(data, today);
  const archive = onArchive && ((target: ArchiveTarget, archived = true) => run(() => onArchive(target, archived)));
  const archived = archivedSchedules(data.records);
  const deletion = useScheduleDeletion(data, onDelete);
@@ -124,7 +125,7 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onEdit
   </>}
   {details.dialog}
   {deletion.dialog}
-  {operation && <AccountOperation operation={operation} records={data.records} save={save} onClose={() => setOperation(null)}/>}
+  {operation && <AccountOperation operation={operation} records={data.records} activity={paymentsFrom(data.activity, data.debtPayments)} save={save} onClose={() => setOperation(null)}/>}
  </>;
 }
 

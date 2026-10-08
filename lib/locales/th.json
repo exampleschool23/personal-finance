@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "เลือกบัญชีเงินสดที่ใช้สำหรับธุรกรรมนี้ ยอดเงินสดและเงินต้นคงค้างจะเปลี่ยนพร้อมกัน เงินต้นไม่ใช่รายรับหรือรายจ่าย",
   "Choose a cash account in the record currency.": "เลือกบัญชีเงินสดในสกุลเงินของรายการ",
   "Enter transactions on or after the latest cash balance date.": "ป้อนธุรกรรมตรงกับหรือหลังวันที่ยอดเงินสดล่าสุด",
-  "The start date is fixed once the record is saved to preserve its history.": "วันที่เริ่มต้นจะถูกล็อกเมื่อบันทึกรายการเพื่อรักษาประวัติ",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "วันที่หนี้หรือเงินกู้นี้เริ่มต้น ป้อนเงินต้นคงค้าง ณ วันนั้น แล้วบันทึกการชำระคืนครั้งถัดไปใน \"ตัวติดตาม\"",
   "Check the start and due dates.": "ตรวจสอบวันที่เริ่มต้นและวันครบกำหนด",
   "The start date cannot change after creation.": "ไม่สามารถเปลี่ยนวันที่เริ่มต้นหลังสร้างแล้ว",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "รายการ ยอดคงเหลือ ประวัติ เป้าหมาย และการตั้งค่าจะกลับไปเป็นตามข้อมูลสำรองนี้ การเปลี่ยนแปลงหลังวันที่ดังกล่าวจะถูกแทนที่ คุณกู้คืนข้อมูลปัจจุบันได้จากข้อมูลสำรองก่อนกู้คืนที่บันทึกไว้โดยอัตโนมัติ",
   "Restoring…": "กำลังกู้คืน…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "การส่งออก CSV ใช้เพื่อการอ้างอิง ใช้ข้อมูลสำรอง JSON ที่ตรวจสอบแล้วเพื่อกู้คืนบัญชีนี้",
-  "Record history": "ประวัติรายการ",
-  "No recorded edits yet. History starts when this feature is enabled.": "ยังไม่มีการแก้ไขที่บันทึกไว้ ประวัติจะเริ่มเมื่อเปิดใช้ฟีเจอร์นี้",
   "Record details updated": "อัปเดตรายละเอียดรายการแล้ว",
   "This record changed since you opened it. Reload it before saving.": "รายการนี้เปลี่ยนแปลงตั้งแต่คุณเปิด โปรดโหลดใหม่ก่อนบันทึก",
   "The app database needs an update before records can be saved.": "ฐานข้อมูลของแอปต้องมีการอัปเดตก่อนจึงจะบันทึกรายการได้",
@@ -2619,5 +2616,9 @@
   "All other income": "รายได้อื่นทั้งหมด",
   "All other expenses": "ค่าใช้จ่ายอื่นทั้งหมด",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "ประวัติการเปลี่ยนแปลง",
+  "No changes yet.": "ยังไม่มีการเปลี่ยนแปลง",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "การชำระรายเดือนตรงกับวันนี้ของทุกเดือน ต้องไม่อยู่หลังการชำระที่บันทึกไว้",
+  "The start date cannot be after a recorded payment.": "วันเริ่มต้นต้องไม่อยู่หลังการชำระที่บันทึกไว้"
 }

@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Seleziona il conto di cassa usato per questa transazione. Il saldo di cassa e il capitale residuo cambiano insieme; il capitale non è un’entrata né una spesa.",
   "Choose a cash account in the record currency.": "Scegli un conto di cassa nella valuta della voce.",
   "Enter transactions on or after the latest cash balance date.": "Inserisci le transazioni alla data dell’ultimo saldo di cassa o successivamente.",
-  "The start date is fixed once the record is saved to preserve its history.": "La data di inizio è fissa una volta salvata la voce, per preservarne la cronologia.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Quando è iniziato questo debito o prestito. Inserisci il capitale residuo a quella data, poi registra i rimborsi successivi nel Monitoraggio.",
   "Check the start and due dates.": "Controlla le date di inizio e di scadenza.",
   "The start date cannot change after creation.": "La data di inizio non può cambiare dopo la creazione.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Voci, saldi, cronologia, obiettivi e impostazioni torneranno a questo backup. Le modifiche successive alla sua data verranno sostituite. Puoi recuperare i dati attuali con il backup pre-ripristino salvato automaticamente.",
   "Restoring…": "Ripristino in corso…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "Le esportazioni CSV servono come riferimento. Usa un backup JSON verificato per ripristinare questo account.",
-  "Record history": "Cronologia della voce",
-  "No recorded edits yet. History starts when this feature is enabled.": "Ancora nessuna modifica registrata. La cronologia inizia quando questa funzione è attiva.",
   "Record details updated": "Dettagli della voce aggiornati",
   "This record changed since you opened it. Reload it before saving.": "Questa voce è cambiata dopo che l’hai aperta. Ricaricala prima di salvare.",
   "The app database needs an update before records can be saved.": "Il database dell’app richiede un aggiornamento prima di poter salvare le voci.",
@@ -2619,5 +2616,9 @@
   "All other income": "Tutte le altre entrate",
   "All other expenses": "Tutte le altre spese",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "Cronologia delle modifiche",
+  "No changes yet.": "Ancora nessuna modifica.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "I pagamenti mensili cadono in questo giorno di ogni mese. Non può essere successiva a un pagamento registrato.",
+  "The start date cannot be after a recorded payment.": "La data di inizio non può essere successiva a un pagamento registrato."
 }

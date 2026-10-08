@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Chọn tài khoản tiền mặt dùng cho giao dịch này. Số dư tiền mặt và dư nợ gốc thay đổi cùng nhau; tiền gốc không phải thu nhập hay chi phí.",
   "Choose a cash account in the record currency.": "Hãy chọn tài khoản tiền mặt cùng tiền tệ với bản ghi.",
   "Enter transactions on or after the latest cash balance date.": "Hãy nhập giao dịch từ ngày số dư tiền mặt gần nhất trở đi.",
-  "The start date is fixed once the record is saved to preserve its history.": "Ngày bắt đầu được cố định sau khi lưu bản ghi để bảo toàn lịch sử.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Thời điểm khoản nợ hoặc khoản vay này bắt đầu. Hãy nhập dư nợ gốc vào ngày đó, sau đó ghi nhận các khoản trả nợ về sau trong Trình theo dõi.",
   "Check the start and due dates.": "Hãy kiểm tra ngày bắt đầu và ngày đến hạn.",
   "The start date cannot change after creation.": "Không thể đổi ngày bắt đầu sau khi tạo.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Bản ghi, số dư, lịch sử, mục tiêu và cài đặt sẽ trở về như trong bản sao lưu này. Các thay đổi sau ngày sao lưu sẽ bị thay thế. Bạn có thể khôi phục dữ liệu hiện tại bằng bản sao lưu trước khi khôi phục được lưu tự động.",
   "Restoring…": "Đang khôi phục…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "Tệp xuất CSV chỉ để tham khảo. Hãy dùng bản sao lưu JSON đã xác minh để khôi phục tài khoản này.",
-  "Record history": "Lịch sử bản ghi",
-  "No recorded edits yet. History starts when this feature is enabled.": "Chưa có chỉnh sửa nào được ghi nhận. Lịch sử bắt đầu khi tính năng này được bật.",
   "Record details updated": "Đã cập nhật chi tiết bản ghi",
   "This record changed since you opened it. Reload it before saving.": "Bản ghi này đã thay đổi kể từ khi bạn mở. Hãy tải lại trước khi lưu.",
   "The app database needs an update before records can be saved.": "Cơ sở dữ liệu ứng dụng cần được cập nhật trước khi lưu bản ghi.",
@@ -2619,5 +2616,9 @@
   "All other income": "Mọi khoản thu khác",
   "All other expenses": "Mọi khoản chi khác",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "Lịch sử thay đổi",
+  "No changes yet.": "Chưa có thay đổi nào.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Khoản thanh toán hằng tháng rơi vào ngày này mỗi tháng. Ngày này không được sau một khoản thanh toán đã ghi.",
+  "The start date cannot be after a recorded payment.": "Ngày bắt đầu không được sau một khoản thanh toán đã ghi."
 }

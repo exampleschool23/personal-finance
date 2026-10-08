@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "اختر الحساب النقدي المستخدم في هذه المعاملة. يتغير الرصيد النقدي وأصل الدين المستحق معًا؛ وأصل الدين ليس دخلًا ولا مصروفًا.",
   "Choose a cash account in the record currency.": "اختر حسابًا نقديًا بعملة السجل.",
   "Enter transactions on or after the latest cash balance date.": "أدخل المعاملات في تاريخ آخر رصيد نقدي أو بعده.",
-  "The start date is fixed once the record is saved to preserve its history.": "يُثبَّت تاريخ البدء بمجرد حفظ السجل للحفاظ على سجله.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "متى بدأ هذا الدين أو القرض. أدخل أصل الدين المستحق في ذلك التاريخ، ثم سجّل السداد اللاحق في المتتبّع.",
   "Check the start and due dates.": "تحقق من تاريخَي البدء والاستحقاق.",
   "The start date cannot change after creation.": "لا يمكن تغيير تاريخ البدء بعد الإنشاء.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "ستعود السجلات والأرصدة والسجل والأهداف والإعدادات إلى هذه النسخة الاحتياطية. ستُستبدل التغييرات التي أُجريت بعد تاريخها. يمكنك استرداد البيانات الحالية باستخدام النسخة الاحتياطية السابقة للاستعادة المحفوظة تلقائيًا.",
   "Restoring…": "جارٍ الاستعادة…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "ملفات CSV المصدَّرة للرجوع إليها فقط. استخدم نسخة JSON احتياطية موثَّقة لاستعادة هذا الحساب.",
-  "Record history": "سجل التعديلات",
-  "No recorded edits yet. History starts when this feature is enabled.": "لا تعديلات مسجَّلة بعد. يبدأ السجل عند تفعيل هذه الميزة.",
   "Record details updated": "تم تحديث تفاصيل السجل",
   "This record changed since you opened it. Reload it before saving.": "تغيّر هذا السجل منذ فتحته. أعد تحميله قبل الحفظ.",
   "The app database needs an update before records can be saved.": "تحتاج قاعدة بيانات التطبيق إلى تحديث قبل أن يمكن حفظ السجلات.",
@@ -2619,5 +2616,9 @@
   "All other income": "بقية الدخل",
   "All other expenses": "بقية المصروفات",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "سجل التغييرات",
+  "No changes yet.": "لا توجد تغييرات بعد.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "تُستحق الدفعات الشهرية في هذا اليوم من كل شهر. لا يمكن أن يكون بعد دفعة مسجلة.",
+  "The start date cannot be after a recorded payment.": "لا يمكن أن يكون تاريخ البدء بعد دفعة مسجلة."
 }

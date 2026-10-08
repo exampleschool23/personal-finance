@@ -2,7 +2,7 @@ import { daysBetween, monthDays, monthEnd, shiftDay } from './calendar-days';
 import { archivedIn, scheduleDates, income, type Entry } from './finance';
 import { expensePlanTotals, type ExpensePlan } from './expense-plans';
 import { amountIn } from './money';
-import { installmentDates, installmentsFrom, isRecurringCashFlow, laterPayments, paidInstallmentMonths, scheduleAssets, scheduleStart, settledOccurrences, type DebtPayment, type Occurrence } from './planning';
+import { installmentDates, installmentsFrom, isRecurringCashFlow, laterPayments, paidInstallmentAmounts, paidInstallmentMonths, scheduleAssets, scheduleStart, settledOccurrences, type DebtPayment, type Occurrence } from './planning';
 
 export type RecurringStatus = 'paid' | 'skipped' | 'due' | 'overdue';
 /** `installment` is a loan's monthly payment; it is paid by a repayment or mortgage payment in its month. */
@@ -52,11 +52,14 @@ export function occurrencesBetween(records: Entry[], occurrences: Occurrence[], 
    items.push({ key, record, date, status: done ?? (date < today && date >= installmentsFrom(record) ? 'overdue' : 'due'), direction: income.includes(record.kind) ? 'income' : 'expense', amount: Number(record.amount), recorded: done === 'paid' ? recorded.get(key) : undefined });
   }
  }
+ // A loan month counts what its payments actually paid: a $450 payment does not settle a $1,600 installment in full.
+ const paidAmounts = debtPayments && paidInstallmentAmounts(debtPayments, currencyOf);
  if (paid) for (const record of records) {
   const start = installmentsFrom(record);
   for (const date of installmentDates(record, start > from ? start : from, to)) {
    if (date === record.date) continue;
-   items.push({ key: record.id + ':installment:' + date, record, date, status: paid.has(record.id + ':' + date.slice(0, 7)) ? 'paid' : date < today ? 'overdue' : 'due', direction: 'expense', amount: Number(record.estimated_monthly_payment), installment: true });
+   const month = record.id + ':' + date.slice(0, 7), settled = paid.has(month);
+   items.push({ key: record.id + ':installment:' + date, record, date, status: settled ? 'paid' : date < today ? 'overdue' : 'due', direction: 'expense', amount: Number(record.estimated_monthly_payment), recorded: settled ? paidAmounts?.get(month) : undefined, installment: true });
   }
  }
  return items.sort((a, b) => a.date.localeCompare(b.date) || a.record.name.localeCompare(b.record.name));

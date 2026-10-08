@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Pilih rekening kas yang digunakan untuk transaksi ini. Saldo kas dan pokok tertunggak berubah bersamaan; pokok bukan pemasukan atau pengeluaran.",
   "Choose a cash account in the record currency.": "Pilih rekening kas dalam mata uang catatan.",
   "Enter transactions on or after the latest cash balance date.": "Masukkan transaksi pada atau setelah tanggal saldo kas terakhir.",
-  "The start date is fixed once the record is saved to preserve its history.": "Tanggal mulai ditetapkan setelah catatan disimpan untuk menjaga riwayatnya.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Kapan utang atau pinjaman ini dimulai. Masukkan pokok yang tertunggak pada tanggal itu, lalu catat pelunasan berikutnya di Pelacak.",
   "Check the start and due dates.": "Periksa tanggal mulai dan jatuh tempo.",
   "The start date cannot change after creation.": "Tanggal mulai tidak dapat diubah setelah dibuat.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Catatan, saldo, riwayat, tujuan, dan pengaturan akan kembali ke cadangan ini. Perubahan setelah tanggalnya akan diganti. Anda dapat memulihkan data saat ini menggunakan cadangan sebelum pemulihan yang disimpan otomatis.",
   "Restoring…": "Memulihkan…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "Ekspor CSV hanya untuk referensi. Gunakan cadangan JSON terverifikasi untuk memulihkan akun ini.",
-  "Record history": "Riwayat catatan",
-  "No recorded edits yet. History starts when this feature is enabled.": "Belum ada pengeditan tercatat. Riwayat dimulai saat fitur ini diaktifkan.",
   "Record details updated": "Detail catatan diperbarui",
   "This record changed since you opened it. Reload it before saving.": "Catatan ini berubah sejak Anda membukanya. Muat ulang sebelum menyimpan.",
   "The app database needs an update before records can be saved.": "Database aplikasi perlu diperbarui sebelum catatan dapat disimpan.",
@@ -2619,5 +2616,9 @@
   "All other income": "Semua pendapatan lainnya",
   "All other expenses": "Semua pengeluaran lainnya",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "Riwayat perubahan",
+  "No changes yet.": "Belum ada perubahan.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Pembayaran bulanan jatuh pada tanggal ini setiap bulan. Tidak boleh setelah pembayaran yang tercatat.",
+  "The start date cannot be after a recorded payment.": "Tanggal mulai tidak boleh setelah pembayaran yang tercatat."
 }

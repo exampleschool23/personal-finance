@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "בחרו את חשבון המזומן ששימש לעסקה זו. יתרת המזומן והקרן הפתוחה משתנות יחד; קרן אינה הכנסה או הוצאה.",
   "Choose a cash account in the record currency.": "בחרו חשבון מזומן במטבע הרשומה.",
   "Enter transactions on or after the latest cash balance date.": "הזינו עסקאות בתאריך יתרת המזומן האחרונה או אחריו.",
-  "The start date is fixed once the record is saved to preserve its history.": "תאריך ההתחלה קבוע לאחר שמירת הרשומה כדי לשמר את ההיסטוריה שלה.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "מתי החוב או ההלוואה התחילו. הזינו את הקרן הפתוחה בתאריך זה, ולאחר מכן תעדו החזרים מאוחרים יותר במעקב.",
   "Check the start and due dates.": "בדקו את תאריכי ההתחלה והיעד.",
   "The start date cannot change after creation.": "לא ניתן לשנות את תאריך ההתחלה לאחר היצירה.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "רשומות, יתרות, היסטוריה, יעדים והגדרות יחזרו לגיבוי זה. שינויים שנעשו לאחר תאריכו יוחלפו. אפשר לשחזר את הנתונים הנוכחיים באמצעות גיבוי טרום-השחזור שנשמר אוטומטית.",
   "Restoring…": "משחזר…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "ייצואי CSV נועדו לעיון. השתמשו בגיבוי JSON מאומת כדי לשחזר חשבון זה.",
-  "Record history": "היסטוריית רשומה",
-  "No recorded edits yet. History starts when this feature is enabled.": "אין עדיין עריכות שנרשמו. ההיסטוריה מתחילה כשתכונה זו מופעלת.",
   "Record details updated": "פרטי הרשומה עודכנו",
   "This record changed since you opened it. Reload it before saving.": "רשומה זו השתנתה מאז שפתחתם אותה. טענו אותה מחדש לפני השמירה.",
   "The app database needs an update before records can be saved.": "מסד הנתונים של האפליקציה דורש עדכון לפני שאפשר לשמור רשומות.",
@@ -2619,5 +2616,9 @@
   "All other income": "כל שאר ההכנסות",
   "All other expenses": "כל שאר ההוצאות",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "היסטוריית שינויים",
+  "No changes yet.": "אין עדיין שינויים.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "התשלומים החודשיים חלים ביום זה בכל חודש. התאריך אינו יכול להיות אחרי תשלום שנרשם.",
+  "The start date cannot be after a recorded payment.": "תאריך ההתחלה אינו יכול להיות אחרי תשלום שנרשם."
 }

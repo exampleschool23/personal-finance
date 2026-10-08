@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "이 거래에 사용할 현금 계좌를 선택하세요. 현금 잔액과 남은 원금이 함께 바뀌며, 원금은 수입이나 지출이 아니에요.",
   "Choose a cash account in the record currency.": "기록 통화의 현금 계좌를 선택하세요.",
   "Enter transactions on or after the latest cash balance date.": "최근 현금 잔액 날짜 이후의 거래를 입력하세요.",
-  "The start date is fixed once the record is saved to preserve its history.": "내역 보존을 위해 기록을 저장한 뒤에는 시작일을 바꿀 수 없어요.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "이 부채 또는 대출이 시작된 날짜예요. 그 날짜의 남은 원금을 입력하고, 이후 상환은 트래커에 기록하세요.",
   "Check the start and due dates.": "시작일과 만기일을 확인해 주세요.",
   "The start date cannot change after creation.": "시작일은 생성 후에 변경할 수 없어요.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "기록, 잔액, 내역, 목표, 설정이 이 백업 상태로 돌아가요. 백업 날짜 이후의 변경 사항은 대체돼요. 자동 저장된 복원 전 백업으로 현재 데이터를 되살릴 수 있어요.",
   "Restoring…": "복원 중…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "CSV 내보내기는 참고용이에요. 이 계정을 복원하려면 검증된 JSON 백업을 사용하세요.",
-  "Record history": "기록 내역",
-  "No recorded edits yet. History starts when this feature is enabled.": "아직 기록된 수정이 없어요. 이 기능을 켠 시점부터 내역이 쌓여요.",
   "Record details updated": "기록 세부 정보 수정됨",
   "This record changed since you opened it. Reload it before saving.": "이 기록을 연 이후 내용이 바뀌었어요. 저장하기 전에 다시 불러오세요.",
   "The app database needs an update before records can be saved.": "기록을 저장하려면 앱 데이터베이스 업데이트가 필요해요.",
@@ -2619,5 +2616,9 @@
   "All other income": "나머지 모든 수입",
   "All other expenses": "나머지 모든 지출",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "변경 기록",
+  "No changes yet.": "아직 변경 사항이 없습니다.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "월 납부일은 매월 이 날짜입니다. 기록된 납부일 이후로 설정할 수 없습니다.",
+  "The start date cannot be after a recorded payment.": "시작일은 기록된 납부일 이후일 수 없습니다."
 }

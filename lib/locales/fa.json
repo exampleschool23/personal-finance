@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "حساب نقدی مورد استفاده برای این تراکنش را انتخاب کنید. موجودی نقدی و اصل معوق با هم تغییر می‌کنند؛ اصل پول درآمد یا هزینه نیست.",
   "Choose a cash account in the record currency.": "یک حساب نقدی به ارز این مورد انتخاب کنید.",
   "Enter transactions on or after the latest cash balance date.": "تراکنش‌ها را در تاریخ آخرین موجودی نقدی یا پس از آن وارد کنید.",
-  "The start date is fixed once the record is saved to preserve its history.": "برای حفظ تاریخچه، تاریخ شروع پس از ذخیرهٔ مورد ثابت می‌شود.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "زمان شروع این بدهی یا وام. اصل معوق در آن تاریخ را وارد کنید، سپس بازپرداخت‌های بعدی را در ردیاب ثبت کنید.",
   "Check the start and due dates.": "تاریخ‌های شروع و سررسید را بررسی کنید.",
   "The start date cannot change after creation.": "تاریخ شروع پس از ایجاد قابل تغییر نیست.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "اطلاعات، موجودی‌ها، تاریخچه، اهداف و تنظیمات به این پشتیبان بازمی‌گردند. تغییرات پس از تاریخ آن جایگزین می‌شوند. می‌توانید اطلاعات فعلی را با پشتیبان پیش از بازیابی که خودکار ذخیره شده بازیابی کنید.",
   "Restoring…": "در حال بازیابی…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "خروجی‌های CSV برای مرجع هستند. برای بازیابی این حساب از پشتیبان JSON تأییدشده استفاده کنید.",
-  "Record history": "تاریخچهٔ مورد",
-  "No recorded edits yet. History starts when this feature is enabled.": "هنوز ویرایشی ثبت نشده است. تاریخچه از زمان فعال شدن این قابلیت آغاز می‌شود.",
   "Record details updated": "جزئیات مورد به‌روز شد",
   "This record changed since you opened it. Reload it before saving.": "این مورد از زمان باز کردن شما تغییر کرده است. پیش از ذخیره آن را دوباره بارگذاری کنید.",
   "The app database needs an update before records can be saved.": "پایگاه داده برنامه پیش از ذخیرهٔ اطلاعات به به‌روزرسانی نیاز دارد.",
@@ -2619,5 +2616,9 @@
   "All other income": "سایر درآمدها (بقیه)",
   "All other expenses": "سایر هزینه‌ها (بقیه)",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "تاریخچه تغییرات",
+  "No changes yet.": "هنوز تغییری نیست.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "پرداخت‌های ماهانه در این روز از هر ماه است. نمی‌تواند بعد از یک پرداخت ثبت‌شده باشد.",
+  "The start date cannot be after a recorded payment.": "تاریخ شروع نمی‌تواند بعد از یک پرداخت ثبت‌شده باشد."
 }

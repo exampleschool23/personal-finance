@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "এই লেনদেনে ব্যবহৃত নগদ অ্যাকাউন্ট নির্বাচন করুন। নগদ ব্যালেন্স ও বকেয়া আসল একসাথে পরিবর্তিত হয়; আসল আয় বা ব্যয় নয়।",
   "Choose a cash account in the record currency.": "রেকর্ডের মুদ্রার একটি নগদ অ্যাকাউন্ট বেছে নিন।",
   "Enter transactions on or after the latest cash balance date.": "সর্বশেষ নগদ ব্যালেন্সের তারিখ বা তার পরের তারিখে লেনদেন লিখুন।",
-  "The start date is fixed once the record is saved to preserve its history.": "রেকর্ড সংরক্ষণের পর ইতিহাস অক্ষুণ্ণ রাখতে শুরুর তারিখ নির্দিষ্ট হয়ে যায়।",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "এই ঋণ বা লোন কখন শুরু হয়েছিল। সেই তারিখে বকেয়া আসল লিখুন, তারপর পরবর্তী পরিশোধ ট্র্যাকারে রেকর্ড করুন।",
   "Check the start and due dates.": "শুরু ও নির্ধারিত তারিখ পরীক্ষা করুন।",
   "The start date cannot change after creation.": "তৈরি করার পর শুরুর তারিখ পরিবর্তন করা যায় না।",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "রেকর্ড, ব্যালেন্স, ইতিহাস, লক্ষ্য ও সেটিংস এই ব্যাকআপের অবস্থায় ফিরে যাবে। এর তারিখের পরে করা পরিবর্তন প্রতিস্থাপিত হবে। স্বয়ংক্রিয়ভাবে সংরক্ষিত পুনরুদ্ধারের আগের ব্যাকআপ দিয়ে আপনি বর্তমান ডেটা ফিরে পেতে পারবেন।",
   "Restoring…": "পুনরুদ্ধার হচ্ছে…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "CSV এক্সপোর্ট শুধু রেফারেন্সের জন্য। এই অ্যাকাউন্ট পুনরুদ্ধারে একটি যাচাইকৃত JSON ব্যাকআপ ব্যবহার করুন।",
-  "Record history": "রেকর্ডের ইতিহাস",
-  "No recorded edits yet. History starts when this feature is enabled.": "এখনও কোনো রেকর্ড করা সম্পাদনা নেই। এই ফিচার চালু হলে ইতিহাস শুরু হয়।",
   "Record details updated": "রেকর্ডের বিবরণ হালনাগাদ হয়েছে",
   "This record changed since you opened it. Reload it before saving.": "আপনি রেকর্ডটি খোলার পর এটি পরিবর্তিত হয়েছে। সংরক্ষণের আগে এটি রিলোড করুন।",
   "The app database needs an update before records can be saved.": "রেকর্ড সংরক্ষণের আগে অ্যাপের ডেটাবেস হালনাগাদ প্রয়োজন।",
@@ -2619,5 +2616,9 @@
   "All other income": "বাকি সব আয়",
   "All other expenses": "বাকি সব খরচ",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "পরিবর্তনের ইতিহাস",
+  "No changes yet.": "এখনও কোনো পরিবর্তন নেই।",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "মাসিক কিস্তি প্রতি মাসের এই দিনে পড়ে। এটি কোনো রেকর্ড করা পেমেন্টের পরে হতে পারে না।",
+  "The start date cannot be after a recorded payment.": "শুরুর তারিখ কোনো রেকর্ড করা পেমেন্টের পরে হতে পারে না।"
 }

@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "この取引に使用する現金口座を選択してください。現金残高と未払い元本は同時に変動します。元本は収入でも支出でもありません。",
   "Choose a cash account in the record currency.": "記録の通貨の現金口座を選択してください。",
   "Enter transactions on or after the latest cash balance date.": "最新の現金残高の日付以降の取引を入力してください。",
-  "The start date is fixed once the record is saved to preserve its history.": "記録の履歴を保つため、開始日は保存後に固定されます。",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "この債務またはローンが始まった日です。その日の未払い元本を入力し、以降の返済はトラッカーで記録してください。",
   "Check the start and due dates.": "開始日と期日を確認してください。",
   "The start date cannot change after creation.": "開始日は、作成後に変更できません。",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "記録、残高、履歴、目標、設定が、このバックアップの状態に戻ります。その日付以降の変更は置き換えられます。自動保存された復元前のバックアップで、現在のデータを復旧できます。",
   "Restoring…": "復元中…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "CSVのエクスポートは参照用です。このアカウントを復元するには、検証済みのJSONバックアップを使用してください。",
-  "Record history": "記録の履歴",
-  "No recorded edits yet. History starts when this feature is enabled.": "記録された編集はまだありません。履歴は、この機能が有効になった時点から始まります。",
   "Record details updated": "記録の詳細を更新しました",
   "This record changed since you opened it. Reload it before saving.": "この記録は、開いてから変更されました。保存する前に再読み込みしてください。",
   "The app database needs an update before records can be saved.": "記録を保存するには、アプリのデータベースの更新が必要です。",
@@ -2619,5 +2616,9 @@
   "All other income": "その他すべての収入",
   "All other expenses": "その他すべての支出",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "変更履歴",
+  "No changes yet.": "まだ変更はありません。",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "毎月の支払いは各月のこの日になります。記録済みの支払いより後にはできません。",
+  "The start date cannot be after a recorded payment.": "開始日を記録済みの支払いより後にすることはできません。"
 }

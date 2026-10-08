@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Sélectionnez le compte d’espèces utilisé pour cette transaction. Le solde en espèces et le capital restant dû évoluent ensemble ; le capital n’est ni un revenu ni une dépense.",
   "Choose a cash account in the record currency.": "Choisissez un compte d’espèces dans la devise de l’enregistrement.",
   "Enter transactions on or after the latest cash balance date.": "Saisissez les transactions à la date du dernier solde en espèces ou après.",
-  "The start date is fixed once the record is saved to preserve its history.": "La date de début est figée une fois l’enregistrement sauvegardé afin de préserver son historique.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Date de début de cette dette ou de ce prêt. Saisissez le capital restant dû à cette date, puis enregistrez les remboursements ultérieurs dans Suivi.",
   "Check the start and due dates.": "Vérifiez les dates de début et d’échéance.",
   "The start date cannot change after creation.": "La date de début ne peut pas être modifiée après la création.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Les enregistrements, soldes, historique, objectifs et paramètres reviendront à l’état de cette sauvegarde. Les modifications effectuées après sa date seront remplacées. Vous pourrez récupérer les données actuelles grâce à la sauvegarde d’avant restauration enregistrée automatiquement.",
   "Restoring…": "Restauration…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "Les exports CSV sont fournis à titre de référence. Utilisez une sauvegarde JSON vérifiée pour restaurer ce compte.",
-  "Record history": "Historique de l’enregistrement",
-  "No recorded edits yet. History starts when this feature is enabled.": "Aucune modification enregistrée pour le moment. L’historique commence lorsque cette fonctionnalité est activée.",
   "Record details updated": "Détails de l’enregistrement mis à jour",
   "This record changed since you opened it. Reload it before saving.": "Cet enregistrement a changé depuis son ouverture. Rechargez-le avant d’enregistrer.",
   "The app database needs an update before records can be saved.": "La base de données de l’application doit être mise à jour avant de pouvoir enregistrer des données.",
@@ -2619,5 +2616,9 @@
   "All other income": "Autres revenus (reste)",
   "All other expenses": "Autres dépenses (reste)",
   "{business}: {name}": "{business} : {name}",
-  "{label}: {date}": "{label} : {date}"
+  "{label}: {date}": "{label} : {date}",
+  "Change history": "Historique des modifications",
+  "No changes yet.": "Aucune modification pour le moment.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Les paiements mensuels tombent ce jour-là chaque mois. Elle ne peut pas être postérieure à un paiement enregistré.",
+  "The start date cannot be after a recorded payment.": "La date de début ne peut pas être postérieure à un paiement enregistré."
 }

@@ -3,6 +3,7 @@ import { Fragment, useMemo, useState } from 'react';
 import { CalendarCheck, TriangleAlert, Wallet, X } from 'lucide-react';
 import { Area, CartesianGrid, ComposedChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useLanguage } from '@/components/language-provider';
+import { ChartGradient, chartAxis, chartGrid, chartHeight, chartMargin, chartTooltip, chartValueAxis, leadArea, moneyTick, monthTick, referenceLine } from '@/components/presentation-foundation/chart';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { Count } from '@/components/presentation-foundation/count';
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
@@ -23,7 +24,7 @@ import { cashForecast, forecastHorizons, readAdjustments, type CashForecast, typ
 import { niceAxis } from '@/lib/chart-scale';
 import { depositToday } from '@/lib/deposit-interest';
 import type { ExpensePlan } from '@/lib/expense-plans';
-import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatSignedMoney } from '@/lib/format';
+import { formatDate, formatMoney, formatMonthYear, formatNumber, formatSignedMoney } from '@/lib/format';
 import type { PlanningData } from '@/lib/planning';
 import { RollingText } from '@/components/presentation-foundation/rolling-text';
 
@@ -120,15 +121,15 @@ function ForecastChart({ series }: { series: ForecastSeries }) {
  const axis = niceAxis(series.points.map(point => point.balance));
  // One tick per month start keeps the axis readable at every horizon.
  const ticks = series.points.filter((point, index) => index === 0 || point.date.endsWith('-01')).map(point => point.date);
- return <div className="forecast-chart"><ResponsiveContainer width="100%" height={260}>
-  <ComposedChart data={series.points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} accessibilityLayer>
-   <defs><linearGradient id="forecast-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--primary)" stopOpacity={.22}/><stop offset="100%" stopColor="var(--primary)" stopOpacity={0}/></linearGradient></defs>
-   <CartesianGrid stroke="var(--border)" strokeDasharray="2 6" vertical={false}/>
-   <XAxis dataKey="date" ticks={ticks} tickFormatter={date => formatMonthShort(String(date), locale)} axisLine={false} tickLine={false} tickMargin={10} minTickGap={24}/>
-   <YAxis width="auto" domain={axis.domain} ticks={axis.ticks} tickFormatter={amount => formatCompactMoney(Number(amount), series.currency, locale)} axisLine={false} tickLine={false} tickMargin={8}/>
-   {axis.domain[0] < 0 && <ReferenceLine y={0} stroke="var(--negative)" strokeDasharray="4 4"/>}
-   <Tooltip isAnimationActive={false} labelFormatter={date => formatDate(String(date), locale)} formatter={amount => [formatMoney(Number(amount), series.currency, locale), t('Projected balance')]} contentStyle={{ background: 'var(--background)', borderColor: 'var(--border)', borderRadius: 12 }}/>
-   <Area type="stepAfter" dataKey="balance" stroke="var(--primary)" strokeWidth={2.5} fill="url(#forecast-fill)" dot={false} animationDuration={700}/>
+ return <div className="forecast-chart"><ResponsiveContainer width="100%" height={chartHeight.regular}>
+  <ComposedChart data={series.points} margin={chartMargin} accessibilityLayer>
+   <ChartGradient id="forecast-fill"/>
+   <CartesianGrid {...chartGrid}/>
+   <XAxis dataKey="date" ticks={ticks} tickFormatter={monthTick(locale)} minTickGap={24} {...chartAxis}/>
+   <YAxis domain={axis.domain} ticks={axis.ticks} tickFormatter={moneyTick(series.currency, locale)} {...chartValueAxis}/>
+   {axis.domain[0] < 0 && <ReferenceLine y={0} {...referenceLine} stroke="var(--negative)"/>}
+   <Tooltip {...chartTooltip} labelFormatter={date => formatDate(String(date), locale)} formatter={amount => [formatMoney(Number(amount), series.currency, locale), t('Projected balance')]}/>
+   <Area type="stepAfter" dataKey="balance" {...leadArea('forecast-fill')}/>
   </ComposedChart>
  </ResponsiveContainer></div>;
 }

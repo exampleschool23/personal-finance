@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Выберите денежный счёт для этой операции. Остаток средств и основной долг изменятся вместе; основной долг не считается доходом или расходом.",
   "Choose a cash account in the record currency.": "Выберите денежный счёт в валюте записи.",
   "Enter transactions on or after the latest cash balance date.": "Указывайте дату операции не раньше последнего остатка денежного счёта.",
-  "The start date is fixed once the record is saved to preserve its history.": "Дата начала фиксируется при сохранении записи, чтобы сохранить историю.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Дата возникновения долга или кредита. Укажите основной долг на эту дату, а последующие погашения запишите в трекере.",
   "Check the start and due dates.": "Проверьте дату начала и срок погашения.",
   "The start date cannot change after creation.": "Дату начала нельзя изменить после создания записи.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Записи, остатки, история, цели и настройки вернутся к состоянию копии. Более поздние изменения будут заменены. Текущие данные можно вернуть из автоматически сохранённой копии до восстановления.",
   "Restoring…": "Восстановление…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "CSV предназначен для просмотра. Для восстановления используйте проверенную резервную копию JSON.",
-  "Record history": "История записи",
-  "No recorded edits yet. History starts when this feature is enabled.": "Изменений пока нет. История ведётся с момента включения этой функции.",
   "Record details updated": "Данные записи обновлены",
   "This record changed since you opened it. Reload it before saving.": "Запись изменилась после открытия. Загрузите её заново перед сохранением.",
   "The app database needs an update before records can be saved.": "Для сохранения записей необходимо обновить базу данных.",
@@ -2619,5 +2616,9 @@
   "All other income": "Прочие доходы (остальное)",
   "All other expenses": "Прочие расходы (остальное)",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "История изменений",
+  "No changes yet.": "Изменений пока нет.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Ежемесячные платежи приходятся на этот день каждого месяца. Дата не может быть позже записанного платежа.",
+  "The start date cannot be after a recorded payment.": "Дата начала не может быть позже записанного платежа."
 }

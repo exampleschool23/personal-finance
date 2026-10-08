@@ -9,7 +9,7 @@ const {planningReadFilters,currentReviewMonth}=loadTS('lib/planning-reads.ts');
 const {inScheduleCurrency}=loadTS('lib/schedule-currency.ts');
 const {categoryNameTaken,duplicateCategoryMessage}=loadTS('lib/category-names.ts');
 const {signBackup}=loadTS('lib/backup-signature.ts');
-const {debtPaymentsFrom,withExtraPayments}=loadTS('lib/planning.ts');
+const {debtPaymentsFrom,debtPaymentsInLoanCurrency,withExtraPayments}=loadTS('lib/planning.ts');
 import {instrumentFor} from '../lib/market.ts';
 import {exportCSV,parseCSV,mapCSV,FINANCE_RECORD_CSV_COLUMNS} from '../lib/csv.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
@@ -69,7 +69,7 @@ test('CSV backup exports owner records and cannot be misread as a signed bank st
 test('planning reads include holding accounts and computed deposit income exactly once',async()=>{
  const deposit={id:'deposit',kind:'Deposit',amount:1000,estimated_monthly_income:999};
  let fail=false;
- const get=apiFunction('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts','planningReadFilters','currentReviewMonth','debtPaymentsFrom','withExtraPayments','inScheduleCurrency',compile('app/api/planning/route.ts')+';return GET;')(instrumentFor,z,async()=>({token:'owner'}),()=>{},()=>true,async(table,token)=>{assert.equal(token,'owner');return table==='finance_records'?[deposit,{id:'cash',kind:'Cash',amount:20}]:table==='holding_accounts'?[{id:'broker',kind:'Stock'}]:table==='mortgage_payments'?[{mortgage_id:'flat',paid_on:'2026-10-01'}]:[];},()=>true,async token=>{assert.equal(token,'owner');if(fail)throw Error('missing history');return [{id:'deposit',estimated_monthly_income:10}];},planningReadFilters,currentReviewMonth,debtPaymentsFrom,withExtraPayments,inScheduleCurrency);
+ const get=apiFunction('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts','planningReadFilters','currentReviewMonth','debtPaymentsFrom','debtPaymentsInLoanCurrency','withExtraPayments','inScheduleCurrency',compile('app/api/planning/route.ts')+';return GET;')(instrumentFor,z,async()=>({token:'owner'}),()=>{},()=>true,async(table,token)=>{assert.equal(token,'owner');return table==='finance_records'?[deposit,{id:'cash',kind:'Cash',amount:20}]:table==='holding_accounts'?[{id:'broker',kind:'Stock'}]:table==='mortgage_payments'?[{mortgage_id:'flat',paid_on:'2026-10-01'}]:[];},()=>true,async token=>{assert.equal(token,'owner');if(fail)throw Error('missing history');return [{id:'deposit',estimated_monthly_income:10}];},planningReadFilters,currentReviewMonth,debtPaymentsFrom,debtPaymentsInLoanCurrency,withExtraPayments,inScheduleCurrency);
  const result=await (await get()).json();
  assert.deepEqual(result.debtPayments,[{record_id:'flat',date:'2026-10-01'}]);
  assert.equal(result.records.length,2);assert.equal(result.records[0].estimated_monthly_income,10);assert.equal(result.records[0].amount,1000);assert.equal(result.holdingAccounts.length,1);

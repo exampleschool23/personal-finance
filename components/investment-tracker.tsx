@@ -19,6 +19,7 @@ import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
 import { formatAccountOption, formatMoney, formatDate, formatMonthYear } from '@/lib/format';
+import { chartAxis, chartDot, chartGrid, chartHeight, chartLegend, chartLine, chartMargin, chartTooltip, chartValueAxis, leadLine } from '@/components/presentation-foundation/chart';
 import { historyCashDelta, historySeries, historyChartDate, historyEventLabel, historyUpdateTypes, isLendingKind, type HistoryUpdateType, type HistoryEvent } from '@/lib/investment-history';
 import { depositInterest, depositProjection, depositToday } from '@/lib/deposit-interest';
 import { AssetMovementDialog, type MovementDraft } from '@/components/planning/asset-movement-dialog';
@@ -131,15 +132,15 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
     {!cash&&<div><small>{t(mortgage?'Interest paid':lending?'Additions recorded':'Expense paid')}</small><strong>{money(mortgage?stats.interest:lending?stats.additions:stats.expenses)}</strong></div>}
    </div>
    {stats.points.length>0&&<div className="tracker-chart" aria-label={t('Investment history chart')}>
-    <ResponsiveContainer width="100%" height={270}><LineChart data={stats.points} margin={{top:12,right:18,bottom:12,left:18}} accessibilityLayer>
-     <CartesianGrid stroke="var(--border)" strokeDasharray="3 3"/>
-     <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin','dataMax']} tickFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} minTickGap={80}/>
-     <YAxis width={120} tickFormatter={money}/>
-     <Tooltip labelFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} formatter={v=>money(Number(v))} contentStyle={{background:'var(--background)',borderColor:'var(--border)',borderRadius:10}}/>
-     <Legend/>
-     <Line type="linear" dataKey="balance" name={t(lending?(record.kind==='Money lent'?'Amount owed to you':'Outstanding balance'):cash||deposit?'Account balance':'Value (your share)')} stroke="var(--primary)" strokeWidth={2} dot={{r:3}} connectNulls={false}/>
-     {!lending&&!cash&&<Line type="stepAfter" dataKey="contributions" name={t('Net contributions recorded')} stroke={categoryColor('Property')} strokeDasharray="5 4" dot={false}/>}
-     {!lending&&!cash&&<Line type="stepAfter" dataKey="receipts" name={t('Income received')} stroke={categoryColor('Deposit')} dot={false}/>}
+    <ResponsiveContainer width="100%" height={chartHeight.regular}><LineChart data={stats.points} margin={chartMargin} accessibilityLayer>
+     <CartesianGrid {...chartGrid}/>
+     <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin','dataMax']} tickFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} minTickGap={80} {...chartAxis}/>
+     <YAxis tickFormatter={money} {...chartValueAxis}/>
+     <Tooltip {...chartTooltip} labelFormatter={date=>formatDate(historyChartDate(Number(date)),locale)} formatter={v=>money(Number(v))}/>
+     <Legend {...chartLegend}/>
+     <Line type="linear" dataKey="balance" name={t(lending?(record.kind==='Money lent'?'Amount owed to you':'Outstanding balance'):cash||deposit?'Account balance':'Value (your share)')} {...leadLine} dot={chartDot} connectNulls={false}/>
+     {!lending&&!cash&&<Line type="stepAfter" dataKey="contributions" name={t('Net contributions recorded')} {...chartLine} stroke={categoryColor('Property')} strokeDasharray="5 4"/>}
+     {!lending&&!cash&&<Line type="stepAfter" dataKey="receipts" name={t('Income received')} {...chartLine} stroke={categoryColor('Deposit')}/>}
     </LineChart></ResponsiveContainer>
    </div>}
    <p className="muted tracker-help">{t(lending?'History starts with a balance snapshot. Additions increase the balance; principal repayments reduce it.':cash?'History shows confirmed balances and account movements.':'History starts with a current snapshot. Add older values and contributions if known. Recorded contributions are not a complete purchase cost unless you enter them all.')}</p>

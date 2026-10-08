@@ -4,7 +4,7 @@ import { loadTS } from './helpers/load-ts.mjs';
 const { monthOccurrences, monthPlans, scheduleHistory, onlyDirection, archivedSchedules, recurringSummary, daysFrom, calendarWeeks } = loadTS('lib/recurring.ts');
 const { monthly } = loadTS('lib/finance.ts');
 const { planningSchemas } = loadTS('lib/planning-schemas.ts');
-const { upcomingPayments, debtPaymentsFrom, withExtraPayments, paymentSchedules, chooseSchedule } = loadTS('lib/planning.ts');
+const { upcomingPayments, debtPaymentsFrom, debtPaymentsInLoanCurrency, withExtraPayments, paymentSchedules, chooseSchedule } = loadTS('lib/planning.ts');
 const { monthlyIncomeCards } = loadTS('lib/monthly-income-cards.ts');
 
 const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Monthly', notes: '', ...extra });
@@ -55,6 +55,27 @@ test('a loan with a monthly payment is due on its start day each month until the
  assert.deepEqual(summary.expense, { done: 250.4, remaining: 900 });
  const due = upcomingPayments(records, [], '2026-10-15', '2026-11-30', payments).filter(item => item.type === 'installment');
  assert.deepEqual(due.map(item => [item.record.id, item.date, item.overdue, item.amount]), [['loan', '2026-09-30', true, 250.4], ['flat', '2026-10-12', true, 900], ['flat', '2026-11-12', false, 900], ['loan', '2026-11-30', false, 250.4]]);
+});
+
+test('a loan month counts what its payments paid, so a partial mortgage payment never shows the installment paid in full', async () => {
+ const mortgage = record('home', 'Mortgage', 'Mortgage', 200000, '2046-01-01', { frequency: 'Once', opened_on: '2026-01-17', estimated_monthly_payment: 1600 });
+ const cash = record('cash', 'Wallet', 'Cash', 5000, '2026-01-01', { frequency: 'Once' }), som = record('som', 'Som', 'Cash', 1e7, '2026-01-01', { frequency: 'Once', currency: 'UZS' });
+ const loan = record('loan', 'Loan', 'Loan', 900, '2027-01-01', { frequency: 'Once', opened_on: '2026-01-20', estimated_monthly_payment: 100 });
+ const currencyOf = new Map([mortgage, cash, som, loan].map(item => [item.id, item.currency]));
+ // A mortgage payment from an account is in both tables under one id and counts once: $0 principal and $450 interest.
+ const payments = debtPaymentsFrom([{ id: 'p1', action: 'mortgage', target_id: 'home', occurred_on: '2026-10-08', amount: 0, fee: 450, account_id: 'cash' }, { id: 'r1', action: 'repayment', target_id: 'loan', occurred_on: '2026-10-02', amount: 1270000, fee: 0, account_id: 'som' }], [{ id: 'p1', mortgage_id: 'home', paid_on: '2026-10-08', principal: 0, interest: 450 }], currencyOf);
+ assert.deepEqual(payments, [{ record_id: 'loan', date: '2026-10-02', amount: 1270000, currency: 'UZS', account_id: 'som' }, { record_id: 'home', date: '2026-10-08', amount: 450, currency: 'USD', account_id: 'cash' }], 'each payment keeps the account that paid it');
+ const counted = await debtPaymentsInLoanCurrency(payments, currencyOf, async (from, to) => { assert.deepEqual([from, to], ['UZS', 'USD']); return 1 / 12700; });
+ const october = monthOccurrences([mortgage, cash, som, loan], [], '2026-10', '2026-10-08', counted);
+ assert.deepEqual(october.map(item => [item.record.id, item.status, item.recorded]), [['home', 'paid', 450], ['loan', 'paid', 100]]);
+ assert.deepEqual(recurringSummary(october, amount => amount).expense, { done: 550, remaining: 0 });
+ // A debt is counted the same way, and a second payment in the month adds to the first (QA REC-035).
+ const debt = record('debt', 'Card debt', 'Debt', 800, '2027-01-01', { frequency: 'Once', opened_on: '2026-01-05', estimated_monthly_payment: 300 });
+ const debtMonth = debtPaymentsFrom([{ id: 'd1', action: 'repayment', target_id: 'debt', occurred_on: '2026-10-01', amount: 100, fee: 0, account_id: 'cash' }, { id: 'd2', action: 'repayment', target_id: 'debt', occurred_on: '2026-10-06', amount: 150, fee: 20, account_id: 'cash' }], [], new Map([['debt', 'USD'], ['cash', 'USD']]));
+ assert.deepEqual(monthOccurrences([debt, cash], [], '2026-10', '2026-10-08', debtMonth).map(item => [item.status, item.recorded, item.amount]), [['paid', 270, 300]]);
+ // A payment without a usable rate is unknown, never counted under the loan's label.
+ const missing = await debtPaymentsInLoanCurrency(payments, currencyOf, async () => { throw Error('no rate'); });
+ assert.equal(monthOccurrences([mortgage, cash, som, loan], [], '2026-10', '2026-10-08', missing).find(item => item.record.id === 'loan').recorded, null);
 });
 
 test('due labels count whole days and the calendar starts weeks on Monday', () => {

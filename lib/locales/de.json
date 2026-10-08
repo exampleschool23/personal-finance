@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Wählen Sie das Bargeldkonto für diese Transaktion. Bargeldsaldo und offene Hauptforderung ändern sich gemeinsam; die Hauptforderung ist weder Einnahme noch Ausgabe.",
   "Choose a cash account in the record currency.": "Wählen Sie ein Bargeldkonto in der Währung des Eintrags.",
   "Enter transactions on or after the latest cash balance date.": "Erfassen Sie Transaktionen am oder nach dem letzten Bargeldsaldodatum.",
-  "The start date is fixed once the record is saved to preserve its history.": "Das Startdatum steht nach dem Speichern des Eintrags fest, damit der Verlauf erhalten bleibt.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Wann diese Schuld oder dieser Kredit begann. Geben Sie die an diesem Datum offene Hauptforderung ein und erfassen Sie spätere Rückzahlungen im Tracker.",
   "Check the start and due dates.": "Prüfen Sie Start- und Fälligkeitsdatum.",
   "The start date cannot change after creation.": "Das Startdatum kann nach der Erstellung nicht geändert werden.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Einträge, Salden, Verlauf, Ziele und Einstellungen kehren zu dieser Sicherung zurück. Änderungen nach ihrem Datum werden ersetzt. Sie können die aktuellen Daten mit der automatisch gespeicherten Sicherung vor der Wiederherstellung zurückholen.",
   "Restoring…": "Wiederherstellung läuft…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "CSV-Exporte dienen als Referenz. Verwenden Sie eine verifizierte JSON-Sicherung, um dieses Konto wiederherzustellen.",
-  "Record history": "Eintragsverlauf",
-  "No recorded edits yet. History starts when this feature is enabled.": "Noch keine erfassten Änderungen. Der Verlauf beginnt, wenn diese Funktion aktiviert ist.",
   "Record details updated": "Eintragsdetails aktualisiert",
   "This record changed since you opened it. Reload it before saving.": "Dieser Eintrag hat sich geändert, seit Sie ihn geöffnet haben. Laden Sie ihn neu, bevor Sie speichern.",
   "The app database needs an update before records can be saved.": "Die App-Datenbank benötigt ein Update, bevor Einträge gespeichert werden können.",
@@ -2619,5 +2616,9 @@
   "All other income": "Alle übrigen Einnahmen",
   "All other expenses": "Alle übrigen Ausgaben",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "Änderungsverlauf",
+  "No changes yet.": "Noch keine Änderungen.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Monatliche Zahlungen fallen auf diesen Tag jedes Monats. Er darf nicht nach einer erfassten Zahlung liegen.",
+  "The start date cannot be after a recorded payment.": "Das Startdatum darf nicht nach einer erfassten Zahlung liegen."
 }

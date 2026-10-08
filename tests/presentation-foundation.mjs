@@ -130,8 +130,8 @@ test('segmented control presses exactly the current option and reports the chose
 
 test('series legend presses the visible series and toggles a key in or out of the hidden list',()=>{
  const {SeriesLegend,toggleKey}=load('series-legend.tsx');
- const items=[{key:'salary',label:'Salary',swatch:React.createElement('i')},{key:'estimate',label:'Estimate',swatch:React.createElement('i',{className:'income-estimate-key'})}];
- assert.equal(render(SeriesLegend,{items,hidden:['estimate'],onToggle:()=>{}}),'<div class="comparison-legend"><button type="button" aria-pressed="true"><i></i>Salary</button><button type="button" aria-pressed="false"><i class="income-estimate-key"></i>Estimate</button></div>');
+ const items=[{key:'salary',label:'Salary',swatch:React.createElement('i')},{key:'estimate',label:'Estimate',swatch:React.createElement('i',{className:'chart-planned-key'})}];
+ assert.equal(render(SeriesLegend,{items,hidden:['estimate'],onToggle:()=>{}}),'<div class="comparison-legend"><button type="button" aria-pressed="true"><i></i>Salary</button><button type="button" aria-pressed="false"><i class="chart-planned-key"></i>Estimate</button></div>');
  assert.match(render(SeriesLegend,{items,hidden:[],onToggle:()=>{},className:'goal-chart-legend'}),/^<div class="comparison-legend goal-chart-legend">/);
  const toggled=[];
  SeriesLegend({items,hidden:[],onToggle:key=>toggled.push(key)}).props.children[1].props.onClick();
@@ -380,4 +380,16 @@ test('the scheduled payment field offers each schedule by id, with its amount an
  assert.equal(html,'<label>Scheduled payment<select><option value="">Not a scheduled payment</option><option value="r1" selected="">Flat rent · $700 · Every month</option></select></label>');
  // Nothing to offer: no field at all.
  assert.equal(render(ScheduledPaymentField,{schedules:[],value:null,onChange(){}}),'');
+});
+
+test('every chart takes its look from the shared chart kit, never inline styles', () => {
+ const charts = fs.globSync('components/**/*.tsx').filter(file => /from 'recharts'/.test(fs.readFileSync(file, 'utf8')));
+ assert.ok(charts.length >= 10, 'finds the charts');
+ for (const file of charts) {
+  const source = fs.readFileSync(file, 'utf8');
+  assert.match(source, /from '@\/components\/presentation-foundation\/chart'/, file + ' imports the chart kit');
+  assert.match(source, /<CartesianGrid \{\.\.\.chartGrid\}\/>|<Sankey|<PieChart/, file + ' uses the shared grid');
+  // Styling the kit owns: grid dashes, axis lines, tooltip boxes, bar widths, animation and gradients.
+  assert.doesNotMatch(source, /strokeDasharray="(2 6|3 3|3 5)"|contentStyle=|axisLine=\{false\}|tickLine=\{false\}|maxBarSize=|isAnimationActive=\{false\}|<linearGradient/, file + ' keeps chart styling in the kit');
+ }
 });

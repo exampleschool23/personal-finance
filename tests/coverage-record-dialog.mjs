@@ -256,7 +256,7 @@ test('money lent records the borrower, the date lent and an optional due date af
  assert.equal(d.state.editing.name,'Grace');
 });
 
-test('debts take a start date that is fixed once saved and written out as a date',t=>{
+test('debts take a start date, which a saved debt can still set or correct: its monthly payments fall on that day',t=>{
  const fresh=dialog(t,record('loan','Loan',{date:'2026-09-15'}),{recordKinds:finance.liabilities});
  const start=fresh.labelled('Start date','DatePicker');
  assert.equal(start.props.value,'2026-09-30');assert.equal(start.props.max,'2026-09-15','a debt cannot start after its due date');
@@ -270,11 +270,13 @@ test('debts take a start date that is fixed once saved and written out as a date
  assert.equal(future.labelled('Due / maturity date','DatePicker').props.min,'2026-09-30');
  const saved=record('loan','Loan',{opened_on:'2025-03-04'});
  const existing=dialog(t,saved,{rows:[saved]});
- const fixed=existing.r.find(node=>node.type==='div'&&node.children[0]?.type==='span'&&text(node.children[0])==='Start date');
- assert.equal(text(fixed.children[1]),'4 March 2025');
- assert.equal(existing.labelled('Due / maturity date','DatePicker').props.min,'2025-03-04');
+ const editable=existing.labelled('Start date','DatePicker');
+ assert.equal(editable.props.value,'2025-03-04');
+ assert.match(text(existing.r.find(byType('small','Monthly payments fall'))),/It cannot be after a recorded payment\./);
+ existing.r.fire(editable,'onChange','2024-03-17');assert.equal(existing.state.editing.opened_on,'2024-03-17');
+ assert.equal(existing.labelled('Due / maturity date','DatePicker').props.min,'2024-03-17');
  const undated=dialog(t,{...saved,opened_on:null},{rows:[saved]});
- assert.equal(text(undated.r.find(node=>node.type==='div'&&text(node.children[0]??'')==='Start date').children[1]),'—','a missing start date shows a dash');
+ assert.equal(undated.labelled('Start date','DatePicker').props.value,'','a saved debt without a start date can be given one');
  assert.equal(undated.labelled('Due / maturity date','DatePicker').props.min,undefined);
  const mortgage=dialog(t,record('home-loan','Mortgage'));
  mortgage.r.fire(mortgage.labelled('Estimated monthly mortgage payment','FormattedNumberInput'),'onValueChange',900);

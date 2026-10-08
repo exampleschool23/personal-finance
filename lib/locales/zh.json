@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "请选择用于此交易的现金账户。现金余额和未偿本金将同时变动；本金不属于收入或支出。",
   "Choose a cash account in the record currency.": "请选择与记录币种一致的现金账户。",
   "Enter transactions on or after the latest cash balance date.": "请录入不早于最新现金余额日期的交易。",
-  "The start date is fixed once the record is saved to preserve its history.": "记录保存后，开始日期即固定，以保留其历史。",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "此债务或贷款的开始时间。请输入当日的未偿本金，之后的还款请在“追踪”中记录。",
   "Check the start and due dates.": "请检查开始日期和到期日。",
   "The start date cannot change after creation.": "开始日期创建后无法更改。",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "记录、余额、历史、目标和设置将回到此备份的状态。其日期之后所做的更改将被替换。您可以使用自动保存的恢复前备份找回当前数据。",
   "Restoring…": "正在恢复…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "CSV 导出仅供参考。请使用已验证的 JSON 备份来恢复此账户。",
-  "Record history": "记录历史",
-  "No recorded edits yet. History starts when this feature is enabled.": "暂无已记录的编辑。历史从启用此功能时开始。",
   "Record details updated": "记录详情已更新",
   "This record changed since you opened it. Reload it before saving.": "此记录自您打开后已发生变化。请在保存前重新加载。",
   "The app database needs an update before records can be saved.": "保存记录前，应用数据库需要更新。",
@@ -2619,5 +2616,9 @@
   "All other income": "其余收入",
   "All other expenses": "其余支出",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "更改记录",
+  "No changes yet.": "暂无更改。",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "每月还款日为每月的这一天。不能晚于已记录的还款。",
+  "The start date cannot be after a recorded payment.": "开始日期不能晚于已记录的还款。"
 }

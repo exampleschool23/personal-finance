@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Chagua akaunti ya fedha taslimu iliyotumika kwa muamala huu. Salio la fedha taslimu na mkuu uliosalia hubadilika pamoja; mkuu si mapato wala matumizi.",
   "Choose a cash account in the record currency.": "Chagua akaunti ya fedha taslimu yenye sarafu ya rekodi.",
   "Enter transactions on or after the latest cash balance date.": "Weka miamala kwenye tarehe ya mwisho ya salio la fedha taslimu au baada yake.",
-  "The start date is fixed once the record is saved to preserve its history.": "Tarehe ya kuanza hurekebishwa rekodi inapohifadhiwa ili kuhifadhi historia yake.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Wakati deni au mkopo huu ulipoanza. Weka mkuu uliosalia katika tarehe hiyo, kisha rekodi marejesho ya baadaye kwenye Kifuatiliaji.",
   "Check the start and due dates.": "Kagua tarehe za kuanza na mwisho.",
   "The start date cannot change after creation.": "Tarehe ya kuanza haiwezi kubadilika baada ya kuundwa.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Rekodi, salio, historia, malengo na mipangilio vitarudi kwenye nakala hifadhi hii. Mabadiliko yaliyofanywa baada ya tarehe yake yatabadilishwa. Unaweza kurejesha data ya sasa kwa nakala hifadhi ya kabla ya kurejesha iliyohifadhiwa kiotomatiki.",
   "Restoring…": "Inarejesha…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "Uhamishaji wa CSV ni kwa marejeleo. Tumia nakala hifadhi ya JSON iliyothibitishwa kurejesha akaunti hii.",
-  "Record history": "Historia ya rekodi",
-  "No recorded edits yet. History starts when this feature is enabled.": "Bado hakuna mabadiliko yaliyorekodiwa. Historia huanza kipengele hiki kinapowashwa.",
   "Record details updated": "Maelezo ya rekodi yamesasishwa",
   "This record changed since you opened it. Reload it before saving.": "Rekodi hii imebadilika tangu uifungue. Ipakie upya kabla ya kuhifadhi.",
   "The app database needs an update before records can be saved.": "Hifadhidata ya programu inahitaji usasishaji kabla rekodi hazijahifadhiwa.",
@@ -2619,5 +2616,9 @@
   "All other income": "Mapato mengine yote",
   "All other expenses": "Matumizi mengine yote",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "Historia ya mabadiliko",
+  "No changes yet.": "Bado hakuna mabadiliko.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Malipo ya kila mwezi huangukia siku hii kila mwezi. Haiwezi kuwa baada ya malipo yaliyorekodiwa.",
+  "The start date cannot be after a recorded payment.": "Tarehe ya kuanza haiwezi kuwa baada ya malipo yaliyorekodiwa."
 }

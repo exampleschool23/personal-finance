@@ -1,32 +1,30 @@
 "use client";
 import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { chartAxis, chartGrid, chartHeight, chartMargin, chartTooltip, chartValueAxis, moneyTick, monthLabel, monthTick, plannedBar, recordedBar } from '@/components/presentation-foundation/chart';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
-import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { SeriesLegend, toggleKey } from '@/components/presentation-foundation/series-legend';
 import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
-import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/components/language-provider';
-import { frequencyLabels, type Entry } from '@/lib/finance';
-import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatPercent } from '@/lib/format';
+import { frequencyLabels } from '@/lib/finance';
+import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
 import type { PlanningData } from '@/lib/planning';
 import type { RecurringItem } from '@/lib/recurring';
 import { nextOccurrence, scheduleTrack } from '@/lib/recurring-history';
 import { useDueLabel } from './recurring-rows';
 import { BarChart3 } from 'lucide-react';
 
-type Props = { item: RecurringItem; data: PlanningData; today: string; onClose: () => void; onEdit?: (record: Entry) => void; onPay?: (item: RecurringItem) => void };
+type Props = { item: RecurringItem; data: PlanningData; today: string; onClose: () => void };
 type Track = ReturnType<typeof scheduleTrack>;
 
-/** The details dialog the Recurring list opens on a tap: `open` shows an occurrence's schedule, `dialog` renders it. Edit and Record payment close it first. */
-export function useRecurringDetails(data: PlanningData, today: string, onEdit: ((record: Entry) => void) | undefined, onPay: (item: RecurringItem) => void) {
+/** The details dialog the Recurring list opens on a tap: `open` shows an occurrence's schedule, `dialog` renders it. Edit and
+ * Record payment stay on the row, so the dialog only reads; its × closes it. */
+export function useRecurringDetails(data: PlanningData, today: string) {
  const [item, setItem] = useState<RecurringItem | null>(null);
- const close = () => setItem(null);
- const edit = onEdit && ((record: Entry) => { close(); onEdit(record); });
- return { open: setItem, dialog: item && <RecurringDetails item={item} data={data} today={today} onClose={close} onEdit={edit} onPay={next => { close(); onPay(next); }}/> };
+ return { open: setItem, dialog: item && <RecurringDetails item={item} data={data} today={today} onClose={() => setItem(null)}/> };
 }
 
 /** Month by month, what was recorded (solid) inside the outline of what was scheduled, so a short payment shows an unfilled top. */
@@ -36,16 +34,16 @@ function HistoryChart({ track, currency, fill, done }: { track: Track; currency:
  const money = (value: number) => formatMoney(value, currency, locale);
  const names: Record<string, string> = { recorded: done, scheduled: t('Scheduled payment') };
  return <>
-  <div className="portfolio-chart"><ResponsiveContainer width="100%" height={220}><BarChart data={track.points} accessibilityLayer margin={{ top: 12, right: 8, left: 0, bottom: 4 }}>
-   <CartesianGrid stroke="var(--border)" strokeOpacity={.6} strokeDasharray="2 6" vertical={false}/>
+  <div className="portfolio-chart"><ResponsiveContainer width="100%" height={chartHeight.compact}><BarChart data={track.points} accessibilityLayer margin={chartMargin}>
+   <CartesianGrid {...chartGrid}/>
    <XAxis xAxisId="scheduled" dataKey="month" hide/>
-   <XAxis xAxisId="recorded" dataKey="month" tickFormatter={month => formatMonthShort(String(month), locale)} minTickGap={16} axisLine={false} tickLine={false} tickMargin={10}/>
-   <YAxis width="auto" tickFormatter={amount => formatCompactMoney(Number(amount), currency, locale)} axisLine={false} tickLine={false} tickMargin={8}/>
-   <Tooltip cursor={{ fill: 'var(--accent)', fillOpacity: .45 }} labelFormatter={month => formatMonthYear(String(month), locale)} formatter={(amount, name) => [money(Number(amount)), names[String(name)] ?? name]} contentStyle={{ background: 'var(--background)', borderColor: 'var(--border)', borderRadius: 12 }}/>
-   {!hidden.includes('scheduled') && <Bar xAxisId="scheduled" dataKey="scheduled" name="scheduled" fill="transparent" stroke="var(--muted-foreground)" strokeDasharray="4 3" radius={[6, 6, 0, 0]} maxBarSize={28} isAnimationActive={false}/>}
-   {!hidden.includes('recorded') && <Bar xAxisId="recorded" dataKey="recorded" name="recorded" fill={fill} fillOpacity={.8} radius={[6, 6, 0, 0]} maxBarSize={28} isAnimationActive={false}/>}
+   <XAxis xAxisId="recorded" dataKey="month" tickFormatter={monthTick(locale)} minTickGap={16} {...chartAxis}/>
+   <YAxis tickFormatter={moneyTick(currency, locale)} {...chartValueAxis}/>
+   <Tooltip {...chartTooltip} labelFormatter={monthLabel(locale)} formatter={(amount, name) => [money(Number(amount)), names[String(name)] ?? name]}/>
+   {!hidden.includes('scheduled') && <Bar xAxisId="scheduled" dataKey="scheduled" name="scheduled" {...plannedBar}/>}
+   {!hidden.includes('recorded') && <Bar xAxisId="recorded" dataKey="recorded" name="recorded" {...recordedBar} fill={fill}/>}
   </BarChart></ResponsiveContainer></div>
-  <SeriesLegend items={[{ key: 'recorded', label: done, swatch: <i style={{ background: fill }}/> }, { key: 'scheduled', label: t('Scheduled payment'), swatch: <i className="recurring-details-key"/> }]} hidden={hidden} onToggle={key => setHidden(previous => toggleKey(previous, key))}/>
+  <SeriesLegend items={[{ key: 'recorded', label: done, swatch: <i style={{ background: fill }}/> }, { key: 'scheduled', label: t('Scheduled payment'), swatch: <i className="chart-planned-key"/> }]} hidden={hidden} onToggle={key => setHidden(previous => toggleKey(previous, key))}/>
  </>;
 }
 
@@ -65,8 +63,8 @@ function PaymentList({ items, currency, today, done, income }: { items: Recurrin
  </section>;
 }
 
-/** A scheduled income or bill at a glance: what came in or went out month by month against what was scheduled, the totals, and each past payment. Edit and Record payment sit at its foot. */
-export function RecurringDetails({ item, data, today, onClose, onEdit, onPay }: Props) {
+/** A scheduled income or bill at a glance: what came in or went out month by month against what was scheduled, the totals, and each past payment. */
+export function RecurringDetails({ item, data, today, onClose }: Props) {
  const { t, locale } = useLanguage();
  const dueLabel = useDueLabel();
  const [months, setMonths] = useState(12);
@@ -76,7 +74,6 @@ export function RecurringDetails({ item, data, today, onClose, onEdit, onPay }: 
  const money = (value: number) => formatMoney(value, record.currency, locale);
  const income = direction === 'income';
  const done = t(income ? 'Received' : 'Paid'), fill = income ? 'var(--positive)' : 'var(--foreground)';
- const early = next && !item.installment && next.date > today;
  return <Dialog open onOpenChange={open => { if (!open) onClose(); }}><DialogContent className="recurring-details sm:max-w-2xl">
   <header className="recurring-details-head"><CategoryIcon kind={record.kind}/><div><DialogTitle>{record.name}</DialogTitle><DialogDescription>{[t(frequencyLabels[item.installment ? 'Monthly' : record.frequency]), t(record.kind), money(item.amount)].join(' · ')}</DialogDescription></div></header>
   <StatTiles columns={3} label={t('Summary')}>
@@ -89,9 +86,5 @@ export function RecurringDetails({ item, data, today, onClose, onEdit, onPay }: 
    {track.scheduled > 0 ? <HistoryChart track={track} currency={record.currency} fill={fill} done={done}/> : <EmptyState icon={<BarChart3 aria-hidden="true"/>} description={t('Nothing recorded in this period.')}/>}
   </section>
   <PaymentList items={track.history} currency={record.currency} today={today} done={done} income={income}/>
-  <FormFooter onCancel={onClose} cancelLabel={t('Close')}>
-   {onEdit && <Button type="button" variant="outline" onClick={() => onEdit(record)}>{t('Edit')}</Button>}
-   {onPay && next && <Button type="button" disabled={early} title={early ? t('You can record it from {date}.', { date: formatDate(next.date, locale) }) : undefined} onClick={() => onPay(next)}>{t('Record payment')}</Button>}
-  </FormFooter>
  </DialogContent></Dialog>;
 }

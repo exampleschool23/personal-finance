@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Pilih akaun tunai yang digunakan untuk transaksi ini. Baki tunai dan prinsipal tertunggak berubah bersama; prinsipal bukan pendapatan atau perbelanjaan.",
   "Choose a cash account in the record currency.": "Pilih akaun tunai dalam mata wang rekod.",
   "Enter transactions on or after the latest cash balance date.": "Masukkan transaksi pada atau selepas tarikh baki tunai terkini.",
-  "The start date is fixed once the record is saved to preserve its history.": "Tarikh mula ditetapkan setelah rekod disimpan bagi mengekalkan sejarahnya.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Bila hutang atau pinjaman ini bermula. Masukkan prinsipal tertunggak pada tarikh itu, kemudian catat bayaran balik seterusnya dalam Penjejak.",
   "Check the start and due dates.": "Semak tarikh mula dan tarikh akhir.",
   "The start date cannot change after creation.": "Tarikh mula tidak boleh diubah selepas dicipta.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Rekod, baki, sejarah, matlamat dan tetapan akan kembali kepada sandaran ini. Perubahan selepas tarikhnya akan diganti. Anda boleh memulihkan data semasa menggunakan sandaran pra-pemulihan yang disimpan secara automatik.",
   "Restoring…": "Memulihkan…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "Eksport CSV adalah untuk rujukan. Gunakan sandaran JSON yang disahkan untuk memulihkan akaun ini.",
-  "Record history": "Sejarah rekod",
-  "No recorded edits yet. History starts when this feature is enabled.": "Belum ada suntingan direkodkan. Sejarah bermula apabila ciri ini diaktifkan.",
   "Record details updated": "Butiran rekod dikemas kini",
   "This record changed since you opened it. Reload it before saving.": "Rekod ini berubah sejak anda membukanya. Muat semula sebelum menyimpan.",
   "The app database needs an update before records can be saved.": "Pangkalan data aplikasi memerlukan kemas kini sebelum rekod boleh disimpan.",
@@ -2619,5 +2616,9 @@
   "All other income": "Semua pendapatan lain",
   "All other expenses": "Semua perbelanjaan lain",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "Sejarah perubahan",
+  "No changes yet.": "Belum ada perubahan.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Bayaran bulanan jatuh pada hari ini setiap bulan. Ia tidak boleh selepas bayaran yang direkodkan.",
+  "The start date cannot be after a recorded payment.": "Tarikh mula tidak boleh selepas bayaran yang direkodkan."
 }

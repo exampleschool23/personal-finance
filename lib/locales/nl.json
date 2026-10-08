@@ -723,7 +723,6 @@
   "Select the cash account used for this transaction. The cash balance and outstanding principal change together; principal is not income or an expense.": "Selecteer de contante rekening voor deze transactie. Het contante saldo en de openstaande hoofdsom veranderen samen; de hoofdsom is geen inkomen of uitgave.",
   "Choose a cash account in the record currency.": "Kies een contante rekening in de valuta van de post.",
   "Enter transactions on or after the latest cash balance date.": "Voer transacties in op of na de laatste datum van het contante saldo.",
-  "The start date is fixed once the record is saved to preserve its history.": "De startdatum ligt vast zodra de post is opgeslagen, om de geschiedenis te behouden.",
   "When this debt or loan began. Enter the principal outstanding on that date, then record later repayments in Tracker.": "Wanneer deze schuld of lening begon. Voer de openstaande hoofdsom op die datum in en registreer latere aflossingen in de Tracker.",
   "Check the start and due dates.": "Controleer de start- en vervaldatum.",
   "The start date cannot change after creation.": "De startdatum kan na aanmaak niet meer worden gewijzigd.",
@@ -1288,8 +1287,6 @@
   "Records, balances, history, goals and settings will return to this backup. Changes made after its date will be replaced. You can recover the current data using the automatically saved pre-restore backup.": "Posten, saldi, geschiedenis, doelen en instellingen keren terug naar deze back-up. Wijzigingen na de datum ervan worden vervangen. U kunt de huidige gegevens herstellen met de automatisch opgeslagen back-up van vóór het herstel.",
   "Restoring…": "Herstellen…",
   "CSV exports are for reference. Use a verified JSON backup to restore this account.": "CSV-exports dienen ter referentie. Gebruik een geverifieerde JSON-back-up om dit account te herstellen.",
-  "Record history": "Geschiedenis van post",
-  "No recorded edits yet. History starts when this feature is enabled.": "Nog geen geregistreerde bewerkingen. De geschiedenis begint wanneer deze functie is ingeschakeld.",
   "Record details updated": "Gegevens van post bijgewerkt",
   "This record changed since you opened it. Reload it before saving.": "Deze post is gewijzigd sinds u hem opende. Laad hem opnieuw voordat u opslaat.",
   "The app database needs an update before records can be saved.": "De app-database moet worden bijgewerkt voordat posten kunnen worden opgeslagen.",
@@ -2619,5 +2616,9 @@
   "All other income": "Alle overige inkomsten",
   "All other expenses": "Alle overige uitgaven",
   "{business}: {name}": "{business}: {name}",
-  "{label}: {date}": "{label}: {date}"
+  "{label}: {date}": "{label}: {date}",
+  "Change history": "Wijzigingsgeschiedenis",
+  "No changes yet.": "Nog geen wijzigingen.",
+  "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Maandelijkse betalingen vallen op deze dag van elke maand. De datum mag niet na een geregistreerde betaling liggen.",
+  "The start date cannot be after a recorded payment.": "De startdatum mag niet na een geregistreerde betaling liggen."
 }

@@ -13,7 +13,6 @@ import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
-import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
@@ -150,7 +149,7 @@ function GoalActivityForm({ data, goals, today, busy, save }: { data: PlanningDa
    <label>{t('Date')}<DatePicker value={date} max={today} onChange={value => { setDate(value); setSource(''); }}/></label>
    {type === 'transfer' && <label>{t('Destination goal')}<NativeSelect required value={target} onChange={event => setTarget(event.target.value)}><option value="">{t('Select goal')}</option>{goals.filter(item => item.id !== goalId && item.account_id === goal?.account_id).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</NativeSelect></label>}
    {type === 'contribution' && <label>{t('Link income (optional)')}<NativeSelect value={source} onChange={event => setSource(event.target.value)}><option value="">{t('None')}</option>{data.records.filter(record => record.account_id === goal?.account_id && record.currency === goal?.currency && record.date <= date && record.frequency === 'Once' && income.includes(record.kind)).map(record => <option key={record.id} value={record.id}>{record.name} · {formatMoney(record.amount, record.currency, locale)}</option>)}</NativeSelect>{exceedsIncome && linked && <small className="negative" role="alert">{t('Enter no more than the linked income: {amount}.', { amount: formatMoney(Number(linked.amount), linked.currency, locale) })}</small>}</label>}
-   <label className="goal-field-wide">{t('Notes (optional)')}<Input value={notes} maxLength={2000} onChange={event => setNotes(event.target.value)}/></label>
+   <label className="goal-field-wide">{t('Notes (optional)')}<textarea rows={2} value={notes} maxLength={2000} onChange={event => setNotes(event.target.value)}/></label>
   </fieldset>
   <div className="goal-activity-actions"><Button type="submit" disabled={busy || !goal || amount <= 0 || exceedsIncome || type === 'transfer' && !target}>{t(operation ? 'Retry' : 'Save')}</Button>{operation && !busy && <Button type="button" variant="outline" onClick={() => setOperation(null)}>{t('Edit details after checking activity')}</Button>}</div>
   {operation && !busy && <p className="muted">{t('Check goal activity before changing a request whose result is uncertain. Retry keeps the same operation identifier.')}</p>}

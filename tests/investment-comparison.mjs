@@ -52,7 +52,7 @@ test('comparison chart shows monetary values from the purchase-based comparison,
  assert.ok(source.includes('<InvestmentValueChart'));
  assert.ok(!/getInvestment(Portfolio|Comparison)/.test(source));
  const chart=fs.readFileSync('components/investment-value-chart.tsx','utf8');
- assert.ok(chart.includes('tickFormatter={amount=>formatCompactMoney(Number(amount),currency,locale)}'));
+ assert.ok(chart.includes('tickFormatter={moneyTick(currency,locale)}'),'the value axis shows money through the shared chart kit');
  assert.ok(chart.includes('money(Number(amount))'));
  // On phones a tap opens the details window, so no tooltip is drawn under the finger to flash through it.
  assert.ok(chart.includes('const tapOpensDetails=mobile&&!!onPointSelect;'));
