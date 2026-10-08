@@ -253,7 +253,8 @@ test('editing an existing linked receipt preserves its source without duplicate 
  let editing={id:'receipt',name:'Apartment',kind:'Rent income',income_source_id:'rental',currency:'USD',amount:500,date:'2026-09-18',frequency:'Once',notes:''};
  const original={...editing};
  const render=component('components/income-record-form.tsx','IncomeRecordForm');
- const props={currencies:['USD'],rows:[original],planning:{data:{records:[rental],categories:[]}},earningSources:{sources:[],loading:false,error:'',retry(){},save:async()=>{}},setEditing:value=>{editing=value;}};
+ // The dialog hands the form the stored record (also one from Transactions' own read, absent from rows).
+ const props={currencies:['USD'],rows:[],original,planning:{data:{records:[rental],categories:[]}},earningSources:{sources:[],loading:false,error:'',retry(){},save:async()=>{}},setEditing:value=>{editing=value;}};
  const tree=render.tree({...props,editing});
  assert.deepEqual(editing,original);
  assert.equal(find(tree,node=>node.type==='label'&&React.Children.toArray(node.props.children).includes('Linked rental')),undefined);

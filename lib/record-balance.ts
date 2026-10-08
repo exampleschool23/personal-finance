@@ -29,6 +29,19 @@ export function applyRecordChange(rows: Entry[], previous?: Entry, next?: Entry)
  return next ? [next, ...result] : result;
 }
 
+/** The list as the server will return it after `saved` was stored: the record in its place (a new one first) and its
+ * cash account moved by the change. When the account is not in the list, only the record changes. */
+export function withSavedRecord(rows: Entry[], saved: Entry): Entry[] {
+ const previous = rows.find(row => row.id === saved.id);
+ const next: Entry = { ...previous, ...saved };
+ let changed: Entry[];
+ try { changed = applyRecordChange(rows, previous, next); }
+ catch { return previous ? rows.map(row => row.id === saved.id ? next : row) : [next, ...rows]; }
+ if (!previous) return changed;
+ const byId = new Map(changed.map(row => [row.id, row]));
+ return rows.map(row => byId.get(row.id) ?? row);
+}
+
 /** The cash accounts money lent in `currency` can be paid from: only one in the loan's own currency. */
 export const lendingAccounts = (rows: readonly Entry[], currency: string) => rows.filter(row => row.kind === 'Cash' && row.currency === currency);
 

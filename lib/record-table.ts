@@ -59,3 +59,11 @@ export function storedEntry(record: Entry, sources: { history: readonly Entry[];
  const full = demo || record.record_count === undefined;
  return normalizeEntry(find(sources.history) || find(sources.planning) || find(sources.rows) || (full ? record : find(sources.summary) || record));
 }
+
+/** The stored version of the record a form edits: in the open page, else in the planning list, else the record as
+ * the dialog opened it when that was a saved one (a revision), as screens with their own reads (Transactions) hand
+ * it over. Undefined for a new draft. */
+export function savedRecord(id: string | undefined, rows: readonly Entry[], planning: readonly Entry[], opened?: Entry | null): Entry | undefined {
+ if (id === undefined) return undefined;
+ return rows.find(row => row.id === id) ?? planning.find(row => row.id === id) ?? (opened?.id === id && opened.revision != null ? opened : undefined);
+}

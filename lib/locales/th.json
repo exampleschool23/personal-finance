@@ -1046,6 +1046,7 @@
   "Archive": "เก็บถาวร",
   "Edit this schedule in Income sources.": "แก้ไขกำหนดการนี้ใน \"แหล่งรายได้\"",
   "Choose an income source": "เลือกแหล่งรายได้",
+  "Paused or no longer available": "หยุดชั่วคราวหรือไม่พร้อมใช้งานแล้ว",
   "Loading income sources…": "กำลังโหลดแหล่งรายได้…",
   "Choose an income source and record the amount received.": "เลือกแหล่งรายได้และบันทึกจำนวนเงินที่ได้รับ",
   "Choose a cash account": "เลือกบัญชีเงินสด",

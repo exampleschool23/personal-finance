@@ -296,3 +296,19 @@ test('the pure save rules and the table view behave as the provider relied on', 
  assert.deepEqual([{ settingsLoading: true }, { summaryLoaded: false }, { plansLoading: true }, { marketReady: false }].map(change => workspaceLoading({ ...ready, ...change })), [true, true, true, true]);
  assert.equal(workspaceLoading({ ...ready, demo: true, settingsLoading: true }), false);
 });
+
+test('a form finds the saved record outside the open page, so an edit in a filtered view keeps its source', () => {
+ const { savedRecord } = loadTS('lib/record-table.ts');
+ const rent = { id: 'rent', kind: 'Rent income', income_source_id: 'flat' };
+ // Filtered Transactions show planning records; the open page may not hold the record.
+ assert.equal(savedRecord('rent', [], [rent]), rent);
+ const paged = { ...rent, notes: 'page' };
+ assert.equal(savedRecord('rent', [paged], [rent]), paged);
+ assert.equal(savedRecord('draft', [paged], [rent]), undefined);
+ assert.equal(savedRecord(undefined, [paged], [rent]), undefined);
+ // Transactions reads its own list: the record the dialog opened, once saved, is the stored one; a draft is not.
+ const opened = { ...rent, revision: 1 };
+ assert.equal(savedRecord('rent', [], [], opened), opened);
+ assert.equal(savedRecord('rent', [], [], rent), undefined);
+ assert.equal(savedRecord('other', [], [], opened), undefined);
+});

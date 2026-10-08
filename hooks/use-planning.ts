@@ -21,5 +21,7 @@ export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:
   showSaved();
   onSaved();
  },[demo,onSaved,resource]);
- return {data:demo?{...emptyPlanning,...demoSeed,records:rows,holdingAccounts}:{...resource.data,records:resource.data.records.map(normalizeEntry)},loading:resource.initialLoading,refreshing:resource.loading,error:resource.error,save};
+ return {data:demo?{...emptyPlanning,...demoSeed,records:rows,holdingAccounts}:{...resource.data,records:resource.data.records.map(normalizeEntry)},loading:resource.initialLoading,refreshing:resource.loading,error:resource.error,save,
+  /** Shows a confirmed record change before the reload that follows it returns. */
+  updateRecords:(change:(records:Entry[])=>Entry[])=>{if(!demo)resource.update(data=>({...data,records:change(data.records)}));}};
 }

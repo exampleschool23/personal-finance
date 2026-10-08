@@ -7,9 +7,10 @@ import { showDeleted, showSaved } from '@/lib/feedback';
 import { liabilities, type Entry } from '@/lib/finance';
 import { resolveIncomeSource } from '@/lib/income-sources';
 import type { Category } from '@/lib/planning';
-import { applyRecordChange, lendFromAccount } from '@/lib/record-balance';
+import { applyRecordChange, lendFromAccount, withSavedRecord } from '@/lib/record-balance';
 import { businessMoveFrom, cashAccountProblem, debtDatesProblem, duplicateSalaryPayment, duplicateScheduledPayment, expenseName, fitsExpensePlan, recordSaveProblem } from '@/lib/record-save';
 import { depositToday } from '@/lib/deposit-interest';
+import { savedRecord } from '@/lib/record-table';
 
 const today = depositToday;
 
@@ -20,7 +21,7 @@ export type RecordSaveInput = {
     setBusy: Dispatch<SetStateAction<boolean>>; setError: Dispatch<SetStateAction<string>>;
     /** Shows why a change was refused. */
     fail: (message: string) => void;
-    planning: { loading: boolean; error: string; data: { records: Entry[]; categories: Category[] } };
+    planning: { loading: boolean; error: string; data: { records: Entry[]; categories: Category[] }; updateRecords?: (change: (records: Entry[]) => Entry[]) => void };
     plans: ExpensePlan[]; sources: EarningSource[];
     refreshRecords: () => void;
     setAccountBusiness: (accountId: string, business: string | null) => Promise<number>;
@@ -33,14 +34,16 @@ export function useRecordSave(input: RecordSaveInput) {
     const { demo, rows, setRows, editing, setEditing, deleting, setDeleting, setBusy, setError, fail, planning } = input;
     /** The record as it is sent: a blank expense named, its exchange rate and income source filled in, a new debt dated. */
     function recordToSave(editing: Entry, rate: number, converted: boolean) {
-        const earningPatch=editing.earning_source_id?resolveEarningSource(editing,input.sources,rows.find(row=>row.id===editing.id)):{};
+        // A saved record carries its revision, also one opened from a screen with its own read (Transactions).
+        const stored=savedRecord(editing.id,rows,planning.data.records,editing);
+        const earningPatch=editing.earning_source_id?resolveEarningSource(editing,input.sources,stored):{};
         if(demo&&duplicateScheduledPayment(editing,rows,earningPatch.earning_due_on))throw Error('This scheduled payment is already recorded.');
         const incomeSourcePatch=editing.income_source_id?resolveIncomeSource(editing,planning.data.records):{};
         if(demo&&duplicateSalaryPayment(editing,rows,incomeSourcePatch.income_due_on))throw Error('This salary payment is already recorded.');
         const name=expenseName(editing,planning.data.categories.find(category=>category.id===editing.custom_category_id)?.name,editing.kind);
-        const opened=liabilities.includes(editing.kind)&&!rows.some(row=>row.id===editing.id)?{opened_on:editing.opened_on??today()}:{};
+        const opened=liabilities.includes(editing.kind)&&!stored?{opened_on:editing.opened_on??today()}:{};
         // Only new money lent leaves a cash account.
-        const lentFrom=editing.kind==='Money lent'&&!rows.some(row=>row.id===editing.id)?editing.lent_from??null:null;
+        const lentFrom=editing.kind==='Money lent'&&!stored?editing.lent_from??null:null;
         return {...editing,name,lent_from:lentFrom||undefined,account_exchange_rate:converted?rate:undefined,...opened,...incomeSourcePatch,...earningPatch};
     }
     async function save(e: React.FormEvent) {
@@ -61,7 +64,13 @@ export function useRecordSave(input: RecordSaveInput) {
             const datesProblem=debtDatesProblem(savedRecord);
             if(datesProblem)throw Error(datesProblem);
             if (demo) { const lent=lendFromAccount(rows,savedRecord); setRows(withAssetIncomePlans(applyRecordChange(lent.rows,lent.rows.find(record=>record.id===savedRecord.id),lent.loan),input.sources)); }
-            else { await requestJson('/api/records', { body: savedRecord }); input.refreshRecords(); }
+            else {
+                await requestJson('/api/records', { body: savedRecord });
+                // The lists show the change now; the reload that follows takes a few seconds.
+                planning.updateRecords?.(records => withSavedRecord(records, savedRecord));
+                setRows(previous => previous.some(row => row.id === savedRecord.id) ? withSavedRecord(previous, savedRecord) : previous);
+                input.refreshRecords();
+            }
             if(move)await input.setAccountBusiness(editing.id,editing.business_id??null);
             setEditing(null);
             showSaved();
