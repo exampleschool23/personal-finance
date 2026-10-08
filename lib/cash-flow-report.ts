@@ -22,6 +22,14 @@ const shares = (totals: Map<string, number>): Share[] => {
  const sum = [...totals.values()].reduce((total, value) => total + value, 0);
  return [...totals].filter(([, amount]) => amount > 0).map(([key, amount]) => ({ key, amount, share: sum > 0 ? amount / sum : 0 })).sort((a, b) => b.amount - a.amount || a.key.localeCompare(b.key));
 };
+/** The key of the share that collects everything past the largest ones; no category, merchant or business can be named it. */
+export const otherShareKey = '\u0000other';
+/** The largest `limit` shares, then the rest as one "Other" share, so the rows always add up to the total. */
+export function topShares(items: readonly Share[], limit = 10): Share[] {
+ if (items.length <= limit) return [...items];
+ const rest = items.slice(limit);
+ return [...items.slice(0, limit), { key: otherShareKey, amount: rest.reduce((total, item) => total + item.amount, 0), share: rest.reduce((total, item) => total + item.share, 0) }];
+}
 const add = (totals: Map<string, number>, key: string, amount: number) => totals.set(key, (totals.get(key) ?? 0) + amount);
 
 /** Income and spending over some months: totals, savings, savings rate, and shares by category and by merchant.

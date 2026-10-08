@@ -9,6 +9,7 @@ import { Segmented } from '@/components/presentation-foundation/segmented';
 import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
 import { HOUSEHOLD } from '@/lib/business';
 import { attributeTrend, businessKey, intervals, sharesBy, type Attribute, type Direction, type Drill, type Interval, type LedgerLine } from '@/lib/business-report';
+import { rankColor } from '@/lib/category-colors';
 import { formatMoney, formatNumber } from '@/lib/format';
 import { attributeLabels, intervalLabels, type TabProps } from './report-labels';
 
@@ -18,13 +19,15 @@ export function AttributeTab({ direction, lines, range, rangeLabel, names, group
  const categoryHue = useCategoryHue();
  const [mode, setMode] = useState<'breakdown' | 'trends'>('breakdown');
  const [attribute, setAttribute] = useState<Attribute>('category');
- const [visual, setVisual] = useState<'bars' | 'donut'>('bars');
+ const [visual, setVisual] = useState<'bars' | 'donut'>('donut');
  const [stacked, setStacked] = useState(true), [interval, setInterval] = useState<Interval>('month');
  const keyOf = (line: LedgerLine) => attribute === 'category' ? line.category : attribute === 'group' ? groupOf(line.category) : attribute === 'merchant' ? line.name : businessKey(line);
  const label = (key: string) => attribute === 'category' ? names.category(key) : attribute === 'group' ? names.group(key) : attribute === 'merchant' ? key : names.business(key);
- const color = (key: string) => key === 'other' ? 'var(--muted-foreground)' : attributeColor(attribute, key, names, categoryHue);
- const drillOf = (key: string): Drill => attribute === 'category' ? { direction, category: key } : attribute === 'merchant' ? { direction, merchant: key } : attribute === 'business' ? { direction, business: key === HOUSEHOLD ? null : key } : { direction, categories: [...new Set(lines.filter(line => groupOf(line.category) === key).map(line => line.category))] };
  const items = sharesBy(lines, keyOf);
+ // Merchants have no colour of their own, so each takes one by its place in the breakdown.
+ const rank = new Map(items.map((item, index) => [item.key, index]));
+ const color = (key: string) => key === 'other' ? 'var(--muted-foreground)' : attribute === 'merchant' ? rankColor(rank.get(key) ?? 0) : attributeColor(attribute, key, names, categoryHue);
+ const drillOf = (key: string): Drill => attribute === 'category' ? { direction, category: key } : attribute === 'merchant' ? { direction, merchant: key } : attribute === 'business' ? { direction, business: key === HOUSEHOLD ? null : key } : { direction, categories: [...new Set(lines.filter(line => groupOf(line.category) === key).map(line => line.category))] };
  const trend = attributeTrend(lines, range, interval, keyOf);
  const total = lines.reduce((sum, line) => sum + line.amount, 0);
  const attributes = (['category', 'group', 'merchant', ...(hasBusinesses ? ['business'] : [])] as Attribute[]);
@@ -45,7 +48,7 @@ export function AttributeTab({ direction, lines, range, rangeLabel, names, group
    </PanelTitle>
    {mode === 'trends' ? <TrendChart key={attribute + interval} rows={trend.rows} interval={interval} currency={currency} stacked={stacked} series={trend.keys.map(key => ({ key, label: key === 'other' ? t('Other') : label(key), color: color(key) }))}/>
     : visual === 'donut' ? <BreakdownDonut items={items} label={label} colorOf={color} currency={currency} onSelect={key => onDrill(drillOf(key))}/>
-    : <ShareBars items={items} label={label} colorKey={color} currency={currency} limit={15} onSelect={key => onDrill(drillOf(key))}/>}
+    : <ShareBars items={items} label={label} colorKey={color} currency={currency} onSelect={key => onDrill(drillOf(key))}/>}
   </section>
  </>;
 }

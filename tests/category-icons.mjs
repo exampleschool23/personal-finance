@@ -154,5 +154,4 @@ test('report breakdowns colour categories and groups with the colour chosen for 
  assert.equal(attributeColor('category', 'c1', names, hueOf), 'hsl(270 60% 48%)', 'an added category is found by its name');
  assert.equal(attributeColor('group', 'Charity', names, hueOf), 'hsl(0 60% 48%)');
  assert.equal(attributeColor('category', 'Salary', names), `hsl(${categoryHue('Salary')} 60% 48%)`, 'outside a workspace the stable default shows');
- assert.equal(attributeColor('merchant', 'Shop', names, hueOf), 'var(--foreground)');
 });

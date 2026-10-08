@@ -9,7 +9,7 @@ import { Segmented } from '@/components/presentation-foundation/segmented';
 import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
 import { signTone } from '@/components/presentation-foundation/tone';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
-import { cashFlowReport, periodMonths, reportPeriods, sankeyFlows, trailingMonths, type ReportPeriod, type Share } from '@/lib/cash-flow-report';
+import { cashFlowReport, periodMonths, reportPeriods, sankeyFlows, topShares, otherShareKey, trailingMonths, type ReportPeriod, type Share } from '@/lib/cash-flow-report';
 import { hueColor } from '@/lib/category-colors';
 import { useCategoryHue } from '@/components/category-icons-context';
 import { depositToday } from '@/lib/deposit-interest';
@@ -23,16 +23,19 @@ import { measureLabel, sankeyLabelMargins } from '@/lib/sankey-labels';
 const periodLabels: Record<ReportPeriod, string> = { month: 'Month', quarter: 'Quarter', year: 'Year' };
 type Props = { owner: string | null; demo: boolean; revision: number; data: PlanningData; splits: TransactionSplit[]; month: string; currency: string; market: MarketData | null };
 
-/** One side of the breakdown: proportional bars with amount and share, the Income / Expenses panels.
- * With `onSelect`, each bar is a button that narrows the transactions below to it. */
-export function ShareBars({ items, label, colorKey, currency, limit = 12, onSelect }: { items: Share[]; label: (key: string) => string; colorKey: (key: string) => string; currency: string; limit?: number; onSelect?: (key: string) => void }) {
+/** One side of the breakdown: proportional bars with amount and share, the Income / Expenses panels. The largest ten
+ * are named and the rest share one "Other" row, so the rows add up to the total.
+ * With `onSelect`, each named bar is a button that narrows the transactions below to it. */
+export function ShareBars({ items, label, colorKey, currency, onSelect }: { items: Share[]; label: (key: string) => string; colorKey: (key: string) => string; currency: string; onSelect?: (key: string) => void }) {
  const { t, locale } = useLanguage();
  if (!items.length) return <p className="budget-left-empty">{t('Nothing recorded in this period.')}</p>;
- const peak = items[0].amount;
- return <ul className="share-bars">{items.slice(0, limit).map(item => {
-  const bar = <span className="share-bar" style={{ width: `${Math.max(2, item.amount / peak * 100)}%`, background: `color-mix(in srgb, ${colorKey(item.key)} 22%, transparent)` }}><span>{label(item.key)}</span></span>;
-  return <li key={item.key} title={`${label(item.key)} · ${formatMoney(item.amount, currency, locale)}`}>
-   {onSelect ? <button type="button" className="share-bar-button" onClick={() => onSelect(item.key)} aria-label={t('Show transactions for {name}', { name: label(item.key) })}>{bar}</button> : bar}
+ const shown = topShares(items), peak = Math.max(...shown.map(item => item.amount));
+ const name = (key: string) => key === otherShareKey ? t('Other') : label(key);
+ return <ul className="share-bars">{shown.map(item => {
+  const other = item.key === otherShareKey;
+  const bar = <span className="share-bar" style={{ width: `${Math.max(2, item.amount / peak * 100)}%`, background: `color-mix(in srgb, ${other ? 'var(--muted-foreground)' : colorKey(item.key)} 22%, transparent)` }}><span>{name(item.key)}</span></span>;
+  return <li key={item.key} title={`${name(item.key)} · ${formatMoney(item.amount, currency, locale)}`}>
+   {onSelect && !other ? <button type="button" className="share-bar-button" onClick={() => onSelect(item.key)} aria-label={t('Show transactions for {name}', { name: label(item.key) })}>{bar}</button> : bar}
    <strong>{formatMoney(item.amount, currency, locale)}</strong><small>{formatPercent(item.share * 100, locale)}</small>
   </li>;
  })}</ul>;

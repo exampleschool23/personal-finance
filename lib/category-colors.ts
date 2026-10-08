@@ -16,6 +16,9 @@ export const categoryHues: Record<CategoryKind, number> = {
 export function categoryHue(kind:string){ if(Object.hasOwn(categoryHues,kind))return categoryHues[kind as CategoryKind]; let hash=0;for(const char of kind)hash=(hash*31+char.charCodeAt(0))>>>0;return hash%360; }
 export const categoryColor = (kind: string) => hueColor(categoryHue(kind));
 export const hueColor = (hue: number) => `hsl(${hue} 60% 48%)`;
+/** Ten hues far apart, for things that have no colour of their own (merchants), coloured by their place in a ranking. */
+export const rankHues = [210, 30, 150, 280, 50, 340, 185, 100, 250, 0];
+export const rankColor = (index: number) => hueColor(rankHues[index % rankHues.length]);
 /** Colours a person may give a category: the palette's hues, without grey, which a tinted badge cannot show. */
 export const categoryPaletteColors = paletteColors.filter(color => color !== 'slate');
 export type CategoryColors = Record<string, PaletteColor>;

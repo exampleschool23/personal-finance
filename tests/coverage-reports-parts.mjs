@@ -5,6 +5,7 @@ import { loadTS } from './helpers/load-ts.mjs';
 import { byType, createRenderer, hostModule, stubs, translate } from './helpers/component-tree.mjs';
 
 const view = loadTS('lib/report-view.ts');
+const { rankColor } = loadTS('lib/category-colors.ts');
 const { workspaceOwners, demoHousehold } = loadTS('lib/household.ts');
 const { depositToday } = loadTS('lib/deposit-interest.ts');
 const today = depositToday(), year = today.slice(0, 4);
@@ -108,12 +109,13 @@ test('Spending and Income break down by category, group, merchant or business, a
  open();
  switchTab('spending');
  assert.deepEqual([tile('Total spending').value, tile('Transactions').value], ['$400', '1']);
- assert.equal(r.find(byType('ShareBars')).props.label('Living expense'), 'Living expense');
- r.fire(r.find(byType('ShareBars')), 'onSelect', 'Living expense');
+ assert.equal(r.find(byType('BreakdownDonut')).props.label('Living expense'), 'Living expense', 'the donut is the default view');
+ r.fire(r.find(byType('BreakdownDonut')), 'onSelect', 'Living expense');
  assert.equal(r.find(byType('ReportTransactions')).props.label, 'Living expense');
  switchTab('income');
  assert.equal(tile('Total income').tone, 'positive');
  assert.equal(r.all(byType('ReportSummary'))[0].props.mixed, false);
+ pick('Chart type', 'bars');
  const drills = {};
  for (const attribute of ['group', 'merchant', 'business']) {
   pick('Group by', attribute);
@@ -123,6 +125,10 @@ test('Spending and Income break down by category, group, merchant or business, a
  }
  assert.deepEqual(drills, { group: ['Income'], merchant: ['Payroll', 'Bread stall'], business: ['household', 'b1'] });
  assert.equal(r.find(byType('ReportTransactions')).props.label, 'Income · Household');
+ pick('Group by', 'merchant');
+ const colorKey = r.find(byType('ShareBars')).props.colorKey;
+ assert.deepEqual(['Payroll', 'Bread stall'].map(colorKey), [rankColor(0), rankColor(1)], 'merchants take colours by their place in the breakdown');
+ pick('Group by', 'business');
  pick('Chart type', 'donut');
  assert.equal(r.find(byType('BreakdownDonut')).props.colorOf('other'), 'var(--muted-foreground)');
  r.fire(r.find(byType('BreakdownDonut')), 'onSelect', 'b1');

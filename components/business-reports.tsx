@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { paletteColor } from '@/lib/business';
 import { measureLabel, sankeyLabelMargins } from '@/lib/sankey-labels';
 import { ledgerExportRows, summarizeLines, type BusinessSankey, type Drill, type Interval, type LedgerLine, type PnlLine, type ProfitAndLoss } from '@/lib/business-report';
-import type { Share } from '@/lib/cash-flow-report';
+import { otherShareKey, topShares, type Share } from '@/lib/cash-flow-report';
 import { categoryHue, hueColor } from '@/lib/category-colors';
 import { exportCSV } from '@/lib/csv';
 import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatSignedMoney, formatYear } from '@/lib/format';
@@ -146,24 +146,23 @@ export function TrendChart({ rows, series, stacked, interval, currency }: { rows
 export function BreakdownDonut({ items, label, colorOf, currency, onSelect }: { items: Share[]; label: (key: string) => string; colorOf: (key: string) => string; currency: string; onSelect: (key: string) => void }) {
  const { t, locale } = useLanguage();
  if (!items.length) return <p className="budget-left-empty">{t('Nothing recorded in this period.')}</p>;
- const top = items.slice(0, 10);
+ const top = topShares(items);
+ const name = (key: string) => key === otherShareKey ? t('Other') : label(key);
  return <div className="breakdown-donut">
   <ResponsiveContainer width="100%" height={240}><PieChart>
-   <Pie data={top} dataKey="amount" nameKey="key" innerRadius="58%" outerRadius="92%" paddingAngle={1} stroke="var(--card)" onClick={entry => { const key = (entry.payload as Share | undefined)?.key; if (key) onSelect(key); }}>
-    {top.map(item => <Cell key={item.key} fill={colorOf(item.key)} className="donut-slice"/>)}
+   <Pie data={top} dataKey="amount" nameKey="key" innerRadius="58%" outerRadius="92%" paddingAngle={1} stroke="var(--card)" onClick={entry => { const key = (entry.payload as Share | undefined)?.key; if (key && key !== otherShareKey) onSelect(key); }}>
+    {top.map(item => <Cell key={item.key} fill={item.key === otherShareKey ? 'var(--muted-foreground)' : colorOf(item.key)} className="donut-slice"/>)}
    </Pie>
-   <Tooltip formatter={(value, name) => [formatMoney(Number(value), currency, locale), label(String(name))]}/>
+   <Tooltip formatter={(value, key) => [formatMoney(Number(value), currency, locale), name(String(key))]}/>
   </PieChart></ResponsiveContainer>
-  <ShareBars items={top} label={label} colorKey={colorOf} currency={currency} limit={10} onSelect={onSelect}/>
+  <ShareBars items={items} label={label} colorKey={colorOf} currency={currency} onSelect={onSelect}/>
  </div>;
 }
 
 /** The colour of a breakdown key: a business's own colour, a category's colour (the one chosen for it, through `hueOf`), otherwise the ink colour. */
-export function attributeColor(attribute: 'category' | 'group' | 'merchant' | 'business', key: string, names: ReportNames, hueOf: (kind: string) => number = categoryHue) {
+export function attributeColor(attribute: 'category' | 'group' | 'business', key: string, names: ReportNames, hueOf: (kind: string) => number = categoryHue) {
  if (attribute === 'business') return paletteColor(names.businessRecord(key === 'household' ? null : key)?.business_color ?? (key === 'household' ? 'slate' : null));
- if (attribute === 'category') return hueColor(hueOf(names.icon(key)));
- if (attribute === 'group') return hueColor(hueOf(key));
- return 'var(--foreground)';
+ return hueColor(hueOf(attribute === 'category' ? names.icon(key) : key));
 }
 
 /** The transactions behind a report, narrowed by the last click on a chart or table. A row opens its transaction. */

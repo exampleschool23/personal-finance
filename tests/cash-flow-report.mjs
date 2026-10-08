@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { periodMonths, cashFlowReport, sankeyFlows, trailingMonths } = loadTS('lib/cash-flow-report.ts');
+const { periodMonths, cashFlowReport, sankeyFlows, trailingMonths, topShares, otherShareKey } = loadTS('lib/cash-flow-report.ts');
 
 const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Once', notes: '', ...extra });
 
@@ -38,4 +38,19 @@ test('the Sankey flows income sources into one total and out to spending and sav
  assert.deepEqual(flows.nodes.map(node => [node.name, node.kind]), [['Salary', 'income'], ['Income', 'total'], ['A', 'expense'], ['B', 'expense'], ['Other expense', 'expense'], ['Savings', 'savings']]);
  assert.deepEqual(flows.links, [{ source: 0, target: 1, value: 1000 }, { source: 1, target: 2, value: 400 }, { source: 1, target: 3, value: 200 }, { source: 1, target: 4, value: 100 }, { source: 1, target: 5, value: 300 }]);
  assert.ok(!sankeyFlows({ ...report, savings: -50 }, key => key).nodes.some(node => node.kind === 'savings'), 'no savings node when spending exceeds income');
+});
+
+test('a breakdown names the largest ten and folds the rest into one Other share, so its rows add up to the total', () => {
+ // 2026-10-08: the Spending donut listed ten merchants, UZS 74,347,757 of a UZS 75,347,758 total, and dropped the rest.
+ const amounts = [18363290, 18000000, 10800000, 6000000, 6000000, 6000000, 3000000, 2500000, 2361838, 1322629, 600000, 400001];
+ const total = amounts.reduce((sum, amount) => sum + amount, 0);
+ const items = amounts.map((amount, index) => ({ key: 'm' + index, amount, share: amount / total }));
+ const shown = topShares(items);
+ assert.equal(shown.length, 11);
+ assert.deepEqual(shown.slice(0, 10).map(item => item.key), items.slice(0, 10).map(item => item.key));
+ assert.deepEqual([shown[10].key, shown[10].amount, shown[10].share.toFixed(6)], [otherShareKey, 1000001, (1000001 / total).toFixed(6)]);
+ assert.equal(shown.reduce((sum, item) => sum + item.amount, 0), total);
+ assert.equal(shown.reduce((sum, item) => sum + item.share, 0).toFixed(6), '1.000000');
+ assert.deepEqual(topShares(items.slice(0, 10)), items.slice(0, 10), 'ten or fewer need no Other');
+ assert.notEqual(otherShareKey, 'other', 'a merchant named "other" stays its own row');
 });
