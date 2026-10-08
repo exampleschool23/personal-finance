@@ -97,7 +97,7 @@
 /* Business tax prep: lines of a profit-or-loss return, each holding the categories mapped to it. */
 .tax-prep{display:flex;flex-direction:column;gap:16px;width:100%}
 .tax-prep .tax-export{margin-inline-start:auto}
-.tax-all{align-items:center}
+.tax-all{align-items:center;margin:0}
 .tax-disclaimer{margin:0;color:var(--muted-foreground);font-size:var(--type-caption)}
 .tax-part{display:flex;flex-direction:column;gap:4px}
 .tax-lines{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
@@ -135,7 +135,7 @@ summary.tax-line-heading>svg{flex-shrink:0;color:var(--muted-foreground);transit
 .tax-export-dialog .pnl-table{margin-block-end:8px}
 @media (prefers-reduced-motion:reduce){summary.tax-line-heading>svg{transition:none}}
 @container content (max-width:640px){.tax-category{grid-template-columns:minmax(0,1fr) auto}.tax-move{grid-column:1/-1}.tax-prep .tax-export{margin-inline-start:0}}
-.tax-move{display:block;min-width:0}
+.tax-move{display:block;min-width:0;margin:0}
 .tax-move [data-slot=native-select-wrapper],.tax-move select{width:100%}
 /* The rule dialog scrolls inside the window; with room (desktops) conditions and actions sit side by side. */
 .rule-dialog{width:calc(100vw - 32px);max-height:calc(100dvh - 32px);overflow-y:auto}

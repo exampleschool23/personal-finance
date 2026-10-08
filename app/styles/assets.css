@@ -2,22 +2,31 @@
 
 /* Assets: a holdings hero, then accounts and other assets as compact cards. */
 .asset-dashboard{--asset-color:var(--primary);display:grid;grid-template-columns:minmax(0,1fr);gap:28px}
-.portfolio-summary{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);border:1px solid var(--border);border-radius:var(--radius-card);overflow:hidden;background:var(--card);box-shadow:var(--shadow-card)}
-.portfolio-summary-main{padding:28px}
-.portfolio-summary-main h2{font-size:var(--type-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground)}
+.portfolio-summary{display:grid;grid-template-columns:minmax(0,1fr);border:1px solid var(--border);border-radius:var(--radius-card);overflow:hidden;background:var(--card);box-shadow:var(--shadow-card)}
+.portfolio-summary-main{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:24px 40px;padding:28px}
+.portfolio-summary-total{min-width:0}
+.portfolio-summary-total h2{font-size:var(--type-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground)}
 .portfolio-summary-value{display:block;margin:6px 0 8px;font-size:var(--type-hero);font-weight:650;letter-spacing:-.04em;line-height:1.05;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.portfolio-summary-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11rem),1fr));row-gap:16px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
-.portfolio-summary-metrics>div{display:grid;gap:4px;min-width:0;padding-inline-start:20px;border-inline-start:1px solid var(--border)}
+.portfolio-summary-metrics{display:flex;gap:16px 0;min-width:0}
+.portfolio-summary-metrics>div{display:grid;flex:0 0 auto;gap:4px;min-width:max-content;padding-inline-start:20px;border-inline-start:1px solid var(--border)}
 .portfolio-summary-metrics>div:first-child{padding-inline-start:0;border-inline-start:0}
-.portfolio-summary-metrics span{font-size:var(--type-caption);color:var(--muted-foreground)}
+.portfolio-summary-metrics span{font-size:var(--type-caption);color:var(--muted-foreground);white-space:nowrap}
 .portfolio-summary-metrics strong{font-size:var(--type-heading);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.portfolio-summary-allocation{min-width:0;padding:28px;border-inline-start:1px solid var(--border)}
+.portfolio-summary-allocation{min-width:0;padding:24px 28px 28px;border-top:1px solid var(--border)}
 .portfolio-summary-allocation h3{margin-bottom:16px;font-size:var(--type-body);font-weight:600;letter-spacing:-.01em}
 .portfolio-summary-allocation .allocation-bar{margin-bottom:12px}
 .portfolio-summary-allocation .allocation-bar span{min-width:4px}
-@container content (max-width:900px){.portfolio-summary{grid-template-columns:minmax(0,1fr)}.portfolio-summary-allocation{border-inline-start:0;border-top:1px solid var(--border)}.portfolio-summary-main,.portfolio-summary-allocation{padding:24px}}
-@container content (max-width:520px){.portfolio-summary-main,.portfolio-summary-allocation{padding:20px 16px}}
+.portfolio-summary-allocation .overview-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr));column-gap:32px}
+.portfolio-summary-allocation .overview-list li{display:block;border-top:0;border-bottom:1px solid color-mix(in srgb,var(--border) 60%,transparent)}
+.portfolio-summary-allocation .allocation-option{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:12px;width:100%;padding:11px 8px;margin:0 -8px;border:0;border-radius:var(--radius-control);background:none;color:inherit;font:inherit;text-align:start;cursor:pointer}
+.portfolio-summary-allocation .allocation-option:hover{background:var(--muted)}
+.portfolio-summary-allocation .allocation-option[aria-pressed=true]{background:var(--accent)}
+.portfolio-summary-allocation .allocation-option strong{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.portfolio-summary-allocation .allocation-option small{color:var(--muted-foreground)}
+.portfolio-summary-allocation .allocation-option i{width:8px;height:8px;border-radius:50%}
+@container content (max-width:520px){.portfolio-summary-main,.portfolio-summary-allocation{padding:20px 16px}.portfolio-summary-metrics{flex-wrap:wrap}}
 
+.asset-holdings{scroll-margin-top:72px}
 .asset-holdings-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px}
 .asset-holdings-heading h2{font-size:var(--type-heading);font-weight:650;letter-spacing:-.02em}
 .asset-holdings-heading a{font-size:var(--type-small);font-weight:500;color:var(--primary);white-space:nowrap}

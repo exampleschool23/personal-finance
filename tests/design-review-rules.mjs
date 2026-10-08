@@ -210,7 +210,7 @@ test('pages and dialogs never grow wider than the screen, and fit short screens 
  assert.match(css,/\[data-slot=dialog-content\] :is\(\[data-variant=link\],\.panel-link\)\{max-width:100%;height:auto;white-space:normal/);
  assert.match(css,/\.customize-footer\{display:flex;flex-wrap:wrap;/);
  // Net worth and debt sit side by side only while both figures fit (Arabic at 280px cut "202,800 US$").
- assert.match(css,/\.portfolio-summary-metrics\{display:grid;grid-template-columns:repeat\(auto-fit,minmax\(min\(100%,11rem\),1fr\)\)/);
+ assert.match(css,/\.portfolio-summary-metrics\{display:flex;/);
  assert.match(fs.readFileSync('components/ui/sidebar.tsx','utf8'),/SIDEBAR_WIDTH_MOBILE = "min\(18rem, 85vw\)"/);
  assert.match(css,/\.goal-setup-steps\{display:flex;flex-wrap:wrap;/,'the add-goal steps wrap so Close stays on screen');
 });

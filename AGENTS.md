@@ -181,6 +181,7 @@ hard-code a USD/UZS-only selector or validation rule. `formatMoney` displays who
 amounts by default; unit quotes retain up to eight decimals without trailing zeros.
 Stored values and inputs retain their precision. Conversions require explicit
 positive rates; never infer a rate.
+**Show every amount in the selected display currency, always.** Every amount on every surface (balances, income, spending plans, progress totals, tiles, charts, lists, reports, Telegram and the assistant) is converted into the display currency chosen in the top bar. Never show a mix of currencies on one screen, for example "$5,700" beside "UZS 9,000,000". Convert with `convertMoney` / `amountIn` and explicit rates; where no positive rate exists, show the amount as missing (—) with an "Exchange rate unavailable" note, never under the wrong currency label. Stored values keep their own currency.
 Account defaults live in `user_preferences` with owner RLS. The top-right
 language selector changes only the current visit; saving Settings changes the
 default. Keep one or two preferred currencies (`maxPreferredCurrencies` in

@@ -76,7 +76,7 @@
 .panel-title :is(a,[data-variant=link]){display:inline-flex;align-items:center;min-height:24px}
 .panel-link:hover{text-decoration:underline;text-underline-offset:3px}
 /* Explanations live behind a small ⓘ instead of a line of grey text under every heading. */
-.info-hint{position:relative;display:inline-grid;place-items:center;flex-shrink:0;width:22px;height:22px;border-radius:50%;color:var(--muted-foreground);transition:color .15s,background .15s}
+.info-hint{position:relative;display:inline-grid;place-items:center;flex:none;align-self:center;box-sizing:border-box;width:22px;min-width:22px;max-width:22px;height:22px;min-height:22px;max-height:22px;padding:0;aspect-ratio:1;border-radius:50%;color:var(--muted-foreground);transition:color .15s,background .15s}
 .info-hint:hover,.info-hint[data-state=open]{background:var(--muted);color:var(--foreground)}
 .info-hint svg{width:15px;height:15px}
 .info-hint::after{content:"";position:absolute;inset:-5px}

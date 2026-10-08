@@ -4,7 +4,7 @@ import { Count } from '@/components/presentation-foundation/count';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { signTone } from '@/components/presentation-foundation/tone';
 
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, useRef, useState, type CSSProperties } from 'react';
 import { AssetCard } from '@/components/presentation-foundation/asset-card';
 import { AnimatedMoney } from '@/components/presentation-foundation/animated-money';
 import { ChevronDown, Ellipsis, LayoutGrid, List, Search, Trash2 } from 'lucide-react';
@@ -34,6 +34,7 @@ type Props = {
 export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoading, accountsError, onRetryAccounts, onAddHolding, records, currency, market, netWorth, debt, loading, demo, onAdd, onEdit, onTrack, onDelete, quoteLabel }: Props) {
  const { t, locale } = useLanguage();
  const [category, setCategory] = useState('all');
+ const holdingsRef = useRef<HTMLElement>(null);
  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
  const [limit, setLimit] = useState(12);
  const holdings = useMemo(() => sortAssetsByWorth(records.filter(record => assetRecordKinds.includes(record.kind) && (record.kind !== 'Cash' || isInvestmentRecord(record))), record => marketEntry(record, currency, market)).map(original => ({ original, converted: marketEntry(original, currency, market) })), [records, currency, market]);
@@ -47,6 +48,8 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
  const visible = filtered.slice(0, limit);
  const money = (amount: number, unit = currency) => formatMoney(amount, unit, locale);
  const selectCategory = (kind: string) => { setCategory(kind); setLimit(12); };
+ // Tapping a row in the allocation list moves the reader down to the filtered assets it now shows.
+ const showCategory = (kind: string) => { selectCategory(kind); holdingsRef.current?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
  const clearFilters = () => { setCategory('all'); setLimit(12); };
 
  const renderCard = ({ original, converted }: (typeof holdings)[number]) => {
@@ -71,21 +74,23 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
  return <div className="asset-dashboard" aria-busy={loading}>
   <section className="portfolio-summary" aria-label={t('Your holdings')}>
    <div className="portfolio-summary-main">
-    <h2>{t('Your holdings')}<Count value={holdings.length}/></h2>
-    <strong className="portfolio-summary-value">{loading ? '—' : <AnimatedMoney value={total} currency={currency}/>}</strong>
-    <PartialTotal currencies={excludedCurrencies}/>
+    <div className="portfolio-summary-total">
+     <h2>{t('Your holdings')}<Count value={holdings.length}/></h2>
+     <strong className="portfolio-summary-value">{loading ? '—' : <AnimatedMoney value={total} currency={currency}/>}</strong>
+     <PartialTotal currencies={excludedCurrencies}/>
+    </div>
     <div className="portfolio-summary-metrics"><div><span>{t('Net worth')}</span><strong>{loading ? '—' : <AnimatedMoney value={netWorth} currency={currency}/>}</strong></div><div><span>{t('Outstanding debt')}</span><strong>{loading ? '—' : <AnimatedMoney value={debt} currency={currency}/>}</strong></div></div>
    </div>
    <div className="portfolio-summary-allocation">
     <h3>{t('Asset allocation')}</h3>
     <div className="allocation-bar" aria-hidden="true">{categories.filter(group=>group.amount>0).map(group=><span key={group.kind} style={{flexGrow:group.amount,background:categoryColor(group.kind)}}/>)}</div>
-    <ul className="overview-list">{categories.map(group=><li key={group.kind}><i style={{background:categoryColor(group.kind)}} aria-hidden="true"/><span>{t(group.kind)}</span><strong>{loading ? '—' : <AnimatedMoney value={group.amount} currency={currency}/>}</strong><small>{loading || total<=0 ? '—' : formatPercent(group.amount/total*100,locale,1,1)}</small></li>)}</ul>
+    <ul className="overview-list">{categories.map(group=><li key={group.kind}><button type="button" className="allocation-option" aria-pressed={category===group.kind} onClick={() => showCategory(group.kind)}><i style={{background:categoryColor(group.kind)}} aria-hidden="true"/><span>{t(group.kind)}</span><strong>{loading ? '—' : <AnimatedMoney value={group.amount} currency={currency}/>}</strong><small>{loading || total<=0 ? '—' : formatPercent(group.amount/total*100,locale,1,1)}</small></button></li>)}</ul>
    </div>
   </section>
 
   <AssetAccounts accounts={accounts} records={records} market={market} loading={accountsLoading || loading} error={accountsError} onRetry={onRetryAccounts} onAdd={onAddHolding} currency={currency} portfolioTotal={total} accountCount={accountRecords.length} onEdit={onEdit} onTrack={onTrack} demo={demo} >{accountRecords.map(renderCard)}</AssetAccounts>
 
-  <section className="asset-holdings" aria-label={t('Assets & investments')}>
+  <section ref={holdingsRef} className="asset-holdings" aria-label={t('Assets & investments')}>
    <div className="asset-holdings-heading"><h2>{t('Other assets')}<Count value={otherHoldings.length}/></h2><div className="asset-layout-switch" role="group" aria-label={t('Asset layout')}><Button variant="ghost" size="icon" aria-label={t('Card view')} aria-pressed={layout === 'grid'} onClick={() => setLayout('grid')}><LayoutGrid size={17}/></Button><Button variant="ghost" size="icon" aria-label={t('Compact view')} aria-pressed={layout === 'list'} onClick={() => setLayout('list')}><List size={18}/></Button></div></div>
 
    <Segmented className="asset-category-filters" label={t('Filter assets by category')} value={category} onChange={selectCategory} options={[{ value: 'all', label: <>{t('All assets')}<span>{formatNumber(otherHoldings.length, locale, 0)}</span></> }, ...otherCategories.map(group => ({ value: group.kind, label: <><i style={{ '--asset-color': categoryColor(group.kind) } as CSSProperties}/>{t(group.kind)}<span>{formatNumber(group.count, locale, 0)}</span></> }))]}/>

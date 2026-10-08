@@ -97,7 +97,7 @@
 .cashflow-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
 .cashflow-preview-grid>.tools-panel{grid-column:1/-1}
 .cashflow-income-preview{display:flex;flex-direction:column}
-.cashflow-spending-preview>.panel{height:100%}
+.cashflow-spending-preview{align-self:start}
 .cashflow-preview-grid .panel-title{align-items:center;margin-bottom:12px}
 .cashflow-preview-grid .panel-title button:not(.info-hint){height:auto;min-height:24px;padding:0;font-size:var(--type-caption);font-weight:500;color:var(--primary)}
 .cashflow-preview-grid table{min-width:0;white-space:normal}

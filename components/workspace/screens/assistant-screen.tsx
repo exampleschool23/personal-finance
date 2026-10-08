@@ -55,7 +55,7 @@ export function AssistantScreen() {
  return <div data-page="Assistant" className="content assistant-content">
   <PageHeader title={t('Assistant')} hint={t('Your questions and a summary of your records are sent to Claude, an AI model by Anthropic, to answer them. Answers can be wrong and are not financial advice.')}/>
   <section className="panel assistant-panel" aria-label={t('Assistant')}>
-   <div className="assistant-log" aria-live="polite">
+   <div className={unavailable && !turns.length ? 'assistant-log is-unavailable' : 'assistant-log'} aria-live="polite">
     {turns.length ? turns.map((turn, index) => <div key={index} className="assistant-turn" data-role={turn.role}><p>{turn.content}</p></div>)
      : unavailable ? <EmptyState id={reasonId} icon={<Sparkles/>} title={t('The assistant isn’t available yet')} description={t('It will answer questions here once it has been set up for this app.')}/>
      : <EmptyState id={reasonId} icon={<Sparkles/>} title={t('Ask anything about your money')} description={t(demo ? 'Sign in to ask about your own records. The sample workspace has no assistant.' : 'Try one of these, or type your own question.')}/>}

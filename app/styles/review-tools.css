@@ -54,7 +54,7 @@
  .goal-chart-canvas{min-width:0}
 }
 /* Keep checkbox visuals square; their labels provide the larger touch target. */
-.tools-panel :is(button:not([role="checkbox"]),input,select){min-height:44px}
+.tools-panel :is(button:not([role="checkbox"]):not(.info-hint),input,select){min-height:44px}
 .tools-panel .inline-tool-form>fieldset{flex:1 1 100%;width:100%;max-width:none}
 .tools-panel .inline-tool-form>fieldset.tracker-fields{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
 
