@@ -146,7 +146,7 @@ test('QA 2026-10-02: dialogs explain limits, prefill scheduled amounts and offer
  const transactions=read('components/workspace/screens/transactions-screen.tsx');
  assert.match(transactions,/onAdd\('Other income'\)/);assert.match(transactions,/onAdd\('Other expense'\)/);
  // Split choices are built-in plus added categories of the transaction's type.
- assert.match(read('components/transaction-tools-panel.tsx'),/categoryChoices\(categories,income\.includes\(record\.kind\)\?'income':'expense'\)/);
+ assert.match(read('components/transaction-tools-panel.tsx'),/categoryChoices\(categories,income\.includes\(record\.kind\)\?'income':'expense',removed\)/);
  // A scheduled payment starts at its scheduled amount instead of a placeholder.
  const operation=read('components/planning/account-operation.tsx');
  assert.match(operation,/amount:operation\.amount\?\?\(operation\.action==='occurrence'/);

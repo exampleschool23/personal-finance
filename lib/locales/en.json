@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "Lent from account (optional)",
   "Not from an account": "Not from an account",
   "No cash account in {currency}.": "No cash account in {currency}.",
-  "Built-in categories cannot be deleted.": "Built-in categories cannot be deleted.",
   "Restored": "Restored",
   "Import undone": "Import undone",
   "Add recurring": "Add recurring",
   "Recurring income": "Recurring income",
   "Recurring bill": "Recurring bill",
   "Monthly spending plan": "Monthly spending plan",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.",
+  "Deleted categories": "Deleted categories",
+  "Restore {name}": "Restore {name}",
+  "Keep at least one category of this type.": "Keep at least one category of this type.",
+  "Rules and templates: {count}": "Rules and templates: {count}",
+  "All other income": "All other income",
+  "All other expenses": "All other expenses",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

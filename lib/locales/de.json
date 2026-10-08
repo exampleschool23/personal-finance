@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "Verliehen von Konto (optional)",
   "Not from an account": "Nicht von einem Konto",
   "No cash account in {currency}.": "Kein Bargeldkonto in {currency}.",
-  "Built-in categories cannot be deleted.": "Integrierte Kategorien können nicht gelöscht werden.",
   "Restored": "Wiederhergestellt",
   "Import undone": "Import rückgängig gemacht",
   "Add recurring": "Wiederkehrend hinzufügen",
   "Recurring income": "Wiederkehrendes Einkommen",
   "Recurring bill": "Wiederkehrende Rechnung",
   "Monthly spending plan": "Monatlicher Ausgabenplan",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Das Nettoeinkommen ist das Einkommen abzüglich der Ausgaben in diesem Zeitraum: was auf Ihren Konten blieb oder in Ersparnisse, Anlagen oder die Tilgung von Krediten floss."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Das Nettoeinkommen ist das Einkommen abzüglich der Ausgaben in diesem Zeitraum: was auf Ihren Konten blieb oder in Ersparnisse, Anlagen oder die Tilgung von Krediten floss.",
+  "Deleted categories": "Gelöschte Kategorien",
+  "Restore {name}": "{name} wiederherstellen",
+  "Keep at least one category of this type.": "Behalte mindestens eine Kategorie dieser Art.",
+  "Rules and templates: {count}": "Regeln und Vorlagen: {count}",
+  "All other income": "Alle übrigen Einnahmen",
+  "All other expenses": "Alle übrigen Ausgaben",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

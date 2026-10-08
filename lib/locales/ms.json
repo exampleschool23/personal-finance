@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "Dipinjamkan dari akaun (pilihan)",
   "Not from an account": "Bukan dari akaun",
   "No cash account in {currency}.": "Tiada akaun tunai dalam {currency}.",
-  "Built-in categories cannot be deleted.": "Kategori terbina dalam tidak boleh dipadam.",
   "Restored": "Dipulihkan",
   "Import undone": "Import dibatalkan",
   "Add recurring": "Tambah berulang",
   "Recurring income": "Pendapatan berulang",
   "Recurring bill": "Bil berulang",
   "Monthly spending plan": "Pelan perbelanjaan bulanan",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Pendapatan bersih ialah pendapatan ditolak perbelanjaan dalam tempoh ini: wang yang kekal dalam akaun anda atau pergi ke simpanan, pelaburan atau pokok pinjaman."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Pendapatan bersih ialah pendapatan ditolak perbelanjaan dalam tempoh ini: wang yang kekal dalam akaun anda atau pergi ke simpanan, pelaburan atau pokok pinjaman.",
+  "Deleted categories": "Kategori yang dipadam",
+  "Restore {name}": "Pulihkan {name}",
+  "Keep at least one category of this type.": "Kekalkan sekurang-kurangnya satu kategori jenis ini.",
+  "Rules and templates: {count}": "Peraturan dan templat: {count}",
+  "All other income": "Semua pendapatan lain",
+  "All other expenses": "Semua perbelanjaan lain",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

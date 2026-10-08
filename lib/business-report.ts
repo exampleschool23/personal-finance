@@ -113,12 +113,22 @@ export const drillMatches = (drill: Drill | null, line: LedgerLine, keyOf: (line
  (drill.direction === undefined || line.direction === drill.direction) && (drill.category === undefined || keyOf(line) === drill.category) && (drill.categories === undefined || drill.categories.includes(line.category))
  && (drill.business === undefined || line.business === drill.business) && (drill.merchant === undefined || line.name === drill.merchant));
 
+/** Every node needs a name of its own: a business's line that shares its name with another node says whose it is. */
+function nameEachOnce(nodes: SankeyNode[], used: ReadonlySet<number>, inBusiness: (name: string, business: string) => string) {
+ const count = new Map<string, number>();
+ for (const key of used) count.set(nodes[key].name, (count.get(nodes[key].name) ?? 0) + 1);
+ for (const key of used) {
+  const item = nodes[key], business = item.drill?.business;
+  if ((item.kind === 'income' || item.kind === 'expense') && business && count.get(item.name)! > 1) nodes[key] = { ...item, name: inBusiness(item.name, business) };
+ }
+}
+
 export type SankeyNode = { name: string; kind: 'income' | 'total' | 'expense' | 'savings' | 'business' | 'loss'; drill: Drill | null };
 export type BusinessSankey = { nodes: SankeyNode[]; links: Array<{ source: number; target: number; value: number }> };
 /** Where money came from and went, with a layer for each business: its income flows into it and its expenses out of
  * it (a business with one kind of income is its own source); a profit then flows into household income, while a loss leaves the household like any other expense. Without
  * the household, a business's profit or loss stands on its own. Small flows merge into "Other". */
-export function businessSankey(pnl: ProfitAndLoss, labels: { category: (key: string) => string; business: (id: string) => string; total: string; savings: string; profit: string; loss: (name: string) => string; otherIncome: string; otherExpense: string }, limit = 7): BusinessSankey {
+export function businessSankey(pnl: ProfitAndLoss, labels: { category: (key: string) => string; business: (id: string) => string; total: string; savings: string; profit: string; loss: (name: string) => string; otherIncome: string; otherExpense: string; inBusiness: (name: string, business: string) => string }, limit = 7): BusinessSankey {
  const nodes: SankeyNode[] = [], links: BusinessSankey['links'] = [];
  const node = (item: SankeyNode) => nodes.push(item) - 1;
  const top = (items: PnlLine[], other: string, direction: Direction, business: string | null) => {
@@ -148,6 +158,7 @@ export function businessSankey(pnl: ProfitAndLoss, labels: { category: (key: str
   if (pnl.net > 0) links.push({ source: total, target: node({ name: labels.savings, kind: 'savings', drill: null }), value: pnl.net });
  }
  const used = new Set(links.filter(link => link.value > 0).flatMap(link => [link.source, link.target]));
+ nameEachOnce(nodes, used, (name, business) => labels.inBusiness(name, labels.business(business)));
  const index = new Map([...nodes.keys()].filter(key => used.has(key)).map((key, position) => [key, position]));
  return { nodes: nodes.filter((_, key) => used.has(key)), links: links.filter(link => link.value > 0).map(link => ({ source: index.get(link.source)!, target: index.get(link.target)!, value: link.value })) };
 }

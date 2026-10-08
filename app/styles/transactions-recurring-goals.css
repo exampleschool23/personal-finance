@@ -180,7 +180,8 @@
 .share-bar>span{white-space:nowrap}
 .share-bars strong{font-weight:500;font-variant-numeric:tabular-nums;text-align:end}
 .share-bars small{color:var(--muted-foreground);font-variant-numeric:tabular-nums;text-align:end}
-.cash-flow-sankey{overflow-x:auto}
+/* When the chart is wider than its card it scrolls; an edge shadow shows there is more to the side and fades out at the end (the covers scroll with the content). */
+.cash-flow-sankey{overflow-x:auto;background:linear-gradient(to right,var(--card) 30%,transparent) left center/32px 100% no-repeat local,linear-gradient(to left,var(--card) 30%,transparent) right center/32px 100% no-repeat local,radial-gradient(farthest-side at 0 50%,color-mix(in srgb,var(--foreground) 14%,transparent),transparent) left center/12px 100% no-repeat scroll,radial-gradient(farthest-side at 100% 50%,color-mix(in srgb,var(--foreground) 14%,transparent),transparent) right center/12px 100% no-repeat scroll}
 .sankey-label{fill:var(--foreground);font-size:var(--type-micro)}
 @container content (max-width:720px){.cash-flow-breakdown{grid-template-columns:minmax(0,1fr)}}
 

@@ -10,6 +10,7 @@ import {dictionaries,locales,translate,type Language} from './i18n';
 import {shiftDay} from './period-summary';
 import type {Category} from './planning';
 import {directionOf,ruleChoice,ruleMatches,type TransactionRule} from './transaction-rules';
+import { offeredChoice } from './removed-categories';
 export type Direction='expense'|'income';
 /** A record date typed the way the app shows it (30 September 2026, in the owner's language or English), as ISO (2026-09-30)
  * or day first (30.09.2026); past or today unless `future` allows later days. */
@@ -157,9 +158,13 @@ const keywordKinds:Array<[Entry['kind'],string[]]>=[
 ];
 export type CategoryGuess={direction:Direction;kind:Entry['kind'];custom_category_id:string|null;business_id?:string;account_id?:string;source:'rule'|'history'|'category'|'keyword'|'default'};
 const generalKind=(direction:Direction):Entry['kind']=>direction==='income'?'Other income':'Other expense';
+/** The first kind of the keyword table whose words the text contains. */
+function keywordKind(lower:string,words:string[],allowed:(kind:Entry['kind'])=>boolean){
+ return keywordKinds.find(([kind,stems])=>allowed(kind)&&stems.some(stem=>stem.includes(' ')?lower.includes(stem):words.some(word=>word===stem||(stem.length>=5&&word.startsWith(stem)))))?.[0];
+}
 /** The category for a typed entry: the owner's rules first, then their last record with the same name, then a category
  * named in the text, then a keyword table, then Other expense or Other income. A typed sign fixes the direction. */
-export function guessCategory(entry:{name:string;amount:number;account_id?:string;direction?:Direction},ctx:{rules?:TransactionRule[];records:Entry[];categories:Category[];businesses?:Pick<Entry,'id'>[]}):CategoryGuess{
+export function guessCategory(entry:{name:string;amount:number;account_id?:string;direction?:Direction},ctx:{rules?:TransactionRule[];records:Entry[];categories:Category[];businesses?:Pick<Entry,'id'>[];removed?:readonly string[]}):CategoryGuess{
  const name=entry.name.trim(),lower=name.toLowerCase(),forced=entry.direction;
  const fits=(kind:Entry['kind'])=>{const direction=directionOf(kind);return !!direction&&(!forced||forced===direction);};
  // Business income always names a business, so a guess without one falls back to Other income.
@@ -182,11 +187,10 @@ export function guessCategory(entry:{name:string;amount:number;account_id?:strin
   const words=lower.split(/[\s\-–—]+/);
   const custom=ctx.categories.find(category=>(!forced||category.direction===forced)&&(category.name.trim().toLowerCase()===lower||words.includes(category.name.trim().toLowerCase())));
   if(custom)return {direction:custom.direction,kind:generalKind(custom.direction),custom_category_id:custom.id,source:'category'};
-  for(const [kind,stems] of keywordKinds){
-   if(!fits(kind))continue;
-   if(stems.some(stem=>stem.includes(' ')?lower.includes(stem):words.some(word=>word===stem||(stem.length>=5&&word.startsWith(stem)))))return {direction:directionOf(kind)!,kind,custom_category_id:null,source:'keyword'};
-  }
+  const keyword=keywordKind(lower,words,kind=>fits(kind)&&!ctx.removed?.includes(kind));
+  if(keyword)return {direction:directionOf(keyword)!,kind:keyword,custom_category_id:null,source:'keyword'};
  }
  const direction=forced??'expense';
- return {direction,kind:generalKind(direction),custom_category_id:null,source:'default'};
+ // A deleted general category gives way to the first category the workspace still offers.
+ return {direction,...offeredChoice(generalKind(direction),ctx.categories,ctx.removed??[]),source:'default'};
 }

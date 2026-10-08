@@ -18,13 +18,34 @@ export function sankeyNodeValue(flows: Flows, index: number) {
 export function sankeyLabelMargins(flows: Flows, label: (name: string, value: number) => string, measure: (text: string) => number = estimateLabelWidth) {
  // The gap between a bar and its label, plus a little slack for rounding.
  const gap = 14;
- let left = 0, right = 0;
+ let left = 0, right = 0, middle = 0;
  flows.nodes.forEach((node, index) => {
   const width = measure(label(node.name, sankeyNodeValue(flows, index)));
-  if (!flows.links.some(link => link.target === index)) left = Math.max(left, width);
-  if (!flows.links.some(link => link.source === index)) right = Math.max(right, width);
+  const source = !flows.links.some(link => link.target === index), sink = !flows.links.some(link => link.source === index);
+  if (source) left = Math.max(left, width);
+  if (sink) right = Math.max(right, width);
+  if (!source && !sink) middle = Math.max(middle, width);
  });
- return { left: Math.ceil(left) + gap, right: Math.ceil(right) + gap };
+ return { left: Math.ceil(left) + gap, right: Math.ceil(right) + gap, middle: Math.ceil(middle) + gap };
+}
+
+/** How many columns the chart draws: the longest chain of flows from a source to a sink, counted in nodes. */
+export function sankeyColumns(flows: Flows) {
+ const depth = new Map<number, number>();
+ const of = (index: number, seen: ReadonlySet<number>): number => {
+  if (depth.has(index)) return depth.get(index)!;
+  const next = flows.links.filter(link => link.source === index && !seen.has(link.target)).map(link => of(link.target, new Set([...seen, index])));
+  const value = 1 + Math.max(0, ...next);
+  depth.set(index, value);
+  return value;
+ };
+ return Math.max(0, ...flows.nodes.map((_, index) => of(index, new Set())));
+}
+
+/** The narrowest the chart may draw before it scrolls: its label margins, and between each pair of columns room for
+ * a middle column's label (drawn beside its bar, over the flows) with the flows still curving gently past it. */
+export function sankeyMinWidth(flows: Flows, margins: { left: number; right: number; middle?: number }, perColumn = 140) {
+ return Math.ceil(margins.left + margins.right + Math.max(1, sankeyColumns(flows) - 1) * Math.max(perColumn, (margins.middle ?? 0) + 24));
 }
 
 let canvas: HTMLCanvasElement | undefined;

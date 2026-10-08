@@ -51,8 +51,8 @@ export function flexBucketCategory(settings: readonly BudgetCategorySetting[]): 
  return { key: flexBucketKey, name: 'Flexible', custom: false, direction: 'expense', type: 'flexible', group: defaultGroups.flexible, excluded: false, ...rolloverFund(settings.find(item => item.category_key === flexBucketKey)) };
 }
 
-/** Every category that can carry a budget: built-in kinds and custom categories. */
-export function budgetCategories(categories: readonly Category[], settings: readonly BudgetCategorySetting[]): BudgetCategory[] {
+/** Every category that can carry a budget: the built-in kinds this workspace kept, and custom categories. */
+export function budgetCategories(categories: readonly Category[], settings: readonly BudgetCategorySetting[], removed: readonly string[] = []): BudgetCategory[] {
  const byKey = new Map(settings.map(setting => [setting.category_key, setting]));
  const build = (key: string, name: string, custom: boolean, direction: BudgetDirection): BudgetCategory => {
   const setting = byKey.get(key);
@@ -60,9 +60,9 @@ export function budgetCategories(categories: readonly Category[], settings: read
   return { key, name, custom, direction, type, group: setting?.group_name?.trim() || (direction === 'income' ? defaultGroups.income : defaultGroups[type]), ...rolloverFund(direction === 'expense' ? setting : undefined), excluded: !!setting?.excluded };
  };
  return [
-  ...income.map(kind => build(kind, kind, false, 'income')),
+  ...income.filter(kind => !removed.includes(kind)).map(kind => build(kind, kind, false, 'income')),
   ...categories.filter(category => category.direction === 'income').map(category => build(category.id, category.name, true, 'income')),
-  ...expenses.map(kind => build(kind, kind, false, 'expense')),
+  ...expenses.filter(kind => !removed.includes(kind)).map(kind => build(kind, kind, false, 'expense')),
   ...categories.filter(category => category.direction === 'expense').map(category => build(category.id, category.name, true, 'expense')),
  ];
 }
@@ -177,6 +177,18 @@ export function budgetRows(categories: readonly BudgetCategory[], amounts: reado
   const available = budget === null ? null : budget + rolloverIn;
   return { ...category, budget, actual, rolloverIn, remaining: available === null ? null : available - actual, progress: available && available > 0 ? actual / available : actual > 0 ? 1 : 0 };
  });
+}
+
+export type BudgetOverall = { income: number; expenses: number; plannedIncome: number; plannedExpenses: number };
+/** One month's income and spending across its categories, actual and planned. Excluded categories are left out. */
+export function budgetOverall(rows: readonly BudgetRow[]): BudgetOverall {
+ const overall = { income: 0, expenses: 0, plannedIncome: 0, plannedExpenses: 0 };
+ for (const row of rows) {
+  if (row.excluded) continue;
+  if (row.direction === 'income') { overall.income += row.actual; overall.plannedIncome += row.budget ?? 0; }
+  else { overall.expenses += row.actual; overall.plannedExpenses += row.budget ?? 0; }
+ }
+ return overall;
 }
 
 /** A row is "unbudgeted" when nothing is planned and nothing happened; those hide behind "Show N unbudgeted". */

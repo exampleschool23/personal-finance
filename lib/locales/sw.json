@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "Imekopeshwa kutoka akaunti (si lazima)",
   "Not from an account": "Si kutoka akaunti",
   "No cash account in {currency}.": "Hakuna akaunti ya pesa taslimu kwa {currency}.",
-  "Built-in categories cannot be deleted.": "Kategoria zilizojengwa ndani haziwezi kufutwa.",
   "Restored": "Imerejeshwa",
   "Import undone": "Uingizaji umetenguliwa",
   "Add recurring": "Ongeza inayojirudia",
   "Recurring income": "Mapato yanayojirudia",
   "Recurring bill": "Bili inayojirudia",
   "Monthly spending plan": "Mpango wa matumizi wa kila mwezi",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Mapato halisi ni mapato ukiondoa matumizi katika kipindi hiki: kilichobaki kwenye akaunti zako au kilichokwenda kwenye akiba, uwekezaji au kulipa mtaji wa mikopo."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Mapato halisi ni mapato ukiondoa matumizi katika kipindi hiki: kilichobaki kwenye akaunti zako au kilichokwenda kwenye akiba, uwekezaji au kulipa mtaji wa mikopo.",
+  "Deleted categories": "Kategoria zilizofutwa",
+  "Restore {name}": "Rejesha {name}",
+  "Keep at least one category of this type.": "Acha angalau kategoria moja ya aina hii.",
+  "Rules and templates: {count}": "Kanuni na violezo: {count}",
+  "All other income": "Mapato mengine yote",
+  "All other expenses": "Matumizi mengine yote",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

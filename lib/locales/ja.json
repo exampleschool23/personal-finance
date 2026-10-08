@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "貸し出し元の口座（任意）",
   "Not from an account": "口座からではない",
   "No cash account in {currency}.": "{currency} の現金口座がありません。",
-  "Built-in categories cannot be deleted.": "標準のカテゴリは削除できません。",
   "Restored": "復元しました",
   "Import undone": "インポートを取り消しました",
   "Add recurring": "定期項目を追加",
   "Recurring income": "定期収入",
   "Recurring bill": "定期支払い",
   "Monthly spending plan": "毎月の支出プラン",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "純収入はこの期間の収入から支出を引いたものです。口座に残ったお金、または貯蓄・投資・ローン元金の返済に回ったお金です。"
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "純収入はこの期間の収入から支出を引いたものです。口座に残ったお金、または貯蓄・投資・ローン元金の返済に回ったお金です。",
+  "Deleted categories": "削除したカテゴリ",
+  "Restore {name}": "{name}を元に戻す",
+  "Keep at least one category of this type.": "この種類のカテゴリを少なくとも1つ残してください。",
+  "Rules and templates: {count}": "ルールとテンプレート：{count}",
+  "All other income": "その他すべての収入",
+  "All other expenses": "その他すべての支出",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

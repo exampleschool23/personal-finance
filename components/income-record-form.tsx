@@ -21,7 +21,8 @@ import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { CashAccountField } from '@/components/cash-account-field';
 import { earningSourcePaymentStatus, selectEarningSource } from '@/lib/earning-sources';
 import { depositToday } from '@/lib/deposit-interest';
-import { income, type Entry } from '@/lib/finance';
+import type { Entry } from '@/lib/finance';
+import { offeredKinds } from '@/lib/removed-categories';
 import { incomeSources, selectIncomeSource, changeIncomeKind, salaryDueDate } from '@/lib/income-sources';
 import { formatMoney, formatDate, formatNumber } from '@/lib/format';
 import type { RecordDialogProps } from '@/components/record-dialog';
@@ -40,6 +41,7 @@ function ScheduledPaymentSummary({date,label}:{date:string;label:string}){
 
 export function IncomeRecordForm({editing,setEditing,busy,save,currencies,planning,error,demo,earningSources,onLeave,original}:RecordDialogProps){
  const {t,locale}=useLanguage();
+ const removed=planning.data.removedKinds??[];
  const [salaryPlan,setSalaryPlan]=useState(()=>editing?.kind==='Salary'&&editing.frequency!=='Once');
  // Only a saved schedule opens here repeating; new recurring income is a fixed income source (Recurring › Add recurring).
  const [schedule]=useState(()=>!!editing&&editing.frequency!=='Once');
@@ -65,7 +67,7 @@ export function IncomeRecordForm({editing,setEditing,busy,save,currencies,planni
  const sourcePlaceholder=editing.kind==='Salary'?'Choose a salary plan':editing.kind==='Rent income'?'Choose a rental':'Choose a business';
  return <form className="record-form" onSubmit={save}>
   {simple&&earningSources&&<div><IncomeSourcePicker value={editing.custom_category_id??editing.earning_source_id??(retained?'saved':editing.kind==='Other income'?'':'choose')} disabled={busy||earningSources.loading||!!earningSources.error||planning.loading||!!planning.error} options={[
-   {id:'',name:t('Other income'),kind:'Other income'},
+   ...(offeredKinds('income',removed,editing.custom_category_id?undefined:editing.kind).includes('Other income')?[{id:'',name:t('Other income'),kind:'Other income'}]:[]),
    ...planning.data.categories.filter(category=>category.direction==='income').map(category=>({id:category.id,name:category.name,kind:category.id,categoryLabel:category.name})),
    ...(original&&!original.earning_source_id&&original.kind!=='Other income'?[{id:'saved',name:original.name,kind:original.kind}]:[]),
    ...(editing.earning_source_id&&!reusable?[{id:editing.earning_source_id,name:editing.name,kind:editing.kind,disabled:true}]:[]),
@@ -86,7 +88,7 @@ export function IncomeRecordForm({editing,setEditing,busy,save,currencies,planni
   {reusable&&<label>{t('Payment type')}<NativeSelect value={editing.payment_type??'regular'} disabled={busy} onChange={event=>update(selectEarningSource(editing,reusable,event.target.value==='bonus'))}><option value="regular">{t('Regular income')}</option><option value="bonus">{t('Bonus')}</option></NativeSelect></label>}
   {reusable&&editing.payment_type!=='bonus'&&reusable.mode==='fixed'&&<ScheduledPaymentSummary label={t('Scheduled payment date')} date={editing.earning_due_on??''}/>}
   {salaryPlan&&<p className="muted">{t('Set up the recurring salary plan you will select when recording payments.')}</p>}
-  {!simple&&<label>{t('Category')}<NativeSelect value={editing.custom_category_id??editing.kind} disabled={busy||!!reusable||planning.loading||!!planning.error} leadingIcon={<RecordIcon record={editing}/>} onChange={event=>{setSalaryPlan(false);const selected=selectTransactionCategory(editing,event.target.value,planning.data.categories,'income');setEditing({...changeIncomeKind(editing,selected.kind),custom_category_id:selected.custom_category_id});}}>{income.map(kind=><option key={kind} value={kind}>{t(kind)}</option>)}{planning.data.categories.filter(category=>category.direction==='income').map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</NativeSelect></label>}
+  {!simple&&<label>{t('Category')}<NativeSelect value={editing.custom_category_id??editing.kind} disabled={busy||!!reusable||planning.loading||!!planning.error} leadingIcon={<RecordIcon record={editing}/>} onChange={event=>{setSalaryPlan(false);const selected=selectTransactionCategory(editing,event.target.value,planning.data.categories,'income');setEditing({...changeIncomeKind(editing,selected.kind),custom_category_id:selected.custom_category_id});}}>{offeredKinds('income',removed,editing.kind).map(kind=><option key={kind} value={kind}>{t(kind)}</option>)}{planning.data.categories.filter(category=>category.direction==='income').map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</NativeSelect></label>}
   {!reusable&&(named?<RecordNameInput label={salaryPlan?t('Salary plan name'):t('Name')} entry={editing} rows={planning.data.records} original={original} placeholder={t(salaryPlan?'e.g. Monthly salary':'e.g. Freelance payment')} onChange={name=>update({name})}/>:!simple&&<div><label>{t(sourceLabel)}<NativeSelect required={!legacy} value={sourceId??''} disabled={busy||planning.loading||!!planning.error} onChange={event=>{const selected=sources.find(row=>row.id===event.target.value);if(selected)update(selectIncomeSource(editing,selected));else update({name:'',business_id:null,income_source_id:null});}}><option value="">{legacy?original.name:t(sourcePlaceholder)}</option>{sourceId&&!source&&original&&<option value={sourceId} disabled>{`${original.name} (${t('Paused or no longer available')})`}</option>}{sources.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</NativeSelect></label>
    {!planning.loading&&!planning.error&&!sources.length&&!sourceId&&<p className="muted">{t(editing.kind==='Salary'?'Add a salary plan before recording its income.':editing.kind==='Rent income'?'Add a property in Assets & investments first.':'Add a business in Assets & investments first.')}</p>}
    {editing.kind==='Salary'?<Link href="/income-expenses#income-sources">{t('Add income source')}</Link>:<Link href="/assets">{t('Assets & investments')}</Link>}

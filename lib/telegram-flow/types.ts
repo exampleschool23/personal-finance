@@ -15,7 +15,7 @@ export type DraftData={typed?:boolean;fx_rate?:number;fx_rate_date?:string;id?:s
 export type LiabilityKind='Loan'|'Debt'|'Mortgage';
 export const liabilityKinds:LiabilityKind[]=['Loan','Debt','Mortgage'];
 export type Draft={kind:FlowKind;step:Step;data:DraftData};
-export type FlowContext={language:Language;today:string;newId:string;categories:Category[];accounts:Entry[];liabilities:Entry[];currencies?:string[];businesses?:Entry[];records?:Entry[];rules?:TransactionRule[]};
+export type FlowContext={language:Language;today:string;newId:string;categories:Category[];accounts:Entry[];liabilities:Entry[];currencies?:string[];businesses?:Entry[];records?:Entry[];rules?:TransactionRule[];/** Built-in categories the workspace deleted: never offered or guessed. */removed?:string[]};
 export type FlowInput={text?:string;callback?:string};
 export type PaymentData={id:string;account_id:string;target_id:string;amount:number;received:number;fee:number;date:string;notes:string};
 /** What to save. A record in another currency than its account carries the dated rate's day and the account currency in `fx`;

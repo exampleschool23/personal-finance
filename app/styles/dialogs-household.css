@@ -3,7 +3,7 @@
 /* Wide screens: a wider dialog with the accounts in a grid of bordered cells, so long lists need less scrolling. */
 @media (min-width:1024px){.record-dialog.account-businesses-dialog{max-width:min(1180px,calc(100vw - 96px))!important}.account-businesses-dialog ul{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px 12px}.account-businesses-dialog li{grid-template-columns:auto minmax(0,1fr) minmax(0,10rem);padding:8px 12px;border:1px solid var(--hairline);border-radius:var(--radius-control)}}
 .account-list-title{display:flex;align-items:center;gap:6px}
-.account-list-title>.business-mark{width:18px;height:18px;border-radius:5px;font-size:var(--type-micro)}
+.account-list-title>.business-mark{width:18px;height:18px;font-size:var(--type-micro)}
 .sankey-link{fill:none;stroke:color-mix(in srgb,var(--foreground) 13%,transparent);transition:stroke .15s}
 .sankey-link[data-clickable],.sankey-node[data-clickable]{cursor:pointer}
 .sankey-link[data-clickable]:hover{stroke:color-mix(in srgb,var(--mark-bg) 38%,transparent)}
@@ -16,6 +16,7 @@
 .donut-slice{cursor:pointer;outline:none}
 @container content (max-width:640px){.breakdown-donut{grid-template-columns:minmax(0,1fr)}}
 .report-custom-range{align-items:center}
+.report-custom-range>.date-picker-trigger{width:auto}
 .report-business-name{display:inline-flex;align-items:center;gap:8px;min-width:0}
 .report-business-name>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pnl-table{width:100%;border-collapse:collapse;font-size:var(--type-small);font-variant-numeric:tabular-nums}
@@ -40,9 +41,6 @@
 .pnl-drill:hover{background:var(--muted);color:var(--foreground)}
 @media (hover:none){.pnl-drill{opacity:1}}
 .report-transactions{display:flex;flex-direction:column;gap:12px}
-.report-transactions-heading{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
-.report-transactions-heading h2{margin:0;font-size:var(--type-title);font-weight:600}
-.report-transactions-heading>.muted{margin-inline-start:auto;font-size:var(--type-caption)}
 .report-drill{display:inline-flex;align-items:center;gap:6px;padding:2px 4px 2px 10px;border-radius:999px;background:color-mix(in srgb,var(--mark-bg) 12%,transparent);font-size:var(--type-caption);font-weight:500}
 .report-drill>button{display:grid;place-items:center;width:20px;height:20px;border-radius:50%}
 .report-drill>button:hover{background:color-mix(in srgb,var(--mark-bg) 20%,transparent)}

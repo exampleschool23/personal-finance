@@ -4,6 +4,7 @@ import {uuid,nonnegativeAmount,fiatCurrency,isoDate} from './api-validation';
 import {taxLineIds,taxTemplates} from './business-tax';
 import {isCategoryIcon} from './category-icons';
 import {isCategoryPaletteColor} from './category-colors';
+import {expenses,income} from './finance';
 const weights=z.record(z.string().max(80),z.number().finite().min(0).max(100)).refine(value=>Object.keys(value).length<=50&&Math.abs(Object.values(value).reduce((sum,n)=>sum+n,0)-100)<1e-8);
 // Dashboard layouts saved before cards could change column keep one `order` list; both shapes load, as do ids of removed cards.
 const dashboardCardList=z.array(z.enum([...dashboardCardIds,...retiredDashboardCards] as string[] as [string,...string[]])).max(20);
@@ -20,6 +21,8 @@ export const workspacePreferenceSchema=z.discriminatedUnion('key',[
  z.object({key:z.literal('tax_lines'),data:z.object({template:z.enum(taxTemplates),lines:z.record(z.string().trim().min(1).max(80),z.enum(taxLineIds as [string,...string[]]).nullable()).refine(value=>Object.keys(value).length<=500)})}),
  // The icon and colour chosen for a category, by built-in category name or added category id; only icons from the catalogue and palette colours.
  z.object({key:z.literal('category_icons'),data:z.object({icons:z.record(z.string().trim().min(1).max(80),z.string().refine(isCategoryIcon)).refine(value=>Object.keys(value).length<=1000),colors:z.record(z.string().trim().min(1).max(80),z.string().refine(isCategoryPaletteColor)).refine(value=>Object.keys(value).length<=1000).optional()})}),
+ // Built-in categories deleted from this workspace (migration 122): no longer offered, while records keep their kind.
+ z.object({key:z.literal('removed_categories'),data:z.object({kinds:z.array(z.enum([...income,...expenses] as [string,...string[]])).max(8).refine(kinds=>new Set(kinds).size===kinds.length)})}),
  z.object({key:z.literal('category_order'),data:z.object({ids:z.array(z.string().trim().min(1).max(80)).max(1000).refine(ids=>new Set(ids).size===ids.length)})}),
  z.object({key:z.literal('allocation'),data:z.object({weights,target_net_worth:z.object({amount:nonnegativeAmount.positive(),currency:fiatCurrency,date:isoDate.nullable().optional()}).nullable().optional()})}),
  z.object({key:z.literal('watchlists'),data:z.object({items:z.array(z.object({id:uuid,name:z.string().trim().min(1).max(80),query:z.string().trim().max(120),category:z.string().max(80),currency:fiatCurrency,target:nonnegativeAmount.positive()})).max(30)})}),

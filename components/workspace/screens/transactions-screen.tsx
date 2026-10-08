@@ -45,7 +45,7 @@ const transactionsPerPage = 20;
 
 export function TransactionsScreen() {
  const { t, locale } = useLanguage();
- const { user, demo, reload, currency, market, planning, transactionTools, workspaceLoading, addCashFlow, setViewing, storedRecord, categorize, assignTransactionsBusiness, businessList, tags, attachments, refreshRecords, household, readOnly, assignRecordOwner } = useWorkspace();
+ const { user, demo, reload, currency, market, planning, transactionTools, workspaceLoading, addCashFlow, setViewing, storedRecord, categorize, assignTransactionsBusiness, businessList, tags, attachments, refreshRecords, household, readOnly, assignRecordOwner, removedCategories } = useWorkspace();
  // In a shared household: whose transactions to show, and who each one belongs to.
  const homes = household.state;
  const owners = homes && sharedWorkspace(homes) ? ownerChoices(homes, { shared: t('Shared'), unnamed: t('Partner') }) : [];
@@ -91,7 +91,7 @@ export function TransactionsScreen() {
  const accounts = new Map(data.records.filter(record => record.kind === 'Cash').map(record => [record.id, record.name]));
  const money = (amount: number) => formatMoney(amount, currency, locale);
  const chosen = records.filter(record => selected.has(record.id));
- const categoryOptions = [...categoryChoices(data.categories, 'income'), ...categoryChoices(data.categories, 'expense')];
+ const categoryOptions = [...categoryChoices(data.categories, 'income', removedCategories.kinds), ...categoryChoices(data.categories, 'expense', removedCategories.kinds)];
 
  async function change(targets: Entry[], choice: CategoryChoice) {
   try {
@@ -173,7 +173,7 @@ export function TransactionsScreen() {
       return <li key={record.id} className="transaction-row" data-selected={selected.has(record.id) || undefined} tabIndex={0} aria-label={transactionRowLabel(t('View details for {name}', { name: shownName(record, t) }), record, nameOf(record), locale)} onClick={open(record)} onKeyDown={open(record)}>
        {selecting && <input type="checkbox" aria-label={t('Select {name}', { name: record.name })} checked={selected.has(record.id)} onChange={() => toggle(record.id)}/>}
        <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span>{attachments.counts.get(record.id) ? <span className="transaction-name"><strong>{shownName(record, t)}</strong><Paperclip className="transaction-attachment-mark" size={13} role="img" aria-label={t('Attachments: {count}', { count: attachments.counts.get(record.id)! })}/></span> : <strong>{shownName(record, t)}</strong>}{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}<MortgageSplit record={record}/>{recordTags.length > 0 && <span className="transaction-tags">{recordTags.map(tag => <TagChip key={tag.id} name={tag.name} color={tag.color}/>)}</span>}</span></span>
-       <span className="transaction-labels">{owners.length > 0 && <OwnerPicker record={record} owner={ownerOption(record)} owners={owners} disabled={readOnly || selecting} onChange={owner => void giveTo(record, owner)}/>}<CategoryPicker record={record} categories={data.categories} disabled={!editable || selecting || readOnly} onChange={choice => change([record], choice)}/>
+       <span className="transaction-labels">{owners.length > 0 && <OwnerPicker record={record} owner={ownerOption(record)} owners={owners} disabled={readOnly || selecting} onChange={owner => void giveTo(record, owner)}/>}<CategoryPicker record={record} categories={data.categories} removed={removedCategories.kinds} disabled={!editable || selecting || readOnly} onChange={choice => change([record], choice)}/>
        {businessList.length > 0 && <BusinessPicker record={record} businesses={businessList} disabled={selecting || readOnly || record.frequency !== 'Once' || !!record.history_event_id || !!record.earning_source_id || (record.kind === 'Salary' && !!record.income_source_id)} onChange={business => moveToBusiness(record, business)}/>}</span>
        <TransactionAmount record={record}/>
       </li>;
@@ -192,8 +192,8 @@ export function TransactionsScreen() {
     </dl>
    </aside>
   </div>}
-  {editingMany && <BulkEditSheet records={chosen} categories={data.categories} businesses={businessList} owners={owners} tags={tags.data.tags} tagsOf={tagsOf} onCreateTag={createTag} onSave={editMany} onClose={() => setEditingMany(false)}/>}
-  {rule && <RuleDialog key={rule.id} rule={rule} records={data.records} categories={data.categories} businesses={businessList} accounts={[...accounts].map(([id, name]) => ({ id, name }))} tags={tags.data.tags} tagsOf={tagsOf} onCreateTag={createTag} splits={splits} onSave={async (next, apply) => { const changed = await rules.save(next, apply); if (apply) showNotice(t('{changed} updated', { changed })); return changed; }} onClose={() => setRule(null)}/>}
+  {editingMany && <BulkEditSheet records={chosen} categories={data.categories} removed={removedCategories.kinds} businesses={businessList} owners={owners} tags={tags.data.tags} tagsOf={tagsOf} onCreateTag={createTag} onSave={editMany} onClose={() => setEditingMany(false)}/>}
+  {rule && <RuleDialog key={rule.id} rule={rule} records={data.records} categories={data.categories} removed={removedCategories.kinds} businesses={businessList} accounts={[...accounts].map(([id, name]) => ({ id, name }))} tags={tags.data.tags} tagsOf={tagsOf} onCreateTag={createTag} splits={splits} onSave={async (next, apply) => { const changed = await rules.save(next, apply); if (apply) showNotice(t('{changed} updated', { changed })); return changed; }} onClose={() => setRule(null)}/>}
   {rulesOpen && !rule && <RulesDialog rules={rules.rules} categories={data.categories} businesses={businessList} tags={tags.data.tags} onEdit={setRule} onAdd={() => setRule(newRule())} onRemove={item => rules.remove(item.id)} onClose={() => setRulesOpen(false)}/>}
  </div>;
 }

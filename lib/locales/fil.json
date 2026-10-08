@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "Ipinahiram mula sa account (opsyonal)",
   "Not from an account": "Hindi mula sa account",
   "No cash account in {currency}.": "Walang cash account sa {currency}.",
-  "Built-in categories cannot be deleted.": "Hindi maaaring burahin ang mga built-in na kategorya.",
   "Restored": "Naibalik",
   "Import undone": "Na-undo ang pag-import",
   "Add recurring": "Magdagdag ng umuulit",
   "Recurring income": "Umuulit na kita",
   "Recurring bill": "Umuulit na bayarin",
   "Monthly spending plan": "Buwanang plano ng gastos",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Ang netong kita ay ang kita bawas ang gastos sa panahong ito: ang naiwan sa iyong mga account o napunta sa ipon, pamumuhunan o prinsipal ng utang."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Ang netong kita ay ang kita bawas ang gastos sa panahong ito: ang naiwan sa iyong mga account o napunta sa ipon, pamumuhunan o prinsipal ng utang.",
+  "Deleted categories": "Mga binurang kategorya",
+  "Restore {name}": "Ibalik ang {name}",
+  "Keep at least one category of this type.": "Mag-iwan ng kahit isang kategorya ng ganitong uri.",
+  "Rules and templates: {count}": "Mga patakaran at template: {count}",
+  "All other income": "Lahat ng iba pang kita",
+  "All other expenses": "Lahat ng iba pang gastos",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

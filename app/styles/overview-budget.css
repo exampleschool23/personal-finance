@@ -231,6 +231,10 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-year td>small{color:var(--muted-foreground)}
 .budget-year td[data-future]{color:var(--muted-foreground)}
 .budget-year td .budget-progress{margin-top:4px}
+.budget-year tfoot th[scope=row],.budget-year tfoot td{background:var(--muted);font-weight:500}
+.budget-year tfoot tr:first-child>*{border-top:1px solid var(--border)}
+.budget-year tfoot tr[data-net]>*{border-bottom:0}
+.budget-year tfoot td[data-tone=negative]{color:var(--negative)}
 .budget-year>.budget-left-empty{padding:24px}
 @container content (max-width:980px){.budget-layout{grid-template-columns:minmax(0,1fr)}.budget-side{position:static;order:-1}}
 /* Planned, Actual and Remaining stay beside the name until a 9rem name and three 92px figures no longer fit (about 540px of content). Below that,

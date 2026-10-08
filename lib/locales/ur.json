@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "کس اکاؤنٹ سے قرض دیا (اختیاری)",
   "Not from an account": "کسی اکاؤنٹ سے نہیں",
   "No cash account in {currency}.": "{currency} میں کوئی نقد اکاؤنٹ نہیں۔",
-  "Built-in categories cannot be deleted.": "بلٹ اِن زمرے حذف نہیں کیے جا سکتے۔",
   "Restored": "بحال کر دیا گیا",
   "Import undone": "امپورٹ واپس لے لیا گیا",
   "Add recurring": "بار بار ہونے والا شامل کریں",
   "Recurring income": "باقاعدہ آمدنی",
   "Recurring bill": "باقاعدہ بل",
   "Monthly spending plan": "ماہانہ اخراجات کا منصوبہ",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "خالص آمدنی اس مدت کی آمدنی میں سے خرچ نکال کر ہے: جو آپ کے اکاؤنٹس میں رہا یا بچت، سرمایہ کاری یا قرض کی اصل رقم میں گیا۔"
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "خالص آمدنی اس مدت کی آمدنی میں سے خرچ نکال کر ہے: جو آپ کے اکاؤنٹس میں رہا یا بچت، سرمایہ کاری یا قرض کی اصل رقم میں گیا۔",
+  "Deleted categories": "حذف شدہ زمرے",
+  "Restore {name}": "{name} بحال کریں",
+  "Keep at least one category of this type.": "اس قسم کا کم از کم ایک زمرہ رکھیں۔",
+  "Rules and templates: {count}": "اصول اور سانچے: {count}",
+  "All other income": "باقی تمام آمدنی",
+  "All other expenses": "باقی تمام اخراجات",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

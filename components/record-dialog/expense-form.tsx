@@ -1,4 +1,5 @@
 "use client";
+import { offeredKinds } from '@/lib/removed-categories';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { ScheduleFields } from '@/components/presentation-foundation/schedule-fields';
@@ -21,7 +22,7 @@ import { NativeSelect } from '@/components/ui/native-select';
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney, formatDate as sharedFormatDate } from '@/lib/format';
-import { liabilities, expenses, type Entry } from '@/lib/finance';
+import { liabilities, type Entry } from '@/lib/finance';
 import { depositToday as today } from '@/lib/deposit-interest';
 import { expensePlanTotals, type ExpensePlan } from '@/lib/expense-plans';
 import { ExpensePlanDialog, newExpensePlan } from '@/components/expense-plans';
@@ -59,11 +60,12 @@ function PlanFields({form}:{form:ExpenseContext}){
 function CategoryAmount({form}:{form:ExpenseContext}){
  const {t}=useLanguage();
  const {editing,setEditing,busy,planning,currencies,mode,update,savedCurrency,onLeave,schedule,original}=form;
+ const removed=planning.data.removedKinds??[];
  return <>   {schedule&&<RecordNameInput label={t('Name')} entry={editing} rows={planning.data.records} original={original} placeholder={t('e.g. Rent or internet subscription')} onChange={name=>update({name})}/>}
    {mode==='expense'&&<div><label>{t('Category')}<NativeSelect disabled={busy||planning.loading||!!planning.error} value={editing.custom_category_id??editing.kind} onChange={event=>{
     const selected=event.target.value;
     setEditing(selectTransactionCategory(editing,selected,planning.data.categories,'expense'));
-   }}>{expenses.map(kind=><option key={kind} value={kind}>{t(kind)}</option>)}{planning.data.categories.filter(category=>category.direction==='expense').map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</NativeSelect></label><Link className="panel-link" href="/settings#categories" onNavigate={event=>{if(busy){event.preventDefault();return;}if(onLeave)onLeave(event,'/settings#categories');else setEditing(null);}}>{t('Manage categories in Settings')}</Link></div>}
+   }}>{offeredKinds('expense',removed,editing.kind).map(kind=><option key={kind} value={kind}>{t(kind)}</option>)}{planning.data.categories.filter(category=>category.direction==='expense').map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</NativeSelect></label><Link className="panel-link" href="/settings#categories" onNavigate={event=>{if(busy){event.preventDefault();return;}if(onLeave)onLeave(event,'/settings#categories');else setEditing(null);}}>{t('Manage categories in Settings')}</Link></div>}
    {/* A new one-time expense may pay a recurring bill, named by its id. Otherwise nothing is offered and a choice made earlier is cleared. */}
    <ScheduledPaymentField schedules={mode==='expense'&&savedCurrency===undefined&&editing.frequency==='Once'?paymentSchedules(planning.data.records,editing):[]} value={editing.occurrence_record_id} disabled={busy||planning.loading} onChange={schedule=>update(chooseSchedule(editing,schedule))}/>
    <AmountCurrencyFields amount={editing.amount} currency={editing.currency} currencies={currencies} savedCurrency={savedCurrency} disabled={busy} currencyLocked={mode==='plan'} onAmountChange={amount=>update({amount})} onCurrencyChange={currency=>update({currency,account_exchange_rate:null,account_rate_date:null,account_currency:null})}/></>;

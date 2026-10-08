@@ -253,3 +253,16 @@ test('dark tooltips and menus stay readable, touch fields do not zoom, and primi
  const {useUiLabel}=loadTS('components/ui/ui-label.ts',{react:{...React,useContext:()=>null}});
  assert.equal(useUiLabel()('Close'),'Close','without a provider a primitive falls back to English instead of throwing');
 });
+
+test('Reports keeps the 8 October 2026 review fixes (SCR-095, SCR-096, HEAD-011, TOK-013)', () => {
+ const reports=fs.readFileSync('components/business-reports.tsx','utf8'),filters=fs.readFileSync('components/reports/report-filters.tsx','utf8'),css=stylesheet();
+ assert.doesNotMatch(reports,/minWidth=\{columns/,'the Sankey width follows its labels and columns, not a fixed guess');
+ assert.match(reports,/<PanelTitle title=\{t\('Transactions'\)\} count=\{<Count/,'the transactions panel opens with PanelTitle and a Count pill');
+ assert.doesNotMatch(reports,/budget-left-empty/,'report charts use EmptyState');
+ assert.match(filters,/label=\{t\('From'\)\}[\s\S]*label=\{t\('To'\)\}/,'custom range fields are named');
+ assert.match(css,/\.report-custom-range>\.date-picker-trigger\{width:auto\}/);
+ assert.doesNotMatch(css,/\.business-mark[^{]*\{[^}]*border-radius:\d+px/,'business marks round in proportion to their size');
+ const {sankeyColumns,sankeyMinWidth}=loadTS('lib/sankey-labels.ts');
+ const flows={nodes:[{name:'a'},{name:'b'},{name:'c'},{name:'d'}],links:[{source:0,target:2,value:1},{source:1,target:2,value:1},{source:2,target:3,value:1}]};
+ assert.equal(sankeyColumns(flows),3);assert.equal(sankeyMinWidth(flows,{left:150,right:140}),570);assert.equal(sankeyMinWidth(flows,{left:150,right:140,middle:180}),698,'a long middle label widens its gap');
+});

@@ -25,8 +25,8 @@ export function ReportFilters({ businesses, business, onBusiness, owners, owner,
 export function CustomRange({ range, today, onChange }: { range: ReportRange; today: string; onChange: (range: ReportRange) => void }) {
  const { t } = useLanguage();
  return <div className="transactions-tools report-custom-range">
-  <DatePicker value={range.from} max={range.to} onChange={from => from && onChange({ ...range, from })}/>
-  <DatePicker value={range.to} min={range.from} max={today} onChange={to => to && onChange({ ...range, to })}/>
+  <DatePicker label={t('From')} value={range.from} max={range.to} onChange={from => from && onChange({ ...range, from })}/>
+  <DatePicker label={t('To')} value={range.to} min={range.from} max={today} onChange={to => to && onChange({ ...range, to })}/>
   {rangeMonths(range).length > 24 && <span className="bulk-bar-note">{t('Reports cover up to 24 months.')}</span>}
  </div>;
 }

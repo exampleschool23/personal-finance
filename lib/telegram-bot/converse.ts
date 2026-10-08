@@ -18,15 +18,17 @@ import type {BotClock,FlowInput,Turn} from './types';
 
 type Context=FlowContext&{records:Entry[]};
 async function loadContext(db:ServiceDatabase,owner:string,language:Language,clock:BotClock,typed=false):Promise<Context>{
- const [records,categories,preferences,rules]=await Promise.all([
+ const [records,categories,preferences,rules,removed]=await Promise.all([
   // Every record, read in pages: a long history must not push accounts or schedules past the first page.
   ownerRows<Entry>(db,'finance_records',owner).then(rows=>rows.sort((a,b)=>a.name.localeCompare(b.name))),
   db.read<Category[]>(`/rest/v1/transaction_categories?select=id,name,direction&user_id=eq.${owner}`),
   db.read<Array<{currencies?:string[]}>>('/rest/v1/user_preferences?select=currencies&user_id=eq.'+owner),
   // Typed text may be an entry, which the owner's rules help categorise. Without the rules table it is guessed from history alone.
   typed?db.read<TransactionRule[]>(`/rest/v1/transaction_rules?select=*&user_id=eq.${owner}&order=created_at.desc`).catch(()=>[]):Promise.resolve([] as TransactionRule[]),
+  // Built-in categories the workspace deleted (migration 122); before it, none.
+  db.read<Array<{data?:{kinds?:string[]}}>>(`/rest/v1/workspace_preferences?select=data&key=eq.removed_categories&user_id=eq.${owner}`).then(rows=>rows[0]?.data?.kinds??[]).catch(()=>[] as string[]),
  ]);
- return {language,currencies:preferences[0]?.currencies??[],today:clock.today,newId:clock.newId(),categories,records,rules,accounts:records.filter(record=>record.kind==='Cash'),businesses:records.filter(record=>record.kind==='Business'),liabilities:records.filter(record=>['Loan','Debt','Mortgage'].includes(record.kind))};
+ return {language,currencies:preferences[0]?.currencies??[],today:clock.today,newId:clock.newId(),categories,records,rules,removed,accounts:records.filter(record=>record.kind==='Cash'),businesses:records.filter(record=>record.kind==='Business'),liabilities:records.filter(record=>['Loan','Debt','Mortgage'].includes(record.kind))};
 }
 /** An entry in another currency than its account waits for the day's rate; without one the owner is asked for the converted amount. */
 async function withDatedRate({env,chatId}:Turn,result:FlowResult,ctx:Context){

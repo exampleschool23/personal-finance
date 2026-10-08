@@ -135,7 +135,7 @@ test('expense uses one category above amount, including user categories and safe
 });
 test('Settings exposes added categories beside the category creation form',()=>{
  const render=component('components/transaction-tools-panel.tsx','TransactionToolsPanel');
- const html=render({tools:{data:{rules:[]},loading:false,error:'',retry(){},save:async()=>{}},categories:[{id:'food',name:'Eating out',direction:'expense'}],saveCategory:async()=>{},icons:{icons:{},disabled:false,choose:async()=>{},emojiOf:kind=>kind==='food'?'🍕':'🏷️'},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true});
+ const html=render({tools:{data:{rules:[]},loading:false,error:'',retry(){},save:async()=>{}},categories:[{id:'food',name:'Eating out',direction:'expense'}],saveCategory:async()=>{},icons:{icons:{},disabled:false,choose:async()=>{},emojiOf:kind=>kind==='food'?'🍕':'🏷️'},removed:{kinds:[],restore:async()=>{},hideForVisit(){},deleted(){},disabled:false},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true});
  assert.ok(html.includes('id="categories"'));
  assert.ok(html.includes('Eating out'));
  assert.ok(html.includes('Add expense category'));assert.ok(html.includes('Add income category'));

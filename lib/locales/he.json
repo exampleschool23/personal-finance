@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "הולווה מחשבון (לא חובה)",
   "Not from an account": "לא מחשבון",
   "No cash account in {currency}.": "אין חשבון מזומן ב־{currency}.",
-  "Built-in categories cannot be deleted.": "לא ניתן למחוק קטגוריות מובנות.",
   "Restored": "שוחזר",
   "Import undone": "הייבוא בוטל",
   "Add recurring": "הוספת פריט קבוע",
   "Recurring income": "הכנסה קבועה",
   "Recurring bill": "חשבון קבוע",
   "Monthly spending plan": "תוכנית הוצאות חודשית",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "הכנסה נטו היא ההכנסה פחות ההוצאות בתקופה זו: מה שנשאר בחשבונות שלך או הופנה לחיסכון, להשקעות או לקרן ההלוואות."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "הכנסה נטו היא ההכנסה פחות ההוצאות בתקופה זו: מה שנשאר בחשבונות שלך או הופנה לחיסכון, להשקעות או לקרן ההלוואות.",
+  "Deleted categories": "קטגוריות שנמחקו",
+  "Restore {name}": "שחזור {name}",
+  "Keep at least one category of this type.": "יש להשאיר לפחות קטגוריה אחת מסוג זה.",
+  "Rules and templates: {count}": "כללים ותבניות: {count}",
+  "All other income": "כל שאר ההכנסות",
+  "All other expenses": "כל שאר ההוצאות",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

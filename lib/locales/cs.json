@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "Půjčeno z účtu (volitelné)",
   "Not from an account": "Ne z účtu",
   "No cash account in {currency}.": "Žádný hotovostní účet v {currency}.",
-  "Built-in categories cannot be deleted.": "Vestavěné kategorie nelze smazat.",
   "Restored": "Obnoveno",
   "Import undone": "Import byl vrácen",
   "Add recurring": "Přidat opakovanou položku",
   "Recurring income": "Opakovaný příjem",
   "Recurring bill": "Opakovaná platba",
   "Monthly spending plan": "Měsíční plán výdajů",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Čistý příjem jsou příjmy minus výdaje za toto období: co zůstalo na vašich účtech nebo šlo na úspory, investice či splátky jistiny úvěrů."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Čistý příjem jsou příjmy minus výdaje za toto období: co zůstalo na vašich účtech nebo šlo na úspory, investice či splátky jistiny úvěrů.",
+  "Deleted categories": "Smazané kategorie",
+  "Restore {name}": "Obnovit {name}",
+  "Keep at least one category of this type.": "Ponechte alespoň jednu kategorii tohoto typu.",
+  "Rules and templates: {count}": "Pravidla a šablony: {count}",
+  "All other income": "Všechny ostatní příjmy",
+  "All other expenses": "Všechny ostatní výdaje",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

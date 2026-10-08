@@ -57,7 +57,7 @@ export function EditCategoryDialog({item,icon,chosen,color,defaultHue,iconsDisab
    {taken&&<p role="alert" className="error">{t(duplicateCategoryMessage)}</p>}
    <ErrorPopup message={error}/>
    <FormFooter busy={busy} onCancel={guard.close}>
-    <DeleteButton className="category-edit-delete" disabled={busy} label={t('Delete {name}',{name:item.label})} reason={onDelete?undefined:t('Built-in categories cannot be deleted.')} onClick={onDelete}/>
+    <DeleteButton className="category-edit-delete" disabled={busy} label={t('Delete {name}',{name:item.label})} reason={onDelete?undefined:t('Keep at least one category of this type.')} onClick={onDelete}/>
     <Button disabled={busy||!dirty||taken||!name.trim()}>{t(busy?'Saving…':'Save')}</Button>
    </FormFooter>
   </form>

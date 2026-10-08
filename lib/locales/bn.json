@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "যে অ্যাকাউন্ট থেকে ধার দেওয়া হয়েছে (ঐচ্ছিক)",
   "Not from an account": "কোনো অ্যাকাউন্ট থেকে নয়",
   "No cash account in {currency}.": "{currency}-এ কোনো নগদ অ্যাকাউন্ট নেই।",
-  "Built-in categories cannot be deleted.": "অন্তর্নির্মিত বিভাগগুলি মুছে ফেলা যায় না।",
   "Restored": "পুনরুদ্ধার করা হয়েছে",
   "Import undone": "ইমপোর্ট বাতিল করা হয়েছে",
   "Add recurring": "পুনরাবৃত্ত যোগ করুন",
   "Recurring income": "পুনরাবৃত্ত আয়",
   "Recurring bill": "পুনরাবৃত্ত বিল",
   "Monthly spending plan": "মাসিক খরচের পরিকল্পনা",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "নিট আয় হলো এই সময়ের আয় থেকে ব্যয় বাদ দিয়ে: যা আপনার অ্যাকাউন্টে রয়ে গেছে বা সঞ্চয়, বিনিয়োগ বা ঋণের আসলে গেছে।"
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "নিট আয় হলো এই সময়ের আয় থেকে ব্যয় বাদ দিয়ে: যা আপনার অ্যাকাউন্টে রয়ে গেছে বা সঞ্চয়, বিনিয়োগ বা ঋণের আসলে গেছে।",
+  "Deleted categories": "মুছে ফেলা বিভাগ",
+  "Restore {name}": "{name} ফিরিয়ে আনুন",
+  "Keep at least one category of this type.": "এই ধরনের অন্তত একটি বিভাগ রাখুন।",
+  "Rules and templates: {count}": "নিয়ম ও টেমপ্লেট: {count}",
+  "All other income": "বাকি সব আয়",
+  "All other expenses": "বাকি সব খরচ",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

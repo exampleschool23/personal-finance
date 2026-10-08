@@ -27,7 +27,7 @@ export function BulkEditBar({ count, total, onAll, onEdit, onCancel }: { count: 
 
 /** Edit multiple drawer: change the category, the business, the owner and the tags of the selected transactions together.
  * Fields left as they are stay unchanged on every transaction. */
-export function BulkEditSheet({ records, categories, businesses, owners = [], tags, tagsOf, onCreateTag, onSave, onClose }: { records: Entry[]; categories: readonly Category[]; businesses: readonly BusinessOption[]; /** The household's owners, in a shared workspace. */ owners?: readonly OwnerOption[]; tags: readonly Tag[]; tagsOf: (id: string) => readonly string[]; onCreateTag?: (name: string) => Promise<string>; onSave: (change: { choice: CategoryChoice | null; business: string | null | undefined; owner: string | undefined; add: string[]; remove: string[] }) => Promise<void>; onClose: () => void }) {
+export function BulkEditSheet({ records, categories, removed, businesses, owners = [], tags, tagsOf, onCreateTag, onSave, onClose }: { records: Entry[]; categories: readonly Category[]; removed?: readonly string[]; businesses: readonly BusinessOption[]; /** The household's owners, in a shared workspace. */ owners?: readonly OwnerOption[]; tags: readonly Tag[]; tagsOf: (id: string) => readonly string[]; onCreateTag?: (name: string) => Promise<string>; onSave: (change: { choice: CategoryChoice | null; business: string | null | undefined; owner: string | undefined; add: string[]; remove: string[] }) => Promise<void>; onClose: () => void }) {
  const { t } = useLanguage();
  const directions = new Set(records.map(record => directionOf(record.kind)));
  const direction = directions.size === 1 ? [...directions][0] : null;
@@ -51,7 +51,7 @@ export function BulkEditSheet({ records, categories, businesses, owners = [], ta
    <form className="bulk-edit-form" onSubmit={event => { event.preventDefault(); return save(); }}>
     <fieldset disabled={busy}>
      <div className="budget-dialog-label">{t('Category')}
-      {direction ? <CategoryChoiceButton categories={categories} direction={direction} value={choice} placeholder={t('Leave unchanged')} onChange={setChoice}/> : <span className="bulk-bar-note">{t('Select only income or only expenses to change their category together.')}</span>}
+      {direction ? <CategoryChoiceButton categories={categories} removed={removed} direction={direction} value={choice} placeholder={t('Leave unchanged')} onChange={setChoice}/> : <span className="bulk-bar-note">{t('Select only income or only expenses to change their category together.')}</span>}
      </div>
      {businesses.length > 0 && <div className="budget-dialog-label">{t('Business')}<BusinessChoiceButton businesses={businesses} value={business} label={businessName} onChange={setBusiness}/></div>}
      {owners.length > 0 && <div className="budget-dialog-label">{t('Owner')}

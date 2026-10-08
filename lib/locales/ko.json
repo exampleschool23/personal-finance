@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "빌려준 계좌 (선택)",
   "Not from an account": "계좌에서 나가지 않음",
   "No cash account in {currency}.": "{currency} 현금 계좌가 없습니다.",
-  "Built-in categories cannot be deleted.": "기본 카테고리는 삭제할 수 없습니다.",
   "Restored": "복원됨",
   "Import undone": "가져오기를 취소했습니다",
   "Add recurring": "반복 항목 추가",
   "Recurring income": "반복 수입",
   "Recurring bill": "반복 청구서",
   "Monthly spending plan": "월별 지출 계획",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "순수입은 이 기간의 수입에서 지출을 뺀 금액입니다. 계좌에 남았거나 저축, 투자 또는 대출 원금 상환에 쓰인 돈입니다."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "순수입은 이 기간의 수입에서 지출을 뺀 금액입니다. 계좌에 남았거나 저축, 투자 또는 대출 원금 상환에 쓰인 돈입니다.",
+  "Deleted categories": "삭제한 카테고리",
+  "Restore {name}": "{name} 복원",
+  "Keep at least one category of this type.": "이 유형의 카테고리를 하나 이상 남겨 두세요.",
+  "Rules and templates: {count}": "규칙 및 템플릿: {count}",
+  "All other income": "나머지 모든 수입",
+  "All other expenses": "나머지 모든 지출",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

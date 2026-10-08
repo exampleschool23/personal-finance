@@ -23,11 +23,11 @@ export function useChoiceName(categories: readonly Category[]) {
 }
 
 /** A searchable list of one direction's categories. */
-export function CategoryList({ categories, direction, selected, onSelect }: { categories: readonly Category[]; direction: Category['direction']; selected?: string; onSelect: (choice: Choice) => void }) {
+export function CategoryList({ categories, removed = [], direction, selected, onSelect }: { categories: readonly Category[]; /** Deleted built-in categories, not offered. */ removed?: readonly string[]; direction: Category['direction']; selected?: string; onSelect: (choice: Choice) => void }) {
  const { t } = useLanguage();
  const [query, setQuery] = useState('');
  const name = (choice: Choice) => choice.custom ? choice.name : t(choice.name);
- const options = categoryChoices(categories, direction).filter(choice => name(choice).toLowerCase().includes(query.trim().toLowerCase()));
+ const options = categoryChoices(categories, direction, removed).filter(choice => name(choice).toLowerCase().includes(query.trim().toLowerCase()));
  return <div className="category-picker">
   <Input autoFocus placeholder={t('Search categories')} aria-label={t('Search categories')} value={query} onChange={event => setQuery(event.currentTarget.value)}/>
   <p className="category-picker-heading">{t(direction === 'income' ? 'Income' : 'Expenses')}</p>
@@ -41,7 +41,7 @@ export function CategoryList({ categories, direction, selected, onSelect }: { ca
 }
 
 /** A transaction's category as a pill; clicking it opens the category list. */
-export function CategoryPicker({ record, categories, disabled, onChange }: { record: Entry; categories: readonly Category[]; disabled?: boolean; onChange: (choice: CategoryChoice) => void }) {
+export function CategoryPicker({ record, categories, removed, disabled, onChange }: { record: Entry; categories: readonly Category[]; removed?: readonly string[]; disabled?: boolean; onChange: (choice: CategoryChoice) => void }) {
  const { t } = useLanguage();
  const [open, setOpen] = useState(false);
  const direction = directionOf(record.kind) ?? 'expense';
@@ -52,7 +52,7 @@ export function CategoryPicker({ record, categories, disabled, onChange }: { rec
  return <Popover open={open} onOpenChange={setOpen}>
   <PopoverTrigger asChild><button type="button" className="transaction-category-button" aria-label={t('Change category for {name}', { name: record.name })}>{pill}</button></PopoverTrigger>
   <PopoverContent className="category-picker-popover" align="start">
-   <CategoryList categories={categories} direction={direction} selected={choiceKey(choice)} onSelect={next => { setOpen(false); if (choiceKey(next) !== choiceKey(choice) || next.kind !== record.kind) onChange(next); }}/>
+   <CategoryList categories={categories} removed={removed} direction={direction} selected={choiceKey(choice)} onSelect={next => { setOpen(false); if (choiceKey(next) !== choiceKey(choice) || next.kind !== record.kind) onChange(next); }}/>
   </PopoverContent>
  </Popover>;
 }
@@ -113,11 +113,11 @@ export function ChoiceButton({ label, children }: { label: ReactNode; children: 
 }
 
 /** A category field: the chosen category (or `placeholder`), and with `clearLabel` a way back to none. */
-export function CategoryChoiceButton({ categories, direction, value, placeholder, clearLabel, onChange }: { categories: readonly Category[]; direction: Category['direction']; value: CategoryChoice | null; placeholder: string; clearLabel?: string; onChange: (choice: CategoryChoice | null) => void }) {
+export function CategoryChoiceButton({ categories, removed, direction, value, placeholder, clearLabel, onChange }: { categories: readonly Category[]; removed?: readonly string[]; direction: Category['direction']; value: CategoryChoice | null; placeholder: string; clearLabel?: string; onChange: (choice: CategoryChoice | null) => void }) {
  const choiceName = useChoiceName(categories);
  const label = value ? <><CategoryIcon kind={value.category_id ? choiceName(value) : value.kind} size="sm"/>{choiceName(value)}</> : placeholder;
  return <ChoiceButton label={label}>{close => <>
-  <CategoryList categories={categories} direction={direction} selected={value ? choiceKey(value) : undefined} onSelect={next => { close(); onChange(next); }}/>
+  <CategoryList categories={categories} removed={removed} direction={direction} selected={value ? choiceKey(value) : undefined} onSelect={next => { close(); onChange(next); }}/>
   {value && clearLabel && <Button type="button" size="sm" variant="ghost" onClick={() => { close(); onChange(null); }}>{clearLabel}</Button>}
  </>}</ChoiceButton>;
 }

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, leftToBudget, flexBucketBudget, budgetRowsForMode, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, demoBudget } = loadTS('lib/budget.ts');
+const { budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, leftToBudget, flexBucketBudget, budgetOverall, budgetRowsForMode, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, demoBudget } = loadTS('lib/budget.ts');
 const { shiftMonth } = loadTS('lib/calendar-days.ts');
 const { demoRecords } = loadTS('lib/demo-finance.ts');
 
@@ -232,4 +232,11 @@ test('the Flexible bucket rolls over its plan minus all flexible spending', () =
  assert.equal(flexBucketRollover(bucket, categories, amounts, history, '2026-03', 'USD', rates), 0);
  // Before a bucket amount is saved, its plan is the sum of the flexible categories' budgets.
  assert.equal(flexBucketPlan([amount('Living expense', '2026-01', 50, true), amount('Other expense', '2026-01', 20, true), amount('Rent expense', '2026-01', 900, true)], categories, '2026-01', 'USD', rates), 70);
+});
+
+test('the overall line sums income and spending apart, actual and planned, and skips excluded categories', () => {
+ const row = (direction, actual, budget, excluded = false) => ({ key: direction + actual, direction, actual, budget, excluded });
+ assert.deepEqual(budgetOverall([row('income', 9150, 9150), row('income', 850, null), row('expense', 1482, 1400), row('expense', 1873, null), row('expense', 50, 100, true)]),
+  { income: 10000, expenses: 3355, plannedIncome: 9150, plannedExpenses: 1400 });
+ assert.deepEqual(budgetOverall([]), { income: 0, expenses: 0, plannedIncome: 0, plannedExpenses: 0 });
 });

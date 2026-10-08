@@ -13,7 +13,9 @@ import { formatNumber } from '@/lib/format';
 import { requestJson } from '@/lib/api-client';
 import type { Category } from '@/lib/planning';
 
-type Usage={records:number;deleted:number;watchlists:number};
+/** What uses a category. Rules and entry templates are counted only for a built-in category (migration 122). */
+type Usage={records:number;deleted:number;watchlists:number;rules?:number};
+/** Deletes an added category, or a built-in one (its `id` is the kind) from this workspace; linked records move first. */
 export function DeleteCategoryDialog({category,categories,onClose,onDeleted}:{category:Category;categories:Category[];onClose:()=>void;onDeleted:()=>void}){
  const {t,locale}=useLanguage();
  const [usage,setUsage]=useState<Usage|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[retry,setRetry]=useState(0),[replacement,setReplacement]=useState(''),[name,setName]=useState('');
@@ -25,7 +27,7 @@ export function DeleteCategoryDialog({category,categories,onClose,onDeleted}:{ca
   }).catch(reason=>{if(!controller.signal.aborted)setError(reason.message);});
   return()=>controller.abort();
  },[category.id,retry]);
- const inUse=!!usage&&(usage.records+usage.deleted+usage.watchlists>0);
+ const inUse=!!usage&&(usage.records+usage.deleted+usage.watchlists+(usage.rules??0)>0);
  const targets=categories.filter(item=>item.id!==category.id&&item.direction===category.direction);
  const valid=!!usage&&(!inUse||(replacement==='new'?!!name.trim():targets.some(item=>item.id===replacement)));
  async function remove(){
@@ -49,6 +51,7 @@ export function DeleteCategoryDialog({category,categories,onClose,onDeleted}:{ca
    {usage.records>0&&<li>{t('Transactions and schedules: {count}',{count:formatNumber(usage.records,locale,0)})}</li>}
    {usage.deleted>0&&<li>{t('Recently deleted records: {count}',{count:formatNumber(usage.deleted,locale,0)})}</li>}
    {usage.watchlists>0&&<li>{t('Spending watchlists: {count}',{count:formatNumber(usage.watchlists,locale,0)})}</li>}
+   {!!usage.rules&&<li>{t('Rules and templates: {count}',{count:formatNumber(usage.rules,locale,0)})}</li>}
   </ul><label>{t('Move to category')}<NativeSelect value={replacement} disabled={busy} onChange={event=>setReplacement(event.target.value)}><option value="">{t('Select category')}</option>{targets.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}<option value="new">{t('Create a replacement category')}</option></NativeSelect></label>
   {replacement==='new'&&<label>{t('New category')}<Input value={name} disabled={busy} required maxLength={80} onChange={event=>setName(event.target.value)}/></label>}
   <p className="muted">{t('Only categories of the same type can receive these records. Split allocations and Recently deleted records are moved too.')}</p></>}

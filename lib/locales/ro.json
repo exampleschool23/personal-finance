@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "Împrumutat din contul (opțional)",
   "Not from an account": "Nu dintr-un cont",
   "No cash account in {currency}.": "Niciun cont de numerar în {currency}.",
-  "Built-in categories cannot be deleted.": "Categoriile implicite nu pot fi șterse.",
   "Restored": "Restaurat",
   "Import undone": "Importul a fost anulat",
   "Add recurring": "Adaugă recurent",
   "Recurring income": "Venit recurent",
   "Recurring bill": "Factură recurentă",
   "Monthly spending plan": "Plan lunar de cheltuieli",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Venitul net este venitul minus cheltuielile din această perioadă: ce a rămas în conturile tale sau a mers la economii, investiții ori la principalul împrumuturilor."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Venitul net este venitul minus cheltuielile din această perioadă: ce a rămas în conturile tale sau a mers la economii, investiții ori la principalul împrumuturilor.",
+  "Deleted categories": "Categorii șterse",
+  "Restore {name}": "Restaurează {name}",
+  "Keep at least one category of this type.": "Păstrează cel puțin o categorie de acest tip.",
+  "Rules and templates: {count}": "Reguli și șabloane: {count}",
+  "All other income": "Toate celelalte venituri",
+  "All other expenses": "Toate celelalte cheltuieli",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

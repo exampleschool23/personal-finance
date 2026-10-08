@@ -74,13 +74,14 @@ export function BudgetCard({ owner = null, demo = false, revision = 0, data: pro
  const { t, locale } = useLanguage();
  const today = depositToday(), month = expensePlanMonth();
  const budget = useBudget(owner, demo, revision);
+ const removed = provided.removedKinds ?? [];
  // Rollover categories need every month since their rollover started.
- const range = budgetReadRange(month, 'month', budgetCategories(provided.categories, budget.state.categories));
+ const range = budgetReadRange(month, 'month', budgetCategories(provided.categories, budget.state.categories, removed));
  const remote = useOwnerResource(`/api/planning?scope=budget&month=${month}&from=${range.from}`, owner, !!owner && !demo, revision, emptyPlanning);
  const data = owner && !demo ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : provided;
  const rates = market?.rates ?? market?.fx?.rate;
  const history = new Map(monthsBetween(range.from, month).map(item => [item, monthActuals(data, splits, item, currency, today, rates)]));
- const rows = budgetRows(budgetCategories(data.categories, budget.state.categories), budget.state.amounts, history, month, currency, rates).filter(row => row.direction === 'expense' && !row.excluded);
+ const rows = budgetRows(budgetCategories(data.categories, budget.state.categories, removed), budget.state.amounts, history, month, currency, rates).filter(row => row.direction === 'expense' && !row.excluded);
  const flexible = budget.state.mode === 'flex' ? flexBucketBudget(budget.state.amounts, rows, month, currency, rates) ?? 0 : null;
  const planned = leftToBudget(rows, budget.state.mode, flexible, 0).expenses, spent = rows.reduce((sum, row) => sum + row.actual, 0);
  // In flex mode flexible categories share one bucket, so only fixed categories keep a budget of their own here, as on the Budget page.

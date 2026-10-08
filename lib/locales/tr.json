@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "Ödünç verilen hesap (isteğe bağlı)",
   "Not from an account": "Bir hesaptan değil",
   "No cash account in {currency}.": "{currency} cinsinden nakit hesabı yok.",
-  "Built-in categories cannot be deleted.": "Yerleşik kategoriler silinemez.",
   "Restored": "Geri yüklendi",
   "Import undone": "İçe aktarma geri alındı",
   "Add recurring": "Düzenli ekle",
   "Recurring income": "Düzenli gelir",
   "Recurring bill": "Düzenli fatura",
   "Monthly spending plan": "Aylık harcama planı",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Net gelir, bu dönemdeki gelirden harcamaların düşülmesidir: hesaplarınızda kalan ya da birikime, yatırıma veya kredi anaparasına giden para."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Net gelir, bu dönemdeki gelirden harcamaların düşülmesidir: hesaplarınızda kalan ya da birikime, yatırıma veya kredi anaparasına giden para.",
+  "Deleted categories": "Silinen kategoriler",
+  "Restore {name}": "{name} geri yükle",
+  "Keep at least one category of this type.": "Bu türden en az bir kategori bırakın.",
+  "Rules and templates: {count}": "Kurallar ve şablonlar: {count}",
+  "All other income": "Diğer tüm gelirler",
+  "All other expenses": "Diğer tüm giderler",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

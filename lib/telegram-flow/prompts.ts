@@ -21,7 +21,7 @@ function categoryOptions(kind:'expense'|'income',ctx:FlowContext):TelegramButton
  const defaults=kind==='expense'?expenses:income;
  const custom=ctx.categories.filter(category=>category.direction===kind).sort((a,b)=>a.name.localeCompare(b.name));
  // Business income is offered only when there is a business to credit it to.
- const offered=defaults.filter(name=>name!=='Business income'||!!ctx.businesses?.length);
+ const offered=defaults.filter(name=>!ctx.removed?.includes(name)&&(name!=='Business income'||!!ctx.businesses?.length));
  return [...custom.map(category=>({text:category.name,callback_data:'f:cat:'+category.id})),...offered.map(name=>({text:t(ctx.language,name),callback_data:'f:cat:'+name}))];
 }
 function accountOptions(ctx:FlowContext,currency?:string,exclude?:string):TelegramButton[]{

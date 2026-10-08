@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "Qaysi hisobdan qarz berildi (ixtiyoriy)",
   "Not from an account": "Hisobdan emas",
   "No cash account in {currency}.": "{currency} da naqd hisob yo‘q.",
-  "Built-in categories cannot be deleted.": "Standart toifalarni o‘chirib bo‘lmaydi.",
   "Restored": "Tiklandi",
   "Import undone": "Import bekor qilindi",
   "Add recurring": "Takroriy qo‘shish",
   "Recurring income": "Takroriy daromad",
   "Recurring bill": "Takroriy to‘lov",
   "Monthly spending plan": "Oylik xarajat rejasi",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Sof daromad — bu davrdagi daromaddan xarajatlar ayirilgani: hisoblaringizda qolgan yoki jamg‘arma, investitsiya yoki qarz asosiy summasiga ketgan pul."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Sof daromad — bu davrdagi daromaddan xarajatlar ayirilgani: hisoblaringizda qolgan yoki jamg‘arma, investitsiya yoki qarz asosiy summasiga ketgan pul.",
+  "Deleted categories": "Oʻchirilgan toifalar",
+  "Restore {name}": "{name}ni tiklash",
+  "Keep at least one category of this type.": "Bu turdagi kamida bitta toifani qoldiring.",
+  "Rules and templates: {count}": "Qoidalar va andozalar: {count}",
+  "All other income": "Qolgan barcha daromadlar",
+  "All other expenses": "Qolgan barcha xarajatlar",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

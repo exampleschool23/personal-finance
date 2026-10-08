@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "Prestato dal conto (facoltativo)",
   "Not from an account": "Non da un conto",
   "No cash account in {currency}.": "Nessun conto di liquidità in {currency}.",
-  "Built-in categories cannot be deleted.": "Le categorie predefinite non possono essere eliminate.",
   "Restored": "Ripristinato",
   "Import undone": "Importazione annullata",
   "Add recurring": "Aggiungi ricorrente",
   "Recurring income": "Entrata ricorrente",
   "Recurring bill": "Bolletta ricorrente",
   "Monthly spending plan": "Piano di spesa mensile",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Il reddito netto è il reddito meno le spese del periodo: ciò che è rimasto sui tuoi conti o è andato in risparmi, investimenti o nel rimborso del capitale dei prestiti."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Il reddito netto è il reddito meno le spese del periodo: ciò che è rimasto sui tuoi conti o è andato in risparmi, investimenti o nel rimborso del capitale dei prestiti.",
+  "Deleted categories": "Categorie eliminate",
+  "Restore {name}": "Ripristina {name}",
+  "Keep at least one category of this type.": "Mantieni almeno una categoria di questo tipo.",
+  "Rules and templates: {count}": "Regole e modelli: {count}",
+  "All other income": "Tutte le altre entrate",
+  "All other expenses": "Tutte le altre spese",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

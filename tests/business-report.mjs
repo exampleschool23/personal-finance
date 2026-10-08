@@ -53,7 +53,7 @@ test('profit and loss rolls each business net income into total income beside ho
 
 test('the Sankey feeds a profit into household income and shows a loss leaving the household', () => {
  const { lines } = reportLedger({ records, investmentLinks: [] }, [], range, 'USD', today, { USD: 1, UZS: 12500 });
- const labels = { category: key => key, business: id => id, total: 'Income', savings: 'Savings', profit: 'Net profit', loss: name => `${name} net loss`, otherIncome: 'Other income', otherExpense: 'Other expense' };
+ const labels = { category: key => key, business: id => id, total: 'Income', savings: 'Savings', profit: 'Net profit', loss: name => `${name} net loss`, otherIncome: 'All other income', otherExpense: 'All other expenses', inBusiness: (name, business) => `${business}: ${name}` };
  const data = businessSankey(profitAndLoss(lines, ['candles', 'rentals'], line => line.category, true), labels);
  const index = name => data.nodes.findIndex(node => node.name === name);
  const link = (from, to) => data.links.find(item => item.source === index(from) && item.target === index(to));
@@ -64,6 +64,10 @@ test('the Sankey feeds a profit into household income and shows a loss leaving t
  assert.equal(index('sales'), -1, 'a business with one kind of income is its own source');
  assert.equal(index('Rent income'), -1);
  assert.equal(data.links.some(item => item.target === index('rentals')), false);
+ const names = data.nodes.map(node => node.name);
+ assert.equal(new Set(names).size, names.length, 'every node has a name of its own');
+ const shared = businessSankey({ household: { income: [{ key: 'Salary', amount: 900 }], incomeTotal: 900, expenses: [{ key: 'Other expense', amount: 100 }], expenseTotal: 100 }, businesses: [{ id: 'shop', income: [{ key: 'Sales', amount: 500 }], expenses: [{ key: 'Other expense', amount: 200 }], grossIncome: 500, totalExpenses: 200, net: 300 }], totalIncome: 1200, net: 1100 }, labels);
+ assert.deepEqual(shared.nodes.map(node => node.name).filter(name => name.includes('Other expense')).sort(), ['Other expense', 'shop: Other expense'], 'a business line that shares a name with another node says whose it is');
  assert.ok(data.links.every(item => item.value > 0 && data.nodes[item.source] && data.nodes[item.target]));
  const alone = businessSankey(profitAndLoss(filterLines(lines, ['candles']), ['candles'], line => line.category, false), labels);
  assert.equal(alone.nodes[alone.links.find(item => alone.nodes[item.source].kind === 'loss').target].name, 'candles', 'without the household, the loss covers the business');
@@ -164,7 +168,7 @@ test('a Sankey leaves room for its longest label on each side, no more',()=>{
  assert.equal(sankeyNodeValue(flows,3),97500);
  const label=(name,value)=>`${name} · ${value}`;
  const measure=text=>text.length*10;
- // Sources sit on the left, sinks on the right; the middle columns label inside the chart and never widen a margin.
- assert.deepEqual(sankeyLabelMargins(flows,label,measure),{left:'Business income · 44400'.length*10+14,right:'Other expense · 17200'.length*10+14});
+ // Sources sit on the left, sinks on the right; the middle columns label inside the chart, so they set the room between columns, not a margin.
+ assert.deepEqual(sankeyLabelMargins(flows,label,measure),{left:'Business income · 44400'.length*10+14,right:'Other expense · 17200'.length*10+14,middle:'Household income · 97500'.length*10+14});
  assert.ok(estimateLabelWidth('工资 · $1K')>estimateLabelWidth('ab · $1K'),'wide scripts take more room');
 });

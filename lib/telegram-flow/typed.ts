@@ -44,7 +44,7 @@ function typedAccount(parsed:{account_id?:string;currency?:string},guess:Guess,c
 export function startTyped(text:string,ctx:FlowContext):{draft:Draft}|{error:'empty'|'amount'|'date'}{
  const parsed=parseTypedEntry(text,{language:ctx.language,today:ctx.today,accounts:ctx.accounts,currencies:ctx.currencies});
  if('error' in parsed)return parsed;
- const guess=guessCategory({name:parsed.name,amount:parsed.amount,account_id:parsed.account_id,direction:parsed.direction},{rules:ctx.rules,records:ctx.records??[],categories:ctx.categories,businesses:ctx.businesses});
+ const guess=guessCategory({name:parsed.name,amount:parsed.amount,account_id:parsed.account_id,direction:parsed.direction},{rules:ctx.rules,records:ctx.records??[],categories:ctx.categories,businesses:ctx.businesses,removed:ctx.removed});
  const account=typedAccount(parsed,guess,ctx);
  const custom=guess.custom_category_id?ctx.categories.find(category=>category.id===guess.custom_category_id):undefined;
  const name=parsed.name?parsed.name.charAt(0).toLocaleUpperCase(locales[ctx.language])+parsed.name.slice(1):'';

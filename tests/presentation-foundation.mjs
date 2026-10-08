@@ -112,9 +112,9 @@ test('every delete button is a labelled bin with no text',()=>{
  const html=render(DeleteButton,{label:'Delete Insurance',onClick:()=>{}});
  assert.match(html,/aria-label="Delete Insurance"/);assert.match(html,/title="Delete Insurance"/);assert.match(html,/lucide-trash/);
  assert.doesNotMatch(html.replace(/<[^>]*>/g,''),/\S/,'no visible text');
- const fixed=render(DeleteButton,{label:'Delete Charity',reason:'Built-in categories cannot be deleted.'});
- assert.match(fixed,/<span[^>]*title="Built-in categories cannot be deleted."><button[^>]*disabled=""/,'an undeletable item keeps a disabled bin with its reason');
- assert.match(fixed,/aria-label="Delete Charity. Built-in categories cannot be deleted."/);
+ const fixed=render(DeleteButton,{label:'Delete Charity',reason:'Keep at least one category of this type.'});
+ assert.match(fixed,/<span[^>]*title="Keep at least one category of this type."><button[^>]*disabled=""/,'an undeletable item keeps a disabled bin with its reason');
+ assert.match(fixed,/aria-label="Delete Charity. Keep at least one category of this type."/);
 });
 
 test('segmented control presses exactly the current option and reports the chosen value',()=>{

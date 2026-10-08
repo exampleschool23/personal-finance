@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "از کدام حساب قرض داده شد (اختیاری)",
   "Not from an account": "نه از یک حساب",
   "No cash account in {currency}.": "هیچ حساب نقدی به {currency} وجود ندارد.",
-  "Built-in categories cannot be deleted.": "دسته‌های پیش‌فرض را نمی‌توان حذف کرد.",
   "Restored": "بازیابی شد",
   "Import undone": "واردکردن لغو شد",
   "Add recurring": "افزودن تکرارشونده",
   "Recurring income": "درآمد تکرارشونده",
   "Recurring bill": "قبض تکرارشونده",
   "Monthly spending plan": "برنامه هزینه ماهانه",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "درآمد خالص، درآمد این دوره منهای هزینه‌هاست: آنچه در حساب‌های شما ماند یا به پس‌انداز، سرمایه‌گذاری یا اصل وام رفت."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "درآمد خالص، درآمد این دوره منهای هزینه‌هاست: آنچه در حساب‌های شما ماند یا به پس‌انداز، سرمایه‌گذاری یا اصل وام رفت.",
+  "Deleted categories": "دسته‌های حذف‌شده",
+  "Restore {name}": "بازگرداندن {name}",
+  "Keep at least one category of this type.": "دست‌کم یک دسته از این نوع را نگه دارید.",
+  "Rules and templates: {count}": "قوانین و الگوها: {count}",
+  "All other income": "سایر درآمدها (بقیه)",
+  "All other expenses": "سایر هزینه‌ها (بقیه)",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

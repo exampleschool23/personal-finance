@@ -8,12 +8,13 @@ import { ShareBars } from '@/components/cash-flow-report';
 import { BusinessMark } from '@/components/presentation-foundation/business-mark';
 import type { BusinessOption } from '@/components/presentation-foundation/business-filter';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
+import { Count } from '@/components/presentation-foundation/count';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { toggleKey } from '@/components/presentation-foundation/series-legend';
 import { Button } from '@/components/ui/button';
 import { paletteColor } from '@/lib/business';
-import { measureLabel, sankeyLabelMargins } from '@/lib/sankey-labels';
+import { measureLabel, sankeyLabelMargins, sankeyMinWidth } from '@/lib/sankey-labels';
 import { ledgerExportRows, summarizeLines, type BusinessSankey, type Drill, type Interval, type LedgerLine, type PnlLine, type ProfitAndLoss } from '@/lib/business-report';
 import { otherShareKey, topShares, type Share } from '@/lib/cash-flow-report';
 import { categoryHue, hueColor } from '@/lib/category-colors';
@@ -99,14 +100,13 @@ export function ProfitLossTable({ pnl, breakdown, names, groupOf, currency, onDr
 /** The Sankey diagram with a layer for each business. Clicking a flow or a label narrows the transactions below. */
 export function BusinessSankeyChart({ data, currency, onDrill }: { data: BusinessSankey; currency: string; onDrill: (drill: Drill) => void }) {
  const { t, locale } = useLanguage();
- if (!data.links.length) return <p className="budget-left-empty">{t('Nothing recorded in this period.')}</p>;
+ if (!data.links.length) return <EmptyState icon={<ReceiptText/>} description={t('Nothing recorded in this period.')}/>;
  const fill = (kind: BusinessSankey['nodes'][number]['kind']) => kind === 'income' || kind === 'savings' ? 'var(--positive)' : kind === 'total' ? 'var(--mark-bg)' : kind === 'business' ? 'var(--caution)' : kind === 'loss' ? 'var(--negative)' : 'color-mix(in srgb, var(--foreground) 55%, transparent)';
  const drillOf = (index: number) => data.nodes[index]?.drill;
- const columns = new Set(data.nodes.map(node => node.kind)).size;
  const label = (name: string, value: number) => `${name} · ${formatCompactMoney(value, currency, locale)}`;
- // Each side gets exactly the room its longest label needs.
+ // Each side gets exactly the room its longest label needs; the chart scrolls only when that and its columns do not fit.
  const room = sankeyLabelMargins(data, label, measureLabel);
- return <div className="cash-flow-sankey"><ResponsiveContainer width="100%" minWidth={columns > 3 ? 720 : 480} height={Math.max(300, data.nodes.length * 30)}>
+ return <div className="cash-flow-sankey"><ResponsiveContainer width="100%" minWidth={sankeyMinWidth(data, room)} height={Math.max(300, data.nodes.length * 30)}>
   <Sankey data={data} nodePadding={16} nodeWidth={10} margin={{ top: 8, right: room.right, bottom: 8, left: room.left }}
    link={({ sourceX, targetX, sourceY, targetY, sourceControlX, targetControlX, linkWidth, index }: LinkProps) => {
     const link = data.links[index], drill = link && (drillOf(link.target) ?? drillOf(link.source));
@@ -145,7 +145,7 @@ export function TrendChart({ rows, series, stacked, interval, currency }: { rows
 /** A breakdown as a donut with its legend beside it; clicking a slice or a legend row narrows the transactions. */
 export function BreakdownDonut({ items, label, colorOf, currency, onSelect }: { items: Share[]; label: (key: string) => string; colorOf: (key: string) => string; currency: string; onSelect: (key: string) => void }) {
  const { t, locale } = useLanguage();
- if (!items.length) return <p className="budget-left-empty">{t('Nothing recorded in this period.')}</p>;
+ if (!items.length) return <EmptyState icon={<ReceiptText/>} description={t('Nothing recorded in this period.')}/>;
  const top = topShares(items);
  const name = (key: string) => key === otherShareKey ? t('Other') : label(key);
  return <div className="breakdown-donut">
@@ -170,7 +170,7 @@ export function ReportTransactions({ lines, drill, label, names, currency, onCle
  const { t, locale } = useLanguage();
  const [limit, setLimit] = useState(25);
  return <section className="panel report-transactions" aria-label={t('Transactions')}>
-  <div className="report-transactions-heading"><h2>{t('Transactions')}</h2>{drill && label && <span className="report-drill">{label}<button type="button" aria-label={t('Clear filter')} onClick={onClear}><X size={14} aria-hidden="true"/></button></span>}<span className="muted">{t('{count} transactions', { count: formatNumber(lines.length, locale, 0) })}</span></div>
+  <PanelTitle title={t('Transactions')} count={<Count value={lines.length}/>}>{drill && label && <span className="report-drill">{label}<button type="button" aria-label={t('Clear filter')} onClick={onClear}><X size={14} aria-hidden="true"/></button></span>}</PanelTitle>
   {lines.length ? <ul className="report-transaction-list">{lines.slice(0, limit).map(line => {
    const cells = <>
     <CategoryIcon kind={names.icon(line.category)} size="sm"/>

@@ -50,7 +50,7 @@ test('delete dialog requires a loaded preview and explicit same-type replacement
 });
 test('category pills are named edit buttons, disabled while loading; text fields stay editable',()=>{
  const h=harness('components/transaction-tools-panel.tsx','TransactionToolsPanel');const category={id:id(1),name:'Leisure',direction:'expense'};
- const props={categories:[category],saveCategory:async()=>{},icons:{icons:{},disabled:false,choose:async()=>{},emojiOf:kind=>kind==='food'?'🍕':'🏷️'},loading:true,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true};
+ const props={categories:[category],saveCategory:async()=>{},icons:{icons:{},disabled:false,choose:async()=>{},emojiOf:kind=>kind==='food'?'🍕':'🏷️'},removed:{kinds:[],restore:async()=>{},hideForVisit(){},deleted(){},disabled:false},loading:true,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true};
  const panel=h.render(props);const group=find(panel,node=>node.type?.name==='CategoryGroup'&&node.props.direction==='expense');
  // The group uses hooks from the same mocked React module.
  const tree=group.type(group.props);
@@ -62,7 +62,7 @@ test('tapping a category pill edits its name and icon together; built-in names s
  const h=harness('components/transaction-tools-panel.tsx','TransactionToolsPanel');const category={id:id(1),name:'Leisure',direction:'expense'};
  const calls=[];
  const icons={icons:{[id(1)]:'🎬'},colors:{[id(1)]:'violet'},disabled:false,choose:async(key,icon)=>{calls.push(['icon',key,icon]);},update:async(key,look)=>{calls.push(['look',key,look]);},emojiOf:kind=>kind==='Leisure'?'🎬':'🏷️'};
- const props={categories:[category],saveCategory:async(name,direction,existing)=>{calls.push(['save',name,direction,existing]);return existing??id(5);},icons,loading:false,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true};
+ const hidden=[];const props={categories:[category],saveCategory:async(name,direction,existing)=>{calls.push(['save',name,direction,existing]);return existing??id(5);},icons,removed:{kinds:[],restore:async()=>{},hideForVisit:kind=>hidden.push(kind),deleted(){},disabled:false},loading:false,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:null,demo:true};
  let panel;const group=()=>{panel=h.render(props);const node=find(panel,item=>item.type?.name==='CategoryGroup'&&item.props.direction==='expense');return node.type(node.props);};
  let tree=group();
  const pills=[];(function walk(node){if(!node||typeof node!=='object')return;if(node.props?.className==='category-edit-button')pills.push(node);for(const child of React.Children.toArray(node.props?.children))walk(child);})(tree);
@@ -76,10 +76,11 @@ test('tapping a category pill edits its name and icon together; built-in names s
  await dialog.props.onSave({name:'Hobbies',icon:'🎨',color:'teal'});
  assert.deepEqual(calls.slice(-2),[['save','Hobbies','expense',id(1)],['look',id(1),{icon:'🎨',color:'teal'}]],'icon and colour are one save');
  await dialog.props.onSave({color:null});assert.deepEqual(calls.at(-1),['look',id(1),{color:null}],'a colour-only change does not rename');
- // A built-in category edits only its icon and cannot be deleted.
+ // A built-in category keeps its name and can be deleted too; the sample workspace hides it for the visit.
  pills.find(pill=>pill.props['aria-label']==='Edit Charity').props.onClick();tree=group();
  dialog=find(tree,node=>node.type?.name==='EditCategoryDialog');
- assert.equal(dialog.props.item.category,undefined);assert.equal(dialog.props.onDelete,undefined);assert.equal(dialog.props.color,null);
+ assert.equal(dialog.props.item.category,undefined);assert.equal(dialog.props.color,null);
+ dialog.props.onDelete();assert.deepEqual(hidden,['Charity']);tree=group();
  // A new category: the name, then its icon.
  find(tree,node=>node.type?.name==='Input').props.onChange({target:{value:'Travel'}});tree=group();
  const start=find(tree,node=>node.props?.label==='Choose an icon');assert.deepEqual([start.props.icon,start.props.chosen],['🏷️',false]);
@@ -107,5 +108,37 @@ test('the category edit dialog saves only what changed (name, icon and colour), 
  find(tree,node=>node.props?.className==='category-edit-delete').props.onClick();assert.equal(deleted,1);
  const builtIn=harness('components/edit-category-dialog.tsx','EditCategoryDialog').render({...props,item:{id:'Charity',label:'Charity',direction:'expense'},onDelete:undefined});
  assert.equal(find(builtIn,node=>node.type?.name==='Input').props.disabled,true,'built-in names are translated and stay fixed');
- assert.equal(find(builtIn,node=>node.props?.className==='category-edit-delete').props.reason,'Built-in categories cannot be deleted.','a built-in category shows the bin, disabled, with the reason');
+ assert.equal(find(builtIn,node=>node.props?.className==='category-edit-delete').props.reason,'Keep at least one category of this type.','the last category of a direction shows the bin, disabled, with the reason');
+});
+
+test('deleted built-in categories leave the list, can be restored, and the last category of a direction stays',async()=>{
+ const h=harness('components/transaction-tools-panel.tsx','TransactionToolsPanel');const restored=[];
+ const removed={kinds:['Rent expense','Salary','Rent income','Business income'],restore:async kind=>{restored.push(kind);},hideForVisit(){},deleted(){},disabled:false};
+ const props={categories:[],saveCategory:async()=>id(5),icons:{icons:{},colors:{},disabled:false,choose:async()=>{},update:async()=>{},emojiOf:()=>'🏷️'},removed,loading:false,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:id(9),demo:false};
+ const panel=h.render(props);
+ const groupOf=direction=>{const node=find(panel,item=>item.type?.name==='CategoryGroup'&&item.props.direction===direction);return node;};
+ assert.deepEqual(groupOf('expense').props.items.map(item=>item.id),['Living expense','Charity','Other expense']);
+ assert.deepEqual(groupOf('income').props.items.map(item=>item.id),['Other income']);
+ const restore=find(panel,node=>node.props?.['aria-label']==='Restore Rent expense');
+ restore.props.onClick();await new Promise(resolve=>setImmediate(resolve));assert.deepEqual(restored,['Rent expense']);
+ // Other income is the only income category left: its bin stays disabled.
+ const render=direction=>{const node=find(h.render(props),item=>item.type?.name==='CategoryGroup'&&item.props.direction===direction);return node.type(node.props);};
+ const pill=(node,label)=>find(node,item=>item.props?.className==='category-edit-button'&&item.props['aria-label']===label);
+ pill(render('income'),'Edit Other income').props.onClick();
+ assert.equal(find(render('income'),node=>node.type?.name==='EditCategoryDialog').props.onDelete,undefined);
+ // A built-in category with a database opens the delete dialog, named by its kind.
+ const h2=harness('components/transaction-tools-panel.tsx','TransactionToolsPanel');
+ const expense=()=>{const root=h2.render(props);const node=find(root,item=>item.type?.name==='CategoryGroup'&&item.props.direction==='expense');return {root,tree:node.type(node.props)};};
+ pill(expense().tree,'Edit Charity').props.onClick();
+ find(expense().tree,node=>node.type?.name==='EditCategoryDialog').props.onDelete();
+ const dialog=find(expense().root,node=>node.type?.name==='DeleteCategoryDialog');
+ assert.deepEqual(dialog.props.category,{id:'Charity',name:'Charity',direction:'expense'});
+});
+test('the category API reads and deletes a built-in category by its kind',async()=>{
+ const app=api();
+ assert.equal((await app.GET(new Request('https://local/api/categories?id=Rent%20expense'))).status,200);
+ assert.deepEqual(app.calls[0],{path:'/rest/v1/rpc/built_in_category_usage',body:{p_kind:'Rent expense'},token:'owner-token'});
+ assert.equal((await app.DELETE(request({id:'Rent expense',replacement_id:id(2)}))).status,200);
+ assert.deepEqual(app.calls[1],{path:'/rest/v1/rpc/delete_built_in_category',body:{p_kind:'Rent expense',p_replacement:id(2),p_new_name:null},token:'owner-token'});
+ assert.equal((await app.DELETE(request({id:'Groceries'}))).status,400);
 });

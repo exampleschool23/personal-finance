@@ -10,6 +10,7 @@ import { upcomingPayments } from '@/lib/planning';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney } from '@/lib/format';
 import { useExpensePlans } from '@/hooks/use-expense-plans';
+import { useRemovedCategories } from '@/hooks/use-removed-categories';
 import { useCategoryIcons } from '@/hooks/use-category-icons';
 import { CategoryHueContext, CategoryIconsContext } from '@/components/category-icons-context';
 import { expensePlanMonth, monthlyBudgetTotals } from '@/lib/expense-plans';
@@ -88,8 +89,9 @@ function useWorkspaceState() {
         setRows(previous=>schedule?[...previous.filter(row=>row.id!==schedule.id),schedule]:previous.map(row=>row.id===source.schedule_id?{...row,source_paused:true}:row));
     },legacyEarningSources(rows));
     const workspacePreferences=useWorkspacePreferences(user,demo,reload);
+    const removedCategories=useRemovedCategories(workspacePreferences,user,demo);
     // Accounts in the person's own order (Accounts page), wherever an account is picked.
-    const planning={...basePlanning,data:{...basePlanning.data,records:inAccountOrder(basePlanning.data.records,savedOrder(workspacePreferences.data.preferences,'account_order')),occurrences:demo?[...basePlanning.data.occurrences,...rows.filter(row=>row.earning_source_id&&row.earning_due_on).flatMap(row=>{const source=earningSources.sources.find(source=>source.id===row.earning_source_id);return source?.schedule_id?[{id:row.id,record_id:source.schedule_id,due_on:row.earning_due_on!,status:'paid' as const}]:[];})]:basePlanning.data.occurrences}};
+    const planning={...basePlanning,data:{...basePlanning.data,removedKinds:removedCategories.kinds,records:inAccountOrder(basePlanning.data.records,savedOrder(workspacePreferences.data.preferences,'account_order')),occurrences:demo?[...basePlanning.data.occurrences,...rows.filter(row=>row.earning_source_id&&row.earning_due_on).flatMap(row=>{const source=earningSources.sources.find(source=>source.id===row.earning_source_id);return source?.schedule_id?[{id:row.id,record_id:source.schedule_id,due_on:row.earning_due_on!,status:'paid' as const}]:[];})]:basePlanning.data.occurrences}};
     const transactionTools=useTransactionTools(user,demo,reload,refreshRecords);
     const categoryIcons=useCategoryIcons(workspacePreferences,user,demo,planning.data.categories);
     const tagResource=useTags(user,demo,reload,planning.data.records,sample.demoTags);
@@ -140,7 +142,7 @@ function useWorkspaceState() {
     // currency. Transaction history returns raw rows, so normalize to the record shape forms expect.
     const storedRecord = (record: Entry) => storedEntry(record, { history: historyPage.data.records, planning: planning.data.records, rows, summary }, demo);
     const navigate = (path: string) => router.push(path);
-    const forms = recordForms({ editable, setError, setRecordKinds, setEditing, setDeleting, setEditingIncomeSource, currency, section, cashFlowSection, holdingAccounts: planning.data.holdingAccounts, preferredCurrencies: preferencesData.currencies, sources: earningSources.sources, storedRecord });
+    const forms = recordForms({ editable, setError, setRecordKinds, setEditing, setDeleting, setEditingIncomeSource, currency, section, cashFlowSection, holdingAccounts: planning.data.holdingAccounts, preferredCurrencies: preferencesData.currencies, sources: earningSources.sources, storedRecord, categories: planning.data.categories, removedKinds: removedCategories.kinds });
 
     const seedSample = sample.seedSample;
     async function startDemo() {
@@ -162,7 +164,7 @@ function useWorkspaceState() {
         // Preferences
         currency, setCurrency: settings.setCurrency, preferencesData, applyPreferences: settings.applyPreferences, savePreferences: settings.savePreferences, settingsLoading, settingsError: settings.settingsError, retrySettings: settings.retrySettings, workspacePreferences, onboardingNeeded: settings.onboardingNeeded, restartOnboarding: settings.restartOnboarding, saveTrackingStart: saveTrackingStartRequest,
         // Records and market data
-        rows, summary, current, categoryIcons, market, marketLoading, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, expensePlans, snapshots,
+        rows, summary, current, categoryIcons, removedCategories, market, marketLoading, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, expensePlans, snapshots,
         reload, refreshRecords, budget, forecast, forecastReady, forecastMonth, setForecastMonth, excludedCurrencies, netWorth, totalDebt, monthlyIncomeEntries,
         availableBusinesses, businessList, tags, attachments, overdueCount, workspaceLoading: loading, deletedItems: bin.deletedItems, restoreDemoItem: bin.restoreDemoItem, discardDeletedItem: bin.discardDeletedItem,
         // Record table

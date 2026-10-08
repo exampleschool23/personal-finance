@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "ให้ยืมจากบัญชี (ไม่บังคับ)",
   "Not from an account": "ไม่ได้มาจากบัญชี",
   "No cash account in {currency}.": "ไม่มีบัญชีเงินสดสกุล {currency}",
-  "Built-in categories cannot be deleted.": "ไม่สามารถลบหมวดหมู่ในตัวได้",
   "Restored": "กู้คืนแล้ว",
   "Import undone": "ยกเลิกการนำเข้าแล้ว",
   "Add recurring": "เพิ่มรายการประจำ",
   "Recurring income": "รายได้ประจำ",
   "Recurring bill": "บิลประจำ",
   "Monthly spending plan": "แผนการใช้จ่ายรายเดือน",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "รายได้สุทธิคือรายได้หักค่าใช้จ่ายในช่วงนี้ ได้แก่เงินที่เหลืออยู่ในบัญชี หรือไปเป็นเงินออม การลงทุน หรือการชำระเงินต้นของเงินกู้"
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "รายได้สุทธิคือรายได้หักค่าใช้จ่ายในช่วงนี้ ได้แก่เงินที่เหลืออยู่ในบัญชี หรือไปเป็นเงินออม การลงทุน หรือการชำระเงินต้นของเงินกู้",
+  "Deleted categories": "หมวดหมู่ที่ลบแล้ว",
+  "Restore {name}": "กู้คืน {name}",
+  "Keep at least one category of this type.": "เก็บหมวดหมู่ประเภทนี้ไว้อย่างน้อยหนึ่งรายการ",
+  "Rules and templates: {count}": "กฎและเทมเพลต: {count}",
+  "All other income": "รายได้อื่นทั้งหมด",
+  "All other expenses": "ค่าใช้จ่ายอื่นทั้งหมด",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

@@ -12,12 +12,13 @@ import { PanelSkeleton } from '@/components/presentation-foundation/loading-plac
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { StatTile } from '@/components/presentation-foundation/stat-tile';
 import { Segmented } from '@/components/presentation-foundation/segmented';
+import { signTone } from '@/components/presentation-foundation/tone';
 import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 import { useBudget } from '@/hooks/use-budget';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { ageOfMoneyTrend } from '@/lib/age-of-money';
-import { budgetCategories, budgetHistory, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, flexBucketCategory, flexBucketKey, flexBucketRollover, goalContribution, groupRows, leftToBudget, monthActuals, monthsBetween, suggestedBudget, type BudgetAmount, type BudgetCategory, type BudgetRow, type MonthActuals } from '@/lib/budget';
+import { budgetCategories, budgetHistory, budgetOverall, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, flexBucketCategory, flexBucketKey, flexBucketRollover, goalContribution, groupRows, leftToBudget, monthActuals, monthsBetween, suggestedBudget, type BudgetAmount, type BudgetCategory, type BudgetOverall, type BudgetRow, type MonthActuals } from '@/lib/budget';
 import { shiftMonth } from '@/lib/calendar-days';
 import { depositToday } from '@/lib/deposit-interest';
 import { expensePlanMonth } from '@/lib/expense-plans';
@@ -41,14 +42,15 @@ export function BudgetScreen() {
  const [settingsOpen, setSettingsOpen] = useState(false);
  const rates = market?.rates ?? market?.fx?.rate;
  const live = !!user && !demo;
+ const removed = planning.data.removedKinds ?? [];
 
- const settingsOnly = budgetCategories(planning.data.categories, budget.state.categories);
+ const settingsOnly = budgetCategories(planning.data.categories, budget.state.categories, removed);
  const range = budgetReadRange(month, view, [...settingsOnly, flexBucketCategory(budget.state.categories)]);
  const remote = useOwnerResource(`/api/planning?scope=budget&month=${range.to}&from=${range.from}`, user, live, reload, emptyPlanning);
  const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : planning.data, [live, remote.data, planning.data]);
  const splits = transactionTools.data.splits;
  const history = useMemo(() => new Map(monthsBetween(range.from, range.to).map(item => [item, monthActuals(data, splits, item, currency, today, rates)])), [range.from, range.to, data, splits, currency, today, rates]);
- const categories = budgetCategories(data.categories, budget.state.categories);
+ const categories = budgetCategories(data.categories, budget.state.categories, removed);
  const flex = budget.state.mode === 'flex';
  const categoryRows = budgetRows(categories, budget.state.amounts, history, month, currency, rates);
  const flexBudget = flex ? flexBucketBudget(budget.state.amounts, categoryRows, month, currency, rates) : null;
@@ -176,6 +178,33 @@ function BudgetYear({ rows, month, history, amounts, currency, rates, today }: {
      <td><strong>{formatMoney(total, currency, locale)}</strong></td>
     </tr>;
    })}</tbody>
+   <BudgetYearOverall months={months} overall={table.map(budgetOverall)} current={current} currency={currency}/>
   </table></div> : <p className="budget-left-empty">{t('Nothing planned or recorded this year yet.')}</p>}
  </section>;
+}
+
+/** The Year view's overall rows: income, spending and what is left, per month and for the year. Past months show actuals with the plan below. */
+function BudgetYearOverall({ months, overall, current, currency }: { months: string[]; overall: BudgetOverall[]; current: string; currency: string }) {
+ const { t, locale } = useLanguage();
+ const lines = [
+  { label: t('Total income'), actual: (item: BudgetOverall) => item.income, plan: (item: BudgetOverall) => item.plannedIncome },
+  { label: t('Total expenses'), actual: (item: BudgetOverall) => item.expenses, plan: (item: BudgetOverall) => item.plannedExpenses },
+  { label: t('Net'), net: true, actual: (item: BudgetOverall) => item.income - item.expenses, plan: (item: BudgetOverall) => item.plannedIncome - item.plannedExpenses },
+ ];
+ return <tfoot>{lines.map(line => {
+  const total = overall.reduce((sum, item, position) => sum + (months[position] <= current ? line.actual(item) : line.plan(item)), 0);
+  return <tr key={line.label} data-net={line.net || undefined}>
+   <th scope="row">{line.label}</th>
+   {overall.map((item, position) => {
+    const past = months[position] <= current;
+    const value = past ? line.actual(item) : line.plan(item);
+    if (!item.income && !item.expenses && !item.plannedIncome && !item.plannedExpenses) return <td key={months[position]} data-future={!past || undefined}>—</td>;
+    return <td key={months[position]} data-future={!past || undefined} data-tone={line.net ? signTone(value, true) : undefined}>
+     <span>{formatMoney(value, currency, locale)}</span>
+     {past && <small>{t('of {amount}', { amount: formatMoney(line.plan(item), currency, locale) })}</small>}
+    </td>;
+   })}
+   <td data-tone={line.net ? signTone(total, true) : undefined}><strong>{formatMoney(total, currency, locale)}</strong></td>
+  </tr>;
+ })}</tfoot>;
 }

@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "Cho vay từ tài khoản (tùy chọn)",
   "Not from an account": "Không từ tài khoản",
   "No cash account in {currency}.": "Không có tài khoản tiền mặt bằng {currency}.",
-  "Built-in categories cannot be deleted.": "Không thể xóa các danh mục có sẵn.",
   "Restored": "Đã khôi phục",
   "Import undone": "Đã hoàn tác nhập dữ liệu",
   "Add recurring": "Thêm khoản định kỳ",
   "Recurring income": "Thu nhập định kỳ",
   "Recurring bill": "Hóa đơn định kỳ",
   "Monthly spending plan": "Kế hoạch chi tiêu hằng tháng",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Thu nhập ròng là thu nhập trừ chi tiêu trong kỳ này: số tiền còn lại trong tài khoản hoặc được đưa vào tiết kiệm, đầu tư hay trả nợ gốc."
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Thu nhập ròng là thu nhập trừ chi tiêu trong kỳ này: số tiền còn lại trong tài khoản hoặc được đưa vào tiết kiệm, đầu tư hay trả nợ gốc.",
+  "Deleted categories": "Danh mục đã xóa",
+  "Restore {name}": "Khôi phục {name}",
+  "Keep at least one category of this type.": "Hãy giữ lại ít nhất một danh mục thuộc loại này.",
+  "Rules and templates: {count}": "Quy tắc và mẫu: {count}",
+  "All other income": "Mọi khoản thu khác",
+  "All other expenses": "Mọi khoản chi khác",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

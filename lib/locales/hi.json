@@ -2605,12 +2605,19 @@
   "Lent from account (optional)": "किस खाते से उधार दिया (वैकल्पिक)",
   "Not from an account": "किसी खाते से नहीं",
   "No cash account in {currency}.": "{currency} में कोई नकद खाता नहीं।",
-  "Built-in categories cannot be deleted.": "अंतर्निहित श्रेणियाँ हटाई नहीं जा सकतीं।",
   "Restored": "पुनर्स्थापित किया गया",
   "Import undone": "आयात पूर्ववत किया गया",
   "Add recurring": "आवर्ती जोड़ें",
   "Recurring income": "आवर्ती आय",
   "Recurring bill": "आवर्ती बिल",
   "Monthly spending plan": "मासिक खर्च योजना",
-  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "शुद्ध आय इस अवधि की आय में से खर्च घटाकर है: जो आपके खातों में रहा या बचत, निवेश या ऋण के मूलधन में गया।"
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "शुद्ध आय इस अवधि की आय में से खर्च घटाकर है: जो आपके खातों में रहा या बचत, निवेश या ऋण के मूलधन में गया।",
+  "Deleted categories": "हटाई गई श्रेणियाँ",
+  "Restore {name}": "{name} वापस लाएँ",
+  "Keep at least one category of this type.": "इस प्रकार की कम से कम एक श्रेणी रखें।",
+  "Rules and templates: {count}": "नियम और टेम्पलेट: {count}",
+  "All other income": "बाकी सभी आय",
+  "All other expenses": "बाकी सभी खर्च",
+  "{business}: {name}": "{business}: {name}",
+  "{label}: {date}": "{label}: {date}"
 }

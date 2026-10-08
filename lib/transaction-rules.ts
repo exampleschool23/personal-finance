@@ -42,9 +42,9 @@ export const canSaveRule = (rule: TransactionRule) => hasCriteria(rule) && amoun
 const sameChoice = (record: Pick<Entry, 'kind' | 'custom_category_id'>, choice: CategoryChoice) => record.kind === choice.kind && (record.custom_category_id ?? null) === choice.category_id;
 export const choiceKey = (choice: CategoryChoice) => choice.category_id ?? choice.kind;
 
-/** Every category of one direction: the built-in kinds, then custom categories on the general kind. */
-export function categoryChoices(categories: readonly Category[], direction: Category['direction']): Array<CategoryChoice & { name: string; custom: boolean }> {
- const kinds = direction === 'income' ? income : expenses;
+/** Every category of one direction: the built-in kinds still offered, then custom categories on the general kind. */
+export function categoryChoices(categories: readonly Category[], direction: Category['direction'], removed: readonly string[] = []): Array<CategoryChoice & { name: string; custom: boolean }> {
+ const kinds = (direction === 'income' ? income : expenses).filter(kind => !removed.includes(kind));
  const general = direction === 'income' ? 'Other income' : 'Other expense';
  return [
   ...kinds.map(kind => ({ kind: kind as Entry['kind'], category_id: null, name: kind, custom: false })),

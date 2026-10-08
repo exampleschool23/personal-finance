@@ -21,7 +21,7 @@ export function CashFlowTab({ lines, range, rangeLabel, includeHousehold, busine
  const totals = lines.reduce((sum, line) => line.direction === 'income' ? { ...sum, income: sum.income + line.amount } : { ...sum, expenses: sum.expenses + line.amount }, { income: 0, expenses: 0 });
  const net = totals.income - totals.expenses;
  const money = (amount: number) => formatMoney(amount, currency, locale);
- const sankey = businessSankey(pnl, { category: names.category, business: id => names.business(id), total: t(businessIds.length ? 'Household income' : 'Income'), savings: t('Net income'), profit: t('Net profit'), loss: name => t('{name} net loss', { name }), otherIncome: t('Other income'), otherExpense: t('Other expense') });
+ const sankey = businessSankey(pnl, { category: names.category, business: id => names.business(id), total: t(businessIds.length ? 'Household income' : 'Income'), savings: t('Net income'), profit: t('Net profit'), loss: name => t('{name} net loss', { name }), otherIncome: t('All other income'), otherExpense: t('All other expenses'), inBusiness: (name, business) => t('{business}: {name}', { business, name }) });
  const trend = cashFlowTrend(lines, range, interval);
  // Net income of the household and of each business, side by side or stacked, so businesses can be compared.
  const netKeys = [...(includeHousehold ? [HOUSEHOLD] : []), ...businessIds];
