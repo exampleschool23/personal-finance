@@ -124,7 +124,7 @@ test('TX-019 TX-020 an expense needs an amount above zero and cannot be dated in
 test('TX-022 editing an expense moves its account once', async ({ page }) => {
   await page.goto('/transactions');
   await page.getByRole('listitem', { name: /View details for E2E Lunch/ }).getByText('E2E Lunch', { exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Edit', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Edit E2E Lunch', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByPlaceholder('0').first().fill('30');
   await dialog.getByRole('button', { name: /^Save/ }).click();
