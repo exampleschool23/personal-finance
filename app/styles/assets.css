@@ -7,7 +7,7 @@
 .portfolio-summary-total{min-width:0}
 .portfolio-summary-total h2{font-size:var(--type-caption);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground)}
 .portfolio-summary-value{display:block;margin:6px 0 8px;font-size:var(--type-hero);font-weight:650;letter-spacing:-.04em;line-height:1.05;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.portfolio-summary-metrics{display:flex;gap:16px 0;min-width:0}
+.portfolio-summary-metrics{display:flex;gap:16px 20px;min-width:0}
 .portfolio-summary-metrics>div{display:grid;flex:0 0 auto;gap:4px;min-width:max-content;padding-inline-start:20px;border-inline-start:1px solid var(--border)}
 .portfolio-summary-metrics>div:first-child{padding-inline-start:0;border-inline-start:0}
 .portfolio-summary-metrics span{font-size:var(--type-caption);color:var(--muted-foreground);white-space:nowrap}
