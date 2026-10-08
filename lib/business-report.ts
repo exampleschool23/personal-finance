@@ -116,7 +116,7 @@ export const drillMatches = (drill: Drill | null, line: LedgerLine, keyOf: (line
 export type SankeyNode = { name: string; kind: 'income' | 'total' | 'expense' | 'savings' | 'business' | 'loss'; drill: Drill | null };
 export type BusinessSankey = { nodes: SankeyNode[]; links: Array<{ source: number; target: number; value: number }> };
 /** Where money came from and went, with a layer for each business: its income flows into it and its expenses out of
- * it; a profit then flows into household income, while a loss leaves the household like any other expense. Without
+ * it (a business with one kind of income is its own source); a profit then flows into household income, while a loss leaves the household like any other expense. Without
  * the household, a business's profit or loss stands on its own. Small flows merge into "Other". */
 export function businessSankey(pnl: ProfitAndLoss, labels: { category: (key: string) => string; business: (id: string) => string; total: string; savings: string; profit: string; loss: (name: string) => string; otherIncome: string; otherExpense: string }, limit = 7): BusinessSankey {
  const nodes: SankeyNode[] = [], links: BusinessSankey['links'] = [];
@@ -133,7 +133,9 @@ export function businessSankey(pnl: ProfitAndLoss, labels: { category: (key: str
   if (!business.grossIncome && !business.totalExpenses) continue;
   const name = labels.business(business.id);
   const hub = node({ name, kind: 'business', drill: { business: business.id } });
-  for (const item of top(business.income, labels.otherIncome, 'income', business.id)) links.push({ source: node({ name: item.name, kind: 'income', drill: item.drill }), target: hub, value: item.amount });
+  // A business with a single kind of income is its own source: a node named only "Business income" would say less
+  // than the business's name and repeat beside every other business.
+  if (business.income.length > 1) for (const item of top(business.income, labels.otherIncome, 'income', business.id)) links.push({ source: node({ name: item.name, kind: 'income', drill: item.drill }), target: hub, value: item.amount });
   for (const item of top(business.expenses, labels.otherExpense, 'expense', business.id)) links.push({ source: hub, target: node({ name: item.name, kind: 'expense', drill: item.drill }), value: item.amount });
   if (business.net > 0) links.push({ source: hub, target: household ? total : node({ name: labels.profit, kind: 'savings', drill: { business: business.id } }), value: business.net });
   else if (business.net < 0) {

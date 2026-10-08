@@ -2611,5 +2611,6 @@
   "Add recurring": "เพิ่มรายการประจำ",
   "Recurring income": "รายได้ประจำ",
   "Recurring bill": "บิลประจำ",
-  "Monthly spending plan": "แผนการใช้จ่ายรายเดือน"
+  "Monthly spending plan": "แผนการใช้จ่ายรายเดือน",
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "รายได้สุทธิคือรายได้หักค่าใช้จ่ายในช่วงนี้ ได้แก่เงินที่เหลืออยู่ในบัญชี หรือไปเป็นเงินออม การลงทุน หรือการชำระเงินต้นของเงินกู้"
 }

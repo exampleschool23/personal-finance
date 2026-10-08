@@ -2611,5 +2611,6 @@
   "Add recurring": "Añadir recurrente",
   "Recurring income": "Ingreso recurrente",
   "Recurring bill": "Factura recurrente",
-  "Monthly spending plan": "Plan de gasto mensual"
+  "Monthly spending plan": "Plan de gasto mensual",
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "El ingreso neto es el ingreso menos el gasto de este período: lo que quedó en tus cuentas o se destinó a ahorros, inversiones o al capital de préstamos."
 }

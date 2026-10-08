@@ -60,7 +60,10 @@ test('the Sankey feeds a profit into household income and shows a loss leaving t
  assert.equal(link('rentals', 'Income').value, 1900);
  assert.equal(link('Income', 'candles net loss').value, 300.5);
  assert.equal(data.nodes[index('candles net loss')].kind, 'loss');
- assert.ok(link('sales', 'candles') && link('candles', 'supplies'));
+ assert.ok(link('candles', 'supplies'));
+ assert.equal(index('sales'), -1, 'a business with one kind of income is its own source');
+ assert.equal(index('Rent income'), -1);
+ assert.equal(data.links.some(item => item.target === index('rentals')), false);
  assert.ok(data.links.every(item => item.value > 0 && data.nodes[item.source] && data.nodes[item.target]));
  const alone = businessSankey(profitAndLoss(filterLines(lines, ['candles']), ['candles'], line => line.category, false), labels);
  assert.equal(alone.nodes[alone.links.find(item => alone.nodes[item.source].kind === 'loss').target].name, 'candles', 'without the household, the loss covers the business');

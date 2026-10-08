@@ -21,7 +21,7 @@ export function CashFlowTab({ lines, range, rangeLabel, includeHousehold, busine
  const totals = lines.reduce((sum, line) => line.direction === 'income' ? { ...sum, income: sum.income + line.amount } : { ...sum, expenses: sum.expenses + line.amount }, { income: 0, expenses: 0 });
  const net = totals.income - totals.expenses;
  const money = (amount: number) => formatMoney(amount, currency, locale);
- const sankey = businessSankey(pnl, { category: names.category, business: id => names.business(id), total: t(businessIds.length ? 'Household income' : 'Income'), savings: t('Savings'), profit: t('Net profit'), loss: name => t('{name} net loss', { name }), otherIncome: t('Other income'), otherExpense: t('Other expense') });
+ const sankey = businessSankey(pnl, { category: names.category, business: id => names.business(id), total: t(businessIds.length ? 'Household income' : 'Income'), savings: t('Net income'), profit: t('Net profit'), loss: name => t('{name} net loss', { name }), otherIncome: t('Other income'), otherExpense: t('Other expense') });
  const trend = cashFlowTrend(lines, range, interval);
  // Net income of the household and of each business, side by side or stacked, so businesses can be compared.
  const netKeys = [...(includeHousehold ? [HOUSEHOLD] : []), ...businessIds];
@@ -34,7 +34,7 @@ export function CashFlowTab({ lines, range, rangeLabel, includeHousehold, busine
    <StatTile label={t('Savings rate')} value={totals.income > 0 ? formatPercent(net / totals.income * 100, locale) : '—'} tone={totals.income > 0 ? signTone(net) : undefined}/>
   </StatTiles>
   <section className="panel">
-   <PanelTitle title={<>{t(mode === 'breakdown' ? 'Breakdown' : 'Trends')} <span className="panel-figure">{rangeLabel}</span></>}>
+   <PanelTitle title={<>{t(mode === 'breakdown' ? 'Breakdown' : 'Trends')} <span className="panel-figure">{rangeLabel}</span></>} hint={mode === 'breakdown' && view === 'sankey' ? t('Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.') : undefined}>
     <div className="cash-flow-switches">
      <Segmented label={t('Report view')} options={[{ value: 'breakdown', label: t('Breakdown') }, { value: 'trends', label: t('Trends') }] as const} value={mode} onChange={setMode}/>
      {mode === 'breakdown' ? <Segmented label={t('Chart type')} options={[{ value: 'sankey', label: t('Sankey') }, { value: 'pnl', label: t('Profit & loss') }] as const} value={view} onChange={onView}/>

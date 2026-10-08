@@ -2611,5 +2611,6 @@
   "Add recurring": "Добавить регулярный",
   "Recurring income": "Регулярный доход",
   "Recurring bill": "Регулярный счёт",
-  "Monthly spending plan": "Ежемесячный план расходов"
+  "Monthly spending plan": "Ежемесячный план расходов",
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Чистый доход — это доходы минус расходы за период: то, что осталось на счетах или ушло в сбережения, инвестиции или на погашение основного долга."
 }

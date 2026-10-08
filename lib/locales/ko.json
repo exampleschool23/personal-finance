@@ -2611,5 +2611,6 @@
   "Add recurring": "반복 항목 추가",
   "Recurring income": "반복 수입",
   "Recurring bill": "반복 청구서",
-  "Monthly spending plan": "월별 지출 계획"
+  "Monthly spending plan": "월별 지출 계획",
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "순수입은 이 기간의 수입에서 지출을 뺀 금액입니다. 계좌에 남았거나 저축, 투자 또는 대출 원금 상환에 쓰인 돈입니다."
 }

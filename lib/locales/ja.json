@@ -2611,5 +2611,6 @@
   "Add recurring": "定期項目を追加",
   "Recurring income": "定期収入",
   "Recurring bill": "定期支払い",
-  "Monthly spending plan": "毎月の支出プラン"
+  "Monthly spending plan": "毎月の支出プラン",
+  "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "純収入はこの期間の収入から支出を引いたものです。口座に残ったお金、または貯蓄・投資・ローン元金の返済に回ったお金です。"
 }
