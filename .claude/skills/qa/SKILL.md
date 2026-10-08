@@ -11,6 +11,10 @@ keep `references/cases.md` (the regression catalog) open: it is the plan.
 
 ## 0. Ground rules (never break these)
 
+- **Loading state:** the full "Loading your workspace…" layout (the sign-in-to-app screen, `WorkspaceSkeleton`) is
+  only for the first load of the app and for a reload. Switching a tab or a drawer page must show shimmer
+  (`NavigationShimmer`, the in-screen skeleton rows), never the big loader. Any tab or page switch that shows the
+  big loader is a P1 finding; guarded by `tests/navigation-shimmer.mjs`.
 - **Credentials:** never type a password, create an account or share a phone number.
   When a session is needed, front the tab and ask the user to sign in. Test account:
   `user1@gmail.com` (the user signs in; never store its password anywhere).

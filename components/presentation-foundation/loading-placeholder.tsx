@@ -31,6 +31,14 @@ export function PageSkeleton({ label, section }: { label: string; section: strin
   </div>;
 }
 
+/** Shimmer for a drawer tap: a title bar and rows only. The full workspace layout is for the first load and reloads. */
+export function NavigationShimmer({ label }: { label: string }) {
+  return <div className="content page-loading" role="status" aria-busy="true">
+    <span className="sr-only">{label}</span>
+    <div aria-hidden="true"><Skeleton className="mb-6 h-8 w-1/3"/><SkeletonRows rows={4}/></div>
+  </div>;
+}
+
 /** The dashboard board's two columns of cards, in the person's saved order. */
 export type DashboardSkeletonColumns = { left: readonly string[]; right: readonly string[] };
 const defaultDashboardSkeleton: DashboardSkeletonColumns = { left: ['net_worth', 'spending'], right: ['goals', 'transactions', 'upcoming'] };

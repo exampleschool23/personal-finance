@@ -178,6 +178,9 @@ JavaScript runs. Report the file and line.
 
 ## 4. Method
 
+0. Loading state is a design rule: the big "Loading your workspace…" layout shows only on the first load and on a
+   reload. A tab or drawer page switch shows shimmer. Flag any switch that shows the big loader as a finding
+   (guarded by `tests/navigation-shimmer.mjs`).
 1. Scope the screens (argument; `git diff --name-only HEAD~1` plus uncommitted
    changes mapped through the §1 table for "diff"; "full" is every row of §1).
    Always include the cross-cutting areas plus the `SCR` cases of each screen.
