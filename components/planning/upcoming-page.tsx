@@ -78,8 +78,8 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onEdit
  const deletion = useScheduleDeletion(data, onDelete);
  // Rows stay on one line while their name keeps room beside status, amount and actions; two lines only when this month's content needs it.
  const rows = useColumnsFit<HTMLUListElement>('.recurring-row');
- const skip = (item: RecurringItem) => run(() => save('exception', { target_id: item.record.id, date: item.date, skip: true }));
- const row = (item: RecurringItem, dated = false) => <OccurrenceRow key={item.key} item={item} dated={dated} today={today} busy={busy} categories={data.categories} onEdit={onEdit} onOpen={details.open} onPay={pay} onSkip={skip} onArchive={archive && (() => archive({ source: 'record', record: item.record }))} onDelete={deletion.open}/>;
+ const skip = (item: RecurringItem, skipped = true) => run(() => save('exception', { target_id: item.record.id, date: item.date, skip: skipped }));
+ const row = (item: RecurringItem, dated = false) => <OccurrenceRow key={item.key} item={item} dated={dated} today={today} busy={busy} categories={data.categories} onEdit={onEdit} onOpen={details.open} onPay={pay} onSkip={skip} onRestore={item => skip(item, false)} onArchive={archive && (() => archive({ source: 'record', record: item.record }))} onDelete={deletion.open}/>;
  return <>
   <PageHeader title={t('Recurring')} tabs={<Segmented className="page-tabs" as="nav" label={t('Recurring view')} options={[{ value: 'list', label: t('List') }, { value: 'calendar', label: t('Calendar') }, { value: 'subscriptions', label: t('Subscriptions') }, { value: 'reminders', label: t('Reminders') }] as const} value={view} onChange={onView}/>} hint={<><p>{t('Every scheduled income and bill, month by month. Record a payment only after it happens; a reminder never moves money.')}</p><p>{t('Debt amounts show the outstanding balance; enter the actual principal and interest when paying.')}</p></>}>
    {scheduled && <div className="budget-month-nav">

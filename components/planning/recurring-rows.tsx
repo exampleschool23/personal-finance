@@ -34,11 +34,11 @@ function RowName({ name, label, detail, onOpen }: { name: string; label: string;
 /** Tapping a row outside its buttons and menu does what its name does. */
 const rowTap = (action?: () => void) => action && ((event: MouseEvent) => { if (!(event.target as HTMLElement).closest('button,a,[role=menu]')) action(); });
 
-type OccurrenceProps = { item: RecurringItem; dated: boolean; today: string; busy: boolean; categories?: readonly Category[]; onEdit?: (record: Entry) => void; onOpen?: (item: RecurringItem) => void; onPay: (item: RecurringItem) => void; onSkip: (item: RecurringItem) => void; onArchive?: () => void; onDelete?: (target: ArchiveTarget) => void };
+type OccurrenceProps = { item: RecurringItem; dated: boolean; today: string; busy: boolean; categories?: readonly Category[]; onEdit?: (record: Entry) => void; onOpen?: (item: RecurringItem) => void; onPay: (item: RecurringItem) => void; onSkip: (item: RecurringItem) => void; /** Undoes a skip: the occurrence is due again. */onRestore?: (item: RecurringItem) => void; onArchive?: () => void; onDelete?: (target: ArchiveTarget) => void };
 
 /** A schedule's or plan's ⋯ menu: Edit, Skip while an occurrence is open, then Archive and Delete where they are offered. */
-function scheduleMenu(t: (key: string) => string, busy: boolean, { edit, skip, archive, remove }: { edit?: () => void; skip?: () => void; archive?: () => void; remove?: () => void }): RowMenuItem[] {
- return [...(edit ? [{ label: t('Edit'), onSelect: edit }] : []), ...(skip ? [{ label: t('Skip this occurrence'), disabled: busy, onSelect: skip }] : []), ...(archive ? [{ label: t('Archive'), disabled: busy, onSelect: archive }] : []), ...(remove ? [{ label: t('Delete'), deletes: true, disabled: busy, onSelect: remove }] : [])];
+function scheduleMenu(t: (key: string) => string, busy: boolean, { edit, skip, restore, archive, remove }: { edit?: () => void; skip?: () => void; restore?: () => void; archive?: () => void; remove?: () => void }): RowMenuItem[] {
+ return [...(edit ? [{ label: t('Edit'), onSelect: edit }] : []), ...(skip ? [{ label: t('Skip this occurrence'), disabled: busy, onSelect: skip }] : []), ...(restore ? [{ label: t('Restore occurrence'), disabled: busy, onSelect: restore }] : []), ...(archive ? [{ label: t('Archive'), disabled: busy, onSelect: archive }] : []), ...(remove ? [{ label: t('Delete'), deletes: true, disabled: busy, onSelect: remove }] : [])];
 }
 
 /** An occurrence's ⋯ menu. Archiving takes the whole schedule out of Recurring; its recorded payments stay. Loan payments follow their loan instead, so they offer only Edit. */
@@ -59,7 +59,7 @@ const occurrenceDetail = (t: (key: string) => string, locale: string, item: Recu
  [t(frequencyLabels[item.installment ? 'Monthly' : item.record.frequency]), category ?? t(item.record.kind), dated ? formatDate(item.date, locale) : null].filter(Boolean).join(' · ');
 
 /** One scheduled income or bill on its day: its status, the scheduled amount, and recording, skipping or archiving it. */
-export function OccurrenceRow({ item, dated, today, busy, categories = [], onEdit, onOpen, onPay, onSkip, onArchive, onDelete }: OccurrenceProps) {
+export function OccurrenceRow({ item, dated, today, busy, categories = [], onEdit, onOpen, onPay, onSkip, onRestore, onArchive, onDelete }: OccurrenceProps) {
  const { t, locale } = useLanguage();
  // A payment is recorded once it happens: before its date the button waits and says when. A recorded one takes further payments; a skipped one none.
  const early = !item.installment && item.date > today, pending = item.status === 'due' || item.status === 'overdue';
@@ -67,7 +67,7 @@ export function OccurrenceRow({ item, dated, today, busy, categories = [], onEdi
  const paid = item.status === 'paid';
  const category = customCategory(item.record, categories);
  const status = <OccurrenceStatus item={item} today={today}/>;
- const menu = occurrenceMenu(t, busy, item, { edit: onOpen && edit, skip: pending ? () => onSkip(item) : undefined, archive: onArchive, remove: onDelete && (() => onDelete({ source: 'record', record: item.record })) });
+ const menu = occurrenceMenu(t, busy, item, { edit: onOpen && edit, skip: pending ? () => onSkip(item) : undefined, restore: item.status === 'skipped' && onRestore ? () => onRestore(item) : undefined, archive: onArchive, remove: onDelete && (() => onDelete({ source: 'record', record: item.record })) });
  return <li className="recurring-row" data-status={item.status} data-editable={open ? '' : undefined} onClick={rowTap(open)}>
   <span className="transaction-merchant"><DoneTick done={paid}/><CategoryIcon kind={category ?? item.record.kind}/><RowName name={shownName(item.record, t)} label={openLabel} onOpen={open} detail={occurrenceDetail(t, locale, item, category, dated)}/></span>
   {status}

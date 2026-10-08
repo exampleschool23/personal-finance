@@ -212,3 +212,12 @@ test('with a details view, tapping a row opens it and Edit moves into the ⋯ me
  assert.deepEqual(calls, ['open rent:2026-10-01', 'edit rent']);
  assert.deepEqual(mount(OccurrenceRow, { ...props, item: item('due', { installment: true }) }).find(byType(RowMenu)).props.items.map(entry => entry.label), ['Edit']);
 });
+
+test('a skipped occurrence is restored from its own ⋯ menu', () => {
+ const calls = [];
+ const view = mount(OccurrenceRow, { item: item('skipped'), dated: true, today: '2026-10-05', busy: false, onPay() {}, onSkip: () => calls.push('skip'), onRestore: entry => calls.push('restore ' + entry.date), onArchive() {} });
+ const menu = view.find(byType(RowMenu)).props.items;
+ assert.deepEqual(menu.map(entry => entry.label), ['Restore occurrence', 'Archive']);
+ menu[0].onSelect();
+ assert.deepEqual(calls, ['restore 2026-10-01']);
+});
