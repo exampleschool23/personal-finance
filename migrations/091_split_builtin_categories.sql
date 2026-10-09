@@ -1,5 +1,5 @@
 -- Split parts may use a built-in category (stored in kind) as well as an
--- added one (category_id). Existing splits are unchanged. Apply after 090.
+-- added one (category_id). Existing splits are unchanged. Apply after 089 (090 and 096 were never used).
 BEGIN;
 ALTER TABLE public.transaction_splits ALTER COLUMN category_id DROP NOT NULL;
 ALTER TABLE public.transaction_splits ADD COLUMN kind text CHECK(kind IN ('Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense'));

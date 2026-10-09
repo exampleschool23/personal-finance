@@ -10,7 +10,7 @@ import { selectTransactionCategory } from '@/lib/transaction-categories';
 import { IncomeSourcePicker } from '@/components/income-source-picker';
 import Link from 'next/link';
 import { Settings2, ArrowRight, CalendarDays } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -19,7 +19,7 @@ import { RecordNameInput } from '@/components/record-name-input';
 import { AmountCurrencyFields } from '@/components/presentation-foundation/amount-currency-fields';
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { CashAccountField } from '@/components/cash-account-field';
-import { earningSourcePaymentStatus, selectEarningSource } from '@/lib/earning-sources';
+import { earningSourcePaymentStatus, openEarningDue, selectEarningSource } from '@/lib/earning-sources';
 import { depositToday } from '@/lib/deposit-interest';
 import type { Entry } from '@/lib/finance';
 import { offeredKinds } from '@/lib/removed-categories';
@@ -45,6 +45,11 @@ export function IncomeRecordForm({editing,setEditing,busy,save,currencies,planni
  const [salaryPlan,setSalaryPlan]=useState(()=>editing?.kind==='Salary'&&editing.frequency!=='Once');
  // Only a saved schedule opens here repeating; new recurring income is a fixed income source (Recurring › Add recurring).
  const [schedule]=useState(()=>!!editing&&editing.frequency!=='Once');
+ // A new receipt from a fixed source settles the earliest due date still open (openEarningDue), so a late payment pays
+ // the week it was late for rather than the one it was received in. A saved receipt keeps the date it settled.
+ const fixedSource=!original&&editing?.frequency==='Once'&&editing.payment_type!=='bonus'?earningSources?.sources.find(item=>item.id===editing.earning_source_id):undefined;
+ const openDue=fixedSource&&editing?openEarningDue(fixedSource,editing.date,new Set((planning.data.occurrences??[]).filter(occurrence=>occurrence.record_id===(fixedSource.schedule_id??fixedSource.id)).map(occurrence=>occurrence.due_on))):null;
+ useEffect(()=>{if(openDue)setEditing(current=>current&&current.earning_source_id&&current.earning_due_on!==openDue?{...current,earning_due_on:openDue}:current);},[openDue,editing?.earning_due_on,setEditing]);
  if(!editing)return null;
  const update=(patch:Partial<Entry>)=>setEditing({...editing,...patch});
  const sources=incomeSources(editing.kind,planning.data.records,editing.id);
@@ -56,8 +61,7 @@ export function IncomeRecordForm({editing,setEditing,busy,save,currencies,planni
  const named=!reusable&&(editing.kind==='Other income'||salaryPlan);
  const legacy=!!original&&!original.income_source_id&&!original.business_id&&original.kind===editing.kind&&!sourceId;
  const missing=editing.earning_source_id?!reusable:!named&&!source&&!legacy;
- // A new receipt settles the scheduled date of the period it was received in, so the due date
- // follows the record date. A saved receipt keeps the date it already settled.
+ // The due date follows the record date; the effect above moves it to the earliest open one.
  const changeDate=(date:string)=>update({date,...(!original&&reusable&&editing.earning_due_on?{earning_due_on:selectEarningSource({...editing,date},reusable).earning_due_on}:{}),...(!original&&editing.kind==='Salary'&&source&&editing.income_due_on?{income_due_on:salaryDueDate(source,date)}:{})});
  const actual=editing.frequency==='Once'&&!salaryPlan;
  const latestDate=[actual?depositToday():undefined,editing.kind==='Salary'&&source?source.end_date??undefined:undefined].filter((date):date is string=>!!date).sort()[0];
