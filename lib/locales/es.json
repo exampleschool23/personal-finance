@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Esto restaura los datos y las fechas originales. El elemento volverá a aparecer en tus registros y afectará de nuevo a los saldos o las previsiones. Un elemento detenido conserva su fecha de finalización.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "No se pudo restaurar este elemento. Restaura primero su plan o negocio vinculado y comprueba que sus fechas y moneda originales sigan siendo válidas.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "¿Mover {name} a Eliminados recientemente? Se quitará de tus registros, totales y de todos los meses de planificación. Las transacciones independientes no cambian. Puedes restaurarlo desde Eliminados recientemente.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "¿Mover {name} a Eliminados recientemente? Viene de una transferencia, un pago de hipoteca o una actualización de un activo, así que todo lo que cambió esa acción se deshace y los saldos vuelven a como estaban. Restaurar lo devuelve todo.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Para conservar la planificación pasada y solo terminar las repeticiones futuras, elige Detener.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Esto mueve el plan a Eliminados recientemente y lo quita de todos los meses de planificación. Puedes restaurarlo allí. Los planes con gastos registrados no se pueden eliminar; elige Detener para terminar la planificación futura.",
   "Portfolio over time": "Cartera a lo largo del tiempo",
@@ -2619,5 +2620,10 @@
   "Change history": "Historial de cambios",
   "No changes yet.": "Aún no hay cambios.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Los pagos mensuales caen en este día de cada mes. No puede ser posterior a un pago registrado.",
-  "The start date cannot be after a recorded payment.": "La fecha de inicio no puede ser posterior a un pago registrado."
+  "The start date cannot be after a recorded payment.": "La fecha de inicio no puede ser posterior a un pago registrado.",
+  "This transaction already exists.": "Esta transacción ya existe.",
+  "This transaction has no linked operation. Delete it normally.": "Esta transacción no pertenece a ninguna operación. Elimínala de la forma habitual.",
+  "Delete later trades of this holding first.": "Elimina primero las operaciones posteriores de este activo.",
+  "This operation cannot be deleted.": "Esta operación no se puede eliminar.",
+  "Record not found.": "No se encontró el registro."
 }

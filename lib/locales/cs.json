@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Obnoví původní údaje a data. Položka se znovu objeví ve vašich záznamech a ovlivní zůstatky či prognózy. Zastavená položka si zachová datum ukončení.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Tuto položku se nepodařilo obnovit. Nejprve obnovte její propojený plán nebo podnik a zkontrolujte, zda jsou původní data a měna stále povolena.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "Přesunout {name} do Nedávno smazané? Bude odebráno z vašich záznamů, součtů a všech plánovacích měsíců. Samostatné transakce zůstanou beze změny. Můžete jej obnovit z Nedávno smazané.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "Přesunout {name} do Nedávno smazaných? Pochází z převodu, splátky hypotéky nebo aktualizace aktiva, takže vše, co tato akce změnila, se vrátí a zůstatky budou jako dřív. Obnovení vše vrátí zpět.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Chcete-li zachovat minulé plánování a ukončit pouze budoucí opakování, zvolte místo toho Zastavit.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Plán se přesune do Nedávno smazané a odebere se ze všech plánovacích měsíců. Můžete jej tam obnovit. Plány se zaznamenanými výdaji nelze smazat; k ukončení budoucího plánování zvolte Zastavit.",
   "Portfolio over time": "Portfolio v čase",
@@ -2619,5 +2620,10 @@
   "Change history": "Historie změn",
   "No changes yet.": "Zatím žádné změny.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Měsíční splátky připadají na tento den v každém měsíci. Nesmí být po zaznamenané platbě.",
-  "The start date cannot be after a recorded payment.": "Datum zahájení nesmí být po zaznamenané platbě."
+  "The start date cannot be after a recorded payment.": "Datum zahájení nesmí být po zaznamenané platbě.",
+  "This transaction already exists.": "Tato transakce už existuje.",
+  "This transaction has no linked operation. Delete it normally.": "Tato transakce nemá propojenou operaci. Smažte ji běžným způsobem.",
+  "Delete later trades of this holding first.": "Nejprve smažte pozdější obchody s tímto aktivem.",
+  "This operation cannot be deleted.": "Tuto operaci nelze smazat.",
+  "Record not found.": "Záznam nebyl nalezen."
 }

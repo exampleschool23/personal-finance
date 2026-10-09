@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Cela rétablit les informations et les dates d’origine. L’élément réapparaîtra dans vos enregistrements et influencera de nouveau les soldes ou les prévisions. Un élément arrêté conserve sa date de fin.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Impossible de restaurer cet élément. Restaurez d’abord son budget ou son entreprise liés, et vérifiez que ses dates et sa devise d’origine sont toujours autorisées.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "Déplacer {name} vers Supprimés récemment ? Il sera retiré de vos enregistrements, de vos totaux et de tous les mois de planification. Les transactions distinctes restent inchangées. Vous pourrez le restaurer depuis Supprimés récemment.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "Déplacer {name} vers Récemment supprimés ? Il provient d’un virement, d’un remboursement de prêt immobilier ou d’une mise à jour d’actif : tout ce que cette action a modifié est annulé et les soldes reviennent à leur état antérieur. La restauration remet tout en place.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Pour conserver la planification passée et arrêter uniquement les répétitions futures, choisissez plutôt Arrêter.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Cela déplace le budget vers Supprimés récemment et le retire de tous les mois de planification. Vous pouvez l’y restaurer. Les budgets comportant des dépenses enregistrées ne peuvent pas être supprimés ; choisissez Arrêter pour mettre fin à la planification future.",
   "Portfolio over time": "Évolution du portefeuille",
@@ -2619,5 +2620,10 @@
   "Change history": "Historique des modifications",
   "No changes yet.": "Aucune modification pour le moment.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Les paiements mensuels tombent ce jour-là chaque mois. Elle ne peut pas être postérieure à un paiement enregistré.",
-  "The start date cannot be after a recorded payment.": "La date de début ne peut pas être postérieure à un paiement enregistré."
+  "The start date cannot be after a recorded payment.": "La date de début ne peut pas être postérieure à un paiement enregistré.",
+  "This transaction already exists.": "Cette transaction existe déjà.",
+  "This transaction has no linked operation. Delete it normally.": "Cette transaction n’est liée à aucune opération. Supprimez-la normalement.",
+  "Delete later trades of this holding first.": "Supprimez d’abord les opérations plus récentes sur cette position.",
+  "This operation cannot be deleted.": "Cette opération ne peut pas être supprimée.",
+  "Record not found.": "Enregistrement introuvable."
 }

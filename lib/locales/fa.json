@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "جزئیات و تاریخ‌های اصلی بازیابی می‌شوند. مورد دوباره در اطلاعات شما ظاهر می‌شود و بر موجودی‌ها یا پیش‌بینی‌ها اثر می‌گذارد. مورد متوقف‌شده تاریخ پایان خود را حفظ می‌کند.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "این مورد بازیابی نشد. ابتدا برنامه یا کسب‌وکار مرتبط با آن را بازیابی کنید و بررسی کنید که تاریخ‌ها و ارز اصلی هنوز مجاز باشند.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "{name} به «اخیراً حذف‌شده» منتقل شود؟ از اطلاعات، مجموع‌ها و همهٔ ماه‌های برنامه‌ریزی حذف می‌شود. تراکنش‌های جداگانه تغییری نمی‌کنند. می‌توانید آن را از «اخیراً حذف‌شده» بازیابی کنید.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "{name} به «اخیراً حذف‌شده» منتقل شود؟ این مورد از یک انتقال، پرداخت وام مسکن یا به‌روزرسانی دارایی آمده است، پس هر تغییری که آن عملیات داده برگردانده می‌شود و موجودی‌ها به حالت قبل برمی‌گردند. بازیابی همه را برمی‌گرداند.",
   "To keep past planning and only end future repeats, choose Stop instead.": "برای حفظ برنامه‌ریزی‌های گذشته و فقط پایان دادن به تکرارهای آینده، «توقف» را انتخاب کنید.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "این کار برنامه را به «اخیراً حذف‌شده» منتقل می‌کند و از همهٔ ماه‌های برنامه‌ریزی حذف می‌کند. می‌توانید آن را همان‌جا بازیابی کنید. برنامه‌های دارای هزینهٔ ثبت‌شده قابل حذف نیستند؛ برای پایان دادن به برنامه‌ریزی آینده «توقف» را انتخاب کنید.",
   "Portfolio over time": "پرتفوی در گذر زمان",
@@ -2619,5 +2620,10 @@
   "Change history": "تاریخچه تغییرات",
   "No changes yet.": "هنوز تغییری نیست.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "پرداخت‌های ماهانه در این روز از هر ماه است. نمی‌تواند بعد از یک پرداخت ثبت‌شده باشد.",
-  "The start date cannot be after a recorded payment.": "تاریخ شروع نمی‌تواند بعد از یک پرداخت ثبت‌شده باشد."
+  "The start date cannot be after a recorded payment.": "تاریخ شروع نمی‌تواند بعد از یک پرداخت ثبت‌شده باشد.",
+  "This transaction already exists.": "این تراکنش از قبل وجود دارد.",
+  "This transaction has no linked operation. Delete it normally.": "این تراکنش به هیچ عملیاتی متصل نیست. آن را به روش معمول حذف کنید.",
+  "Delete later trades of this holding first.": "ابتدا معاملات بعدی این دارایی را حذف کنید.",
+  "This operation cannot be deleted.": "این عملیات قابل حذف نیست.",
+  "Record not found.": "سابقه پیدا نشد."
 }

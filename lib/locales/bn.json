@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "এটি মূল বিবরণ ও তারিখ পুনরুদ্ধার করে। আইটেমটি আপনার রেকর্ডে আবার দেখা যাবে এবং ব্যালেন্স বা পূর্বাভাসে প্রভাব ফেলবে। বন্ধ করা আইটেম তার শেষের তারিখ বজায় রাখে।",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "এই আইটেম পুনরুদ্ধার করা যায়নি। আগে এর সংযুক্ত পরিকল্পনা বা ব্যবসা পুনরুদ্ধার করুন এবং নিশ্চিত করুন যে এর মূল তারিখ ও মুদ্রা এখনও অনুমোদিত।",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "{name} কি সম্প্রতি মুছে ফেলায় সরাবেন? এটি আপনার রেকর্ড, মোট ও সব পরিকল্পনার মাস থেকে সরে যাবে। আলাদা লেনদেন অপরিবর্তিত থাকবে। আপনি সম্প্রতি মুছে ফেলা থেকে এটি পুনরুদ্ধার করতে পারবেন।",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "{name} সম্প্রতি মুছে ফেলা-তে সরাবেন? এটি একটি ট্রান্সফার, মর্টগেজ পেমেন্ট বা সম্পদ আপডেট থেকে এসেছে, তাই সেই কাজের সব পরিবর্তন বাতিল হবে এবং ব্যালেন্স আগের মতো হবে। পুনরুদ্ধার করলে সব ফিরে আসবে।",
   "To keep past planning and only end future repeats, choose Stop instead.": "অতীতের পরিকল্পনা রাখতে এবং শুধু ভবিষ্যতের পুনরাবৃত্তি শেষ করতে বন্ধ করুন বেছে নিন।",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "এটি পরিকল্পনাটিকে সম্প্রতি মুছে ফেলায় সরায় এবং সব পরিকল্পনার মাস থেকে সরিয়ে দেয়। আপনি সেখান থেকে এটি পুনরুদ্ধার করতে পারবেন। খরচ রেকর্ড করা পরিকল্পনা মুছে ফেলা যায় না; ভবিষ্যতের পরিকল্পনা শেষ করতে বন্ধ করুন বেছে নিন।",
   "Portfolio over time": "সময়ের সাথে পোর্টফোলিও",
@@ -2619,5 +2620,10 @@
   "Change history": "পরিবর্তনের ইতিহাস",
   "No changes yet.": "এখনও কোনো পরিবর্তন নেই।",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "মাসিক কিস্তি প্রতি মাসের এই দিনে পড়ে। এটি কোনো রেকর্ড করা পেমেন্টের পরে হতে পারে না।",
-  "The start date cannot be after a recorded payment.": "শুরুর তারিখ কোনো রেকর্ড করা পেমেন্টের পরে হতে পারে না।"
+  "The start date cannot be after a recorded payment.": "শুরুর তারিখ কোনো রেকর্ড করা পেমেন্টের পরে হতে পারে না।",
+  "This transaction already exists.": "এই লেনদেনটি আগে থেকেই আছে।",
+  "This transaction has no linked operation. Delete it normally.": "এই লেনদেনের সঙ্গে কোনো সংযুক্ত কাজ নেই। সাধারণভাবে মুছুন।",
+  "Delete later trades of this holding first.": "আগে এই হোল্ডিংয়ের পরের ট্রেডগুলো মুছুন।",
+  "This operation cannot be deleted.": "এই কাজটি মোছা যাবে না।",
+  "Record not found.": "রেকর্ড পাওয়া যায়নি।"
 }

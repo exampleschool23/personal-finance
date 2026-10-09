@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "원래의 내용과 날짜가 복원돼요. 항목이 기록에 다시 나타나고 잔액과 예측에 다시 반영돼요. 중단된 항목은 종료일이 유지돼요.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "이 항목을 복원하지 못했어요. 연결된 계획이나 사업을 먼저 복원하고, 원래의 날짜와 통화가 아직 허용되는지 확인하세요.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "{name}을(를) 최근 삭제됨으로 이동할까요? 기록, 합계, 모든 계획 월에서 제거돼요. 별도의 거래는 그대로 유지돼요. 최근 삭제됨에서 복원할 수 있어요.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "{name}을(를) 최근 삭제됨으로 옮길까요? 이체, 주택담보대출 상환 또는 자산 업데이트에서 생긴 항목이라 그 작업으로 바뀐 내용이 모두 취소되고 잔액도 원래대로 돌아갑니다. 복원하면 모두 되돌아옵니다.",
   "To keep past planning and only end future repeats, choose Stop instead.": "과거 계획은 유지하고 앞으로의 반복만 끝내려면 중단을 선택하세요.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "계획이 최근 삭제됨으로 이동하고 모든 계획 월에서 제거돼요. 그곳에서 복원할 수 있어요. 지출이 기록된 계획은 삭제할 수 없으니, 앞으로의 계획을 끝내려면 중단을 선택하세요.",
   "Portfolio over time": "기간별 포트폴리오",
@@ -2619,5 +2620,10 @@
   "Change history": "변경 기록",
   "No changes yet.": "아직 변경 사항이 없습니다.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "월 납부일은 매월 이 날짜입니다. 기록된 납부일 이후로 설정할 수 없습니다.",
-  "The start date cannot be after a recorded payment.": "시작일은 기록된 납부일 이후일 수 없습니다."
+  "The start date cannot be after a recorded payment.": "시작일은 기록된 납부일 이후일 수 없습니다.",
+  "This transaction already exists.": "이 거래는 이미 있습니다.",
+  "This transaction has no linked operation. Delete it normally.": "이 거래는 연결된 작업이 없습니다. 평소처럼 삭제하세요.",
+  "Delete later trades of this holding first.": "이 보유 자산의 이후 거래를 먼저 삭제하세요.",
+  "This operation cannot be deleted.": "이 작업은 삭제할 수 없습니다.",
+  "Record not found.": "기록을 찾을 수 없습니다."
 }

@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Восстановятся исходные данные и даты. Запись снова появится в списке и будет влиять на балансы или прогнозы. У остановленной записи сохранится дата окончания.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Не удалось восстановить запись. Сначала восстановите связанный план или бизнес и проверьте, что исходные даты и валюта по-прежнему допустимы.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "Переместить {name} в «Недавно удалённые»? Запись будет убрана из списка, итогов и всех месяцев планирования. Отдельные операции не изменятся. Запись можно восстановить в разделе «Недавно удалённые».",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "Переместить {name} в «Недавно удалённые»? Запись появилась из перевода, платежа по ипотеке или обновления актива, поэтому всё, что изменило это действие, будет отменено, а балансы вернутся к прежним. Восстановление вернёт всё обратно.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Чтобы сохранить прошлые планы и завершить будущие повторы, выберите «Остановить».",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "План будет перемещён в «Недавно удалённые» и убран из всех месяцев планирования. Там его можно восстановить. Планы с записанными расходами удалить нельзя; выберите «Остановить», чтобы завершить будущее планирование.",
   "Portfolio over time": "Портфель во времени",
@@ -2619,5 +2620,10 @@
   "Change history": "История изменений",
   "No changes yet.": "Изменений пока нет.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Ежемесячные платежи приходятся на этот день каждого месяца. Дата не может быть позже записанного платежа.",
-  "The start date cannot be after a recorded payment.": "Дата начала не может быть позже записанного платежа."
+  "The start date cannot be after a recorded payment.": "Дата начала не может быть позже записанного платежа.",
+  "This transaction already exists.": "Эта операция уже есть.",
+  "This transaction has no linked operation. Delete it normally.": "Эта операция не связана с другим действием. Удалите её обычным способом.",
+  "Delete later trades of this holding first.": "Сначала удалите более поздние сделки с этим активом.",
+  "This operation cannot be deleted.": "Это действие нельзя удалить.",
+  "Record not found.": "Запись не найдена."
 }

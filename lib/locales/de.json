@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Dies stellt die ursprünglichen Angaben und Daten wieder her. Das Element erscheint wieder in Ihren Einträgen und wirkt sich erneut auf Salden oder Prognosen aus. Ein beendetes Element behält sein Enddatum.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Dieses Element konnte nicht wiederhergestellt werden. Stellen Sie zuerst den verknüpften Plan oder das verknüpfte Unternehmen wieder her und prüfen Sie, ob die ursprünglichen Daten und die Währung noch zulässig sind.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "{name} nach „Kürzlich gelöscht“ verschieben? Es wird aus Ihren Einträgen, Summen und allen Planungsmonaten entfernt. Separate Transaktionen bleiben unverändert. Sie können es unter „Kürzlich gelöscht“ wiederherstellen.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "{name} in „Zuletzt gelöscht“ verschieben? Der Eintrag stammt aus einer Überweisung, einer Hypothekenzahlung oder einer Vermögensaktualisierung. Alles, was diese Aktion geändert hat, wird rückgängig gemacht und die Salden stimmen wieder. Wiederherstellen stellt alles wieder her.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Um die bisherige Planung zu behalten und nur künftige Wiederholungen zu beenden, wählen Sie stattdessen „Beenden“.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Der Plan wird nach „Kürzlich gelöscht“ verschoben und aus allen Planungsmonaten entfernt. Sie können ihn dort wiederherstellen. Pläne mit erfassten Ausgaben können nicht gelöscht werden; wählen Sie „Beenden“, um die künftige Planung zu beenden.",
   "Portfolio over time": "Portfolio im Zeitverlauf",
@@ -2619,5 +2620,10 @@
   "Change history": "Änderungsverlauf",
   "No changes yet.": "Noch keine Änderungen.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Monatliche Zahlungen fallen auf diesen Tag jedes Monats. Er darf nicht nach einer erfassten Zahlung liegen.",
-  "The start date cannot be after a recorded payment.": "Das Startdatum darf nicht nach einer erfassten Zahlung liegen."
+  "The start date cannot be after a recorded payment.": "Das Startdatum darf nicht nach einer erfassten Zahlung liegen.",
+  "This transaction already exists.": "Diese Buchung gibt es bereits.",
+  "This transaction has no linked operation. Delete it normally.": "Diese Buchung gehört zu keiner Aktion. Lösche sie wie gewohnt.",
+  "Delete later trades of this holding first.": "Lösche zuerst spätere Trades dieser Position.",
+  "This operation cannot be deleted.": "Diese Aktion kann nicht gelöscht werden.",
+  "Record not found.": "Eintrag nicht gefunden."
 }

@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "这会恢复原有的详情和日期。该项目将重新出现在您的记录中，并再次影响余额或预测。已停止的项目保留其结束日期。",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "无法恢复此项目。请先恢复其关联的计划或企业，并确认其原有的日期和币种仍然可用。",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "将 {name} 移至“最近删除”？它将从您的记录、合计和所有规划月份中移除。单独的交易不受影响。您可以从“最近删除”中恢复。",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "将 {name} 移到“最近删除”？它来自一笔转账、房贷还款或资产更新，因此该操作所做的全部更改都会撤销，余额恢复原样。恢复后一切都会回来。",
   "To keep past planning and only end future repeats, choose Stop instead.": "如需保留过往规划、只结束未来的重复，请改选“停止”。",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "这会将计划移至“最近删除”，并从所有规划月份中移除。您可以在那里恢复。已有支出记录的计划无法删除；请选择“停止”以结束未来规划。",
   "Portfolio over time": "资产组合走势",
@@ -2619,5 +2620,10 @@
   "Change history": "更改记录",
   "No changes yet.": "暂无更改。",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "每月还款日为每月的这一天。不能晚于已记录的还款。",
-  "The start date cannot be after a recorded payment.": "开始日期不能晚于已记录的还款。"
+  "The start date cannot be after a recorded payment.": "开始日期不能晚于已记录的还款。",
+  "This transaction already exists.": "这笔交易已存在。",
+  "This transaction has no linked operation. Delete it normally.": "这笔交易不属于任何关联操作，请按常规方式删除。",
+  "Delete later trades of this holding first.": "请先删除该持仓之后的交易。",
+  "This operation cannot be deleted.": "此操作无法删除。",
+  "Record not found.": "未找到记录。"
 }

@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "इससे मूल विवरण और तारीखें वापस आ जाएंगी। आइटम आपके रिकॉर्ड में दिखेगा और बैलेंस या अनुमानों को फिर से प्रभावित करेगा। रोके गए आइटम की समाप्ति तारीख बनी रहती है।",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "यह आइटम पुनर्स्थापित नहीं हो सका। पहले उससे जुड़ी योजना या बिज़नेस पुनर्स्थापित करें और जांचें कि उसकी मूल तारीखें और मुद्रा अब भी मान्य हैं।",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "{name} को \"हाल ही में हटाए गए\" में भेजें? यह आपके रिकॉर्ड, कुल और सभी योजना महीनों से हट जाएगा। अलग लेन-देन जस के तस रहेंगे। आप इसे \"हाल ही में हटाए गए\" से पुनर्स्थापित कर सकते हैं।",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "{name} को हाल ही में हटाए गए में ले जाएँ? यह किसी ट्रांसफ़र, मॉर्गेज भुगतान या एसेट अपडेट से आया है, इसलिए उस कार्रवाई के सभी बदलाव पलट दिए जाएँगे और बैलेंस पहले जैसे हो जाएँगे। पुनर्स्थापित करने पर सब वापस आ जाएगा।",
   "To keep past planning and only end future repeats, choose Stop instead.": "पिछली योजना रखकर केवल आगे के दोहराव समाप्त करने के लिए \"रोकें\" चुनें।",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "इससे योजना \"हाल ही में हटाए गए\" में चली जाएगी और सभी योजना महीनों से हट जाएगी। आप उसे वहां से पुनर्स्थापित कर सकते हैं। जिन योजनाओं में खर्च दर्ज है उन्हें हटाया नहीं जा सकता; आगे की योजना समाप्त करने के लिए \"रोकें\" चुनें।",
   "Portfolio over time": "समय के साथ पोर्टफ़ोलियो",
@@ -2619,5 +2620,10 @@
   "Change history": "बदलाव का इतिहास",
   "No changes yet.": "अभी तक कोई बदलाव नहीं।",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "मासिक भुगतान हर महीने इसी दिन होते हैं। यह किसी दर्ज भुगतान के बाद नहीं हो सकती।",
-  "The start date cannot be after a recorded payment.": "शुरू होने की तारीख किसी दर्ज भुगतान के बाद नहीं हो सकती।"
+  "The start date cannot be after a recorded payment.": "शुरू होने की तारीख किसी दर्ज भुगतान के बाद नहीं हो सकती।",
+  "This transaction already exists.": "यह लेन-देन पहले से मौजूद है।",
+  "This transaction has no linked operation. Delete it normally.": "यह लेन-देन किसी जुड़ी हुई कार्रवाई से नहीं है। इसे सामान्य तरीके से हटाएँ।",
+  "Delete later trades of this holding first.": "पहले इस होल्डिंग के बाद वाले ट्रेड हटाएँ।",
+  "This operation cannot be deleted.": "यह कार्रवाई हटाई नहीं जा सकती।",
+  "Record not found.": "रिकॉर्ड नहीं मिला।"
 }

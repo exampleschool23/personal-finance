@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Przywraca to pierwotne szczegóły i daty. Element znów pojawi się w rekordach i wpłynie na salda lub prognozy. Zakończony element zachowuje datę zakończenia.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Nie udało się przywrócić tego elementu. Najpierw przywróć powiązany plan lub firmę i sprawdź, czy pierwotne daty i waluta są nadal dozwolone.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "Przenieść {name} do Ostatnio usunięte? Zostanie usunięty z rekordów, sum i wszystkich miesięcy planowania. Osobne transakcje pozostaną bez zmian. Możesz go przywrócić z Ostatnio usunięte.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "Przenieść {name} do Ostatnio usuniętych? Pochodzi z przelewu, raty kredytu hipotecznego lub aktualizacji aktywa, więc wszystko, co ta operacja zmieniła, zostanie cofnięte, a salda wrócą do poprzednich wartości. Przywrócenie przywróci wszystko.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Aby zachować dotychczasowe planowanie i zakończyć tylko przyszłe powtórzenia, wybierz Zakończ.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Plan zostanie przeniesiony do Ostatnio usunięte i usunięty ze wszystkich miesięcy planowania. Możesz go tam przywrócić. Planów z zapisanymi wydatkami nie można usunąć; wybierz Zakończ, aby zakończyć przyszłe planowanie.",
   "Portfolio over time": "Portfel w czasie",
@@ -2619,5 +2620,10 @@
   "Change history": "Historia zmian",
   "No changes yet.": "Brak zmian.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Raty miesięczne przypadają na ten dzień każdego miesiąca. Data nie może być późniejsza niż zapisana płatność.",
-  "The start date cannot be after a recorded payment.": "Data rozpoczęcia nie może być późniejsza niż zapisana płatność."
+  "The start date cannot be after a recorded payment.": "Data rozpoczęcia nie może być późniejsza niż zapisana płatność.",
+  "This transaction already exists.": "Ta transakcja już istnieje.",
+  "This transaction has no linked operation. Delete it normally.": "Ta transakcja nie jest powiązana z żadną operacją. Usuń ją w zwykły sposób.",
+  "Delete later trades of this holding first.": "Najpierw usuń późniejsze transakcje tego aktywa.",
+  "This operation cannot be deleted.": "Tej operacji nie można usunąć.",
+  "Record not found.": "Nie znaleziono rekordu."
 }

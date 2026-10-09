@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Thao tác này khôi phục thông tin và ngày ban đầu. Mục này sẽ xuất hiện lại trong bản ghi của bạn và ảnh hưởng đến số dư hoặc dự báo. Mục đã dừng vẫn giữ ngày kết thúc.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Không thể khôi phục mục này. Hãy khôi phục kế hoạch hoặc doanh nghiệp liên kết trước, và kiểm tra xem ngày cùng tiền tệ ban đầu có còn hợp lệ không.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "Chuyển {name} vào Đã xóa gần đây? Mục này sẽ bị loại khỏi bản ghi, tổng số và tất cả các tháng lập kế hoạch. Các giao dịch riêng lẻ vẫn giữ nguyên. Bạn có thể khôi phục từ Đã xóa gần đây.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "Chuyển {name} vào Đã xóa gần đây? Mục này đến từ một lần chuyển tiền, khoản trả góp thế chấp hoặc cập nhật tài sản, nên mọi thay đổi của thao tác đó sẽ được hoàn tác và số dư trở lại như cũ. Khôi phục sẽ đưa mọi thứ trở lại.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Để giữ kế hoạch trước đây và chỉ kết thúc các lần lặp trong tương lai, hãy chọn Dừng.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Thao tác này chuyển kế hoạch vào Đã xóa gần đây và loại khỏi tất cả các tháng lập kế hoạch. Bạn có thể khôi phục tại đó. Không thể xóa kế hoạch đã có khoản chi; hãy chọn Dừng để kết thúc kế hoạch trong tương lai.",
   "Portfolio over time": "Danh mục đầu tư theo thời gian",
@@ -2619,5 +2620,10 @@
   "Change history": "Lịch sử thay đổi",
   "No changes yet.": "Chưa có thay đổi nào.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Khoản thanh toán hằng tháng rơi vào ngày này mỗi tháng. Ngày này không được sau một khoản thanh toán đã ghi.",
-  "The start date cannot be after a recorded payment.": "Ngày bắt đầu không được sau một khoản thanh toán đã ghi."
+  "The start date cannot be after a recorded payment.": "Ngày bắt đầu không được sau một khoản thanh toán đã ghi.",
+  "This transaction already exists.": "Giao dịch này đã tồn tại.",
+  "This transaction has no linked operation. Delete it normally.": "Giao dịch này không gắn với thao tác nào. Hãy xóa như bình thường.",
+  "Delete later trades of this holding first.": "Hãy xóa trước các giao dịch mua bán sau đó của tài sản này.",
+  "This operation cannot be deleted.": "Không thể xóa thao tác này.",
+  "Record not found.": "Không tìm thấy bản ghi."
 }

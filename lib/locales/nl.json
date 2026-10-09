@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Hiermee worden de oorspronkelijke gegevens en datums hersteld. Het item verschijnt weer in uw posten en beïnvloedt saldi of prognoses opnieuw. Een gestopt item behoudt zijn einddatum.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Kan dit item niet herstellen. Herstel eerst het gekoppelde plan of bedrijf en controleer of de oorspronkelijke datums en valuta nog zijn toegestaan.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "{name} naar Onlangs verwijderd verplaatsen? Het wordt verwijderd uit uw posten, totalen en alle planningsmaanden. Losse transacties blijven ongewijzigd. U kunt het herstellen via Onlangs verwijderd.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "{name} naar Recent verwijderd verplaatsen? Het komt uit een overboeking, een hypotheekbetaling of een update van een bezitting, dus alles wat die actie veranderde wordt teruggedraaid en de saldi kloppen weer. Herstellen zet alles terug.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Kies Stoppen om eerdere planning te behouden en alleen toekomstige herhalingen te beëindigen.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Hiermee wordt het plan naar Onlangs verwijderd verplaatst en uit alle planningsmaanden verwijderd. U kunt het daar herstellen. Plannen met geregistreerde uitgaven kunnen niet worden verwijderd; kies Stoppen om toekomstige planning te beëindigen.",
   "Portfolio over time": "Portefeuille in de tijd",
@@ -2619,5 +2620,10 @@
   "Change history": "Wijzigingsgeschiedenis",
   "No changes yet.": "Nog geen wijzigingen.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Maandelijkse betalingen vallen op deze dag van elke maand. De datum mag niet na een geregistreerde betaling liggen.",
-  "The start date cannot be after a recorded payment.": "De startdatum mag niet na een geregistreerde betaling liggen."
+  "The start date cannot be after a recorded payment.": "De startdatum mag niet na een geregistreerde betaling liggen.",
+  "This transaction already exists.": "Deze transactie bestaat al.",
+  "This transaction has no linked operation. Delete it normally.": "Deze transactie hoort niet bij een actie. Verwijder hem op de gewone manier.",
+  "Delete later trades of this holding first.": "Verwijder eerst latere transacties van deze positie.",
+  "This operation cannot be deleted.": "Deze actie kan niet worden verwijderd.",
+  "Record not found.": "Record niet gevonden."
 }

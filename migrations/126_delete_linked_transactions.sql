@@ -23,10 +23,20 @@
 -- bought units that were sold since), and a holding with later purchases keeps its
 -- trade until those are deleted. A balance whose history no longer ends at the
 -- restored value gets today's corrected value, as delete_tracker_update does.
--- Deletion is permanent: these rows never reach Recently deleted.
+-- The operation goes to Recently deleted as one entry: data is the clicked row, so
+-- the list shows it like any transaction, and the new column
+-- deleted_items.linked_operation holds every row removed (transactions, history,
+-- cash links, mortgage payment, movement, account activity), the history rows the
+-- reversal added, the replay tombstones it wrote and each balance's amount,
+-- quantity and cost before and after. restore_deleted_item puts all of it back with
+-- the same ids and re-applies the recorded balance changes, or changes nothing when
+-- a balance would become invalid. permanently_delete_item only drops the entry; the
+-- operation stays undone and its ids stay unusable.
 -- The four guards let exactly the row this function is deleting through, named by
 -- the transaction-local setting finance.linked_delete. Re-running this is a no-op.
 BEGIN;
+
+ALTER TABLE public.deleted_items ADD COLUMN IF NOT EXISTS linked_operation jsonb;
 
 DO $patch$
 DECLARE
@@ -42,10 +52,18 @@ BEGIN
   IF (length(definition)-length(replace(definition,anchor,'')))/length(anchor)<>1 THEN RAISE EXCEPTION 'Unexpected definition of %. Apply migrations in order.',fn; END IF;
   EXECUTE replace(definition,anchor,anchor||chr(10)||bypass);
  END LOOP;
+ -- A linked operation restores as a whole.
+ definition:=pg_get_functiondef('public.restore_deleted_item(uuid)'::regprocedure);
+ IF position('restore_linked_transaction' IN definition)=0 THEN
+  -- Placed before the goal branch, so the text migration 124 added stays whole.
+  anchor:=$a$ IF item.source='savings_goals' THEN$a$;
+  IF (length(definition)-length(replace(definition,anchor,'')))/length(anchor)<>1 THEN RAISE EXCEPTION 'Unexpected definition of restore_deleted_item. Apply migrations in order.'; END IF;
+  EXECUTE replace(definition,anchor,$b$ IF item.linked_operation IS NOT NULL THEN PERFORM public.restore_linked_transaction(item.id); RETURN; END IF;$b$||chr(10)||anchor);
+ END IF;
 END $patch$;
 
--- Removes the named rows of the open workspace for good: past the guards, and out of
--- Recently deleted, because their operation is undone with them.
+-- Removes the named rows of the open workspace past the guards. Their single-row
+-- Recently deleted entries go too: the operation is archived as one entry.
 CREATE OR REPLACE FUNCTION public.delete_linked_rows(p_ids uuid[]) RETURNS void
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 DECLARE owner uuid:=public.active_owner(); item uuid;
@@ -97,11 +115,38 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.reverse_cash_link(public.investment_account_links,public.investment_history,text) FROM PUBLIC,anon,authenticated;
 
+-- Everything an operation can touch: balances of its records, their history, and the
+-- rows that name the operation's ids. Comparing it before and after a delete gives
+-- exactly what the delete removed, added and changed.
+CREATE OR REPLACE FUNCTION public.linked_state(p_records uuid[],p_ids uuid[]) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$
+ SELECT jsonb_build_object(
+  'balances',(SELECT coalesce(jsonb_object_agg(r.id,jsonb_build_object('amount',r.amount,'quantity',r.quantity,'cost',r.cost)),'{}'::jsonb) FROM public.finance_records r WHERE r.user_id=public.active_owner() AND r.id=ANY(p_records)),
+  'records',(SELECT coalesce(jsonb_agg(to_jsonb(r)),'[]'::jsonb) FROM public.finance_records r WHERE r.user_id=public.active_owner()
+   AND (r.id=ANY(p_ids) OR r.history_event_id=ANY(p_ids) OR r.mortgage_payment_id=ANY(p_ids) OR r.movement_id=ANY(p_ids) OR r.operation_id=ANY(p_ids))),
+  'history',(SELECT coalesce(jsonb_agg(to_jsonb(h)),'[]'::jsonb) FROM public.investment_history h WHERE h.user_id=public.active_owner() AND (h.record_id=ANY(p_records) OR h.id=ANY(p_ids))),
+  'links',(SELECT coalesce(jsonb_agg(to_jsonb(l)),'[]'::jsonb) FROM public.investment_account_links l WHERE l.user_id=public.active_owner() AND l.id=ANY(p_ids)),
+  'mortgage_payments',(SELECT coalesce(jsonb_agg(to_jsonb(m)),'[]'::jsonb) FROM public.mortgage_payments m WHERE m.user_id=public.active_owner() AND m.id=ANY(p_ids)),
+  'asset_movements',(SELECT coalesce(jsonb_agg(to_jsonb(m)),'[]'::jsonb) FROM public.asset_movements m WHERE m.user_id=public.active_owner() AND m.id=ANY(p_ids)),
+  'account_activity',(SELECT coalesce(jsonb_agg(to_jsonb(o)),'[]'::jsonb) FROM public.account_activity o WHERE o.user_id=public.active_owner() AND o.id=ANY(p_ids)),
+  'tombstones',(SELECT coalesce(jsonb_agg(d.id),'[]'::jsonb) FROM public.deleted_tracker_updates d WHERE d.user_id=public.active_owner() AND d.id=ANY(p_ids)))
+$$;
+REVOKE ALL ON FUNCTION public.linked_state(uuid[],uuid[]) FROM PUBLIC,anon,authenticated;
+
+-- The rows of one list in a state that another state no longer has, by id.
+CREATE OR REPLACE FUNCTION public.linked_missing(p_from jsonb,p_in jsonb) RETURNS jsonb
+LANGUAGE sql IMMUTABLE SET search_path=public AS $$
+ SELECT coalesce(jsonb_agg(x),'[]'::jsonb) FROM jsonb_array_elements(p_from) x
+ WHERE NOT EXISTS(SELECT 1 FROM jsonb_array_elements(p_in) y WHERE coalesce(y->>'id',y#>>'{}')=coalesce(x->>'id',x#>>'{}'))
+$$;
+REVOKE ALL ON FUNCTION public.linked_missing(jsonb,jsonb) FROM PUBLIC,anon,authenticated;
+
 CREATE OR REPLACE FUNCTION public.delete_linked_transaction(p_id uuid) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 DECLARE owner uuid:=public.active_owner(); t public.finance_records; h public.investment_history; link public.investment_account_links;
  r public.finance_records; a public.finance_records; b public.finance_records; op public.account_activity; pay public.mortgage_payments;
  move public.asset_movements; units boolean; quantity numeric; cost numeric;
+ ids uuid[]; touched uuid[]; before jsonb; after jsonb; splits jsonb; occurrences jsonb;
 BEGIN
  IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
  IF NOT public.can_write_owner(owner) THEN RAISE EXCEPTION 'This shared workspace is view-only.' USING ERRCODE='42501'; END IF;
@@ -115,6 +160,17 @@ BEGIN
  IF t.history_event_id IS NULL AND t.mortgage_payment_id IS NULL AND t.movement_id IS NULL AND t.operation_id IS NULL THEN
   RAISE EXCEPTION 'This transaction has no linked operation. Delete it normally.';
  END IF;
+ ids:=array_remove(ARRAY[t.id,t.history_event_id,t.mortgage_payment_id,t.movement_id,t.operation_id],NULL);
+ touched:=ARRAY(SELECT DISTINCT x FROM (
+   SELECT record_id AS x FROM public.investment_history WHERE user_id=owner AND id=t.history_event_id
+   UNION ALL SELECT account_id FROM public.investment_account_links WHERE user_id=owner AND id=ANY(ids)
+   UNION ALL SELECT mortgage_id FROM public.mortgage_payments WHERE user_id=owner AND id=t.mortgage_payment_id
+   UNION ALL SELECT unnest(ARRAY[account_id,target_id]) FROM public.account_activity WHERE user_id=owner AND id=ANY(ids)
+   UNION ALL SELECT unnest(ARRAY[source_id,target_id]) FROM public.asset_movements WHERE user_id=owner AND id=t.movement_id) s WHERE x IS NOT NULL);
+ before:=public.linked_state(touched,ids);
+ SELECT coalesce(jsonb_agg(jsonb_build_object('category_id',coalesce(category_id::text,kind),'amount',amount) ORDER BY position),'[]'::jsonb) INTO splits
+  FROM public.transaction_splits WHERE record_id=t.id AND user_id=owner;
+ SELECT coalesce(jsonb_agg(to_jsonb(o)),'[]'::jsonb) INTO occurrences FROM public.payment_occurrences o WHERE o.transaction_id=t.id AND o.user_id=owner;
  BEGIN
  IF t.history_event_id IS NOT NULL THEN
   SELECT * INTO h FROM public.investment_history WHERE id=t.history_event_id AND user_id=owner FOR UPDATE;
@@ -210,10 +266,89 @@ BEGIN
  END IF;
  EXCEPTION WHEN check_violation THEN RAISE EXCEPTION 'The cash reversal would create an invalid balance.';
  END;
+ after:=public.linked_state(touched,ids);
+ INSERT INTO public.deleted_items(user_id,source,data,splits,occurrences,linked_operation)
+ VALUES(owner,'finance_records',to_jsonb(t),splits,occurrences,jsonb_build_object(
+  'records',public.linked_missing(before->'records',after->'records'),
+  'history',public.linked_missing(before->'history',after->'history'),
+  'links',public.linked_missing(before->'links',after->'links'),
+  'mortgage_payments',public.linked_missing(before->'mortgage_payments',after->'mortgage_payments'),
+  'asset_movements',public.linked_missing(before->'asset_movements',after->'asset_movements'),
+  'account_activity',public.linked_missing(before->'account_activity',after->'account_activity'),
+  'added_history',(SELECT coalesce(jsonb_agg(x->'id'),'[]'::jsonb) FROM jsonb_array_elements(public.linked_missing(after->'history',before->'history')) x),
+  'tombstones',public.linked_missing(after->'tombstones',before->'tombstones'),
+  'balances',(SELECT coalesce(jsonb_object_agg(key,jsonb_build_object('before',value,'after',after->'balances'->key)),'{}'::jsonb) FROM jsonb_each(before->'balances'))));
  RETURN jsonb_build_object('ok',true);
 END $$;
 REVOKE ALL ON FUNCTION public.delete_linked_transaction(uuid) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.delete_linked_transaction(uuid) TO authenticated;
+
+-- Puts a deleted operation back exactly: the same rows with the same ids, and each
+-- balance changed again by what the delete gave back. Nothing changes when a
+-- balance or quantity would become invalid (the money was spent meanwhile).
+CREATE OR REPLACE FUNCTION public.restore_linked_transaction(p_item uuid) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE owner uuid:=public.active_owner(); item public.deleted_items; snap jsonb; key text; change jsonb; r public.finance_records;
+ targets jsonb:='{}'::jsonb; amount numeric; quantity numeric; cost numeric; previous_write text; previous_restore text;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ IF NOT public.can_write_owner(owner) THEN RAISE EXCEPTION 'This shared workspace is view-only.' USING ERRCODE='42501'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ SELECT * INTO item FROM public.deleted_items WHERE id=p_item AND user_id=owner FOR UPDATE;
+ IF item.id IS NULL OR item.linked_operation IS NULL THEN RETURN; END IF;
+ snap:=item.linked_operation;
+ PERFORM id FROM public.finance_records WHERE user_id=owner AND id IN(SELECT k::uuid FROM jsonb_object_keys(snap->'balances') k) ORDER BY id FOR UPDATE;
+ FOR key,change IN SELECT * FROM jsonb_each(snap->'balances') LOOP
+  SELECT * INTO r FROM public.finance_records WHERE id=key::uuid AND user_id=owner;
+  IF r.id IS NULL THEN RAISE EXCEPTION 'Record not found.'; END IF;
+  amount:=r.amount+(change->'before'->>'amount')::numeric-(change->'after'->>'amount')::numeric;
+  quantity:=r.quantity+(change->'before'->>'quantity')::numeric-(change->'after'->>'quantity')::numeric;
+  -- A cost the delete set back returns to the trade's average unless it moved since.
+  cost:=CASE WHEN r.cost=(change->'after'->>'cost')::numeric THEN (change->'before'->>'cost')::numeric ELSE r.cost END;
+  IF amount<0 OR amount>1e15 OR quantity<0 OR quantity>1e15 THEN RAISE EXCEPTION 'Insufficient balance or holding quantity.'; END IF;
+  targets:=targets||jsonb_build_object(key,jsonb_build_object('amount',amount,'quantity',quantity,'cost',cost));
+ END LOOP;
+ IF EXISTS(SELECT 1 FROM jsonb_array_elements(snap->'records') x JOIN public.finance_records f ON f.id=(x->>'id')::uuid)
+  OR EXISTS(SELECT 1 FROM jsonb_array_elements(snap->'mortgage_payments') x JOIN public.mortgage_payments f ON f.id=(x->>'id')::uuid)
+  OR EXISTS(SELECT 1 FROM jsonb_array_elements(snap->'asset_movements') x JOIN public.asset_movements f ON f.id=(x->>'id')::uuid)
+  OR EXISTS(SELECT 1 FROM jsonb_array_elements(snap->'account_activity') x JOIN public.account_activity f ON f.id=(x->>'id')::uuid)
+  OR EXISTS(SELECT 1 FROM jsonb_array_elements(snap->'links') x JOIN public.investment_account_links f ON f.id=(x->>'id')::uuid)
+  OR EXISTS(SELECT 1 FROM jsonb_array_elements(snap->'history') x JOIN public.investment_history f ON f.id=(x->>'id')::uuid) THEN
+  RAISE EXCEPTION 'This transaction already exists.';
+ END IF;
+ BEGIN
+ DELETE FROM public.deleted_tracker_updates WHERE user_id=owner AND id IN(SELECT (x#>>'{}')::uuid FROM jsonb_array_elements(snap->'tombstones') x);
+ DELETE FROM public.investment_history WHERE user_id=owner AND id IN(SELECT (x#>>'{}')::uuid FROM jsonb_array_elements(snap->'added_history') x);
+ previous_write:=coalesce(current_setting('finance.history_write',true),'0');
+ previous_restore:=coalesce(current_setting('finance.restore_transaction',true),'0');
+ PERFORM set_config('finance.history_write','1',true);
+ PERFORM set_config('finance.restore_transaction','1',true);
+ INSERT INTO public.mortgage_payments SELECT * FROM jsonb_populate_recordset(NULL::public.mortgage_payments,snap->'mortgage_payments');
+ -- The payment trigger writes a fresh history entry; the saved one replaces it.
+ DELETE FROM public.investment_history WHERE user_id=owner AND id IN(SELECT (x->>'id')::uuid FROM jsonb_array_elements(snap->'history') x);
+ INSERT INTO public.investment_history SELECT * FROM jsonb_populate_recordset(NULL::public.investment_history,snap->'history');
+ INSERT INTO public.investment_account_links SELECT * FROM jsonb_populate_recordset(NULL::public.investment_account_links,snap->'links');
+ INSERT INTO public.asset_movements SELECT * FROM jsonb_populate_recordset(NULL::public.asset_movements,snap->'asset_movements');
+ INSERT INTO public.account_activity SELECT * FROM jsonb_populate_recordset(NULL::public.account_activity,snap->'account_activity');
+ INSERT INTO public.finance_records SELECT (jsonb_populate_record(NULL::public.finance_records,public.normalize_finance_record_snapshot(x)||jsonb_build_object('user_id',owner))).*
+  FROM jsonb_array_elements(snap->'records') x;
+ -- Fee rows on an account moved it again as they went in; the recorded totals set every balance.
+ FOR key,change IN SELECT * FROM jsonb_each(targets) LOOP
+  UPDATE public.finance_records SET amount=(change->>'amount')::numeric,quantity=(change->>'quantity')::numeric,cost=(change->>'cost')::numeric WHERE id=key::uuid AND user_id=owner;
+ END LOOP;
+ PERFORM set_config('finance.history_write',previous_write,true);
+ PERFORM set_config('finance.restore_transaction',previous_restore,true);
+ IF jsonb_array_length(item.splits)>0 THEN PERFORM public.save_transaction_splits((item.data->>'id')::uuid,item.splits); END IF;
+ INSERT INTO public.payment_occurrences(id,user_id,record_id,due_on,status,transaction_id)
+ SELECT o.id,o.user_id,o.record_id,o.due_on,o.status,o.transaction_id FROM jsonb_populate_recordset(NULL::public.payment_occurrences,item.occurrences) o
+ WHERE o.user_id=owner AND EXISTS(SELECT 1 FROM public.finance_records f WHERE f.id=o.record_id AND f.user_id=owner)
+  AND EXISTS(SELECT 1 FROM public.finance_records f WHERE f.id=o.transaction_id AND f.user_id=owner)
+ ON CONFLICT DO NOTHING;
+ DELETE FROM public.deleted_items WHERE id=item.id AND user_id=owner;
+ EXCEPTION WHEN check_violation THEN RAISE EXCEPTION 'Insufficient balance or holding quantity.';
+ END;
+END $$;
+REVOKE ALL ON FUNCTION public.restore_linked_transaction(uuid) FROM PUBLIC,anon,authenticated;
 
 -- The capability version moves to 126, so the app can ask for this migration.
 CREATE OR REPLACE FUNCTION public.finance_capabilities() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$

@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Hii hurejesha maelezo na tarehe asili. Kitu hicho kitaonekana tena kwenye rekodi zako na kuathiri salio au utabiri. Kitu kilichosimamishwa huhifadhi tarehe yake ya mwisho.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Imeshindwa kurejesha kitu hiki. Rejesha kwanza mpango au biashara iliyounganishwa, na uhakikishe tarehe na sarafu asili bado zinaruhusiwa.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "Hamisha {name} hadi Zilizofutwa hivi karibuni? Kitaondolewa kwenye rekodi, jumla na miezi yote ya mipango. Miamala tofauti haibadiliki. Unaweza kukirejesha kutoka Zilizofutwa hivi karibuni.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "Hamisha {name} kwenda Vilivyofutwa hivi karibuni? Imetokana na uhamisho, malipo ya rehani au sasisho la mali, kwa hivyo kila kitu kilichobadilishwa na kitendo hicho kitarudishwa na salio litarudi kama lilivyokuwa. Kurejesha kunarudisha kila kitu.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Ili kuweka mipango ya zamani na kumaliza marudio ya baadaye tu, chagua Simamisha badala yake.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Hii huhamisha mpango hadi Zilizofutwa hivi karibuni na kuuondoa kwenye miezi yote ya mipango. Unaweza kuurejesha huko. Mipango yenye matumizi yaliyorekodiwa haiwezi kufutwa; chagua Simamisha ili kumaliza mipango ya baadaye.",
   "Portfolio over time": "Kwingineko kadri muda unavyopita",
@@ -2619,5 +2620,10 @@
   "Change history": "Historia ya mabadiliko",
   "No changes yet.": "Bado hakuna mabadiliko.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Malipo ya kila mwezi huangukia siku hii kila mwezi. Haiwezi kuwa baada ya malipo yaliyorekodiwa.",
-  "The start date cannot be after a recorded payment.": "Tarehe ya kuanza haiwezi kuwa baada ya malipo yaliyorekodiwa."
+  "The start date cannot be after a recorded payment.": "Tarehe ya kuanza haiwezi kuwa baada ya malipo yaliyorekodiwa.",
+  "This transaction already exists.": "Muamala huu tayari upo.",
+  "This transaction has no linked operation. Delete it normally.": "Muamala huu hauhusiani na kitendo chochote. Ufute kwa njia ya kawaida.",
+  "Delete later trades of this holding first.": "Futa kwanza biashara za baadaye za mali hii.",
+  "This operation cannot be deleted.": "Kitendo hiki hakiwezi kufutwa.",
+  "Record not found.": "Rekodi haikupatikana."
 }

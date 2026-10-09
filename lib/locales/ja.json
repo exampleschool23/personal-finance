@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "元の内容と日付を復元します。項目は記録に再び表示され、残高や予測にも反映されます。停止した項目は終了日が保持されます。",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "この項目を復元できませんでした。関連する計画または事業を先に復元し、元の日付と通貨が引き続き使用できることを確認してください。",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "{name}を「最近削除した項目」に移動しますか？記録、合計、すべての計画月から削除されます。個別の取引は変更されません。「最近削除した項目」から復元できます。",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "{name} を最近削除した項目に移動しますか？振替、住宅ローンの返済、または資産の更新から作られた取引のため、その操作で変わった内容はすべて取り消され、残高も元に戻ります。復元するとすべて元どおりになります。",
   "To keep past planning and only end future repeats, choose Stop instead.": "過去の計画を残して今後の繰り返しのみ終了するには、代わりに「停止」を選択してください。",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "この計画を「最近削除した項目」に移動し、すべての計画月から削除します。そこから復元できます。支出が記録されている計画は削除できません。今後の計画を終了するには「停止」を選択してください。",
   "Portfolio over time": "資産の推移",
@@ -2619,5 +2620,10 @@
   "Change history": "変更履歴",
   "No changes yet.": "まだ変更はありません。",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "毎月の支払いは各月のこの日になります。記録済みの支払いより後にはできません。",
-  "The start date cannot be after a recorded payment.": "開始日を記録済みの支払いより後にすることはできません。"
+  "The start date cannot be after a recorded payment.": "開始日を記録済みの支払いより後にすることはできません。",
+  "This transaction already exists.": "この取引はすでにあります。",
+  "This transaction has no linked operation. Delete it normally.": "この取引は他の操作に紐づいていません。通常どおり削除してください。",
+  "Delete later trades of this holding first.": "先にこの保有資産のその後の取引を削除してください。",
+  "This operation cannot be deleted.": "この操作は削除できません。",
+  "Record not found.": "記録が見つかりません。"
 }

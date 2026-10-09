@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { uuid } from '@/lib/api-validation';
-import { crossSite, readJson, signInAgain } from '@/lib/api-route';
+import { crossSite, postgrestFailure, readJson, signInAgain } from '@/lib/api-route';
 import { workspaceOwner } from '@/lib/household';
 import { session, supa, sameOrigin } from '@/lib/supabase';
 import { attachmentStore, ownsAttachmentPath } from '@/lib/record-attachments';
@@ -22,7 +22,9 @@ export async function POST(req:Request) {
   const parsed=z.object({id:uuid}).safeParse(await readJson(req));
   if(!parsed.success)return Response.json({error:'Check the record fields.'},{status:400});
   const result=await supa('/rest/v1/rpc/restore_deleted_item',{method:'POST',body:JSON.stringify({p_id:parsed.data.id})},auth.token);
-  if(!result.ok)return Response.json({error:'Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.'},{status:409});
+  // A refusal the database explains ("Insufficient balance or holding quantity." for a transfer or payment whose cash was spent
+  // since, "This transaction already exists.") is shown as it is; anything else keeps the general advice.
+  if(!result.ok)return postgrestFailure(result,'Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.');
   return Response.json({ok:true});
  } catch {return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
 }

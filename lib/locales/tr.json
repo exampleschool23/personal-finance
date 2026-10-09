@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Bu işlem özgün ayrıntıları ve tarihleri geri yükler. Öğe kayıtlarınızda yeniden görünür ve bakiyeleri veya tahminleri yeniden etkiler. Durdurulmuş bir öğe bitiş tarihini korur.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Bu öğe geri yüklenemedi. Önce bağlı planını veya işletmesini geri yükleyin ve özgün tarihlerin ile para biriminin hâlâ geçerli olduğunu kontrol edin.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "{name} Son silinenler'e taşınsın mı? Kayıtlarınızdan, toplamlardan ve tüm planlama aylarından kaldırılır. Ayrı işlemler değişmez. Son silinenler bölümünden geri yükleyebilirsiniz.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "{name} Son silinenler bölümüne taşınsın mı? Bir transferden, ipotek ödemesinden veya varlık güncellemesinden geldiği için o işlemin değiştirdiği her şey geri alınır ve bakiyeler eski hâline döner. Geri yükleme her şeyi geri getirir.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Geçmiş planlamayı korumak ve yalnızca gelecekteki tekrarları sonlandırmak için bunun yerine Durdur'u seçin.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Bu işlem planı Son silinenler'e taşır ve tüm planlama aylarından kaldırır. Oradan geri yükleyebilirsiniz. Kayıtlı harcaması olan planlar silinemez; gelecekteki planlamayı sonlandırmak için Durdur'u seçin.",
   "Portfolio over time": "Zaman içinde portföy",
@@ -2619,5 +2620,10 @@
   "Change history": "Değişiklik geçmişi",
   "No changes yet.": "Henüz değişiklik yok.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Aylık ödemeler her ayın bu gününe denk gelir. Kaydedilmiş bir ödemeden sonra olamaz.",
-  "The start date cannot be after a recorded payment.": "Başlangıç tarihi kaydedilmiş bir ödemeden sonra olamaz."
+  "The start date cannot be after a recorded payment.": "Başlangıç tarihi kaydedilmiş bir ödemeden sonra olamaz.",
+  "This transaction already exists.": "Bu işlem zaten var.",
+  "This transaction has no linked operation. Delete it normally.": "Bu işlem bağlı bir eyleme ait değil. Her zamanki gibi silin.",
+  "Delete later trades of this holding first.": "Önce bu varlığın sonraki alım satımlarını silin.",
+  "This operation cannot be deleted.": "Bu eylem silinemez.",
+  "Record not found.": "Kayıt bulunamadı."
 }

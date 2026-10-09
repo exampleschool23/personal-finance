@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "يستعيد هذا التفاصيل والتواريخ الأصلية. سيظهر العنصر في سجلاتك ويؤثر على الأرصدة أو التوقعات مجددًا. يحتفظ العنصر الموقوف بتاريخ انتهائه.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "تعذّرت استعادة هذا العنصر. استعد أولًا الخطة أو العمل التجاري المرتبط به، وتأكد من أن تواريخه الأصلية وعملته ما زالت مسموحة.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "هل تنقل {name} إلى «المحذوفات الأخيرة»؟ ستُزال من سجلاتك وإجمالياتك وجميع أشهر التخطيط. تبقى المعاملات المنفصلة دون تغيير. يمكنك استعادته من «المحذوفات الأخيرة».",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "نقل {name} إلى المحذوفات مؤخرًا؟ جاء من تحويل أو دفعة رهن عقاري أو تحديث أصل، لذا يُلغى كل ما غيّره ذلك الإجراء وتعود الأرصدة كما كانت. الاستعادة تعيد كل شيء.",
   "To keep past planning and only end future repeats, choose Stop instead.": "للاحتفاظ بالتخطيط السابق وإنهاء التكرارات المستقبلية فقط، اختر «أوقِف» بدلًا من ذلك.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "ينقل هذا الخطة إلى «المحذوفات الأخيرة» ويزيلها من جميع أشهر التخطيط. يمكنك استعادتها من هناك. لا يمكن حذف الخطط التي لها إنفاق مسجَّل؛ اختر «أوقِف» لإنهاء التخطيط المستقبلي.",
   "Portfolio over time": "المحفظة عبر الزمن",
@@ -2619,5 +2620,10 @@
   "Change history": "سجل التغييرات",
   "No changes yet.": "لا توجد تغييرات بعد.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "تُستحق الدفعات الشهرية في هذا اليوم من كل شهر. لا يمكن أن يكون بعد دفعة مسجلة.",
-  "The start date cannot be after a recorded payment.": "لا يمكن أن يكون تاريخ البدء بعد دفعة مسجلة."
+  "The start date cannot be after a recorded payment.": "لا يمكن أن يكون تاريخ البدء بعد دفعة مسجلة.",
+  "This transaction already exists.": "هذه المعاملة موجودة بالفعل.",
+  "This transaction has no linked operation. Delete it normally.": "هذه المعاملة غير مرتبطة بأي عملية. احذفها بالطريقة المعتادة.",
+  "Delete later trades of this holding first.": "احذف أولًا الصفقات اللاحقة لهذا الأصل.",
+  "This operation cannot be deleted.": "لا يمكن حذف هذه العملية.",
+  "Record not found.": "لم يُعثر على السجل."
 }

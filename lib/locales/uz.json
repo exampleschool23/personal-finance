@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Asl ma’lumotlar va sanalar tiklanadi. Yozuv ro‘yxatda yana ko‘rinadi va balanslar yoki prognozlarga ta’sir qiladi. To‘xtatilgan yozuvning tugash sanasi saqlanadi.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Yozuvni tiklab bo‘lmadi. Avval bog‘langan reja yoki biznesni tiklang va asl sanalar hamda valyuta hali ham mos kelishini tekshiring.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "{name} «Yaqinda o‘chirilganlar» bo‘limiga ko‘chirilsinmi? U yozuvlar, jami summalar va barcha rejalashtirish oylaridan olib tashlanadi. Alohida operatsiyalar o‘zgarmaydi. Uni «Yaqinda o‘chirilganlar» bo‘limidan tiklashingiz mumkin.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "{name} „Yaqinda o‘chirilganlar“ga ko‘chirilsinmi? U o‘tkazma, ipoteka to‘lovi yoki aktiv yangilanishidan kelgan, shuning uchun o‘sha amal o‘zgartirgan hamma narsa bekor qilinadi va qoldiqlar avvalgi holiga qaytadi. Tiklash hammasini qaytaradi.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Oldingi rejalarni saqlab, kelgusi takrorlanishlarni tugatish uchun «To‘xtatish»ni tanlang.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Reja «Yaqinda o‘chirilganlar» bo‘limiga ko‘chiriladi va barcha rejalashtirish oylaridan olib tashlanadi. Uni o‘sha yerdan tiklash mumkin. Xarajatlari qayd etilgan rejalarni o‘chirib bo‘lmaydi; kelgusi rejalashtirishni tugatish uchun «To‘xtatish»ni tanlang.",
   "Portfolio over time": "Portfel vaqt davomida",
@@ -2619,5 +2620,10 @@
   "Change history": "O'zgarishlar tarixi",
   "No changes yet.": "Hozircha o'zgarishlar yo'q.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Oylik to'lovlar har oyning shu kuniga to'g'ri keladi. U qayd etilgan to'lovdan keyin bo'lishi mumkin emas.",
-  "The start date cannot be after a recorded payment.": "Boshlanish sanasi qayd etilgan to'lovdan keyin bo'lishi mumkin emas."
+  "The start date cannot be after a recorded payment.": "Boshlanish sanasi qayd etilgan to'lovdan keyin bo'lishi mumkin emas.",
+  "This transaction already exists.": "Bu tranzaksiya allaqachon mavjud.",
+  "This transaction has no linked operation. Delete it normally.": "Bu tranzaksiya hech qaysi amalga bog‘lanmagan. Uni odatdagidek o‘chiring.",
+  "Delete later trades of this holding first.": "Avval shu aktivning keyingi savdolarini o‘chiring.",
+  "This operation cannot be deleted.": "Bu amalni o‘chirib bo‘lmaydi.",
+  "Record not found.": "Yozuv topilmadi."
 }

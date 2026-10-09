@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "การกู้คืนจะนำรายละเอียดและวันที่เดิมกลับมา รายการจะปรากฏในรายการของคุณและมีผลต่อยอดคงเหลือหรือการคาดการณ์อีกครั้ง รายการที่หยุดไว้จะคงวันที่สิ้นสุดเดิม",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "ไม่สามารถกู้คืนรายการนี้ได้ โปรดกู้คืนแผนหรือธุรกิจที่เชื่อมโยงก่อน และตรวจสอบว่ายังใช้วันที่และสกุลเงินเดิมได้",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "ย้าย {name} ไปที่ \"ลบล่าสุด\" หรือไม่ รายการจะถูกนำออกจากรายการ ยอดรวม และเดือนที่วางแผนทั้งหมด ธุรกรรมที่แยกต่างหากจะไม่เปลี่ยนแปลง คุณกู้คืนได้จาก \"ลบล่าสุด\"",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "ย้าย {name} ไปที่รายการที่ลบล่าสุดหรือไม่ รายการนี้มาจากการโอน การผ่อนชำระสินเชื่อบ้าน หรือการอัปเดตสินทรัพย์ ทุกอย่างที่การดำเนินการนั้นเปลี่ยนจะถูกยกเลิกและยอดคงเหลือจะกลับเป็นเหมือนเดิม การกู้คืนจะนำทุกอย่างกลับมา",
   "To keep past planning and only end future repeats, choose Stop instead.": "หากต้องการเก็บการวางแผนในอดีตไว้และยุติเฉพาะการเกิดซ้ำในอนาคต ให้เลือก \"หยุด\" แทน",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "การดำเนินการนี้จะย้ายแผนไปที่ \"ลบล่าสุด\" และนำออกจากเดือนที่วางแผนทั้งหมด คุณกู้คืนได้ที่นั่น แผนที่มีรายจ่ายบันทึกไว้ไม่สามารถลบได้ ให้เลือก \"หยุด\" เพื่อยุติการวางแผนในอนาคต",
   "Portfolio over time": "พอร์ตโฟลิโอตามช่วงเวลา",
@@ -2619,5 +2620,10 @@
   "Change history": "ประวัติการเปลี่ยนแปลง",
   "No changes yet.": "ยังไม่มีการเปลี่ยนแปลง",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "การชำระรายเดือนตรงกับวันนี้ของทุกเดือน ต้องไม่อยู่หลังการชำระที่บันทึกไว้",
-  "The start date cannot be after a recorded payment.": "วันเริ่มต้นต้องไม่อยู่หลังการชำระที่บันทึกไว้"
+  "The start date cannot be after a recorded payment.": "วันเริ่มต้นต้องไม่อยู่หลังการชำระที่บันทึกไว้",
+  "This transaction already exists.": "มีธุรกรรมนี้อยู่แล้ว",
+  "This transaction has no linked operation. Delete it normally.": "ธุรกรรมนี้ไม่ได้เชื่อมกับการดำเนินการใด ลบตามปกติได้เลย",
+  "Delete later trades of this holding first.": "ลบรายการซื้อขายที่เกิดภายหลังของสินทรัพย์นี้ก่อน",
+  "This operation cannot be deleted.": "ไม่สามารถลบการดำเนินการนี้ได้",
+  "Record not found.": "ไม่พบรายการ"
 }

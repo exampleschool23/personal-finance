@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Ibabalik nito ang orihinal na detalye at petsa. Lalabas muli ang item sa mga record mo at makakaapekto ulit sa mga balanse o forecast. Pananatilihin ng inihintong item ang petsa ng pagtatapos nito.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Hindi maibalik ang item na ito. Ibalik muna ang naka-link na plano o negosyo nito, at tiyaking pinapayagan pa ang orihinal na mga petsa at currency.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "Ilipat ang {name} sa Kamakailang binura? Aalisin ito sa mga record, kabuuan at lahat ng buwan ng pagpaplano mo. Hindi magbabago ang mga hiwalay na transaksyon. Maibabalik mo ito mula sa Kamakailang binura.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "Ilipat ang {name} sa Kamakailang binura? Galing ito sa isang transfer, bayad sa mortgage o update ng asset, kaya babawiin ang lahat ng binago ng aksyong iyon at babalik ang mga balanse. Ibabalik lahat ng Restore.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Para panatilihin ang nakaraang pagpaplano at tapusin lang ang mga susunod na pag-uulit, piliin ang Ihinto.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Ililipat nito ang plano sa Kamakailang binura at aalisin sa lahat ng buwan ng pagpaplano. Maibabalik mo ito roon. Hindi mabubura ang mga planong may naitalang paggastos; piliin ang Ihinto para tapusin ang susunod na pagpaplano.",
   "Portfolio over time": "Portfolio sa paglipas ng panahon",
@@ -2619,5 +2620,10 @@
   "Change history": "Kasaysayan ng mga pagbabago",
   "No changes yet.": "Wala pang pagbabago.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Ang buwanang bayad ay tumatapat sa araw na ito bawat buwan. Hindi ito maaaring lumampas sa isang naitalang bayad.",
-  "The start date cannot be after a recorded payment.": "Hindi maaaring mas huli ang petsa ng simula kaysa sa isang naitalang bayad."
+  "The start date cannot be after a recorded payment.": "Hindi maaaring mas huli ang petsa ng simula kaysa sa isang naitalang bayad.",
+  "This transaction already exists.": "Mayroon na ang transaksyong ito.",
+  "This transaction has no linked operation. Delete it normally.": "Walang kaugnay na aksyon ang transaksyong ito. Burahin ito sa karaniwang paraan.",
+  "Delete later trades of this holding first.": "Burahin muna ang mga mas huling trade ng holding na ito.",
+  "This operation cannot be deleted.": "Hindi mabubura ang aksyong ito.",
+  "Record not found.": "Hindi nakita ang record."
 }

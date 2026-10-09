@@ -11,6 +11,7 @@ import { applyRecordChange, lendFromAccount, withSavedRecord } from '@/lib/recor
 import { businessMoveFrom, cashAccountProblem, debtDatesProblem, duplicateSalaryPayment, duplicateScheduledPayment, expenseName, fitsExpensePlan, recordSaveProblem } from '@/lib/record-save';
 import { depositToday } from '@/lib/deposit-interest';
 import { savedRecord } from '@/lib/record-table';
+import { isLinkedTransaction } from '@/lib/linked-transactions';
 
 const today = depositToday;
 
@@ -88,7 +89,7 @@ export function useRecordSave(input: RecordSaveInput) {
                 input.binRecord(original);
                 setRows(applyRecordChange(rows,original));
             }
-            else { await requestJson('/api/records', { method: 'DELETE', body: { id: deleting.id } }); input.refreshRecords(); }
+            else { await requestJson('/api/records', { method: 'DELETE', body: isLinkedTransaction(deleting) ? { id: deleting.id, linked: true } : { id: deleting.id } }); input.refreshRecords(); }
             setDeleting(null);
             showDeleted();
         }

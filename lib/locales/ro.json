@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Aceasta restaurează detaliile și datele inițiale. Elementul va apărea din nou în înregistrările tale și va afecta soldurile sau prognozele. Un element oprit își păstrează data de încheiere.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Acest element nu a putut fi restaurat. Restaurează mai întâi planul sau afacerea asociată și verifică dacă datele și moneda inițiale sunt încă permise.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "Muți {name} în Șterse recent? Va fi eliminat din înregistrările, totalurile și toate lunile de planificare. Tranzacțiile separate rămân neschimbate. Îl poți restaura din Șterse recent.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "Muți {name} în Șterse recent? Provine dintr-un transfer, o plată a creditului ipotecar sau o actualizare a unui activ, așa că tot ce a schimbat acea acțiune este anulat și soldurile revin la ce erau. Restaurarea pune totul la loc.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Pentru a păstra planificarea trecută și a opri doar repetările viitoare, alege Oprește.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Aceasta mută planul în Șterse recent și îl elimină din toate lunile de planificare. Îl poți restaura de acolo. Planurile cu cheltuieli înregistrate nu pot fi șterse; alege Oprește pentru a încheia planificarea viitoare.",
   "Portfolio over time": "Portofoliu în timp",
@@ -2619,5 +2620,10 @@
   "Change history": "Istoricul modificărilor",
   "No changes yet.": "Încă nu există modificări.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Plățile lunare cad în această zi a fiecărei luni. Nu poate fi după o plată înregistrată.",
-  "The start date cannot be after a recorded payment.": "Data de început nu poate fi după o plată înregistrată."
+  "The start date cannot be after a recorded payment.": "Data de început nu poate fi după o plată înregistrată.",
+  "This transaction already exists.": "Această tranzacție există deja.",
+  "This transaction has no linked operation. Delete it normally.": "Această tranzacție nu aparține niciunei operațiuni. Șterge-o în mod obișnuit.",
+  "Delete later trades of this holding first.": "Șterge mai întâi tranzacțiile ulterioare ale acestei dețineri.",
+  "This operation cannot be deleted.": "Această operațiune nu poate fi ștearsă.",
+  "Record not found.": "Înregistrarea nu a fost găsită."
 }

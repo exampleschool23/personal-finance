@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Ini memulihkan detail dan tanggal asli. Item akan muncul kembali di catatan Anda dan memengaruhi saldo atau proyeksi. Item yang dihentikan mempertahankan tanggal berakhirnya.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Tidak dapat memulihkan item ini. Pulihkan dulu rencana atau bisnis terkaitnya, dan pastikan tanggal serta mata uang aslinya masih diizinkan.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "Pindahkan {name} ke Baru dihapus? Item ini akan dihapus dari catatan, total, dan semua bulan perencanaan Anda. Transaksi terpisah tidak berubah. Anda dapat memulihkannya dari Baru dihapus.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "Pindahkan {name} ke Baru dihapus? Ini berasal dari transfer, pembayaran KPR, atau pembaruan aset, jadi semua yang diubah tindakan itu dibatalkan dan saldo kembali seperti semula. Pulihkan akan mengembalikan semuanya.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Untuk mempertahankan perencanaan sebelumnya dan hanya mengakhiri pengulangan mendatang, pilih Hentikan.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "Ini memindahkan rencana ke Baru dihapus dan menghapusnya dari semua bulan perencanaan. Anda dapat memulihkannya di sana. Rencana dengan pengeluaran tercatat tidak dapat dihapus; pilih Hentikan untuk mengakhiri perencanaan mendatang.",
   "Portfolio over time": "Portofolio dari waktu ke waktu",
@@ -2619,5 +2620,10 @@
   "Change history": "Riwayat perubahan",
   "No changes yet.": "Belum ada perubahan.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Pembayaran bulanan jatuh pada tanggal ini setiap bulan. Tidak boleh setelah pembayaran yang tercatat.",
-  "The start date cannot be after a recorded payment.": "Tanggal mulai tidak boleh setelah pembayaran yang tercatat."
+  "The start date cannot be after a recorded payment.": "Tanggal mulai tidak boleh setelah pembayaran yang tercatat.",
+  "This transaction already exists.": "Transaksi ini sudah ada.",
+  "This transaction has no linked operation. Delete it normally.": "Transaksi ini tidak terkait dengan tindakan apa pun. Hapus seperti biasa.",
+  "Delete later trades of this holding first.": "Hapus dulu transaksi jual-beli berikutnya untuk aset ini.",
+  "This operation cannot be deleted.": "Tindakan ini tidak dapat dihapus.",
+  "Record not found.": "Catatan tidak ditemukan."
 }

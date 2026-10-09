@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.",
   "To keep past planning and only end future repeats, choose Stop instead.": "To keep past planning and only end future repeats, choose Stop instead.",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.",
   "Portfolio over time": "Portfolio over time",
@@ -2619,5 +2620,10 @@
   "Change history": "Change history",
   "No changes yet.": "No changes yet.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Monthly payments fall on this day of each month. It cannot be after a recorded payment.",
-  "The start date cannot be after a recorded payment.": "The start date cannot be after a recorded payment."
+  "The start date cannot be after a recorded payment.": "The start date cannot be after a recorded payment.",
+  "This transaction already exists.": "This transaction already exists.",
+  "This transaction has no linked operation. Delete it normally.": "This transaction has no linked operation. Delete it normally.",
+  "Delete later trades of this holding first.": "Delete later trades of this holding first.",
+  "This operation cannot be deleted.": "This operation cannot be deleted.",
+  "Record not found.": "Record not found."
 }

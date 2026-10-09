@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "Це відновить початкові дані та дати. Елемент знову з’явиться у ваших записах і впливатиме на баланси чи прогнози. Зупинений елемент зберігає дату завершення.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "Не вдалося відновити цей елемент. Спочатку відновіть пов’язаний план чи бізнес і перевірте, що початкові дати та валюта все ще допустимі.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "Перемістити {name} до «Нещодавно видалені»? Його буде вилучено з ваших записів, підсумків і всіх місяців планування. Окремі транзакції не зміняться. Ви зможете відновити його з розділу «Нещодавно видалені».",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "Перемістити {name} до «Нещодавно видалених»? Запис з’явився з переказу, платежу за іпотекою або оновлення активу, тому все, що змінила ця дія, буде скасовано, а баланси повернуться до попередніх. Відновлення поверне все назад.",
   "To keep past planning and only end future repeats, choose Stop instead.": "Щоб зберегти минуле планування й лише припинити майбутні повтори, виберіть «Зупинити».",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "План буде переміщено до «Нещодавно видалені» й вилучено з усіх місяців планування. Ви зможете відновити його там. Плани із записаними витратами видаляти не можна; виберіть «Зупинити», щоб завершити майбутнє планування.",
   "Portfolio over time": "Портфель у часі",
@@ -2619,5 +2620,10 @@
   "Change history": "Історія змін",
   "No changes yet.": "Змін поки немає.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "Щомісячні платежі припадають на цей день кожного місяця. Дата не може бути пізнішою за записаний платіж.",
-  "The start date cannot be after a recorded payment.": "Дата початку не може бути пізнішою за записаний платіж."
+  "The start date cannot be after a recorded payment.": "Дата початку не може бути пізнішою за записаний платіж.",
+  "This transaction already exists.": "Ця операція вже існує.",
+  "This transaction has no linked operation. Delete it normally.": "Ця операція не пов’язана з іншою дією. Видаліть її звичайним способом.",
+  "Delete later trades of this holding first.": "Спершу видаліть пізніші угоди з цим активом.",
+  "This operation cannot be deleted.": "Цю дію не можна видалити.",
+  "Record not found.": "Запис не знайдено."
 }

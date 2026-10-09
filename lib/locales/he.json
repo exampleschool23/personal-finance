@@ -321,6 +321,7 @@
   "This restores the original details and dates. The item will appear in your records and affect balances or forecasts again. A stopped item keeps its end date.": "פעולה זו משחזרת את הפרטים והתאריכים המקוריים. הפריט יופיע ברשומות שלכם וישפיע שוב על יתרות או תחזיות. פריט שנעצר שומר על תאריך הסיום שלו.",
   "Could not restore this item. Restore its linked plan or business first, and check that its original dates and currency are still allowed.": "לא ניתן לשחזר פריט זה. שחזרו קודם את התוכנית או העסק המקושרים, ובדקו שהתאריכים והמטבע המקוריים עדיין מותרים.",
   "Move {name} to Recently deleted? It will be removed from your records, totals and all planning months. Separate transactions stay unchanged. You can restore it from Recently deleted.": "להעביר את {name} אל נמחקו לאחרונה? הוא יוסר מהרשומות, מהסכומים ומכל חודשי התכנון שלכם. עסקאות נפרדות לא ישתנו. אפשר לשחזר אותו מ\"נמחקו לאחרונה\".",
+  "Move {name} to Recently deleted? It came from a transfer, a mortgage payment or an asset update, so everything that action changed is undone and the balances go back. Restore puts it all back.": "להעביר את {name} ל״נמחקו לאחרונה״? הוא נוצר מהעברה, מתשלום משכנתא או מעדכון נכס, ולכן כל מה שהפעולה שינתה יבוטל והיתרות יחזרו למצבן. שחזור מחזיר הכול.",
   "To keep past planning and only end future repeats, choose Stop instead.": "כדי לשמור את התכנון בעבר ולסיים רק חזרות עתידיות, בחרו \"עצירה\".",
   "This moves the plan to Recently deleted and removes it from all planning months. You can restore it there. Plans with recorded spending cannot be deleted; choose Stop to end future planning.": "פעולה זו מעבירה את התוכנית אל נמחקו לאחרונה ומסירה אותה מכל חודשי התכנון. אפשר לשחזר אותה שם. לא ניתן למחוק תוכניות עם הוצאות שנרשמו; בחרו \"עצירה\" כדי לסיים תכנון עתידי.",
   "Portfolio over time": "תיק לאורך זמן",
@@ -2619,5 +2620,10 @@
   "Change history": "היסטוריית שינויים",
   "No changes yet.": "אין עדיין שינויים.",
   "Monthly payments fall on this day of each month. It cannot be after a recorded payment.": "התשלומים החודשיים חלים ביום זה בכל חודש. התאריך אינו יכול להיות אחרי תשלום שנרשם.",
-  "The start date cannot be after a recorded payment.": "תאריך ההתחלה אינו יכול להיות אחרי תשלום שנרשם."
+  "The start date cannot be after a recorded payment.": "תאריך ההתחלה אינו יכול להיות אחרי תשלום שנרשם.",
+  "This transaction already exists.": "העסקה הזו כבר קיימת.",
+  "This transaction has no linked operation. Delete it normally.": "לעסקה הזו אין פעולה מקושרת. מחקו אותה כרגיל.",
+  "Delete later trades of this holding first.": "מחקו קודם עסקאות מאוחרות יותר של הנכס הזה.",
+  "This operation cannot be deleted.": "לא ניתן למחוק את הפעולה הזו.",
+  "Record not found.": "הרשומה לא נמצאה."
 }
