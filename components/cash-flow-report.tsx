@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Sankey, Tooltip, XAxis, YAxis } from 'recharts';
 import { useLanguage } from '@/components/language-provider';
-import { chartAxis, chartColors, chartGrid, chartHeight, chartLegend, chartMargin, chartSankey, chartTooltip, chartValueAxis, groupedBar, monthLabel, monthTick, moneyTick, sankeyLink, sankeyNodeRadius } from '@/components/presentation-foundation/chart';
+import { chartAxis, chartColors, chartGrid, chartHeight, chartLegend, chartMargin, chartSankey, chartTooltip, chartValueAxis, groupedBar, intervalLabel, moneyTick, sankeyLink, sankeyNodeRadius } from '@/components/presentation-foundation/chart';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { ChartSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
@@ -10,7 +10,7 @@ import { Segmented } from '@/components/presentation-foundation/segmented';
 import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
 import { signTone } from '@/components/presentation-foundation/tone';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
-import { cashFlowReport, periodMonths, reportPeriods, sankeyFlows, topShares, otherShareKey, trailingMonths, type ReportPeriod, type Share } from '@/lib/cash-flow-report';
+import { cashFlowReport, periodMonths, reportPeriods, sankeyFlows, topShares, otherShareKey, trendBarsBy, trendMonths, type ReportPeriod, type Share } from '@/lib/cash-flow-report';
 import { hueColor } from '@/lib/category-colors';
 import { useCategoryHue } from '@/components/category-icons-context';
 import { depositToday } from '@/lib/deposit-interest';
@@ -22,6 +22,7 @@ import type { TransactionSplit } from '@/lib/transaction-tools';
 import { measureLabel, sankeyLabelMargins } from '@/lib/sankey-labels';
 
 const periodLabels: Record<ReportPeriod, string> = { month: 'Month', quarter: 'Quarter', year: 'Year' };
+const trendTitles: Record<ReportPeriod, string> = { month: 'Income and spending by month', quarter: 'Income and spending by quarter', year: 'Income and spending by year' };
 type Props = { owner: string | null; demo: boolean; revision: number; data: PlanningData; splits: TransactionSplit[]; month: string; currency: string; market: MarketData | null };
 
 /** One side of the breakdown: proportional bars with amount and share, the Income / Expenses panels. The largest ten
@@ -49,13 +50,12 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
  const [period, setPeriod] = useState<ReportPeriod>('month');
  const [grouping, setGrouping] = useState<'category' | 'merchant'>('category');
  const [view, setView] = useState<'bars' | 'sankey'>('bars');
- const series = trailingMonths(month);
  const live = !!owner && !demo;
- const remote = useOwnerResource(`/api/planning?scope=budget&month=${month}&from=${series[0]}`, owner, live, revision, emptyPlanning);
+ const remote = useOwnerResource(`/api/planning?scope=budget&month=${month}&from=${trendMonths(month, 'year')[0]}`, owner, live, revision, emptyPlanning);
  const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : provided, [live, remote.data, provided]);
  const rates = marketRates(market);
  const report = useMemo(() => cashFlowReport(data, splits, periodMonths(month, period), currency, today, rates), [data, splits, month, period, currency, today, rates]);
- const trend = useMemo(() => cashFlowReport(data, splits, trailingMonths(month), currency, today, rates).series, [data, splits, month, currency, today, rates]);
+ const trend = useMemo(() => trendBarsBy(cashFlowReport(data, splits, trendMonths(month, period), currency, today, rates).series, period), [data, splits, month, period, currency, today, rates]);
  const money = (amount: number) => formatMoney(amount, currency, locale);
  const categoryName = (key: string) => data.categories.find(category => category.id === key)?.name ?? t(key);
  const label = grouping === 'category' ? categoryName : (key: string) => key;
@@ -78,13 +78,13 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
    <StatTile label={t('Savings rate')} value={report.savingsRate === null ? '—' : formatPercent(report.savingsRate, locale)} tone={report.savingsRate === null ? undefined : signTone(report.savingsRate)}/>
   </StatTiles>
   <section className="panel">
-   <PanelTitle title={t('Income and spending by month')}/>
+   <PanelTitle title={t(trendTitles[period])}/>
    <div className="cash-flow-chart"><ResponsiveContainer width="100%" height={chartHeight.regular}>
     <BarChart data={trend} barGap={2} accessibilityLayer margin={chartMargin}>
      <CartesianGrid {...chartGrid}/>
-     <XAxis dataKey="month" tickFormatter={monthTick(locale)} {...chartAxis}/>
+     <XAxis dataKey="period" tickFormatter={intervalLabel(period, locale, t)} {...chartAxis}/>
      <YAxis tickFormatter={moneyTick(currency, locale)} {...chartValueAxis}/>
-     <Tooltip {...chartTooltip} labelFormatter={monthLabel(locale)} formatter={(value, name) => [money(Number(value)), String(name)]}/>
+     <Tooltip {...chartTooltip} labelFormatter={intervalLabel(period, locale, t, true)} formatter={(value, name) => [money(Number(value)), String(name)]}/>
      <Legend {...chartLegend}/>
      <Bar dataKey="income" name={t('Income')} {...groupedBar} fill={chartColors.income}/>
      <Bar dataKey="expenses" name={t('Expenses')} {...groupedBar} fill={chartColors.expense}/>

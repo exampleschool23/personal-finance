@@ -5,7 +5,7 @@ import type { LinkProps } from 'recharts/types/chart/Sankey';
 import { ChevronDown, Download, ReceiptText, X } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { ShareBars } from '@/components/cash-flow-report';
-import { chartAxis, chartBar, chartColors, chartDonut, chartGrid, chartHeight, chartLegend, chartMargin, chartSankey, chartTooltip, chartValueAxis, groupedBar, moneyTick, sankeyNodeRadius, stackTop } from '@/components/presentation-foundation/chart';
+import { chartAxis, chartBar, chartColors, chartDonut, chartGrid, chartHeight, chartLegend, chartMargin, chartSankey, chartTooltip, chartValueAxis, groupedBar, intervalLabel, moneyTick, sankeyNodeRadius, stackTop } from '@/components/presentation-foundation/chart';
 import { BusinessMark } from '@/components/presentation-foundation/business-mark';
 import type { BusinessOption } from '@/components/presentation-foundation/business-filter';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
@@ -21,7 +21,7 @@ import { ledgerExportRows, summarizeLines, type BusinessSankey, type Drill, type
 import { otherShareKey, topShares, type Share } from '@/lib/cash-flow-report';
 import { categoryHue, hueColor } from '@/lib/category-colors';
 import { exportCSV } from '@/lib/csv';
-import { formatCompactMoney, formatDate, formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatSignedMoney, formatYear } from '@/lib/format';
+import { formatCompactMoney, formatDate, formatMoney, formatNumber, formatSignedMoney } from '@/lib/format';
 import { RollingText } from '@/components/presentation-foundation/rolling-text';
 import { signTone } from '@/components/presentation-foundation/tone';
 import { shownName } from '@/lib/record-names';
@@ -33,8 +33,7 @@ export type ReportNames = { category: (key: string) => string; icon: (key: strin
 /** An interval key as a chart label: a short month, a quarter or a year. */
 function useIntervalLabel(interval: Interval, long = false) {
  const { t, locale } = useLanguage();
- return (period: string) => interval === 'month' ? (long ? formatMonthYear(period, locale) : formatMonthShort(period, locale)) : interval === 'year' ? formatYear(Number(period), locale)
-  : t('Q{quarter} {year}', { quarter: period.slice(-1), year: formatYear(Number(period.slice(0, 4)), locale) });
+ return intervalLabel(interval, locale, t, long);
 }
 
 /** A business's mark beside its name, or the household's. */

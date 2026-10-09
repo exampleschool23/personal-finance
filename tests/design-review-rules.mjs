@@ -317,3 +317,16 @@ test('the 9 October 2026 follow-up stays fixed (THEME-009, MOT-001, MOT-005, A11
  assert.match(css,/:is\(\.pnl-toggle,\.pnl-drill\)::after\{content:"";position:absolute;inset:-11px\}/);
  assert.match(css,/\.report-drill>button::after\{content:"";position:absolute;inset:-12px\}/);
 });
+
+test('budget History reads on every bar and fits the window; the Year view marks this month (SCR-106 to SCR-110)',()=>{
+ const css=stylesheet();
+ assert.match(css,/\.budget-history-bars>li>div>i\{[^}]*border-top:2px dashed var\(--foreground\);box-shadow:0 0 0 1px var\(--card\)\}/,'the plan mark is ink with a card edge');
+ assert.match(css,/\.budget-history-bars>li>div>span\{[^}]*background:var\(--muted-foreground\)\}/,'expense bars use the AA grey');
+ assert.doesNotMatch(css,/\.budget-history-bars>li\[data-current\]>div>span\{opacity/,'the current bar is not dimmed');
+ assert.match(css,/\.budget-history-popover\{[^}]*max-height:var\(--radix-popover-content-available-height\);overflow-y:auto/);
+ assert.match(css,/@media\(pointer:coarse\)\{\.budget-history-forward\{min-height:44px\}\}/);
+ assert.match(fs.readFileSync('components/budget/planned-input.tsx','utf8'),/className="budget-history-popover"[^>]*collisionPadding=\{16\}/);
+ assert.match(css,/\.budget-year \[data-current\]\{background-image:/);
+ const screen=fs.readFileSync('components/workspace/screens/budget-screen.tsx','utf8');
+ assert.equal((screen.match(/'data-current': months\[position\] === current/g)||[]).length,2,'category and overall cells mark the current month');
+});

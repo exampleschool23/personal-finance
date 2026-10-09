@@ -1,4 +1,5 @@
 import { monthActuals, monthsBetween } from './budget';
+import { intervalOf } from './business-report';
 import { shiftMonth } from './calendar-days';
 import { expenses, income, type Entry } from './finance';
 import { convertAmount } from './market';
@@ -67,8 +68,24 @@ export function cashFlowReport(data: Pick<PlanningData, 'records' | 'activity' |
  };
 }
 
-/** The twelve months ending with `month`, for the income and spending bars. */
-export const trailingMonths = (month: string, count = 12) => monthsBetween(shiftMonth(month, 1 - count), month);
+/** How many bars the income and spending chart shows for each period: twelve months, four quarters or two years, which
+ * stays inside the 24 months `/api/planning` reads at once. */
+const trendBars: Record<ReportPeriod, number> = { month: 12, quarter: 4, year: 2 };
+/** The months the income and spending chart reads for a period, ending with `month`: whole quarters or years, the last one up to `month`. */
+export function trendMonths(month: string, period: ReportPeriod) {
+ const step = period === 'month' ? 1 : period === 'quarter' ? 3 : 12;
+ return monthsBetween(periodMonths(shiftMonth(month, -step * (trendBars[period] - 1)), period)[0], month);
+}
+export type TrendBar = { period: string; income: number; expenses: number };
+/** Monthly income and spending summed into one bar per month, quarter or year, keyed `2026-07`, `2026-Q3` or `2026`. */
+export function trendBarsBy(series: ReadonlyArray<{ month: string; income: number; expenses: number }>, period: ReportPeriod): TrendBar[] {
+ const bars = new Map<string, TrendBar>();
+ for (const item of series) {
+  const key = intervalOf(item.month + '-01', period), bar = bars.get(key) ?? { period: key, income: 0, expenses: 0 };
+  bars.set(key, { period: key, income: bar.income + item.income, expenses: bar.expenses + item.expenses });
+ }
+ return [...bars.values()];
+}
 
 export type SankeyData = { nodes: Array<{ name: string; kind: 'income' | 'total' | 'expense' | 'savings' }>; links: Array<{ source: number; target: number; value: number }> };
 /** Income sources flow into one total, which flows out to spending categories and savings. Small flows merge into "Other". */

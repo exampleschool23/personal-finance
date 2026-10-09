@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { periodMonths, cashFlowReport, sankeyFlows, trailingMonths, topShares, otherShareKey } = loadTS('lib/cash-flow-report.ts');
+const { periodMonths, cashFlowReport, sankeyFlows, trendMonths, trendBarsBy, topShares, otherShareKey } = loadTS('lib/cash-flow-report.ts');
 
 const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Once', notes: '', ...extra });
 
@@ -10,7 +10,18 @@ test('report periods cover the calendar month, quarter or year up to the chosen 
  assert.deepEqual(periodMonths('2026-08', 'quarter'), ['2026-07', '2026-08']);
  assert.deepEqual(periodMonths('2026-03', 'quarter'), ['2026-01', '2026-02', '2026-03']);
  assert.deepEqual(periodMonths('2026-03', 'year'), ['2026-01', '2026-02', '2026-03']);
- assert.deepEqual(trailingMonths('2026-03', 3), ['2026-01', '2026-02', '2026-03']);
+ assert.deepEqual(trendMonths('2026-03', 'month'), ['2025-04', '2025-05', '2025-06', '2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03']);
+});
+
+test('the income and spending chart follows the period: twelve months, four quarters or two years', () => {
+ assert.equal(trendMonths('2026-10', 'quarter')[0], '2026-01', 'three whole quarters before the current one');
+ assert.equal(trendMonths('2026-10', 'year')[0], '2025-01', 'the whole year before the current one');
+ assert.ok(trendMonths('2026-12', 'year').length <= 24, 'inside what the planning read allows');
+ assert.equal(trendMonths('2026-10', 'year').at(-1), '2026-10', 'never past the chosen month');
+ const series = trendMonths('2026-10', 'quarter').map((month, index) => ({ month, income: 100, expenses: index }));
+ assert.deepEqual(trendBarsBy(series, 'quarter'), [{ period: '2026-Q1', income: 300, expenses: 3 }, { period: '2026-Q2', income: 300, expenses: 12 }, { period: '2026-Q3', income: 300, expenses: 21 }, { period: '2026-Q4', income: 100, expenses: 9 }]);
+ assert.deepEqual(trendBarsBy(series, 'year'), [{ period: '2026', income: 1000, expenses: 45 }]);
+ assert.equal(trendBarsBy(series, 'month').length, 10);
 });
 
 test('cash flow totals, savings rate and shares by category and merchant, in the display currency', () => {

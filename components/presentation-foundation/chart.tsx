@@ -4,7 +4,7 @@
  * change here changes every chart at once. Colours, tick text and the tooltip box live in `app/styles/assets.css`
  * (`.recharts-*`). This file imports nothing from recharts, so a test can stub the library and still use it.
  */
-import { formatCompactMoney, formatMonthShort, formatMonthYear } from '@/lib/format';
+import { formatCompactMoney, formatMonthShort, formatMonthYear, formatYear } from '@/lib/format';
 
 /** Chart heights: `compact` inside dialogs and cards, `regular` for a panel's main chart, `tall` for a page's lead chart. */
 export const chartHeight = { compact: 220, regular: 260, tall: 300 } as const;
@@ -65,3 +65,9 @@ export const sankeyNodeRadius = 3;
 export const moneyTick = (currency: string, locale: string) => (value: unknown) => formatCompactMoney(Number(value), currency, locale);
 export const monthTick = (locale: string) => (month: unknown) => formatMonthShort(String(month), locale);
 export const monthLabel = (locale: string) => (month: unknown) => formatMonthYear(String(month), locale);
+/** An interval key (`2026-07`, `2026-Q3` or `2026`) as a tick, or with `long` as a tooltip label; `t` translates "Q{quarter} {year}". */
+export const intervalLabel = (interval: 'month' | 'quarter' | 'year', locale: string, t: (key: string, params?: Record<string, string | number>) => string, long = false) => (value: unknown) => {
+ const key = String(value);
+ if (interval === 'month') return long ? formatMonthYear(key, locale) : formatMonthShort(key, locale);
+ return interval === 'year' ? formatYear(Number(key), locale) : t('Q{quarter} {year}', { quarter: key.slice(-1), year: formatYear(Number(key.slice(0, 4)), locale) });
+};
