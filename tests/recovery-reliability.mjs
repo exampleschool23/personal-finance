@@ -34,12 +34,12 @@ test('pre-revision archives restore and unchanged imports undo after incremental
   await db.query('SELECT import_statement($1,$2,$3)',[id(21),id(10),rows]);
   await db.query("UPDATE finance_records SET notes='changed' WHERE import_key=$1",[rows[0].key]);
   await assert.rejects(db.query('SELECT undo_statement_import($1)',[id(21)]),/changed/);
-  // Expense plan archives must use their own row shape, not finance-record defaults.
-  await db.query("INSERT INTO expense_plans(id,user_id,name,category,currency,amount,start_date) VALUES($1,$2,'Budget','Other','USD',12.345678,'2026-01-01')",[id(30),id(1)]);
-  await db.query('SELECT move_item_to_deleted($1,$2)',[id(30),'expense_plans']);
-  const plan=(await db.query("SELECT id FROM deleted_items WHERE source='expense_plans'")).rows[0].id;
-  await db.query('SELECT restore_deleted_item($1)',[plan]);
-  assert.equal((await db.query('SELECT amount FROM expense_plans WHERE id=$1',[id(30)])).rows[0].amount,'12.345678');
+  // A spending plan deleted before migration 130 restores from its own row shape, as a category whose budget keeps the exact amount.
+  await db.exec('RESET ROLE');
+  await db.query("INSERT INTO deleted_items(id,user_id,source,data) VALUES($1,$2,'expense_plans',$3)",[id(31),id(1),{id:id(30),user_id:id(1),name:'Budget',category:'Other',currency:'USD',amount:12.345678,start_date:'2026-01-01',end_date:null,created_at:'2026-01-01T00:00:00Z',archived:false,archive_pauses:[]}]);
+  await db.exec('SET ROLE authenticated');
+  await db.query('SELECT restore_deleted_item($1)',[id(31)]);
+  assert.equal((await db.query("SELECT b.amount FROM budget_amounts b JOIN transaction_categories c ON c.id::text=b.category_key WHERE c.name='Budget'")).rows[0].amount,'12.345678');
  }finally{await db.close();}
 });
 test('restore avoids global table locks and callers cannot forge the private bypass',async()=>{

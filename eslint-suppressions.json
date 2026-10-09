@@ -236,11 +236,6 @@
       "count": 1
     }
   },
-  "hooks/use-expense-plans.ts": {
-    "max-params": {
-      "count": 1
-    }
-  },
   "hooks/use-planning.ts": {
     "max-params": {
       "count": 1
@@ -280,9 +275,6 @@
     }
   },
   "lib/cash-forecast.ts": {
-    "complexity": {
-      "count": 1
-    },
     "max-params": {
       "count": 1
     }
@@ -339,7 +331,7 @@
   },
   "lib/goal-projection.ts": {
     "max-params": {
-      "count": 2
+      "count": 1
     }
   },
   "lib/income-history.ts": {

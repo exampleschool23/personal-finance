@@ -1,5 +1,5 @@
 import { validDay } from './benchmark-data';
-import { shiftDay, shiftMonth } from './calendar-days';
+import { shiftDay } from './calendar-days';
 import { income, liabilities, scheduleDates, type Entry } from './finance';
 import { convertAmount } from './market';
 import { hasMonthlyInstallment, installmentAnchor, installmentsFrom, paidInstallmentMonths, upcomingPayments, type DebtPayment, type Occurrence } from './planning';
