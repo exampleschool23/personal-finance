@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Summa o‘zgarishi tanlangan prognoz oyidan amal qiladi. Oldingi oylar budjeti saqlanadi.",
   "Review the amounts before saving. Both balances update together.": "Saqlashdan oldin summalarni tekshiring. Ikkala qoldiq birga yangilanadi.",
   "This records a balance correction today. It is not income or spending.": "Bugungi qoldiq tuzatishi qayd etiladi. Bu daromad yoki xarajat emas.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "To‘lov daromad va xarajatlarda bir marta qayd etiladi. Jami summa tanlangan hisobdan olinadi. Saqlangan to‘lovni tahrirlash yoki o‘chirish mumkin emas.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "To‘lov daromad va xarajatlarda bir marta qayd etiladi. Jami summa tanlangan hisobdan olinadi. To‘lovni bekor qilish uchun uni Tranzaksiyalardan o‘chiring; „Yaqinda o‘chirilganlar“dan tiklashingiz mumkin.",
   "Choose one of your cash accounts.": "Pul hisoblaringizdan birini tanlang.",
   "Allocations exceed the account balance.": "Ajratmalar hisob qoldig‘idan oshdi.",
   "Check the account fields.": "Hisob maydonlarini tekshiring.",

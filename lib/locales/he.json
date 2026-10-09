@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "שינויי סכום חלים מחודש התחזית שנבחר. חודשים קודמים שומרים על התקציבים שלהם.",
   "Review the amounts before saving. Both balances update together.": "בדקו את הסכומים לפני השמירה. שתי היתרות מתעדכנות יחד.",
   "This records a balance correction today. It is not income or spending.": "פעולה זו מתעדת תיקון יתרה להיום. זו אינה הכנסה או הוצאה.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "נשמר פעם אחת ב\"הכנסות והוצאות\". חשבון המזומן שנבחר משלם את הסכום הכולל. לא ניתן לערוך או למחוק תשלומים שנשמרו.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "נשמר פעם אחת ב\"הכנסות והוצאות\". חשבון המזומן שנבחר משלם את הסכום הכולל. כדי לבטל תשלום, מחקו אותו מ\"עסקאות\"; אפשר לשחזר אותו מ\"נמחקו לאחרונה\".",
   "Choose one of your cash accounts.": "בחרו אחד מחשבונות המזומן שלכם.",
   "Allocations exceed the account balance.": "ההקצאות גבוהות מיתרת החשבון.",
   "Check the account fields.": "בדקו את שדות החשבון.",

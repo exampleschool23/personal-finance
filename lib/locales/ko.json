@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "금액 변경은 선택한 예측 월부터 적용돼요. 이전 달의 예산은 그대로 유지돼요.",
   "Review the amounts before saving. Both balances update together.": "저장하기 전에 금액을 확인하세요. 두 잔액이 함께 업데이트돼요.",
   "This records a balance correction today. It is not income or spending.": "오늘 날짜로 잔액 보정을 기록해요. 수입이나 지출이 아니에요.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "수입 및 지출에 한 번 저장돼요. 선택한 현금 계좌에서 총액이 출금돼요. 저장된 납부는 수정하거나 삭제할 수 없어요.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "수입 및 지출에 한 번 저장돼요. 선택한 현금 계좌에서 총액이 출금돼요. 납부를 취소하려면 거래에서 삭제하세요. 최근 삭제됨에서 복원할 수 있어요.",
   "Choose one of your cash accounts.": "현금 계좌 중 하나를 선택하세요.",
   "Allocations exceed the account balance.": "배정액이 계좌 잔액을 초과해요.",
   "Check the account fields.": "계좌 항목을 확인해 주세요.",

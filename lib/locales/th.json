@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "การเปลี่ยนแปลงจำนวนเงินจะมีผลตั้งแต่เดือนที่เลือกในการคาดการณ์ เดือนก่อนหน้ายังคงใช้งบเดิม",
   "Review the amounts before saving. Both balances update together.": "ตรวจสอบจำนวนเงินก่อนบันทึก ยอดคงเหลือทั้งสองบัญชีจะอัปเดตพร้อมกัน",
   "This records a balance correction today. It is not income or spending.": "การดำเนินการนี้บันทึกการแก้ไขยอดคงเหลือของวันนี้ ไม่ใช่รายรับหรือรายจ่าย",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "บันทึกครั้งเดียวใน \"รายรับและรายจ่าย\" บัญชีเงินสดที่เลือกจะชำระยอดรวม ไม่สามารถแก้ไขหรือลบการชำระเงินที่บันทึกแล้วได้",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "บันทึกครั้งเดียวใน \"รายรับและรายจ่าย\" บัญชีเงินสดที่เลือกจะชำระยอดรวม หากต้องการยกเลิกการชำระเงิน ให้ลบออกจากธุรกรรม คุณกู้คืนได้จากรายการที่ลบล่าสุด",
   "Choose one of your cash accounts.": "เลือกบัญชีเงินสดของคุณหนึ่งบัญชี",
   "Allocations exceed the account balance.": "การจัดสรรเกินยอดคงเหลือของบัญชี",
   "Check the account fields.": "ตรวจสอบช่องข้อมูลของบัญชี",

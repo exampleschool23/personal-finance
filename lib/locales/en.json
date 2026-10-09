@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Amount changes apply from the selected forecast month. Earlier months keep their budgets.",
   "Review the amounts before saving. Both balances update together.": "Review the amounts before saving. Both balances update together.",
   "This records a balance correction today. It is not income or spending.": "This records a balance correction today. It is not income or spending.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.",
   "Choose one of your cash accounts.": "Choose one of your cash accounts.",
   "Allocations exceed the account balance.": "Allocations exceed the account balance.",
   "Check the account fields.": "Check the account fields.",

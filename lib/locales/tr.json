@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Tutar değişiklikleri seçili tahmin ayından itibaren geçerli olur. Önceki aylar bütçelerini korur.",
   "Review the amounts before saving. Both balances update together.": "Kaydetmeden önce tutarları gözden geçirin. Her iki bakiye birlikte güncellenir.",
   "This records a balance correction today. It is not income or spending.": "Bu, bugün bir bakiye düzeltmesi kaydeder. Gelir veya harcama değildir.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Gelir ve giderler bölümünde bir kez kaydedilir. Toplamı seçili nakit hesabı öder. Kaydedilen ödemeler düzenlenemez veya silinemez.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Gelir ve giderler bölümünde bir kez kaydedilir. Toplamı seçili nakit hesabı öder. Bir ödemeyi geri almak için İşlemler bölümünden silin; Son silinenler bölümünden geri yükleyebilirsiniz.",
   "Choose one of your cash accounts.": "Nakit hesaplarınızdan birini seçin.",
   "Allocations exceed the account balance.": "Ayırmalar hesap bakiyesini aşıyor.",
   "Check the account fields.": "Hesap alanlarını kontrol edin.",

@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Nalalapat ang mga pagbabago sa halaga mula sa napiling buwan ng forecast. Pinananatili ng mga naunang buwan ang mga budget nila.",
   "Review the amounts before saving. Both balances update together.": "Suriin ang mga halaga bago i-save. Sabay na mag-a-update ang dalawang balanse.",
   "This records a balance correction today. It is not income or spending.": "Magtatala ito ng pagwawasto ng balanse ngayon. Hindi ito kita o paggastos.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Isang beses na naka-save sa Kita at gastos. Ang napiling cash account ang magbabayad ng kabuuan. Hindi maaaring i-edit o burahin ang mga naka-save na bayad.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Isang beses na naka-save sa Kita at gastos. Ang napiling cash account ang magbabayad ng kabuuan. Para bawiin ang isang bayad, burahin ito sa Mga transaksyon; maibabalik mo ito mula sa Kamakailang binura.",
   "Choose one of your cash accounts.": "Pumili ng isa sa mga cash account mo.",
   "Allocations exceed the account balance.": "Lampas sa balanse ng account ang mga alokasyon.",
   "Check the account fields.": "Suriin ang mga field ng account.",

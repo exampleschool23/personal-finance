@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Mabadiliko ya kiasi hutumika kuanzia mwezi wa utabiri uliochaguliwa. Miezi ya awali huweka bajeti zake.",
   "Review the amounts before saving. Both balances update together.": "Kagua kiasi kabla ya kuhifadhi. Salio zote mbili husasishwa pamoja.",
   "This records a balance correction today. It is not income or spending.": "Hii inarekodi marekebisho ya salio leo. Si mapato wala matumizi.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Imehifadhiwa mara moja kwenye Mapato na matumizi. Akaunti ya fedha taslimu iliyochaguliwa hulipa jumla. Malipo yaliyohifadhiwa hayawezi kuhaririwa wala kufutwa.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Imehifadhiwa mara moja kwenye Mapato na matumizi. Akaunti ya fedha taslimu iliyochaguliwa hulipa jumla. Ili kutendua malipo, yafute kwenye Miamala; unaweza kuyarejesha kutoka Vilivyofutwa hivi karibuni.",
   "Choose one of your cash accounts.": "Chagua mojawapo ya akaunti zako za fedha taslimu.",
   "Allocations exceed the account balance.": "Mgawo unazidi salio la akaunti.",
   "Check the account fields.": "Kagua sehemu za akaunti.",

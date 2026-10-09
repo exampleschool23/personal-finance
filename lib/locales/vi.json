@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Thay đổi số tiền áp dụng từ tháng dự báo đã chọn. Các tháng trước giữ nguyên ngân sách.",
   "Review the amounts before saving. Both balances update together.": "Hãy kiểm tra số tiền trước khi lưu. Cả hai số dư sẽ được cập nhật cùng lúc.",
   "This records a balance correction today. It is not income or spending.": "Thao tác này ghi nhận một điều chỉnh số dư hôm nay. Đây không phải thu nhập hay khoản chi.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Chỉ lưu một lần trong Thu nhập & chi phí. Tài khoản tiền mặt đã chọn thanh toán toàn bộ. Không thể sửa hoặc xóa các khoản thanh toán đã lưu.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Chỉ lưu một lần trong Thu nhập & chi phí. Tài khoản tiền mặt đã chọn thanh toán toàn bộ. Để hoàn tác một khoản thanh toán, hãy xóa nó trong Giao dịch; bạn có thể khôi phục từ Đã xóa gần đây.",
   "Choose one of your cash accounts.": "Hãy chọn một tài khoản tiền mặt của bạn.",
   "Allocations exceed the account balance.": "Các khoản phân bổ vượt quá số dư tài khoản.",
   "Check the account fields.": "Hãy kiểm tra các trường của tài khoản.",

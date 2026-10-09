@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "تسري تغييرات المبلغ من شهر التوقع المحدد. تحتفظ الأشهر السابقة بميزانياتها.",
   "Review the amounts before saving. Both balances update together.": "راجع المبالغ قبل الحفظ. يُحدَّث الرصيدان معًا.",
   "This records a balance correction today. It is not income or spending.": "يسجّل هذا تصحيحًا للرصيد اليوم. وهو ليس دخلًا ولا إنفاقًا.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "تُحفظ مرة واحدة في «الدخل والمصروفات». يدفع الحساب النقدي المحدد الإجمالي. لا يمكن تعديل الدفعات المحفوظة أو حذفها.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "تُحفظ مرة واحدة في «الدخل والمصروفات». يدفع الحساب النقدي المحدد الإجمالي. لإلغاء دفعة، احذفها من «المعاملات»؛ يمكنك استعادتها من «المحذوفات مؤخرًا».",
   "Choose one of your cash accounts.": "اختر أحد حساباتك النقدية.",
   "Allocations exceed the account balance.": "المخصصات تتجاوز رصيد الحساب.",
   "Check the account fields.": "تحقق من حقول الحساب.",

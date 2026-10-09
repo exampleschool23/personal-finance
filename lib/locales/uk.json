@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Зміни сум діють із вибраного місяця прогнозу. Попередні місяці зберігають свої бюджети.",
   "Review the amounts before saving. Both balances update together.": "Перевірте суми перед збереженням. Обидва баланси оновляться разом.",
   "This records a balance correction today. It is not income or spending.": "Це записує коригування балансу на сьогодні. Це не дохід і не витрата.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Зберігається один раз у розділі «Доходи та витрати». Вибраний готівковий рахунок оплачує всю суму. Збережені платежі не можна редагувати чи видаляти.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Зберігається один раз у розділі «Доходи та витрати». Вибраний готівковий рахунок оплачує всю суму. Щоб скасувати платіж, видаліть його в розділі «Операції»; відновити його можна в «Нещодавно видалених».",
   "Choose one of your cash accounts.": "Виберіть один зі своїх готівкових рахунків.",
   "Allocations exceed the account balance.": "Розподіл перевищує баланс рахунку.",
   "Check the account fields.": "Перевірте поля рахунку.",

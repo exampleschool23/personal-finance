@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "تغییرات مبلغ از ماه پیش‌بینی انتخاب‌شده اعمال می‌شوند. ماه‌های قبل بودجهٔ خود را حفظ می‌کنند.",
   "Review the amounts before saving. Both balances update together.": "پیش از ذخیره، مبالغ را بررسی کنید. هر دو موجودی با هم به‌روز می‌شوند.",
   "This records a balance correction today. It is not income or spending.": "این کار یک اصلاح موجودی را امروز ثبت می‌کند. درآمد یا هزینه نیست.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "یک‌بار در «درآمد و هزینه‌ها» ذخیره می‌شود. حساب نقدی انتخاب‌شده کل مبلغ را می‌پردازد. پرداخت‌های ذخیره‌شده قابل ویرایش یا حذف نیستند.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "یک‌بار در «درآمد و هزینه‌ها» ذخیره می‌شود. حساب نقدی انتخاب‌شده کل مبلغ را می‌پردازد. برای لغو یک پرداخت، آن را از «تراکنش‌ها» حذف کنید؛ می‌توانید از «اخیراً حذف‌شده» بازیابی‌اش کنید.",
   "Choose one of your cash accounts.": "یکی از حساب‌های نقدی خود را انتخاب کنید.",
   "Allocations exceed the account balance.": "تخصیص‌ها از موجودی حساب بیشتر است.",
   "Check the account fields.": "فیلدهای حساب را بررسی کنید.",

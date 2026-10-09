@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Bedragwijzigingen gelden vanaf de geselecteerde prognosemaand. Eerdere maanden behouden hun budgetten.",
   "Review the amounts before saving. Both balances update together.": "Controleer de bedragen voordat u opslaat. Beide saldi worden samen bijgewerkt.",
   "This records a balance correction today. It is not income or spending.": "Dit registreert vandaag een saldocorrectie. Het is geen inkomen of uitgave.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Eenmaal opgeslagen onder Inkomsten en uitgaven. De geselecteerde contante rekening betaalt het totaal. Opgeslagen betalingen kunnen niet worden bewerkt of verwijderd.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Eenmaal opgeslagen onder Inkomsten en uitgaven. De geselecteerde contante rekening betaalt het totaal. Om een betaling ongedaan te maken, verwijder je hem bij Transacties; je kunt hem herstellen via Recent verwijderd.",
   "Choose one of your cash accounts.": "Kies een van uw contante rekeningen.",
   "Allocations exceed the account balance.": "Toewijzingen overschrijden het rekeningsaldo.",
   "Check the account fields.": "Controleer de rekeningvelden.",

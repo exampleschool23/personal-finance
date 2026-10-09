@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Изменение суммы действует с выбранного месяца прогноза. Бюджеты прошлых месяцев сохраняются.",
   "Review the amounts before saving. Both balances update together.": "Проверьте суммы перед сохранением. Оба остатка обновятся одновременно.",
   "This records a balance correction today. It is not income or spending.": "Сегодня будет записана корректировка остатка. Это не доход и не расход.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Платёж записывается один раз в доходах и расходах. Полная сумма списывается с выбранного счёта. Сохранённый платёж нельзя изменить или удалить.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Платёж записывается один раз в доходах и расходах. Полная сумма списывается с выбранного счёта. Чтобы отменить платёж, удалите его в разделе «Операции»; восстановить его можно в «Недавно удалённых».",
   "Choose one of your cash accounts.": "Выберите один из своих денежных счетов.",
   "Allocations exceed the account balance.": "Резервы превышают остаток счёта.",
   "Check the account fields.": "Проверьте поля счёта.",

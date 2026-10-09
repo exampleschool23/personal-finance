@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Změny částek platí od vybraného měsíce prognózy. Dřívější měsíce si ponechávají své rozpočty.",
   "Review the amounts before saving. Both balances update together.": "Před uložením zkontrolujte částky. Oba zůstatky se aktualizují společně.",
   "This records a balance correction today. It is not income or spending.": "Tím se dnes zaznamená oprava zůstatku. Nejde o příjem ani výdaj.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Uloženo jednou v části Příjmy a výdaje. Celkovou částku hradí vybraný hotovostní účet. Uložené platby nelze upravovat ani mazat.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Uloženo jednou v části Příjmy a výdaje. Celkovou částku hradí vybraný hotovostní účet. Platbu vrátíte zpět smazáním v Transakcích; obnovit ji můžete v Nedávno smazaných.",
   "Choose one of your cash accounts.": "Vyberte jeden ze svých hotovostních účtů.",
   "Allocations exceed the account balance.": "Přidělení překračuje zůstatek účtu.",
   "Check the account fields.": "Zkontrolujte pole účtu.",

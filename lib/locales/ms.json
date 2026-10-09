@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Perubahan jumlah berkuat kuasa dari bulan ramalan yang dipilih. Bulan lebih awal mengekalkan bajetnya.",
   "Review the amounts before saving. Both balances update together.": "Semak jumlah sebelum menyimpan. Kedua-dua baki dikemas kini bersama.",
   "This records a balance correction today. It is not income or spending.": "Ini merekodkan pembetulan baki hari ini. Ia bukan pendapatan atau perbelanjaan.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Disimpan sekali dalam Pendapatan & perbelanjaan. Akaun tunai yang dipilih membayar jumlah keseluruhan. Bayaran yang disimpan tidak boleh diedit atau dipadam.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Disimpan sekali dalam Pendapatan & perbelanjaan. Akaun tunai yang dipilih membayar jumlah keseluruhan. Untuk membatalkan bayaran, padamkannya daripada Transaksi; anda boleh memulihkannya daripada Baru dipadam.",
   "Choose one of your cash accounts.": "Pilih salah satu akaun tunai anda.",
   "Allocations exceed the account balance.": "Peruntukan melebihi baki akaun.",
   "Check the account fields.": "Semak medan akaun.",

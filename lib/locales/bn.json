@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "পরিমাণের পরিবর্তন নির্বাচিত পূর্বাভাসের মাস থেকে প্রযোজ্য হয়। আগের মাসগুলোর বাজেট অপরিবর্তিত থাকে।",
   "Review the amounts before saving. Both balances update together.": "সংরক্ষণের আগে পরিমাণগুলো পর্যালোচনা করুন। উভয় ব্যালেন্স একসাথে হালনাগাদ হয়।",
   "This records a balance correction today. It is not income or spending.": "এটি আজকের জন্য একটি ব্যালেন্স সংশোধন রেকর্ড করে। এটি আয় বা ব্যয় নয়।",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "আয় ও ব্যয়-এ একবার সংরক্ষিত হয়। নির্বাচিত নগদ অ্যাকাউন্ট মোট পরিমাণ পরিশোধ করে। সংরক্ষিত পরিশোধ সম্পাদনা বা মুছে ফেলা যায় না।",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "আয় ও ব্যয়-এ একবার সংরক্ষিত হয়। নির্বাচিত নগদ অ্যাকাউন্ট মোট পরিমাণ পরিশোধ করে। কোনো পরিশোধ বাতিল করতে লেনদেন থেকে সেটি মুছুন; সম্প্রতি মুছে ফেলা থেকে আবার ফিরিয়ে আনতে পারবেন।",
   "Choose one of your cash accounts.": "আপনার নগদ অ্যাকাউন্টগুলোর একটি বেছে নিন।",
   "Allocations exceed the account balance.": "বরাদ্দ অ্যাকাউন্ট ব্যালেন্সের চেয়ে বেশি।",
   "Check the account fields.": "অ্যাকাউন্টের ঘরগুলো পরীক্ষা করুন।",

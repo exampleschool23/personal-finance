@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "As alterações de valor valem a partir do mês de previsão selecionado. Os meses anteriores mantêm seus orçamentos.",
   "Review the amounts before saving. Both balances update together.": "Revise os valores antes de salvar. Os dois saldos são atualizados juntos.",
   "This records a balance correction today. It is not income or spending.": "Isto registra uma correção de saldo hoje. Não é receita nem gasto.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Salvo uma única vez em Receitas e despesas. A conta de dinheiro selecionada paga o total. Pagamentos salvos não podem ser editados nem excluídos.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Salvo uma única vez em Receitas e despesas. A conta de dinheiro selecionada paga o total. Para desfazer um pagamento, exclua-o em Transações; você pode restaurá-lo em Excluídos recentemente.",
   "Choose one of your cash accounts.": "Escolha uma das suas contas de dinheiro.",
   "Allocations exceed the account balance.": "As alocações excedem o saldo da conta.",
   "Check the account fields.": "Verifique os campos da conta.",

@@ -49,7 +49,7 @@ export function MortgagePaymentDialog({ mortgage, accounts = [], onClose, onSave
     <label>{t('Notes (optional)')}<textarea rows={2} maxLength={2000} value={payment.notes} onChange={e => setPayment({ ...payment, notes: e.target.value })}/></label>
    </fieldset>
    <div className="ownership-summary"><p>{t('Total payment: {amount}', { amount: money(payment.principal + payment.interest) })}</p><p>{t('Remaining balance: {amount}', { amount: money(mortgage.amount - payment.principal) })}</p></div>
-   <p className="muted">{t('Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.')}</p>
+   <p className="muted">{t('Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.')}</p>
    <ErrorPopup message={error} detail="Retry the same payment to avoid duplicates."/>
    <FormFooter busy={busy} onCancel={guard.close}><span title={busy||!blocked?undefined:t(blocked)}><Button disabled={busy || !valid} type="button" onClick={()=>void submit()}>{t(busy ? 'Saving…' : 'Save payment')}</Button></span></FormFooter>
   </div>;

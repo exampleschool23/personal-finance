@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "金額の変更は、選択した予測月から適用されます。それ以前の月の予算は変わりません。",
   "Review the amounts before saving. Both balances update together.": "保存する前に金額を確認してください。両方の残高が同時に更新されます。",
   "This records a balance correction today. It is not income or spending.": "今日付けで残高の修正を記録します。収入や支出ではありません。",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "「収入と支出」に一度だけ保存されます。選択した現金口座から合計額が支払われます。保存した支払いは編集も削除もできません。",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "「収入と支出」に一度だけ保存されます。選択した現金口座から合計額が支払われます。支払いを取り消すには「取引」から削除してください。「最近削除した項目」から復元できます。",
   "Choose one of your cash accounts.": "現金口座のいずれかを選択してください。",
   "Allocations exceed the account balance.": "割当額が口座残高を超えています。",
   "Check the account fields.": "口座の入力内容を確認してください。",

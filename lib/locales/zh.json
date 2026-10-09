@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "金额变更自所选预测月份起生效，更早的月份保留原预算。",
   "Review the amounts before saving. Both balances update together.": "保存前请核对金额。两个账户的余额将同时更新。",
   "This records a balance correction today. It is not income or spending.": "这会记录一笔今日的余额更正，不属于收入或支出。",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "在“收入与支出”中保存一次。由所选现金账户支付总额。已保存的付款无法编辑或删除。",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "在“收入与支出”中保存一次。由所选现金账户支付总额。要撤销一笔付款，请在“交易”中删除它；之后可在“最近删除”中恢复。",
   "Choose one of your cash accounts.": "请选择您的一个现金账户。",
   "Allocations exceed the account balance.": "分配超过了账户余额。",
   "Check the account fields.": "请检查账户字段。",

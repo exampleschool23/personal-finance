@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "رقم کی تبدیلیاں منتخب پیش گوئی کے مہینے سے لاگو ہوتی ہیں۔ پچھلے مہینوں کے بجٹ برقرار رہتے ہیں۔",
   "Review the amounts before saving. Both balances update together.": "محفوظ کرنے سے پہلے رقوم دیکھ لیں۔ دونوں بیلنس ایک ساتھ اپ ڈیٹ ہوں گے۔",
   "This records a balance correction today. It is not income or spending.": "یہ آج کے لیے بیلنس کی درستی درج کرتا ہے۔ یہ آمدنی یا خرچ نہیں ہے۔",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "آمدنی اور اخراجات میں ایک بار محفوظ ہوتی ہے۔ منتخب نقد اکاؤنٹ کل رقم ادا کرتا ہے۔ محفوظ شدہ ادائیگیوں میں ترمیم یا انہیں حذف نہیں کیا جا سکتا۔",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "آمدنی اور اخراجات میں ایک بار محفوظ ہوتی ہے۔ منتخب نقد اکاؤنٹ کل رقم ادا کرتا ہے۔ کسی ادائیگی کو واپس لینے کے لیے اسے لین دین سے حذف کریں؛ آپ اسے حال ہی میں حذف شدہ سے بحال کر سکتے ہیں۔",
   "Choose one of your cash accounts.": "اپنے نقد اکاؤنٹس میں سے ایک منتخب کریں۔",
   "Allocations exceed the account balance.": "مختص رقوم اکاؤنٹ کے بیلنس سے زیادہ ہیں۔",
   "Check the account fields.": "اکاؤنٹ کے خانے چیک کریں۔",

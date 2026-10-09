@@ -440,7 +440,7 @@
   "Amount changes apply from the selected forecast month. Earlier months keep their budgets.": "Modificările de sumă se aplică începând cu luna de prognoză selectată. Lunile anterioare își păstrează bugetele.",
   "Review the amounts before saving. Both balances update together.": "Verifică sumele înainte de salvare. Ambele solduri se actualizează împreună.",
   "This records a balance correction today. It is not income or spending.": "Aceasta înregistrează o corecție de sold astăzi. Nu este venit sau cheltuială.",
-  "Saved once in Income & expenses. The selected cash account pays the total. Saved payments cannot be edited or deleted.": "Salvată o singură dată în Venituri și cheltuieli. Contul de numerar selectat plătește totalul. Plățile salvate nu pot fi editate sau șterse.",
+  "Saved once in Income & expenses. The selected cash account pays the total. To undo a payment, delete it from Transactions; you can restore it from Recently deleted.": "Salvată o singură dată în Venituri și cheltuieli. Contul de numerar selectat plătește totalul. Pentru a anula o plată, șterge-o din Tranzacții; o poți restaura din Șterse recent.",
   "Choose one of your cash accounts.": "Alege unul dintre conturile tale de numerar.",
   "Allocations exceed the account balance.": "Alocările depășesc soldul contului.",
   "Check the account fields.": "Verifică câmpurile contului.",
