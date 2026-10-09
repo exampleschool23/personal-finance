@@ -111,7 +111,7 @@ export function monthActuals(data: Pick<PlanningData, 'records' | 'activity' | '
 }
 
 /** The budget in display currency; null when its currency cannot be converted. */
-function budgetedIn(amounts: readonly BudgetAmount[], key: string, month: string, currency: string, rates: Rates) {
+export function budgetedIn(amounts: readonly BudgetAmount[], key: string, month: string, currency: string, rates: Rates) {
  const saved = budgetAmountFor(amounts, key, month);
  if (!saved) return 0;
  return convertAmount(Number(saved.amount), saved.currency, currency, rates);
@@ -155,11 +155,16 @@ export function flexBucketRollover(bucket: BudgetCategory, categories: readonly 
  return rolloverCarry(bucket, month, startingBalanceIn(bucket, currency, rates), past => flexBucketPlan(amounts, categories, past, currency, rates), past => flexible.reduce((sum, category) => sum + (history.get(past)?.byCategory.get(category.key) ?? 0), 0));
 }
 
-export type BudgetHistory = { months: Array<{ month: string; amount: number }>; lastMonth: number; average: number };
-/** The six months before `month`: the History popover. */
-export function budgetHistory(key: string, month: string, history: ReadonlyMap<string, MonthActuals>): BudgetHistory {
- const months = monthsBetween(shiftMonth(month, -historyMonths), shiftMonth(month, -1)).map(past => ({ month: past, amount: history.get(past)?.byCategory.get(key) ?? 0 }));
- return { months, lastMonth: months.at(-1)?.amount ?? 0, average: months.reduce((sum, item) => sum + item.amount, 0) / months.length };
+export type BudgetHistoryMonth = { month: string; amount: number; planned: number | null };
+export type BudgetHistory = { months: BudgetHistoryMonth[]; lastMonth: number; average: number };
+/** The History popover: six bars ending with `month` (what came in or went out so far), each with its plan,
+ * plus last month and the average of the six complete months before `month`. Several keys are summed (the Flexible bucket). */
+export function budgetHistory(keys: string | readonly string[], month: string, history: ReadonlyMap<string, MonthActuals>, planOf: (month: string) => number | null = () => null): BudgetHistory {
+ const list = typeof keys === 'string' ? [keys] : keys;
+ const actual = (past: string) => list.reduce((sum, key) => sum + (history.get(past)?.byCategory.get(key) ?? 0), 0);
+ const complete = monthsBetween(shiftMonth(month, -historyMonths), shiftMonth(month, -1)).map(actual);
+ const months = monthsBetween(shiftMonth(month, 1 - historyMonths), month).map(item => ({ month: item, amount: actual(item), planned: planOf(item) }));
+ return { months, lastMonth: complete.at(-1) ?? 0, average: complete.reduce((sum, value) => sum + value, 0) / complete.length };
 }
 /** Suggested budgets are whole amounts, rounded up so the suggestion covers the average. */
 export const suggestedBudget = (average: number) => Math.max(0, Math.ceil(average - 1e-9));

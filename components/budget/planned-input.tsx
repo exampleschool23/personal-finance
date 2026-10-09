@@ -3,24 +3,35 @@ import { useRef, useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
-import type { BudgetHistory, BudgetRow } from '@/lib/budget';
+import type { BudgetHistory, BudgetHistoryMonth, BudgetRow } from '@/lib/budget';
 import { showError } from '@/lib/feedback';
-import { formatMoney, formatMonthShort } from '@/lib/format';
+import { formatMoney, formatMonthShort, formatMonthYear } from '@/lib/format';
 
-/** History popover: last month, the monthly average and six monthly bars. */
+const percentOf = (value: number, peak: number) => `${Math.max(2, value / peak * 100)}%`;
+
+/** History popover: last month, the monthly average and six monthly bars ending with the edited month.
+ * Each bar carries a dashed mark at its plan; the edited month's mark follows the amount being typed. */
 function HistoryPanel({ history, direction, currency, amount, forward, onForward }: { history: BudgetHistory; direction: BudgetRow['direction']; currency: string; amount: number; forward: boolean; onForward: (value: boolean) => void }) {
  const { t, locale } = useLanguage();
- const peak = Math.max(...history.months.map(item => item.amount), 1);
+ const editing = history.months.at(-1)?.month;
+ const months = history.months.map(item => item.month === editing ? { ...item, planned: amount } : item);
+ const peak = Math.max(...months.flatMap(item => [item.amount, item.planned ?? 0]), 1);
+ const money = (value: number) => formatMoney(value, currency, locale);
+ const label = (item: BudgetHistoryMonth) => [formatMonthYear(item.month, locale), `${t('Actual')} ${money(item.amount)}`, ...(item.planned ? [`${t('Planned')} ${money(item.planned)}`] : [])].join(' · ');
  return <div className="budget-history">
   <p className="budget-history-title">{t('History')}</p>
   <div className="budget-history-tiles">
-   <div><strong>{formatMoney(history.lastMonth, currency, locale)}</strong><span>{t(direction === 'income' ? 'Earned last month' : 'Spent last month')}</span></div>
-   <div><strong>{formatMoney(history.average, currency, locale)}</strong><span>{t('Monthly average')}</span></div>
+   <div><strong>{money(history.lastMonth)}</strong><span>{t(direction === 'income' ? 'Earned last month' : 'Spent last month')}</span></div>
+   <div><strong>{money(history.average)}</strong><span>{t('Monthly average')}</span></div>
   </div>
   <ol className="budget-history-bars" data-direction={direction}>
-   {history.months.map(item => <li key={item.month} title={formatMoney(item.amount, currency, locale)}><span style={{ height: `${Math.max(2, item.amount / peak * 100)}%` }}/><small>{formatMonthShort(item.month, locale)}</small></li>)}
+   {months.map(item => <li key={item.month} title={label(item)} aria-label={label(item)} data-current={item.month === editing || undefined}>
+    <div><span style={{ height: percentOf(item.amount, peak) }}/>{item.planned ? <i style={{ bottom: `${item.planned / peak * 100}%` }}/> : null}</div>
+    <small>{formatMonthShort(item.month, locale)}</small>
+   </li>)}
   </ol>
-  <label className="budget-history-forward"><input type="checkbox" checked={forward} onChange={event => onForward(event.currentTarget.checked)}/>{t('Apply {amount} to all future months', { amount: formatMoney(amount, currency, locale) })}</label>
+  <p className="budget-history-legend"><span data-key="actual">{t('Actual')}</span><span data-key="planned">{t('Planned')}</span></p>
+  <label className="budget-history-forward"><input type="checkbox" checked={forward} onChange={event => onForward(event.currentTarget.checked)}/>{t('Apply {amount} to all future months', { amount: money(amount) })}</label>
  </div>;
 }
 

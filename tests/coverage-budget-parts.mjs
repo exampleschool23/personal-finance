@@ -38,7 +38,7 @@ const overrides={
 // The budget screen's parts, loaded together as one module would be.
 const cache=new Map();
 const page=Object.assign({},...['budget-rows','planned-input','left-to-budget-card','settings-dialogs'].map(name=>loadTS(`components/budget/${name}.tsx`,overrides,cache)));
-const {formatMoney,formatSignedMoney,formatMonthShort}=loadTS('lib/format.ts');
+const {formatMoney,formatSignedMoney,formatMonthShort,formatMonthYear}=loadTS('lib/format.ts');
 const {goalEmoji}=loadTS('lib/goal-emoji.ts');
 const money=value=>formatMoney(value,'USD','en-US');
 
@@ -237,7 +237,7 @@ test('LeftToBudgetCard expenses tab buckets spending by type; flex mode uses the
  assert.match(text(byClass(empty,'budget-left-empty')[0]),/haven’t added any expense budgets/);
 });
 
-const history={months:[{month:'2026-05',amount:100},{month:'2026-06',amount:0},{month:'2026-07',amount:50}],lastMonth:50,average:50};
+const history={months:[{month:'2026-05',amount:100,planned:80},{month:'2026-06',amount:0,planned:null},{month:'2026-07',amount:50,planned:200}],lastMonth:50,average:50};
 
 test('PlannedInput opens History on focus, edits the draft and saves on close',async()=>{
  const saves=[];
@@ -252,8 +252,11 @@ test('PlannedInput opens History on focus, edits the draft and saves on close',a
  const panel=byClass(view,'budget-history')[0];
  assert.match(text(panel),new RegExp(`T:History\\${money(50)}T:Spent last month\\${money(50)}T:Monthly average`));
  const bars=all(view,'li');
- assert.deepEqual(bars.map(bar=>bar.props.title),[money(100),money(0),money(50)]);
- assert.deepEqual(nodes(bars,node=>node.type==='span').map(span=>span.props.style.height),['100%','2%','50%']);
+ const months=['2026-05','2026-06','2026-07'].map(month=>formatMonthYear(month,'en-US'));
+ assert.deepEqual(bars.map(bar=>bar.props.title),[`${months[0]} · T:Actual ${money(100)} · T:Planned ${money(80)}`,`${months[1]} · T:Actual ${money(0)}`,`${months[2]} · T:Actual ${money(50)} · T:Planned ${money(500)}`],'the edited month is planned at the amount being typed');
+ assert.deepEqual(bars.map(bar=>bar.props['data-current']),[undefined,undefined,true]);
+ assert.deepEqual(nodes(bars,node=>node.type==='span').map(span=>span.props.style.height),['20%','2%','10%']);
+ assert.deepEqual(nodes(bars,node=>node.type==='i').map(mark=>mark.props.style.bottom),['16%','100%'],'a month without a plan has no mark');
  assert.deepEqual(nodes(bars,node=>node.type==='small').map(text),['2026-05','2026-06','2026-07'].map(month=>formatMonthShort(month,'en-US')));
  assert.equal(byClass(view,'budget-history-bars')[0].props['data-direction'],'expense');
  // Closing without changes does not save.

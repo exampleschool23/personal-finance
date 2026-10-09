@@ -18,7 +18,7 @@ import { useWorkspace } from '@/components/workspace/workspace-provider';
 import { useBudget } from '@/hooks/use-budget';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { ageOfMoneyTrend } from '@/lib/age-of-money';
-import { budgetCategories, budgetHistory, budgetOverall, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, flexBucketCategory, flexBucketKey, flexBucketRollover, goalContribution, groupRows, leftToBudget, monthActuals, monthsBetween, suggestedBudget, type BudgetAmount, type BudgetCategory, type BudgetOverall, type BudgetRow, type MonthActuals } from '@/lib/budget';
+import { budgetCategories, budgetedIn, budgetHistory, budgetOverall, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, flexBucketCategory, flexBucketKey, flexBucketPlan, flexBucketRollover, goalContribution, groupRows, leftToBudget, monthActuals, monthsBetween, suggestedBudget, type BudgetAmount, type BudgetCategory, type BudgetOverall, type BudgetRow, type MonthActuals } from '@/lib/budget';
 import { shiftMonth } from '@/lib/calendar-days';
 import { depositToday } from '@/lib/deposit-interest';
 import { expensePlanMonth } from '@/lib/expense-plans';
@@ -66,11 +66,10 @@ export function BudgetScreen() {
 
  const save = (key: string) => (amount: number, forward: boolean) => budget.saveAmount(key, month, amount, currency, forward);
  const historyOf = (key: string) => {
-  if (key !== flexBucketKey) return budgetHistory(key, month, history);
+  if (key !== flexBucketKey) return budgetHistory(key, month, history, past => budgetedIn(budget.state.amounts, key, past, currency, rates));
   // The Flexible bucket's history is the sum of its categories.
-  const parts = rows.filter(row => row.direction === 'expense' && row.type === 'flexible' && !row.excluded).map(row => budgetHistory(row.key, month, history));
-  const months = (parts[0]?.months ?? budgetHistory(key, month, history).months).map((item, index) => ({ month: item.month, amount: parts.reduce((sum, part) => sum + part.months[index].amount, 0) }));
-  return { months, lastMonth: months.at(-1)?.amount ?? 0, average: months.reduce((sum, item) => sum + item.amount, 0) / months.length };
+  const keys = rows.filter(row => row.direction === 'expense' && row.type === 'flexible' && !row.excluded).map(row => row.key);
+  return budgetHistory(keys, month, history, past => flexBucketPlan(budget.state.amounts, categories, past, currency, rates));
  };
  // In flex mode a flexible category has no plan of its own; the bucket above it holds the amount.
  const planned = (row: BudgetRow) => flex && row.direction === 'expense' && row.type === 'flexible' ? <span className="budget-pill">—</span> : <PlannedInput key={row.key + month + (row.budget ?? 0)} label={t('Planned for {name}', { name: name(row) })} value={row.budget ?? 0} history={historyOf(row.key)} direction={row.direction} currency={currency} defaultForward={budget.state.applyForward} onSave={save(row.key)}/>;

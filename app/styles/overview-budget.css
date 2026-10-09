@@ -171,10 +171,20 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-history-tiles>div{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:var(--radius-control);background:var(--muted)}
 .budget-history-tiles span{color:var(--muted-foreground);font-size:var(--type-caption)}
 .budget-history-bars{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;height:120px;margin:0;padding:10px 10px 0;border-radius:var(--radius-control);background:var(--muted);list-style:none}
-.budget-history-bars>li{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-height:0}
-.budget-history-bars>li>span{width:100%;max-width:26px;border-radius:5px 5px 0 0;background:color-mix(in srgb,var(--foreground) 40%,transparent)}
-.budget-history-bars[data-direction=income]>li>span{background:var(--positive)}
+.budget-history-bars>li{display:flex;flex-direction:column;align-items:center;gap:4px;min-height:0}
+.budget-history-bars>li>div{position:relative;display:flex;flex:1;align-items:flex-end;justify-content:center;width:100%;max-width:26px;min-height:0}
+.budget-history-bars>li>div>span{width:100%;border-radius:5px 5px 0 0;background:color-mix(in srgb,var(--foreground) 40%,transparent)}
+.budget-history-bars[data-direction=income]>li>div>span{background:var(--positive)}
+/* The month's plan: a dashed mark across its bar, as in the chart kit's planned style. */
+.budget-history-bars>li>div>i{position:absolute;inset-inline:-3px;border-top:2px dashed var(--primary)}
 .budget-history-bars small{padding-bottom:6px;color:var(--muted-foreground);font-size:var(--type-micro);text-transform:uppercase}
+.budget-history-bars>li[data-current]>small{color:var(--foreground);font-weight:600}
+.budget-history-bars>li[data-current]>div>span{opacity:.7}
+.budget-history-legend{display:flex;gap:14px;margin:0;color:var(--muted-foreground);font-size:var(--type-caption)}
+.budget-history-legend>span{display:inline-flex;align-items:center;gap:6px}
+.budget-history-legend>span::before{content:"";width:12px;height:8px;border-radius:2px;background:color-mix(in srgb,var(--foreground) 40%,transparent)}
+.budget-history:has([data-direction=income]) .budget-history-legend>[data-key=actual]::before{background:var(--positive)}
+.budget-history-legend>[data-key=planned]::before{height:0;border-top:2px dashed var(--primary);background:none;border-radius:0}
 .budget-history-forward{display:flex;align-items:center;gap:8px;font-size:var(--type-caption)}
 .budget-side{position:sticky;top:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
 .budget-left{display:flex;flex-direction:column;gap:14px;padding:16px}
