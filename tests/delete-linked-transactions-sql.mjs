@@ -18,7 +18,7 @@ test('migration 126 is in setup.sql, reports its schema version and changes noth
  assert.ok(setup.includes(migration),'setup.sql includes migration 126');
  const db=await database();
  try{
-  assert.equal((await db.query('SELECT finance_capabilities()->>\'schema_version\' AS v')).rows[0].v,'126');
+  assert.ok(Number((await db.query('SELECT finance_capabilities()->>\'schema_version\' AS v')).rows[0].v)>=126,'reports 126 or a later migration');
   const before=await functions(db);
   await db.exec(migration);
   assert.equal(await functions(db),before);
