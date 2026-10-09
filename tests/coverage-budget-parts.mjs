@@ -53,10 +53,10 @@ function expand(node,path){
  const {children,...props}=node.props??{};
  return {type:node.type,props,children:expand(children,path+'/'+String(node.type?.toString?.()??node.type))};
 }
-/** Mounts an element; `render()` re-renders it with the kept hook state. */
+/** Mounts an element; `render()` re-renders it with the kept hook state, `rerender(next)` with new props. */
 function mount(element){
  hookState.store=new Map();const store=hookState.store;
- const view={tree:null,render(){hookState.store=store;view.tree=expand(element,'');return view;}};
+ const view={tree:null,render(){hookState.store=store;view.tree=expand(element,'');return view;},rerender(next){element=next;return view.render();}};
  return view.render();
 }
 function nodes(tree,predicate,out=[]){
@@ -241,7 +241,7 @@ const history={months:[{month:'2026-05',amount:100,planned:80},{month:'2026-06',
 
 test('PlannedInput opens History on focus, edits the draft and saves on close',async()=>{
  const saves=[];
- const view=mount(React.createElement(page.PlannedInput,{label:'Planned: Groceries',value:500,history,direction:'expense',currency:'USD',defaultForward:false,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));
+ const view=mount(React.createElement(page.PlannedInput,{label:'Planned: Groceries',value:500,history,direction:'expense',currency:'USD',defaultForward:false,appliesForward:false,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));
  const popover=()=>one(view,'x-popover');
  assert.equal(popover().props.open,false);
  const input=one(view,'x-number-input');
@@ -262,20 +262,30 @@ test('PlannedInput opens History on focus, edits the draft and saves on close',a
  // Closing without changes does not save.
  popover().props.onOpenChange(true);popover().props.onOpenChange(false);await flush();
  assert.deepEqual(saves,[]);
- // Edit the amount and tick "apply forward" then close: saves the draft and forward flag.
+ // Ticking "apply forward" saves at once, with the amount being typed; closing afterwards saves nothing more.
  one(view,'x-number-input').props.onValueChange(620);view.render();
  assert.match(text(byClass(view,'budget-history-forward')[0]),new RegExp(`Apply \\${money(620)} to all future months`));
  const checkbox=one(view,'input',node=>node.props.type==='checkbox');assert.equal(checkbox.props.checked,false);
- checkbox.props.onChange({currentTarget:{checked:true}});view.render();
+ checkbox.props.onChange({currentTarget:{checked:true}});await flush();
+ assert.deepEqual(saves,[[620,true]],'the tick saves right away');
+ view.rerender(React.createElement(page.PlannedInput,{label:'Planned: Groceries',value:620,history,direction:'expense',currency:'USD',defaultForward:false,appliesForward:true,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));
+ assert.equal(one(view,'input',node=>node.props.type==='checkbox').props.checked,true,'the tick follows what is saved');
+ one(view,'input',node=>node.props.type==='checkbox').props.onChange({currentTarget:{checked:false}});await flush();
+ assert.deepEqual(saves,[[620,true],[620,false]],'unticking saves this month only');
+});
+
+test('PlannedInput: an amount edited while it applies forward keeps applying forward',async()=>{
+ const saves=[];
+ const view=mount(React.createElement(page.PlannedInput,{label:'Rent',value:500,history,direction:'expense',currency:'USD',defaultForward:false,appliesForward:true,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));
  assert.equal(one(view,'input',node=>node.props.type==='checkbox').props.checked,true);
- popover().props.onOpenChange(false);await flush();view.render();
- assert.deepEqual(saves,[[620,true]]);
- assert.equal(one(view,'input',node=>node.props.type==='checkbox').props.checked,false,'forward resets to the default after saving');
+ one(view,'x-number-input').props.onValueChange(550);view.render();
+ one(view,'x-popover').props.onOpenChange(false);await flush();
+ assert.deepEqual(saves,[[550,true]]);
 });
 
 test('PlannedInput: a saved amount no rate converts reads — and offers no input, so it is never saved as 0',async()=>{
  const saves=[];
- const view=mount(React.createElement(page.PlannedInput,{label:'Planned: Groceries',value:null,history,direction:'expense',currency:'USD',defaultForward:false,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));
+ const view=mount(React.createElement(page.PlannedInput,{label:'Planned: Groceries',value:null,history,direction:'expense',currency:'USD',defaultForward:false,appliesForward:false,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));
  assert.equal(all(view,'x-number-input').length,0,'no input');
  assert.equal(all(view,'x-popover').length,0,'no History popover');
  const pill=one(view,'span',node=>node.props.className==='budget-pill');
@@ -288,7 +298,7 @@ test('PlannedInput: a saved amount no rate converts reads — and offers no inpu
 
 test('PlannedInput: Enter commits and blurs; other keys do nothing; focus clicks inside the anchor are kept',async()=>{
  const saves=[];
- const view=mount(React.createElement(page.PlannedInput,{label:'Salary',value:1000,history,direction:'income',currency:'USD',defaultForward:true,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));
+ const view=mount(React.createElement(page.PlannedInput,{label:'Salary',value:1000,history,direction:'income',currency:'USD',defaultForward:true,appliesForward:false,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));
  assert.match(text(byClass(view,'budget-history')[0]),/T:Earned last month/);
  const anchorSpan=()=>one(view,'span',node=>node.props.className==='budget-input');
  let prevented=0,blurred=0;
@@ -313,7 +323,7 @@ test('PlannedInput: Enter commits and blurs; other keys do nothing; focus clicks
 test('PlannedInput: a failed save restores the value and shows the translated error',async()=>{
  errors.length=0;
  let fail=new Error('Budget is locked');
- const view=mount(React.createElement(page.PlannedInput,{label:'Rent',value:1500,history,direction:'expense',currency:'USD',defaultForward:false,onSave:async()=>{throw fail;}}));
+ const view=mount(React.createElement(page.PlannedInput,{label:'Rent',value:1500,history,direction:'expense',currency:'USD',defaultForward:false,appliesForward:false,onSave:async()=>{throw fail;}}));
  one(view,'x-number-input').props.onValueChange(1700);view.render();
  one(view,'x-popover').props.onOpenChange(false);await flush();view.render();
  assert.deepEqual(errors,['T:Budget is locked']);

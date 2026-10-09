@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, leftToBudget, flexBucketPlan: bucketPlan, budgetOverall, budgetRowsForMode, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, knownPlan } = loadTS('lib/budget.ts');
+const { appliesToFutureMonths, budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, leftToBudget, flexBucketPlan: bucketPlan, budgetOverall, budgetRowsForMode, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, knownPlan } = loadTS('lib/budget.ts');
 const { demoBudget } = loadTS('lib/budget-demo.ts');
 const { shiftMonth } = loadTS('lib/calendar-days.ts');
 const { demoRecords } = loadTS('lib/demo-finance.ts');
@@ -283,4 +283,16 @@ test('a rollover whose starting balance no rate converts is marked missing, so t
  assert.equal(unknown.rolloverMissing, true);assert.equal(unknown.rolloverIn, 0);assert.equal(unknown.remaining, null);
  const known = row('USD');
  assert.equal(known.rolloverMissing, false);assert.ok(known.rolloverIn > 0);
+});
+
+test('appliesToFutureMonths: a forward amount with no later month of its own', () => {
+ const rows = [{ category_key: 'Rent', month: '2026-09', amount: 500, currency: 'USD', applies_forward: true }];
+ assert.equal(appliesToFutureMonths(rows, 'Rent', '2026-09'), true);
+ assert.equal(appliesToFutureMonths(rows, 'Rent', '2026-10'), true, 'an inherited forward amount carries on too');
+ assert.equal(appliesToFutureMonths(rows, 'Rent', '2026-08'), false, 'no budget yet');
+ assert.equal(appliesToFutureMonths(rows, 'Food', '2026-10'), false);
+ const later = [...rows, { category_key: 'Rent', month: '2026-11', amount: 0, currency: 'USD', applies_forward: true }];
+ assert.equal(appliesToFutureMonths(later, 'Rent', '2026-10'), false, 'a later month has its own amount');
+ assert.equal(appliesToFutureMonths(setBudgetAmount(later, 'Rent', '2026-10', 500, 'USD', true), 'Rent', '2026-10'), true, 'applying forward replaces later months');
+ assert.equal(appliesToFutureMonths(setBudgetAmount(rows, 'Rent', '2026-10', 600, 'USD', false), 'Rent', '2026-10'), false, 'a one-month change does not');
 });

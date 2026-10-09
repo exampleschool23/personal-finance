@@ -78,6 +78,11 @@ export function budgetAmountFor(amounts: readonly BudgetAmount[], key: string, m
  return best;
 }
 
+/** Whether this month's budget carries on unchanged into every later month: it is a forward amount and no later month has its own. */
+export function appliesToFutureMonths(amounts: readonly BudgetAmount[], key: string, month: string) {
+ return !!budgetAmountFor(amounts, key, month)?.applies_forward && !amounts.some(item => item.category_key === key && item.month > month);
+}
+
 /** Saving for "this month only" keeps later months as they were; "all future months" replaces them.
  * Mirrors `public.set_budget_amount` so the sample workspace behaves like a saved account. */
 export function setBudgetAmount(amounts: readonly BudgetAmount[], key: string, month: string, amount: number, currency: string, forward: boolean): BudgetAmount[] {

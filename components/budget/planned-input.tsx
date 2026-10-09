@@ -35,7 +35,7 @@ function HistoryPanel({ history, direction, currency, amount, forward, onForward
  </div>;
 }
 
-type PlannedProps = { label: string; value: number; history: BudgetHistory; direction: BudgetRow['direction']; currency: string; defaultForward: boolean; onSave: (amount: number, forward: boolean) => Promise<void> };
+type PlannedProps = { label: string; value: number; history: BudgetHistory; direction: BudgetRow['direction']; currency: string; defaultForward: boolean; appliesForward: boolean; onSave: (amount: number, forward: boolean) => Promise<void> };
 
 /** An editable planned amount. A saved amount no rate converts (`value` null) reads — and is not editable here:
  * a 0 in its place would overwrite the real amount on save. */
@@ -45,18 +45,17 @@ export function PlannedInput({ value, ...props }: Omit<PlannedProps, 'value'> & 
  return <EditablePlannedInput {...props} value={value}/>;
 }
 
-/** Focusing the amount opens the History popover; leaving it saves. */
-function EditablePlannedInput({ label, value, history, direction, currency, defaultForward, onSave }: PlannedProps) {
+/** Focusing the amount opens the History popover; leaving it saves. The tick shows whether the amount carries on into
+ * later months and saves the moment it changes. */
+function EditablePlannedInput({ label, value, history, direction, currency, defaultForward, appliesForward, onSave }: PlannedProps) {
  const { t } = useLanguage();
  const anchor = useRef<HTMLSpanElement>(null);
  const [open, setOpen] = useState(false);
  const [draft, setDraft] = useState(value);
- const [forward, setForward] = useState(defaultForward);
+ const save = (forward: boolean) => onSave(draft, forward).catch(error => { setDraft(value); showError(t((error as Error).message || 'Could not save changes.')); });
  function commit() {
   setOpen(false);
-  const changed = draft !== value || forward !== defaultForward;
-  setForward(defaultForward);
-  if (changed) onSave(draft, forward).catch(error => { setDraft(value); showError(t((error as Error).message || 'Could not save changes.')); });
+  if (draft !== value) save(appliesForward || defaultForward);
  }
  return <Popover open={open} onOpenChange={next => { if (!next) commit(); }}>
   <PopoverAnchor asChild>
@@ -65,7 +64,7 @@ function EditablePlannedInput({ label, value, history, direction, currency, defa
    </span>
   </PopoverAnchor>
   <PopoverContent className="budget-history-popover" align="end" collisionPadding={16} onOpenAutoFocus={event => event.preventDefault()} onInteractOutside={event => { if (anchor.current?.contains(event.target as Node)) event.preventDefault(); }}>
-   <HistoryPanel history={history} direction={direction} currency={currency} amount={draft} forward={forward} onForward={setForward}/>
+   <HistoryPanel history={history} direction={direction} currency={currency} amount={draft} forward={appliesForward} onForward={save}/>
   </PopoverContent>
  </Popover>;
 }
