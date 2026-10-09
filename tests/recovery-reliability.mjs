@@ -34,7 +34,7 @@ test('pre-revision archives restore and unchanged imports undo after incremental
   await db.query('SELECT import_statement($1,$2,$3)',[id(21),id(10),rows]);
   await db.query("UPDATE finance_records SET notes='changed' WHERE import_key=$1",[rows[0].key]);
   await assert.rejects(db.query('SELECT undo_statement_import($1)',[id(21)]),/changed/);
-  // A spending plan deleted before migration 130 restores from its own row shape, as a category whose budget keeps the exact amount.
+  // A spending plan deleted before migration 131 restores from its own row shape, as a category whose budget keeps the exact amount.
   await db.exec('RESET ROLE');
   await db.query("INSERT INTO deleted_items(id,user_id,source,data) VALUES($1,$2,'expense_plans',$3)",[id(31),id(1),{id:id(30),user_id:id(1),name:'Budget',category:'Other',currency:'USD',amount:12.345678,start_date:'2026-01-01',end_date:null,created_at:'2026-01-01T00:00:00Z',archived:false,archive_pauses:[]}]);
   await db.exec('SET ROLE authenticated');

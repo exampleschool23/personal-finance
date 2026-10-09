@@ -23,7 +23,7 @@ test('deletion archives atomically; owner-only restore keeps details, dependenci
   await db.query('SELECT restore_deleted_item($1)',[archived.id]);await db.query('SELECT restore_deleted_item($1)',[archived.id]);
   assert.deepEqual((await db.query('SELECT * FROM finance_records WHERE id=$1',[record])).rows[0],original);
   assert.equal((await db.query('SELECT * FROM deleted_items')).rows.length,0);
-  // A spending plan deleted before plans became Budget categories (migration 130) comes back as a category with its budget.
+  // A spending plan deleted before plans became Budget categories (migration 131) comes back as a category with its budget.
   await db.exec('RESET ROLE');
   await db.query("INSERT INTO deleted_items(id,user_id,source,data) VALUES($1,$2,'expense_plans',$3)",[payment,owner,{id:plan,user_id:owner,name:'Food',category:'Groceries',currency:'USD',amount:500,start_date:'2026-01-01',end_date:null,created_at:'2026-01-01T00:00:00Z',archived:false,archive_pauses:[]}]);
   await db.exec('SET ROLE authenticated');

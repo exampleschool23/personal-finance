@@ -7998,7 +7998,7 @@ $$;
 NOTIFY pgrst,'reload schema';
 COMMIT;
 
--- Spending plans become Budget categories. Apply after 129.
+-- Spending plans become Budget categories. Apply after 130.
 -- A monthly spending plan was a second budget beside Budget, with its own four
 -- labels (Groceries, Family support, Household, Other). Each plan now becomes a
 -- spending category named after the plan (an existing spending category of that
@@ -8090,9 +8090,9 @@ END $$;
 REVOKE INSERT,UPDATE ON public.expense_plans FROM authenticated;
 REVOKE EXECUTE ON FUNCTION public.save_budget_plan(jsonb,date,boolean) FROM authenticated;
 
--- The capability version moves to 130, so the app can ask for this migration.
+-- The capability version moves to 131, so the app can ask for this migration.
 CREATE OR REPLACE FUNCTION public.finance_capabilities() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
- SELECT jsonb_build_object('schema_version',130,'record_revisions',true,'verified_restore',true)
+ SELECT jsonb_build_object('schema_version',131,'record_revisions',true,'verified_restore',true)
 $$;
 
 NOTIFY pgrst,'reload schema';

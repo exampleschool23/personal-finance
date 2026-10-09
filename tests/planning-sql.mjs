@@ -36,7 +36,7 @@ assert.equal(await balance(10),895);assert.equal(await balance(11),200);
  await action('category',{id:id(42),name:'Travel',direction:'expense'});
  await record(50,'Salary',100,'USD',{frequency:'Monthly'});
  await action('occurrence',{id:id(51),account_id:id(10),target_id:id(50),date:today});await action('occurrence',{id:id(52),account_id:id(10),target_id:id(50),date:today});assert.equal(await balance(10),1000);
- // A category's budget (spending plans became Budget categories in migration 130).
+ // A category's budget (spending plans became Budget categories in migration 131).
  await db.query('SELECT set_budget_amount($1,$2,$3,$4,$5)',[id(42),'2025-01-01',100,'USD',true]);await db.query('SELECT set_budget_amount($1,$2,$3,$4,$5)',[id(42),'2025-03-01',200,'USD',true]);
  assert.deepEqual((await db.query("SELECT to_char(month,'YYYY-MM') AS month,amount::float AS amount FROM budget_amounts WHERE category_key=$1 ORDER BY month",[id(42)])).rows,[{month:'2025-01',amount:100},{month:'2025-03',amount:200}]);
  const importRows=[{name:'Import',date:today,amount:-10,notes:'',key:'a'.repeat(64)}];

@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const id=n=>`13000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const setup=fs.readFileSync('database/setup.sql','utf8');
-const migration=fs.readFileSync('migrations/130_spending_plans_to_budget.sql','utf8');
+const migration=fs.readFileSync('migrations/131_spending_plans_to_budget.sql','utf8');
 const skip=!process.env.PGLITE_MODULE;
 const auth=`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;INSERT INTO auth.users VALUES('${id(1)}'),('${id(2)}');`;
 const setupBefore=setup.slice(0,setup.indexOf('-- Spending plans become Budget categories.'));
 
-test('migration 130 is in setup.sql',()=>{assert.ok(setup.includes(migration));});
+test('migration 131 is in setup.sql',()=>{assert.ok(setup.includes(migration));});
 
-test('each spending plan becomes a Budget category with its amounts, pauses, end, carry-over and spending (migration 130)',{skip},async()=>{
+test('each spending plan becomes a Budget category with its amounts, pauses, end, carry-over and spending (migration 131)',{skip},async()=>{
  const {PGlite}=await import(process.env.PGLITE_MODULE);const db=new PGlite();
  try{
   await db.exec(auth);await db.exec(setupBefore);
