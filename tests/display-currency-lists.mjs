@@ -74,3 +74,24 @@ test('Cash flow lists every income source with its progress after Show more (CF-
  assert.ok(sixth.includes(usd(2000)) && sixth.includes(usd(800)), sixth);
  assert.equal(showMore().length, 0);
 });
+
+test('a metal is counted by its weight and other holdings in units (INV-051)', () => {
+ const { holdingQuantity } = loadTS('lib/asset-movements.ts');
+ const t = (key, values = {}) => key.replace(/\{(\w+)\}/g, (_, name) => String(values[name]));
+ assert.equal(holdingQuantity(t, { kind: 'Precious metals', metal_unit: 'oz' }, 6, 'en'), '6 troy oz');
+ assert.equal(holdingQuantity(t, { kind: 'Precious metals', metal_unit: 'g' }, 100, 'en'), '100 g');
+ assert.equal(holdingQuantity(t, { kind: 'Stock' }, 4, 'en'), '4 units');
+ assert.equal(holdingQuantity(t, { kind: 'Crypto' }, 1, 'en'), '1 unit');
+});
+
+test('holding rows and Recently deleted show amounts in the display currency, quotes with their decimals (XAPP-020)', async () => {
+ const money = displayMoney({ currency: 'EUR', rates: { EUR: 0.9 } });
+ assert.equal(money.show(711.28, 'USD', true), formatMoney(711.28 * 0.9, 'EUR', 'en', true));
+ assert.equal(money.show(2845, 'USD'), formatMoney(2845 * 0.9, 'EUR', 'en'));
+ const fs = await import('node:fs');
+ for (const file of ['components/planning/accounts/holding-rows.tsx', 'components/recently-deleted.tsx']) {
+  const source = fs.readFileSync(file, 'utf8');
+  assert.match(source, /useDisplayMoney\(\)/, file);
+  assert.doesNotMatch(source, /formatMoney\(/, file + ' formats no amount in its own currency');
+ }
+});

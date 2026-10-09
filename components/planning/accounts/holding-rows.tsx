@@ -5,11 +5,11 @@ import { CategoryIcon } from '@/components/presentation-foundation/category-icon
 import { useLanguage } from '@/components/language-provider';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { NativeSelect } from '@/components/ui/native-select';
-import { formatMoney } from '@/lib/format';
+import { useDisplayMoney } from '@/components/display-money';
 import type { HoldingAccount } from '@/lib/holding-accounts';
 import { value, type Entry } from '@/lib/finance';
 import { marketEntry, type MarketData } from '@/lib/market';
-import { isHolding, unitCount } from '@/lib/asset-movements';
+import { holdingQuantity, isHolding } from '@/lib/asset-movements';
 import type { MovementDraft } from '../asset-movement-dialog';
 import { AccountMenu } from './account-menu';
 
@@ -23,13 +23,14 @@ export type HoldingActions = {
 
 function HoldingRow({ record, accounts, market, onEdit, onTrack, assignHolding, onMove, onCorporate }: HoldingActions & { record: Entry }) {
  const { t, locale } = useLanguage();
+ const { show } = useDisplayMoney();
  const [busy, setBusy] = useState(false), [error, setError] = useState('');
  const priced = marketEntry(record, record.currency, market) ?? record;
  async function assign(accountId: string|null) {
   setBusy(true);setError('');
   try{await assignHolding(record,accountId);}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}
  }
- return <li className="account-holding-row"><CategoryIcon kind={record.kind}/><div><strong>{record.name}</strong><p className="muted">{isHolding(record)?<>{unitCount(t, record.quantity, locale)} · {formatMoney(priced.amount, record.currency, locale, true)} {t('per unit')}</>:t('Available cash')}</p></div><strong className="account-holding-value">{formatMoney(value(priced), record.currency, locale)}</strong>
+ return <li className="account-holding-row"><CategoryIcon kind={record.kind}/><div><strong>{record.name}</strong><p className="muted">{isHolding(record)?<>{holdingQuantity(t, record, record.quantity, locale)} · {show(priced.amount, record.currency, true)} {t('per unit')}</>:t('Available cash')}</p></div><strong className="account-holding-value">{show(value(priced), record.currency)}</strong>
   <div className="account-holding-actions"><label><span className="sr-only">{t('Investment account')}</span><NativeSelect value={record.holding_account_id??''} disabled={busy} onChange={event=>void assign(event.target.value||null)}><option value="">{t('No investment account')}</option>{accounts.filter(account=>record.kind==='Cash'||account.kind===record.kind).map(account=><option key={account.id} value={account.id}>{account.name}</option>)}</NativeSelect></label><AccountMenu name={record.name}>{isHolding(record)&&<><DropdownMenuItem onSelect={()=>onMove({kind:'buy',target_id:record.id})}>{t('Buy')}</DropdownMenuItem><DropdownMenuItem onSelect={()=>onMove({kind:'sell',source_id:record.id})}>{t('Sell / convert')}</DropdownMenuItem><DropdownMenuItem onSelect={()=>onCorporate(record)}>{t('Investment events')}</DropdownMenuItem></>}{onTrack&&<DropdownMenuItem onSelect={()=>onTrack(record)}>{t('Tracker')}</DropdownMenuItem>}<DropdownMenuItem onSelect={()=>onEdit(record)}>{t('Edit')}</DropdownMenuItem></AccountMenu></div>
   <ErrorPopup message={error}/>
  </li>;

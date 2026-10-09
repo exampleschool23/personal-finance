@@ -9,7 +9,7 @@ import { accountActivityPage } from '@/lib/account-activity-page';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { income, type Entry } from '@/lib/finance';
 import { decimalSum } from '@/lib/decimal-amounts';
-import { isHolding, unitCount } from '@/lib/asset-movements';
+import { holdingQuantity, isHolding } from '@/lib/asset-movements';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { emptyPlanning, type PlanningData } from '@/lib/planning';
 
@@ -29,7 +29,7 @@ function OperationsTable({ activity, data, fallback }: { activity: Activity; dat
 function MovementsTable({ activity, data, fallback }: { activity: Activity; data: PlanningData; fallback: string }) {
  const { t, locale } = useLanguage();
  if(!activity.movements.length)return null;
- const amount=(record:Entry|undefined,n:number)=>record&&isHolding(record)?unitCount(t,n,locale):formatMoney(n,record?.currency??fallback,locale);
+ const amount=(record:Entry|undefined,n:number)=>record&&isHolding(record)?holdingQuantity(t,record,n,locale):formatMoney(n,record?.currency??fallback,locale);
  return <div className="table-scroll"><table><thead><tr><th>{t('Date')}</th><th>{t('Activity')}</th><th>{t('From')}</th><th>{t('To')}</th></tr></thead><tbody>{activity.movements.map(item=>{const source=data.records.find(record=>record.id===item.source_id),target=data.records.find(record=>record.id===item.target_id);return <tr key={item.id}><td>{formatDate(item.occurred_on,locale)}</td><td>{t(movementLabels[item.kind])}{item.notes&&<small className="block">{item.notes}</small>}</td><td>{item.kind==='interest'?'—':<>{source?.name}<small className="block">{amount(source,item.sent)}</small></>}</td><td>{target?.name}<small className="block">{amount(target,item.received)}</small></td></tr>;})}</tbody></table></div>;
 }
 

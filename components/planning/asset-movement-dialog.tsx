@@ -14,7 +14,7 @@ import { useLanguage } from '@/components/language-provider';
 import { formatAccountOption, formatMoney } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
 import { decimalSum } from '@/lib/decimal-amounts';
-import { isHolding, movementSources, unitCount, movementTargets, type AssetMovement, type MovementKind } from '@/lib/asset-movements';
+import { isHolding, movementSources, holdingQuantity, movementTargets, type AssetMovement, type MovementKind } from '@/lib/asset-movements';
 import type { Entry } from '@/lib/finance';
 import type { HoldingAccount } from '@/lib/holding-accounts';
 
@@ -46,7 +46,7 @@ export function AssetMovementDialog({initial,records,accounts=[],save,onClose}:{
  const blocked=valid||submitted?undefined:movementBlocker({draft,source,target,available,amounts:interest?[received,targetValue]:[sourceValue,received,targetValue],rateIssue:crossTransfer&&!rate?(fx.error?'Check the dated exchange rate.':'Loading exchange rate for the selected date…'):undefined});
  const title={transfer:'Transfer money',buy:'Buy holding',sell:'Sell / convert holding',interest:'Record capitalized interest'}[draft.kind];
  const accountName=(record:Entry)=>{const parent=accounts.find(account=>account.id===record.holding_account_id);return `${parent?parent.name+' · ':''}${isHolding(record)?`${record.name} · ${record.currency}`:formatAccountOption(record,locale)}`;};
- const units=(record:Entry,amount:number)=>isHolding(record)?unitCount(t,amount,locale):formatMoney(amount,record.currency,locale);
+ const units=(record:Entry,amount:number)=>isHolding(record)?holdingQuantity(t,record,amount,locale):formatMoney(amount,record.currency,locale);
  const blockedReason=!blocked?undefined:source?t(blocked,{amount:units(source,available)}):t(blocked);
  const change=(name:keyof typeof draft,value:string|number)=>setDraft({...draft,[name]:value});
  const [initialDraft]=useState(()=>JSON.stringify(draft));
