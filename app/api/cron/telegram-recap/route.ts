@@ -6,7 +6,7 @@ import { translate } from '@/lib/i18n';
 import { periodTotals, shiftDay, topCategory } from '@/lib/period-summary';
 import { recapMessage } from '@/lib/recap-message';
 import { serviceDatabase } from '@/lib/service-role';
-import { sendTelegramMessage, telegramConfig } from '@/lib/telegram';
+import { deliverTelegramMessage, telegramConfig } from '@/lib/telegram';
 import { deliverToSubscribers, ownerProfile, ownerCashflowSince, ownerSpendingExtras, recentSnapshots } from '@/lib/telegram-owner';
 export const maxDuration=60;
 /** Sends each linked owner the recap of the seven days ending today (scheduled for Sunday evening). One owner's failure never blocks the others. */
@@ -17,7 +17,7 @@ export async function GET(req:Request){
  const to=depositToday(),from=shiftDay(to,-6),shareOrigin=accountOrigin();
  try{
   // One recap per owner and week, keyed by its last day: a retried or overlapping run skips the owners already sent.
-  const {sent,failed}=await deliverToSubscribers(db,{kind:'recap',period:to},async({user_id,chat_id})=>{
+  const {sent,failed,blocked}=await deliverToSubscribers(db,{kind:'recap',period:to},async({user_id,chat_id})=>{
     const [records,categories,profile,snapshots,goalEvents]=await Promise.all([
      // Only the week's own cash flow counts.
      ownerCashflowSince(db,user_id,from),
@@ -31,9 +31,9 @@ export async function GET(req:Request){
     // Built-in categories are translated; an added category shows the owner's own name.
     const label=best&&(best.key.startsWith('c:')?categories.find(category=>category.id===best.key.slice(2))?.name:translate(profile.language,best.key.slice(2)));
     const message=recapMessage({name:profile.name,currency:profile.currency,from,to,income:totals.income,spending:totals.spending,missing:totals.missing,top:best&&label?{label,amount:best.amount}:null,goalsMoved:new Set(goalEvents.map(event=>event.goal_id)).size,shareOrigin},profile.language);
-    return sendTelegramMessage({chat_id,...message},config);
+    return deliverTelegramMessage({chat_id,...message},config);
   });
-  if(failed)await reportError('cron:telegram-recap','Some Telegram recaps were not delivered.',{route:'/api/cron/telegram-recap',status:503,counts:{sent,failed}},{alert:true});
-  return Response.json({sent,failed},{status:failed?503:200,headers:{'Cache-Control':'no-store'}});
- }catch(error){await reportError('cron:telegram-recap',error,{route:'/api/cron/telegram-recap',status:503},{alert:true});return Response.json({error:'Telegram recap failed. Recaps already sent are not repeated on retry.',sent:0,failed:0},{status:503});}
+  if(failed)await reportError('cron:telegram-recap','Some Telegram recaps were not delivered.',{route:'/api/cron/telegram-recap',status:503,counts:{sent,failed,blocked}},{alert:true});
+  return Response.json({sent,failed,blocked},{status:failed?503:200,headers:{'Cache-Control':'no-store'}});
+ }catch(error){await reportError('cron:telegram-recap',error,{route:'/api/cron/telegram-recap',status:503},{alert:true});return Response.json({error:'Telegram recap failed. Recaps already sent are not repeated on retry.',sent:0,failed:0,blocked:0},{status:503});}
 }

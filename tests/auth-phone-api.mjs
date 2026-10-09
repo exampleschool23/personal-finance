@@ -31,6 +31,17 @@ test('the SMS hook sends the code to the Telegram chat of the account, in its la
  assert.match(sent[0].message.text,/<code>123456<\/code>/);assert.ok(!sent[0].message.text.includes('+998'));
  assert.equal(sent[0].used,config);
 });
+test('the SMS hook refuses an oversized body before checking its signature, with or without a Content-Length',async()=>{
+ const db=botDb({telegram_subscriptions:[subscription({chat_id:777})]}),sent=[],route=sendSms(db,sent);
+ const big={...payload,padding:'x'.repeat(70_000)},signed=hookRequest(big);
+ assert.equal((await route.POST(signed)).status,413);
+ const {headers}=hookRequest(big),raw=JSON.stringify(big);
+ const streamed=new Request('https://app.local/api/auth/send-sms-hook',{method:'POST',duplex:'half',headers:Object.fromEntries(headers),body:new ReadableStream({start(controller){for(let at=0;at<raw.length;at+=8000)controller.enqueue(new TextEncoder().encode(raw.slice(at,at+8000)));controller.close();}})});
+ assert.equal(streamed.headers.get('content-length'),null);assert.equal((await route.POST(streamed)).status,413);
+ assert.equal(sent.length,0);
+ // An ordinary call still goes through.
+ assert.equal((await route.POST(hookRequest(payload))).status,200);
+});
 test('the SMS hook refuses unsigned, tampered, stale and malformed calls before touching anything',async()=>{
  const db=botDb({telegram_subscriptions:[subscription({chat_id:777})]}),sent=[],route=sendSms(db,sent);
  const bad=[

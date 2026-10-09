@@ -21,7 +21,7 @@ test('account deletion keeps the account when its stored files cannot be removed
  const jar={get:()=>undefined,set:()=>{},delete:()=>{}};
  let storage=500;
  const route=loadTS('app/api/account-access/route.ts',{'next/headers':{cookies:async()=>jar},'@/lib/rate-limit':limiter().module,'@/lib/supabase':{session:async()=>({user:{id:owner,phone:'+10000000000'},token:'owner'}),sameOrigin:()=>true,config:()=>({url:'https://supabase.invalid'}),saveSession:async()=>{},
-  supa:async path=>path.startsWith('/rest/v1/record_attachments')?Response.json([{id:other,path:`${owner}/${other}/${other}.pdf`}]):path.startsWith('/storage/')?new Response('{}',{status:storage}):Response.json({})}});
+  supa:async path=>path.startsWith('/rest/v1/record_attachments')?Response.json([{id:other,path:`${owner}/${other}/${other}.pdf`}]):path.startsWith('/storage/v1/object/list/')?Response.json([]):path.startsWith('/storage/')?new Response('{}',{status:storage}):Response.json({})}});
  await withEnv({SUPABASE_SERVICE_ROLE_KEY:'test-admin-key'},async()=>{
   const failed=await route.POST(post('/api/account-access',{action:'delete_account',confirmation:'DELETE'}));
   assert.equal(failed.status,503);assert.deepEqual(await failed.json(),{error:'Could not delete the account. Please try again.'});
@@ -50,7 +50,7 @@ test('removing an attachment deletes its row only after the file is gone',async(
 function binRoute(storageOk){
  const reports=[],calls=[];
  const route=loadTS('app/api/deleted-items/route.ts',{'@/lib/monitoring':{reportError:async(source,error,context)=>{reports.push({source,context});}},'@/lib/supabase':{session:async()=>({user:{id:owner},token:'owner'}),sameOrigin:()=>true,
-  supa:async(path,init)=>{calls.push({path,body:init?.body});return path.startsWith('/storage/')?new Response('{}',{status:storageOk?200:500}):path.endsWith('forget_attachments')?Response.json(1):Response.json({paths:[`${owner}/${other}/${other}.pdf`,`${other}/x/y.pdf`]});}}});
+  supa:async(path,init)=>{if(path.startsWith('/storage/v1/object/list/')||path.startsWith('/rest/v1/record_attachments'))return Response.json([]);calls.push({path,body:init?.body});return path.startsWith('/storage/')?new Response('{}',{status:storageOk?200:500}):path.endsWith('forget_attachments')?Response.json(1):Response.json({paths:[`${owner}/${other}/${other}.pdf`,`${other}/x/y.pdf`]});}}});
  const purge=()=>route.DELETE(new Request('https://local/api/deleted-items',{method:'DELETE',body:JSON.stringify({id:other})}));
  return {reports,calls,purge};
 }
@@ -84,6 +84,18 @@ test('signed-in market reads and portfolio saves are counted per person against 
  loads.length=0;
  const snapshots=loadTS('app/api/portfolio-snapshots/route.ts',{'@/lib/rate-limit':limited.module,'@/lib/supabase':{session:async()=>({user:{id:owner},token:'owner'}),sameOrigin:()=>true,supa:async()=>Response.json([])},'@/lib/server-market':{loadMarket:async(...args)=>{loads.push(args);return {};}}});
  assert.equal((await snapshots.POST(post('/api/portfolio-snapshots',{}))).status,429);assert.equal(loads.length,0);
+});
+
+test('historical exchange rates are counted per person against the signed-in market limit (API-002)',async()=>{
+ const {limits}=loadTS('lib/rate-limit.ts');
+ let over=new Set(['market-user']);const loads=[];
+ const route=loadTS('app/api/exchange-rate/route.ts',{'@/lib/rate-limit':{limits,rateLimited:async(req,name,list,key,options)=>{loads.push({name,list,key,options});return over.has(name);}},'@/lib/supabase':{session:async()=>({user:{id:owner},token:'owner'})},'@/lib/dated-exchange-rate':{loadDatedExchangeRate:async(...args)=>{loads.push(args);return {rate:2,effective_date:'2026-10-01'};}}});
+ const read=()=>route.GET(new Request('https://local/api/exchange-rate?from=USD&to=EUR&date=2026-10-01'));
+ assert.equal((await read()).status,429);
+ assert.deepEqual(loads,[{name:'market-user',list:limits.market,key:owner,options:{perIp:false}}],'no rate is fetched once over the limit');
+ over=new Set();loads.length=0;
+ const response=await read();assert.equal(response.status,200);assert.deepEqual(await response.json(),{rate:2,effective_date:'2026-10-01'});
+ assert.deepEqual(loads.at(-1),['USD','EUR','2026-10-01']);
 });
 
 test('Telegram sign-in is rate limited per address and per Telegram user',async()=>{
@@ -152,6 +164,25 @@ test('a password sign-in the provider throttles answers 429',async()=>{
  const route=loadTS('app/api/auth/route.ts',{'next/headers':{cookies:async()=>({get:()=>undefined})},'@/lib/rate-limit':limiter().module,'@/lib/supabase':{sameOrigin:()=>true,saveSession:async()=>{},supa:async()=>Response.json({},{status:429})}});
  const response=await route.POST(post('/api/auth',{email:'me@example.com',password:'password1'}));
  assert.equal(response.status,429);assert.deepEqual(await response.json(),{error:'Too many attempts. Please try again later.'});
+});
+
+test('a password sign-in saves only a well-formed session from the provider (API-001)',async()=>{
+ let answer;const saved=[];
+ const route=loadTS('app/api/auth/route.ts',{'next/headers':{cookies:async()=>({get:()=>undefined})},'@/lib/rate-limit':limiter().module,'@/lib/supabase':{sameOrigin:()=>true,saveSession:async value=>{saved.push(value);},supa:async()=>answer()}});
+ const signIn=(body={email:'me@example.com',password:'password1'})=>route.POST(post('/api/auth',body));
+ for(const bad of [{email:5,password:'x'},{email:'me@example.com'},{email:'a'.repeat(255),password:'x'},'not json'])assert.equal((await signIn(bad)).status,400,JSON.stringify(bad));
+ const good={access_token:'access',refresh_token:'refresh',expires_in:3600,user:{id:owner,email:'me@example.com'}};
+ for(const malformed of [{},{...good,access_token:''},{...good,expires_in:'3600'},{...good,user:{id:'x',email:'me@example.com'}},{...good,user:{id:owner}}]){
+  answer=()=>Response.json(malformed);
+  const response=await signIn();
+  assert.equal(response.status,503,JSON.stringify(malformed));assert.deepEqual(await response.json(),{error:'Sign-in is unavailable. Check the Supabase connection.'});
+ }
+ answer=()=>new Response('<html>',{status:200});assert.equal((await signIn()).status,503);
+ assert.equal(saved.length,0,'nothing from a malformed answer is saved');
+ answer=()=>Response.json(good);
+ const response=await signIn();
+ assert.equal(response.status,200);assert.deepEqual(await response.json(),{user:{email:'me@example.com'}});
+ assert.deepEqual(saved,[good]);
 });
 
 test('forecast assignments accept only known currencies, and month and date schemas are shared',async()=>{

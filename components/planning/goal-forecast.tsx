@@ -9,6 +9,7 @@ import { ArrowUpRight, Check, ChevronDown, CircleHelp, RotateCcw, Save, SlidersH
 import { Button } from '@/components/ui/button';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { niceAxis } from '@/lib/chart-scale';
+import { isoDay } from '@/lib/calendar-days';
 import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { ChartGradient, chartAxis, chartDot, chartGrid, chartLine, chartTooltip, chartValueAxis, guideLine, leadArea, referenceLine } from '@/components/presentation-foundation/chart';
 import { Segmented } from '@/components/presentation-foundation/segmented';
@@ -54,7 +55,6 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
   { key: 'required', label: 'Path to your goal', color: 'var(--chart-2)', dash: '6 4' },
   { key: 'target', label: 'Target amount', color: 'var(--muted-foreground)', dash: '3 5' },
  ];
- const isoDate = (time: number) => new Date(time).toISOString().slice(0, 10);
  const reached = result !== null && result.projected >= goal.target - 0.01;
  const progress = result ? Math.max(0, Math.min(100, result.projected / goal.target * 100)) : 0;
  const overBudget = contribution !== null && surplus !== null ? Math.max(0, contribution - Math.max(0, surplus)) : 0;
@@ -137,9 +137,9 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
     <div className="goal-projection-chart" role="region" aria-label={t('Your path to the goal')} tabIndex={0}><div className="goal-chart-canvas"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={points} accessibilityLayer margin={{ top: 24, right: compact?8:24, left: compact?0:8, bottom: 12 }}>
      <ChartGradient id={`${id}-fill`}/>
      <CartesianGrid {...chartGrid}/>
-     <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={time => formatMonthYear(isoDate(Number(time)), locale)} minTickGap={compact?40:80} tickCount={compact?2:5} height={64} {...chartAxis}/>
+     <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={time => formatMonthYear(isoDay(Number(time)), locale)} minTickGap={compact?40:80} tickCount={compact?2:5} height={64} {...chartAxis}/>
      <YAxis hide={compact} tickFormatter={money} domain={axis.domain} ticks={axis.ticks} {...chartValueAxis}/>
-     <Tooltip {...chartTooltip} labelFormatter={time => formatDate(isoDate(Number(time)), locale)} formatter={(amount, name) => [money(Number(amount)), t(lines.find(line => line.key === name)?.label ?? String(name))]}/>
+     <Tooltip {...chartTooltip} labelFormatter={time => formatDate(isoDay(Number(time)), locale)} formatter={(amount, name) => [money(Number(amount)), t(lines.find(line => line.key === name)?.label ?? String(name))]}/>
      <ReferenceLine x={Date.parse(today + 'T00:00:00Z')} {...referenceLine} label={{ value: t('Today'), position: 'insideBottomLeft', offset: 8, fill: 'var(--muted-foreground)', fontSize: 13 }} />
      {!hidden.includes('projected') && <Area dataKey="projected" {...leadArea(`${id}-fill`)}/>}
      {lines.filter(line => line.key !== 'projected' && line.key !== 'actual' && !hidden.includes(line.key)).map(line => <Line key={line.key} dataKey={line.key} {...(line.key === 'target' ? guideLine : chartLine)} stroke={line.color} strokeDasharray={line.dash} connectNulls={false}/>)}

@@ -1,4 +1,4 @@
-import { shiftDay, shiftMonth } from './calendar-days';
+import { addMonths, shiftDay, shiftMonth } from './calendar-days';
 import { defaultComparisonPreferences, isInvestmentRecord } from './comparison-profile';
 import { assets, expenses, income, interestKinds, liabilities, scheduleDates, unitPricedKinds, value, type Entry } from './finance';
 import { withAssetIncomePlans } from './earning-sources';
@@ -99,7 +99,7 @@ export function demoRecords(today: string): Entry[] {
 }
 
 export function demoGoals(today: string): Goal[] {
- const months = (count: number) => { const date = new Date(today + 'T00:00:00Z'); date.setUTCMonth(date.getUTCMonth() + count); return date.toISOString().slice(0, 10); };
+ const months = (count: number) => addMonths(today, count);
  return [
   { id: 'demo-goal-mortgage', name: 'Pay $50K off the mortgage', kind: 'savings', account_id: 'demo-savings', currency: 'USD', target: 50000, allocated: 22000, target_date: months(14), archived: false, funding_enabled: true, funding_priority: 1, monthly_contribution: 2000, annual_return: 0 },
   { id: 'demo-goal-emergency', name: 'Emergency fund', kind: 'savings', account_id: 'demo-savings', currency: 'USD', target: 36000, allocated: 30000, target_date: months(6), archived: false, funding_enabled: true, funding_priority: 2, monthly_contribution: 1000, annual_return: 0 },

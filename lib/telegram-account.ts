@@ -6,6 +6,7 @@
 // is TELEGRAM_LOGIN_SECRET; before it is set, the webhook secret stands in, and
 // accounts made then move to the login secret on their next sign-in.
 import {createHash,createHmac,randomBytes} from 'node:crypto';
+import {reportError} from './monitoring';
 import {serviceKeyHeaders,type ServiceDatabase} from './service-role';
 export const loginTokenMinutes=5;
 /** The password of an account created in Telegram. Derived, never stored or shown, and recomputed whenever the server signs that person in. */
@@ -44,7 +45,10 @@ export function adminAccounts(env:Record<string,string|undefined>=process.env,fe
    const response=await call('/auth/v1/admin/users/'+userId,'PUT',{password});
    if(!response.ok)throw Error('Could not update the password.');
   },
-  async deleteUser(userId){await call('/auth/v1/admin/users/'+userId,'DELETE').catch(()=>null);},
+  async deleteUser(userId){
+   const response=await call('/auth/v1/admin/users/'+userId,'DELETE').catch(()=>null);
+   if(!response?.ok)throw Error('Could not remove the account.');
+  },
  };
 }
 export type TelegramPerson={chatId:number;telegramUserId:number;phone:string;firstName:string;language:string;now:Date};
@@ -58,7 +62,11 @@ export async function createTelegramAccount(deps:{db:ServiceDatabase;admin:Admin
   if(!preferences.ok)throw Error('Database request failed.');
   const subscription=await deps.db.write('/rest/v1/telegram_subscriptions?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({user_id:userId,chat_id:person.chatId,telegram_user_id:person.telegramUserId,phone:person.phone,first_name:person.firstName.trim().slice(0,80)||null,linked_at:at,consented_at:at,digest_enabled:true,actions_enabled:true,updated_at:at})});
   if(!subscription.ok)throw Error('Database request failed.');
- }catch(error){await deps.admin.deleteUser(userId);throw error;}
+ }catch(error){
+  // An account left behind holds the number, so the person could not sign up again: the operator is alerted to remove it.
+  await deps.admin.deleteUser(userId).catch(undo=>reportError('telegram-signup',undo,{userId},{alert:true}));
+  throw error;
+ }
  return {userId};
 }
 /** Single-use tokens are stored only as this hash. */

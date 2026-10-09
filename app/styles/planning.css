@@ -3,7 +3,7 @@
 /* Planning pages reuse the finance panel, form and table styles. */
 .planning-check { display:flex; align-items:center; gap:10px; padding:10px 0; }
 .planning-check input { width:auto; }
-.import-preview { max-height:360px; overflow:auto; }
+.import-preview { max-height:400px; overflow:auto; margin-block:16px; }
 .record-filters { display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin:18px 0; }
 .record-filters > label { display:grid; gap:6px; flex:1; min-width:150px; }
 .record-filters > input { flex:2; min-width:200px; }
@@ -103,7 +103,7 @@
 .goal-chart-legend button:hover{background:var(--muted)}
 .goal-chart-legend i{width:10px;height:10px}
 .goal-projection-chart{width:100%;height:480px;margin:20px 0;min-width:0;overflow-x:auto;overscroll-behavior-x:contain}
-.goal-chart-canvas{width:100%;min-width:640px;height:100%}
+.goal-chart-canvas{width:100%;min-width:0;height:100%}
 .workspace .content .goal-milestones :is(th,td){font-size:var(--type-small)}
 .goal-chart-section .goal-milestones{max-height:480px;min-height:360px;margin-top:16px;font-size:var(--type-small)}
 .goal-method{border-top:1px solid var(--border);margin-top:26px;padding-top:18px;font-size:var(--type-small);color:var(--muted-foreground)}
@@ -202,7 +202,6 @@
 .instrument-popover [data-slot="command"]{height:100%;min-height:0}
 .instrument-popover [data-slot="command-input-wrapper"],.instrument-popover .instrument-help{flex-shrink:0}
 .instrument-popover [data-slot="command-list"]{flex:1;min-height:0;max-height:none;scrollbar-gutter:stable}
-.portfolio-editor-dialog{scrollbar-gutter:stable}
 .instrument-popover [data-slot="command-input-wrapper"]{height:auto;min-height:48px}
 .instrument-popover [data-slot="command-input"]{min-width:0;font-size:var(--type-body)}
 

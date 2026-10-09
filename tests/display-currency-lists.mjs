@@ -100,3 +100,91 @@ test('holding rows and Recently deleted show amounts in the display currency, qu
   assert.doesNotMatch(source, /formatMoney\(/, file + ' formats no amount in its own currency');
  }
 });
+
+// Screens mounted with the display currency EUR (1 USD = 0.9 EUR) and no GBP rate: every amount reads in euros, and a
+// pound amount reads "—" with the "Exchange rate unavailable." note, never under its own label (MONEY-008).
+const eur = value => formatMoney(value, 'EUR', 'en');
+const inEuros = { '@/components/display-money': { useDisplayMoney: () => displayMoney({ currency: 'EUR', rates: { EUR: 0.9 } }) }, '@/components/language-provider': language('en') };
+const market = { rates: { EUR: 0.9 }, fx: null, quotes: {}, errors: {}, stocksConfigured: false };
+const entry = (id, kind, currency, amount, extra = {}) => ({ id, name: id, kind, currency, amount, quantity: 1, cost: 0, rate: 0, date: '2026-10-01', frequency: 'Once', notes: '', ...extra });
+const missingRate = shown => { assert.ok(shown.includes('—'), shown); assert.ok(shown.includes('Exchange rate unavailable.'), shown); assert.doesNotMatch(shown, /£|GBP|\$/, shown); };
+const mountScreen = (file, name, props, modules = {}) => { const r = createRenderer(), ui = stubs(); const Component = r.load(file, { ...ui.modules, ...inEuros, ...modules })[name]; r.mount(React.createElement(Component, props)); return text(r.tree); };
+const foundation = (...names) => Object.fromEntries(names.map(name => ['@/components/presentation-foundation/' + name, hostModule()]));
+
+test('Recurring › Reminders lists each reminder in the display currency (MONEY-008)', () => {
+ const reminders = [{ key: 'rent', record: entry('Rent', 'Rent expense', 'USD', 1000), amount: 1000, date: '2026-10-10', overdue: false }, { key: 'tv', record: entry('Licence', 'Other expense', 'GBP', 50), amount: 50, date: '2026-10-12', overdue: true }];
+ const panel = list => mountScreen('components/reminder-panel.tsx', 'ReminderPanel', { data: {}, preferences: { data: { preferences: [] }, save: async () => {} } }, { '@/lib/daily-finance': { dueReminders: () => list }, ...foundation('panel-title') });
+ const shown = panel(reminders);
+ assert.ok(shown.includes(eur(900)), shown);
+ missingRate(shown);
+ assert.ok(!panel(reminders.slice(0, 1)).includes('Exchange rate unavailable.'), 'the note only when a rate is missing');
+});
+
+test('Transactions suggestions and duplicates show amounts in the display currency (MONEY-008)', () => {
+ const insights = { cadenceLabels: { monthly: 'Monthly' }, recurringPlanDraft: () => ({}), recurringSuggestions: () => [{ id: 's', record: entry('Gym', 'Other expense', 'USD', 50), cadence: 'monthly', next: '2026-11-01', changed: true, previous: 40 }], suspectedDuplicates: () => [[entry('Coffee', 'Other expense', 'GBP', 10), entry('Coffee', 'Other expense', 'GBP', 10)]] };
+ const shown = mountScreen('components/transaction-insights.tsx', 'TransactionInsights', { owner: null, records: [], today: '2026-10-09', onReview() {} }, { '@/lib/recurring-insights': insights, '@/hooks/use-owner-resource': { useOwnerResource: () => ({}) }, '@/lib/planning': { emptyPlanning: {} }, ...foundation('resource-state') });
+ assert.ok(shown.includes(eur(45)) && shown.includes('Last amount changed from ' + eur(36) + '.'), shown);
+ missingRate(shown);
+});
+
+test('a business’s other assets and debts read in the display currency, a debt with its minus (MONEY-008)', () => {
+ const shown = mountScreen('components/planning/accounts/business-holdings.tsx', 'BusinessHoldings', { records: [entry('Van', 'Vehicle', 'USD', 1000), entry('Credit', 'Loan', 'USD', 500), entry('Shop', 'Property', 'GBP', 100)], market }, foundation('category-icon', 'count', 'panel-title'));
+ assert.ok(shown.includes(eur(900)) && shown.includes('−' + eur(450)), shown);
+ assert.ok(!shown.includes('−—'), 'a debt without a rate is just missing');
+ missingRate(shown);
+});
+
+test('monthly mortgage payments convert, and without a rate read as missing (MONEY-008)', () => {
+ const props = { records: [entry('Home', 'Mortgage', 'USD', 100000, { estimated_monthly_payment: 1000 }), entry('Flat', 'Mortgage', 'GBP', 80000, { estimated_monthly_payment: 700 })], currency: 'EUR', market, loading: false, error: '', onPay() {}, onEdit() {} };
+ const shown = mountScreen('components/monthly-mortgage-payments.tsx', 'MonthlyMortgagePayments', props, foundation('category-icon', 'inline-error', 'panel-title', 'row-menu', 'loading-placeholder'));
+ assert.ok(shown.includes(eur(900)) && shown.includes(eur(90000)), shown);
+ missingRate(shown);
+});
+
+const AssetCard = Object.assign(({ record, worth, fact, note, details }) => React.createElement('article', { 'data-id': record.id }, worth, ' ', fact?.value, note, details), { displayName: 'AssetCard' });
+const assetModules = { '@/components/presentation-foundation/asset-card': { AssetCard }, ...foundation('count', 'inline-error', 'loading-placeholder', 'partial-total', 'empty-state', 'animated-money', 'segmented', 'pagination'), 'next/link': hostModule(), 'lucide-react': hostModule(), '@/components/ui/dropdown-menu': hostModule() };
+
+test('an investment account card shows its total and each holding in the display currency (MONEY-008)', () => {
+ const account = (id, currency) => ({ id, kind: 'Stock', name: id, currency });
+ const holdings = [entry('AAA', 'Stock', 'USD', 100, { quantity: 2, holding_account_id: 'usd' }), entry('BBB', 'Stock', 'GBP', 10, { holding_account_id: 'usd' }), entry('CCC', 'Stock', 'USD', 50, { holding_account_id: 'pounds' })];
+ const card = (accounts, records) => mountScreen('components/asset-accounts.tsx', 'AssetAccounts', { currency: 'EUR', portfolioTotal: 1000, onEdit() {}, onTrack() {}, demo: false, accountCount: 0, children: null, accounts, records, market, loading: false, error: '', onRetry() {}, onAdd() {} }, assetModules);
+ const shown = card([account('usd', 'USD')], holdings.slice(0, 1));
+ assert.equal(shown.split(eur(180)).length - 1, 2, 'the total and the holding both in euros: ' + shown);
+ assert.doesNotMatch(shown, /\$/);
+ // A USD account's pound holding reads "—", and so does the account total that needs it.
+ const partial = card([account('usd', 'USD')], holdings.slice(0, 2));
+ assert.ok(partial.startsWith('Accounts') && partial.includes('— ') && partial.includes('BBB—') && partial.includes('The account total is unavailable.') && !/£|\$/.test(partial), partial);
+ // A GBP account (no rate) never shows its total in pounds; its dollar holding still converts.
+ const pounds = card([account('pounds', 'GBP')], holdings.slice(2));
+ assert.ok(pounds.includes(eur(45)) && pounds.includes('—') && !pounds.includes('£'), pounds);
+});
+
+test('a holding card converts, its converted price per unit reads to the cent, and one without a rate reads as missing (MONEY-006, MONEY-008)', () => {
+ const props = { accounts: [], accountsLoading: false, accountsError: '', onRetryAccounts() {}, onAddHolding() {}, currency: 'EUR', market, netWorth: 0, debt: 0, forecast: {}, forecastReady: true, loading: false, demo: false, onAdd() {}, onEdit() {}, onTrack() {}, onDelete() {}, quoteLabel: () => 'Manual' };
+ const dashboard = records => mountScreen('components/asset-dashboard.tsx', 'AssetDashboard', { ...props, records }, { ...assetModules, '@/components/asset-accounts': hostModule() });
+ const shown = dashboard([entry('AAA', 'Stock', 'USD', 711.28, { quantity: 2 })]);
+ assert.ok(shown.includes(eur(1280.304)) && shown.includes('€640.15'), shown);
+ assert.doesNotMatch(shown, /€\d+\.\d{3,}/, 'no calculation tail');
+ // A quote already in the display currency keeps the decimals the person typed.
+ assert.ok(dashboard([entry('BBB', 'Stock', 'EUR', 0.12345678)]).includes('€0.12345678'));
+ // Without a rate the worth, gain and price read "—"; only the labelled saved value keeps the record's own currency.
+ missingRate(dashboard([entry('CCC', 'Stock', 'GBP', 10, { cost: 5 })]).replace(/Saved value.*/, ''));
+});
+
+test('a schedule’s details convert its totals, payments and chart, and without a rate the chart gives way to a note (MONEY-008)', () => {
+ const pay = entry('Pay', 'Salary', 'USD', 1000, { date: '2026-08-15', frequency: 'Monthly' });
+ const data = currency => ({ records: [{ ...pay, currency }, entry('a', 'Salary', currency, 800, { date: '2026-08-15' })], occurrences: [{ id: 'o', record_id: 'Pay', due_on: '2026-08-15', status: 'paid', transaction_id: 'a' }], debtPayments: [] });
+ const item = currency => ({ key: 'Pay:2026-10-15', record: { ...pay, currency }, date: '2026-10-15', status: 'due', direction: 'income', amount: 1000 });
+ const h = React.createElement, pass = name => Object.assign(({ children, data: points }) => h('div', { 'data-part': name, 'data-points': points && JSON.stringify(points) }, children), { displayName: name });
+ const recharts = { ...Object.fromEntries(['ResponsiveContainer', 'BarChart', 'CartesianGrid', 'XAxis', 'YAxis', 'Tooltip'].map(name => [name, pass(name)])), Bar: () => h('span', { 'data-bar': true }) };
+ const r = createRenderer();
+ const { RecurringDetails } = r.load('components/planning/recurring-details.tsx', { ...stubs().modules, ...inEuros, recharts, '@/components/presentation-foundation/rolling-text': { RollingText: ({ text: value }) => value } });
+ r.mount(React.createElement(RecurringDetails, { item: item('USD'), data: data('USD'), today: '2026-10-20', onClose() {} }));
+ const shown = text(r.tree);
+ assert.ok(shown.includes(eur(900)) && shown.includes(eur(720)) && !shown.includes('$'), shown);
+ const points = JSON.parse(r.find(node => node.props?.['data-part'] === 'BarChart').props['data-points']);
+ assert.deepEqual(points.find(point => point.month === '2026-08'), { month: '2026-08', scheduled: 900, recorded: 720 });
+ r.mount(React.createElement(RecurringDetails, { item: item('GBP'), data: data('GBP'), today: '2026-10-20', onClose() {} }));
+ missingRate(text(r.tree));
+ assert.equal(r.all(node => node.props?.['data-bar']).length, 0);
+});

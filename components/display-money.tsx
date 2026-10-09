@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, type ReactNode } from 'react';
 import { useLanguage } from '@/components/language-provider';
-import { formatMoney, formatSignedMoney } from '@/lib/format';
+import { formatConvertedQuote, formatMoney, formatSignedMoney } from '@/lib/format';
 import { convertAmount } from '@/lib/market';
 
 type Rates = number | Record<string, number> | undefined;
@@ -23,12 +23,11 @@ export function useDisplayMoney() {
  const currency = display?.currency;
  const convert = (amount: number, from: string): number | null => display ? convertAmount(amount, from, display.currency, display.rates) : amount;
  /** `unitPrice` keeps a quote's decimals (up to eight), as `formatMoney` does. A quote converted into another currency
-  * has no decimals of its own, so it reads to the cent, or four significant digits below one: €635.14, not €635.13676472. */
+  * reads through `formatConvertedQuote`: €635.14, not €635.13676472. */
  const show = (amount: number, from: string, unitPrice = false): string => {
-  const value = convert(amount, from);
+  const value = convert(amount, from), to = currency ?? from;
   if (value === null) return '—';
-  const shown = unitPrice && (currency ?? from) !== from ? (Math.abs(value) >= 1 ? Math.round(value * 100) / 100 : Number(value.toPrecision(4))) : value;
-  return formatMoney(shown, currency ?? from, locale, unitPrice);
+  return unitPrice && to !== from ? formatConvertedQuote(value, to, locale) : formatMoney(value, to, locale, unitPrice);
  };
  const showSigned = (amount: number, from: string): string => { const value = convert(amount, from); return value === null ? '—' : formatSignedMoney(value, currency ?? from, locale); };
  /** Amounts in several currencies added in the display currency; null when one of them cannot be converted. */

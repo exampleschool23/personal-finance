@@ -1,7 +1,8 @@
 // The bot's fixed answers: the welcome and invitation, the number button, web sign-in, signing out, the app link and
 // upcoming payments.
 import {paymentsSection} from '../digest-message';
-import type {Language} from '../i18n';
+import {formatNumber} from '../format';
+import {locales,type Language} from '../i18n';
 import {legalPaths} from '../legal';
 import {debtPaymentsFrom,upcomingPayments,type Occurrence} from '../planning';
 import {ownerRows} from '../owner-rows';
@@ -10,7 +11,7 @@ import {createLoginToken} from '../telegram-account';
 import {connectMinutes,connectStartPath,createConnectRequest,unlinkChat} from '../telegram-connect';
 import {t} from '../telegram-kit';
 import {createdInTelegram,type TelegramSubscription} from '../telegram-link';
-import {ownerRecordsSince} from '../telegram-owner';
+import {ownerDebtPayments,ownerProfile,ownerRecordsSince,recentSnapshots} from '../telegram-owner';
 import type {TelegramMessage} from '../telegram';
 import {ownerLanguage,stranger} from './owner';
 import type {BotEnv,TelegramFrom,Turn} from './types';
@@ -19,7 +20,7 @@ import type {BotEnv,TelegramFrom,Turn} from './types';
 export async function webSignIn({db,chatId,clock,env}:Turn,from:TelegramFrom|undefined,language:Language):Promise<TelegramMessage>{
  if(!env.appOrigin||!from?.id)return {chat_id:chatId,text:t(language,'Registration is not available yet. Please try again later.')};
  const token=await createConnectRequest(db,{chatId,telegramUserId:from.id,firstName:from.first_name??''},clock.now);
- return {chat_id:chatId,text:t(language,'Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.',{minutes:connectMinutes}),keyboard:{inline:[[{text:t(language,'Sign in'),url:`${env.appOrigin}${connectStartPath}?c=${token}`}]]}};
+ return {chat_id:chatId,text:t(language,'Sign in on the web to connect this chat to your account. The link works for {minutes} minutes.',{minutes:formatNumber(connectMinutes,locales[language],0)}),keyboard:{inline:[[{text:t(language,'Sign in'),url:`${env.appOrigin}${connectStartPath}?c=${token}`}]]}};
 }
 /** Sign the chat out. An account that signs in with its number keeps its Telegram identity, so sharing the number returns to it; an account linked from the app is released completely, so the same person can use another account. */
 export async function signOut(db:ServiceDatabase,subscription:TelegramSubscription,now:Date):Promise<TelegramMessage>{
@@ -28,16 +29,17 @@ export async function signOut(db:ServiceDatabase,subscription:TelegramSubscripti
  await db.write('/rest/v1/telegram_drafts?user_id=eq.'+subscription.user_id,{method:'DELETE'});
  return {chat_id:subscription.chat_id!,text:t(language,'You are signed out. Sad to see you go! 👋 Come back any time: send /start and sign in with your phone number or on the web.'),keyboard:{remove:true}};
 }
-/** Payments due in the next 31 days, as the morning digest lists them. */
+/** Payments due in the next 31 days, as the morning digest lists them, in the owner's primary currency at the latest snapshot's rates. */
 export async function upcomingReply(db:ServiceDatabase,owner:string,language:Language,today:string){
- const [records,occurrences,repayments,mortgagePayments]=await Promise.all([
+ const [records,occurrences,[repayments,mortgagePayments],profile,[snapshot]]=await Promise.all([
   // Schedules and debts in full; no cash-flow history, which the payments due never read.
   ownerRecordsSince(db,owner,today),
   ownerRows<Occurrence>(db,'payment_occurrences',owner,'id,record_id,due_on,status'),
-  db.read<Array<{action:string;target_id:string|null;occurred_on:string}>>(`/rest/v1/account_activity?select=action,target_id,occurred_on&action=in.(repayment,mortgage)&user_id=eq.${owner}`),
-  db.read<Array<{mortgage_id:string;paid_on:string}>>(`/rest/v1/mortgage_payments?select=mortgage_id,paid_on&user_id=eq.${owner}`),
+  ownerDebtPayments(db,owner),
+  ownerProfile(db,owner),
+  recentSnapshots(db,owner,1),
  ]);
- return paymentsSection(upcomingPayments(records,occurrences,today,undefined,debtPaymentsFrom(repayments,mortgagePayments)),language,today)??t(language,'No payments due in the next 31 days.');
+ return paymentsSection(upcomingPayments(records,occurrences,today,undefined,debtPaymentsFrom(repayments,mortgagePayments)),language,today,{currency:profile.currency,rates:snapshot?.rates})??t(language,'No payments due in the next 31 days.');
 }
 /** The "your account also works on the web" message. Accounts created in Telegram get one-tap buttons; other accounts get a plain link. */
 export async function openAppReply({db,chatId,clock,env}:Turn,subscription:TelegramSubscription,language:Language):Promise<TelegramMessage|null>{

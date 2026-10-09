@@ -150,3 +150,11 @@ test('tracking cannot start before the first recorded investment', () => {
  assert.equal(effectiveTrackingStart(null, first, today), null);
  assert.equal(effectiveTrackingStart(shiftDay(today, 1), first, today), null);
 });
+
+test('sample goal dates move by calendar months, clamped to the end of a shorter month', () => {
+ const { demoGoals } = loadTS('lib/demo-finance.ts');
+ // 31 August + 6 months is 28 February, not 3 March (setUTCMonth overflow).
+ const dates = Object.fromEntries(demoGoals('2025-08-31').map(goal => [goal.id, goal.target_date]));
+ assert.deepEqual(dates, { 'demo-goal-mortgage': '2026-10-31', 'demo-goal-emergency': '2026-02-28', 'demo-goal-net-worth': '2028-08-31', 'demo-goal-bitcoin': '2027-08-31' });
+ assert.equal(demoGoals('2027-08-31').find(goal => goal.id === 'demo-goal-emergency').target_date, '2028-02-29', 'a leap year keeps 29 February');
+});

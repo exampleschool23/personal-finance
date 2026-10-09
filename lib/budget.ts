@@ -29,7 +29,7 @@ export const flexBucketKey = 'flex:flexible';
 const fixedKinds = ['Rent expense'];
 export const defaultGroups: Record<BudgetDirection | BudgetType, string> = { income: 'Income', expense: 'Everyday spending', fixed: 'Bills & recurring', flexible: 'Everyday spending', non_monthly: 'Future spending' };
 export const budgetTypeLabels: Record<BudgetType, string> = { fixed: 'Fixed', flexible: 'Flexible', non_monthly: 'Non-monthly' };
-const historyMonths = 6;
+export const historyMonths = 6;
 
 export type RolloverFund = { rollover: boolean; rolloverStart: string | null; rolloverBalance: number; rolloverCurrency: string | null; rolloverNegative: boolean };
 export type BudgetCategory = RolloverFund & { key: string; name: string; custom: boolean; direction: BudgetDirection; type: BudgetType; group: string; excluded: boolean };
@@ -145,12 +145,15 @@ export function rolloverBalance(category: BudgetCategory, amounts: readonly Budg
  return rolloverCarry(category, month, startingBalanceIn(category, currency, rates), past => budgetedIn(amounts, category.key, past, currency, rates), past => history.get(past)?.byCategory.get(category.key) ?? 0);
 }
 
-const isFlexibleCategory = (category: BudgetCategory) => category.direction === 'expense' && category.type === 'flexible' && !category.excluded;
+/** A spending category that belongs to the Flexible bucket (excluded ones never do). Rows are categories too. */
+export const isFlexibleCategory = (category: Pick<BudgetCategory, 'direction' | 'type' | 'excluded'>) => category.direction === 'expense' && category.type === 'flexible' && !category.excluded;
 
 /** Sums amounts that may be unknown: null as soon as one of them is. */
 const sumKnown = (values: readonly (number | null)[]) => values.reduce<number | null>((sum, value) => sum === null || value === null ? null : sum + value, 0);
 
-/** The Flexible bucket's plan for one month without any rollover: its saved amount, or the sum of its categories' budgets.
+/** Flex mode plans one amount for the Flexible bucket: its saved amount, or until one is saved, the sum of its categories'
+ * own budgets, so switching style keeps the plan. Never any rollover: in flex mode the bucket's own rollover
+ * (`flexBucketRollover`) carries the leftover, once. Budget, the Overview card and the forecasts all read this.
  * Null when one of them cannot be converted. */
 export function flexBucketPlan(amounts: readonly BudgetAmount[], categories: readonly BudgetCategory[], month: string, currency: string, rates: Rates): number | null {
  if (budgetAmountFor(amounts, flexBucketKey, month)) return budgetedIn(amounts, flexBucketKey, month, currency, rates);
@@ -233,21 +236,15 @@ export function groupRows(rows: readonly BudgetRow[], byType: boolean): BudgetGr
  * two pages never disagree: only goals included in monthly funding count. */
 export const goalContribution = (goal: Goal, today: string) => inFundingPlan(goal, today) ? Math.max(0, Number(fundingBudget(goal) ?? 0)) : 0;
 
-const isFlexible = (row: BudgetRow) => row.direction === 'expense' && row.type === 'flexible' && !row.excluded;
-
-/** Flex mode plans one amount for the Flexible bucket: the saved bucket amount, or until one is saved, the sum of
- * its categories' budgets, so switching style keeps the plan. Null when an amount it needs cannot be converted. */
-export function flexBucketBudget(amounts: readonly BudgetAmount[], rows: readonly BudgetRow[], month: string, currency: string, rates: Rates): number | null {
- if (budgetAmountFor(amounts, flexBucketKey, month)) return budgetedIn(amounts, flexBucketKey, month, currency, rates);
- return sumKnown(rows.filter(isFlexible).map(row => row.missing ? null : (row.budget ?? 0) + row.rolloverIn));
-}
-
 /** In flex mode flexible categories carry no budget of their own: only the bucket is planned, and they show what was spent.
  * Their saved amounts are kept for Category mode, but never shown as a plan the totals ignore. */
 export function budgetRowsForMode(rows: readonly BudgetRow[], mode: BudgetMode): BudgetRow[] {
  if (mode === 'category') return [...rows];
  return rows.map(row => row.direction === 'expense' && row.type === 'flexible' ? { ...row, budget: null, rolloverIn: 0, rolloverMissing: false, remaining: null, progress: 0, missing: false } : row);
 }
+
+/** A row's own plan: null when its budget has no usable rate (an unknown rollover alone keeps a known plan). */
+export const knownPlan = (row: Pick<BudgetRow, 'missing' | 'budget'>) => row.missing && row.budget === null ? null : row.budget ?? 0;
 
 /** Planned figures are null when an amount they add (a budget, the bucket, a goal contribution) has no usable rate:
  * unknown, shown as —, never counted as zero. `missing` counts those amounts for the Exchange rate unavailable note. */
@@ -256,8 +253,7 @@ export type LeftToBudget = { income: number | null; expenses: number | null; con
  * In flex mode the Flexible bucket replaces the sum of its categories. `contributions` is null when one cannot be converted. */
 export function leftToBudget(rows: readonly BudgetRow[], mode: BudgetMode, flexibleBudget: number | null, contributions: number | null, missingContributions = 0): LeftToBudget {
  const active = rows.filter(row => !row.excluded);
- // A row whose own budget is unknown; one with only an unknown rollover still has a known plan.
- const plan = (row: BudgetRow) => row.missing && row.budget === null ? null : row.budget ?? 0;
+ const plan = knownPlan;
  const plannedIncome = sumKnown(active.filter(row => row.direction === 'income').map(plan));
  const others = sumKnown(active.filter(row => row.direction === 'expense' && (mode === 'category' || row.type !== 'flexible')).map(plan));
  const flexible = mode === 'flex' ? flexibleBudget : null;
@@ -283,19 +279,4 @@ export function budgetReadRange(month: string, view: 'month' | 'year', categorie
  // Reads stay bounded: two years at most.
  const earliest = shiftMonth(to, -23);
  return { from: from < earliest ? earliest : from, to };
-}
-
-/** The sample workspace's budget: amounts that cover its pay, bills and day-to-day spending, with giving rolling over. */
-export function demoBudget(month: string): BudgetState {
- const from = shiftMonth(month, -historyMonths);
- const amount = (category_key: string, value: number, currency = 'USD'): BudgetAmount => ({ category_key, month: from, amount: value, currency, applies_forward: true });
- return {
-  mode: 'category', applyForward: false,
-  categories: [
-   { category_key: 'Charity', budget_type: 'flexible', group_name: null, rollover: true, rollover_start: shiftMonth(month, -3), excluded: false },
-   { category_key: 'demo-cat-groceries', budget_type: 'flexible', group_name: 'Groceries', rollover: false, rollover_start: null, excluded: false },
-   { category_key: 'demo-cat-household', budget_type: 'flexible', group_name: 'Household', rollover: false, rollover_start: null, excluded: false },
-  ],
-  amounts: [amount('Salary', 14500), amount('Other income', 1800), amount('Living expense', 3050), amount('demo-cat-groceries', 1100), amount('demo-cat-household', 450), amount('Other expense', 1300), amount('Charity', 300), amount(flexBucketKey, 4800)],
- };
 }

@@ -30,6 +30,20 @@ function longDay(text:string,language?:Language):string|null{
  }
  return null;
 }
+/** Words a date as formatDate writes it can span: "9 de octubre de 2026" is the longest. */
+const longDayWords=5;
+/** The first date in `text` written the way the app shows it (9 October 2026, in `language` or English), the longest
+ * run of words that reads as one, with the pattern that removes it. */
+function longDayIn(text:string,language:Language){
+ const words=text.trim().split(/\s+/).filter(Boolean);
+ for(let size=Math.min(longDayWords,words.length);size>=1;size--)for(let start=0;start+size<=words.length;start++){
+  const run=words.slice(start,start+size);
+  if(!run.some(word=>/\d{4}/.test(word)))continue;
+  const iso=longDay(run.join(' '),language);
+  if(iso)return {iso,pattern:new RegExp(`(?<=\\s)${run.map(escapeRegExp).join('\\s+')}(?=\\s)`,'u')};
+ }
+ return null;
+}
 /** A typed number: spaces and apostrophes group digits; a lone comma or dot is decimal unless exactly three digits follow it,
  * in which case it is decimal only when it is the language's decimal mark (1,500 is 1500 in English and 1.5 in Russian;
  * 1.500 is 1.5 in English and 1500 in Russian). With both marks the last one is decimal. */
@@ -93,6 +107,12 @@ export function parseTypedEntry(text:string,ctx:{language:Language;today:string;
   const day=parseDay(match[1],ctx.today);
   if(!day||date)return {error:'date'};
   date=day;rest=rest.replace(match[0],' ');
+ }
+ // The way the bot itself writes dates (9 October 2026), which its date questions show as the example.
+ const written=longDayIn(rest,ctx.language);
+ if(written){
+  if(date||written.iso>ctx.today||!isoDate.safeParse(written.iso).success)return {error:'date'};
+  date=written.iso;rest=rest.replace(written.pattern,' ');
  }
  for(const [word,shift] of dateWords()){
   const pattern=new RegExp(`(?<=\\s)${escapeRegExp(word)}(?=[\\s,.!]|$)`,'iu');

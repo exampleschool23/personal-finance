@@ -156,18 +156,26 @@ function WhatIfPanel({ adjustments, currency, today, onChange }: { adjustments: 
  </section>;
 }
 
-/** Dashboard card: the lowest projected cash in the next 90 days, and any account heading below zero. */
-export function LowestBalanceCard({ data, budget, currency, rates }: { data: PlanningData; budget?: CashForecastBudget; currency: string; rates: Rates }) {
- const { t, locale } = useLanguage();
+/** Dashboard card: the lowest projected cash in the next 90 days, and any account heading below zero.
+ * It waits for the saved Budget (`budgetState`), since the projection spends what is left of it. */
+export function LowestBalanceCard({ data, budget, budgetState, currency, rates }: { data: PlanningData; budget?: CashForecastBudget; budgetState?: { loading: boolean; error: string; retry: () => void }; currency: string; rates: Rates }) {
+ const { t } = useLanguage();
  const today = depositToday();
  const forecast = useMemo(() => cashForecast({ records: data.records, occurrences: data.occurrences, debtPayments: data.debtPayments, budget, today, days: 90, currency, rates }), [data, budget, today, currency, rates]);
  return <section className="panel overview-panel forecast-card" aria-label={t('Lowest balance ahead')}>
   <PanelTitle title={t('Lowest balance ahead')}><DrawerLink href="/income-expenses#forecast">{t('View forecast')}</DrawerLink></PanelTitle>
+  {budgetState?.loading ? <PanelSkeleton label={t('Loading records…')} rows={2}/> : budgetState?.error ? <InlineError as="div" message={t(budgetState.error)} onRetry={budgetState.retry}/> : <LowestBalanceFigures forecast={forecast}/>}
+ </section>;
+}
+
+function LowestBalanceFigures({ forecast }: { forecast: CashForecast }) {
+ const { t, locale } = useLanguage();
+ return <>
   {forecast.totals.length ? <ul className="forecast-card-figures">{forecast.totals.map(total => <li key={total.id}>
    <strong className={signTone(total.lowest.balance, true)}><RollingText text={formatMoney(total.lowest.balance, total.currency, locale)}/></strong>
    <small>{formatDate(total.lowest.date, locale)}</small>
   </li>)}</ul> : <EmptyState icon={<Wallet aria-hidden="true"/>} description={t('Add a cash account to forecast its balance.')}/>}
   {forecast.totals[0] && <MissingRateNote forecast={forecast} series={forecast.totals[0]}/>}
   <BelowZeroWarning forecast={forecast}/>
- </section>;
+ </>;
 }

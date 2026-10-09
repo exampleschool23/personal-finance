@@ -136,6 +136,5 @@ roll-strip>roll-char{display:block;height:1lh}
 .record-dialog{max-height:90svh;overflow:auto}
 .record-dialog form{margin-top:5px}
 .record-dialog label{margin-bottom:15px}
-.record-dialog textarea{width:100%;resize:vertical}
 @media(max-width:1200px){.content{padding:28px 24px}.workspace .content{padding:24px 24px 0}.topbar{padding-inline:24px}}
 @media(max-width:640px){.content{padding:22px 16px}.workspace .content{padding:20px 16px 0;gap:16px}.topbar{padding:0 16px}.page-heading{align-items:stretch;flex-direction:column}.page-heading>div:first-child{flex:none}.panel{padding:20px 16px}.records{padding:20px 0 0}.records .panel-title{padding:0 16px}.form-grid{gap:10px}.entry-actions{width:100%}.entry-actions [data-slot=button]{flex:1}}

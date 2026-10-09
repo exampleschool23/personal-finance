@@ -1,7 +1,7 @@
 // The Sunday Telegram recap: what was saved, where the most went, and which
 // goals moved forward. Pure. The share button carries no amounts, so what a
 // friend sees is an invitation, not the owner's finances.
-import {formatDate} from './format';
+import {formatDate,formatNumber} from './format';
 import type {Language} from './i18n';
 import {escapeHtml,type TelegramMessage} from './telegram';
 import {messageKit} from './telegram-kit';
@@ -25,7 +25,7 @@ export function recapMessage(input:RecapInput,language:Language):Omit<TelegramMe
  const net=input.income-input.spending,lines=[missing?`💰 ${t('Saved')}: ${t('Exchange rate unavailable.')}`:`💰 ${net>=0?t('You saved {amount} this week.',{amount:money(net)}):t('You spent {amount} more than you earned this week.',{amount:money(-net)})}`];
  // An incomplete week has no reliable top category either.
  if(input.top&&!missing)lines.push(`🏷 ${t('Top spending: {category} · {amount}',{category:escapeHtml(input.top.label),amount:money(input.top.amount)})}`);
- if(input.goalsMoved>0)lines.push(`🎯 ${t('Goals moved forward: {count}',{count:input.goalsMoved})}`);
+ if(input.goalsMoved>0)lines.push(`🎯 ${t('Goals moved forward: {count}',{count:formatNumber(input.goalsMoved,locale,0)})}`);
  const text=`${title}\n\n${lines.join('\n')}`;
  return input.shareOrigin?{text,keyboard:{inline:[[{text:t('Share my week'),url:shareLink(input.shareOrigin,t('I check in on my money every week with Hoggish 💪'))}]]}}:{text};
 }

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { shiftMonth } from './calendar-days';
 import { cashFlowReport } from './cash-flow-report';
 import { assets, liabilities, value, type Entry } from './finance';
-import { formatDate, formatMoney, formatMonthYear } from './format';
+import { formatDate, formatMoney, formatMonthYear, formatNumber } from './format';
 import { isLanguage, locales } from './i18n';
 import { convertAmount } from './market';
 import { upcomingPayments, type PlanningData } from './planning';
@@ -34,11 +34,12 @@ export const assistantSuggestions = ['What recurring expenses do I have?', 'How 
 /** A compact, factual snapshot of the user's money for the assistant: holdings, debts, recent cash flow by category,
  * this month's scheduled items and goals. Amounts and dates are written the way the app shows them ("$1,200", "30 September 2026"),
  * in the person's own language and number style, so the assistant repeats them the way they read them everywhere else;
- * a line names its own currency when it has no rate to `currency`. */
+ * every amount is in `currency`, and one without a rate to it is written as a dash and counted, never shown under its own currency. */
 export function assistantContext(data: Pick<PlanningData, 'records' | 'categories' | 'goals' | 'occurrences' | 'activity' | 'investmentLinks'>, today: string, currency: string, rates: Record<string, number>, language = 'en') {
  const month = today.slice(0, 7);
  const locale = isLanguage(language) ? locales[language] : locales.en, money = (amount: number, unit = currency) => formatMoney(amount, unit, locale), day = (date: string) => formatDate(date, locale);
- const inCurrency = (amount: number, unit: string) => { const converted = convertAmount(amount, unit, currency, rates); return converted === null ? money(amount, unit) : money(converted); };
+ let unconverted = 0;
+ const inCurrency = (amount: number, unit: string) => { const converted = convertAmount(amount, unit, currency, rates); if (converted === null) unconverted++; return converted === null ? '— (Exchange rate unavailable)' : money(converted); };
  const categoryName = (key: string) => data.categories.find(category => category.id === key)?.name ?? key;
  const records = data.records as Entry[];
  const holdings = records.filter(record => assets.includes(record.kind) && value(record) > 0).map(record => `${record.name} (${record.kind}): ${inCurrency(value(record), record.currency)}`);
@@ -47,13 +48,14 @@ export function assistantContext(data: Pick<PlanningData, 'records' | 'categorie
  const flows = months.map(item => {
   const report = cashFlowReport(data, [], [item], currency, today, rates);
   const top = report.categories.expense.slice(0, 8).map(entry => `${categoryName(entry.key)} ${money(entry.amount)}`).join(', ');
-  return `${formatMonthYear(item, locale)}${item === month ? ' (so far)' : ''}: income ${money(report.income)}, spending ${money(report.expenses)}${top ? ` (${top})` : ''}${report.missing ? `; ${report.missing} amounts in currencies without a rate are left out` : ''}`;
+  return `${formatMonthYear(item, locale)}${item === month ? ' (so far)' : ''}: income ${money(report.income)}, spending ${money(report.expenses)}${top ? ` (${top})` : ''}${report.missing ? `; ${formatNumber(report.missing, locale, 0)} amounts in currencies without a rate are left out` : ''}`;
  });
  const recurring = monthOccurrences(records, data.occurrences, month, today).map(item => `${day(item.date)} ${item.record.name} (${item.record.kind}, ${item.record.frequency}): ${inCurrency(item.amount, item.record.currency)}, ${item.status}`);
  const reminders = upcomingPayments(records, data.occurrences, today).filter(item => item.type !== 'scheduled').map(item => `${day(item.date)} ${item.record.name} (${item.record.kind}): ${inCurrency(item.amount, item.record.currency)}${item.overdue ? ', overdue' : ''}`);
- const goals = data.goals.filter(goal => !goal.archived).map(goal => `${goal.name}: ${money(Number(goal.allocated), goal.currency ?? currency)} of ${money(Number(goal.target), goal.currency ?? currency)}${goal.target_date ? ` by ${day(goal.target_date)}` : ''}${goal.funding_monthly ?? goal.monthly_contribution ? `, saving ${money(Number(goal.funding_monthly ?? goal.monthly_contribution), goal.currency ?? currency)} a month` : ''}`);
+ const goals = data.goals.filter(goal => !goal.archived).map(goal => { const unit = goal.currency ?? currency, monthly = goal.funding_monthly ?? goal.monthly_contribution; return `${goal.name}: ${inCurrency(Number(goal.allocated), unit)} of ${inCurrency(Number(goal.target), unit)}${goal.target_date ? ` by ${day(goal.target_date)}` : ''}${monthly ? `, saving ${inCurrency(Number(monthly), unit)} a month` : ''}`; });
  const section = (title: string, lines: string[]) => `## ${title}\n${lines.length ? lines.map(line => `- ${line}`).join('\n') : '- none'}`;
- return [`Today is ${day(today)}. Display currency: ${currency}.`, section('Holdings', holdings), section('Debts', debts), section(`Cash flow by month (${currency})`, flows), section(`Scheduled income and bills in ${formatMonthYear(month, locale)}`, recurring), section('Debt and deposit reminders', reminders), section('Savings goals', goals)].join('\n\n');
+ const header = `Today is ${day(today)}. Display currency: ${currency}.${unconverted ? ` ${formatNumber(unconverted, locale, 0)} amounts in currencies without a rate are written as — and left out of any total.` : ''}`;
+ return [header, section('Holdings', holdings), section('Debts', debts), section(`Cash flow by month (${currency})`, flows), section(`Scheduled income and bills in ${formatMonthYear(month, locale)}`, recurring), section('Debt and deposit reminders', reminders), section('Savings goals', goals)].join('\n\n');
 }
 
 /** The assistant's standing instructions. Kept free of per-user data so it caches. */

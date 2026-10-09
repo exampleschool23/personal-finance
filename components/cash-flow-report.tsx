@@ -10,7 +10,7 @@ import { Segmented } from '@/components/presentation-foundation/segmented';
 import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
 import { signTone } from '@/components/presentation-foundation/tone';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
-import { cashFlowReport, periodMonths, reportPeriods, sankeyFlows, topShares, otherShareKey, trendBarsBy, trendMonths, type ReportPeriod, type Share } from '@/lib/cash-flow-report';
+import { cashFlowReport, partialBar, periodMonths, reportPeriods, sankeyFlows, topShares, otherShareKey, trendBarsBy, trendMonths, type ReportPeriod, type Share } from '@/lib/cash-flow-report';
 import { hueColor } from '@/lib/category-colors';
 import { useCategoryHue } from '@/components/category-icons-context';
 import { depositToday } from '@/lib/deposit-interest';
@@ -43,6 +43,20 @@ export function ShareBars({ items, label, colorKey, currency, onSelect }: { item
  })}</ul>;
 }
 
+/** The period's income, expenses, savings and savings rate. An amount that could not be converted leaves them unknown
+ * (—), never too low, as on Budget and Reports. */
+function CashFlowTiles({ report, currency }: { report: ReturnType<typeof cashFlowReport>; currency: string }) {
+ const { t, locale } = useLanguage();
+ const known = !report.missing, rate = known ? report.savingsRate : null;
+ const tile = (value: number) => known ? formatMoney(value, currency, locale) : '—';
+ return <StatTiles columns={4} label={t('Cash flow')}>
+  <StatTile label={t('Income')} value={tile(report.income)} tone={known && report.income > 0 ? 'positive' : undefined}/>
+  <StatTile label={t('Expenses')} value={tile(report.expenses)}/>
+  <StatTile label={t('Total savings')} value={tile(report.savings)} tone={known ? signTone(report.savings) : undefined}/>
+  <StatTile label={t('Savings rate')} value={rate === null ? '—' : formatPercent(rate, locale)} tone={rate === null ? undefined : signTone(rate)}/>
+ </StatTiles>;
+}
+
 /** Cash flow: figures for the period, monthly bars, and where money came from and went, as bars or a Sankey diagram. */
 export function CashFlowReport({ owner, demo, revision, data: provided, splits, month, currency, market }: Props) {
  const { t, locale } = useLanguage();
@@ -57,6 +71,10 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
  const report = useMemo(() => cashFlowReport(data, splits, periodMonths(month, period), currency, today, rates), [data, splits, month, period, currency, today, rates]);
  const trend = useMemo(() => trendBarsBy(cashFlowReport(data, splits, trendMonths(month, period), currency, today, rates).series, period), [data, splits, month, period, currency, today, rates]);
  const money = (amount: number) => formatMoney(amount, currency, locale);
+ // A quarter or year still running is labelled "to date", so it is never read as a whole period beside the others.
+ const partial = partialBar(month, period, today);
+ const barLabel = (long: boolean) => { const label = intervalLabel(period, locale, t, long); return (value: unknown) => value === partial && (long || period !== 'month') ? t('{period} to date', { period: label(value) }) : label(value); };
+ const unknown = report.missing > 0 || trend.some(bar => bar.missing > 0);
  const categoryName = (key: string) => data.categories.find(category => category.id === key)?.name ?? t(key);
  const label = grouping === 'category' ? categoryName : (key: string) => key;
  const categoryHue = useCategoryHue();
@@ -71,20 +89,16 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
   <div className="cash-flow-report-tools">
    <Segmented label={t('Period')} options={reportPeriods.map(value => ({ value, label: t(periodLabels[value]) }))} value={period} onChange={setPeriod}/>
   </div>
-  <StatTiles columns={4} label={t('Cash flow')}>
-   <StatTile label={t('Income')} value={money(report.income)} tone={report.income > 0 ? 'positive' : undefined}/>
-   <StatTile label={t('Expenses')} value={money(report.expenses)}/>
-   <StatTile label={t('Total savings')} value={money(report.savings)} tone={signTone(report.savings)}/>
-   <StatTile label={t('Savings rate')} value={report.savingsRate === null ? '—' : formatPercent(report.savingsRate, locale)} tone={report.savingsRate === null ? undefined : signTone(report.savingsRate)}/>
-  </StatTiles>
+  <CashFlowTiles report={report} currency={currency}/>
+  {unknown && <p className="partial-total" role="status">{t('Some transactions could not be converted. Current or previous month totals are incomplete.')}</p>}
   <section className="panel">
    <PanelTitle title={t(trendTitles[period])}/>
    <div className="cash-flow-chart"><ResponsiveContainer width="100%" height={chartHeight.regular}>
     <BarChart data={trend} barGap={2} accessibilityLayer margin={chartMargin}>
      <CartesianGrid {...chartGrid}/>
-     <XAxis dataKey="period" tickFormatter={intervalLabel(period, locale, t)} {...chartAxis}/>
+     <XAxis dataKey="period" tickFormatter={barLabel(false)} {...chartAxis}/>
      <YAxis tickFormatter={moneyTick(currency, locale)} {...chartValueAxis}/>
-     <Tooltip {...chartTooltip} labelFormatter={intervalLabel(period, locale, t, true)} formatter={(value, name) => [money(Number(value)), String(name)]}/>
+     <Tooltip {...chartTooltip} filterNull={false} labelFormatter={barLabel(true)} formatter={(value, name) => [value === null || value === undefined ? '—' : money(Number(value)), String(name)]}/>
      <Legend {...chartLegend}/>
      <Bar dataKey="income" name={t('Income')} {...groupedBar} fill={chartColors.income}/>
      <Bar dataKey="expenses" name={t('Expenses')} {...groupedBar} fill={chartColors.expense}/>

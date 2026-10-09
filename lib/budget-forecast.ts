@@ -1,4 +1,4 @@
-import { budgetCategories, budgetedIn, flexBucketKey, flexBucketPlan, type BudgetState } from './budget';
+import { budgetCategories, budgetedIn, flexBucketKey, flexBucketPlan, isFlexibleCategory, type BudgetState } from './budget';
 import type { Category } from './planning';
 import type { BudgetLine } from './finance';
 
@@ -23,9 +23,9 @@ export function budgetLines({ state, categories, removed }: BudgetSource, month:
  const all = budgetCategories(categories, state.categories, removed);
  const spending = all.filter(category => category.direction === 'expense' && !category.excluded && category.type !== 'non_monthly');
  const flex = state.mode === 'flex';
- for (const category of spending) if (!flex || category.type !== 'flexible') add(category.key, category.name, [category.key]);
+ for (const category of spending) if (!flex || !isFlexibleCategory(category)) add(category.key, category.name, [category.key]);
  // The Flexible amount as Budget shows it: the one saved for the bucket, or else the sum of the flexible categories' plans.
- if (flex) add(flexBucketKey, 'Flexible', spending.filter(category => category.type === 'flexible').map(category => category.key), flexBucketPlan(state.amounts, all, month, currency, rates));
+ if (flex) add(flexBucketKey, 'Flexible', spending.filter(isFlexibleCategory).map(category => category.key), flexBucketPlan(state.amounts, all, month, currency, rates));
  return { lines, missing };
 }
 

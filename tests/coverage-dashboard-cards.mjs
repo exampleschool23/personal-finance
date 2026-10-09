@@ -15,7 +15,6 @@ const cards=loadTS('components/dashboard-cards.tsx',{
  '@/lib/deposit-interest':{...realDeposit,depositToday:()=>today},
  '@/lib/expense-plans':{expensePlanMonth:()=>month},
  '@/hooks/use-owner-resource':{useOwnerResource:(url,owner,enabled,revision,empty)=>{resources.push({url,owner,enabled,revision});return {data:remote.data??empty,loading:remote.loading};}},
- '@/hooks/use-budget':{useBudget:(owner,demo,revision)=>({...budget,args:[owner,demo,revision]})},
  '@/components/budget/budget-rows':{BudgetProgress:({row})=>React.createElement('meter',{'data-progress':row.progress.toFixed?String(Math.round(row.progress*100)):'','data-remaining':String(row.remaining)})},
  '@/lib/investment-goals':{investmentGoalCompletion:goal=>completion.get(goal.id)??null},
  'next/link':{__esModule:true,default:({children,href,...props})=>React.createElement('a',{href,...props},children)},
@@ -87,7 +86,7 @@ test('Budget compares this month’s spending with the plan and lists the catego
  resources.length=0;
  budget={state:{mode:'category',applyForward:false,categories:[],amounts:[amount('Living expense',500),amount('Rent expense',1000),amount('Charity',50),amount('pets',40),amount('Salary',4000)]},loading:false};
  const records=[entry('Food','Living expense',620,'2026-10-05'),entry('Rent','Rent expense',1000,'2026-10-01'),entry('Gift','Charity',10,'2026-10-03'),entry('Vet','Other expense',55,'2026-10-04',{custom_category_id:'pets'}),entry('Pay','Salary',4000,'2026-10-01')];
- const html=render(cards.BudgetCard,{data:planning(records,{categories:[{id:'pets',name:'Pets',direction:'expense'}]}),currency:'USD',market:null,splits:[]});
+ const html=render(cards.BudgetCard,{budget,data:planning(records,{categories:[{id:'pets',name:'Pets',direction:'expense'}]}),currency:'USD',market:null,splits:[]});
  const text=plain(html);
  assert.match(html,/aria-label="Budget"/);
  assert.match(text,new RegExp(`Budget ${formatMonthYear(month,'en-US')}`));
@@ -107,27 +106,27 @@ test('Budget compares this month’s spending with the plan and lists the catego
 test('Budget in flex mode shares one bucket among flexible categories and lists fixed ones only',()=>{
  budget={state:{mode:'flex',applyForward:false,categories:[],amounts:[amount('flex:flexible',100),amount('Rent expense',300)]},loading:false};
  const data=planning([entry('Rent','Rent expense',300,'2026-10-01'),entry('Food','Living expense',150,'2026-10-02')]);
- const html=render(cards.BudgetCard,{data,currency:'USD',market:{rates:{USD:1}},splits:[]});
+ const html=render(cards.BudgetCard,{budget,data,currency:'USD',market:{rates:{USD:1}},splits:[]});
  assert.match(plain(html),/\$450 of \$400 \$50 over/);
  const list=html.slice(html.indexOf('dashboard-budget-list'));
  assert.match(list,/Rent expense/);
  assert.doesNotMatch(list,/Living expense/,'flexible categories share the bucket in flex mode');
  budget={state:{mode:'flex',applyForward:false,categories:[],amounts:[amount('Rent expense',300)]},loading:false};
- assert.match(plain(render(cards.BudgetCard,{data,currency:'USD',market:null,splits:[]})),/\$450 of \$300/,'no flexible bucket counts as zero');
+ assert.match(plain(render(cards.BudgetCard,{budget,data,currency:'USD',market:null,splits:[]})),/\$450 of \$300/,'no flexible bucket counts as zero');
 });
 
 test('Budget waits for loading, falls back to the market rate and invites a plan when empty',()=>{
  budget={state:{mode:'category',applyForward:false,categories:[],amounts:[]},loading:true};
- assert.match(plain(render(cards.BudgetCard,{data:planning(),currency:'USD',market:null,splits:[]})),/Loading records…/);
+ assert.match(plain(render(cards.BudgetCard,{budget,data:planning(),currency:'USD',market:null,splits:[]})),/Loading records…/);
  budget={...budget,loading:false};
  remote={data:planning(),loading:true};
- assert.match(plain(render(cards.BudgetCard,{owner:'me',data:planning(),currency:'USD',market:null,splits:[]})),/Loading records…/);
+ assert.match(plain(render(cards.BudgetCard,{budget,owner:'me',data:planning(),currency:'USD',market:null,splits:[]})),/Loading records…/);
  remote={data:planning([{...entry('Food','Living expense','30','2026-10-02'),quantity:'1',cost:'0',rate:'0'}]),loading:false};
  budget={state:{mode:'category',applyForward:false,categories:[],amounts:[amount('Living expense',100)]},loading:false};
- const html=render(cards.BudgetCard,{owner:'me',data:planning(),currency:'USD',market:{fx:{rate:{USD:1}}},splits:[]});
+ const html=render(cards.BudgetCard,{budget,owner:'me',data:planning(),currency:'USD',market:{fx:{rate:{USD:1}}},splits:[]});
  assert.match(plain(html),/\$30 of \$100/,'a signed-in owner reads spending from the server');
  remote={data:null,loading:false};
  budget={state:{mode:'category',applyForward:false,categories:[],amounts:[]},loading:false};
- const empty=plain(render(cards.BudgetCard,{data:planning(),currency:'USD',market:null,splits:[]}));
+ const empty=plain(render(cards.BudgetCard,{budget,data:planning(),currency:'USD',market:null,splits:[]}));
  assert.match(empty,/Plan this month’s spending to track it here\. Set up a budget/);
 });

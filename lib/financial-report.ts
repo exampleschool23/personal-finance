@@ -1,34 +1,22 @@
 // The personal financial report's layout: what each section says and shows. The figures come from lib/report-figures.ts.
-import { unwrapSignedBackup } from '@/lib/backup-envelope';
 import { dayMs, monthEnd, shiftMonth } from './calendar-days';
 import { depositToday } from './deposit-interest';
 import { projectGoal } from './goal-projection';
 import { convertAmount, marketRates, type MarketData } from './market';
 import { assets, interestKinds, liabilities, income, expenses, type Entry } from './finance';
-import { formatDate, formatDateTime, formatMoney, formatNumber } from './format';
+import { formatDate, formatDateTime, formatMoney, formatNumber, formatPercent } from './format';
 import { isCurrency, currencyLabel } from './currencies';
 import { locales, translate, type Language } from './i18n';
 import { upcomingPayments, type Goal, type Occurrence, type PlanningData } from './planning';
 import { legacyEarningSources, type EarningSource } from './earning-sources';
 import { investmentGoalItems, investmentGoalPlan } from './investment-goals';
-import { consolidatedFlow, expectedMonthlyIncome, hasFlowHistory, inPeriod, budgetFigures, monthBudgets, reportCashFlow, reportCurrencies, reportLedger, reportNumber as number, reportWealth, wealthTotals, type ReportCashFlow, type ReportLedger, type ReportRow, type WealthItem, type WealthTotals } from './report-figures';
+import { consolidatedFlow, expectedMonthlyIncome, hasFlowHistory, inPeriod, budgetFigures, monthBudgets, parseFinanceBackup, reportCashFlow, reportCurrencies, reportLedger, reportNumber as number, reportWealth, wealthTotals, type FinanceBackup, type ReportCashFlow, type ReportLedger, type ReportRow, type WealthItem, type WealthTotals } from './report-figures';
 
-export type { ReportRow };
-export type FinanceBackup={version:number;exported_at:string;tables:Record<string,ReportRow[]>;income_sources?:ReportRow[]};
+export type { FinanceBackup, ReportRow };
+export { parseFinanceBackup };
 export type ReportBlock={kind:'title'|'heading'|'subheading'|'text'|'pageBreak';text:string}|{kind:'table';text:string;headers:string[];rows:string[][];widths:number[];numeric?:number[]};
 export type FinancialReport={title:string;generated:string;locale:string;blocks:ReportBlock[]};
 export type ReportOptions={currency?:string};
-// Version 1 kept income sources beside tables; version 2 (migration 059+) signs owner-scoped tables.
-const SUPPORTED_BACKUP_VERSIONS=[1,2];
-export function parseFinanceBackup(signed:unknown):FinanceBackup {
- const input=unwrapSignedBackup(signed);
- if(!input||typeof input!=='object')throw Error('Could not read the complete backup.');
- const data=input as FinanceBackup;
- if(!SUPPORTED_BACKUP_VERSIONS.includes(data.version)||!data.exported_at||!Number.isFinite(Date.parse(data.exported_at))||!data.tables||typeof data.tables!=='object'||!Array.isArray(data.tables.finance_records)||!Array.isArray(data.tables.savings_goals))throw Error('Could not read the complete backup.');
- for(const rows of Object.values(data.tables))if(!Array.isArray(rows)||rows.some(row=>!row||typeof row!=='object'||Array.isArray(row)))throw Error('Could not read the complete backup.');
- if(data.income_sources!==undefined&&(!Array.isArray(data.income_sources)||data.income_sources.some(row=>!row||typeof row!=='object'||Array.isArray(row))))throw Error('Could not read the complete backup.');
- return data;
-}
 
 type Block='title'|'heading'|'subheading'|'text'|'pageBreak';
 /** What every section reads: the backup's records and tables, the period, the currencies and the shared formatters. */
@@ -245,7 +233,7 @@ function reportContext(backup:FinanceBackup,language:Language,market:MarketData|
  // The bundled PDF font has no true minus sign (U+2212), so the report prints negatives with a hyphen.
  const money=(n:number|null,c:string)=>n===null||!Number.isFinite(n)||!isCurrency(c)?na:formatMoney(n,c,locale).replace(/−/g,'-');
  const date=(v:unknown)=>{const input=typeof v==='string'?v:'';const result=input.includes('T')?formatDateTime(input,locale):formatDate(input,locale);return result==='—'?na:result;};
- return {t,na,locale,issues:new Set<string>(),money,date,percent:n=>number(n)===null?na:`${formatNumber(Number(n),locale,2)}%`,
+ return {t,na,locale,issues:new Set<string>(),money,date,percent:n=>number(n)===null?na:formatPercent(Number(n),locale,2).replace(/−/g,'-'),
   add:(kind,text)=>{blocks.push({kind,text});},
   table:(headers,rows,widths,numeric=[])=>{if(rows.length)blocks.push({kind:'table',text:'',headers:headers.map(header=>t(header)),rows,widths,numeric});},
   tables,ledger,records,byId,today,month,start:month+'-01',end:monthEnd(month),reporting,market,wealth,flows:new Map(),consolidated:wealthTotals(wealth,reporting,market),

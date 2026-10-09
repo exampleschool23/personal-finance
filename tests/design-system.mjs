@@ -88,6 +88,23 @@ test('shared surfaces are defined once and the stylesheet has no unterminated co
  assert.equal((stripped.match(/\{/g)||[]).length,(stripped.match(/\}/g)||[]).length);
 });
 
+test('selectors that once had a later override keep one rule with the value that was in effect',()=>{
+ const css=stylesheet().replace(/\/\*[\s\S]*?\*\//g,'').replace(/\s*([{};:])\s*/g,'$1');
+ const rules=selector=>css.split('}').map(chunk=>chunk.split('{').slice(-2)).filter(([head])=>head.trim()===selector).map(([,body])=>body);
+ for(const [selector,body] of [
+  ['.goal-chart-canvas','width:100%;min-width:0;height:100%'],
+  ['.import-preview','max-height:400px;overflow:auto;margin-block:16px;'],
+  ['.record-dialog textarea','width:100%;resize:vertical;min-height:80px!important;max-height:180px'],
+  ['.category-settings .category-badges','display:flex;flex-wrap:wrap;align-items:center;gap:8px;list-style:none;padding:0;margin:0'],
+ ])assert.deepEqual(rules(selector),[body],selector);
+ assert.deepEqual(rules('.portfolio-editor-dialog').length,1);
+ assert.match(rules('.portfolio-editor-dialog')[0],/scrollbar-gutter:auto/);
+ assert.deepEqual(rules('.budget-year thead th:first-child'),[],'the header corner takes the header tint from .budget-year thead th');
+ assert.doesNotMatch(rules('.budget-year th[scope=row],.budget-year thead th:first-child')[0],/background/);
+ assert.match(rules('.budget-year thead th')[0],/background:var\(--muted\)/);
+ assert.match(rules('.budget-year th[scope=row]')[0],/background:var\(--card\)/);
+});
+
 test('the logo links to the main page from every screen that shows it',()=>{
  const element=tag=>function Element(all){const props={...all};return React.createElement(tag,props);};
  const {Brand}=loadTS('components/presentation-foundation/brand.tsx',{...{'@/components/language-provider':language},'@/components/presentation-foundation/drawer-link':{DrawerLink:element('a')}});

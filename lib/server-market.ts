@@ -43,12 +43,12 @@ async function krakenPrice(symbol: string) {
   if (result.error?.length || pairs.length !== 1 || !pairs[0][0].includes(symbol) || !pairs[0][0].endsWith('USD')) throw new Error('invalid_quote');
   return positive(pairs[0][1].c?.[0]);
 }
-/** A metal's spot price per fine troy ounce from Twelve Data (XAU/USD and so on). */
-async function twelveDataMetal(symbol: string, key: string): Promise<Quote> {
+/** A Twelve Data quote that must answer for `symbol`; `usdOnly` also refuses a quote in another currency. */
+async function twelveDataQuote(symbol: string, key: string, usdOnly = false): Promise<Quote> {
   const url = new URL('https://api.twelvedata.com/quote');
-  url.searchParams.set('symbol', `${symbol}/USD`); url.searchParams.set('apikey', key);
-  const result = await read(url.href, 300) as { symbol?: string; close?: string; timestamp?: number };
-  if (result.symbol !== `${symbol}/USD`) throw new Error('invalid_quote');
+  url.searchParams.set('symbol', symbol); url.searchParams.set('apikey', key);
+  const result = await read(url.href, 300) as { symbol?: string; currency?: string; close?: string; timestamp?: number };
+  if (result.symbol !== symbol || (usdOnly && result.currency !== 'USD')) throw new Error('invalid_quote');
   const quote: Quote = { usd: marketQuote(result.close), source: 'Twelve Data', fetchedAt: new Date().toISOString() };
   if (Number.isFinite(result.timestamp)) quote.marketTime = new Date(result.timestamp! * 1000).toISOString();
   return quote;
@@ -95,28 +95,25 @@ export async function loadMarket(crypto:string[],stocks:string[],stockAccess:boo
     if (!key) { data.errors[`Stock:${symbol}`] = 'Stock prices need a market-data API key.'; return; }
     if (!stockAccess) { data.errors[`Stock:${symbol}`] = 'Sign in to fetch stock prices.'; return; }
     try {
-      const url = new URL('https://api.twelvedata.com/quote');
-      url.searchParams.set('symbol', symbol); url.searchParams.set('apikey', key!);
-      const result = await read(url.href, 300) as { symbol?: string; currency?: string; close?: string; datetime?: string; timestamp?: number; is_market_open?: boolean };
       // Only USD-denominated stocks are supported; never treat a foreign quote as USD.
-      if (result.symbol !== symbol || result.currency !== 'USD') throw new Error('invalid_quote');
-      const quote: Quote = { usd: marketQuote(result.close), source: 'Twelve Data', fetchedAt: new Date().toISOString() };
-      if (Number.isFinite(result.timestamp)) quote.marketTime = new Date(result.timestamp! * 1000).toISOString();
-      data.quotes[`Stock:${symbol}`] = quote;
+      data.quotes[`Stock:${symbol}`] = await twelveDataQuote(symbol, key, true);
     } catch { data.errors[`Stock:${symbol}`] = 'Price unavailable. Saved price is shown.'; }
   });
   // Spot prices per fine troy ounce. The Twelve Data plan quotes gold (XAU/USD) only, so silver, platinum and palladium
   // come from gold-api.com (free, no key; INV-050). Each source stands in when the other fails.
   for (const symbol of metals) jobs.push(async () => {
     if (!metalAccess) { data.errors[`Metal:${symbol}`] = 'Sign in to fetch metal prices.'; return; }
-    const twelveData = key ? [() => twelveDataMetal(symbol, key)] : [];
+    // A metal's spot price per fine troy ounce from Twelve Data (XAU/USD and so on).
+    const twelveData = key ? [() => twelveDataQuote(`${symbol}/USD`, key)] : [];
     const sources = symbol === 'XAU' ? [...twelveData, () => goldApiMetal(symbol)] : [() => goldApiMetal(symbol), ...twelveData];
     for (const source of sources) {
       try { data.quotes[`Metal:${symbol}`] = await source(); return; } catch { /* try the next source */ }
     }
     data.errors[`Metal:${symbol}`] = 'Price unavailable. Saved price is shown.';
   });
-  // Bound upstream concurrency; individual failures do not hide successful prices.
+  // Bound upstream concurrency; individual failures do not hide successful prices. The loop repeats forEachLimited
+  // (lib/bounded-concurrency.ts) because scripts/create-test-investment-sql.mjs imports this file natively with Node,
+  // which cannot resolve an `@/` or extensionless import; every job catches its own failure, so the two behave alike.
   let index = 0;
   await Promise.all(Array.from({ length: Math.min(4, jobs.length) }, async () => { while (index < jobs.length) await jobs[index++](); }));
   if (data.fx) data.rates = { ...data.rates, USD: 1, UZS: data.fx.rate };

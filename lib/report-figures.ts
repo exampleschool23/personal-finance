@@ -1,10 +1,11 @@
 // The figures of the personal financial report, from an owner's backup. Pure: holdings are valued the way Overview values
 // them (marketEntry, financialTotals through lib/workspace-totals.ts), cash flow follows the Monthly review, and
 // lib/financial-report.ts only lays the figures out in words and tables.
+import { unwrapSignedBackup } from './backup-envelope';
 import { isCurrency } from './currencies';
 import type { EarningSource } from './earning-sources';
 import { sourceSchedule } from './earning-sources';
-import { budgetAmountFor, type BudgetAmount } from './budget';
+import { budgetAmountFor, monthActuals, type BudgetAmount } from './budget';
 import { assets, expenses, financialTotals, income, liabilities, monthly, normalizeEntry, unitPricedKinds, value, type Entry } from './finance';
 import { convertAmount, instrumentFor, instrumentKey, marketEntry, marketRates, quotedUnitPrice, type MarketData, type Quote } from './market';
 import type { Activity, PlanningData } from './planning';
@@ -13,6 +14,18 @@ import { monthlyReview, normalizeSplits, type TransactionSplit } from './transac
 import { workspaceTotals } from './workspace-totals';
 
 export type ReportRow = Record<string, unknown>;
+export type FinanceBackup = { version: number; exported_at: string; tables: Record<string, ReportRow[]>; income_sources?: ReportRow[] };
+// Version 1 kept income sources beside tables; version 2 (migration 059+) signs owner-scoped tables.
+const supportedBackupVersions = [1, 2];
+const rowList = (rows: unknown) => Array.isArray(rows) && rows.every(row => row && typeof row === 'object' && !Array.isArray(row));
+/** A downloaded backup, signed or not, checked to hold every table the report reads; throws when it is incomplete. */
+export function parseFinanceBackup(signed: unknown): FinanceBackup {
+ const data = unwrapSignedBackup(signed) as FinanceBackup | null;
+ const valid = !!data && typeof data === 'object' && supportedBackupVersions.includes(data.version) && !!data.exported_at && Number.isFinite(Date.parse(data.exported_at)) && !!data.tables && typeof data.tables === 'object'
+  && Array.isArray(data.tables.finance_records) && Array.isArray(data.tables.savings_goals) && Object.values(data.tables).every(rowList) && (data.income_sources === undefined || rowList(data.income_sources));
+ if (!valid) throw Error('Could not read the complete backup.');
+ return data;
+}
 /** A saved number, or null when it is missing or not a number (never zero in its place). */
 export const reportNumber = (v: unknown): number | null => v === null || v === undefined || v === '' || !Number.isFinite(Number(v)) ? null : Number(v);
 /** The sum, or null when any part is unknown. */
@@ -109,13 +122,14 @@ export function monthBudgets(rows: readonly ReportRow[], month: string, known: (
  return [...new Set(amounts.map(row => row.category_key))].filter(known).flatMap(key => { const saved = budgetAmountFor(amounts, key, month); return saved && saved.amount > 0 ? [saved] : []; });
 }
 
-/** A category's budget this month: its spending through `today` in the budget's currency, and what remains. Null where an amount or rate is unknown. */
-export function budgetFigures(budget: BudgetAmount, ledger: Pick<ReportLedger, 'records' | 'byId'>, { month, today }: { month: string; today: string }, market: MarketData | null) {
- const rates = marketRates(market);
- const actual = reportSum(ledger.records.filter(r => (r.custom_category_id ?? r.kind) === budget.category_key && expenses.includes(r.kind) && r.frequency === 'Once' && inPeriod(r.date, month, today)).map(r => {
-  const n = reportNumber(ledger.byId.get(r.id)?.amount);
-  return n === null ? null : convertAmount(n, r.currency, budget.currency, rates);
- }));
+/** A category's budget this month: its spending through `today` in the budget's currency by Budget's own rule
+ * (`monthActuals`: a split counts in its own categories, a mortgage payment its interest only), and what remains.
+ * Null where an amount or rate is unknown. */
+export function budgetFigures(budget: BudgetAmount, ledger: ReportLedger, { month, today }: { month: string; today: string }, market: MarketData | null) {
+ const key = budget.category_key, splitIn = new Set(ledger.splits.filter(s => s.category_id === key).map(s => s.record_id));
+ const unsaved = ledger.records.some(r => ((r.custom_category_id ?? r.kind) === key || splitIn.has(r.id)) && expenses.includes(r.kind) && r.frequency === 'Once' && inPeriod(r.date, month, today) && reportNumber(ledger.byId.get(r.id)?.amount) === null);
+ const actuals = monthActuals({ records: ledger.records, activity: ledger.activity, investmentLinks: ledger.links }, ledger.splits, month, budget.currency, today, marketRates(market));
+ const actual = unsaved || actuals.missing > 0 ? null : actuals.byCategory.get(key) ?? 0;
  return { planned: budget.amount, actual, remaining: actual === null ? null : budget.amount - actual };
 }
 

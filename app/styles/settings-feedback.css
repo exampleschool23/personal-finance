@@ -32,7 +32,7 @@
 .category-settings .category-group{border-top:1px solid var(--border);margin-top:24px;padding-top:24px}
 .category-settings .category-group h3,.category-settings .category-group h2{font-size:var(--type-title);font-weight:600;margin:0 0 12px}
 .category-settings .category-group h4{font-size:var(--type-small);font-weight:500;margin:0 0 12px;color:var(--muted-foreground)}
-.category-settings .category-badges{display:flex;flex-wrap:wrap;gap:10px;list-style:none;padding:0;margin:0}
+.category-settings .category-badges{display:flex;flex-wrap:wrap;align-items:center;gap:8px;list-style:none;padding:0;margin:0}
 .category-restore{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:16px;font-size:var(--type-small);color:var(--muted-foreground)}
 .category-create-form{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:end;margin-top:16px}
 .category-settings .category-create-form>label{display:grid;gap:8px;margin:0;min-width:0}
@@ -66,7 +66,6 @@
 @media(max-width:600px){.data-import-fields{grid-template-columns:1fr}.data-backup-actions{flex-direction:column}.data-backup-actions a{width:100%}}
 
 /* Compact category tags; each one is a button that opens its edit dialog, marked with a pencil. */
-.category-settings .category-badges{align-items:center;gap:8px;padding-top:0}
 .category-settings .category-badges .category-badge{position:relative;display:inline-flex;align-items:center;box-sizing:border-box;height:28px;padding:3px 9px;gap:5px;line-height:20px;vertical-align:middle}
 .category-settings .category-edit-button{display:inline-flex;align-items:center;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;font:inherit;cursor:pointer}
 .category-settings .category-edit-button:hover:not(:disabled) .category-badge{filter:brightness(.97)}

@@ -149,15 +149,15 @@ test('cron runs report failures and partial runs as alerts with their tallies; t
  process.env.CRON_SECRET='test-secret';
  const reported=[],monitor={'@/lib/monitoring':{reportError:async(...args)=>{reported.push(args);}}};
  const cron=new Request('https://local',{headers:{authorization:'Bearer test-secret'}});
- const telegram={telegramConfig:()=>({token:'T',webhookSecret:'S',botUsername:'b'}),sendTelegramMessage:async message=>message.chat_id!==2,escapeHtml:text=>text};
- const owner={'@/lib/telegram-owner':{deliverToSubscribers:async(db,delivery,send)=>{let sent=0,failed=0;for(const chat_id of [1,2]){if(await send({user_id:'u'+chat_id,chat_id}).catch(()=>false))sent++;else failed++;}return {sent,failed};},ownerProfile:async()=>{throw Error('profile unavailable');},recentSnapshots:async()=>[]}};
+ const telegram={telegramConfig:()=>({token:'T',webhookSecret:'S',botUsername:'b'}),sendTelegramMessage:async message=>message.chat_id!==2,deliverTelegramMessage:async message=>message.chat_id!==2,escapeHtml:text=>text};
+ const owner={'@/lib/telegram-owner':{deliverToSubscribers:async(db,delivery,send)=>{let sent=0,failed=0;for(const chat_id of [1,2]){if(await send({user_id:'u'+chat_id,chat_id}).catch(()=>false))sent++;else failed++;}return {sent,failed,blocked:0};},ownerProfile:async()=>{throw Error('profile unavailable');},recentSnapshots:async()=>[],ownerDebtPayments:async()=>[[],[]]}};
  const db={read:async()=>[],write:async()=>Response.json(true)};
  for(const name of ['telegram-digest','telegram-recap']){
   reported.length=0;
   const route=loadTS(`app/api/cron/${name}/route.ts`,{...monitor,...owner,'@/lib/telegram':telegram,'@/lib/service-role':{serviceDatabase:()=>db}});
   let response=await route.GET(cron);
-  assert.equal(response.status,503);assert.deepEqual(await response.json(),{sent:0,failed:2});
-  assert.equal(reported.length,1);assert.equal(reported[0][0],'cron:'+name);assert.deepEqual(reported[0][2],{route:'/api/cron/'+name,status:503,counts:{sent:0,failed:2}});assert.deepEqual(reported[0][3],{alert:true});
+  assert.equal(response.status,503);assert.deepEqual(await response.json(),{sent:0,failed:2,blocked:0});
+  assert.equal(reported.length,1);assert.equal(reported[0][0],'cron:'+name);assert.deepEqual(reported[0][2],{route:'/api/cron/'+name,status:503,counts:{sent:0,failed:2,blocked:0}});assert.deepEqual(reported[0][3],{alert:true});
   const broken=loadTS(`app/api/cron/${name}/route.ts`,{...monitor,'@/lib/telegram-owner':{...owner['@/lib/telegram-owner'],deliverToSubscribers:async()=>{throw Error('subscribers unavailable');}},'@/lib/telegram':telegram,'@/lib/service-role':{serviceDatabase:()=>db}});
   response=await broken.GET(cron);
   assert.equal(response.status,503);assert.equal((await response.json()).sent,0);
@@ -246,6 +246,10 @@ test('the client error route checks origin, size, rate and shape before reportin
  assert.equal((await post({...valid,stack:'é'.repeat(4100)})).status,413,'bytes, not characters');
  for(const bad of ['not json',{...valid,kind:'other'},{...valid,amount:5},{...valid,path:'/goals?id=1'},{...valid,message:''},{...valid,digest:'a b'}])assert.equal((await post(bad)).status,403,JSON.stringify(bad));
  limited=true;assert.equal((await post(valid)).status,429);limited=false;
+ // A streamed body has no Content-Length: it is cut off at the limit instead of read whole.
+ const streamed=chunks=>new Request('https://app.local/api/client-errors',{method:'POST',duplex:'half',headers:{'Content-Type':'application/json'},body:new ReadableStream({pull(controller){if(!chunks.length)return controller.close();controller.enqueue(new TextEncoder().encode(chunks.shift()));}})});
+ const oversized=streamed(Array.from({length:100},()=>'x'.repeat(1000)));assert.equal(oversized.headers.get('content-length'),null);
+ assert.equal((await route.POST(oversized)).status,413);
  assert.equal(reported.length,0);
  const response=await post(valid);
  assert.equal(response.status,204);

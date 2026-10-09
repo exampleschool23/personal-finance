@@ -7,7 +7,7 @@ const verified={access_token:'verified-token',refresh_token:'refresh',expires_in
 function api({auth=true,origin=true,provider,jarValues={},email='owner@example.com'}={}){
  const calls=[],saved=[],writes=[],deleted=[];const values=new Map(Object.entries(jarValues));
  const jar={get:name=>values.has(name)?{value:values.get(name)}:undefined,set:(name,value,options)=>{writes.push({name,value,options});values.set(name,value);},delete:name=>{deleted.push(name);values.delete(name);}};
- const route=loadTS('app/api/account-access/route.ts',{'@/lib/account-access':{...loadTS('lib/account-access.ts'),accountOrigin:()=> 'https://canonical.example'},'next/headers':{cookies:async()=>jar},'@/lib/supabase':{session:async()=>auth?{user:{id,email},token:'owner'}:null,sameOrigin:()=>origin,config:()=>({url:'https://supabase.invalid'}),saveSession:async data=>saved.push(data),supa:async(path,init,token)=>{calls.push({path,init,token});if(path.startsWith('/rest/v1/record_attachments'))return Response.json([]);return provider?provider(path,init,token):Response.json(verified);}}});return {...route,calls,saved,writes,deleted};
+ const route=loadTS('app/api/account-access/route.ts',{'@/lib/account-access':{...loadTS('lib/account-access.ts'),accountOrigin:()=> 'https://canonical.example'},'next/headers':{cookies:async()=>jar},'@/lib/supabase':{session:async()=>auth?{user:{id,email},token:'owner'}:null,sameOrigin:()=>origin,config:()=>({url:'https://supabase.invalid'}),saveSession:async data=>saved.push(data),supa:async(path,init,token)=>{calls.push({path,init,token});if(path.startsWith('/rest/v1/record_attachments')||path.startsWith('/storage/v1/object/list/'))return Response.json([]);return provider?provider(path,init,token):Response.json(verified);}}});return {...route,calls,saved,writes,deleted};
 }
 const request=body=>new Request('https://local/api/account-access',{method:'POST',body:JSON.stringify(body)});
 test('account access rejects cross-origin, anonymous changes, short passwords and destructive requests without confirmation',async()=>{
@@ -108,7 +108,7 @@ test('a phone-only account deletes with DELETE alone, while an email account sti
  try{
   const phone=api({email:''});
   const result=await phone.POST(request({action:'delete_account',confirmation:'DELETE'}));
-  assert.equal(result.status,200);assert.deepEqual(phone.calls.map(call=>call.path.split('?')[0]),['/rest/v1/record_attachments'],'no password check; only its receipts are listed for removal');assert.equal(phone.calls[0].token,'owner');
+  assert.equal(result.status,200);assert.deepEqual(phone.calls.map(call=>call.path.split('?')[0]),['/rest/v1/record_attachments','/storage/v1/object/list/attachments'],'no password check; only its receipts (recorded and stored) are listed for removal');assert.equal(phone.calls[0].token,'owner');
   assert.equal(calls.length,1);assert.equal(calls[0].url,'https://supabase.invalid/auth/v1/admin/users/'+id);assert.deepEqual(phone.deleted,['hf_access','hf_refresh','hf_workspace']);
   assert.equal((await api({email:''}).POST(request({action:'delete_account',confirmation:'delete'}))).status,400,'DELETE is still required');
   const emailed=api();

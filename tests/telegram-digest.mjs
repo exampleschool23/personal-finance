@@ -15,15 +15,16 @@ const items=[
 
 const sun='\u2600\uFE0F',greeting=sun+' <b>Good morning, Aziz</b>\n<i>Every record you add makes tomorrow easier to plan.</i>';
 
+const rates={UZS:12000};
 test('the digest greets the owner by name, then lists overdue items first and each day, with income marked and names escaped',()=>{
- const text=digestMessage(items,'en',today,{name:'Aziz'});
+ const text=digestMessage(items,'en',today,{name:'Aziz',currency:'USD',rates});
  assert.equal(text,[
   greeting,
   '',
   '<b>Upcoming payments</b> · 30 September 2026',
   '',
   '<b>Overdue</b>',
-  '• Rent · UZS\u00a03,000,000 · 28 September 2026',
+  '• Rent · $250 · 28 September 2026',
   '',
   '<b>Today</b>',
   '• Salary &lt;sept&gt; · +$1,200 · income',
@@ -62,17 +63,30 @@ test('spending is compared with the week before in plain words, whichever way it
 });
 
 test('the digest is translated',()=>{
- const ru=digestMessage(items,'ru',today,{name:'Азиз'});
+ const ru=digestMessage(items,'ru',today,{name:'Азиз',currency:'UZS',rates});
  assert.ok(ru.startsWith(sun+' <b>Доброе утро, Азиз</b>\n<i>'));
  assert.match(ru,/<b>Предстоящие платежи<\/b> · 30 сентября 2026\n\n<b>Просрочено<\/b>\n• Rent · 3\s000\s000\sUZS · 28 сентября 2026\n\n<b>Сегодня<\/b>/);
  assert.match(ru,/погашение/);
- assert.match(digestMessage(items,'uz',today),/<b>.+<\/b> · 30 sentabr 2026\n\n<b>.+<\/b>\n• Rent · 3\s000\s000\sso.m/);
+ assert.match(digestMessage(items,'uz',today,{currency:'UZS',rates}),/<b>.+<\/b> · 30 sentabr 2026\n\n<b>.+<\/b>\n• Rent · 3\s000\s000\sso.m/);
  assert.match(digestMessage([],'de',today,{spending:{current:10,previous:30}}),/Guten Morgen/);
 });
 
 test('the bot\'s Upcoming answer is the payments block alone, with no greeting',()=>{
- assert.equal(paymentsSection([],'en',today),null);
- assert.match(paymentsSection(items,'en',today),/^<b>Upcoming payments<\/b> · 30 September 2026\n\n<b>Overdue<\/b>/);
+ assert.equal(paymentsSection([],'en',today,{currency:'USD'}),null);
+ assert.match(paymentsSection(items,'en',today,{currency:'USD',rates}),/^<b>Upcoming payments<\/b> · 30 September 2026\n\n<b>Overdue<\/b>/);
+});
+
+test('every payment is shown in the display currency, and one no rate converts is a dash with the reason, never another currency',()=>{
+ // Review BOT-004: bills showed in their own currency beside net worth in the primary one.
+ const uzs=paymentsSection(items,'en',today,{currency:'UZS',rates});
+ assert.match(uzs,/• Salary &lt;sept&gt; · \+UZS\u00a014,400,000 · income/);assert.match(uzs,/• Rent · UZS\u00a03,000,000/);
+ assert.doesNotMatch(uzs,/\$/);assert.doesNotMatch(uzs,/Exchange rate unavailable/);
+ const eur=paymentsSection(items,'en',today,{currency:'EUR',rates});
+ assert.match(eur,/• Rent · — · 28 September 2026/);assert.match(eur,/• Car loan · — · repayment/);
+ assert.doesNotMatch(eur,/UZS|\$/);assert.match(eur,/<i>Exchange rate unavailable\.<\/i>$/);
+ // Without any rates only payments already in the display currency show a figure.
+ const bare=digestMessage(items,'ru',today,{currency:'USD'});
+ assert.match(bare,/• Rent · — · /);assert.match(bare,/1\s200\s\$/);assert.match(bare,/<i>Курс валют недоступен\.<\/i>$/);
 });
 
 test('the digest cron is scheduled in the morning and documented',()=>{
@@ -104,7 +118,7 @@ function cronRoute({subscriptions,records={},splits={},links={},occurrences={},l
  };
  const route=loadTS('app/api/cron/telegram-digest/route.ts',{
   '@/lib/service-role':{serviceDatabase:()=>db},
-  '@/lib/telegram':{telegramConfig:()=>({token:'T',webhookSecret:'S',botUsername:'b'}),sendTelegramMessage:async message=>{sent.push(message);return sendResult;},escapeHtml:text=>text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')},
+  '@/lib/telegram':{telegramConfig:()=>({token:'T',webhookSecret:'S',botUsername:'b'}),deliverTelegramMessage:async message=>{sent.push(message);return sendResult;},escapeHtml:text=>text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')},
   '@/lib/deposit-interest':{...loadTS('lib/deposit-interest.ts'),depositToday:()=>'2026-09-30'},
  });
  return {sent,reads,deliveries,GET:()=>route.GET(new Request('https://local',{headers:{authorization:'Bearer test-secret'}}))};
@@ -122,7 +136,7 @@ test('the cron sends one digest per linked owner in their language and window, g
  const cron=cronRoute({subscriptions:[{user_id:'anna',chat_id:1},{user_id:'bob',chat_id:2}],records:{anna:[rent],bob:[{...rent,id:'far',date:'2026-10-25'}]},languages:{anna:'ru'},names:{anna:'Анна'},reminders:{anna:{enabled:false,days_ahead:3,snoozed:[]}}});
  const response=await cron.GET();
  assert.equal(response.status,200);
- assert.deepEqual(await response.json(),{sent:2,failed:0});
+ assert.deepEqual(await response.json(),{sent:2,failed:0,blocked:0});
  assert.equal(cron.sent.length,2);assert.equal(cron.sent[0].chat_id,1);
  assert.match(cron.sent[0].text,/<b>Предстоящие платежи<\/b>/);assert.match(cron.sent[0].text,/Rent/);
  assert.match(cron.sent[0].text,/Доброе утро, Анна/);
@@ -137,7 +151,7 @@ test('a snoozed item stays out of the digest and one failing owner does not bloc
  const cron=cronRoute({subscriptions:[{user_id:'broken',chat_id:9},{user_id:'anna',chat_id:1}],records:{anna:[{...rent,date:'2026-10-01'},{...rent,id:'car',name:'Car loan',kind:'Loan',amount:400,currency:'USD',date:'2026-10-03',frequency:'Once'}]},reminders:{anna:{enabled:true,days_ahead:7,snoozed:[{key:'rent:2026-10-01',until:'2026-10-05'}]}},failFor:'broken'});
  const response=await cron.GET();
  assert.equal(response.status,503);
- assert.deepEqual(await response.json(),{sent:1,failed:1});
+ assert.deepEqual(await response.json(),{sent:1,failed:1,blocked:0});
  assert.equal(cron.sent.length,1);
  assert.ok(!cron.sent[0].text.includes('Rent'));assert.ok(cron.sent[0].text.includes('Car loan'));
 });
@@ -165,7 +179,7 @@ test('a long payment list stays within one Telegram message and says how many it
  assert.equal((text.split('<b>Overdue</b>')[1].split('\n\n')[0].match(/^• QA Gym/gm)||[]).length,10);
  assert.match(text,/<b>1 October 2026<\/b>/);
  // A short list is unchanged: no "more" line.
- assert.doesNotMatch(paymentsSection(items,'en',today),/more/);
+ assert.doesNotMatch(paymentsSection(items,'en',today,{currency:'USD',rates}),/more/);
 });
 
 test('the digest and the recap share one subscriber loop: only linked private chats with the digest on, each owner counted on its own',async()=>{
@@ -175,13 +189,13 @@ test('the digest and the recap share one subscriber loop: only linked private ch
  const reads=[],delivered=[],deliveries=deliveryTable(),digest={kind:'digest',period:'2026-09-30'};
  const db={read:async path=>{reads.push(path);return [{user_id:'a',chat_id:1},{user_id:'b',chat_id:2},{user_id:'c',chat_id:3}];},write:deliveries.write};
  const counts=await deliverToSubscribers(db,digest,async subscriber=>{delivered.push(subscriber.chat_id);if(subscriber.user_id==='b')throw Error('boom');return subscriber.user_id==='a';});
- assert.deepEqual(counts,{sent:1,failed:2});assert.deepEqual(delivered,[1,2,3]);assert.deepEqual(reads,[digestSubscribersPath+'&limit=500&offset=0']);
+ assert.deepEqual(counts,{sent:1,failed:2,blocked:0});assert.deepEqual(delivered,[1,2,3]);assert.deepEqual(reads,[digestSubscribersPath+'&limit=500&offset=0']);
  // Only the delivered message keeps its claim; the failed ones are given back for a retry.
  assert.deepEqual(deliveries.rows,[{user_id:'a',...digest}]);
  await assert.rejects(deliverToSubscribers({read:async()=>{throw Error('down');}},digest,async()=>true),/down/);
  // A claim that cannot be written counts as a failure, and nothing is sent.
  const unsent=[];
- assert.deepEqual(await deliverToSubscribers({read:async()=>[{user_id:'a',chat_id:1}],write:async()=>new Response(null,{status:500})},digest,async()=>{unsent.push(1);return true;}),{sent:0,failed:1});
+ assert.deepEqual(await deliverToSubscribers({read:async()=>[{user_id:'a',chat_id:1}],write:async()=>new Response(null,{status:500})},digest,async()=>{unsent.push(1);return true;}),{sent:0,failed:1,blocked:0});
  assert.deepEqual(unsent,[]);
  for(const file of ['app/api/cron/telegram-digest/route.ts','app/api/cron/telegram-recap/route.ts']){
   const source=fs.readFileSync(file,'utf8');
@@ -194,15 +208,15 @@ test('a retried digest run sends nothing twice, and a digest that failed is sent
  const deliveries=deliveryTable();
  const subscriptions=[{user_id:'anna',chat_id:1},{user_id:'bob',chat_id:2}];
  const first=cronRoute({subscriptions,failFor:'bob',deliveries});
- assert.deepEqual(await (await first.GET()).json(),{sent:1,failed:1});
+ assert.deepEqual(await (await first.GET()).json(),{sent:1,failed:1,blocked:0});
  assert.deepEqual(deliveries.rows,[{user_id:'anna',kind:'digest',period:'2026-09-30'}]);
  // The retry (or a second run that overlaps it) reaches only Bob.
  const retry=cronRoute({subscriptions,deliveries});
  const response=await retry.GET();
- assert.equal(response.status,200);assert.deepEqual(await response.json(),{sent:1,failed:0});
+ assert.equal(response.status,200);assert.deepEqual(await response.json(),{sent:1,failed:0,blocked:0});
  assert.deepEqual(retry.sent.map(message=>message.chat_id),[2]);
  const again=cronRoute({subscriptions,deliveries});
- assert.deepEqual(await (await again.GET()).json(),{sent:0,failed:0});assert.equal(again.sent.length,0);
+ assert.deepEqual(await (await again.GET()).json(),{sent:0,failed:0,blocked:0});assert.equal(again.sent.length,0);
  // A message Telegram refused keeps no claim, so the next run tries it again.
  const refused=deliveryTable(),declined=cronRoute({subscriptions:[{user_id:'anna',chat_id:1}],sendResult:false,deliveries:refused});
  assert.equal((await declined.GET()).status,503);assert.deepEqual(refused.rows,[]);
@@ -233,4 +247,78 @@ test('background work over many owners runs a few at a time, finishes every item
  const started=[];
  await assert.rejects(forEachLimited([1,2,3,4,5],1,async item=>{started.push(item);if(item===2)throw Error('capture failed');}),/capture failed/);
  assert.deepEqual(started,[1,2],'no new item starts after a failure');
+});
+
+test('the bot\'s Upcoming payments answer shows bills in the primary currency at the latest snapshot rates, reading paid debts in pages',async()=>{
+ const {upcomingReply}=loadTS('lib/telegram-bot/replies.ts');
+ const reads=[];
+ const db=(snapshots,activity=[])=>({async read(path){
+  reads.push(path);
+  if(path.startsWith('/rest/v1/finance_records'))return recordsFor([{...rent,currency:'USD',amount:500,date:'2026-09-02'}],path);
+  if(path.startsWith('/rest/v1/user_preferences'))return [{language:'en',currencies:['UZS']}];
+  if(path.startsWith('/rest/v1/portfolio_snapshots'))return snapshots;
+  if(path.startsWith('/rest/v1/account_activity'))return path.includes('offset=0')?activity:[];
+  if(path.startsWith('/rest/v1/payment_occurrences')||path.startsWith('/rest/v1/mortgage_payments'))return [];
+  throw Error('unexpected '+path);
+ }});
+ const text=await upcomingReply(db([{occurred_on:'2026-09-29',assets:0,debt:0,rates:{UZS:12000},updated_at:''}]),'anna','en',today);
+ assert.match(text,/• Rent · UZS 6,000,000/);assert.doesNotMatch(text,/\$/);
+ const missing=await upcomingReply(db([]),'anna','en',today);
+ assert.match(missing,/• Rent · —/);assert.match(missing,/Exchange rate unavailable\./);
+ for(const table of ['account_activity','mortgage_payments'])assert.ok(reads.some(path=>path.startsWith('/rest/v1/'+table)&&path.includes('limit=500&offset=0')),table+' is paged');
+ // A full page of repayments asks for the next one.
+ reads.length=0;
+ await upcomingReply(db([],Array.from({length:500},()=>({action:'repayment',target_id:null,occurred_on:'2026-09-01'}))),'anna','en',today);
+ assert.ok(reads.some(path=>path.startsWith('/rest/v1/account_activity')&&path.includes('offset=500')));
+});
+
+test('a chat that blocked the bot keeps its claim, has its digest switched off and is not counted as a failure; a refused release is reported',async()=>{
+ // Review BOT-005: a blocked bot failed every run, gave the claim back and alerted the operator forever.
+ const reported=[];
+ const {deliverToSubscribers}=loadTS('lib/telegram-owner.ts',{'./monitoring':{reportError:async(...args)=>{reported.push(args);}}});
+ const deliveries=deliveryTable(),patches=[],digest={kind:'digest',period:'2026-09-30'};
+ const db={read:async()=>[{user_id:'a',chat_id:1},{user_id:'b',chat_id:2},{user_id:'c',chat_id:3}],async write(path,init){
+  if(path.startsWith('/rest/v1/telegram_subscriptions')){patches.push({path,method:init.method,body:JSON.parse(init.body)});return new Response(null,{status:204});}
+  return deliveries.write(path,init);
+ }};
+ const outcomes={a:'sent',b:'blocked',c:'failed'};
+ assert.deepEqual(await deliverToSubscribers(db,digest,async({user_id})=>outcomes[user_id]),{sent:1,failed:1,blocked:1});
+ assert.deepEqual(deliveries.rows.map(row=>row.user_id),['a','b'],'the blocked chat keeps its claim; the failed one is given back');
+ assert.equal(patches.length,1);assert.equal(patches[0].method,'PATCH');assert.match(patches[0].path,/user_id=eq\.b&chat_id=eq\.2/);
+ assert.equal(patches[0].body.digest_enabled,false);assert.equal('chat_id' in patches[0].body,false,'the chat stays linked');
+ // When switching the digest off fails, the message counts as failed and is tried again.
+ const failing=deliveryTable();
+ assert.deepEqual(await deliverToSubscribers({read:db.read,write:(path,init)=>path.startsWith('/rest/v1/telegram_subscriptions')?Promise.resolve(new Response(null,{status:500})):failing.write(path,init)},digest,async()=>'blocked'),{sent:0,failed:3,blocked:0});
+ assert.deepEqual(failing.rows,[]);
+ // A claim that cannot be given back is reported, and the run goes on.
+ assert.equal(reported.length,0);
+ const stuck=deliveryTable();
+ assert.deepEqual(await deliverToSubscribers({read:async()=>[{user_id:'a',chat_id:1}],write:(path,init)=>init.method==='DELETE'?Promise.resolve(new Response(null,{status:500})):stuck.write(path,init)},digest,async()=>false),{sent:0,failed:1,blocked:0});
+ assert.equal(reported.length,1);assert.equal(reported[0][0],'telegram-delivery');
+});
+
+test('the digest cron answers 200 and raises no alert when the only undelivered digests went to chats that blocked the bot',async()=>{
+ process.env.CRON_SECRET='test-secret';
+ const table=deliveryTable(),muted=[];
+ const cron=cronRoute({subscriptions:[{user_id:'anna',chat_id:1}],sendResult:'blocked',deliveries:{rows:table.rows,write:(path,init)=>path.startsWith('/rest/v1/telegram_subscriptions')?(muted.push(path),Promise.resolve(new Response(null,{status:204}))):table.write(path,init)}});
+ const response=await cron.GET();
+ assert.equal(response.status,200);assert.deepEqual(await response.json(),{sent:0,failed:0,blocked:1});
+ assert.equal(muted.length,1);assert.equal(table.rows.length,1,'not retried on the next run');
+});
+
+test('sending tells a chat that refuses the bot for good apart from a failure a retry may fix',async()=>{
+ const {deliverTelegramMessage,sendTelegramMessage}=loadTS('lib/telegram.ts');
+ const config={token:'T',webhookSecret:'S',botUsername:'b'},reply=(status,description)=>async()=>Response.json({ok:false,error_code:status,description},{status});
+ assert.equal(await deliverTelegramMessage({chat_id:1,text:'hi'},config,async()=>Response.json({ok:true})),'sent');
+ assert.equal(await deliverTelegramMessage({chat_id:1,text:'hi'},config,reply(403,'Forbidden: bot was blocked by the user')),'blocked');
+ assert.equal(await deliverTelegramMessage({chat_id:1,text:'hi'},config,reply(403,'Forbidden: user is deactivated')),'blocked');
+ assert.equal(await deliverTelegramMessage({chat_id:1,text:'hi'},config,reply(400,'Bad Request: chat not found')),'blocked');
+ assert.equal(await deliverTelegramMessage({chat_id:1,text:'hi'},config,reply(400,"Bad Request: can't parse entities")),'failed');
+ assert.equal(await deliverTelegramMessage({chat_id:1,text:'hi'},config,reply(429,'Too Many Requests')),'failed');
+ assert.equal(await deliverTelegramMessage({chat_id:1,text:'hi'},config,async()=>new Response('not json',{status:400})),'failed');
+ assert.equal(await deliverTelegramMessage({chat_id:1,text:'hi'},config,async()=>{throw Error('offline');}),'failed');
+ assert.equal(await deliverTelegramMessage({chat_id:1,text:'hi'},null),'failed');
+ // Existing callers still get a plain yes or no.
+ assert.equal(await sendTelegramMessage({chat_id:1,text:'hi'},config,reply(403,'Forbidden: bot was blocked by the user')),false);
+ assert.equal(await sendTelegramMessage({chat_id:1,text:'hi'},config,async()=>Response.json({ok:true})),true);
 });

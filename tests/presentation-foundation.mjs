@@ -425,3 +425,18 @@ test('every chart takes its look from the shared chart kit, never inline styles'
   assert.doesNotMatch(source, /strokeDasharray="(2 6|3 3|3 5)"|contentStyle=|axisLine=\{false\}|tickLine=\{false\}|maxBarSize=|isAnimationActive=\{false\}|<linearGradient/, file + ' keeps chart styling in the kit');
  }
 });
+
+test('interval labels name a month, quarter or year through the shared formatters in every language', () => {
+ const {intervalLabel}=load('chart.tsx');
+ const {translate,locales}=loadTS('lib/i18n.ts');
+ const labels=language=>{
+  const t=(key,values)=>translate(language,key,values),locale=locales[language];
+  return [intervalLabel('month',locale,t)('2026-07'),intervalLabel('month',locale,t,true)('2026-07'),intervalLabel('quarter',locale,t)('2026-Q3'),intervalLabel('year',locale,t)('2026')];
+ };
+ assert.deepEqual(labels('en'),['Jul','July 2026','Q3 2026','2026']);
+ const [ruShort,ruLong,ruQuarter,ruYear]=labels('ru');
+ assert.match(ruShort,/^июл/i);assert.match(ruLong,/^июль 2026$/i);assert.equal(ruQuarter,'3 кв. 2026');assert.equal(ruYear,'2026');
+ const [,uzLong,uzQuarter,uzYear]=labels('uz');
+ assert.match(uzLong,/^iyul 2026$/i);assert.equal(uzQuarter,'2026, 3-chorak');assert.equal(uzYear,'2026');
+ assert.ok(labels('en').every(label=>!/^\d{4}-\d{2}$/.test(label)),'never the stored key');
+});

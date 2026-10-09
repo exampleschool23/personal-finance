@@ -52,6 +52,7 @@ export const limits = {
  publicMarket: [{ max: 60, seconds: minute }, { max: 600, seconds: hour }],
  market: [{ max: 60, seconds: minute }, { max: 1000, seconds: day }],
  import: [{ max: 20, seconds: hour }, { max: 100, seconds: day }],
+ attachments: [{ max: 60, seconds: hour }, { max: 300, seconds: day }],
  benchmarks: [{ max: 30, seconds: minute }, { max: 300, seconds: day }],
  clientErrors: [{ max: 10, seconds: minute }, { max: 100, seconds: day }],
  health: [{ max: 30, seconds: minute }],

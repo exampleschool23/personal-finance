@@ -54,7 +54,7 @@ test('the projected cash spends what is left of each budget: this month after sp
  const today = '2026-10-10';
  const records = [record('cash', 'Checking', 'Cash', 5000, '2026-01-01'), record('gym', 'Gym', 'Living expense', 40, '2026-01-20', { frequency: 'Monthly', custom_category_id: 'food', account_id: 'cash' })];
  const lines = [{ key: 'food', name: 'Groceries', categoryKeys: ['food'], amount: 500 }, { key: 'Charity', name: 'Charity', categoryKeys: ['Charity'], amount: 30 }];
- const budget = { linesFor: () => lines, spent: new Map([['food', 300], ['Charity', 45]]) };
+ const budget = { linesFor: () => ({ lines, missing: 0 }), spent: new Map([['food', 300], ['Charity', 45]]) };
  const forecast = cashForecast({ records, occurrences: [], today, days: 60, currency: 'USD', rates, budget });
  const spending = forecast.events.filter(event => event.source === 'budget').map(event => [event.date, event.name, event.amount]);
  // October: 500 − 300 spent − 40 gym still due = 160 today; Charity is already overspent. November: 460 beside its gym bill.
@@ -66,5 +66,34 @@ test('the projected cash spends what is left of each budget: this month after sp
  assert.equal(without.totals[0].end - forecast.totals[0].end, 160 + 490 + 530);
  // A bill no rate converts leaves its budget out rather than counting both.
  const euroGym = [records[0], { ...records[1], currency: 'GBP' }];
- assert.deepEqual(cashForecast({ records: euroGym, occurrences: [], today, days: 20, currency: 'USD', rates, budget: { linesFor: () => [lines[0]], spent: new Map() } }).events.filter(event => event.source === 'budget'), []);
+ assert.deepEqual(cashForecast({ records: euroGym, occurrences: [], today, days: 20, currency: 'USD', rates, budget: { linesFor: () => ({ lines: [lines[0]], missing: 0 }), spent: new Map() } }).events.filter(event => event.source === 'budget'), []);
+ // A budget no rate converts is left out of the projection and counted, so the note shows (MONEY-008).
+ const unknown = cashForecast({ records, occurrences: [], today, days: 60, currency: 'USD', rates, budget: { linesFor: month => ({ lines: month === '2026-11' ? [] : lines, missing: month === '2026-11' ? 1 : 0 }), spent: new Map() } });
+ assert.equal(unknown.missing, 1);
+ assert.equal(unknown.converted, false);
+ assert.deepEqual(unknown.months.map(group => [group.month, group.missing]), [['2026-10', 0], ['2026-11', 1], ['2026-12', 0]], 'that month\'s total is unknown');
+ assert.equal(unknown.events.some(event => event.source === 'budget' && event.date.startsWith('2026-11')), false);
+ assert.equal(cashForecast({ records, occurrences: [], today, days: 60, currency: 'USD', rates, budget }).missing, 0);
+});
+
+test('flex mode: Budget, the Overview card and the forecasts plan the same Flexible amount, and the leftover rolls over once (DRY-001)', () => {
+ const { budgetCategories, budgetRows, budgetRowsForMode, flexBucketCategory, flexBucketPlan, flexBucketRollover, leftToBudget } = loadTS('lib/budget.ts');
+ // No saved Flexible amount; Groceries (flexible) budgets 400 and rolls over since September, when 300 was spent.
+ const settings = [setting('food', 'flexible', { rollover: true, rollover_start: '2026-09-01' }), setting('flex:flexible', 'flexible', { rollover: true, rollover_start: '2026-09-01' })];
+ const state = { mode: 'flex', applyForward: false, categories: settings, amounts: [amount('food', 400, 'USD', '2026-09')] };
+ const all = budgetCategories(categories, settings);
+ const history = new Map([['2026-09', { month: '2026-09', byCategory: new Map([['food', 300]]), missing: 0 }], ['2026-10', { month: '2026-10', byCategory: new Map(), missing: 0 }]]);
+ const rows = budgetRows(all, state.amounts, history, '2026-10', 'USD', rates);
+ assert.equal(rows.find(row => row.key === 'food').rolloverIn, 100, 'the category alone would carry 100');
+ const plan = flexBucketPlan(state.amounts, all, '2026-10', 'USD', rates);
+ assert.equal(plan, 400, 'the plan carries no per-category rollover');
+ const forecast = budgetLines({ state, categories, removed: [] }, '2026-10', 'USD', rates).lines.find(line => line.key === 'flex:flexible');
+ assert.equal(forecast.amount, plan, 'Budget and the forecasts agree');
+ // The bucket's own rollover carries September's leftover, once: 400 + 100 available, not 600.
+ const carried = flexBucketRollover(flexBucketCategory(settings), all, state.amounts, history, '2026-10', 'USD', rates);
+ assert.equal(carried, 100);
+ assert.equal(plan + carried, 500);
+ const shown = budgetRowsForMode(rows, 'flex');
+ assert.equal(shown.find(row => row.key === 'food').rolloverIn, 0, 'in flex mode the category carries nothing of its own');
+ assert.equal(leftToBudget(shown.filter(row => row.direction === 'expense'), 'flex', plan, 0).expenses, 400, 'the Overview Budget card plans the same 400');
 });

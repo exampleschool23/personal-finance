@@ -30,7 +30,8 @@ import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
 import { useDisplayMoney } from '@/components/display-money';
-import { formatAccountOption,formatDate,formatNumber,formatPercent,calendarIso,parseCalendarDate } from '@/lib/format';
+import { formatAccountOption,formatDate,formatNumber,formatPercent } from '@/lib/format';
+import { addMonths } from '@/lib/calendar-days';
 import { type Goal,type PlanningData } from '@/lib/planning';
 import { investmentGoalItems, investmentGoalTargets, investmentGoalCompletion } from '@/lib/investment-goals';
 import { InvestmentGoalPlan } from './investment-goal-plan';
@@ -61,7 +62,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
  const accounts=data.records.filter(record=>record.kind==='Cash'),today=depositToday();
  // New goals start in the primary currency, not the currency shown in the top bar.
  const primary=currencies[0]??currency;
- const maxDate=calendarIso(new Date(parseCalendarDate(today)!.getFullYear()+100,parseCalendarDate(today)!.getMonth(),parseCalendarDate(today)!.getDate()));
+ const maxDate=addMonths(today,1200);
  const goalCurrency=(goal:Goal)=>measuredIn(goal,{records:accounts,holdingAccounts:investmentAccounts},currency);
  const open=(goal?:Goal)=>{setError('');setDraft(goal?{...goal,kind:goal.kind??'savings',currency:goalCurrency(goal),investment_targets:investmentGoalTargets(goal),expected_allocated:goal.allocated}:{id:crypto.randomUUID(),name:'',kind:'net_worth',currency:primary,account_id:null,target:0,allocated:0,target_date:null,archived:false,monthly_contribution:null,annual_return:0});};
  // A new stock or crypto goal skips the add-goal flow and opens the holdings editor directly.

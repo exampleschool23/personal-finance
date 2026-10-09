@@ -234,9 +234,8 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 .budget-year table{width:100%;border-collapse:collapse;font-size:var(--type-caption);font-variant-numeric:tabular-nums}
 .budget-year th,.budget-year td{padding:10px 12px;border-bottom:1px solid var(--hairline);text-align:end;white-space:nowrap;vertical-align:top}
 .budget-year thead th{background:var(--muted);color:var(--muted-foreground);font-weight:500}
-.budget-year th[scope=row],.budget-year thead th:first-child{position:sticky;inset-inline-start:0;z-index:1;background:var(--card);text-align:start;font-weight:500}
-.budget-year th[scope=row]{text-transform:none;letter-spacing:normal;color:var(--foreground);font-size:var(--type-small)}
-.budget-year thead th:first-child{background:var(--muted)}
+.budget-year th[scope=row],.budget-year thead th:first-child{position:sticky;inset-inline-start:0;z-index:1;text-align:start;font-weight:500}
+.budget-year th[scope=row]{background:var(--card);text-transform:none;letter-spacing:normal;color:var(--foreground);font-size:var(--type-small)}
 /* The current month's column is tinted top to bottom, over each cell's own background (SCR-110). */
 .budget-year [data-current]{background-image:linear-gradient(color-mix(in srgb,var(--primary) 6%,transparent),color-mix(in srgb,var(--primary) 6%,transparent))}
 .budget-year th[data-current]{color:var(--foreground);font-weight:600}

@@ -54,6 +54,10 @@ test('the onboarding walks language, currency and a first cash account, saving a
  assert.equal(other.draft.step,'currency_other');assert.equal(other.reply.keyboard.reply.flat().length,fiatCurrencies.length+1,'every currency, then Back');
  for(const bad of ['dollars','US','12','XXX','usd1'])assert.equal(advanceOnboarding(other.draft,{text:bad},{language:'en'},777).draft.step,'currency_other',bad);
  assert.deepEqual(advanceOnboarding(other.draft,{text:' chf '},{language:'en'},777).effects,{currency:'CHF'});
+ // Review BOT-002: the typed search is escaped inside the HTML reply, so "<eur" is answered instead of refused by Telegram.
+ const tagged=advanceOnboarding(other.draft,{text:'<eur & co>'},{language:'en'},777);
+ assert.equal(tagged.draft.data.search,'<eur & co>','the search itself is kept as typed');
+ assert.match(tagged.reply.text,/“&lt;eur &amp; co&gt;”/);assert.doesNotMatch(tagged.reply.text,/<eur/);
  const named=advanceOnboarding(euro.draft,{text:'  Savings jar '},{language:'en'},777);
  assert.equal(named.draft.step,'balance');assert.deepEqual(named.reply.keyboard,{reply:[['0'],['‹ '+t('en','Back')]]});
  assert.deepEqual(euro.reply.keyboard,{reply:[[t('ja','Cash')],['‹ '+t('ja','Back')]]});

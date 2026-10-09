@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatNumberInput, numberInputValue, formatMoney, formatAccountOption, formatSignedMoney, formatCompactMoney, formatDate, formatDateTime, formatMonthYear, formatPercent } from '../lib/format.ts';
+import { formatNumberInput, numberInputValue, formatMoney, formatConvertedQuote, formatAccountOption, formatSignedMoney, formatCompactMoney, formatDate, formatDateTime, formatMonthYear, formatPercent } from '../lib/format.ts';
 test('amount entry groups digits and round-trips supported locales',()=>{
  for(const locale of ['en-US','ru-RU','uz-UZ']) {
   const formatted=numberInputValue(9300.25,locale);
@@ -17,6 +17,26 @@ test('money preserves unit-price precision and uses currency formatting',()=>{
  assert.equal(formatMoney(9300,'USD','en-US'),'$9,300');
  assert.equal(formatMoney(0.00001234,'USD','en-US',true),'$0.00001234');
  assert.equal(formatMoney(NaN,'USD','en-US'),'—');
+});
+test('a converted unit quote reads to the minor unit, or four significant digits below one, never a calculation tail (MONEY-006)',()=>{
+ const expected={
+  'en-US':['€635.14','€0.0001235','¥636','\u2212$2.5'],
+  'ru-RU':['635,14\u00a0€','0,0001235\u00a0€','636\u00a0¥','\u22122,5\u00a0$'],
+  'uz-UZ':['635,14\u00a0€','0,0001235\u00a0€','636\u00a0JP¥','\u22122,5\u00a0US$'],
+ };
+ for(const [locale,[quote,small,yen,negative]] of Object.entries(expected)){
+  assert.equal(formatConvertedQuote(635.13676472,'EUR',locale),quote);
+  // A small crypto price keeps four significant digits instead of rounding to nothing.
+  assert.equal(formatConvertedQuote(0.000123456,'EUR',locale),small);
+  // A currency without minor units shows none.
+  assert.equal(formatConvertedQuote(635.6,'JPY',locale),yen);
+  assert.equal(formatConvertedQuote(-2.5,'USD',locale),negative);
+ }
+ assert.equal(formatConvertedQuote(1,'USD','en-US'),'$1');
+ assert.equal(formatConvertedQuote(0.99999,'USD','en-US'),'$1');
+ assert.equal(formatConvertedQuote(NaN,'USD','en-US'),'—');
+ // The stored quote is untouched: an own-currency quote still keeps up to eight decimals.
+ assert.equal(formatMoney(635.13676472,'EUR','en-US',true),'€635.13676472');
 });
 test('balances display whole amounts across languages without changing input precision',()=>{
  const expected={

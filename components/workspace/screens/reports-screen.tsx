@@ -11,7 +11,6 @@ import { CashFlowTab } from '@/components/reports/cash-flow-tab';
 import { ReportFilters, type RangeChoice } from '@/components/reports/report-filters';
 import { TaxTab } from '@/components/reports/tax-tab';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
-import { useBudget } from '@/hooks/use-budget';
 import { useReportLink } from '@/hooks/use-report-link';
 import { useRangeData } from '@/hooks/use-report-data';
 import { budgetCategories } from '@/lib/budget';
@@ -29,7 +28,7 @@ const tabLabels: Record<ReportTab, string> = { cash_flow: 'Cash flow', spending:
  * profit and loss table, and business tax prep. Every chart narrows the transactions below it. */
 export function ReportsScreen() {
  const { t, locale } = useLanguage();
- const { user, demo, reload, currency, market, transactionTools, businessList, workspacePreferences, setViewing, storedRecord, household } = useWorkspace();
+ const { currency, market, budget, transactionTools, businessList, workspacePreferences, setViewing, storedRecord, household } = useWorkspace();
  // In a shared household, reports narrow to what one person owns or to what is shared.
  const homes = household.state;
  const owners = workspaceOwners(homes, { shared: t('Shared'), unnamed: t('Partner') });
@@ -45,7 +44,6 @@ export function ReportsScreen() {
  const ledger = useMemo(() => reportLedger(data, splits, range, currency, today, rates), [data, splits, range, currency, today, rates]);
  // Costs that come from an asset's history rather than a transaction belong to the household.
  const lines = useMemo(() => filterLines(ledger.lines, businesses).filter(line => !homes || inOwnerFilter(ownerFilter, line.record ? ownerOf(line.record, homes) : SHARED)), [ledger.lines, businesses, homes, ownerFilter]);
- const budget = useBudget(user, demo, reload);
  const groups = useMemo(() => new Map(budgetCategories(data.categories, budget.state.categories).map(category => [category.key, category.group])), [data.categories, budget.state.categories]);
  const groupOf = groupFinder(groups, data.categories);
  const names = reportNames(data.categories, businessList, t);

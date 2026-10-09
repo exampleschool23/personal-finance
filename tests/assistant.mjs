@@ -26,10 +26,23 @@ test('the assistant snapshot lists holdings, debts, monthly cash flow, scheduled
  assert.match(ru, /Today is 2 октября 2026\./);
  assert.match(ru, /Main account \(Cash\): 5\s000\s\$/);
  assert.match(ru, /Сентябрь 2026: income 3\s000\s\$/);
- assert.match(assistantContext(data, '2026-10-02', 'USD', { USD: 1 }, 'de'), /Car loan \(Loan\): 125\.000\.000\sUZS, due 1\. Januar 2027/);
+ assert.match(assistantContext(data, '2026-10-02', 'USD', { USD: 1, UZS: 12500 }, 'de'), /Car loan \(Loan\): 10\.000\s\$, due 1\. Januar 2027/);
  assert.equal(assistantContext(data, '2026-10-02', 'USD', { USD: 1 }, 'xx'), assistantContext(data, '2026-10-02', 'USD', { USD: 1 }), 'an unknown language reads as English');
- assert.match(assistantContext(data, '2026-10-02', 'USD', { USD: 1 }), /Car loan \(Loan\): UZS\s125,000,000/, 'no inferred exchange rate');
+ assert.match(assistantContext(data, '2026-10-02', 'USD', { USD: 1 }), /Car loan \(Loan\): — \(Exchange rate unavailable\), due/, 'no inferred exchange rate');
  assert.doesNotMatch(assistantInstructions, /\d{4}-\d{2}-\d{2}/, 'the instructions carry no per-request data, so they cache');
+});
+
+test('the assistant snapshot shows goals in the display currency too, and never an amount under another currency', () => {
+ // Review BOT-004: goals kept their own currency and an amount without a rate kept its own label.
+ const goals = [{ id: 'u', name: 'House', allocated: 25000000, target: 125000000, archived: false, currency: 'UZS', funding_monthly: 1250000 }];
+ const text = assistantContext({ ...data, goals }, '2026-10-02', 'USD', { USD: 1, UZS: 12500 });
+ assert.match(text, /House: \$2,000 of \$10,000, saving \$100 a month/);
+ assert.match(text, /Display currency: USD\.\n/, 'nothing is missing');
+ const missing = assistantContext({ ...data, goals }, '2026-10-02', 'EUR', { USD: 1, UZS: 12500 });
+ assert.match(missing, /House: — \(Exchange rate unavailable\) of — \(Exchange rate unavailable\), saving — \(Exchange rate unavailable\) a month/);
+ assert.doesNotMatch(missing, /UZS|\$/);
+ assert.match(missing, /Display currency: EUR\. \d+ amounts in currencies without a rate are written as — and left out of any total\./);
+ assert.match(missing, /amounts in currencies without a rate are left out/, 'the month counts its own missing amounts');
 });
 
 test('assistant requests start and end with the user and stay small', () => {

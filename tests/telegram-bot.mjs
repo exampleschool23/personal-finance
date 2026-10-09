@@ -8,7 +8,7 @@ const clock={now,today:'2026-09-30',newId:()=>'99999999-9999-4999-8999-999999999
 const owner='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222';
 const id=n=>`77000000-0000-4000-8000-0000000000${String(n).padStart(2,'0')}`;
 const entry=(n,name,kind,amount,currency='UZS')=>({id:id(n),user_id:owner,name,kind,amount,currency,quantity:0,cost:0,rate:0,date:'2026-01-01',frequency:'Once',notes:''});
-function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurrences=[],activity=[],mortgagePayments=[],drafts=[],failWrites=false,rpcFailure=null,rules=null,currencies}={}){
+function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurrences=[],activity=[],mortgagePayments=[],drafts=[],failWrites=false,rpcFailure=null,rules=null,currencies,snapshots=[{occurred_on:'2026-09-29',assets:0,debt:0,rates:{UZS:12000},updated_at:''}]}={}){
  const writes=[],reads=[];
  return {writes,drafts,reads,
   async read(path){
@@ -31,6 +31,7 @@ function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurren
    if(path.startsWith('/rest/v1/payment_occurrences'))return occurrences;
    if(path.startsWith('/rest/v1/account_activity'))return activity;
    if(path.startsWith('/rest/v1/mortgage_payments'))return mortgagePayments;
+   if(path.startsWith('/rest/v1/portfolio_snapshots'))return snapshots;
    if(path.startsWith('/rest/v1/telegram_drafts'))return drafts.filter(d=>d.user_id===owner);
    throw Error('unexpected read '+path);
   },
@@ -156,7 +157,7 @@ test('a loan with a monthly payment is due every month on its start day, until a
  // A mortgage is settled by a mortgage payment; without a start date the creation day in Tashkent is used.
  const flat={...entry(11,'Flat','Mortgage',50000000),date:'2040-01-01',estimated_monthly_payment:900000,created_at:'2026-09-03T20:00:00Z'};
  const mortgage=await handleTelegramUpdate(message(500,'Upcoming payments'),fakeDb({...workspace(),records:[flat]}),clock);
- assert.match(mortgage.replies[0].text,/<b>4 October 2026<\/b>\n• Flat · UZS.900,000/);
+ assert.match(mortgage.replies[0].text,/<b>4 October 2026<\/b>\n• Flat · \$75 · repayment/,'in the primary currency at the latest snapshot rate');
  const settled=await handleTelegramUpdate(message(500,'Upcoming payments'),fakeDb({...workspace(),records:[flat],mortgagePayments:[{mortgage_id:flat.id,paid_on:'2026-10-01'}]}),clock);
  assert.equal(settled.replies[0].text,'No payments due in the next 31 days.');
 });

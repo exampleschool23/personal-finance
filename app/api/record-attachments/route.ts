@@ -2,7 +2,8 @@ import { workspaceOwner } from '@/lib/household';
 import { config, session, supa, sameOrigin } from '@/lib/supabase';
 import { attachmentErrors, attachmentFileName, attachmentPath, attachmentProblemMessages, attachmentSchemas, attachmentStore, checkAttachmentRecord, finishAttachment, ownsAttachmentPath, toAttachmentView, validateAttachment, type AttachmentMime } from '@/lib/record-attachments';
 import { uuid } from '@/lib/api-validation';
-import { crossSite, parseAction, readJson, reply, signInAgain } from '@/lib/api-route';
+import { crossSite, parseAction, readJson, reply, signInAgain, tooManyAttempts } from '@/lib/api-route';
+import { limits, rateLimited } from '@/lib/rate-limit';
 
 // Every request carries the signed-in owner's token, so row security and the
 // storage policies apply as well; paths are always built from that owner's id.
@@ -46,6 +47,8 @@ export async function POST(req: Request) {
   const mime = file.mime as AttachmentMime;
   if (input.action === 'prepare') {
    // The browser uploads straight to storage through a one-time link, so files up to the limit skip the app server's body limit.
+   // Each link lets a file in before any row exists, so links are counted per workspace, whose folder they fill.
+   if (await rateLimited(req, 'attachments', limits.attachments, owner, { perIp: false })) return tooManyAttempts();
    const blocked = await checkAttachmentRecord(store, owner, file.record_id);
    if (blocked && !blocked.ok) return reply({ error: blocked.error }, blocked.status);
    const id = crypto.randomUUID();

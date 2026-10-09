@@ -40,7 +40,7 @@ export function cashFlowReport(data: Pick<PlanningData, 'records' | 'activity' |
  const incomeKeys = new Set([...income, ...data.categories.filter((category: Category) => category.direction === 'income').map(category => category.id)]);
  const byCategory = { income: new Map<string, number>(), expense: new Map<string, number>() };
  const byMerchant = { income: new Map<string, number>(), expense: new Map<string, number>() };
- const series: Array<{ month: string; income: number; expenses: number }> = [];
+ const series: TrendMonth[] = [];
  let missing = 0;
  for (const month of months) {
   const actual = monthActuals(data, splits, month, currency, today, rates);
@@ -50,7 +50,7 @@ export function cashFlowReport(data: Pick<PlanningData, 'records' | 'activity' |
    if (incomeKeys.has(key)) { add(byCategory.income, key, amount); monthIncome += amount; }
    else { add(byCategory.expense, key, amount); monthSpending += amount; }
   }
-  series.push({ month, income: monthIncome, expenses: monthSpending });
+  series.push({ month, income: monthIncome, expenses: monthSpending, missing: actual.missing });
  }
  const first = months[0], last = months.at(-1);
  for (const record of data.records as Entry[]) {
@@ -76,15 +76,23 @@ export function trendMonths(month: string, period: ReportPeriod) {
  const step = period === 'month' ? 1 : period === 'quarter' ? 3 : 12;
  return monthsBetween(periodMonths(shiftMonth(month, -step * (trendBars[period] - 1)), period)[0], month);
 }
-export type TrendBar = { period: string; income: number; expenses: number };
+export type TrendMonth = { month: string; income: number; expenses: number; missing: number };
+/** One bar: income and spending, both null when a transaction in it could not be converted (missing, never too low). */
+export type TrendBar = { period: string; income: number | null; expenses: number | null; missing: number };
 /** Monthly income and spending summed into one bar per month, quarter or year, keyed `2026-07`, `2026-Q3` or `2026`. */
-export function trendBarsBy(series: ReadonlyArray<{ month: string; income: number; expenses: number }>, period: ReportPeriod): TrendBar[] {
- const bars = new Map<string, TrendBar>();
+export function trendBarsBy(series: ReadonlyArray<TrendMonth>, period: ReportPeriod): TrendBar[] {
+ const bars = new Map<string, { period: string; income: number; expenses: number; missing: number }>();
  for (const item of series) {
-  const key = intervalOf(item.month + '-01', period), bar = bars.get(key) ?? { period: key, income: 0, expenses: 0 };
-  bars.set(key, { period: key, income: bar.income + item.income, expenses: bar.expenses + item.expenses });
+  const key = intervalOf(item.month + '-01', period), bar = bars.get(key) ?? { period: key, income: 0, expenses: 0, missing: 0 };
+  bars.set(key, { period: key, income: bar.income + item.income, expenses: bar.expenses + item.expenses, missing: bar.missing + item.missing });
  }
- return [...bars.values()];
+ return [...bars.values()].map(bar => bar.missing ? { ...bar, income: null, expenses: null } : bar);
+}
+/** The key of the last bar when its month, quarter or year is not over by `month` (or is still running on `today`), so
+ * the chart can call it "to date" rather than compare a partial period with whole ones. Null when it is complete. */
+export function partialBar(month: string, period: ReportPeriod, today: string) {
+ const last = period === 'month' ? month : shiftMonth(periodMonths(month, period)[0], period === 'quarter' ? 2 : 11);
+ return last > month || month >= today.slice(0, 7) ? intervalOf(month + '-01', period) : null;
 }
 
 export type SankeyData = { nodes: Array<{ name: string; kind: 'income' | 'total' | 'expense' | 'savings' }>; links: Array<{ source: number; target: number; value: number }> };

@@ -18,13 +18,26 @@ export function sendMessageBody(message:TelegramMessage){
 }
 /** Escape text that goes inside an HTML-mode message, such as record names. */
 export const escapeHtml=(text:string)=>text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-/** Send one message. Resolves to true when Telegram accepted it, false otherwise. */
-export async function sendTelegramMessage(message:TelegramMessage,config:TelegramConfig|null=telegramConfig(),fetcher:typeof fetch=fetch){
- if(!config)return false;
+/** How a send ended: accepted, refused for good (the person blocked the bot or deleted their Telegram account, or the
+ * chat no longer exists), or failed in a way a later try may fix. */
+export type SendOutcome='sent'|'blocked'|'failed';
+/** Telegram's 403s are all permanent (blocked, deactivated, kicked, never started); of its 400s only a missing chat is. */
+const goneChat=/chat not found/i;
+/** Send one message and say how it ended. */
+export async function deliverTelegramMessage(message:TelegramMessage,config:TelegramConfig|null=telegramConfig(),fetcher:typeof fetch=fetch):Promise<SendOutcome>{
+ if(!config)return 'failed';
  try{
   const response=await fetcher(`https://api.telegram.org/bot${config.token}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sendMessageBody(message)),cache:'no-store',signal:AbortSignal.timeout(10000)});
-  return response.ok;
- }catch{return false;}
+  if(response.ok)return 'sent';
+  if(response.status===403)return 'blocked';
+  if(response.status!==400)return 'failed';
+  const body=await response.json().catch(()=>null) as {description?:unknown}|null;
+  return goneChat.test(String(body?.description??''))?'blocked':'failed';
+ }catch{return 'failed';}
+}
+/** Send one message. Resolves to true when Telegram accepted it, false otherwise. */
+export async function sendTelegramMessage(message:TelegramMessage,config:TelegramConfig|null=telegramConfig(),fetcher:typeof fetch=fetch){
+ return await deliverTelegramMessage(message,config,fetcher)==='sent';
 }
 /** Acknowledge a button press so Telegram stops showing the loading state. */
 export async function answerCallback(callbackId:string,config:TelegramConfig|null=telegramConfig(),fetcher:typeof fetch=fetch){

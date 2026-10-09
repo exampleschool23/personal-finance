@@ -46,6 +46,38 @@ test('the hook measures the rows on screen, marks the list, and measures again o
  } finally { Object.assign(globalThis, globals); }
 });
 
+test('the hook keeps one observer across renders, still re-measures new content, and moves the observer when the list is replaced', () => {
+ const r = createRenderer();
+ const { useColumnsFit } = r.load('hooks/use-columns-fit.ts');
+ const cell = width => ({ getBoundingClientRect: () => ({ width }) });
+ const makeList = cells => ({ dataset: {}, cells, querySelectorAll: () => [{ children: cells.map(cell), getBoundingClientRect: () => ({ width: 900 }) }], getBoundingClientRect: () => ({ width: 900 }) });
+ const observers = [];
+ const names = ['getComputedStyle', 'ResizeObserver', 'requestAnimationFrame', 'cancelAnimationFrame'], globals = Object.fromEntries(names.map(name => [name, globalThis[name]]));
+ Object.assign(globalThis, {
+  getComputedStyle: () => ({ paddingLeft: '16px', paddingRight: '16px', columnGap: '12px' }),
+  ResizeObserver: class { constructor() { this.targets = []; this.disconnected = false; observers.push(this); } observe(target) { this.targets.push(target); } disconnect() { this.disconnected = true; } },
+  requestAnimationFrame: () => 1, cancelAnimationFrame() {},
+ });
+ try {
+  let list = makeList([300, 100, 70, 172]);
+  const Host = ({ version }) => { const ref = useColumnsFit('.recurring-row'); ref.current = list; return React.createElement('span', null, version); };
+  r.mount(React.createElement(Host, { version: 1 }));
+  assert.equal(list.dataset.layout, 'columns');
+  // New content in the same list: measured again on render, without a new observer.
+  list.cells.splice(2, 1, 400);
+  r.render(React.createElement(Host, { version: 2 }));
+  assert.equal(list.dataset.layout, 'stacked', 'a wider amount after a render stacks the rows');
+  assert.equal(observers.length, 1, 'renders reuse the observer');
+  // The list element is replaced (an empty state swapped for rows): the old observer stops, a new one watches the new list.
+  const first = list; list = makeList([300, 100, 70, 172]);
+  r.render(React.createElement(Host, { version: 3 }));
+  assert.equal(observers.length, 2);assert.equal(observers[0].disconnected, true);assert.deepEqual(observers[1].targets, [list]);assert.notEqual(observers[1].targets[0], first);
+  assert.equal(list.dataset.layout, 'columns');
+  r.unmount();
+  assert.equal(observers[1].disconnected, true);
+ } finally { Object.assign(globalThis, globals); }
+});
+
 test('Recurring and Subscriptions stack by what is on screen, not by a guessed breakpoint', () => {
  for (const file of ['components/planning/upcoming-page.tsx', 'components/planning/subscriptions-panel.tsx']) assert.match(fs.readFileSync(file, 'utf8'), /useColumnsFit<HTMLUListElement>\('\.recurring-row'\)/, file);
  const css = stylesheet();

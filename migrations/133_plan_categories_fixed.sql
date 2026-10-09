@@ -7,10 +7,12 @@
 -- keep the group their plan gave them.
 -- * convert_expense_plan makes the category Fixed, for a plan restored later from
 --   an old backup or Recently deleted;
--- * the categories migration 131 made become Fixed. They are recognised by what only
---   that conversion wrote: an added spending category, Flexible, with negative carry
---   switched off (the app keeps it on unless a rollover fund turns it off) and its
---   plan's label, or none, as the group.
+-- * the categories migration 131 made become Fixed. They are recognised by the
+--   transaction that wrote them: a budget setting still as migration 131 left it
+--   carries that transaction's id (xmin), which the trigger and function it created
+--   carry too. A setting the person changed since, or one of their own categories
+--   with rollover on and negative carry off, has another and keeps its type. Where
+--   that id cannot be found (131 applied piece by piece), nothing is re-typed.
 BEGIN;
 
 DO $$
@@ -27,7 +29,9 @@ UPDATE public.budget_categories b SET budget_type='fixed',updated_at=now()
  FROM public.transaction_categories c
  WHERE c.user_id=b.user_id AND c.id::text=b.category_key AND c.direction='expense'
   AND b.budget_type='flexible' AND NOT b.rollover_negative
-  AND (b.group_name IS NULL OR b.group_name IN ('Groceries','Family support','Household'));
+  AND (b.group_name IS NULL OR b.group_name IN ('Groceries','Family support','Household'))
+  AND b.xmin IN (SELECT p.xmin FROM pg_proc p WHERE p.oid=to_regprocedure('public.convert_restored_expense_plan()')
+   UNION ALL SELECT t.xmin FROM pg_trigger t WHERE t.tgname='convert_restored_expense_plan' AND t.tgrelid=to_regclass('public.expense_plans'));
 
 -- The capability version moves to 133, so the app can ask for this migration.
 CREATE OR REPLACE FUNCTION public.finance_capabilities() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$

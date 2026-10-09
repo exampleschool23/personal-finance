@@ -96,3 +96,32 @@ test('anonymous market reads are rate limited per visitor, signed-in reads per p
   assert.equal((await GET(new Request('http://localhost/api/market?crypto=BTC'))).status,200);
  }finally{globalThis.fetch=original;delete globalThis.marketTestLimited;delete globalThis.marketTestSession;}
 });
+
+test('metal prices reach signed-in readers without the market-data key, never signed-out ones, and only for known codes',async()=>{
+ const original=globalThis.fetch,key=process.env.TWELVE_DATA_API_KEY;
+ const metalCalls=[],paidCalls=[];
+ try{
+  delete process.env.TWELVE_DATA_API_KEY;
+  globalThis.fetch=async url=>{
+   url=String(url);
+   if(url.includes('gold-api.com')){metalCalls.push(url);const symbol=url.split('/').pop();return Response.json({symbol,currency:'USD',price:symbol==='XAG'?31.5:2400,updatedAt:'2026-10-09T10:00:00Z'});}
+   if(url.includes('twelvedata')){paidCalls.push(url);return Response.json({},{status:401});}
+   if(url.includes('open.er-api.com'))return Response.json({result:'success',base_code:'USD',rates:{USD:1},time_last_update_unix:1700000000});
+   return Response.json([]);
+  };
+  // Signed out: no metal request at all, and each metal says why.
+  globalThis.marketTestSession=null;
+  let data=await (await GET(new Request('http://localhost/api/market?metals=XAU,XAG'))).json();
+  assert.deepEqual([data.errors['Metal:XAU'],data.errors['Metal:XAG']],['Sign in to fetch metal prices.','Sign in to fetch metal prices.']);
+  assert.equal(data.quotes['Metal:XAU'],undefined);assert.equal(metalCalls.length,0);
+  // Signed in without TWELVE_DATA_API_KEY: the free source answers and the paid feed is never asked.
+  globalThis.marketTestSession={user:{id:'test'}};
+  data=await (await GET(new Request('http://localhost/api/market?metals=XAU,XAG'))).json();
+  assert.equal(data.quotes['Metal:XAU'].usd,2400);assert.equal(data.quotes['Metal:XAG'].usd,31.5);assert.equal(data.quotes['Metal:XAG'].source,'gold-api.com');
+  assert.equal(data.errors['Metal:XAU'],undefined);assert.equal(paidCalls.length,0);
+  // Unknown or lower-case codes are refused before any request.
+  metalCalls.length=0;
+  for(const metals of ['XCU','xau','XAU,BTC','../XAU'])assert.equal((await GET(new Request('http://localhost/api/market?metals='+encodeURIComponent(metals)))).status,400,metals);
+  assert.equal(metalCalls.length,0);
+ }finally{globalThis.fetch=original;delete globalThis.marketTestSession;if(key===undefined)delete process.env.TWELVE_DATA_API_KEY;else process.env.TWELVE_DATA_API_KEY=key;}
+});

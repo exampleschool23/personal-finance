@@ -1,8 +1,8 @@
 "use client";
 import { ChartPie, Goal as GoalIcon, ReceiptText } from 'lucide-react';
 import { BudgetProgress } from '@/components/budget/budget-rows';
-import { useBudget } from '@/hooks/use-budget';
-import { budgetCategories, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, leftToBudget, monthActuals, monthsBetween, remainingTone } from '@/lib/budget';
+import type { WorkspaceBudget } from '@/hooks/use-budget';
+import { budgetCategories, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketPlan, leftToBudget, monthActuals, monthsBetween, remainingTone } from '@/lib/budget';
 import { marketRates, type MarketData } from '@/lib/market';
 import { signedAmount } from '@/lib/transaction-list';
 import type { TransactionSplit } from '@/lib/transaction-tools';
@@ -82,11 +82,11 @@ function BudgetCardTotal({ plan, spent, currency }: { plan: number | null; spent
  </>;
 }
 
-/** This month's budget at a glance: planned spending against what is spent, and the categories closest to their limit. */
-export function BudgetCard({ owner = null, demo = false, revision = 0, data: provided, currency, market, splits }: { owner?: string | null; demo?: boolean; revision?: number; data: PlanningData; currency: string; market: MarketData | null; splits: TransactionSplit[] }) {
+/** This month's budget at a glance: planned spending against what is spent, and the categories closest to their limit.
+ * `budget` is the workspace's one Budget (`useWorkspace().budget`), so an edit on Budget shows here at once. */
+export function BudgetCard({ owner = null, demo = false, revision = 0, budget, data: provided, currency, market, splits }: { owner?: string | null; demo?: boolean; revision?: number; budget: Pick<WorkspaceBudget, 'state' | 'loading'>; data: PlanningData; currency: string; market: MarketData | null; splits: TransactionSplit[] }) {
  const { t, locale } = useLanguage();
  const today = depositToday(), month = depositMonth();
- const budget = useBudget(owner, demo, revision);
  const removed = provided.removedKinds ?? [];
  // Rollover categories need every month since their rollover started.
  const range = budgetReadRange(month, 'month', budgetCategories(provided.categories, budget.state.categories, removed));
@@ -94,9 +94,11 @@ export function BudgetCard({ owner = null, demo = false, revision = 0, data: pro
  const data = owner && !demo ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : provided;
  const rates = marketRates(market);
  const history = new Map(monthsBetween(range.from, month).map(item => [item, monthActuals(data, splits, item, currency, today, rates)]));
- const rows = budgetRows(budgetCategories(data.categories, budget.state.categories, removed), budget.state.amounts, history, month, currency, rates).filter(row => row.direction === 'expense' && !row.excluded);
- const flexible = budget.state.mode === 'flex' ? flexBucketBudget(budget.state.amounts, rows, month, currency, rates) : null;
-  const plan = leftToBudget(rows, budget.state.mode, flexible, 0).expenses, spent = rows.reduce((sum, row) => sum + row.actual, 0);
+ const categories = budgetCategories(data.categories, budget.state.categories, removed);
+ const rows = budgetRows(categories, budget.state.amounts, history, month, currency, rates).filter(row => row.direction === 'expense' && !row.excluded);
+ // The Flexible plan as Budget and the forecasts count it.
+ const flexible = budget.state.mode === 'flex' ? flexBucketPlan(budget.state.amounts, categories, month, currency, rates) : null;
+ const plan = leftToBudget(rows, budget.state.mode, flexible, 0).expenses, spent = rows.reduce((sum, row) => sum + row.actual, 0);
  // In flex mode flexible categories share one bucket, so only fixed categories keep a budget of their own here, as on the Budget page.
  const watched = budgetRowsForMode(rows, budget.state.mode).filter(row => row.budget).sort((a, b) => b.progress - a.progress).slice(0, 3);
  const money = (amount: number) => formatMoney(amount, currency, locale);

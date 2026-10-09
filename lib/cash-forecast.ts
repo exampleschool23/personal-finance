@@ -23,9 +23,9 @@ export type ForecastMonth = { month: string; events: ForecastEvent[]; total: num
  * events no rate converts are left out of it and counted in `missing`; `converted` is true when none is. */
 export type CashForecast = { today: string; end: string; events: ForecastEvent[]; accounts: ForecastSeries[]; totals: ForecastSeries[]; converted: boolean; missing: number; months: ForecastMonth[]; belowZero: ForecastSeries[] };
 
-/** Budget as the projected cash reads it, in the display currency: each month's spending lines, and this month's
- * spending so far per category key. */
-export type CashForecastBudget = { linesFor: (month: string) => BudgetLine[]; spent: ReadonlyMap<string, number> };
+/** Budget as the projected cash reads it, in the display currency: each month's spending lines with the count of
+ * budgets no rate converts, and this month's spending so far per category key. */
+export type CashForecastBudget = { linesFor: (month: string) => { lines: BudgetLine[]; missing: number }; spent: ReadonlyMap<string, number> };
 
 type Input = {
  records: Entry[]; occurrences: Occurrence[]; debtPayments?: DebtPayment[];
@@ -54,6 +54,20 @@ function installmentEvents(record: Entry, today: string, end: string, paid: Set<
  return result;
 }
 
+/** The months from today's through the horizon's. */
+function forecastMonths(today: string, end: string) {
+ const months: string[] = [];
+ for (let month = today.slice(0, 7); month <= end.slice(0, 7); month = shiftMonth(month, 1)) months.push(month);
+ return months;
+}
+
+/** Budgets of each month in the horizon that no rate converts: left out of the projection and counted, never as zero. */
+function missingBudgets(input: Input, end: string) {
+ const budget = input.budget;
+ if (!budget) return new Map<string, number>();
+ return new Map(forecastMonths(input.today, end).map(month => [month, budget.linesFor(month).missing] as const).filter(([, count]) => count > 0));
+}
+
 /** What each month's budgets add beyond the bills already scheduled in their categories, in the display currency:
  * this month what is left after the spending so far and the bills still due, today; a later month the rest, on its
  * first day. A bill that no rate converts leaves its budget out rather than counting it twice. */
@@ -61,9 +75,9 @@ function budgetEvents(scheduled: readonly ForecastEvent[], input: Input, end: st
  const budget = input.budget, { today, currency, rates } = input;
  if (!budget) return [];
  const result: ForecastEvent[] = [];
- for (let month = today.slice(0, 7); month <= end.slice(0, 7); month = shiftMonth(month, 1)) {
+ for (const month of forecastMonths(today, end)) {
   const current = month === today.slice(0, 7);
-  for (const line of budget.linesFor(month)) {
+  for (const line of budget.linesFor(month).lines) {
    const bills = scheduled.filter(event => event.amount < 0 && event.date.slice(0, 7) === month && line.categoryKeys.includes(event.category ?? '')).map(event => convertAmount(-event.amount, event.currency, currency, rates));
    if (bills.some(amount => amount === null)) continue;
    const spent = current ? line.categoryKeys.reduce((sum, key) => sum + (budget.spent.get(key) ?? 0), 0) : 0;
@@ -138,7 +152,8 @@ export function cashForecast(input: Input): CashForecast {
   return series(account.id, account.name, account.currency, account.id, Number(account.amount), deltas, today, days);
  });
  const convert = (amount: number, from: string) => { const value = convertAmount(amount, from, currency, rates); return value !== null && Number.isFinite(value) ? value : null; };
- let missing = 0, start = 0;
+ const unconverted = missingBudgets(input, end);
+ let missing = [...unconverted.values()].reduce((sum, count) => sum + count, 0), start = 0;
  for (const account of cash) { const value = convert(Number(account.amount), account.currency); if (value === null) missing += 1; else start += value; }
  const deltas = new Map<string, number>();
  const months: ForecastMonth[] = [];
@@ -151,6 +166,8 @@ export function cashForecast(input: Input): CashForecast {
   addTo(deltas, event.date, value);
   group.total += value;
  }
+ // A month with a budget no rate converts has an unknown total too.
+ for (const group of months) group.missing += unconverted.get(group.month) ?? 0;
  const totals = [series('total', 'Total cash', currency, null, start, deltas, today, days)];
  const belowZero = [...totals, ...accounts].filter(item => item.belowZero !== null);
  return { today, end, events, accounts, totals, converted: missing === 0, missing, months, belowZero };

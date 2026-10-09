@@ -7,7 +7,9 @@ import {escapeHtml} from './telegram';
 import {messageKit} from './telegram-kit';
 const goalThresholds=[25,50,75,100];
 export const firstRecordKey='first_record';
-export const netWorthKey='net_worth_high';
+/** The celebrated net-worth high, in US dollars like the daily snapshots, so changing the primary currency never reads
+ * as a new high. The older key `net_worth_high` held it in whatever the primary currency was then and is no longer read. */
+export const netWorthKey='net_worth_high_usd';
 export const goalKey=(goalId:string,threshold:number)=>`goal:${goalId}:${threshold}`;
 /** The thresholds a goal has reached that were not celebrated yet. */
 export function newGoalThresholds(allocated:number,target:number,achieved:readonly number[]){
@@ -17,7 +19,7 @@ export function newGoalThresholds(allocated:number,target:number,achieved:readon
 }
 export type NetWorthDecision={notify:boolean;store:number|null};
 /**
- * `history` is net worth by day, oldest first, ending today. A high is only
+ * `history` is net worth by day in one fixed currency (the snapshots' US dollars), oldest first, ending today. A high is only
  * celebrated after a week of history and when it beats the last celebrated
  * high (or, the first time, the best earlier day) by 2%, so a slow climb does
  * not message every night. The first run records its baseline quietly.

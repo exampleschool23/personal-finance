@@ -7,6 +7,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -14,6 +15,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # Fails on a known high or critical vulnerability in a package the app ships.
+      - run: npm audit --omit=dev --audit-level=high
       # Every test, plus a coverage floor and the list of files no test runs yet (scripts/coverage-floor.json).
       - run: npm run test:coverage
       - run: npm run lint
@@ -24,6 +27,7 @@ jobs:
   # on the fixed workspace in e2e/fixture.mjs. No real account or service is reached.
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0

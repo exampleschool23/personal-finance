@@ -159,6 +159,31 @@ test('a new net-worth high is announced after a week of history, then only after
  assert.equal(w.sent.length,2);
 });
 
+test('changing the primary currency never reads as a new net-worth high, either way; a real one is shown in the new currency',async()=>{
+ // Review MONEY-009: the stored high was a bare number in the old primary currency, so USD → UZS looked like a 12,000-fold climb.
+ const priced=nets=>snapshots(nets).map(snapshot=>({...snapshot,rates:{USD:1,UZS:12000}}));
+ const prefer=(w,currency)=>{w.tables.user_preferences[0].currencies=[currency];};
+ const w=world({portfolio_snapshots:priced([...climb,106])});
+ assert.equal(await announceNetWorthHigh(owner,deps(w)),false);
+ assert.deepEqual(w.tables.telegram_milestones.map(row=>[row.key,row.value]),[['net_worth_high_usd',106]],'stored in the snapshots\' US dollars');
+ prefer(w,'UZS');
+ assert.equal(await announceNetWorthHigh(owner,deps(w)),false);assert.equal(w.sent.length,0);
+ assert.equal(w.tables.telegram_milestones[0].value,106);
+ w.tables.portfolio_snapshots=priced([...climb,106,109]);
+ assert.equal(await announceNetWorthHigh(owner,deps(w)),true);
+ assert.equal(w.sent.at(-1).text,'Aziz, new net-worth high: UZS 1,308,000 📈');
+ assert.equal(w.tables.telegram_milestones[0].value,109);
+ prefer(w,'USD');
+ assert.equal(await announceNetWorthHigh(owner,deps(w)),false);assert.equal(w.sent.length,1);
+ // A high stored the old way, in a primary currency, is not read: the new key starts from its own quiet baseline.
+ const old=world({portfolio_snapshots:priced([...climb,107]),telegram_milestones:[{user_id:owner,key:'net_worth_high',value:1272000}]});
+ assert.equal(await announceNetWorthHigh(owner,deps(old)),false);assert.equal(old.sent.length,0);
+ assert.deepEqual(old.tables.telegram_milestones.find(row=>row.key==='net_worth_high_usd')?.value,106);
+ // A high that cannot be shown in the primary currency is kept but not announced under another currency.
+ const unpriced=world({portfolio_snapshots:snapshots([...climb,120])});prefer(unpriced,'EUR');
+ assert.equal(await announceNetWorthHigh(owner,deps(unpriced)),false);assert.equal(unpriced.sent.length,0);
+});
+
 test('net-worth highs respect the chat link and the action-message switch',async()=>{
  const off=world({telegram_subscriptions:[{user_id:owner,chat_id:500,actions_enabled:false}],portfolio_snapshots:snapshots([...climb,120])});
  assert.equal(await announceNetWorthHigh(owner,deps(off)),false);assert.equal(off.tables.telegram_milestones.length,0);
@@ -203,6 +228,9 @@ test('spending more than earning is stated plainly, and optional lines and the b
  const quiet=recapMessage(recap({income:0,spending:0,goalsMoved:0,top:null}),'en');
  assert.match(quiet.text,/A quiet week\. Add this week's records to see your recap\.$/);assert.equal(quiet.keyboard,undefined);
  assert.match(recapMessage(recap({income:0,spending:0,top:null}),'en').text,/Goals moved forward: 2/);
+ // The count goes through the shared number formatter, grouped in the owner's style.
+ assert.match(recapMessage(recap({goalsMoved:1234}),'en').text,/Goals moved forward: 1,234/);
+ assert.match(recapMessage(recap({goalsMoved:1234}),'ru').text,/: 1\s234/);
  assert.match(recapMessage(recap({name:'<i>'}),'en').text,/Your week, &lt;i&gt;/);
  assert.match(recapMessage(recap(),'ru').text,/^📊 <b>Ваша неделя, Aziz<\/b>\n28 сентября 2026 – 4 октября 2026/);
 });
@@ -228,7 +256,7 @@ function recapRoute({onRead=()=>{},subscriptions,records={},splits={},links={},c
  };
  const route=loadTS('app/api/cron/telegram-recap/route.ts',{
   '@/lib/service-role':{serviceDatabase:()=>db},
-  '@/lib/telegram':{telegramConfig:()=>config,sendTelegramMessage:async message=>{sent.push(message);return sendResult;},escapeHtml:text=>text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')},
+  '@/lib/telegram':{telegramConfig:()=>config,deliverTelegramMessage:async message=>{sent.push(message);return sendResult;},escapeHtml:text=>text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')},
   '@/lib/deposit-interest':{depositToday:()=>'2026-10-04'},
   '@/lib/account-access':{accountOrigin:()=>'https://hoggish.app'},
  });
@@ -244,7 +272,7 @@ test('the recap cron sends each linked owner their own week, in their language, 
   events:{anna:[{goal_id:'g1'},{goal_id:'g1'},{goal_id:'g2'}]},
  });
  const response=await cron.GET();
- assert.equal(response.status,200);assert.deepEqual(await response.json(),{sent:2,failed:0});
+ assert.equal(response.status,200);assert.deepEqual(await response.json(),{sent:2,failed:0,blocked:0});
  const [anna,bob]=cron.sent;
  assert.equal(anna.chat_id,1);assert.match(anna.text,/Ваша неделя, Анна/);assert.match(anna.text,/Pets/);assert.match(anna.text,/Целей продвинулось: 2/);
  assert.ok(anna.keyboard.inline[0][0].url.startsWith('https://t.me/share/url?url=https%3A%2F%2Fhoggish.app'));
@@ -295,7 +323,7 @@ test('the recap cron refuses a wrong secret, reports unreachable owners, and is 
  assert.equal((await route.GET(new Request('https://local',{headers:{authorization:'Bearer wrong'}}))).status,401);
  const failing=recapRoute({subscriptions:[{user_id:'anna',chat_id:1}],prefs:{anna:{language:'en',display_name:'A',currencies:['USD']}},sendResult:false});
  const response=await failing.GET();
- assert.equal(response.status,503);assert.deepEqual(await response.json(),{sent:0,failed:1});
+ assert.equal(response.status,503);assert.deepEqual(await response.json(),{sent:0,failed:1,blocked:0});
  const vercel=JSON.parse(fs.readFileSync('vercel.json','utf8'));
  assert.deepEqual(vercel.crons.find(cron=>cron.path==='/api/cron/telegram-recap'),{path:'/api/cron/telegram-recap',schedule:'0 15 * * 0'});
  assert.match(fs.readFileSync('VERCEL.md','utf8'),/telegram-recap/);
@@ -356,10 +384,10 @@ test('a retried recap run sends each owner their week once',async()=>{
  process.env.CRON_SECRET='test-secret';
  const deliveries=deliveryTable(),setup={subscriptions:[{user_id:'anna',chat_id:1}],prefs:{anna:{language:'en',display_name:'A',currencies:['USD']}},deliveries};
  const first=recapRoute(setup);
- assert.deepEqual(await (await first.GET()).json(),{sent:1,failed:0});
+ assert.deepEqual(await (await first.GET()).json(),{sent:1,failed:0,blocked:0});
  assert.deepEqual(deliveries.rows,[{user_id:'anna',kind:'recap',period:'2026-10-04'}]);
  const retry=recapRoute(setup);
- assert.deepEqual(await (await retry.GET()).json(),{sent:0,failed:0});assert.equal(retry.sent.length,0);
+ assert.deepEqual(await (await retry.GET()).json(),{sent:0,failed:0,blocked:0});assert.equal(retry.sent.length,0);
 });
 
 test('the daily snapshot cron reads only holdings and debts, by id pages, and values owners a few at a time',async()=>{

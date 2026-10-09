@@ -1,4 +1,4 @@
-import { crossSite, requestRejected, sameOrigin, tooManyAttempts } from '@/lib/api-route';
+import { crossSite, readCapped, requestRejected, sameOrigin, tooManyAttempts } from '@/lib/api-route';
 import { clientErrorMaxBytes, clientErrorSchema } from '@/lib/client-errors';
 import { reportError } from '@/lib/monitoring';
 import { limits, rateLimited } from '@/lib/rate-limit';
@@ -10,8 +10,9 @@ export async function POST(req: Request) {
  if (!sameOrigin(req)) return crossSite();
  if (Number(req.headers.get('content-length') ?? 0) > clientErrorMaxBytes) return tooLarge();
  if (await rateLimited(req, 'client-errors', limits.clientErrors)) return tooManyAttempts();
- const body = await req.text().catch(() => '');
- if (new TextEncoder().encode(body).length > clientErrorMaxBytes) return tooLarge();
+ // The stream is cut off at the limit, also for a client that sends no Content-Length or a false one.
+ const body = await readCapped(req, clientErrorMaxBytes).catch(() => '');
+ if (body === null) return tooLarge();
  let json: unknown = null;
  try { json = JSON.parse(body); } catch { /* answered below */ }
  const parsed = clientErrorSchema.safeParse(json);

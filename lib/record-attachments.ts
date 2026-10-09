@@ -9,6 +9,10 @@ import { uuid } from './api-validation';
 const attachmentBucket = 'attachments';
 const maxAttachmentBytes = 10 * 1024 * 1024;
 const maxAttachmentsPerRecord = 20;
+/** Storage folder listings come a page at a time. */
+const listPage = 1000;
+/** An upload link lasts two hours; a file older than a day with no row was never confirmed and can go. */
+const unconfirmedUploadMs = 24 * 60 * 60 * 1000;
 /** Signed links to view a file last five minutes. */
 const attachmentLinkSeconds = 300;
 /** Accepted types and the extension each is stored under. */
@@ -140,6 +144,17 @@ export function attachmentStore(request: SupabaseRequest) {
    const response = await request(`/rest/v1/record_attachments?id=eq.${id}&user_id=eq.${owner}`, { method: 'DELETE' });
    if (!response.ok) throw Error('unavailable');
   },
+  /** What sits directly in a storage folder (`<owner>/` or `<owner>/<record>/`): sub-folders come back without an id. */
+  async listFolder(prefix: string) {
+   const items: { name: string; id: string | null; created_at: string | null }[] = [];
+   for (let offset = 0; ; offset += listPage) {
+    const response = await request(`/storage/v1/object/list/${attachmentBucket}`, { method: 'POST', headers: json, body: JSON.stringify({ prefix, limit: listPage, offset, sortBy: { column: 'name', order: 'asc' } }) });
+    if (!response.ok) throw Error('unavailable');
+    const page = await response.json() as typeof items;
+    items.push(...page);
+    if (page.length < listPage) return items;
+   }
+  },
   /** Removes files; paths outside an owner's folder are never passed here. */
   async remove(paths: readonly string[]) {
    if (!paths.length) return;
@@ -189,11 +204,34 @@ export async function finishAttachment(store: AttachmentStore, owner: string, fi
  }
 }
 
-/** Removes every file an owner has, before the account itself is deleted. */
-export async function removeOwnerAttachments(store: AttachmentStore, owner: string) {
- const paths = (await store.list(owner)).map(item => item.path).filter(path => ownsAttachmentPath(owner, path));
+/** Every file stored under an owner's folder, with or without a row: an upload whose confirm never arrived has none. */
+export async function storedOwnerFiles(store: AttachmentStore, owner: string) {
+ const root = owner.toLowerCase(), files: { path: string; created_at: string | null }[] = [];
+ for (const folder of (await store.listFolder(root + '/')).filter(item => !item.id && uuidPattern.test(item.name))) {
+  for (const item of await store.listFolder(`${root}/${folder.name}/`)) {
+   const path = `${root}/${folder.name}/${item.name}`;
+   if (item.id && ownsAttachmentPath(owner, path)) files.push({ path, created_at: item.created_at });
+  }
+ }
+ return files;
+}
+
+const removeInBatches = async (store: AttachmentStore, paths: readonly string[]) => {
  for (let index = 0; index < paths.length; index += 100) await store.remove(paths.slice(index, index + 100));
  return paths.length;
+};
+
+/** Removes every file an owner has, before the account itself is deleted: the recorded ones and any upload never confirmed. */
+export async function removeOwnerAttachments(store: AttachmentStore, owner: string) {
+ const recorded = (await store.list(owner)).map(item => item.path), stored = (await storedOwnerFiles(store, owner)).map(item => item.path);
+ return removeInBatches(store, [...new Set([...recorded, ...stored])].filter(path => ownsAttachmentPath(owner, path)));
+}
+
+/** Removes files uploaded more than a day ago that were never confirmed, so no row points to them. */
+export async function removeUnconfirmedUploads(store: AttachmentStore, owner: string, now = Date.now()) {
+ const recorded = new Set((await store.list(owner)).map(item => item.path));
+ const stale = (await storedOwnerFiles(store, owner)).filter(file => !recorded.has(file.path) && now - Date.parse(file.created_at ?? '') > unconfirmedUploadMs);
+ return removeInBatches(store, stale.map(file => file.path));
 }
 
 /**

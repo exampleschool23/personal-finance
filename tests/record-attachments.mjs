@@ -42,7 +42,7 @@ test('paths put the owner folder first and are built from ids only',()=>{
 
 /** A fake Supabase holding rows and files for several owners; every query must name its owner. */
 function fakeSupabase({records={[id(2)]:id(1),[id(5)]:id(4)},rows=[],failInsert=false}={}){
- const files=new Map(),calls=[];
+ const files=new Map(),added=new Map(),calls=[];
  const ownerOf=path=>new URLSearchParams(path.split('?')[1]).get('user_id')?.replace(/^eq\./,'');
  const request=async(path,init={})=>{
   calls.push({path,init});const method=init.method??'GET';const query=new URLSearchParams(path.split('?')[1]??'');const eq=key=>query.get(key)?.replace(/^eq\./,'');
@@ -53,10 +53,16 @@ function fakeSupabase({records={[id(2)]:id(1),[id(5)]:id(4)},rows=[],failInsert=
   if(path.startsWith('/storage/v1/object/upload/sign/'))return Response.json({url:'/object/upload/sign/'+path.slice('/storage/v1/object/upload/sign/'.length)+'?token=t'});
   if(path.startsWith('/storage/v1/object/sign/'))return Response.json(JSON.parse(init.body).paths.map(item=>({path:item,signedURL:'/object/sign/attachments/'+item+'?token=s'})));
   if(path.startsWith('/storage/v1/object/authenticated/')){const bytes=files.get(path.slice('/storage/v1/object/authenticated/attachments/'.length));if(!bytes)return new Response(null,{status:404});return new Response(bytes.subarray(0,32),{status:206,headers:{'content-range':`bytes 0-31/${bytes.length}`}});}
+  if(path==='/storage/v1/object/list/attachments'&&method==='POST'){
+   // Storage lists one folder level, a page at a time: deeper paths come back as folders without an id.
+   const {prefix,limit,offset}=JSON.parse(init.body);const entries=new Map();
+   for(const file of [...files.keys()].filter(item=>item.startsWith(prefix)).sort()){const [name,...deeper]=file.slice(prefix.length).split('/');entries.set(name,deeper.length?{name,id:null,created_at:null}:{name,id:'object-'+name,created_at:added.get(file)??'2026-10-03T00:00:00Z'});}
+   return Response.json([...entries.values()].slice(offset,offset+limit));
+  }
   if(path==='/storage/v1/object/attachments'&&method==='DELETE'){for(const item of JSON.parse(init.body).prefixes)files.delete(item);return Response.json([]);}
   throw Error('Unexpected request '+method+' '+path);
  };
- return {request,files,rows,calls};
+ return {request,files,added,rows,calls};
 }
 
 test('removing an account\'s files touches only that owner\'s folder',async()=>{
@@ -65,10 +71,10 @@ test('removing an account\'s files touches only that owner\'s folder',async()=>{
  assert.equal(await lib.removeOwnerAttachments(store,id(1)),2);assert.deepEqual([...db.files.keys()],[`${id(4)}/${id(5)}/${id(7)}.jpg`]);
 });
 
-function api({auth=id(1),origin=true,db=fakeSupabase()}={}){
- const calls=[];
- const route=loadTS('app/api/record-attachments/route.ts',{'@/lib/supabase':{config:()=>({url:'https://project.supabase.co',key:'k'}),session:async()=>auth?{user:{id:auth},token:'token-'+auth}:null,sameOrigin:()=>origin,supa:async(path,init,token)=>{calls.push({path,token});return db.request(path,init);}}});
- return {...route,calls,db};
+function api({auth=id(1),origin=true,db=fakeSupabase(),limited=false}={}){
+ const calls=[],limits=[];
+ const route=loadTS('app/api/record-attachments/route.ts',{'@/lib/rate-limit':{limits:{attachments:[{max:1,seconds:1}]},rateLimited:async(req,name,list,key,options)=>{limits.push({name,key,options});return limited;}},'@/lib/supabase':{config:()=>({url:'https://project.supabase.co',key:'k'}),session:async()=>auth?{user:{id:auth},token:'token-'+auth}:null,sameOrigin:()=>origin,supa:async(path,init,token)=>{calls.push({path,token});return db.request(path,init);}}});
+ return {...route,calls,db,limits};
 }
 const post=(action,data)=>new Request('https://local/api/record-attachments',{method:'POST',body:JSON.stringify({action,data})});
 
@@ -138,4 +144,41 @@ test('row menus and popovers never open the transaction details behind them',()=
  const read=path=>fs.readFileSync(new URL('../'+path,import.meta.url),'utf8');
  assert.match(read('components/workspace/records-table.tsx'),/event\.currentTarget\.contains\(target\)&&!target\.closest\('button,a,input'\)\)setViewing/);
  assert.match(read('components/workspace/screens/transactions-screen.tsx'),/!\(event\.currentTarget as HTMLElement\)\.contains\(event\.target as Node\) \|\|/);
+});
+
+test('an upload whose confirm never arrived is removed with the account, and only that owner\'s',async()=>{
+ const app=api();
+ const prepared=await (await app.POST(post('prepare',{record_id:id(2),name:'March.pdf',mime:'application/pdf',size:pdf.length}))).json();
+ // The browser stored the file, then the tab closed before confirm: no row exists.
+ const path=`${id(1)}/${id(2)}/${prepared.id}.pdf`;app.db.files.set(path,pdf);app.db.files.set(`${id(4)}/${id(5)}/${id(7)}.jpg`,jpeg(4));
+ assert.equal(app.db.rows.length,0);
+ assert.equal(await lib.removeOwnerAttachments(lib.attachmentStore(app.db.request),id(1)),1);
+ assert.deepEqual([...app.db.files.keys()],[`${id(4)}/${id(5)}/${id(7)}.jpg`]);
+ // Listings are paged: more files than one page still all go.
+ const db=fakeSupabase();for(let n=0;n<1001;n++)db.files.set(`${id(1)}/${id(2)}/${id(10000+n)}.jpg`,jpeg(4));
+ assert.equal(await lib.removeOwnerAttachments(lib.attachmentStore(db.request),id(1)),1001);assert.equal(db.files.size,0);
+ // A listing that fails keeps the account for another try.
+ await assert.rejects(lib.removeOwnerAttachments(lib.attachmentStore(async(path,init)=>path.includes('/object/list/')?new Response('{}',{status:500}):db.request(path,init)),id(1)));
+});
+
+test('the bin purge removes uploads never confirmed after a day, and keeps recorded and recent files',async()=>{
+ const db=fakeSupabase(),now=Date.parse('2026-10-09T12:00:00Z');
+ const stale=`${id(1)}/${id(2)}/${id(3)}.jpg`,fresh=`${id(1)}/${id(2)}/${id(6)}.jpg`,recorded=`${id(1)}/${id(2)}/${id(8)}.jpg`,foreign=`${id(4)}/${id(5)}/${id(7)}.jpg`;
+ for(const path of [stale,fresh,recorded,foreign]){db.files.set(path,jpeg(4));db.added.set(path,'2026-10-01T00:00:00Z');}
+ db.added.set(fresh,'2026-10-09T06:00:00Z');db.rows.push({id:id(8),user_id:id(1),record_id:id(2),path:recorded});
+ assert.equal(await lib.removeUnconfirmedUploads(lib.attachmentStore(db.request),id(1),now),1);
+ assert.deepEqual([...db.files.keys()].sort(),[fresh,recorded,foreign].sort());
+ // The permanent-delete route runs the sweep with the owner's token.
+ db.added.set(fresh,'2026-10-01T00:00:00Z');
+ const route=loadTS('app/api/deleted-items/route.ts',{'@/lib/supabase':{session:async()=>({user:{id:id(1)},token:'owner'}),sameOrigin:()=>true,supa:async(path,init)=>path==='/rest/v1/rpc/permanently_delete_item'?Response.json({ok:true,paths:[]}):db.request(path,init)}});
+ assert.equal((await route.DELETE(new Request('https://local/api/deleted-items',{method:'DELETE',body:JSON.stringify({id:id(9)})}))).status,200);
+ assert.deepEqual([...db.files.keys()].sort(),[recorded,foreign].sort());
+});
+
+test('upload links are rate limited per workspace',async()=>{
+ const app=api({limited:true});
+ assert.equal((await app.POST(post('prepare',{record_id:id(2),name:'a.jpg',mime:'image/jpeg',size:10}))).status,429);
+ assert.ok(!app.calls.some(call=>call.path.includes('/upload/sign/')),'no link is handed out');
+ assert.deepEqual(app.limits,[{name:'attachments',key:id(1),options:{perIp:false}}]);
+ assert.deepEqual(loadTS('lib/rate-limit.ts').limits.attachments,[{max:60,seconds:3600},{max:300,seconds:86400}]);
 });

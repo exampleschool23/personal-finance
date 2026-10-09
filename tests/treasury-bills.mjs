@@ -38,8 +38,8 @@ test('a Treasury bill matures on its date, with its own label in the Telegram di
  const [due]=upcomingPayments([bill({date:'2026-10-05'})],[],today);
  assert.equal(due.type,'maturity');assert.equal(due.date,'2026-10-05');
  assert.equal(upcomingPayments([bill({amount:0,date:'2026-10-05'})],[],today).length,0,'a redeemed bill has no reminder');
- for(const language of ['en','ru','uz'])assert.match(paymentsSection([due],language,today),new RegExp(JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'))['Treasury bill maturity']));
- assert.doesNotMatch(paymentsSection([due],'en',today),/deposit maturity/);
+ for(const language of ['en','ru','uz'])assert.match(paymentsSection([due],language,today,{currency:'USD'}),new RegExp(JSON.parse(fs.readFileSync(`lib/locales/${language}.json`,'utf8'))['Treasury bill maturity']));
+ assert.doesNotMatch(paymentsSection([due],'en',today,{currency:'USD'}),/deposit maturity/);
 });
 
 test('the tracker offers balance, interest and costs, and labels buying and redeeming a bill',()=>{

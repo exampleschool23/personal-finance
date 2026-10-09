@@ -259,21 +259,19 @@ test('POST occurrence with extra adds another payment to a recorded occurrence i
  assert.deepEqual(state.calls[1].body,{p_data:{...data,notes:''}});
 });
 
-test('GET attaches what later payments added to each paid occurrence, and still loads before migration 112',async()=>{
+test('GET attaches what later payments added to each paid occurrence, and answers 503 when they cannot be read',async()=>{
  const occurrences=[{id:'o1',record_id:'free',due_on:'2026-10-01',status:'paid'},{id:'o2',record_id:'gym',due_on:'2026-10-02',status:'dismissed'},{id:'o3',record_id:'rent',due_on:'2026-10-01',status:'paid'}];
  const extras=[{occurrence_record_id:'free',occurrence_due_on:'2026-10-01',amount:800},{occurrence_record_id:'free',occurrence_due_on:'2026-10-01',amount:500}];
- // The extras read is the one that filters on occurrence_record_id; it answers with later payments, or fails when the column is missing.
+ // The extras read is the one that filters on occurrence_record_id; it answers with later payments, or fails.
  const read=(state,answer)=>{state.rows=new Proxy({payment_occurrences:occurrences},{get:(rows,table)=>table==='finance_records'&&state.reads.at(-1)?.extra?.occurrence_record_id?answer():rows[table]});};
  let {api,state}=harness();
  read(state,()=>extras);
  let body=await (await api.GET(get('?scope=workspace&month=2026-10'))).json();
  assert.deepEqual(body.occurrences.map(item=>[item.id,item.extra]),[['o1',1300],['o2',undefined],['o3',0]]);
  ({api,state}=harness());
- read(state,()=>{throw Error('column finance_records.occurrence_record_id does not exist');});
- const response=await api.GET(get('?scope=workspace&month=2026-10'));
- assert.equal(response.status,200);
- body=await response.json();
- assert.deepEqual(body.occurrences.map(item=>item.extra),[0,undefined,0]);
+ // Counting none would show scheduled payments as less paid than they are (ERR-002), so the read fails as a whole.
+ read(state,()=>{throw Error('offline');});
+ assert.deepEqual(await json(await api.GET(get('?scope=workspace&month=2026-10'))),{status:503,body:{error:'Could not load planning data. Check that the latest migrations are installed.'}});
 });
 
 test('POST occurrence across currencies checks the dated rate and stores it with the payment',async()=>{

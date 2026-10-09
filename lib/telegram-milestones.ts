@@ -7,7 +7,7 @@
 import type {ActionAuth} from './notify-action';
 import type {ActionEvent} from './action-messages';
 import {firstRecordKey,goalKey,milestoneMessage,netWorthHigh,netWorthKey,newGoalThresholds,type Milestone} from './milestones';
-import {snapshotPoints} from './portfolio-snapshots';
+import {convertAmount} from './market';
 import {serviceDatabase,type ServiceDatabase} from './service-role';
 import {supa} from './supabase';
 import {ownerProfile,recentSnapshots} from './telegram-owner';
@@ -32,10 +32,12 @@ async function workspaceRows<T>(path:string,token:string,read:typeof supa=supa){
  if(!response.ok)throw Error('Milestone lookup failed.');
  return await response.json() as T[];
 }
-async function celebrate(db:ServiceDatabase,owner:string,subscription:NonNullable<Awaited<ReturnType<typeof subscriptionOf>>>,milestone:(currency:string)=>Milestone,{config=telegramConfig(),send=sendTelegramMessage}:Deps){
+/** `milestone` gets the owner's primary currency; null when its amount cannot be shown in it, and nothing is sent. */
+async function celebrate(db:ServiceDatabase,owner:string,subscription:NonNullable<Awaited<ReturnType<typeof subscriptionOf>>>,milestone:(currency:string)=>Milestone|null,{config=telegramConfig(),send=sendTelegramMessage}:Deps){
  if(!config)return false;
- const profile=await ownerProfile(db,owner);
- return send({chat_id:subscription.chat_id,text:milestoneMessage(milestone(profile.currency),profile.language,profile.name)},config);
+ const profile=await ownerProfile(db,owner),message=milestone(profile.currency);
+ if(!message)return false;
+ return send({chat_id:subscription.chat_id,text:milestoneMessage(message,profile.language,profile.name)},config);
 }
 /** After a saved action: the first record, or a savings goal passing a quarter of its target. Resolves to true when a message was sent. */
 export async function sendActionMilestone(auth:ActionAuth,event:ActionEvent,deps:Deps={}){
@@ -68,14 +70,16 @@ export async function announceNetWorthHigh(owner:string,deps:Deps={}){
  if(!db)return false;
  const subscription=await subscriptionOf(db,owner);
  if(!subscription)return false;
- const profile=await ownerProfile(db,owner);
- const points=snapshotPoints(await recentSnapshots(db,owner,1000),profile.currency);
+ // Highs are compared and stored in the snapshots' own US dollars; only the message is converted, at the latest rates.
+ const snapshots=await recentSnapshots(db,owner,1000);
+ const history=snapshots.map(snapshot=>Number(snapshot.assets)-Number(snapshot.debt)).filter(Number.isFinite);
  const [stored]=await db.read<Array<{value:number|null}>>(`${table}?select=value&user_id=eq.${owner}&key=eq.${netWorthKey}`);
- const decision=netWorthHigh(points.map(point=>point.net),stored?.value===null||stored?.value===undefined?null:Number(stored.value));
+ const decision=netWorthHigh(history,stored?.value===null||stored?.value===undefined?null:Number(stored.value));
  if(decision.store!==null){
   const saved=await db.write(table+'?on_conflict=user_id,key',{method:'POST',headers:{Prefer:'resolution=merge-duplicates'},body:JSON.stringify({user_id:owner,key:netWorthKey,value:decision.store,achieved_at:new Date().toISOString()})});
   if(!saved.ok)throw Error('Database request failed.');
  }
  if(!decision.notify)return false;
- return celebrate(db,owner,subscription,currency=>({type:'net_worth',amount:decision.store!,currency}),deps);
+ const rates=snapshots[snapshots.length-1]?.rates;
+ return celebrate(db,owner,subscription,currency=>{const amount=convertAmount(decision.store!,'USD',currency,rates);return amount===null?null:{type:'net_worth',amount,currency};},deps);
 }

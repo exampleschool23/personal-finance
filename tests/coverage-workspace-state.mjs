@@ -183,6 +183,24 @@ test('the sample workspace starts from the backend and changes only its own copy
  assert.equal(ws().demo, false);assert.deepEqual(ws().rows, []);assert.equal(ws().editing, null);
 });
 
+test('one Budget for the workspace: a change on Budget reaches the forecasts at once, in the sample workspace too (CONC-007)', async () => {
+ browser('https://app.test/');
+ pathname = '/';
+ const ws = mount();
+ await settle();
+ await ws().startDemo();await settle();
+ const month = today.slice(0, 7);
+ assert.equal(ws().forecastReady, true);
+ const before = ws().forecast.monthlyExpenses, lines = ws().forecastBudget.linesFor(month).lines;
+ const flexible = ws().goalBudget.linesIn(month, 'USD', 1).lines.find(line => line.key === 'Other expense');
+ await ws().budget.saveAmount('Other expense', month, flexible.amount + 5000, 'USD', false);await settle();
+ assert.equal(ws().budget.state.amounts.find(item => item.category_key === 'Other expense' && item.month === month).amount, flexible.amount + 5000);
+ assert.equal(ws().forecast.monthlyExpenses, before + 5000, 'the monthly estimate (Overview, Cash flow) counts the new budget');
+ assert.equal(ws().goalBudget.linesIn(month, 'USD', 1).lines.find(line => line.key === 'Other expense').amount, flexible.amount + 5000, 'the Goals surplus reads it');
+ assert.notDeepEqual(ws().forecastBudget.linesFor(month).lines, lines, 'the projected cash reads it');
+ assert.deepEqual(ws().forecastBudgetState.error, '');
+});
+
 test('signed in, settings and records are read, and every change is sent and read again', async () => {
  browser('https://app.test/');
  pathname = '/transactions';
@@ -291,6 +309,12 @@ test('the pure save rules and the table view behave as the provider relied on', 
  const { workspaceTotals } = loadTS('lib/workspace-totals.ts');
  const totals = workspaceTotals({ records: [{ id: 'c', kind: 'Cash', currency: 'USD', amount: 100, quantity: 1 }, { id: 'e', kind: 'Cash', currency: 'JPY', amount: 5, quantity: 1 }], planningRecords: [], currency: 'USD', market: { rates: { USD: 1 }, quotes: {}, errors: {} } });
  assert.deepEqual([totals.netWorth, totals.excludedCurrencies], [100, ['JPY']]);
+ assert.equal(totals.unconvertedPlanning, 0);
+ // A Salary schedule in UZS with no rate: counted, so Overview and Cash flow read — like Goals instead of Income $0 (MONEY-008).
+ const salary = { id: 's', kind: 'Salary', currency: 'UZS', amount: 9000000, quantity: 1, cost: 0, frequency: 'Monthly' };
+ const unknown = workspaceTotals({ records: [], planningRecords: [salary, { id: 'r', kind: 'Rent expense', currency: 'USD', amount: 500, quantity: 1, cost: 0, frequency: 'Monthly' }], currency: 'USD', market: { rates: { USD: 1 }, quotes: {}, errors: {} } });
+ assert.deepEqual([unknown.unconvertedPlanning, unknown.monthlyIncomeEntries.map(entry => entry.id)], [1, ['r']]);
+ assert.equal(workspaceTotals({ records: [], planningRecords: [salary], currency: 'USD', market: { rates: { USD: 1, UZS: 12000 }, quotes: {}, errors: {} } }).unconvertedPlanning, 0);
  const { workspaceLoading } = loadTS('lib/workspace-totals.ts');
  const ready = { demo: false, settingsLoading: false, summaryLoaded: true, tableLoading: true, marketReady: true, marketLoading: true };
  assert.equal(workspaceLoading(ready), false, 'a later page read or market refresh does not cover the workspace');

@@ -24,7 +24,7 @@ import { marketRates } from '@/lib/market';
 
 export function OverviewScreen() {
  const { t } = useLanguage();
- const { user, demo, rows, addCashFlow, current, currency, market, forecastBudget, reload, preferencesData, excludedCurrencies, snapshots, forecast, forecastReady, planning, transactionTools, workspacePreferences, workspaceLoading, businessList, setSettingUpBusinesses } = useWorkspace();
+ const { user, demo, rows, addCashFlow, current, currency, market, budget, forecastBudget, forecastBudgetState, reload, preferencesData, excludedCurrencies, snapshots, forecast, forecastReady, planning, transactionTools, workspacePreferences, workspaceLoading, businessList, setSettingUpBusinesses } = useWorkspace();
  const planningReady = demo || (!planning.loading && !planning.error);
  const cards = useOverviewCards({ entries: current, currency, excludedCurrencies, forecast, forecastReady, planning: planningReady ? planning.data : null });
  const { layout, change } = useDashboardLayout(workspacePreferences, demo);
@@ -34,14 +34,14 @@ export function OverviewScreen() {
  const card = ({ netWorth, income }: { netWorth: ReactNode; income: ReactNode }): Record<DashboardCard, ReactNode> => ({
   net_worth: netWorth,
   spending: planningReady && <SpendingPaceCard owner={user} demo={demo} revision={reload} data={planning.data} splits={transactionTools.data.splits} snapshots={snapshots.snapshots} currency={currency} market={market}/>,
-  budget: planningReady && <BudgetCard owner={user} demo={demo} revision={reload} data={planning.data} currency={currency} market={market} splits={transactionTools.data.splits}/>,
+  budget: planningReady && <BudgetCard owner={user} demo={demo} revision={reload} budget={budget} data={planning.data} currency={currency} market={market} splits={transactionTools.data.splits}/>,
   business: planningReady && <BusinessCard owner={user} demo={demo} revision={reload} data={planning.data} splits={transactionTools.data.splits} businesses={businessList} currency={currency} market={market} onSetup={() => setSettingUpBusinesses(true)}/>,
   commitments: cards.commitments,
   allocation: cards.allocation,
   goals: planningReady && <GoalsCard goals={planning.data.goals} order={savedGoalOrder(workspacePreferences.data.preferences)} data={planning.data} currency={currency} netWorth={code => goalFinancials(planning.data.records, depositToday().slice(0, 7), code, market).netWorth}/>,
   transactions: planningReady && <RecentTransactionsCard owner={user} demo={demo} revision={reload} data={planning.data}/>,
   upcoming: cards.upcoming,
-  forecast: planningReady && <LowestBalanceCard data={planning.data} budget={forecastBudget} currency={currency} rates={marketRates(market)}/>,
+  forecast: planningReady && <LowestBalanceCard data={planning.data} budget={forecastBudget} budgetState={forecastBudgetState} currency={currency} rates={marketRates(market)}/>,
   income,
  });
  return <>

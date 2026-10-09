@@ -108,6 +108,19 @@ test('a taken number creates nothing, and a failed write removes the new user ag
  }
  assert.deepEqual(deleted,[ownerId,ownerId]);
 });
+test('a sign-up whose undo also fails alerts the operator and still fails with the original error',async()=>{
+ // Review ERR-001: a failed undo was swallowed, leaving the number locked to a half-made account with no trace.
+ const reported=[];
+ const {createTelegramAccount:create,adminAccounts:admins}=loadTS('lib/telegram-account.ts',{'./monitoring':{reportError:async(...args)=>{reported.push(args);}}});
+ const undo=Error('Could not remove the account.');
+ await assert.rejects(create({db:botDb({__fail:['user_preferences']}),admin:{createPhoneUser:async()=>({id:ownerId}),setUserPassword:async()=>{},deleteUser:async()=>{throw undo;}},secret:'s'},person),/Database request failed/);
+ assert.equal(reported.length,1);assert.equal(reported[0][0],'telegram-signup');assert.equal(reported[0][1],undo);assert.deepEqual(reported[0][2],{userId:ownerId});assert.deepEqual(reported[0][3],{alert:true});
+ // The admin call itself reports a refused or unreachable delete instead of resolving as if it worked.
+ const env={SUPABASE_SERVICE_ROLE_KEY:'k',SUPABASE_URL:'https://project.supabase.co'};
+ await assert.rejects(admins(env,async()=>new Response(null,{status:500})).deleteUser(ownerId),/Could not remove the account/);
+ await assert.rejects(admins(env,async()=>{throw Error('offline');}).deleteUser(ownerId),/Could not remove the account/);
+ await admins(env,async()=>new Response(null,{status:200})).deleteUser(ownerId);
+});
 
 test('login tokens are random, stored only as hashes, valid for minutes and spendable exactly once',async()=>{
  const db=botDb();

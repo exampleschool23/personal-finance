@@ -3,7 +3,7 @@ import { uuid } from '@/lib/api-validation';
 import { crossSite, postgrestFailure, readJson, signInAgain } from '@/lib/api-route';
 import { workspaceOwner } from '@/lib/household';
 import { session, supa, sameOrigin } from '@/lib/supabase';
-import { attachmentStore, ownsAttachmentPath } from '@/lib/record-attachments';
+import { attachmentStore, ownsAttachmentPath, removeUnconfirmedUploads } from '@/lib/record-attachments';
 import { reportError } from '@/lib/monitoring';
 export async function GET(req:Request) {
  try {
@@ -42,6 +42,12 @@ async function removeOrphanFiles(auth:{token:string;user:{id:string};owner?:stri
  if(!forgotten?.ok)await report(Error('Could not forget removed attachments.'));
 }
 
+/** Uploads whose confirm never arrived have no row for the purge to return; files over a day old without one go too. */
+async function removeUnconfirmedFiles(auth:{token:string;user:{id:string};owner?:string|null}){
+ try{await removeUnconfirmedUploads(attachmentStore((path,init)=>supa(path,init,auth.token)),workspaceOwner(auth));}
+ catch(error){await reportError('attachment-removal',error,{route:'/api/deleted-items',status:200,userId:auth.user.id},{alert:'repeated'});}
+}
+
 export async function DELETE(req:Request) {
  if(!sameOrigin(req))return crossSite();
  try {
@@ -53,6 +59,7 @@ export async function DELETE(req:Request) {
   // Attachments of a transaction that is gone for good come back as paths; their files are removed too.
   const paths=((await result.json().catch(()=>({})) as {paths?:unknown}).paths);
   if(Array.isArray(paths))await removeOrphanFiles(auth,paths);
+  await removeUnconfirmedFiles(auth);
   return Response.json({ok:true});
  } catch {return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
 }

@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
-const { budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, leftToBudget, flexBucketBudget, budgetOverall, budgetRowsForMode, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, demoBudget } = loadTS('lib/budget.ts');
+const { budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, leftToBudget, flexBucketPlan: bucketPlan, budgetOverall, budgetRowsForMode, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, knownPlan } = loadTS('lib/budget.ts');
+const { demoBudget } = loadTS('lib/budget-demo.ts');
 const { shiftMonth } = loadTS('lib/calendar-days.ts');
 const { demoRecords } = loadTS('lib/demo-finance.ts');
 
@@ -152,7 +153,7 @@ test('flex mode shows one coherent flexible plan: the bucket, or the categories\
  const before = [amount('Salary', '2026-09', 1000), amount('Rent expense', '2026-09', 300), amount('Living expense', '2026-09', 200)];
  const rows = budgetRows(categories, before, history, '2026-09', 'USD', rates);
  // No bucket saved yet: the flexible plan is the $200 the category already had, not $0.
- const bucket = flexBucketBudget(before, rows, '2026-09', 'USD', rates);
+ const bucket = bucketPlan(before, categories, '2026-09', 'USD', rates);
  assert.equal(bucket, 200);
  const shown = budgetRowsForMode(rows, 'flex');
  const living = shown.find(row => row.key === 'Living expense');
@@ -166,7 +167,7 @@ test('flex mode shows one coherent flexible plan: the bucket, or the categories\
  assert.deepEqual(left, { income: 1000, expenses: 500, contributions: 0, left: 500, flexible: 200, missing: 0 });
  // Once a bucket amount is saved it is the plan, whatever the categories had.
  const saved = [...before, amount(flexBucketKey, '2026-09', 450)];
- assert.equal(flexBucketBudget(saved, budgetRows(categories, saved, history, '2026-09', 'USD', rates), '2026-09', 'USD', rates), 450);
+ assert.equal(bucketPlan(saved, categories, '2026-09', 'USD', rates), 450);
  // Category mode is untouched.
  assert.deepEqual(budgetRowsForMode(rows, 'category'), rows);
 });
@@ -268,10 +269,11 @@ test('unconvertible budgets, buckets and contributions leave their totals unknow
  // Flex mode: a bucket built from an unconvertible flexible budget is unknown too.
  const euroFlexible = [amount('Living expense', '2026-09', 50, false, 'EUR')];
  const flexRows = budgetRows(categories, euroFlexible, new Map(), '2026-09', 'USD', rates);
- assert.equal(flexBucketBudget(euroFlexible, flexRows, '2026-09', 'USD', rates), null);
  assert.equal(flexBucketPlan(euroFlexible, categories, '2026-09', 'USD', rates), null);
  const flexLeft = leftToBudget(budgetRowsForMode(flexRows, 'flex'), 'flex', null, 0);
  assert.deepEqual([flexLeft.expenses, flexLeft.flexible, flexLeft.missing], [null, null, 1]);
+ // A row's own plan: unknown only when its budget is; an unknown rollover alone keeps the plan (TEST-001).
+ assert.deepEqual([knownPlan(rent), knownPlan({ missing: true, budget: 200 }), knownPlan({ missing: false, budget: null }), knownPlan({ missing: false, budget: 75 })], [null, 200, 0, 75]);
 });
 
 test('a rollover whose starting balance no rate converts is marked missing, so the settings dialog shows — rather than 0', () => {

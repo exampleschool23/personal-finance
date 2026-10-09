@@ -9,6 +9,7 @@ import { SeriesLegend, toggleKey } from '@/components/presentation-foundation/se
 import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/components/language-provider';
+import { useDisplayMoney } from '@/components/display-money';
 import { frequencyLabels } from '@/lib/finance';
 import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
 import type { PlanningData } from '@/lib/planning';
@@ -28,13 +29,13 @@ export function useRecurringDetails(data: PlanningData, today: string) {
 }
 
 /** Month by month, what was recorded (solid) inside the outline of what was scheduled, so a short payment shows an unfilled top. */
-function HistoryChart({ track, currency, fill, done }: { track: Track; currency: string; fill: string; done: string }) {
+function HistoryChart({ points, currency, fill, done }: { points: Track['points']; currency: string; fill: string; done: string }) {
  const { t, locale } = useLanguage();
  const [hidden, setHidden] = useState<string[]>([]);
  const money = (value: number) => formatMoney(value, currency, locale);
  const names: Record<string, string> = { recorded: done, scheduled: t('Scheduled payment') };
  return <>
-  <div className="portfolio-chart"><ResponsiveContainer width="100%" height={chartHeight.compact}><BarChart data={track.points} accessibilityLayer margin={chartMargin}>
+  <div className="portfolio-chart"><ResponsiveContainer width="100%" height={chartHeight.compact}><BarChart data={points} accessibilityLayer margin={chartMargin}>
    <CartesianGrid {...chartGrid}/>
    <XAxis xAxisId="scheduled" dataKey="month" hide/>
    <XAxis xAxisId="recorded" dataKey="month" tickFormatter={monthTick(locale)} minTickGap={16} {...chartAxis}/>
@@ -48,10 +49,9 @@ function HistoryChart({ track, currency, fill, done }: { track: Track; currency:
 }
 
 /** Each occurrence in the period, newest first: its date, whether it was settled, and what came against what was scheduled. */
-function PaymentList({ items, currency, today, done, income }: { items: RecurringItem[]; currency: string; today: string; done: string; income: boolean }) {
+function PaymentList({ items, money, today, done, income }: { items: RecurringItem[]; money: (value: number) => string; today: string; done: string; income: boolean }) {
  const { t, locale } = useLanguage();
  const dueLabel = useDueLabel();
- const money = (value: number) => formatMoney(value, currency, locale);
  const label = (entry: RecurringItem) => entry.status === 'paid' ? done : entry.status === 'skipped' ? t('Skipped') : dueLabel(today, entry.date);
  if (!items.length) return null;
  return <section className="recurring-details-history" aria-label={t('Payments')}>
@@ -71,7 +71,10 @@ export function RecurringDetails({ item, data, today, onClose }: Props) {
  const { record, direction } = item;
  const track = useMemo(() => scheduleTrack(item, data, today, months), [item, data, today, months]);
  const next = useMemo(() => nextOccurrence(item, data, today), [item, data, today]);
- const money = (value: number) => formatMoney(value, record.currency, locale);
+ // Every figure in the display currency; without a rate they read "—" and the chart gives way to a note.
+ const { convert, show, currency = record.currency } = useDisplayMoney();
+ const money = (value: number) => show(value, record.currency);
+ const points = convert(1, record.currency) === null ? null : track.points.map(point => ({ ...point, scheduled: convert(point.scheduled, record.currency)!, recorded: convert(point.recorded, record.currency)! }));
  const income = direction === 'income';
  const done = t(income ? 'Received' : 'Paid'), fill = income ? 'var(--positive)' : 'var(--foreground)';
  return <Dialog open onOpenChange={open => { if (!open) onClose(); }}><DialogContent className="recurring-details sm:max-w-2xl">
@@ -83,8 +86,8 @@ export function RecurringDetails({ item, data, today, onClose }: Props) {
   </StatTiles>
   <section className="recurring-details-chart" aria-label={t('History')}>
    <div className="recurring-details-bar"><h3>{t('History')}</h3><Segmented label={t('History period')} options={[6, 12, 24].map(value => ({ value, label: t('{count} months', { count: formatNumber(value, locale, 0) }) }))} value={months} onChange={setMonths}/></div>
-   {track.scheduled > 0 ? <HistoryChart track={track} currency={record.currency} fill={fill} done={done}/> : <EmptyState icon={<BarChart3 aria-hidden="true"/>} description={t('Nothing recorded in this period.')}/>}
+   {track.scheduled <= 0 ? <EmptyState icon={<BarChart3 aria-hidden="true"/>} description={t('Nothing recorded in this period.')}/> : points ? <HistoryChart points={points} currency={currency} fill={fill} done={done}/> : <p role="status" className="muted">{t('Exchange rate unavailable.')}</p>}
   </section>
-  <PaymentList items={track.history} currency={record.currency} today={today} done={done} income={income}/>
+  <PaymentList items={track.history} money={money} today={today} done={done} income={income}/>
  </DialogContent></Dialog>;
 }

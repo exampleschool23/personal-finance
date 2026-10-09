@@ -4,12 +4,15 @@
 import {income} from './finance';
 import {formatDate,formatNumber} from './format';
 import type {Language} from './i18n';
+import {amountIn,type RateTable} from './money';
 import type {DueItem} from './planning';
 import {escapeHtml} from './telegram';
 import {messageKit} from './telegram-kit';
 const motivation=['Small steps add up to big results.','A clear view of your money is the first step to calm.','Every record you add makes tomorrow easier to plan.','Progress beats perfection. Keep going.'];
 export type DigestExtras={
  name?:string;currency?:string;
+ /** Units of each currency per US dollar (the latest snapshot's rates), to show every payment in `currency`. */
+ rates?:RateTable|null;
  /** Net worth in `currency` and its change over the latest day, when two snapshots exist. */
  netWorth?:{amount:number;change:number|null};
  /** Spending over the last seven days and over the seven before; `missing` when an amount had no rate, so neither figure is complete. */
@@ -18,12 +21,18 @@ export type DigestExtras={
 /** Characters of payment lines one message can hold beside the digest's greeting and figures. */
 const paymentsSectionBudget=3200;
 const overdueShown=10;
-/** The overdue and upcoming payments, grouped by day; null when there are none. Also the bot's Upcoming payments answer. */
-export function paymentsSection(items:DueItem[],language:Language,today:string):string|null{
+/** The currency every amount of a message is shown in, and the rates (units per US dollar) that convert into it. */
+export type MessageDisplay={currency:string;rates?:RateTable|null};
+/** The overdue and upcoming payments, grouped by day, each in the display currency; null when there are none. A
+ * payment no rate converts shows a dash and the list says the rate is missing. Also the bot's Upcoming payments answer. */
+export function paymentsSection(items:DueItem[],language:Language,today:string,display:MessageDisplay):string|null{
  if(!items.length)return null;
  const {locale,t,money}=messageKit(language);
+ const rates=display.rates?{USD:1,...display.rates}:null;let missing=false;
  const line=(item:DueItem)=>{
-  const amount=money(item.amount,item.record.currency);
+  const converted=amountIn({amount:item.amount,currency:item.record.currency},display.currency,rates);
+  if(converted===null)missing=true;
+  const amount=converted===null?'—':money(converted,display.currency);
   const kind=item.type==='repayment'||item.type==='installment'?t('repayment'):item.type==='maturity'?t(item.record.kind==='Treasury bill'?'Treasury bill maturity':item.record.kind==='Bond'?'bond maturity':'deposit maturity'):income.includes(item.record.kind)?t('income'):null;
   return `• ${escapeHtml(item.record.name)} · ${income.includes(item.record.kind)?'+':''}${amount}${kind?' · '+kind:''}`;
  };
@@ -43,7 +52,7 @@ export function paymentsSection(items:DueItem[],language:Language,today:string):
   sections.push(`<b>${group.title}</b>\n${lines.join('\n')}`);length+=group.title.length+2;
  }
  const hidden=items.length-shown;
- return `<b>${t('Upcoming payments')}</b> · ${formatDate(today,locale)}\n\n${sections.join('\n\n')}${hidden?`\n• ${t('{count} more',{count:formatNumber(hidden,locale,0)})}`:''}`;
+ return `<b>${t('Upcoming payments')}</b> · ${formatDate(today,locale)}\n\n${sections.join('\n\n')}${hidden?`\n• ${t('{count} more',{count:formatNumber(hidden,locale,0)})}`:''}${missing?`\n\n<i>${t('Exchange rate unavailable.')}</i>`:''}`;
 }
 export function digestMessage(items:DueItem[],language:Language,today:string,extras:DigestExtras={}):string{
  const kit=messageKit(language),{t}=kit;
@@ -51,7 +60,7 @@ export function digestMessage(items:DueItem[],language:Language,today:string,ext
  const signed=(value:number)=>(value<0?'−':'+')+money(Math.abs(value));
  const name=extras.name?.trim();
  const greeting=`☀️ <b>${name?t('Good morning, {name}',{name:escapeHtml(name)}):t('Good morning')}</b>\n<i>${t(motivation[Math.floor(Date.parse(today)/86400000)%motivation.length])}</i>`;
- const payments=paymentsSection(items,language,today)??t('Nothing is due soon.');
+ const payments=paymentsSection(items,language,today,{currency,rates:extras.rates})??t('Nothing is due soon.');
  const facts:string[]=[];
  if(extras.netWorth){
   const {amount,change}=extras.netWorth;

@@ -1,12 +1,14 @@
 // What the background Telegram messages need to know about an owner: language,
 // the name to greet them by, and the currency to show amounts in.
 import {forEachLimited} from './bounded-concurrency';
+import {reportError} from './monitoring';
 import {expenses,type Entry} from './finance';
 import {isLanguage,type Language} from './i18n';
-import {pagePath,readAllPages,readIdPages} from './owner-rows';
+import {ownerRows,pagePath,readAllPages,readIdPages} from './owner-rows';
 import {cashflowKinds,standingRecords} from './planning-reads';
 import type {PortfolioSnapshot} from './portfolio-snapshots';
 import type {ServiceDatabase} from './service-role';
+import type {SendOutcome} from './telegram';
 import type {CashFlowExtras,SpendingLink} from './spending';
 import {normalizeSplits,type TransactionSplit} from './transaction-tools';
 export type OwnerProfile={language:Language;name:string;currency:string};
@@ -36,6 +38,14 @@ export async function ownerRecordsSince(db:ServiceDatabase,owner:string,from:str
  const [kept,recent]=await Promise.all([recordPages(db,owner,'or='+standing,'*'),ownerCashflowSince(db,owner,from)]);
  return [...kept,...recent];
 }
+/** What marks a loan installment or mortgage payment as paid, for debtPaymentsFrom: repayments in the activity log and
+ * the mortgage payments, both paged in full. A failed page throws. */
+export function ownerDebtPayments(db:ServiceDatabase,owner:string){
+ return Promise.all([
+  readAllPages<{action:string;target_id:string|null;occurred_on:string}>(range=>db.read(`/rest/v1/account_activity?select=action,target_id,occurred_on&action=in.(repayment,mortgage)&user_id=eq.${owner}&order=id.asc&${range}`)),
+  ownerRows<{mortgage_id:string;paid_on:string}>(db,'mortgage_payments',owner,'mortgage_id,paid_on'),
+ ]);
+}
 /** Records whose splits one request asks for, so the address stays short. */
 const splitBatch=100;
 type SplitRow=Parameters<typeof normalizeSplits>[0][number];
@@ -64,26 +74,42 @@ async function claimDelivery(db:ServiceDatabase,owner:string,{kind,period}:Deliv
  if(!response.ok)throw Error('Database request failed.');
  return (await response.json() as unknown[]).length>0;
 }
-/** Gives a claim back after a failed send, so the next run sends it. */
+/** Gives a claim back after a failed send, so the next run sends it. A claim that stays would skip the owner for the
+ * whole period, so a refused release is reported. */
 async function releaseDelivery(db:ServiceDatabase,owner:string,{kind,period}:Delivery){
- await db.write(`${deliveries}?user_id=eq.${owner}&kind=eq.${kind}&period=eq.${period}`,{method:'DELETE'}).catch(()=>null);
+ const response=await db.write(`${deliveries}?user_id=eq.${owner}&kind=eq.${kind}&period=eq.${period}`,{method:'DELETE'}).catch(()=>null);
+ if(!response?.ok)await reportError('telegram-delivery','A Telegram delivery claim was not released, so it is not retried this period.',{counts:{status:response?.status??0}});
+}
+/** Turns the scheduled messages off for a chat that refuses them for good (the person blocked the bot), so a blocked
+ * chat is not retried and counted as a failure every run. The link stays: unblocking and switching the digest back on
+ * in Settings restores it. */
+async function muteSubscriber(db:ServiceDatabase,{user_id,chat_id}:DigestSubscriber){
+ const response=await db.write(`/rest/v1/telegram_subscriptions?user_id=eq.${user_id}&chat_id=eq.${chat_id}`,{method:'PATCH',body:JSON.stringify({digest_enabled:false,updated_at:new Date().toISOString()})});
+ if(!response.ok)throw Error('Database request failed.');
 }
 /** Subscribers handled at once: enough to finish a long list in time, few enough to stay gentle on the database and Telegram. */
 export const deliveryConcurrency=8;
 /** Runs `deliver` for each digest subscriber who has not had this `delivery` yet and counts the messages Telegram
  * accepted. Each owner's message is claimed before it is built, so a retried or overlapping run never repeats one; a
- * failed one is given back, so a retry sends it. One owner's failure never blocks the others; only reading the
- * subscribers can throw. `deliver` sends to the subscriber's own linked chat and resolves to whether it arrived. */
-export async function deliverToSubscribers(db:ServiceDatabase,delivery:Delivery,deliver:(subscriber:DigestSubscriber)=>Promise<boolean>):Promise<{sent:number;failed:number}>{
- let sent=0,failed=0;
+ * failed one is given back, so a retry sends it. A chat that blocked the bot keeps its claim, has its digest switched
+ * off and counts as `blocked`, not as a failure. One owner's failure never blocks the others; only reading the
+ * subscribers can throw. `deliver` sends to the subscriber's own linked chat and resolves to whether it arrived, or how
+ * the send ended. */
+export async function deliverToSubscribers(db:ServiceDatabase,delivery:Delivery,deliver:(subscriber:DigestSubscriber)=>Promise<boolean|SendOutcome>):Promise<{sent:number;failed:number;blocked:number}>{
+ let sent=0,failed=0,blocked=0;
  const subscribers=await readAllPages<DigestSubscriber>(range=>db.read<DigestSubscriber[]>(pagePath(digestSubscribersPath,range)));
  await forEachLimited(subscribers,deliveryConcurrency,async subscriber=>{
   try{
    if(!await claimDelivery(db,subscriber.user_id,delivery))return;
-   let delivered=false;
-   try{delivered=await deliver(subscriber);}finally{if(!delivered)await releaseDelivery(db,subscriber.user_id,delivery);}
-   if(delivered)sent++;else failed++;
+   let outcome:SendOutcome='failed';
+   try{
+    const result=await deliver(subscriber);
+    outcome=result===true?'sent':result===false?'failed':result;
+    if(outcome==='blocked')await muteSubscriber(db,subscriber);
+   }catch(error){outcome='failed';throw error;}
+   finally{if(outcome==='failed')await releaseDelivery(db,subscriber.user_id,delivery);}
+   if(outcome==='sent')sent++;else if(outcome==='blocked')blocked++;else failed++;
   }catch{failed++;}
  });
- return {sent,failed};
+ return {sent,failed,blocked};
 }

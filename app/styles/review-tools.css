@@ -30,7 +30,6 @@
 .tools-panel details>summary:hover{color:var(--foreground)}
 .tools-panel details+details,.tools-panel .review-grid+details{border-top:1px solid var(--hairline)}
 .partial-total{display:block;font-size:var(--type-small);font-weight:500;line-height:1.6;color:var(--foreground);background:var(--accent);border:1px solid var(--border);padding:8px 12px;border-radius:8px;margin-block:8px;overflow-wrap:anywhere}
-.import-preview{max-height:400px;margin-block:16px}
 /* Category, dates and sort wrap onto another line rather than shrink until "Select date" reads "Select…" (RESP-023). */
 .record-filter-options{min-width:0;display:flex;flex-wrap:wrap;gap:12px;align-items:end}
 .record-filter-options>label{flex:1 1 9.5rem;max-width:16rem}
@@ -45,13 +44,11 @@
  .record-filter-options[data-expanded=false]{display:none}
  .record-filter-options>button{flex:1 1 100%}
 }
-.goal-chart-canvas{min-width:0}
 /* Search takes its own line when the page itself is narrow (the sidebar counts), not at a window width. */
 @container content (max-width:900px){.workspace .content .records .record-filters{grid-template-columns:1fr}.record-filter-options>button{margin-inline-start:auto}}
 @media(max-width:640px){
  .tools-panel{padding:18px}
  .goal-projection-chart{height:300px;overflow:visible}
- .goal-chart-canvas{min-width:0}
 }
 /* Keep checkbox visuals square; their labels provide the larger touch target. */
 .tools-panel :is(button:not([role="checkbox"]):not(.info-hint),input,select){min-height:44px}

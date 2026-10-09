@@ -29,7 +29,7 @@ test('permanent deletion erases recovery data, is idempotent and isolates owners
 });
 test('permanent-delete API validates owner session, origin, id and reports failed writes',async()=>{
  let auth=true,origin=true,fail=false,offline=false;const calls=[];
- const api=loadTS('app/api/deleted-items/route.ts',{'@/lib/supabase':{sameOrigin:()=>origin,session:async()=>auth?{token:'owner-token'}:null,supa:async(path,init,token)=>{calls.push({path,init,token});if(offline)throw Error();return Response.json({}, {status:fail?404:200});}}});
+ const api=loadTS('app/api/deleted-items/route.ts',{'@/lib/supabase':{sameOrigin:()=>origin,session:async()=>auth?{user:{id:id(1)},token:'owner-token'}:null,supa:async(path,init,token)=>{calls.push({path,init,token});if(offline)throw Error();return Response.json(path.startsWith('/rest/v1/rpc/')?{}:[], {status:fail?404:200});}}});
  const req=(value=id(3))=>new Request('https://local/api/deleted-items',{method:'DELETE',body:JSON.stringify({id:value})});
  origin=false;assert.equal((await api.DELETE(req())).status,403);origin=true;
  auth=false;assert.equal((await api.DELETE(req())).status,401);auth=true;

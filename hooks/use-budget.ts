@@ -1,11 +1,15 @@
 "use client";
 import { useState } from 'react';
 import { saveOwnerResource, useOwnerResource } from '@/hooks/use-owner-resource';
-import { demoBudget, emptyBudget, setBudgetAmount, type BudgetCategorySetting, type BudgetMode, type BudgetState } from '@/lib/budget';
+import { emptyBudget, setBudgetAmount, type BudgetCategorySetting, type BudgetMode, type BudgetState } from '@/lib/budget';
+import { demoBudget } from '@/lib/budget-demo';
 import { depositMonth } from '@/lib/deposit-interest';
 import { showSaved } from '@/lib/feedback';
 
-/** Saved budgets, category settings and the budget style. The sample workspace keeps its own copy in memory. */
+export type WorkspaceBudget = ReturnType<typeof useBudget>;
+
+/** Saved budgets, category settings and the budget style. The sample workspace keeps its own copy in memory.
+ * Held once, by WorkspaceProvider (`useWorkspace().budget`), so a change shows at once on Budget and in every forecast. */
 export function useBudget(owner: string | null, demo: boolean, revision: number) {
  const remote = useOwnerResource<BudgetState>('/api/budget', owner, !!owner && !demo, revision, emptyBudget);
  const [sample, setSample] = useState<BudgetState>(() => demoBudget(depositMonth()));

@@ -126,3 +126,19 @@ test('every amount the bot asks for is read by one parser, in setup and in recor
  const balance={kind:'onboard',step:'balance',data:{currency:'EUR',account_name:'Wallet'}};
  for(const [text,language,amount] of [['1.000','ru',1000],['1,5','en',1.5],['1 000','en',1000],['0','en',0]])assert.equal(advanceOnboarding(balance,{text},{language},1).effects.account.amount,amount,text);
 });
+
+test('a date typed the way the bot writes it (its own example) is read as the date, in the owner\'s language or English',()=>{
+ // Review BOT-006: the bot asked for "9 October 2026" but read its digits as amounts or kept them in the name.
+ assert.deepEqual(parse('coffee 4.5 9 September 2026'),{amount:4.5,date:'2026-09-09',name:'coffee'});
+ assert.deepEqual(parse('coffee $4.5 9 September 2026'),{amount:4.5,currency:'USD',date:'2026-09-09',name:'coffee'});
+ assert.deepEqual(parse('9 September 2026 taxi 25 000 uzs'),{amount:25000,currency:'UZS',date:'2026-09-09',name:'taxi'});
+ assert.deepEqual(parse('кофе 4,5 9 сентября 2026','ru'),{amount:4.5,date:'2026-09-09',name:'кофе'});
+ assert.deepEqual(parse('кофе 4,5 9 September 2026','ru'),{amount:4.5,date:'2026-09-09',name:'кофе'},'English is understood in every language');
+ assert.deepEqual(parse('qahva 4,5 9 sentabr 2026','uz'),{amount:4.5,date:'2026-09-09',name:'qahva'});
+ assert.deepEqual(parse('café 4,5 9 de septiembre de 2026','es'),{amount:4.5,date:'2026-09-09',name:'café'});
+ // A future day, or two dates, is refused rather than guessed; a month name alone is just a name.
+ assert.deepEqual(parse('coffee 4.5 9 October 2026'),{error:'date'});
+ assert.deepEqual(parse('coffee 4.5 9 September 2026 yesterday'),{error:'date'});
+ assert.deepEqual(parse('coffee 4.5 2026-09-01 9 September 2026'),{error:'date'});
+ assert.deepEqual(parse('September rent 900'),{amount:900,date:today,name:'September rent'});
+});

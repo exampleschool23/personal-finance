@@ -213,3 +213,9 @@ test('watchlist and goal forms let the user pick any preferred currency',()=>{
  }
  assert.match(read('components/workspace/screens/cash-flow-screen.tsx'),/<SpendingWatchlists [^>]*currencies=\{preferencesData\.currencies\}/);
 });
+
+test('the workspace holds one Budget: only the provider calls useBudget, so an edit reaches every forecast (CONC-007)',()=>{
+ const walk=folder=>fs.readdirSync(folder,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(folder+'/'+entry.name):/\.tsx?$/.test(entry.name)?[folder+'/'+entry.name]:[]);
+ const callers=['app','components','hooks','lib'].flatMap(walk).filter(file=>/\buseBudget\(/.test(read(file)));
+ assert.deepEqual(callers.sort(),['components/workspace/workspace-provider.tsx','hooks/use-budget.ts']);
+});

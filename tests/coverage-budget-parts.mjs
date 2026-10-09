@@ -273,6 +273,19 @@ test('PlannedInput opens History on focus, edits the draft and saves on close',a
  assert.equal(one(view,'input',node=>node.props.type==='checkbox').props.checked,false,'forward resets to the default after saving');
 });
 
+test('PlannedInput: a saved amount no rate converts reads — and offers no input, so it is never saved as 0',async()=>{
+ const saves=[];
+ const view=mount(React.createElement(page.PlannedInput,{label:'Planned: Groceries',value:null,history,direction:'expense',currency:'USD',defaultForward:false,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));
+ assert.equal(all(view,'x-number-input').length,0,'no input');
+ assert.equal(all(view,'x-popover').length,0,'no History popover');
+ const pill=one(view,'span',node=>node.props.className==='budget-pill');
+ assert.equal(text(pill),'—');
+ assert.match(pill.props['aria-label'],/^Planned: Groceries: T:Exchange rate unavailable\.$/);
+ assert.equal(pill.props.title,'T:Exchange rate unavailable.');
+ await flush();
+ assert.deepEqual(saves,[],'onSave is never called');
+});
+
 test('PlannedInput: Enter commits and blurs; other keys do nothing; focus clicks inside the anchor are kept',async()=>{
  const saves=[];
  const view=mount(React.createElement(page.PlannedInput,{label:'Salary',value:1000,history,direction:'income',currency:'USD',defaultForward:true,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));

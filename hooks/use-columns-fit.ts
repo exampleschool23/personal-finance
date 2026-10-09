@@ -7,10 +7,13 @@ import { columnsFit } from '@/lib/columns-fit';
  * `stacked` on the list; its stylesheet lays the rows out for each. Measured before paint, after every render and when the list's width changes. */
 export function useColumnsFit<T extends HTMLElement>(rowSelector: string, minName = 240) {
  const ref = useRef<T>(null);
+ // One observer per list element, kept across renders; it is replaced only when the list itself is (an empty state swapped for rows).
+ const watch = useRef<{ list: T; observer: ResizeObserver; frame: number } | null>(null);
+ const measure = useRef(() => {});
  useLayoutEffect(() => {
   const list = ref.current;
-  if (!list) return;
-  const measure = () => {
+  measure.current = () => {
+   if (!list) return;
    const rows = [...list.querySelectorAll<HTMLElement>(rowSelector)];
    if (!rows.length) return;
    const style = getComputedStyle(rows[0]);
@@ -21,17 +24,26 @@ export function useColumnsFit<T extends HTMLElement>(rowSelector: string, minNam
    });
    list.dataset.layout = fits ? 'columns' : 'stacked';
   };
-  measure();
-  if (typeof ResizeObserver === 'undefined') return;
+  measure.current();
+  if (watch.current?.list === list) return;
+  stopWatching(watch);
+  if (!list || typeof ResizeObserver === 'undefined') return;
   // Only a new width can change the answer; switching layout changes the height, which must not measure again in the same frame.
-  let width = list.getBoundingClientRect().width, frame = 0;
-  const observer = new ResizeObserver(([entry]) => {
+  let width = list.getBoundingClientRect().width;
+  const current = { list, frame: 0, observer: new ResizeObserver(([entry]) => {
    if (entry.contentRect.width === width) return;
    width = entry.contentRect.width;
-   cancelAnimationFrame(frame); frame = requestAnimationFrame(measure);
-  });
-  observer.observe(list);
-  return () => { observer.disconnect(); cancelAnimationFrame(frame); };
+   cancelAnimationFrame(current.frame); current.frame = requestAnimationFrame(() => measure.current());
+  }) };
+  current.observer.observe(list);
+  watch.current = current;
  });
+ useLayoutEffect(() => () => stopWatching(watch), []);
  return ref;
+}
+
+function stopWatching(watch: { current: { observer: ResizeObserver; frame: number } | null }) {
+ if (!watch.current) return;
+ watch.current.observer.disconnect(); cancelAnimationFrame(watch.current.frame);
+ watch.current = null;
 }

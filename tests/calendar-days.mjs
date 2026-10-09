@@ -51,6 +51,18 @@ test('a day moved by months is clamped to the end of a shorter month', () => {
  assert.equal(addMonths('2026-10-04', 0), '2026-10-04');
 });
 
+test('goal pages take day arithmetic from calendar-days: the goal date cap is a hundred years on the same calendar', async () => {
+ const fs = await import('node:fs');
+ // 29 February 2000 + 100 years is 28 February 2100 (not a leap year); local-time Date arithmetic rolled it to 1 March.
+ assert.equal(addMonths('2000-02-29', 1200), '2100-02-28');
+ assert.equal(addMonths('2026-10-09', 1200), '2126-10-09');
+ const source = file => fs.readFileSync(new URL('../' + file, import.meta.url), 'utf8');
+ assert.match(source('components/planning/goals-page.tsx'), /const maxDate=addMonths\(today,1200\);/);
+ for (const file of ['components/planning/goal-forecast.tsx', 'components/planning/investment-goal-plan.tsx', 'components/planning/goals-page.tsx']) {
+  assert.doesNotMatch(source(file), /toISOString\(\)\.slice\(0, ?10\)|getFullYear\(\)\+100/, file);
+ }
+});
+
 test('month ends and lengths follow leap years', () => {
  assert.equal(monthEnd('2026-01'), '2026-01-31');
  assert.equal(monthEnd('2026-02'), '2026-02-28');

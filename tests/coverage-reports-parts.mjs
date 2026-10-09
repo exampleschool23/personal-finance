@@ -40,7 +40,7 @@ test('report names translate built-in categories, keep custom names, and call no
 // The screen with its tabs, against stand-ins for the workspace, the charts and the data reads.
 const r = createRenderer();
 const ui = stubs();
-const workspace = { user: { id: 'me' }, demo: true, reload() {}, currency: 'USD', market: null, transactionTools: { data: { splits: [] } }, businessList: [], workspacePreferences: { data: { preferences: [] }, save: async preference => saved.push(preference) }, setViewing: record => viewed.push(record.id), storedRecord: record => record, household: { state: null }, planning: { data: null, loading: false, error: '' } };
+const workspace = { user: { id: 'me' }, demo: true, reload() {}, currency: 'USD', market: null, transactionTools: { data: { splits: [] } }, businessList: [], workspacePreferences: { data: { preferences: [] }, save: async preference => saved.push(preference) }, setViewing: record => viewed.push(record.id), storedRecord: record => record, household: { state: null }, planning: { data: null, loading: false, error: '' }, budget: { state: { categories: [] } } };
 const saved = [], viewed = [];
 let search = '', range = { data: null, loading: false, error: '', retry() { range.retried = true; } };
 const charts = hostModule({ attributeColor: (attribute, key) => attribute + ':' + key });
@@ -50,7 +50,6 @@ const modules = {
  ...Object.fromEntries(['page-header', 'segmented', 'panel-title', 'stat-tile', 'business-filter', 'owner-filter', 'inline-error', 'loading-placeholder', 'date-range-picker'].map(name => ['@/components/presentation-foundation/' + name, hostModule()])),
  '@/components/presentation-foundation/tone': { signTone: value => value > 0 ? 'positive' : value < 0 ? 'negative' : undefined },
  '@/components/workspace/workspace-provider': { useWorkspace: () => workspace },
- '@/hooks/use-budget': { useBudget: () => ({ state: { categories: [] } }) },
  '@/hooks/use-location-search': { useLocationSearch: () => search },
  '@/hooks/use-report-data': { useRangeData: () => range },
 };

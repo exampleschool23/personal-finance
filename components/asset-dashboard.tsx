@@ -15,7 +15,7 @@ import { LoadingPlaceholder } from '@/components/presentation-foundation/loading
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/components/language-provider';
 import { categoryColor } from '@/lib/category-colors';
-import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
+import { formatConvertedQuote, formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
 import { assetRecordKinds, interestKinds, unitPricedKinds, value, totalValue, type Entry, type estimatedCashFlow } from '@/lib/finance';
 import { sortAssetsByWorth } from '@/lib/asset-sort';
 import { isInvestmentRecord } from '@/lib/comparison-profile';
@@ -59,21 +59,25 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
  const clearFilters = () => { setCategory('all'); setAssetPage(1); };
 
  const renderCard = ({ original, converted }: (typeof holdings)[number]) => {
+    // Every figure in the display currency; without a rate they read "—" with a note, never under the saved currency.
     const record = converted ?? original;
     const worth = value(record);
+    const shown = (amount: number) => converted ? money(amount) : '—';
+    // A quote the conversion or a live price changed is a calculation, read to the cent; the person's own keeps its decimals.
+    const quote = !converted ? '—' : original.currency === currency && record.amount === original.amount ? formatMoney(record.amount, currency, locale, true) : formatConvertedQuote(record.amount, currency, locale);
     const hasQuote = unitPricedKinds.includes(record.kind);
     const gain = hasQuote && record.cost > 0 ? (record.amount - record.cost) * record.quantity : null;
-    const fact = gain !== null ? { label: t('Gain/loss'), value: money(gain, record.currency), tone: signTone(gain) }
-     : (record.estimated_monthly_income ?? 0) > 0 ? { label: t('Estimated monthly income'), value: money(record.estimated_monthly_income!, record.currency) }
+    const fact = gain !== null ? { label: t('Gain/loss'), value: shown(gain), tone: signTone(gain) }
+     : (record.estimated_monthly_income ?? 0) > 0 ? { label: t('Estimated monthly income'), value: shown(record.estimated_monthly_income!) }
      : interestKinds.includes(record.kind) && record.rate > 0 ? { label: t('Annual interest'), value: formatPercent(record.rate, locale, 8) }
      : record.kind === 'Business' ? { label: t('Ownership'), value: formatPercent(record.ownership_percentage ?? 100, locale, 8) }
      : undefined;
-    return <AssetCard key={original.id} record={original} label={t(record.kind)} worth={money(worth, record.currency)} fact={fact}
+    return <AssetCard key={original.id} record={original} label={t(record.kind)} worth={shown(worth)} fact={fact}
      share={converted && total > 0 ? worth / total * 100 : null}
-     note={!converted && <small>{t('Saved currency · Conversion unavailable')}</small>}
+     note={!converted && <small>{t('Exchange rate unavailable.')}</small>}
      menu={<DropdownMenu><DropdownMenuTrigger asChild><Button size="icon" variant="ghost" aria-label={t('Actions for {name}', { name: original.name })}><Ellipsis size={18}/></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => onEdit(original)}>{t('Edit {name}', { name: original.name })}</DropdownMenuItem>{!demo && <DropdownMenuItem onSelect={() => onTrack(original)}>{t('Open Tracker for {name}', { name: original.name })}</DropdownMenuItem>}{!original.history_event_id && <DropdownMenuItem variant="destructive" onSelect={() => onDelete(original)}><Trash2 aria-hidden="true"/>{t('Delete {name}', { name: original.name })}</DropdownMenuItem>}</DropdownMenuContent></DropdownMenu>}
      detailsLabel={t(['Cash','Deposit'].includes(original.kind)?'Account details':'Asset details')}
-     details={<dl><div><dt>{t('Date / due date')}</dt><dd>{formatDate(original.date, locale)}</dd></div>{record.kind === 'Business' && <div><dt>{t('Ownership')}</dt><dd>{formatPercent(record.ownership_percentage ?? 100, locale, 8)}</dd></div>}{hasQuote && <><div><dt>{t('Quantity')}</dt><dd>{formatNumber(record.quantity, locale)}</dd></div><div><dt>{t('Price per unit')}</dt><dd>{formatMoney(record.amount, record.currency, locale, true)}</dd></div><div><dt>{t('Price source')}</dt><dd>{quoteLabel(record)}</dd></div></>}{original.currency !== currency && <div><dt>{t('Saved value')}</dt><dd>{money(value(original), original.currency)}</dd></div>}{original.notes && <div><dt>{t('Notes')}</dt><dd>{original.notes}</dd></div>}</dl>}>
+     details={<dl><div><dt>{t('Date / due date')}</dt><dd>{formatDate(original.date, locale)}</dd></div>{record.kind === 'Business' && <div><dt>{t('Ownership')}</dt><dd>{formatPercent(record.ownership_percentage ?? 100, locale, 8)}</dd></div>}{hasQuote && <><div><dt>{t('Quantity')}</dt><dd>{formatNumber(record.quantity, locale)}</dd></div><div><dt>{t('Price per unit')}</dt><dd>{quote}</dd></div><div><dt>{t('Price source')}</dt><dd>{quoteLabel(record)}</dd></div></>}{original.currency !== currency && <div><dt>{t('Saved value')}</dt><dd>{money(value(original), original.currency)}</dd></div>}{original.notes && <div><dt>{t('Notes')}</dt><dd>{original.notes}</dd></div>}</dl>}>
     </AssetCard>;
    };
 

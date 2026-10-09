@@ -36,6 +36,9 @@ export function AssistantScreen() {
  const [busy, setBusy] = useState(false);
  const [error, setError] = useState('');
  const end = useRef<HTMLDivElement>(null);
+ // The question in flight: leaving the screen stops it, so a paid answer nobody will read is not finished.
+ const pending = useRef<AbortController | null>(null);
+ useEffect(() => () => pending.current?.abort(), []);
  const [available, setStatus] = useAssistantAvailability(!demo && !!user, user);
  const unavailable = available === false;
  // Send says why it is off: the empty state already explains the sample workspace and a missing setup, so it points there.
@@ -48,14 +51,22 @@ export function AssistantScreen() {
   const next = [...turns, { role: 'user' as const, content: text }].slice(-19);
   setTurns(next); setDraft(''); setBusy(true); setError('');
   requestAnimationFrame(() => end.current?.scrollIntoView({ block: 'end' }));
+  pending.current?.abort();
+  const controller = new AbortController();
+  pending.current = controller;
   try {
-   const response = await fetch('/api/assistant', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: next, currency, rates, language }) });
+   const response = await fetch('/api/assistant', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: next, currency, rates, language }), signal: controller.signal });
    const result = await response.json() as { answer?: string; error?: string };
    if (result.error === assistantUnavailable) { setStatus({ owner: user, available: false }); setTurns(turns); setDraft(text); return; }
    if (!response.ok || !result.answer) throw Error(result.error ?? 'The assistant could not answer. Please try again.');
    setTurns([...next, { role: 'assistant', content: result.answer }]);
-  } catch (reason) { setError((reason as Error).message); setTurns(turns); setDraft(text); }
-  finally { setBusy(false); requestAnimationFrame(() => end.current?.scrollIntoView({ block: 'end' })); }
+  } catch (reason) {
+   // A question stopped on purpose is no failure: no message, and the conversation is not rewound.
+   if (controller.signal.aborted) return;
+   setError((reason as Error).message); setTurns(turns); setDraft(text);
+  } finally {
+   if (pending.current === controller) { pending.current = null; setBusy(false); requestAnimationFrame(() => end.current?.scrollIntoView({ block: 'end' })); }
+  }
  }
  return <div data-page="Assistant" className="content assistant-content">
   <PageHeader title={t('Assistant')} hint={t('Your questions and a summary of your records are sent to Claude, an AI model by Anthropic, to answer them. Answers can be wrong and are not financial advice.')}/>

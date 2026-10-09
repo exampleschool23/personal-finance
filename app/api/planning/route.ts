@@ -14,8 +14,9 @@ import { categoryNameTaken, duplicateCategoryMessage } from '@/lib/category-name
 import type { Category, ExtraPayment, Occurrence } from '@/lib/planning';
 import { queueMilestoneCheck } from '@/lib/notify-action';
 import type { ActionEvent } from '@/lib/action-messages';
-/** Later payments for recorded occurrences add to them; limited scopes leave those transactions out of `records`. Before migration 112 there are none. */
-const readExtraPayments=(historyOnly:boolean,token:string)=>historyOnly?Promise.resolve([] as ExtraPayment[]):readOwnerRows<ExtraPayment>('finance_records',token,{select:'id,occurrence_record_id,occurrence_due_on,amount,currency,date',occurrence_record_id:'not.is.null'}).catch(()=>[] as ExtraPayment[]);
+/** Later payments for recorded occurrences add to them; limited scopes leave those transactions out of `records`.
+ * A failed read answers 503 like the other reads: counting none would show scheduled payments as less paid than they are. */
+const readExtraPayments=(historyOnly:boolean,token:string)=>historyOnly?Promise.resolve([] as ExtraPayment[]):readOwnerRows<ExtraPayment>('finance_records',token,{select:'id,occurrence_record_id,occurrence_due_on,amount,currency,date',occurrence_record_id:'not.is.null'});
 export async function GET(req?:Request){
  try{const auth=await session();if(!auth)return signInAgain();
  const scope=(req?new URL(req.url).searchParams.get('scope')??'full':'full') as PlanningScope;
@@ -30,6 +31,8 @@ export async function GET(req?:Request){
  const plan=planningReadPlan(scope);
  const reads=Promise.all(Object.entries(tables).filter(([key])=>plan.tables.has(key as keyof typeof tables)).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,filters[key as keyof typeof filters]??{})]));
  const extraPayments=readExtraPayments(plan.historyOnly,auth.token);
+ // Awaited below; marked handled now so a failure while the other reads run is not an unhandled rejection.
+ extraPayments.catch(()=>null);
  // One rate per currency pair and payment day for the whole read, a few requests at a time.
  const dayRate=sharedDayRate(async(from,to,date)=>(await loadDatedExchangeRate(from,to,date)).rate);
  const results=await reads;

@@ -20,6 +20,13 @@ export function formatMoney(value: number, currency: string, locale: string, uni
   const displayed = !unitPrice && Math.abs(value) < 0.5 ? 0 : value;
   return trueMinus(new Intl.NumberFormat(locale, { style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: unitPrice ? 8 : 0 }).format(displayed));
 }
+/** A unit quote converted into another currency has no decimals of its own, so it reads to that currency's minor unit
+ * (€635.14, ¥636), or four significant digits below one (€0.0001111), never a calculation tail like €635.13676472. */
+export function formatConvertedQuote(value: number, currency: string, locale: string) {
+  if (!Number.isFinite(value)) return '—';
+  const minor = 10 ** (new Intl.NumberFormat('en', { style: 'currency', currency }).resolvedOptions().maximumFractionDigits ?? 2);
+  return formatMoney(Math.abs(value) >= 1 ? Math.round(value * minor) / minor : Number(value.toPrecision(4)), currency, locale, true);
+}
 /** Negative amounts always carry a true minus sign (U+2212), never a hyphen, so "−$5" reads the same on every screen. */
 function trueMinus(formatted: string) {
   return formatted.replace(/-/g, '\u2212');

@@ -4,12 +4,12 @@ import { dueReminders, type ReminderSettings } from '@/lib/daily-finance';
 import { depositToday } from '@/lib/deposit-interest';
 import { digestMessage } from '@/lib/digest-message';
 import { debtPaymentsFrom, type Occurrence } from '@/lib/planning';
-import { ownerRows, readAllPages } from '@/lib/owner-rows';
+import { ownerRows } from '@/lib/owner-rows';
 import { periodTotals, shiftDay } from '@/lib/period-summary';
 import { snapshotPoints } from '@/lib/portfolio-snapshots';
 import { serviceDatabase } from '@/lib/service-role';
-import { sendTelegramMessage, telegramConfig } from '@/lib/telegram';
-import { deliverToSubscribers, ownerProfile, ownerRecordsSince, ownerSpendingExtras, recentSnapshots } from '@/lib/telegram-owner';
+import { deliverTelegramMessage, telegramConfig } from '@/lib/telegram';
+import { deliverToSubscribers, ownerDebtPayments, ownerProfile, ownerRecordsSince, ownerSpendingExtras, recentSnapshots } from '@/lib/telegram-owner';
 export const maxDuration=60;
 const defaultReminders:ReminderSettings={enabled:true,days_ahead:7,snoozed:[]};
 /** Sends each linked owner their digest: a greeting, what is due, yesterday's net-worth change and the week's spending. One owner's failure never blocks the others; the response says how many were reached. */
@@ -20,8 +20,8 @@ export async function GET(req:Request){
  const today=depositToday();
  try{
   // One digest per owner and day: a retried or overlapping run skips the owners already sent today.
-  const {sent,failed}=await deliverToSubscribers(db,{kind:'digest',period:today},async({user_id,chat_id})=>{
-    const [records,occurrences,profile,snapshots,reminders,activity,mortgagePayments]=await Promise.all([
+  const {sent,failed,blocked}=await deliverToSubscribers(db,{kind:'digest',period:today},async({user_id,chat_id})=>{
+    const [records,occurrences,profile,snapshots,reminders,[activity,mortgagePayments]]=await Promise.all([
      // Schedules and holdings in full; actual cash flow only for the two weeks of spending compared.
      ownerRecordsSince(db,user_id,shiftDay(today,-13)),
      ownerRows<Occurrence>(db,'payment_occurrences',user_id,'id,record_id,due_on,status'),
@@ -29,8 +29,7 @@ export async function GET(req:Request){
      recentSnapshots(db,user_id,2),
      db.read<Array<{data:ReminderSettings}>>('/rest/v1/workspace_preferences?select=data&key=eq.reminders&user_id=eq.'+user_id),
      // Only repayments mark a loan installment as paid.
-     readAllPages<{action:string;target_id:string|null;occurred_on:string}>(range=>db.read(`/rest/v1/account_activity?select=action,target_id,occurred_on&action=in.(repayment,mortgage)&user_id=eq.${user_id}&order=id.asc&${range}`)),
-     ownerRows<{mortgage_id:string;paid_on:string}>(db,'mortgage_payments',user_id,'mortgage_id,paid_on'),
+     ownerDebtPayments(db,user_id),
     ]);
     // The digest has its own switch, so the in-app reminder toggle only lends its window and snoozes.
     const settings={...defaultReminders,...reminders[0]?.data,enabled:true};
@@ -42,10 +41,10 @@ export async function GET(req:Request){
     const extras=await ownerSpendingExtras(db,user_id,shiftDay(today,-13),records);
     const current=periodTotals({records,...extras},shiftDay(today,-6),today,profile.currency,rates),previous=periodTotals({records,...extras},shiftDay(today,-13),shiftDay(today,-7),profile.currency,rates);
     const spending={current:current.spending,previous:previous.spending,missing:current.missing+previous.missing>0};
-    const text=digestMessage(dueReminders({records,occurrences,categories:[],goals:[],activity:[],debtPayments:debtPaymentsFrom(activity,mortgagePayments)},settings,today),profile.language,today,{name:profile.name,currency:profile.currency,netWorth,spending});
-    return sendTelegramMessage({chat_id,text},config);
+    const text=digestMessage(dueReminders({records,occurrences,categories:[],goals:[],activity:[],debtPayments:debtPaymentsFrom(activity,mortgagePayments)},settings,today),profile.language,today,{name:profile.name,currency:profile.currency,rates,netWorth,spending});
+    return deliverTelegramMessage({chat_id,text},config);
   });
-  if(failed)await reportError('cron:telegram-digest','Some Telegram digests were not delivered.',{route:'/api/cron/telegram-digest',status:503,counts:{sent,failed}},{alert:true});
-  return Response.json({sent,failed},{status:failed?503:200,headers:{'Cache-Control':'no-store'}});
- }catch(error){await reportError('cron:telegram-digest',error,{route:'/api/cron/telegram-digest',status:503},{alert:true});return Response.json({error:'Telegram digest failed. Digests already sent are not repeated on retry.',sent:0,failed:0},{status:503});}
+  if(failed)await reportError('cron:telegram-digest','Some Telegram digests were not delivered.',{route:'/api/cron/telegram-digest',status:503,counts:{sent,failed,blocked}},{alert:true});
+  return Response.json({sent,failed,blocked},{status:failed?503:200,headers:{'Cache-Control':'no-store'}});
+ }catch(error){await reportError('cron:telegram-digest',error,{route:'/api/cron/telegram-digest',status:503},{alert:true});return Response.json({error:'Telegram digest failed. Digests already sent are not repeated on retry.',sent:0,failed:0,blocked:0},{status:503});}
 }

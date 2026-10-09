@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { useLanguage } from '@/components/language-provider';
 import { formatDate, formatMonthYear, formatNumber, formatMoney } from '@/lib/format';
+import { isoDay } from '@/lib/calendar-days';
 import { chartAxis, chartGrid, chartLegend, chartTooltip, chartValueAxis, guideLine, leadLine } from '@/components/presentation-foundation/chart';
 import { investmentGoalItems, investmentGoalPlan, investmentGoalTargets, investmentGoalStatus } from '@/lib/investment-goals';
 import { holdingAccountValue } from '@/lib/holding-accounts';
@@ -48,9 +49,9 @@ export function InvestmentGoalPlan({goal,data,today,currency,market,save,onEdit}
       <div className="goal-projection-chart" role="region" aria-label={`${t('Your path to the goal')} · ${target.asset_symbol}`} tabIndex={0}><div className="goal-chart-canvas">
        <ResponsiveContainer width="100%" height="100%"><LineChart data={plan.points.map(point=>({...point,time:Date.parse(point.date+'T00:00:00Z')}))} accessibilityLayer margin={{top:24,right:24,left:8,bottom:12}}>
         <CartesianGrid {...chartGrid}/>
-        <XAxis dataKey="time" type="number" scale="time" domain={['dataMin','dataMax']} tickFormatter={time=>formatMonthYear(new Date(Number(time)).toISOString().slice(0,10),locale)} minTickGap={80} height={48} {...chartAxis}/>
+        <XAxis dataKey="time" type="number" scale="time" domain={['dataMin','dataMax']} tickFormatter={time=>formatMonthYear(isoDay(Number(time)),locale)} minTickGap={80} height={48} {...chartAxis}/>
         <YAxis tickFormatter={amount=>formatNumber(Number(amount),locale,8)} domain={[0,'auto']} tickCount={5} {...chartValueAxis}/>
-        <Tooltip {...chartTooltip} labelFormatter={time=>formatDate(new Date(Number(time)).toISOString().slice(0,10),locale)} formatter={(amount,name)=>[units(Number(amount)),name]}/>
+        <Tooltip {...chartTooltip} labelFormatter={time=>formatDate(isoDay(Number(time)),locale)} formatter={(amount,name)=>[units(Number(amount)),name]}/>
         <Legend {...chartLegend}/>
         <Line dataKey="target" name={t('Target quantity')} {...guideLine}/>
         <Line dataKey="projected" name={t('Projected quantity')} type="stepAfter" {...leadLine}/>

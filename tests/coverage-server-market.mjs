@@ -207,3 +207,20 @@ test('metals: gold from Twelve Data, silver, platinum and palladium from gold-ap
   assert.equal((await loadMarket([],[],false,['XAG'])).errors['Metal:XAG'],'Sign in to fetch metal prices.');
  },{key:null});
 });
+
+test('stocks and gold share one Twelve Data quote reader: the symbol must match, and only stocks also demand a USD currency',async()=>{
+ await withFeeds(feeds({'twelvedata':url=>{
+  const symbol=new URL(url).searchParams.get('symbol');
+  if(symbol==='AAPL')return Response.json({symbol,close:'201.5'});
+  if(symbol==='XAU/USD')return Response.json({symbol,close:'4181.6828',timestamp:1791500000});
+  return Response.json({symbol:'XAU',currency:'USD',close:'1'});
+ },'gold-api.com':Response.json({error:'down'},{status:503})}),async({calls})=>{
+  const data=await loadMarket([],['AAPL'],true,['XAU']);
+  assert.equal(data.errors['Stock:AAPL'],'Price unavailable. Saved price is shown.','a stock quote without a USD currency is refused');
+  assert.deepEqual({...data.quotes['Metal:XAU'],fetchedAt:undefined},{usd:4181.6828,source:'Twelve Data',fetchedAt:undefined,marketTime:new Date(1791500000*1000).toISOString()});
+  for(const call of calls.filter(call=>call.url.includes('twelvedata'))){const url=new URL(call.url);assert.equal(url.origin+url.pathname,'https://api.twelvedata.com/quote');assert.equal(url.searchParams.get('apikey'),KEY);assert.equal(call.init.next.revalidate,300);}
+ });
+ await withFeeds(feeds({'twelvedata':Response.json({symbol:'XAU',close:'4181'}),'gold-api.com':Response.json({error:'down'},{status:503})}),async()=>{
+  assert.equal((await loadMarket([],[],true,['XAU'])).errors['Metal:XAU'],'Price unavailable. Saved price is shown.','gold answered under another symbol is refused');
+ });
+});

@@ -188,3 +188,19 @@ test('month mode pages by year, opens on the current month when empty and stops 
  assert.equal(late.find(byLabel('Next year')).props.disabled,true);
  r.fire(popover(),'onOpenChange',false);assert.equal(popover().props.open,false);
 });
+
+test('"today" is the app\'s Tashkent day, so a field capped at depositToday keeps Today in a timezone already on tomorrow',t=>{
+ // 30 September 21:00 in Tashkent is already 1 October 01:00 in Tokyo; callers pass max={depositToday()} = 30 September.
+ const zone=process.env.TZ;process.env.TZ='Asia/Tokyo';t.after(()=>{if(zone===undefined)delete process.env.TZ;else process.env.TZ=zone;});
+ t.mock.timers.enable({apis:['Date'],now:new Date('2026-09-30T16:00:00Z')});t.dateMocked=true;
+ assert.equal(new Date().getDate(),1,'the browser-local day is 1 October');
+ const {r,changes,popover}=mount(t,{value:'',max:'2026-09-30'});
+ r.fire(popover(),'onOpenChange',true);
+ assert.equal(text(r.find(node=>node.props.className==='pos-year-trigger')),'September 2026');
+ assert.equal(r.find(node=>node.props['aria-current']==='date').props['aria-label'],'30 September 2026');
+ const todayPreset=r.find(byText('Button','Today'));
+ assert.ok(todayPreset&&!todayPreset.props.disabled,'Today is offered and enabled');
+ r.fire(todayPreset,'onClick');
+ assert.deepEqual(changes,['2026-09-30']);
+ assert.equal(r.all(byText('Button','Tomorrow')).length,0,'nothing after the cap');
+});

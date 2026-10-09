@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
 import { formatDate, formatMonthYear, formatYear, parseCalendarDate, calendarIso, weekdayLabels } from '@/lib/format';
+import { depositToday } from '@/lib/deposit-interest';
 
 type DatePickerProps = { value: string; onChange: (value: string) => void; min?: string; max?: string; required?: boolean; mode?: 'date' | 'month'; presets?: readonly DatePreset[]; /** Names the field for screen readers when no visible label does, such as "From" in a range. */ label?: string };
 
@@ -16,7 +17,7 @@ export function DatePicker({ mode = 'date', ...props }: DatePickerProps) {
 function MonthSelection({ value, onChange, min, max }: DatePickerProps) {
   const { locale, t } = useLanguage();
   const [open, setOpen] = useState(false);
-  const initialMonth = () => value || calendarIso(new Date()).slice(0, 7);
+  const initialMonth = () => value || depositToday().slice(0, 7);
   const [anchor, setAnchor] = useState(initialMonth);
   const year = Number(anchor.slice(0, 4));
   const first = calendarYearAnchor('2000-01', year, 0);
@@ -47,19 +48,19 @@ function MonthSelection({ value, onChange, min, max }: DatePickerProps) {
 function DayPicker({ value, onChange, min, max, required = true, presets = defaultDatePresets, label }: Omit<DatePickerProps, 'mode'>) {
   const { locale, t } = useLanguage();
   const [open, setOpen] = useState(false);
-  const [month, setMonth] = useState<Date>(() => parseCalendarDate(value) || new Date());
+  const [month, setMonth] = useState<Date>(() => parseCalendarDate(value) || parseCalendarDate(depositToday())!);
   const selectDate = (date: string) => {
     if (date ? !parseCalendarDate(date) || (!!min && date < min) || (!!max && date > max) : required) return;
     onChange(date);
     setOpen(false);
   };
   // One month at a time, opening on the chosen day's month (or today's); the arrows step to the months around it.
-  const openingMonth = () => parseCalendarDate(openingCalendarDay(parseCalendarDate(value) ? value : '', calendarIso(new Date()), min, max).slice(0, 7) + '-01') || new Date();
+  const openingMonth = () => parseCalendarDate(openingCalendarDay(parseCalendarDate(value) ? value : '', depositToday(), min, max).slice(0, 7) + '-01') || parseCalendarDate(depositToday())!;
   return <Popover open={open} onOpenChange={next => { if (next) setMonth(openingMonth()); setOpen(next); }}>
     <PopoverTrigger asChild><button type="button" className="date-picker-trigger" aria-label={label ? t('{label}: {date}', { label, date: value ? formatDate(value, locale) : t('Select date') }) : value ? formatDate(value, locale) : t('Select date')}><span>{value ? formatDate(value, locale) : t('Select date')}</span><CalendarDays size={17}/></button></PopoverTrigger>
     <PopoverContent className="finance-date-picker" align="start" collisionPadding={12} aria-label={t('Select date')}>
       <div className="date-picker-body"><MonthCalendar monthKey={calendarIso(month).slice(0, 7)} draft={value} min={min} max={max} onSelect={selectDate} onYearChange={year => setMonth(parseCalendarDate(calendarYearAnchor(calendarIso(month).slice(0, 7), year, 0) + '-01')!)} previous={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), -1) + '-01')!)} next={() => setMonth(parseCalendarDate(shiftCalendarMonth(calendarIso(month).slice(0, 7), 1) + '-01')!)}/>
-      <aside className="date-picker-presets"><strong>{t('Presets')}</strong>{availablePresets(presets, calendarIso(new Date()), min, max).map(({ preset, date }) => <Button key={preset} type="button" variant="ghost" onClick={() => selectDate(date)}>{t(datePresetLabels[preset])}</Button>)}{!required && <Button type="button" variant="ghost" onClick={() => selectDate('')}>{t('Clear date')}</Button>}</aside></div>
+      <aside className="date-picker-presets"><strong>{t('Presets')}</strong>{availablePresets(presets, depositToday(), min, max).map(({ preset, date }) => <Button key={preset} type="button" variant="ghost" onClick={() => selectDate(date)}>{t(datePresetLabels[preset])}</Button>)}{!required && <Button type="button" variant="ghost" onClick={() => selectDate('')}>{t('Clear date')}</Button>}</aside></div>
     </PopoverContent>
   </Popover>;
 }
@@ -70,7 +71,7 @@ function DayPicker({ value, onChange, min, max, required = true, presets = defau
 export function MonthCalendar({ monthKey, draft, rangeTo, min, max, onSelect, onYearChange, previous, next }: { monthKey: string; draft: string; rangeTo?: string; min?: string; max?: string; onSelect: (date: string) => void; onYearChange: (year: number) => void; previous?: () => void; next?: () => void }) {
   const { locale, t } = useLanguage();
   const weekdays = weekdayLabels(locale);
-  const today = calendarIso(new Date());
+  const today = depositToday();
   const year = Number(monthKey.slice(0, 4));
   const [choosingYear, setChoosingYear] = useState(false);
   const [yearStart, setYearStart] = useState(year - year % 12);

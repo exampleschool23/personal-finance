@@ -6,7 +6,7 @@ import {currencyFromText,currencyLabel,currencyMatches,isCurrency} from './curre
 import {formatNumber} from './format';
 import {languageCatalogue,locales,type Language} from './i18n';
 import {suggestedCurrencies} from './onboarding';
-import type {TelegramMessage} from './telegram';
+import {escapeHtml,type TelegramMessage} from './telegram';
 import {parseTypedAmount} from './telegram-entry';
 import {mainMenu} from './telegram-flow';
 import {backLabel,keyboardRows as rows,t} from './telegram-kit';
@@ -37,8 +37,9 @@ export function onboardPrompt(draft:OnboardDraft,language:Language,chat:number):
   case 'currency':return {chat_id:chat,text:t(language,'Which currency do you use most?'),keyboard:{reply:[...rows(suggestedCurrencies,3),[t(language,'Other currency')],[backLabel(language)]]}};
   case 'currency_other':{
    // The whole list scrolls like the languages; typing part of a name or code narrows it, since a keyboard cannot hold a search box.
-   const query=draft.data.search??'',codes=currencyMatches(query,locales[language]);
-   const text=!query?t(language,'Choose your currency, or type part of its name or code to search, such as peso or EUR.'):codes.length?t(language,'Currencies matching “{query}”',{query}):t(language,'No currency matches “{query}”. Try another word or a code such as USD.',{query});
+   // The search is typed text inside an HTML message, so it is escaped: "<eur" would otherwise make Telegram refuse the reply.
+   const query=draft.data.search??'',codes=currencyMatches(query,locales[language]),shown={query:escapeHtml(query)};
+   const text=!query?t(language,'Choose your currency, or type part of its name or code to search, such as peso or EUR.'):codes.length?t(language,'Currencies matching “{query}”',shown):t(language,'No currency matches “{query}”. Try another word or a code such as USD.',shown);
    return {chat_id:chat,text,keyboard:{reply:[...currencyKeyboard(codes.slice(0,query?searchLimit:codes.length),language),[backLabel(language)]]}};
   }
   case 'account':return {chat_id:chat,text:t(language,'Name your first cash account, for example Wallet.'),keyboard:{reply:[[t(language,'Cash')],[backLabel(language)]]}};
