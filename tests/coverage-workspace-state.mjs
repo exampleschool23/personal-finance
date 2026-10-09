@@ -30,6 +30,8 @@ globalThis.fetch = async (url, options = {}) => {
  requests.push({ url: String(url), method, body });
  const failure = server.fail[method + ' ' + path];
  if (failure !== undefined) return reply({ error: failure }, 400);
+ // A proxy's HTML error page: not JSON at all.
+ if (server.gateway === method + ' ' + path) return { ok: false, status: 502, json: async () => { throw new SyntaxError('Unexpected token <'); } };
  if (path === '/api/auth') return reply(method === 'POST' ? { user: { email: body.email } } : method === 'DELETE' ? {} : server.session);
  if (path === '/api/demo') return reply(demoWorkspace(today));
  if (path === '/api/settings') return reply(method === 'PUT' ? body : server.settings);
@@ -99,6 +101,10 @@ test('a failed Google sign-in shows why, and email sign-in opens the account', a
  await ws().login(formEvent({ email: 'me@example.com' }));r.update();
  assert.equal(ws().error, 'Invalid login credentials');
  delete server.fail['POST /api/auth'];
+ server.gateway = 'POST /api/auth';
+ await ws().login(formEvent({ email: 'me@example.com' }));r.update();
+ assert.equal(ws().error, 'Sign-in could not be completed. Please try again.');
+ delete server.gateway;
  await ws().login(formEvent({ email: 'me@example.com' }));await settle();
  assert.equal(ws().user, 'me@example.com');
 });
@@ -214,6 +220,10 @@ test('signed in, settings and records are read, and every change is sent and rea
  server.fail['POST /api/mortgage-payments'] = '';
  await assert.rejects(ws().recordMortgagePayment({ id: 'pay3', mortgage_id: 'm1', principal: 1, interest: 0, date: today, notes: '' }), error => error.confirmedFailure === true && /Payment could not be confirmed/.test(error.message));
  delete server.fail['POST /api/mortgage-payments'];
+ // A gateway page instead of JSON reads as an unconfirmed failure with the payment's own message, never a parse error.
+ server.gateway = 'POST /api/mortgage-payments';
+ await assert.rejects(ws().recordMortgagePayment({ id: 'pay4', mortgage_id: 'm1', principal: 1, interest: 0, date: today, notes: '' }), error => error.confirmedFailure === false && error.message === 'Payment could not be confirmed. Retry with the same details.');
+ delete server.gateway;
  ws().setStopping(record);r.update();await ws().stopRecord('2030-01-01');
  // Fetching a price fills the holding's amount, or says why it could not.
  ws().setEditing({ ...record, kind: 'Crypto', name: 'Bitcoin (BTC)', amount: 0 });r.update();

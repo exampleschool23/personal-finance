@@ -33,13 +33,16 @@ export const businessesIn = (records: readonly Entry[]) => records.filter(record
 /** Records that can belong to a business as its accounts and assets: everything held or owed except the Business record itself. */
 const businessAccountKinds: readonly string[] = assets.filter(kind => kind !== 'Business').concat(liabilities);
 export const isBusinessAccount = (record: Pick<Entry, 'kind'>) => businessAccountKinds.includes(record.kind);
-/** Those records by type, as lists that assign accounts to businesses show them. */
-export const businessAccountGroups: ReadonlyArray<readonly [label: string, matches: (record: Pick<Entry, 'kind'>) => boolean]> = [
- ['Cash and deposits', record => ['Cash', 'Deposit', 'Treasury bill', 'Bond'].includes(record.kind)],
- ['Holdings', record => [...unitPricedKinds, 'Retirement account'].includes(record.kind)],
- ['Property and other assets', record => ['Property', 'Vehicle', 'Valuables', 'Money lent'].includes(record.kind)],
- ['Loans and debts', record => liabilities.includes(record.kind)],
+/** Everything held or owed, by type, as lists of accounts group it (assigning businesses, editing owners). */
+export const accountKindGroups: ReadonlyArray<readonly [label: string, kinds: readonly string[]]> = [
+ ['Cash and deposits', ['Cash', 'Deposit', 'Treasury bill', 'Bond']],
+ ['Holdings', [...unitPricedKinds, 'Retirement account']],
+ ['Property and other assets', ['Property', 'Business', 'Vehicle', 'Valuables', 'Money lent']],
+ ['Loans and debts', liabilities],
 ];
+/** The records that can belong to a business, in those groups. */
+export const businessAccountGroups: ReadonlyArray<readonly [label: string, matches: (record: Pick<Entry, 'kind'>) => boolean]> =
+ accountKindGroups.map(([label, kinds]) => [label, record => kinds.includes(record.kind) && isBusinessAccount(record)] as const);
 
 /** Whether a business can be set on a transaction by hand, mirroring `public.assign_transaction_business`. */
 export function canAssignBusiness(record: Entry, business: string | null) {

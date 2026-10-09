@@ -20,14 +20,26 @@ export function useTelegramLink(demo:boolean){
  const [busy,setBusy]=useState(false);
  const [waiting,setWaiting]=useState(false);
  const waitingSince=useRef(0);
- // After the owner opens the bot, watch for the link until it lands or the bot's sign-in link would have expired.
+ // After the owner opens the bot, watch for the link until it lands or the bot's sign-in link would have expired. One
+ // check at a time, and stopping (or leaving the page) cancels the one under way, so a late answer never reports a link.
  useEffect(()=>{
   if(!waiting)return;
-  const timer=setInterval(async()=>{
+  const controller=new AbortController();
+  let running=false;
+  const check=async()=>{
+   if(running)return;
    if(Date.now()-waitingSince.current>pollMinutes*60000){setWaiting(false);return;}
-   try{const response=await fetch('/api/telegram',{cache:'no-store'});if(!response.ok)return;const result=await response.json() as TelegramStatus;if(result.linked){setStatus(result);setWaiting(false);showSaved();}}catch{/* keep waiting */}
-  },pollMs);
-  return()=>clearInterval(timer);
+   running=true;
+   try{
+    const response=await fetch('/api/telegram',{cache:'no-store',signal:controller.signal});
+    if(!response.ok||controller.signal.aborted)return;
+    const result=await response.json() as TelegramStatus;
+    if(result.linked&&!controller.signal.aborted){setStatus(result);setWaiting(false);showSaved();}
+   }catch{/* keep waiting */}
+   finally{running=false;}
+  };
+  const timer=setInterval(()=>{void check();},pollMs);
+  return()=>{controller.abort();clearInterval(timer);};
  },[waiting]);
  async function run(body:unknown,after:(result:TelegramStatus)=>void){
   setBusy(true);setError('');

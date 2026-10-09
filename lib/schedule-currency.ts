@@ -1,19 +1,15 @@
 import { convertMoney } from './money';
 import type { ExtraPayment, Occurrence } from './planning';
+import { sharedDayRate, type DayRate } from './day-rates';
 
-/** The official rate of a day: units of `to` for one unit of `from`. */
-export type DayRate = (from: string, to: string, date: string) => Promise<number>;
+export type { DayRate } from './day-rates';
 
 /** Payments made in another currency than their schedule are counted in the schedule's currency at the official rate
  * of the payment's day (migration 120): the read hands them on as money in the schedule's currency, while the saved
  * transactions keep their own. Without a rate a payment keeps its own currency, which Recurring then leaves uncounted. */
 export async function inScheduleCurrency(occurrences: Occurrence[], payments: ExtraPayment[], currencyOf: Map<string, string>, rate: DayRate): Promise<{ occurrences: Occurrence[]; payments: ExtraPayment[] }> {
- const quotes = new Map<string, Promise<number | null>>();
- const quote = (from: string, to: string, date: string) => {
-  const key = from + ':' + to + ':' + date;
-  if (!quotes.has(key)) quotes.set(key, rate(from, to, date).then(value => value, () => null));
-  return quotes.get(key)!;
- };
+ const shared = sharedDayRate(rate);
+ const quote = (from: string, to: string, date: string) => shared(from, to, date).then(value => value, () => null);
  /** The payment as money in its schedule's currency, or unchanged when it already is, or no rate converts it. */
  const counted = async <T extends { amount: number | null; currency?: string; date?: string }>(payment: T, scheduleId: string): Promise<T> => {
   const to = currencyOf.get(scheduleId), from = payment.currency;

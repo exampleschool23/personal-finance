@@ -12,8 +12,8 @@ export type DigestExtras={
  name?:string;currency?:string;
  /** Net worth in `currency` and its change over the latest day, when two snapshots exist. */
  netWorth?:{amount:number;change:number|null};
- /** Spending over the last seven days and over the seven before. */
- spending?:{current:number;previous:number};
+ /** Spending over the last seven days and over the seven before; `missing` when an amount had no rate, so neither figure is complete. */
+ spending?:{current:number;previous:number;missing?:boolean};
 };
 /** Characters of payment lines one message can hold beside the digest's greeting and figures. */
 const paymentsSectionBudget=3200;
@@ -57,7 +57,9 @@ export function digestMessage(items:DueItem[],language:Language,today:string,ext
   const {amount,change}=extras.netWorth;
   facts.push(`📈 ${t('Net worth')}: ${money(amount)}${change!==null&&Math.round(change)!==0?' · '+t('{change} since yesterday',{change:signed(change)}):''}`);
  }
- if(extras.spending){
+ // An incomplete total is never shown as if it were the whole week.
+ if(extras.spending?.missing)facts.push(`🧾 ${t('Spending')}: ${t('Exchange rate unavailable.')}`);
+ else if(extras.spending){
   const {current,previous}=extras.spending,difference=Math.abs(current-previous);
   // Spending is not good or bad news, so the comparison is stated plainly either way.
   if(current>0||previous>0)facts.push(`🧾 ${Math.round(difference)===0||previous<=0?t('Last 7 days you spent {amount}.',{amount:money(current)}):t(current<previous?'Last 7 days you spent {amount}, {change} less than the week before.':'Last 7 days you spent {amount}, {change} more than the week before.',{amount:money(current),change:money(difference)})}`);

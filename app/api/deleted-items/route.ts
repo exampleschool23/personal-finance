@@ -4,6 +4,7 @@ import { crossSite, postgrestFailure, readJson, signInAgain } from '@/lib/api-ro
 import { workspaceOwner } from '@/lib/household';
 import { session, supa, sameOrigin } from '@/lib/supabase';
 import { attachmentStore, ownsAttachmentPath } from '@/lib/record-attachments';
+import { reportError } from '@/lib/monitoring';
 export async function GET(req:Request) {
  try {
   const auth=await session();if(!auth)return signInAgain();
@@ -29,6 +30,18 @@ export async function POST(req:Request) {
  } catch {return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
 }
 
+/** Removes the files of attachments whose transaction is gone for good, then forgets their rows (migration 130).
+ * Files sit under the workspace owner's folder, also when a household member empties the bin. A failed removal keeps
+ * the rows, so the next purge returns the same paths and tries again; it is reported meanwhile. */
+async function removeOrphanFiles(auth:{token:string;user:{id:string};owner?:string|null},paths:unknown[]){
+ const owner=workspaceOwner(auth);const owned=paths.filter((path):path is string=>typeof path==='string'&&ownsAttachmentPath(owner,path));
+ if(!owned.length)return;
+ const report=(error:unknown)=>reportError('attachment-removal',error,{route:'/api/deleted-items',status:200,userId:auth.user.id},{alert:'repeated'});
+ try{await attachmentStore((path,init)=>supa(path,init,auth.token)).remove(owned);}catch(error){await report(error);return;}
+ const forgotten=await supa('/rest/v1/rpc/forget_attachments',{method:'POST',body:JSON.stringify({p_paths:owned})},auth.token).catch(()=>null);
+ if(!forgotten?.ok)await report(Error('Could not forget removed attachments.'));
+}
+
 export async function DELETE(req:Request) {
  if(!sameOrigin(req))return crossSite();
  try {
@@ -39,8 +52,7 @@ export async function DELETE(req:Request) {
   if(!result.ok)return Response.json({error:'Could not permanently delete this item. Check that database update 048 is installed and try again.'},{status:409});
   // Attachments of a transaction that is gone for good come back as paths; their files are removed too.
   const paths=((await result.json().catch(()=>({})) as {paths?:unknown}).paths);
-  // Files are stored under the workspace owner's folder, also when a household member empties the bin.
-  if(Array.isArray(paths)){const owner=workspaceOwner(auth);const owned=paths.filter((path):path is string=>typeof path==='string'&&ownsAttachmentPath(owner,path));await attachmentStore((path,init)=>supa(path,init,auth.token)).remove(owned).catch(()=>null);}
+  if(Array.isArray(paths))await removeOrphanFiles(auth,paths);
   return Response.json({ok:true});
  } catch {return Response.json({error:'Connection unavailable. Please try again.'},{status:503});}
 }

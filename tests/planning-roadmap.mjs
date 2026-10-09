@@ -21,6 +21,20 @@ test('watchlists use actual split spending in original currency and exclude plan
  const list={query:'shop',category:'food',currency:'USD',target:20};const row={id:'1',name:'Shop',kind:'Living expense',frequency:'Once',currency:'USD',date:'2026-09-01',amount:100,custom_category_id:'food'};
  const records=[row,{...row,id:'2',frequency:'Monthly'},{...row,id:'3',date:'2026-09-30'},{...row,id:'4',currency:'UZS'},{...row,id:'5',kind:'Salary'}];
  const result=watchlistSpending(list,records,[{record_id:'1',category_id:'food',amount:25},{record_id:'1',category_id:'other',amount:75}],'2026-09-15');assert.equal(result.spent,25);assert.equal(result.projected,50);assert.equal(result.remaining,-5);assert.equal(result.count,1);
+ assert.equal(result.missing,1,'without a converter the UZS record is missing, not silently ignored');
+});
+test('watchlists count spending in every currency in the display currency, and mark what no rate converts',()=>{
+ const list={query:'coffee',category:'',currency:'USD',target:20};const row={id:'1',name:'Coffee',kind:'Living expense',frequency:'Once',currency:'USD',date:'2026-09-01',amount:10};
+ const rates={USD:1,UZS:12500,EUR:0.5};const convert=to=>(amount,from)=>rates[from]&&rates[to]?amount/rates[from]*rates[to]:null;
+ const records=[row,{...row,id:'2',currency:'UZS',amount:125000}];
+ const usd=watchlistSpending(list,records,[],'2026-09-15',convert('USD'));
+ assert.deepEqual([usd.spent,usd.count,usd.missing,usd.target,usd.remaining,usd.over],[20,2,0,20,0,false],'a USD Coffee watchlist sees UZS coffee too');
+ const uzs=watchlistSpending(list,records,[],'2026-09-15',convert('UZS'));
+ assert.deepEqual([uzs.spent,uzs.target],[250000,250000],'figures and the target follow the display currency');
+ const partial=watchlistSpending(list,[...records,{...row,id:'3',currency:'GBP',amount:5}],[],'2026-09-15',convert('USD'));
+ assert.deepEqual([partial.spent,partial.missing],[20,1],'an unconvertible record is counted as missing, never added raw');
+ const noTarget=watchlistSpending({...list,currency:'GBP'},records,[],'2026-09-15',convert('USD'));
+ assert.deepEqual([noTarget.target,noTarget.remaining,noTarget.over],[null,null,false]);
 });
 test('recurring detection requires three regularly spaced actuals and avoids existing plans and protected operations',()=>{
  const {recurringSuggestions,suspectedDuplicates}=loadTS('lib/recurring-insights.ts');

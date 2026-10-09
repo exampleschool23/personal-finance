@@ -81,8 +81,10 @@ export async function POST(req:Request){
  const key=process.env.SUPABASE_SERVICE_ROLE_KEY;if(!key)return reply({error:'Account deletion is awaiting server setup.'},503);
  // A linked Telegram chat is told afterwards, so it is not left with the menu of an account that is gone.
  const db=serviceDatabase(),notice=db?await deletionNotice(db,auth.user.id).catch(()=>null):null;
- // Stored receipts are removed first; the database rows go with the account.
- await removeOwnerAttachments(attachmentStore((path,init)=>supa(path,personalRequest(init),auth.token)),auth.user.id).catch(()=>null);
+ // Stored receipts are removed first; the database rows go with the account. Files left behind could never be
+ // reached or removed again, so a failure keeps the account and asks for another try.
+ const removed=await removeOwnerAttachments(attachmentStore((path,init)=>supa(path,personalRequest(init),auth.token)),auth.user.id).then(()=>true,()=>false);
+ if(!removed)return reply({error:'Could not delete the account. Please try again.'},503);
  const response=await fetch(config().url+'/auth/v1/admin/users/'+auth.user.id,{method:'DELETE',headers:serviceKeyHeaders(key),cache:'no-store',signal:AbortSignal.timeout(15000)});
  if(!response.ok)return reply({error:'Could not delete the account. Please try again.'},503);
  if(notice)await sendTelegramMessage(notice);

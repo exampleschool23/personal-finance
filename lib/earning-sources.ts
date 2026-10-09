@@ -1,12 +1,11 @@
 import { z } from 'zod';
-import { isCurrency } from './currencies';
+import { fiatCurrency, isoDate as date } from './api-validation';
 import { scheduleDates, type Entry } from './finance';
 import { shiftDay, shiftMonth } from './calendar-days';
 import { salaryDueDate } from './income-sources';
-const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value=>Number.isFinite(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value);
 export const earningSourceSchema=z.object({
  id:z.string().uuid(),name:z.string().trim().min(1).max(120),kind:z.enum(['Salary','Rent income','Business income','Other income']),
- currency:z.string().refine(isCurrency),mode:z.enum(['fixed','variable']),archived:z.boolean().default(false),
+ currency:fiatCurrency,mode:z.enum(['fixed','variable']),archived:z.boolean().default(false),
  amount:z.number().finite().nonnegative().max(1e15).nullable(),recurrence_days:z.number().int().min(1).max(366).nullable().optional(),frequency:z.enum(['Weekly','Fortnightly','Monthly','Yearly','Custom']).nullable(),start_date:date.nullable(),end_date:date.nullable(),
  linked_record_id:z.string().uuid().nullable().default(null),
  approx_monthly:z.number().finite().positive().max(1e15).nullable().optional(),

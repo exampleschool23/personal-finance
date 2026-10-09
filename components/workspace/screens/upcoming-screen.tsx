@@ -9,6 +9,7 @@ import { PlanningError, ToolsUnavailable } from '@/components/workspace/screen-n
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 import { useSubscriptions } from '@/hooks/use-subscriptions';
 import type { RecurringKind } from '@/components/planning/add-recurring-menu';
+import { marketRates } from '@/lib/market';
 
 export function UpcomingScreen() {
  const { t } = useLanguage();
@@ -20,7 +21,7 @@ export function UpcomingScreen() {
  return <>
   <div data-page="Upcoming payments" className="content">
    <PlanningError/>
-   {planning.loading ? <LoadingPlaceholder label={t('Loading records…')}/> : <UpcomingPage data={planning.data} save={planning.save} currency={currency} rates={market?.rates ?? market?.fx?.rate} view={view} onView={setView} onEdit={editRecord} onAddRecurring={readOnly ? undefined : addRecurring} onArchive={archiveSchedule} onDelete={deleteSchedule}/>}
+   {planning.loading ? <LoadingPlaceholder label={t('Loading records…')}/> : <UpcomingPage data={planning.data} save={planning.save} currency={currency} rates={marketRates(market)} view={view} onView={setView} onEdit={editRecord} onAddRecurring={readOnly ? undefined : addRecurring} onArchive={archiveSchedule} onDelete={deleteSchedule}/>}
    {view === 'subscriptions' && !planning.loading && <SubscriptionsPanel records={subscriptions.records} decisions={subscriptions.decisions} loading={subscriptions.loading} error={subscriptions.error} onRetry={subscriptions.retry} decide={subscriptions.decide} restore={subscriptions.restore} onTrack={reviewRecurring}/>}
   </div>
   {(workspacePreferences.error||planning.error)&&<ToolsUnavailable/>}

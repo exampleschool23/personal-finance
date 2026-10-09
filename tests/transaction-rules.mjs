@@ -167,7 +167,7 @@ test('the longest period reaches 24 months, and long selections are sent in part
 });
 
 test('business helpers: colours, filters, who can take a business, account groups and the setup guide', () => {
- const { nextPaletteColor, paletteColor, businessesIn, canAssignBusiness, inBusinessFilter, businessAccountGroups, isBusinessAccount, setupGuide, HOUSEHOLD } = loadTS('lib/business.ts');
+ const { nextPaletteColor, paletteColor, businessesIn, canAssignBusiness, inBusinessFilter, businessAccountGroups, accountKindGroups, isBusinessAccount, setupGuide, HOUSEHOLD } = loadTS('lib/business.ts');
  assert.equal(nextPaletteColor([]), 'teal');assert.equal(nextPaletteColor(['teal', 'blue', null]), 'indigo');
  assert.equal(nextPaletteColor(['teal', 'blue', 'indigo', 'violet', 'pink', 'red', 'orange', 'amber', 'green']), 'slate', 'grey is the last resort');
  assert.equal(paletteColor('nope'), paletteColor('slate'));assert.notEqual(paletteColor('teal'), paletteColor('blue'));assert.equal(paletteColor(null), paletteColor(undefined));
@@ -186,6 +186,12 @@ test('business helpers: colours, filters, who can take a business, account group
   assert.equal(businessAccountGroups.filter(([, matches]) => matches({ kind })).length, 1, kind);
  }
  assert.ok(!isBusinessAccount({ kind: 'Business' }) && !businessAccountGroups.some(([, matches]) => matches({ kind: 'Salary' })));
+ // Edit owners and the business lists share one grouping: every kind held or owed is in exactly one group, and the
+ // business lists are the same groups without the Business record itself.
+ const { assets, liabilities } = loadTS('lib/finance.ts');
+ for (const kind of [...assets, ...liabilities]) assert.equal(accountKindGroups.filter(([, kinds]) => kinds.includes(kind)).length, 1, kind);
+ assert.deepEqual(businessAccountGroups.map(([label]) => label), accountKindGroups.map(([label]) => label));
+ assert.deepEqual(loadTS('lib/comparison-profile.ts').investmentKinds, assets, 'benchmarks compare every asset kind');
  // The guide: three steps with a page each; tagged history is offered to those who tracked by hand, or who have tags.
  const hrefs = cards => cards.map(card => card.href);
  assert.deepEqual(hrefs(setupGuide(false, true)), ['/transactions?business=household', '/settings#rules', '/reports?tab=tax']);

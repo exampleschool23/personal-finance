@@ -7,6 +7,7 @@ import {FormattedNumberInput} from '@/components/presentation-foundation/formatt
 import {Button} from '@/components/ui/button';
 import {NativeSelect} from '@/components/ui/native-select';
 import {useUnsavedNavigation} from '@/components/discard-changes';
+import {monthEnd,shiftMonth} from '@/lib/calendar-days';
 import {formatMoney,formatNumber,formatDate} from '@/lib/format';
 import {debtPayoff,type PayoffMethod} from '@/lib/debt-payoff';
 import {liabilities,type Entry} from '@/lib/finance';
@@ -26,7 +27,7 @@ function PayoffEditor({records,currency,today,initial,save}:{records:Entry[];cur
  const alternative=debtPayoff(inputs,draft.extra,draft.method==='snowball'?'avalanche':'snowball');
  const money=(n:number)=>formatMoney(n,currency,locale);
  // A month-end projection avoids promising an exact contractual payment day.
- const date=result?.months===null||result?.months===undefined?'':new Date(Date.UTC(Number(today.slice(0,4)),Number(today.slice(5,7))-1+result.months+1,0)).toISOString().slice(0,10);
+ const date=result?.months===null||result?.months===undefined?'':monthEnd(shiftMonth(today.slice(0,7),result.months));
  return <form onSubmit={async event=>{event.preventDefault();setBusy(true);setError('');try{await save({key:'debt_plan',data:draft});setSaved(draft);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}}>
  <fieldset disabled={busy} className="tracker-fields"><label>{t('Payoff method')}<NativeSelect value={draft.method} onChange={event=>setDraft({...draft,method:event.target.value as PayoffMethod})}><option value="avalanche">{t('Highest interest first')}</option><option value="snowball">{t('Smallest balance first')}</option></NativeSelect></label><label>{t('Extra monthly payment')}<FormattedNumberInput value={draft.extra} required={false} onValueChange={extra=>setDraft({...draft,extra})}/></label>{debts.map(debt=><label key={debt.id}>{debt.name} · {t('Minimum monthly payment')}<FormattedNumberInput value={draft.payments[debt.id]??debt.estimated_monthly_payment??0} required={false} onValueChange={minimum=>setDraft({...draft,payments:{...draft.payments,[debt.id]:minimum}})}/></label>)}</fieldset>
  {result&&debts.length>0?<div className="review-grid"><article><h3>{t('Monthly payment budget')}</h3><strong><RollingText text={money(result.budget)}/></strong></article><article><h3>{t('Estimated debt-free date')}</h3><strong>{date?formatDate(date,locale):t('Not repaid within 50 years')}</strong></article><article><h3>{t('Estimated interest')}</h3><strong><RollingText text={result.months===null?'—':money(result.interest)}/></strong></article><article><h3>{t('Interest saved by extra payments')}</h3><strong><RollingText text={baseline?.months!=null&&result.months!==null?money(baseline.interest-result.interest):'—'}/></strong></article></div>:<p>{t('Add a debt to compare payoff strategies.')}</p>}

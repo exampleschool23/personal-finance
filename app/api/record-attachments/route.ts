@@ -34,8 +34,10 @@ export async function POST(req: Request) {
   if (input.action === 'delete') {
    const item = await store.find(owner, input.data.id);
    if (!item || !ownsAttachmentPath(owner, item.path)) return reply({ error: 'This attachment was already removed.' }, 404);
+   // The file goes first: a row is only removed once its file is gone, so a storage failure leaves both for a retry
+   // instead of a file nothing points to any more.
+   await store.remove([item.path]);
    await store.deleteRow(owner, item.id);
-   await store.remove([item.path]).catch(() => null);
    return reply({ ok: true });
   }
   const file = input.data;

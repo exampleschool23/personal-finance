@@ -117,20 +117,24 @@ export function budgetedIn(amounts: readonly BudgetAmount[], key: string, month:
  return convertAmount(Number(saved.amount), saved.currency, currency, rates);
 }
 
-/** The fund's starting balance in `currency`; zero when it has none or its currency cannot be converted. */
-export function startingBalanceIn(fund: RolloverFund, currency: string, rates: Rates) {
+/** The fund's starting balance in `currency`; zero when it has none, null when its currency cannot be converted. */
+export function startingBalanceIn(fund: RolloverFund, currency: string, rates: Rates): number | null {
  if (!fund.rolloverBalance) return 0;
- return convertAmount(fund.rolloverBalance, fund.rolloverCurrency ?? currency, currency, rates) ?? 0;
+ return convertAmount(fund.rolloverBalance, fund.rolloverCurrency ?? currency, currency, rates);
 }
 
 /** Money carried into `month`: the starting balance, then each earlier month's budget minus what was spent.
  * Overspending is taken from the fund and can make it negative; with negative carry off an overspent month resets it to zero.
- * Nothing carries before the start month or when rollover is off. Pure, so every chain can be tested month by month. */
-export function rolloverCarry(fund: RolloverFund, month: string, starting: number, budgetOf: (month: string) => number, actualOf: (month: string) => number) {
+ * Nothing carries before the start month or when rollover is off. Null when the starting balance or an earlier budget
+ * cannot be converted: the carry is unknown, never counted as zero. Pure, so every chain can be tested month by month. */
+export function rolloverCarry(fund: RolloverFund, month: string, starting: number | null, budgetOf: (month: string) => number | null, actualOf: (month: string) => number): number | null {
  if (!fund.rollover || !fund.rolloverStart || fund.rolloverStart > month) return 0;
+ if (starting === null) return null;
  let balance = starting;
  for (const past of monthsBetween(fund.rolloverStart, shiftMonth(month, -1))) {
-  balance += budgetOf(past) - actualOf(past);
+  const budget = budgetOf(past);
+  if (budget === null) return null;
+  balance += budget - actualOf(past);
   if (!fund.rolloverNegative && balance < 0) balance = 0;
  }
  return balance;
@@ -138,15 +142,19 @@ export function rolloverCarry(fund: RolloverFund, month: string, starting: numbe
 
 /** Unspent (or overspent) money carried into `month` from earlier months of a rollover category. */
 export function rolloverBalance(category: BudgetCategory, amounts: readonly BudgetAmount[], history: ReadonlyMap<string, MonthActuals>, month: string, currency: string, rates: Rates) {
- return rolloverCarry(category, month, startingBalanceIn(category, currency, rates), past => budgetedIn(amounts, category.key, past, currency, rates) ?? 0, past => history.get(past)?.byCategory.get(category.key) ?? 0);
+ return rolloverCarry(category, month, startingBalanceIn(category, currency, rates), past => budgetedIn(amounts, category.key, past, currency, rates), past => history.get(past)?.byCategory.get(category.key) ?? 0);
 }
 
 const isFlexibleCategory = (category: BudgetCategory) => category.direction === 'expense' && category.type === 'flexible' && !category.excluded;
 
-/** The Flexible bucket's plan for one month without any rollover: its saved amount, or the sum of its categories' budgets. */
-export function flexBucketPlan(amounts: readonly BudgetAmount[], categories: readonly BudgetCategory[], month: string, currency: string, rates: Rates) {
- if (budgetAmountFor(amounts, flexBucketKey, month)) return budgetedIn(amounts, flexBucketKey, month, currency, rates) ?? 0;
- return categories.filter(isFlexibleCategory).reduce((sum, category) => sum + (budgetedIn(amounts, category.key, month, currency, rates) ?? 0), 0);
+/** Sums amounts that may be unknown: null as soon as one of them is. */
+const sumKnown = (values: readonly (number | null)[]) => values.reduce<number | null>((sum, value) => sum === null || value === null ? null : sum + value, 0);
+
+/** The Flexible bucket's plan for one month without any rollover: its saved amount, or the sum of its categories' budgets.
+ * Null when one of them cannot be converted. */
+export function flexBucketPlan(amounts: readonly BudgetAmount[], categories: readonly BudgetCategory[], month: string, currency: string, rates: Rates): number | null {
+ if (budgetAmountFor(amounts, flexBucketKey, month)) return budgetedIn(amounts, flexBucketKey, month, currency, rates);
+ return sumKnown(categories.filter(isFlexibleCategory).map(category => budgetedIn(amounts, category.key, month, currency, rates)));
 }
 
 /** Money the Flexible bucket carries into `month` in flex mode: its plan minus everything spent in flexible categories. */
@@ -169,27 +177,34 @@ export function budgetHistory(keys: string | readonly string[], month: string, h
 /** Suggested budgets are whole amounts, rounded up so the suggestion covers the average. */
 export const suggestedBudget = (average: number) => Math.max(0, Math.ceil(average - 1e-9));
 
-export type BudgetRow = BudgetCategory & { budget: number | null; actual: number; rolloverIn: number; remaining: number | null; progress: number };
-export type BudgetGroup = { name: string; direction: BudgetDirection; type: BudgetType | null; rows: BudgetRow[]; budget: number; actual: number; remaining: number };
+/** `missing`: the budget or the money rolled over is in a currency no rate converts, so the plan and remaining are unknown
+ * (shown as —, with the Exchange rate unavailable note), never counted as zero. */
+export type BudgetRow = BudgetCategory & { budget: number | null; actual: number; rolloverIn: number; remaining: number | null; progress: number; missing: boolean;
+ /** The money rolled over is in a currency no rate converts: `rolloverIn` is then 0 only for sums and shows as —. */
+ rolloverMissing?: boolean };
+/** `missing` counts rows whose plan is unknown; the group's planned and remaining figures are then unknown too. */
+export type BudgetGroup = { name: string; direction: BudgetDirection; type: BudgetType | null; rows: BudgetRow[]; budget: number; actual: number; remaining: number; missing: number };
 
 /** Each category's budget, actual and remaining for one month. Remaining includes money rolled over from earlier months. */
 export function budgetRows(categories: readonly BudgetCategory[], amounts: readonly BudgetAmount[], history: ReadonlyMap<string, MonthActuals>, month: string, currency: string, rates: Rates): BudgetRow[] {
  const actuals = history.get(month)?.byCategory ?? new Map<string, number>();
  return categories.map(category => {
   const budget = budgetedIn(amounts, category.key, month, currency, rates);
-  const rolloverIn = rolloverBalance(category, amounts, history, month, currency, rates);
+  const carried = rolloverBalance(category, amounts, history, month, currency, rates);
   const actual = actuals.get(category.key) ?? 0;
-  const available = budget === null ? null : budget + rolloverIn;
-  return { ...category, budget, actual, rolloverIn, remaining: available === null ? null : available - actual, progress: available && available > 0 ? actual / available : actual > 0 ? 1 : 0 };
+  const available = budget === null || carried === null ? null : budget + carried;
+  return { ...category, budget, actual, rolloverIn: carried ?? 0, rolloverMissing: carried === null, remaining: available === null ? null : available - actual, progress: available && available > 0 ? actual / available : actual > 0 ? 1 : 0, missing: available === null };
  });
 }
 
-export type BudgetOverall = { income: number; expenses: number; plannedIncome: number; plannedExpenses: number };
+/** `missing` counts plans that could not be converted; the planned figures are then unknown. */
+export type BudgetOverall = { income: number; expenses: number; plannedIncome: number; plannedExpenses: number; missing: number };
 /** One month's income and spending across its categories, actual and planned. Excluded categories are left out. */
 export function budgetOverall(rows: readonly BudgetRow[]): BudgetOverall {
- const overall = { income: 0, expenses: 0, plannedIncome: 0, plannedExpenses: 0 };
+ const overall = { income: 0, expenses: 0, plannedIncome: 0, plannedExpenses: 0, missing: 0 };
  for (const row of rows) {
   if (row.excluded) continue;
+  if (row.missing && row.budget === null) overall.missing += 1;
   if (row.direction === 'income') { overall.income += row.actual; overall.plannedIncome += row.budget ?? 0; }
   else { overall.expenses += row.actual; overall.plannedExpenses += row.budget ?? 0; }
  }
@@ -197,7 +212,7 @@ export function budgetOverall(rows: readonly BudgetRow[]): BudgetOverall {
 }
 
 /** A row is "unbudgeted" when nothing is planned and nothing happened; those hide behind "Show N unbudgeted". */
-export const isUnbudgeted = (row: BudgetRow) => !row.budget && !row.actual && !row.rolloverIn;
+export const isUnbudgeted = (row: BudgetRow) => !row.budget && !row.actual && !row.rolloverIn && !row.missing;
 
 export function groupRows(rows: readonly BudgetRow[], byType: boolean): BudgetGroup[] {
  const groups = new Map<string, BudgetGroup>();
@@ -205,7 +220,8 @@ export function groupRows(rows: readonly BudgetRow[], byType: boolean): BudgetGr
   if (row.excluded) continue;
   const name = row.direction === 'income' ? defaultGroups.income : byType ? budgetTypeLabels[row.type] : row.group;
   const id = row.direction + ':' + name;
-  const group = groups.get(id) ?? { name, direction: row.direction, type: byType && row.direction === 'expense' ? row.type : null, rows: [], budget: 0, actual: 0, remaining: 0 };
+  const group = groups.get(id) ?? { name, direction: row.direction, type: byType && row.direction === 'expense' ? row.type : null, rows: [], budget: 0, actual: 0, remaining: 0, missing: 0 };
+  if (row.missing) group.missing += 1;
   group.rows.push(row); group.budget += (row.budget ?? 0) + row.rolloverIn; group.actual += row.actual; group.remaining += row.remaining ?? 0;
   groups.set(id, group);
  }
@@ -220,29 +236,34 @@ export const goalContribution = (goal: Goal, today: string) => inFundingPlan(goa
 const isFlexible = (row: BudgetRow) => row.direction === 'expense' && row.type === 'flexible' && !row.excluded;
 
 /** Flex mode plans one amount for the Flexible bucket: the saved bucket amount, or until one is saved, the sum of
- * its categories' budgets, so switching style keeps the plan. Null when the saved amount cannot be converted. */
+ * its categories' budgets, so switching style keeps the plan. Null when an amount it needs cannot be converted. */
 export function flexBucketBudget(amounts: readonly BudgetAmount[], rows: readonly BudgetRow[], month: string, currency: string, rates: Rates): number | null {
  if (budgetAmountFor(amounts, flexBucketKey, month)) return budgetedIn(amounts, flexBucketKey, month, currency, rates);
- return rows.filter(isFlexible).reduce((sum, row) => sum + (row.budget ?? 0) + row.rolloverIn, 0);
+ return sumKnown(rows.filter(isFlexible).map(row => row.missing ? null : (row.budget ?? 0) + row.rolloverIn));
 }
 
 /** In flex mode flexible categories carry no budget of their own: only the bucket is planned, and they show what was spent.
  * Their saved amounts are kept for Category mode, but never shown as a plan the totals ignore. */
 export function budgetRowsForMode(rows: readonly BudgetRow[], mode: BudgetMode): BudgetRow[] {
  if (mode === 'category') return [...rows];
- return rows.map(row => row.direction === 'expense' && row.type === 'flexible' ? { ...row, budget: null, rolloverIn: 0, remaining: null, progress: 0 } : row);
+ return rows.map(row => row.direction === 'expense' && row.type === 'flexible' ? { ...row, budget: null, rolloverIn: 0, rolloverMissing: false, remaining: null, progress: 0, missing: false } : row);
 }
 
-export type LeftToBudget = { income: number; expenses: number; contributions: number; left: number; flexible: number | null };
+/** Planned figures are null when an amount they add (a budget, the bucket, a goal contribution) has no usable rate:
+ * unknown, shown as —, never counted as zero. `missing` counts those amounts for the Exchange rate unavailable note. */
+export type LeftToBudget = { income: number | null; expenses: number | null; contributions: number | null; left: number | null; flexible: number | null; missing: number };
 /** Budgeted income minus budgeted spending and goal contributions. Green when positive, grey at zero, red when negative.
- * In flex mode the Flexible bucket replaces the sum of its categories. */
-export function leftToBudget(rows: readonly BudgetRow[], mode: BudgetMode, flexibleBudget: number | null, contributions: number): LeftToBudget {
+ * In flex mode the Flexible bucket replaces the sum of its categories. `contributions` is null when one cannot be converted. */
+export function leftToBudget(rows: readonly BudgetRow[], mode: BudgetMode, flexibleBudget: number | null, contributions: number | null, missingContributions = 0): LeftToBudget {
  const active = rows.filter(row => !row.excluded);
- const plannedIncome = active.filter(row => row.direction === 'income').reduce((sum, row) => sum + (row.budget ?? 0), 0);
- const others = active.filter(row => row.direction === 'expense' && (mode === 'category' || row.type !== 'flexible')).reduce((sum, row) => sum + (row.budget ?? 0), 0);
- const flexible = mode === 'flex' ? flexibleBudget ?? 0 : null;
- const planned = others + (flexible ?? 0);
- return { income: plannedIncome, expenses: planned, contributions, left: plannedIncome - planned - contributions, flexible };
+ // A row whose own budget is unknown; one with only an unknown rollover still has a known plan.
+ const plan = (row: BudgetRow) => row.missing && row.budget === null ? null : row.budget ?? 0;
+ const plannedIncome = sumKnown(active.filter(row => row.direction === 'income').map(plan));
+ const others = sumKnown(active.filter(row => row.direction === 'expense' && (mode === 'category' || row.type !== 'flexible')).map(plan));
+ const flexible = mode === 'flex' ? flexibleBudget : null;
+ const planned = mode === 'flex' ? sumKnown([others, flexible]) : others;
+ const missing = active.filter(row => plan(row) === null).length + (mode === 'flex' && flexibleBudget === null ? 1 : 0) + (contributions === null ? Math.max(1, missingContributions) : missingContributions);
+ return { income: plannedIncome, expenses: planned, contributions, left: sumKnown([plannedIncome, planned === null ? null : -planned, contributions === null ? null : -contributions]), flexible, missing };
 }
 
 export type BudgetTone = 'positive' | 'negative' | 'neutral';

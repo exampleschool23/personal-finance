@@ -65,10 +65,10 @@ test('what-if adjustments apply once or every month from their date, in the prim
  assert.deepEqual(forecast.events.map(event => [event.date, event.amount, event.source]), [['2026-10-25', -800, 'adjustment'], ['2026-11-15', 250, 'adjustment'], ['2026-12-15', 250, 'adjustment']]);
  assert.equal(forecast.totals[0].end, 4700);
  assert.equal(forecast.accounts[0].end, 5000);
- assert.deepEqual(forecast.months.map(month => [month.month, month.totals]), [['2026-10', [{ currency: 'USD', amount: -800 }]], ['2026-11', [{ currency: 'USD', amount: 250 }]], ['2026-12', [{ currency: 'USD', amount: 250 }]]]);
+ assert.deepEqual(forecast.months.map(month => [month.month, month.total, month.missing]), [['2026-10', -800, 0], ['2026-11', 250, 0], ['2026-12', 250, 0]]);
 });
 
-test('currencies are combined only with explicit rates; otherwise each currency keeps its own total', () => {
+test('total cash is one series in the display currency; what no rate converts is left out and counted, never a second total', () => {
  const records = [record('usd', 'Checking', 'Cash', 1000, '2026-01-01'), record('eur', 'Euro account', 'Cash', 400, '2026-01-01', { currency: 'EUR' }),
   record('rent', 'Rent', 'Rent expense', 100, '2026-10-20', { currency: 'EUR', account_id: 'eur', frequency: 'Monthly' })];
  const converted = cashForecast({ ...base, records, days: 30 });
@@ -79,8 +79,10 @@ test('currencies are combined only with explicit rates; otherwise each currency 
  assert.equal(converted.accounts[1].end, 300, 'an account stays in its own currency');
  const separate = cashForecast({ ...base, rates: undefined, records, days: 30 });
  assert.equal(separate.converted, false);
- assert.deepEqual(separate.totals.map(total => [total.currency, total.start, total.end]), [['USD', 1000, 1000], ['EUR', 400, 300]]);
- assert.deepEqual(separate.months[0].totals, [{ currency: 'EUR', amount: -100 }]);
+ assert.deepEqual(separate.totals.map(total => [total.currency, total.start, total.end]), [['USD', 1000, 1000]], 'never a EUR total beside the USD one');
+ assert.equal(separate.missing, 2, 'the EUR balance and the EUR rent are missing');
+ assert.deepEqual([separate.months[0].total, separate.months[0].missing], [0, 1]);
+ assert.equal(converted.months[0].total, -200, 'a converted month total is in the display currency');
  const mismatch = cashForecast({ ...base, records: [record('usd', 'Checking', 'Cash', 1000, '2026-01-01'), record('x', 'X', 'Salary', 50, '2026-10-20', { currency: 'EUR', account_id: 'usd', frequency: 'Monthly' })], days: 30 });
  assert.equal(mismatch.events[0].accountId, null, 'an event in another currency never moves the account directly');
  assert.equal(mismatch.accounts[0].end, 1000);
@@ -99,4 +101,14 @@ test('income arriving today never lifts the lowest balance above today\'s openin
  assert.equal(forecast.totals[0].points[0].balance, 2500, 'the chart shows the end of today');
  assert.deepEqual(forecast.totals[0].lowest, { date: today, balance: 500 });
  assert.deepEqual(forecast.accounts[0].lowest, { date: today, balance: 500 });
+});
+
+test('a projected series is shown in the display currency, or not at all without a rate', () => {
+ const { seriesIn } = loadTS('lib/cash-forecast.ts');
+ const records = [record('eur', 'Euro account', 'Cash', 400, '2026-01-01', { currency: 'EUR' })];
+ const account = cashForecast({ ...base, records, days: 30 }).accounts[0];
+ const shown = seriesIn(account, 'USD', base.rates);
+ assert.deepEqual([shown.currency, shown.start, shown.end, shown.lowest.balance, shown.points[0].balance], ['USD', 800, 800, 800, 800]);
+ assert.equal(seriesIn(account, 'USD', undefined), null);
+ assert.equal(seriesIn(account, 'EUR', undefined), account);
 });

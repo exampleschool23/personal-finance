@@ -103,13 +103,24 @@ export function convertAmount(amount: number, from: Entry['currency'], to: Entry
   if (!fromRate || !toRate || !Number.isFinite(fromRate) || !Number.isFinite(toRate) || fromRate <= 0 || toRate <= 0) return null;
   return amount / fromRate * toRate;
 }
+type MarketRates = Pick<MarketData, 'rates' | 'fx'>;
+const tables = new WeakMap<MarketRates, Record<string, number> | undefined>();
+/** The market feed's rates as one table, the shape `convertAmount` and `convertMoney` (lib/money.ts) both read: units of
+ * each currency per US dollar, always with USD itself at 1, and the older single UZS rate (`fx.rate`) as {USD:1,UZS:rate}.
+ * Undefined without either. The same feed object always gives the same table, so it is safe in React dependencies. */
+export function marketRates(market: MarketRates | null | undefined): Record<string, number> | undefined {
+  if (!market) return undefined;
+  if (!tables.has(market)) tables.set(market, market.rates ? { ...market.rates, USD: 1 } : typeof market.fx?.rate === 'number' ? { USD: 1, UZS: market.fx.rate } : undefined);
+  return tables.get(market);
+}
 export function marketEntry(entry: Entry, currency: Entry['currency'], market: MarketData | null): Entry | null {
   const instrument = instrumentFor(entry);
   const quote = instrument ? market?.quotes[instrumentKey(instrument)] : undefined;
   const unitQuote = quotedUnitPrice(entry, quote);
-  const amount = (unitQuote !== null ? convertAmount(unitQuote, 'USD', currency, (market?.rates ?? market?.fx?.rate)) : null) ?? convertAmount(entry.amount, entry.currency, currency, (market?.rates ?? market?.fx?.rate));
-  const cost = convertAmount(entry.cost, entry.currency, currency, (market?.rates ?? market?.fx?.rate));
-  const estimatedMonthlyIncome = convertAmount(entry.estimated_monthly_income ?? 0, entry.currency, currency, market?.rates ?? market?.fx?.rate);
+  const rates = marketRates(market);
+  const amount = (unitQuote !== null ? convertAmount(unitQuote, 'USD', currency, rates) : null) ?? convertAmount(entry.amount, entry.currency, currency, rates);
+  const cost = convertAmount(entry.cost, entry.currency, currency, rates);
+  const estimatedMonthlyIncome = convertAmount(entry.estimated_monthly_income ?? 0, entry.currency, currency, rates);
   // Never mix currencies when the exchange-rate feed is unavailable.
-  return amount === null || cost === null || estimatedMonthlyIncome === null ? null : { ...entry, amount, cost, currency, payment_principal: entry.payment_principal == null ? undefined : convertAmount(Number(entry.payment_principal), entry.currency, currency, market?.rates ?? market?.fx?.rate)!, payment_interest: entry.payment_interest == null ? undefined : convertAmount(Number(entry.payment_interest), entry.currency, currency, market?.rates ?? market?.fx?.rate)!, estimated_monthly_payment: convertAmount(entry.estimated_monthly_payment ?? 0, entry.currency, currency, market?.rates ?? market?.fx?.rate)!, estimated_monthly_income: estimatedMonthlyIncome };
+  return amount === null || cost === null || estimatedMonthlyIncome === null ? null : { ...entry, amount, cost, currency, payment_principal: entry.payment_principal == null ? undefined : convertAmount(Number(entry.payment_principal), entry.currency, currency, rates)!, payment_interest: entry.payment_interest == null ? undefined : convertAmount(Number(entry.payment_interest), entry.currency, currency, rates)!, estimated_monthly_payment: convertAmount(entry.estimated_monthly_payment ?? 0, entry.currency, currency, rates)!, estimated_monthly_income: estimatedMonthlyIncome };
 }

@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 import { emptyPlanning,type Category,type PlanningData } from '@/lib/planning';
 import type { HoldingAccount } from '@/lib/holding-accounts';
 import { normalizeEntry,type Entry } from '@/lib/finance';
-export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:number,onSaved:()=>void,holdingAccounts:HoldingAccount[]=[],scope:'full'|'review'|'workspace'='full',month?:string,demoSeed:Pick<PlanningData,'goals'|'occurrences'>&Partial<Pick<PlanningData,'categories'>>=emptyPlanning){
+export function usePlanning(user:string|null,demo:boolean,rows:Entry[],revision:number,onSaved:()=>void,holdingAccounts:HoldingAccount[]=[],scope:'full'|'accounts'|'review'|'workspace'='full',month?:string,demoSeed:Pick<PlanningData,'goals'|'occurrences'>&Partial<Pick<PlanningData,'categories'>>=emptyPlanning){
  const resource=useOwnerResource('/api/planning?scope='+scope+(scope==='review'&&month?'&month='+encodeURIComponent(month):''),user,!demo,revision,emptyPlanning);
  const save=useCallback(async(action:string,payload:unknown)=>{
   if(demo)throw Error('Sign in to save planning changes.');

@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
 const { monthlyIncomeCards } = loadTS('lib/monthly-income-cards.ts');
 const entry = (id, kind, extra = {}) => ({ id, kind, name: 'Snoonu', currency: 'USD', amount: 5700, date: '2026-09-01', frequency: 'Monthly', ...extra });
-test('legacy salary receipts annotate the existing card without adding their amounts', () => {
- const rows = [entry('schedule', 'Salary'), entry('receipt', 'Salary', { frequency: 'Once' }), entry('receipt2', 'Salary', { frequency: 'Once' })];
+test('salary receipts that name their schedule annotate its card without adding their amounts', () => {
+ const rows = [entry('schedule', 'Salary'), entry('receipt', 'Salary', { frequency: 'Once', occurrence_record_id: 'schedule' }), entry('receipt2', 'Salary', { frequency: 'Once', occurrence_record_id: 'schedule' })];
  const before = structuredClone(rows);
  const cards = monthlyIncomeCards(rows, '2026-09');
  assert.equal(cards.length, 1); assert.equal(cards[0].amount, 5700); assert.equal(cards[0].excluded, false); assert.equal(cards[0].notes.length, 1);
@@ -33,12 +33,21 @@ test('rental source receipts resolve through the source to each existing propert
  assert.deepEqual(cards.map(card=>card.amount),[450,400]);
  assert.ok(cards.every(card=>card.asset&&!card.excluded&&card.notes.includes('One-time payments are not added to the monthly estimate.')));
 });
-test('legacy unlinked rent matches a unique property but never overrides an explicit link', () => {
+test('rent joins a property only by its id, never by a matching name', () => {
  const property=entry('home','Property',{estimated_monthly_income:450});
  const receipt=entry('paid','Rent income',{frequency:'Once'});
- assert.equal(monthlyIncomeCards([property,receipt],'2026-09').length,1);
+ assert.equal(monthlyIncomeCards([property,receipt],'2026-09').length,2,'an unlinked receipt with the same name stays apart');
+ assert.equal(monthlyIncomeCards([property,{...receipt,income_source_id:'home'}],'2026-09').length,1);
  assert.equal(monthlyIncomeCards([property,{...receipt,income_source_id:'other-home'}],'2026-09').length,2);
- assert.equal(monthlyIncomeCards([property,{...property,id:'second-home'},receipt],'2026-09').length,3);
+});
+test('a same-name receipt that names no schedule never marks the schedule received', () => {
+ const cards=monthlyIncomeCards([entry('schedule','Salary'),entry('receipt','Salary',{frequency:'Once',amount:5700})],'2026-09',[],'2026-09-25');
+ assert.equal(cards.length,2);
+ const schedule=cards.find(card=>card.entry.id==='schedule');
+ assert.deepEqual([schedule.received,schedule.receivedAmount],[false,0]);
+ assert.equal(cards.find(card=>card.entry.id==='receipt').excluded,true,'it becomes its own one-time card');
+ // Two unlinked receipts with one name are two cards, not a group made up by name.
+ assert.equal(monthlyIncomeCards([entry('a','Other income',{frequency:'Once'}),entry('b','Other income',{frequency:'Once'})],'2026-09').length,2);
 });
 test('reusable business receipts also resolve to their existing asset', () => {
  const cards=monthlyIncomeCards([entry('business','Business',{estimated_monthly_income:100}),entry('paid','Business income',{frequency:'Once',earning_source_id:'source'})],'2026-09',[{id:'source',schedule_id:'plan',linked_record_id:'business'}]);
@@ -47,11 +56,11 @@ test('reusable business receipts also resolve to their existing asset', () => {
 test('receipt indicators require an actual receipt (a recorded 0 counts) in the selected month through today', () => {
  const plan=entry('salary','Salary');
  for(const [extra,expected] of [[{},true],[{date:'2026-08-31'},false],[{date:'2026-09-19'},false],[{amount:0},true],[{frequency:'Monthly'},false]]) {
-  const cards=monthlyIncomeCards([plan,entry('paid','Salary',{frequency:'Once',...extra})],'2026-09',[],'2026-09-18');
+  const cards=monthlyIncomeCards([plan,entry('paid','Salary',{frequency:'Once',occurrence_record_id:'salary',...extra})],'2026-09',[],'2026-09-18');
   assert.equal(cards[0].received,expected);
  }
  assert.equal(monthlyIncomeCards([plan],'2026-09',[],'2026-09-18')[0].received,false);
- const zero=monthlyIncomeCards([plan,entry('nothing','Salary',{frequency:'Once',amount:0,date:'2026-09-01'})],'2026-09',[],'2026-09-18')[0];
+ const zero=monthlyIncomeCards([plan,entry('nothing','Salary',{frequency:'Once',occurrence_record_id:'salary',amount:0,date:'2026-09-01'})],'2026-09',[],'2026-09-18')[0];
  assert.deepEqual([zero.received,zero.receivedAmount,zero.amount],[true,0,5700],'a recorded 0 shows as received $0 beside the estimate');
 });
 test('rental receipt marks only its own property and leaves estimates unchanged', () => {
@@ -96,10 +105,20 @@ test('linked payments without an asset estimate group within the month', () => {
  assert.deepEqual(monthlyIncomeCards(rows,'2026-09').map(card=>card.amount),[300]);
 });
 
-test('receipts from another currency never mark an unconverted estimate as received', () => {
- const cards=monthlyIncomeCards([entry('schedule','Salary'),entry('receipt','Salary',{frequency:'Once',currency:'UZS',earning_source_id:'source'})],'2026-09',[{id:'source',schedule_id:'schedule'}],'2026-09-25');
- assert.equal(cards.length,2);
- assert.equal(cards.find(card=>card.entry.id==='schedule').received,false);
+test('a payment in another currency joins its schedule by id; without a rate its amount is missing, never added raw', () => {
+ const cards=monthlyIncomeCards([entry('schedule','Salary'),entry('receipt','Salary',{frequency:'Once',currency:'UZS',amount:12500000,earning_source_id:'source'})],'2026-09',[{id:'source',schedule_id:'schedule'}],'2026-09-25');
+ assert.equal(cards.length,1);
+ assert.deepEqual([cards[0].received,cards[0].receivedAmount,cards[0].missing],[true,0,1]);
+ const { incomeCardTotals } = loadTS('lib/monthly-income-cards.ts');
+ assert.equal(incomeCardTotals(cards).missing,1,'the received total is unknown');
+});
+
+test('a EUR payment linked to a USD schedule counts converted into the schedule currency', () => {
+ const rows=[entry('schedule','Salary'),entry('receipt','Salary',{frequency:'Once',currency:'EUR',amount:100,occurrence_record_id:'schedule'})];
+ const cards=monthlyIncomeCards(rows,'2026-09',[],'2026-09-25',{USD:1,EUR:0.8});
+ assert.equal(cards.length,1);
+ assert.deepEqual([cards[0].received,cards[0].receivedAmount,cards[0].missing,cards[0].amount],[true,125,0,5700]);
+ assert.ok(Math.abs(monthlyIncomeCards(rows,'2026-09',[],'2026-09-25',(from,to)=>from==='EUR'&&to==='USD'?1.1:null)[0].receivedAmount-110)<1e-9,'a dated pair rate works too');
 });
 
 test('receipt totals retain precision separately from estimates and exclude future and other-month payments',()=>{
@@ -126,5 +145,5 @@ test('a variable source shows its approximate monthly income as the estimate, an
 });
 test('income totals add every card received and only included estimates', () => {
  const { incomeCardTotals } = loadTS('lib/monthly-income-cards.ts');
- assert.deepEqual(incomeCardTotals([{ amount: 5700, excluded: false, receivedAmount: 5700 }, { amount: 1000, excluded: false, receivedAmount: 424 }, { amount: 200, excluded: true, receivedAmount: 200 }]), { estimate: 6700, received: 6324 });
+ assert.deepEqual(incomeCardTotals([{ amount: 5700, excluded: false, receivedAmount: 5700 }, { amount: 1000, excluded: false, receivedAmount: 424 }, { amount: 200, excluded: true, receivedAmount: 200 }]), { estimate: 6700, received: 6324, missing: 0 });
 });

@@ -1,5 +1,6 @@
 // What a finished conversation saves: a record, or a transfer or payment for the planning functions.
 import type {Entry} from '../finance';
+import {chooseSchedule} from '../planning';
 import type {RecordInput} from '../record-schema';
 import {find,recordName} from './steps';
 import type {Commit,Draft,FlowContext} from './types';
@@ -16,10 +17,11 @@ function cashFlowCommit(draft:Draft,account:Entry,ctx:FlowContext):Commit{
  // A business chosen here (or "No business") wins over the account's own business.
  const business=d.business_id!==undefined?d.business_id:account.business_id??null;
  const kind=(custom?(draft.kind==='income'?'Other income':'Other expense'):d.category) as RecordInput['kind'];
- // A scheduled payment names its schedule by id; rent income also carries the schedule's property.
+ const payment:RecordInput={...blank,id:d.id??ctx.newId,name:recordName(draft,ctx),kind,custom_category_id:d.custom_category_id??null,currency,amount:d.amount??0,rate:0,date:d.date??ctx.today,account_id:account.id,...(business?{business_id:business}:{}),payment_type:'regular',estimated_monthly_payment:0,...(converted?{account_exchange_rate:d.fx_rate}:{})};
+ // A scheduled payment names its schedule by id, the way every form applies the choice; rent income also carries the
+ // schedule's property. The bot asks for an amount above zero, so the schedule never replaces the one typed.
  const schedule=d.schedule_id?find(ctx.records??[],d.schedule_id):undefined;
- const linked=schedule?{occurrence_record_id:schedule.id,...(kind==='Rent income'&&schedule.income_source_id?{income_source_id:schedule.income_source_id}:{})}:{};
- const record:RecordInput={...blank,...linked,id:d.id??ctx.newId,name:recordName(draft,ctx),kind,custom_category_id:d.custom_category_id??null,currency,amount:d.amount??0,rate:0,date:d.date??ctx.today,account_id:account.id,...(business?{business_id:business}:{}),payment_type:'regular',estimated_monthly_payment:0,...(converted?{account_exchange_rate:d.fx_rate}:{})};
+ const record:RecordInput={...payment,...(schedule?chooseSchedule(payment,schedule):{})} as RecordInput;
  return converted?{type:'record',record,fx:{account_rate_date:d.fx_rate_date??d.date??ctx.today,account_currency:account.currency}}:{type:'record',record};
 }
 /** A transfer, repayment or mortgage payment for the planning functions. */

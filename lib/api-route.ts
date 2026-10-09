@@ -26,6 +26,27 @@ export function sameOrigin(req: Request) {
 /** The request's JSON body, or null when it is missing or malformed, so validation answers 400 rather than 503. */
 export const readJson = (req: Request): Promise<unknown> => req.json().catch(() => null);
 
+/** The request body as text, or null once it is larger than `maxBytes`. A declared Content-Length over the limit is
+ * refused before anything is read, and the stream is cut off at the limit for clients that send none or lie. */
+export async function readCapped(req: Request, maxBytes: number): Promise<string | null> {
+ if (Number(req.headers.get('content-length')) > maxBytes) return null;
+ const reader = req.body?.getReader();
+ if (!reader) return '';
+ const chunks: Uint8Array[] = [];
+ let size = 0;
+ for (;;) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  size += value.byteLength;
+  if (size > maxBytes) { await reader.cancel(); return null; }
+  chunks.push(value);
+ }
+ const buffer = new Uint8Array(size);
+ let offset = 0;
+ for (const chunk of chunks) { buffer.set(chunk, offset); offset += chunk.byteLength; }
+ return new TextDecoder().decode(buffer);
+}
+
 type Schemas = Record<string, z.ZodTypeAny>;
 export type ParsedAction<S extends Schemas> = { [K in keyof S & string]: { action: K; data: z.output<S[K]> } }[keyof S & string];
 /** An `{action, data}` body checked against the schema named by its action; null when either is wrong. */

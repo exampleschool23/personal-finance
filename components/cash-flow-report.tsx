@@ -16,7 +16,7 @@ import { useCategoryHue } from '@/components/category-icons-context';
 import { depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry } from '@/lib/finance';
 import { formatCompactMoney, formatMoney, formatMonthYear, formatPercent } from '@/lib/format';
-import type { MarketData } from '@/lib/market';
+import { marketRates, type MarketData } from '@/lib/market';
 import { emptyPlanning, type PlanningData } from '@/lib/planning';
 import type { TransactionSplit } from '@/lib/transaction-tools';
 import { measureLabel, sankeyLabelMargins } from '@/lib/sankey-labels';
@@ -53,7 +53,7 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
  const live = !!owner && !demo;
  const remote = useOwnerResource(`/api/planning?scope=budget&month=${month}&from=${series[0]}`, owner, live, revision, emptyPlanning);
  const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : provided, [live, remote.data, provided]);
- const rates = market?.rates ?? market?.fx?.rate;
+ const rates = marketRates(market);
  const report = useMemo(() => cashFlowReport(data, splits, periodMonths(month, period), currency, today, rates), [data, splits, month, period, currency, today, rates]);
  const trend = useMemo(() => cashFlowReport(data, splits, trailingMonths(month), currency, today, rates).series, [data, splits, month, currency, today, rates]);
  const money = (amount: number) => formatMoney(amount, currency, locale);
@@ -71,13 +71,12 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
   <div className="cash-flow-report-tools">
    <Segmented label={t('Period')} options={reportPeriods.map(value => ({ value, label: t(periodLabels[value]) }))} value={period} onChange={setPeriod}/>
   </div>
-  {/* A single month is already summed up by the review tiles above, so the totals appear only for longer periods. */}
-  {period !== 'month' && <StatTiles columns={4} label={t('Cash flow')}>
+  <StatTiles columns={4} label={t('Cash flow')}>
    <StatTile label={t('Income')} value={money(report.income)} tone={report.income > 0 ? 'positive' : undefined}/>
    <StatTile label={t('Expenses')} value={money(report.expenses)}/>
    <StatTile label={t('Total savings')} value={money(report.savings)} tone={signTone(report.savings)}/>
    <StatTile label={t('Savings rate')} value={report.savingsRate === null ? '—' : formatPercent(report.savingsRate, locale)} tone={report.savingsRate === null ? undefined : signTone(report.savingsRate)}/>
-  </StatTiles>}
+  </StatTiles>
   <section className="panel">
    <PanelTitle title={t('Income and spending by month')}/>
    <div className="cash-flow-chart"><ResponsiveContainer width="100%" height={chartHeight.regular}>

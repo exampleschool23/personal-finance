@@ -45,7 +45,8 @@ test('assistant requests start and end with the user and stay small', () => {
 test('the assistant route needs a key and a session, reads only the owner rows and asks Claude with fallbacks', async () => {
  const calls = [], reads = [];
  let reply = { stop_reason: 'end_turn', content: [{ type: 'text', text: 'You spent 121 USD.' }] };
- class Fake { constructor() { this.beta = { messages: { create: async body => { calls.push(body); return reply; } } }; } }
+ const clients = [], options = [];
+ class Fake { constructor(settings) { clients.push(settings); this.beta = { messages: { create: async (body, opts) => { calls.push(body); options.push(opts); if (opts?.signal?.aborted) throw Error('aborted'); return reply; } } }; } }
  Fake.RateLimitError = class extends Error {}; Fake.AuthenticationError = class extends Error {};
  let auth = { token: 'owner-token', user: { id: 'u1' } };
  const route = loadTS('app/api/assistant/route.ts', {
@@ -70,8 +71,15 @@ test('the assistant route needs a key and a session, reads only the owner rows a
   assert.equal(sent.model, 'claude-opus-5-5');
   assert.equal(sent.fallbacks, 'default');
   assert.deepEqual(sent.betas, ['server-side-fallback-2026-07-01']);
-  assert.match(sent.messages[0].content, /Snapshot of my finances/);
+  assert.match(sent.messages[0].content[0].text, /Snapshot of my finances/);
+  assert.deepEqual(sent.messages[0].content[0].cache_control, { type: 'ephemeral' });
   assert.deepEqual(sent.messages.at(-1), body.messages[0]);
+  assert.deepEqual(clients.at(-1), { timeout: 60_000, maxRetries: 1 });
+  assert.ok(options.at(-1).signal instanceof AbortSignal);
+  // A visitor who leaves before the answer is not reported as an assistant failure.
+  const left = new AbortController(); left.abort();
+  const gone = await route.POST(new Request('https://app.example/api/assistant', { method: 'POST', body: JSON.stringify(body), signal: left.signal }));
+  assert.equal(gone.status, 499);
   reply = { stop_reason: 'refusal', content: [] };
   assert.equal((await route.POST(request(body))).status, 422);
  } finally { delete process.env.ANTHROPIC_API_KEY; }

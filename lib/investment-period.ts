@@ -1,6 +1,6 @@
 import { benchmarkExpenseFunding, benchmarkInvestment, investmentActivity, openingFunding, type BenchmarkMovement } from './investment-benchmarks';
 import { income, liabilities } from './finance';
-import { convertAmount } from './market';
+import { convertAmount, marketRates } from './market';
 import { convertHistorical } from './investment-comparison';
 import type { FxPoint } from './benchmark-data';
 import type { InvestmentPortfolioInput } from './investment-portfolio';
@@ -12,7 +12,7 @@ export function investmentPeriodTotals(input:InvestmentPortfolioInput&{movements
  const totals={income:0,invested:0,expenses:0};
  const missing=new Set<string>();
  const records=new Map(input.records.map(record=>[record.id,record]));
- const rates=input.market?.rates??(input.market?.fx?{UZS:input.market.fx.rate}:{});
+ const rates=marketRates(input.market)??{};
  let context={name:'',date:'',category:''};
  const add=(key:keyof typeof totals,amount:number,currency:string)=>{
   // With the chart's dated rates, convert like the chart: to USD at the day's rate, then to the display currency at today's.

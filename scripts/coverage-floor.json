@@ -19,19 +19,14 @@
   "app/(workspace)/sign-in/page.tsx",
   "app/(workspace)/transactions/page.tsx",
   "app/(workspace)/upcoming/page.tsx",
-  "app/api/asset-movements/route.ts",
   "app/api/auth/google/route.ts",
-  "app/api/budget/route.ts",
   "app/api/comparison-profile/route.ts",
   "app/api/demo/route.ts",
   "app/api/exchange-rate/route.ts",
   "app/api/holding-accounts/route.ts",
   "app/api/investment-history/exchange/route.ts",
-  "app/api/market/route.ts",
   "app/api/portfolio-history/route.ts",
   "app/api/settings/route.ts",
-  "app/api/tags/route.ts",
-  "app/api/transaction-rules/route.ts",
   "app/auth/access/page.tsx",
   "app/auth/callback/route.ts",
   "app/auth/confirm/page.tsx",
@@ -126,7 +121,6 @@
   "hooks/use-transaction-rules.ts",
   "hooks/use-transaction-tools.ts",
   "hooks/use-workspace-preferences.ts",
-  "lib/budget-schemas.ts",
   "lib/deleted-items.ts"
  ]
 }

@@ -192,7 +192,7 @@ test('every table with an owner is either shared with the household or personal,
   await db.exec(`CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY);CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;`);
   await db.exec(fs.readFileSync('database/setup.sql','utf8'));
   const shared=(await db.query('SELECT public.shared_workspace_tables() AS t')).rows[0].t;
-  const personalTables=['backup_manifests','backup_recovery_points','finance_restore_context','telegram_drafts','telegram_login_tokens','telegram_milestones','telegram_subscriptions','user_app_activity','user_preferences'];
+  const personalTables=['backup_manifests','backup_recovery_points','finance_restore_context','telegram_drafts','telegram_deliveries','telegram_login_tokens','telegram_milestones','telegram_subscriptions','user_app_activity','user_preferences'];
   const owned=(await db.query(`SELECT c.table_name AS name FROM information_schema.columns c JOIN information_schema.tables t USING(table_schema,table_name) WHERE c.table_schema='public' AND c.column_name='user_id' AND t.table_type='BASE TABLE' ORDER BY 1`)).rows.map(row=>row.name);
   assert.deepEqual(owned.filter(name=>!shared.includes(name)&&!personalTables.includes(name)),[],'classify new tables in migration 100');
   for(const name of shared){

@@ -55,3 +55,13 @@ test('a typed entry shows its only schedule on the card, where it can be changed
  const two=run([{text:'+3450 salary'}]);
  assert.equal(two.draft.data.schedule_id,null);assert.doesNotMatch(two.reply.text,/Scheduled payment/);
 });
+
+test('the bot applies a schedule choice through chooseSchedule, like the app\'s record forms, keeping the typed amount',()=>{
+ const {chooseSchedule}=loadTS('lib/planning.ts');
+ for(const [category,schedule] of [['Salary',records[2]],['Rent income',records[4]],['Living expense',records[6]]]){
+  const saved=run([{text:category==='Living expense'?'Expense':'Income'},{callback:'f:cat:'+category},{callback:'f:sch:'+schedule.id},...finish]).commit.record;
+  const link=chooseSchedule(saved,schedule);
+  for(const [key,value] of Object.entries(link))assert.equal(saved[key],value,`${category} ${key}`);
+  assert.equal(saved.amount,3450,'the amount typed in the bot is kept, never the schedule\'s');
+ }
+});

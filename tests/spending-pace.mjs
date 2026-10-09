@@ -48,3 +48,12 @@ test('the tooltip shows where the money went on a day: that day\'s spending only
  const pace=spendingPace({records:day,splits:[],snapshots:[]},'2026-10-02','USD',{USD:1});
  assert.equal(pace.points[14].previous-pace.points[13].previous,spendingOnDay(day,'2026-09-15','USD',{USD:1}).reduce((sum,item)=>sum+item.amount,0),'the day\'s items add up to the jump in the line');
 });
+
+test('a day\'s spending includes a Tracker expense on an investment, named after its holding, so the items add up to the line',()=>{
+ const holding=record('stock','Stock',5000,'2026-01-01',{name:'Apple',frequency:'Monthly'});
+ const links=[{id:'fee',account_id:'cash',account_currency:'USD',amount:-12,investment_history:{occurred_on:'2026-09-15',record_id:'stock',event_type:'expense'}}];
+ const day=[...records,holding];
+ assert.deepEqual(spendingOnDay(day,'2026-09-15','USD',{USD:1},links).map(item=>[item.name,item.kind,item.amount]),[['d','Living expense',60],['Apple','Other expense',12]]);
+ const pace=spendingPace({records:day,splits:[],snapshots:[],investmentLinks:links},'2026-10-02','USD',{USD:1});
+ assert.equal(pace.points[14].previous-pace.points[13].previous,72);
+});

@@ -59,7 +59,8 @@ test('attachments stay with their owner and their record, survive Recently delet
   await db.query('SELECT restore_deleted_item($1)',[archived]);
   assert.equal((await db.query('SELECT count(*)::int AS n FROM record_attachments WHERE record_id=$1',[id(11)])).rows[0].n,20);
 
-  // Permanent deletion forgets them and returns the paths to remove; another owner's call removes nothing.
+  // Permanent deletion returns the paths to remove and keeps their rows until the files are gone (migration 130);
+  // another owner's call returns nothing.
   await db.query("SELECT move_item_to_deleted($1,'finance_records')",[id(11)]);
   const again=(await db.query('SELECT id FROM deleted_items')).rows[0].id;
   await db.exec(`SET request.jwt.claim.sub='${id(2)}';`);
@@ -67,7 +68,16 @@ test('attachments stay with their owner and their record, survive Recently delet
   await db.exec(`SET request.jwt.claim.sub='${id(1)}';`);
   const result=(await db.query('SELECT permanently_delete_item($1) AS r',[again])).rows[0].r;
   assert.equal(result.paths.length,20);assert.ok(result.paths.every(item=>item.startsWith(`${id(1)}/${id(11)}/`)));
+  assert.equal((await db.query('SELECT count(*)::int AS n FROM record_attachments')).rows[0].n,20,'rows stay until the files are removed');
+  // A failed removal leaves the rows, so the next purge returns the same paths again.
+  assert.deepEqual((await db.query('SELECT permanently_delete_item($1) AS r',[again])).rows[0].r.paths,result.paths);
+  // Another owner cannot forget them; the owner forgets only what was asked.
+  await db.exec(`SET request.jwt.claim.sub='${id(2)}';`);
+  assert.equal((await db.query('SELECT forget_attachments($1) AS n',[result.paths])).rows[0].n,0);
+  await db.exec(`SET request.jwt.claim.sub='${id(1)}';`);
+  assert.equal((await db.query('SELECT forget_attachments($1) AS n',[result.paths.slice(0,5)])).rows[0].n,5);
+  assert.equal((await db.query('SELECT forget_attachments($1) AS n',[result.paths])).rows[0].n,15);
   assert.equal((await db.query('SELECT count(*)::int AS n FROM record_attachments')).rows[0].n,0);
-  await assert.rejects(db.query('SELECT forget_orphan_attachments($1)',[id(1)]),/permission denied/);
+  await assert.rejects(db.query('SELECT orphan_attachment_paths($1)',[id(1)]),/permission denied/);
  }finally{await db.close();}
 });

@@ -63,7 +63,7 @@ test('dated PC purchase transfers cash without creating net worth; breeding valu
  });
 
 test('investment-only history excludes everyday cash and debt but retains opted-in cash',async()=>{
- const {isInvestmentRecord}=await import('../lib/comparison-profile.ts');
+ const {isInvestmentRecord}=(await import('./helpers/load-ts.mjs')).loadTS('lib/comparison-profile.ts');
  const records=[record('ordinary','Cash'),{...record('reserve','Cash'),is_investment:true},record('stock','Stock'),record('debt','Loan')];
  const events=records.flatMap(r=>[event(r.id,'2026-09-01',100),event(r.id,'2026-09-02',r.id==='ordinary'?900:120)]);
  const result=portfolioHistory(records.filter(isInvestmentRecord),events,'USD',undefined,'2026-09-03');

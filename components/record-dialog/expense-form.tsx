@@ -9,7 +9,7 @@ import { ScheduledPaymentField } from '@/components/presentation-foundation/sche
 import { chooseSchedule, paymentSchedules } from '@/lib/planning';
 import { frequencyLabels } from '@/lib/finance';
 import { selectTransactionCategory } from '@/lib/transaction-categories';
-import { InvestmentTracker } from '@/components/investment-tracker';
+import { InvestmentTracker } from '@/components/investment-tracker-lazy';
 import { MortgagePaymentDialog } from '@/components/mortgage-payment-dialog';
 import { AmountCurrencyFields } from '@/components/presentation-foundation/amount-currency-fields';
 import Link from 'next/link';

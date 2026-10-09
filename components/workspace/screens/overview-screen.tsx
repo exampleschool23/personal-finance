@@ -20,6 +20,7 @@ import { SpendingPaceCard } from '@/components/spending-pace-card';
 import { TelegramNudge } from '@/components/telegram-nudge';
 import { ScreenNotices, ToolsUnavailable } from '@/components/workspace/screen-notices';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
+import { marketRates } from '@/lib/market';
 
 export function OverviewScreen() {
  const { t } = useLanguage();
@@ -40,7 +41,7 @@ export function OverviewScreen() {
   goals: planningReady && <GoalsCard goals={planning.data.goals} order={savedGoalOrder(workspacePreferences.data.preferences)} data={planning.data} currency={currency} netWorth={code => goalFinancials(planning.data.records, depositToday().slice(0, 7), code, market).netWorth}/>,
   transactions: planningReady && <RecentTransactionsCard owner={user} demo={demo} revision={reload} data={planning.data}/>,
   upcoming: cards.upcoming,
-  forecast: planningReady && <LowestBalanceCard data={planning.data} currency={currency} rates={market?.rates ?? market?.fx?.rate}/>,
+  forecast: planningReady && <LowestBalanceCard data={planning.data} currency={currency} rates={marketRates(market)}/>,
   income,
  });
  return <>

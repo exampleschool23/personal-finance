@@ -13,6 +13,7 @@ import { depositToday } from '@/lib/deposit-interest';
 import { expenses, income } from '@/lib/finance';
 import type { WorkspacePreference } from '@/lib/workspace-preferences';
 import { useRangeData } from '@/hooks/use-report-data';
+import { marketRates } from '@/lib/market';
 
 /** Business tax prep reads its own tax year, whatever range the other tabs show. */
 export function TaxTab({ preferences, save, names, onOpen }: { preferences: readonly WorkspacePreference[]; save: (preference: WorkspacePreference) => Promise<void>; names: ReportNames; onOpen: (line: LedgerLine) => void }) {
@@ -25,7 +26,7 @@ export function TaxTab({ preferences, save, names, onOpen }: { preferences: read
  const settings = demo ? sample : saved ?? defaultTaxSettings;
  const range = taxPeriodRange(year, period);
  const { data, loading, error, retry } = useRangeData(range);
- const rates = market?.rates ?? market?.fx?.rate;
+ const rates = marketRates(market);
  const lines = useMemo(() => reportLedger(data, transactionTools.data.splits, range, currency, today, rates).lines.filter(line => line.business === (businessList.some(item => item.id === business) ? business : businessList[0]?.id)), [data, transactionTools.data.splits, range, currency, today, rates, business, businessList]);
  const categories = useMemo(() => [...income.filter(kind => kind !== 'Salary').map(key => ({ key, direction: 'income' as const })), ...expenses.map(key => ({ key, direction: 'expense' as const })), ...data.categories.map(category => ({ key: category.id, direction: category.direction }))], [data.categories]);
  const { t } = useLanguage();

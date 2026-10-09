@@ -1,4 +1,5 @@
-import { planningReadFilters,currentReviewMonth } from '@/lib/planning-reads';
+import { planningReadFilters,planningReadPlan,planningScopes,currentReviewMonth,type PlanningScope } from '@/lib/planning-reads';
+import { sharedDayRate } from '@/lib/day-rates';
 import { loadDatedExchangeRate } from '@/lib/dated-exchange-rate';
 import { depositForecasts } from '@/lib/deposit-forecasts';
 import { interestKinds, type Entry } from '@/lib/finance';
@@ -14,11 +15,11 @@ import type { Category, ExtraPayment, Occurrence } from '@/lib/planning';
 import { queueMilestoneCheck } from '@/lib/notify-action';
 import type { ActionEvent } from '@/lib/action-messages';
 /** Later payments for recorded occurrences add to them; limited scopes leave those transactions out of `records`. Before migration 112 there are none. */
-const readExtraPayments=(scope:string,token:string)=>scope==='insights'?Promise.resolve([] as ExtraPayment[]):readOwnerRows<ExtraPayment>('finance_records',token,{select:'id,occurrence_record_id,occurrence_due_on,amount,currency,date',occurrence_record_id:'not.is.null'}).catch(()=>[] as ExtraPayment[]);
+const readExtraPayments=(historyOnly:boolean,token:string)=>historyOnly?Promise.resolve([] as ExtraPayment[]):readOwnerRows<ExtraPayment>('finance_records',token,{select:'id,occurrence_record_id,occurrence_due_on,amount,currency,date',occurrence_record_id:'not.is.null'}).catch(()=>[] as ExtraPayment[]);
 export async function GET(req?:Request){
  try{const auth=await session();if(!auth)return signInAgain();
- const scope=req?new URL(req.url).searchParams.get('scope')??'full':'full';
- if(!['full','review','workspace','insights','budget'].includes(scope))return Response.json({error:'Invalid planning scope.'},{status:400});
+ const scope=(req?new URL(req.url).searchParams.get('scope')??'full':'full') as PlanningScope;
+ if(!planningScopes.includes(scope))return Response.json({error:'Invalid planning scope.'},{status:400});
  const month=req?new URL(req.url).searchParams.get('month')??currentReviewMonth():currentReviewMonth();
  if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)||!isoDate.safeParse(month+'-01').success)return Response.json({error:'Invalid review month.'},{status:400});
  const first=req?new URL(req.url).searchParams.get('from')??undefined:undefined;
@@ -26,22 +27,25 @@ export async function GET(req?:Request){
  if(scope==='budget'&&(!first||!/^\d{4}-(0[1-9]|1[0-2])$/.test(first)||first>month||(Number(month.slice(0,4))*12+Number(month.slice(5)))-(Number(first.slice(0,4))*12+Number(first.slice(5)))>23))return Response.json({error:'Invalid review month.'},{status:400});
  const filters=planningReadFilters(scope,month,first);
  const tables={movements:'asset_movements',holdingAccounts:'holding_accounts',records:'finance_records',categories:'transaction_categories',goals:'savings_goals',occurrences:'payment_occurrences',activity:'account_activity',investmentLinks:'investment_account_links'};
- const reads=Promise.all(Object.entries(tables).filter(([key])=>scope==='insights'?key==='records':scope==='full'||(key!=='movements'&&(scope==='review'||scope==='budget'||!['activity','investmentLinks'].includes(key)))).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,filters[key as keyof typeof filters]??{})]));
- const extraPayments=readExtraPayments(scope,auth.token);
+ const plan=planningReadPlan(scope);
+ const reads=Promise.all(Object.entries(tables).filter(([key])=>plan.tables.has(key as keyof typeof tables)).map(async([key,table])=>[key,await readOwnerRows(table,auth.token,filters[key as keyof typeof filters]??{})]));
+ const extraPayments=readExtraPayments(plan.historyOnly,auth.token);
+ // One rate per currency pair and payment day for the whole read, a few requests at a time.
+ const dayRate=sharedDayRate(async(from,to,date)=>(await loadDatedExchangeRate(from,to,date)).rate);
  const results=await reads;
  const data={records:[],categories:[],goals:[],occurrences:[],activity:[],movements:[],investmentLinks:[],...Object.fromEntries(results)} as Record<string,unknown>;
  // Loan repayments and mortgage payments settle a loan's monthly payment on Recurring and Upcoming payments.
- if(scope==='full'||scope==='workspace'){const [repayments,mortgagePayments]=await Promise.all([readOwnerRows<{id:string;action:string;target_id:string|null;occurred_on:string;amount:number;fee:number;account_id:string}>('account_activity',auth.token,{select:'id,action,target_id,occurred_on,amount,fee,account_id',action:'in.(repayment,mortgage)'}),readOwnerRows<{id:string;mortgage_id:string;paid_on:string;principal:number;interest:number}>('mortgage_payments',auth.token,{select:'id,mortgage_id,paid_on,principal,interest'})]);
+ if(plan.debtPayments){const [repayments,mortgagePayments]=await Promise.all([readOwnerRows<{id:string;action:string;target_id:string|null;occurred_on:string;amount:number;fee:number;account_id:string}>('account_activity',auth.token,{select:'id,action,target_id,occurred_on,amount,fee,account_id',action:'in.(repayment,mortgage)'}),readOwnerRows<{id:string;mortgage_id:string;paid_on:string;principal:number;interest:number}>('mortgage_payments',auth.token,{select:'id,mortgage_id,paid_on,principal,interest'})]);
   // Each payment says how much it paid, in its loan's currency, so a partial payment never shows the installment paid in full.
   const loanCurrency=new Map((data.records as Entry[]).map(record=>[record.id,record.currency]));
-  data.debtPayments=await debtPaymentsInLoanCurrency(debtPaymentsFrom(repayments,mortgagePayments,loanCurrency),loanCurrency,async(from,to,date)=>(await loadDatedExchangeRate(from,to,date)).rate);}
+  data.debtPayments=await debtPaymentsInLoanCurrency(debtPaymentsFrom(repayments,mortgagePayments,loanCurrency),loanCurrency,dayRate);}
  // Payments in another currency than their schedule count in its currency at the rate of the payment's day.
  const currencyOf=new Map((data.records as Entry[]).map(record=>[record.id,record.currency]));
- const counted=await inScheduleCurrency(data.occurrences as Occurrence[],await extraPayments,currencyOf,async(from,to,date)=>(await loadDatedExchangeRate(from,to,date)).rate);
+ const counted=await inScheduleCurrency(data.occurrences as Occurrence[],await extraPayments,currencyOf,dayRate);
  data.occurrences=withExtraPayments(counted.occurrences,counted.payments,currencyOf);
- // Every scope but insights reads every holding (only income and expense history is period-limited), so the
- // deposits are already here and are not read again.
- const estimates=new Map((scope==='insights'?[]:await depositForecasts(auth.token,data.records as Entry[])).map(record=>[record.id,record.estimated_monthly_income]));
+ // Every scope but the history reads reads every holding (only income and expense history is period-limited), so
+ // the deposits are already here and are not read again.
+ const estimates=new Map((plan.historyOnly?[]:await depositForecasts(auth.token,data.records as Entry[])).map(record=>[record.id,record.estimated_monthly_income]));
  data.records=(data.records as Entry[]).map(record=>interestKinds.includes(record.kind)?{...record,estimated_monthly_income:estimates.get(record.id)??0}:record);
  return Response.json(data,{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Could not load planning data. Check that the latest migrations are installed.'},{status:503});}

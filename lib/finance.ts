@@ -45,7 +45,9 @@ export type Entry = {revision?:number;/** In a household: the record belongs to 
 export function normalizeEntry(entry: Omit<Entry, 'date' | 'lent_date'> & {date?:string|null;lent_date?:string|null}): Entry {
  return {...entry,date:entry.date??'',lent_date:entry.lent_date??'',amount:Number(entry.amount),quantity:Number(entry.quantity),cost:Number(entry.cost),rate:Number(entry.rate),ownership_percentage:Number(entry.ownership_percentage??100),estimated_monthly_income:Number(entry.estimated_monthly_income??0),estimated_monthly_payment:Number(entry.estimated_monthly_payment??0)};
 }
-export const assets:readonly string[] = ['Cash','Stock','Crypto','Precious metals','Equity compensation','Deposit','Treasury bill','Bond','Retirement account','Property','Business','Vehicle','Valuables','Money lent'];
+/** What is owned, as literal kinds for schemas (`z.enum`); `assets` is the same list for `includes` checks. */
+export const assetKinds = ['Cash','Stock','Crypto','Precious metals','Equity compensation','Deposit','Treasury bill','Bond','Retirement account','Property','Business','Vehicle','Valuables','Money lent'] as const satisfies readonly Kind[];
+export const assets:readonly string[] = assetKinds;
 /** Holdings valued as units × price per unit: shares, coins, metal by weight and vested employer shares. */
 export const unitPricedKinds:readonly string[] = ['Stock','Crypto','Precious metals','Equity compensation'];
 /** Assets whose value the person updates by hand, with valuations and cash-funded contributions or withdrawals. */

@@ -65,7 +65,7 @@ export function GoalForecast({ goal, starting, surplus, currency, today, snapsho
  const savePlan = async () => {
   setBusy(true); setError('');
   try {
-   await save('goal', { ...goal, monthly_contribution: monthly, annual_return: rate });
+   await save('goal', { ...goal, expected_allocated: goal.allocated, monthly_contribution: monthly, annual_return: rate });
    setSavedPlan({ monthly, rate });
   } catch (reason) { setError((reason as Error).message); }
   finally { setBusy(false); }

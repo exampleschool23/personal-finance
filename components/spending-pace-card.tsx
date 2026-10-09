@@ -1,31 +1,21 @@
 "use client";
 import { useMemo } from 'react';
 import { ReceiptText } from 'lucide-react';
-import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useLanguage } from '@/components/language-provider';
-import { ChartGradient, chartAxis, chartColors, chartGrid, chartHeight, chartLine, chartMargin, chartTooltip, chartValueAxis, leadArea, moneyTick } from '@/components/presentation-foundation/chart';
+import { SpendingPaceChart } from '@/components/charts-lazy';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { ChartSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
-import { niceAxis } from '@/lib/chart-scale';
 import { depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry } from '@/lib/finance';
-import { formatDate, formatMoney, formatNumber } from '@/lib/format';
-import type { MarketData } from '@/lib/market';
+import { formatMoney } from '@/lib/format';
+import { marketRates, type MarketData } from '@/lib/market';
 import { emptyPlanning, type PlanningData } from '@/lib/planning';
 import type { PortfolioSnapshot } from '@/lib/portfolio-snapshots';
-import { spendingOnDay, spendingPace, type SpendingItem, type SpendingPacePoint } from '@/lib/spending-pace';
-import { monthDays } from '@/lib/calendar-days';
-import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
+import { spendingPace } from '@/lib/spending-pace';
 import type { TransactionSplit } from '@/lib/transaction-tools';
-
-/** One day's spending in the chart tooltip: where the money went, largest first. */
-function SpentOn({ title, items, currency }: { title: string; items: SpendingItem[]; currency: string }) {
- const { t, locale } = useLanguage();
- return <section><h4>{title}</h4>{items.length ? items.slice(0, 5).map(item => <div className="portfolio-tooltip-row" key={item.id}><CategoryIcon kind={item.kind} size="sm"/><div><strong>{item.name}</strong><span>{t(item.kind)}</span></div><b>{formatMoney(item.amount, currency, locale)}</b></div>) : <p className="portfolio-tooltip-note">{t('Nothing spent on this day.')}</p>}{items.length > 5 && <p className="portfolio-tooltip-note">{t('{count} more', { count: formatNumber(items.length - 5, locale, 0) })}</p>}</section>;
-}
 
 type Props = { owner?: string | null; demo?: boolean; revision?: number; data: PlanningData; splits: TransactionSplit[]; snapshots: PortfolioSnapshot[]; currency: string; market: MarketData | null };
 
@@ -37,10 +27,9 @@ export function SpendingPaceCard({ owner = null, demo = false, revision = 0, dat
  const remote = useOwnerResource('/api/planning?scope=review&month=' + today.slice(0, 7), owner, !!owner && !demo, revision, emptyPlanning);
  const live = !!owner && !demo;
  const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : provided, [live, remote.data, provided]);
- const rates = market?.rates ?? market?.fx?.rate;
+ const rates = marketRates(market);
  const pace = useMemo(() => spendingPace({ records: data.records, splits, snapshots, activity: data.activity, investmentLinks: data.investmentLinks }, today, currency, rates), [data, splits, snapshots, today, currency, rates]);
  const money = (amount: number) => formatMoney(amount, currency, locale);
- const axis = niceAxis(pace.points.flatMap(point => [point.current ?? 0, point.previous ?? 0]));
  const difference = pace.spent - pace.previousToDate;
  const loading = !!owner && !demo && remote.loading;
  return <section className="panel overview-panel spending-pace" aria-label={t('Spending')}>
@@ -48,33 +37,7 @@ export function SpendingPaceCard({ owner = null, demo = false, revision = 0, dat
   {loading ? <ChartSkeleton label={t('Loading records…')}/> : remote.error && owner && !demo ? <InlineError message={t(remote.error)} onRetry={remote.retry}/> : <>
    {pace.empty ? <EmptyState icon={<ReceiptText/>} description={t('No spending recorded this month or last.')}/> : <>
    {!pace.missing && pace.previousToDate + pace.spent > 0 && <p className="spending-pace-delta">{difference > 0 ? t('{amount} more than last month by this day', { amount: money(difference) }) : difference < 0 ? t('{amount} less than last month by this day', { amount: money(-difference) }) : t('Same as last month by this day')}</p>}
-   <div className="spending-pace-chart"><ResponsiveContainer width="100%" height={chartHeight.compact}>
-    <ComposedChart data={pace.points} margin={chartMargin} accessibilityLayer>
-     <ChartGradient id="spending-pace-fill"/>
-     <CartesianGrid {...chartGrid}/>
-     <XAxis dataKey="day" tickFormatter={day => t('Day {day}', { day: formatNumber(Number(day), locale, 0) })} interval="preserveStartEnd" minTickGap={40} {...chartAxis}/>
-     <YAxis domain={axis.domain} ticks={axis.ticks} tickFormatter={moneyTick(currency, locale)} {...chartValueAxis}/>
-     <Tooltip {...chartTooltip} wrapperStyle={{ zIndex: 5 }} content={({ active, payload }) => {
-      const point = payload?.[0]?.payload as SpendingPacePoint | undefined;
-      if (!active || !point) return null;
-      const day = (month: string) => `${month}-${String(point.day).padStart(2, '0')}`;
-      // A shorter month has no such day, so nothing new was spent on it.
-      const items = (month: string) => point.day > monthDays(month) ? [] : spendingOnDay(data.records, day(month), currency, rates);
-      return <div className="portfolio-tooltip spending-pace-tooltip">
-       <header><span>{t('Day {day}', { day: formatNumber(point.day, locale, 0) })}</span>
-        {point.current !== null && <div className="portfolio-tooltip-row"><i className="current"/><div><strong>{t('This month')}</strong></div><b>{money(point.current)}</b></div>}
-        <div className="portfolio-tooltip-row"><i className="previous"/><div><strong>{t('Last month')}</strong></div><b>{money(point.previous ?? 0)}</b></div>
-       </header>
-       <div className="portfolio-tooltip-body">
-        {point.current !== null && <SpentOn title={formatDate(day(pace.month), locale)} items={items(pace.month)} currency={currency}/>}
-        {point.day <= monthDays(pace.previousMonth) && <SpentOn title={formatDate(day(pace.previousMonth), locale)} items={items(pace.previousMonth)} currency={currency}/>}
-       </div>
-      </div>;
-     }}/>
-     <Line type="monotone" dataKey="previous" name="previous" {...chartLine} stroke={chartColors.other} strokeOpacity={.55}/>
-     <Area type="monotone" dataKey="current" name="current" {...leadArea('spending-pace-fill')} connectNulls={false}/>
-    </ComposedChart>
-   </ResponsiveContainer></div>
+   <SpendingPaceChart pace={pace} data={data} currency={currency} rates={rates}/>
    <ul className="spending-pace-legend"><li><i className="current"/>{t('This month')}</li><li><i className="previous"/>{t('Last month')}</li></ul>
    </>}
   </>}

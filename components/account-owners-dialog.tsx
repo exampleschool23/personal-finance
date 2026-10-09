@@ -6,7 +6,8 @@ import type { OwnerOption } from '@/components/presentation-foundation/owner-fil
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Button } from '@/components/ui/button';
-import { liabilities, value, type Entry } from '@/lib/finance';
+import { accountKindGroups } from '@/lib/business';
+import { value, type Entry } from '@/lib/finance';
 import { showError, showNotice } from '@/lib/feedback';
 import { formatMoney, formatNumber } from '@/lib/format';
 import { holdingAccountValue, type HoldingAccount } from '@/lib/holding-accounts';
@@ -23,12 +24,8 @@ export function AccountOwnersDialog({ records, accounts, market, household, owne
  const accountRow = (account: HoldingAccount): Row => { const total = holdingAccountValue(account, records, market).total; return { id: account.id, name: account.name, kind: account.kind, amount: total === null ? '—' : formatMoney(total, account.currency, locale), owner: holdingOwner(account, household) }; };
  // Holdings and cash inside an investment account follow it.
  const of = (kinds: readonly string[]) => records.filter(record => !record.holding_account_id && kinds.includes(record.kind)).map(recordRow);
- const groups: Array<[label: string, rows: Row[]]> = [
-  ['Cash and deposits', of(['Cash', 'Deposit', 'Treasury bill', 'Bond'])],
-  ['Investments', [...accounts.map(accountRow), ...of(['Stock', 'Crypto', 'Precious metals', 'Equity compensation', 'Retirement account'])]],
-  ['Property and other assets', of(['Property', 'Business', 'Vehicle', 'Valuables', 'Money lent'])],
-  ['Loans and debts', of(liabilities)],
- ];
+ // The shared account groups; investment accounts lead their holdings.
+ const groups: Array<[label: string, rows: Row[]]> = accountKindGroups.map(([label, kinds]) => [label, [...(label === 'Holdings' ? accounts.map(accountRow) : []), ...of(kinds)]]);
  async function change(row: Row, owner: string) {
   setBusy(row.id);
   try {

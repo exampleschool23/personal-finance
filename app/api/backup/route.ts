@@ -1,9 +1,9 @@
 import { personalRequest } from '@/lib/household';
-import { signBackup, verifyBackup } from '@/lib/backup-signature';
+import { backupRefusals, signBackup, verifyBackup } from '@/lib/backup-signature';
 import { z } from 'zod';
 import { uuid } from '@/lib/api-validation';
 import { databaseUpdateMessage } from '@/lib/database-capabilities';
-import { crossSite,postgrestFailure,signInAgain } from '@/lib/api-route';
+import { crossSite,postgrestFailure,readCapped,signInAgain } from '@/lib/api-route';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { serviceKeyHeaders } from '@/lib/service-role';
 import { readOwnerRows } from '@/lib/server-records';
@@ -38,15 +38,13 @@ export async function POST(req:Request){
  try{
   const auth=await session();if(!auth)return signInAgain();
   // Bound the request while reading, including clients without Content-Length.
-  const reader=req.body?.getReader();if(!reader)return Response.json({error:'Invalid backup.'},{status:400});
-  const chunks:Uint8Array[]=[];let size=0;
-  for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>56_100_000){await reader.cancel();return Response.json({error:'File is too large.'},{status:413});}chunks.push(value);}
-  const buffer=new Uint8Array(size);let offset=0;for(const chunk of chunks){buffer.set(chunk,offset);offset+=chunk.byteLength;}
-  let raw:unknown;try{raw=JSON.parse(new TextDecoder().decode(buffer));}catch{return Response.json({error:'Invalid backup.'},{status:400});}
+  const text=await readCapped(req,56_100_000);if(text===null)return Response.json({error:'File is too large.'},{status:413});
+  let raw:unknown;try{raw=JSON.parse(text);}catch{return Response.json({error:'Invalid backup.'},{status:400});}
   const parsed=requestSchema.safeParse(raw);if(!parsed.success)return Response.json({error:'Preview and confirm the backup before restoring.'},{status:400});
   const {action,expected_state}=parsed.data;
   let verified:ReturnType<typeof verifyBackup>;
-  try{verified=verifyBackup(parsed.data.backup);}catch(error){return Response.json({error:error instanceof Error?error.message:'Invalid backup.'},{status:400});}
+  // Only verifyBackup's own refusals are shown; anything else (JSON.parse quotes the input) is a plain "Invalid backup."
+  try{verified=verifyBackup(parsed.data.backup);}catch(error){const message=error instanceof Error?error.message:'';return Response.json({error:backupRefusals.includes(message)?message:'Invalid backup.'},{status:400});}
   const {backup,portable}=verified;
   if(portable){
    const serviceKey=process.env.SUPABASE_SERVICE_ROLE_KEY;

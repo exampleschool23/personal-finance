@@ -164,6 +164,47 @@ test('no screen offers a language selector: language is chosen in onboarding or 
  assert.match(renderToStaticMarkup(React.createElement(DisplayPreferences,{})),/^<div class="preferences"><button class="theme"><\/button><\/div>$/);
 });
 
+test('the shell every route shares and the Overview route, which serves the landing page at /, load without the chart library',()=>{
+ // Static imports only: `import('…')` inside next/dynamic loads a dialog's charts when it opens.
+ const resolve=(from,spec)=>{
+  if(!spec.startsWith('@/')&&!spec.startsWith('.'))return spec;
+  const base=spec.startsWith('@/')?spec.slice(2):new URL(spec,'file:///'+from).pathname.slice(1);
+  return ['','.ts','.tsx','/index.ts','/index.tsx'].map(ext=>base+ext).find(file=>fs.existsSync(file)&&fs.statSync(file).isFile());
+ };
+ const starts=['app/(workspace)/layout.tsx','app/(workspace)/page.tsx'],seen=new Map(starts.map(start=>[start,null])),queue=[...starts];
+ while(queue.length){
+  const file=queue.shift();
+  for(const match of read(file).matchAll(/^\s*(?:import|export)\s+(?!type\b)[^;]*?\bfrom\s+['"]([^'"]+)['"]/gm)){
+   const target=resolve(file,match[1]);
+   if(!target||seen.has(target))continue;
+   seen.set(target,file);if(fs.existsSync(target))queue.push(target);
+  }
+ }
+ const chain=name=>{const steps=[];for(let at=name;at;at=seen.get(at))steps.push(at);return steps.join(' <- ');};
+ assert.ok(seen.has('components/workspace/workspace-dialogs.tsx')&&seen.has('components/investment-tracker-lazy.tsx'));
+ assert.ok(!seen.has('recharts'),chain('recharts'));
+ assert.ok(!seen.has('components/investment-tracker.tsx'),chain('components/investment-tracker.tsx'));
+});
+
+test('the Overview charts load in the browser when they are drawn, each from its own module',async()=>{
+ const calls=[],modules={};
+ for(const [file,name] of [['cash-forecast-chart','ForecastChart'],['spending-pace-chart','SpendingPaceChart'],['income-history-chart','IncomeHistoryChart'],['investment-value-chart','InvestmentValueChart']])modules['@/components/'+file]={[name]:()=>name};
+ const charts=loadTS('components/charts-lazy.tsx',{'next/dynamic':{__esModule:true,default:(load,options)=>{calls.push(options);return {load};}},...modules});
+ assert.ok(calls.length===4&&calls.every(options=>options.ssr===false&&typeof options.loading==='function'));
+ for(const name of ['ForecastChart','SpendingPaceChart','IncomeHistoryChart','InvestmentValueChart'])assert.equal((await charts[name].load())(),name);
+ for(const file of ['components/cash-forecast.tsx','components/spending-pace-card.tsx','components/portfolio-overview.tsx','components/investment-comparison.tsx'])assert.doesNotMatch(read(file),/from 'recharts'|from '@\/components\/(income-history-chart|investment-value-chart)'/,file);
+});
+
+test('the investment tracker loads in the browser when a payment opens it',async()=>{
+ const Tracker=()=>null,calls=[];
+ const {InvestmentTracker}=loadTS('components/investment-tracker-lazy.tsx',{
+  'next/dynamic':{__esModule:true,default:(load,options)=>{calls.push(options);return {load};}},
+  '@/components/investment-tracker':{InvestmentTracker:Tracker},
+ });
+ assert.deepEqual(calls,[{ssr:false}]);
+ assert.equal(await InvestmentTracker.load(),Tracker);
+});
+
 test('watchlist and goal forms let the user pick any preferred currency',()=>{
  for(const file of ['components/spending-watchlists.tsx','components/planning/goals-page.tsx']){
   const source=read(file);

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {loadTS} from './helpers/load-ts.mjs';
+import {recordsFor} from './helpers/telegram-cron.mjs';
 const {handleTelegramUpdate}=loadTS('lib/telegram-bot.ts');
 const now=new Date('2026-09-30T09:00:00Z');
 const clock={now,today:'2026-09-30',newId:()=>'99999999-9999-4999-8999-999999999999'};
@@ -20,8 +21,10 @@ function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurren
    }
    if(path.startsWith('/rest/v1/user_preferences'))return owner in languages?[{language:languages[owner],...(currencies?{currencies}:{})}]:[];
    if(path.startsWith('/rest/v1/finance_records')){
-    // Pages like PostgREST: a read without a range still stops at 1,000 rows.
-    const rows=records.filter(r=>r.user_id===owner),range=/limit=(\d+)&offset=(\d+)/.exec(path);
+    // Pages like PostgREST: by offset or after an id, and a read without a range still stops at 1,000 rows.
+    const rows=recordsFor(records.filter(r=>r.user_id===owner),path),range=/limit=(\d+)&offset=(\d+)/.exec(path);
+    const params=new URLSearchParams(path.split('?')[1]),after=params.get('id')?.slice(3);
+    if(params.get('order')==='id.asc'&&!range)return [...rows].sort((a,b)=>a.id.localeCompare(b.id)).filter(row=>!after||row.id>after).slice(0,Number(params.get('limit')??1000));
     return range?rows.slice(Number(range[2]),Number(range[2])+Number(range[1])):rows.slice(0,1000);
    }
    if(path.startsWith('/rest/v1/transaction_categories'))return categories;
@@ -254,4 +257,16 @@ test('a long history does not hide schedules: the bot reads every record page by
  const asked=await handleTelegramUpdate(press(500,'f:cat:Salary'),db,clock);
  assert.equal(asked.replies[0].text,'Which scheduled payment is this?');
  assert.ok(asked.replies[0].keyboard.inline.flat().some(button=>button.callback_data==='f:sch:'+id(11)));
+});
+
+test('each bot turn reads holdings and schedules in full but only the last year of cash flow, which still guides a typed entry',async()=>{
+ const lunch={...entry(30,'Lunch','Charity',5),date:'2026-06-01'},ancient={...entry(31,'Ancient','Charity',5),date:'2024-01-01'};
+ const db=fakeDb({...workspace(),records:[...workspace().records,lunch,ancient]});
+ await handleTelegramUpdate(message(500,'Lunch 7'),db,clock);
+ assert.equal(db.drafts[0].data.category,'Charity','the recent history names the category');
+ const recordReads=db.reads.filter(path=>path.startsWith('/rest/v1/finance_records'));
+ assert.ok(recordReads.length>0&&recordReads.every(path=>path.includes('order=id.asc')));
+ const cashflow=recordReads.filter(path=>path.includes('frequency=eq.Once'));
+ assert.ok(cashflow.length&&cashflow.every(path=>path.includes('date=gte.2025-09-01')&&!path.includes('select=*')));
+ assert.ok(recordReads.filter(path=>!path.includes('frequency=eq.Once')).every(path=>path.includes('or=')),'no unfiltered history read');
 });

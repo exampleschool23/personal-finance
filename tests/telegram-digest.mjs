@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {loadTS} from './helpers/load-ts.mjs';
+import {deliveryTable,recordsFor} from './helpers/telegram-cron.mjs';
 const {digestMessage,paymentsSection}=loadTS('lib/digest-message.ts');
 const today='2026-09-30';
 const record=(name,kind,amount,currency='UZS')=>({id:name,name,kind,amount,currency,date:today,frequency:'Monthly',quantity:0,cost:0,rate:0,notes:''});
@@ -80,7 +81,7 @@ test('the digest cron is scheduled in the morning and documented',()=>{
  assert.match(fs.readFileSync('VERCEL.md','utf8'),/telegram-digest/);
 });
 
-function cronRoute({subscriptions,records={},occurrences={},languages={},names={},currencies={},snapshots={},reminders={},sendResult=true,failFor=''}){
+function cronRoute({subscriptions,records={},splits={},links={},occurrences={},languages={},names={},currencies={},snapshots={},reminders={},sendResult=true,failFor='',deliveries=deliveryTable()}){
  const sent=[],reads=[];
  const db={
   async read(path){
@@ -88,24 +89,33 @@ function cronRoute({subscriptions,records={},occurrences={},languages={},names={
    const owner=/user_id=eq\.([\w-]+)/.exec(path)?.[1];
    if(failFor&&owner===failFor)throw Error('Database request failed.');
    if(path.startsWith('/rest/v1/telegram_subscriptions'))return subscriptions;
-   if(path.startsWith('/rest/v1/finance_records'))return records[owner]??[];
+   if(path.startsWith('/rest/v1/finance_records'))return recordsFor(records[owner]??[],path);
    if(path.startsWith('/rest/v1/payment_occurrences'))return occurrences[owner]??[];
    if(path.startsWith('/rest/v1/user_preferences'))return owner in languages||owner in names||owner in currencies?[{language:languages[owner],display_name:names[owner],currencies:currencies[owner]}]:[];
    if(path.startsWith('/rest/v1/portfolio_snapshots'))return [...(snapshots[owner]??[])].reverse();
    if(path.startsWith('/rest/v1/workspace_preferences'))return owner in reminders?[{data:reminders[owner]}]:[];
    if(path.startsWith('/rest/v1/account_activity')||path.startsWith('/rest/v1/mortgage_payments'))return [];
+   if(path.startsWith('/rest/v1/transaction_splits'))return splits[owner]??[];
+   if(path.startsWith('/rest/v1/investment_account_links'))return links[owner]??[];
    throw Error('unexpected '+path);
   },
-  async write(){throw Error('digest never writes');},
+  // The digest writes nothing but its delivery claims.
+  write:deliveries.write,
  };
  const route=loadTS('app/api/cron/telegram-digest/route.ts',{
   '@/lib/service-role':{serviceDatabase:()=>db},
   '@/lib/telegram':{telegramConfig:()=>({token:'T',webhookSecret:'S',botUsername:'b'}),sendTelegramMessage:async message=>{sent.push(message);return sendResult;},escapeHtml:text=>text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')},
   '@/lib/deposit-interest':{...loadTS('lib/deposit-interest.ts'),depositToday:()=>'2026-09-30'},
  });
- return {sent,reads,GET:()=>route.GET(new Request('https://local',{headers:{authorization:'Bearer test-secret'}}))};
+ return {sent,reads,deliveries,GET:()=>route.GET(new Request('https://local',{headers:{authorization:'Bearer test-secret'}}))};
 }
 const rent={id:'rent',name:'Rent',kind:'Rent expense',amount:3000000,currency:'UZS',date:'2026-09-01',frequency:'Monthly',quantity:0,cost:0,rate:0,notes:''};
+
+test('the digest never shows a week\'s spending that left out amounts without a rate',()=>{
+ const text=digestMessage([],'en','2026-09-30',{spending:{current:40,previous:30,missing:true}});
+ assert.match(text,/🧾 Spending: Exchange rate unavailable\./);assert.doesNotMatch(text,/Last 7 days/);
+ assert.match(digestMessage([],'en','2026-09-30',{spending:{current:40,previous:30}}),/Last 7 days you spent \$40/);
+});
 
 test('the cron sends one digest per linked owner in their language and window, greeting them by the name saved in the app',async()=>{
  process.env.CRON_SECRET='test-secret';
@@ -162,13 +172,65 @@ test('the digest and the recap share one subscriber loop: only linked private ch
  const {deliverToSubscribers,digestSubscribersPath}=loadTS('lib/telegram-owner.ts');
  assert.match(digestSubscribersPath,/chat_id=not\.is\.null/);assert.match(digestSubscribersPath,/digest_enabled=is\.true/);
  assert.match(digestSubscribersPath,/chat_id=gt\.0/,'a group chat (negative id) never receives a digest');
- const reads=[],delivered=[];
- const db={read:async path=>{reads.push(path);return [{user_id:'a',chat_id:1},{user_id:'b',chat_id:2},{user_id:'c',chat_id:3}];}};
- const counts=await deliverToSubscribers(db,async subscriber=>{delivered.push(subscriber.chat_id);if(subscriber.user_id==='b')throw Error('boom');return subscriber.user_id==='a';});
- assert.deepEqual(counts,{sent:1,failed:2});assert.deepEqual(delivered,[1,2,3]);assert.deepEqual(reads,[digestSubscribersPath]);
- await assert.rejects(deliverToSubscribers({read:async()=>{throw Error('down');}},async()=>true),/down/);
+ const reads=[],delivered=[],deliveries=deliveryTable(),digest={kind:'digest',period:'2026-09-30'};
+ const db={read:async path=>{reads.push(path);return [{user_id:'a',chat_id:1},{user_id:'b',chat_id:2},{user_id:'c',chat_id:3}];},write:deliveries.write};
+ const counts=await deliverToSubscribers(db,digest,async subscriber=>{delivered.push(subscriber.chat_id);if(subscriber.user_id==='b')throw Error('boom');return subscriber.user_id==='a';});
+ assert.deepEqual(counts,{sent:1,failed:2});assert.deepEqual(delivered,[1,2,3]);assert.deepEqual(reads,[digestSubscribersPath+'&limit=500&offset=0']);
+ // Only the delivered message keeps its claim; the failed ones are given back for a retry.
+ assert.deepEqual(deliveries.rows,[{user_id:'a',...digest}]);
+ await assert.rejects(deliverToSubscribers({read:async()=>{throw Error('down');}},digest,async()=>true),/down/);
+ // A claim that cannot be written counts as a failure, and nothing is sent.
+ const unsent=[];
+ assert.deepEqual(await deliverToSubscribers({read:async()=>[{user_id:'a',chat_id:1}],write:async()=>new Response(null,{status:500})},digest,async()=>{unsent.push(1);return true;}),{sent:0,failed:1});
+ assert.deepEqual(unsent,[]);
  for(const file of ['app/api/cron/telegram-digest/route.ts','app/api/cron/telegram-recap/route.ts']){
   const source=fs.readFileSync(file,'utf8');
   assert.match(source,/deliverToSubscribers\(db,/,file);assert.doesNotMatch(source,/telegram_subscriptions/,file);
  }
+});
+
+test('a retried digest run sends nothing twice, and a digest that failed is sent on the retry',async()=>{
+ process.env.CRON_SECRET='test-secret';
+ const deliveries=deliveryTable();
+ const subscriptions=[{user_id:'anna',chat_id:1},{user_id:'bob',chat_id:2}];
+ const first=cronRoute({subscriptions,failFor:'bob',deliveries});
+ assert.deepEqual(await (await first.GET()).json(),{sent:1,failed:1});
+ assert.deepEqual(deliveries.rows,[{user_id:'anna',kind:'digest',period:'2026-09-30'}]);
+ // The retry (or a second run that overlaps it) reaches only Bob.
+ const retry=cronRoute({subscriptions,deliveries});
+ const response=await retry.GET();
+ assert.equal(response.status,200);assert.deepEqual(await response.json(),{sent:1,failed:0});
+ assert.deepEqual(retry.sent.map(message=>message.chat_id),[2]);
+ const again=cronRoute({subscriptions,deliveries});
+ assert.deepEqual(await (await again.GET()).json(),{sent:0,failed:0});assert.equal(again.sent.length,0);
+ // A message Telegram refused keeps no claim, so the next run tries it again.
+ const refused=deliveryTable(),declined=cronRoute({subscriptions:[{user_id:'anna',chat_id:1}],sendResult:false,deliveries:refused});
+ assert.equal((await declined.GET()).status,503);assert.deepEqual(refused.rows,[]);
+ // The next day is a new digest.
+ assert.ok(!deliveries.rows.some(row=>row.period!=='2026-09-30'));
+});
+
+test('the digest reads schedules and holdings in full but cash flow only for the weeks it compares',async()=>{
+ process.env.CRON_SECRET='test-secret';
+ const old={id:'old',name:'Groceries',kind:'Living expense',amount:999,currency:'USD',date:'2026-08-01',frequency:'Once'};
+ const recent={...old,id:'recent',amount:40,date:'2026-09-29'};
+ const cron=cronRoute({subscriptions:[{user_id:'anna',chat_id:1}],records:{anna:[rent,old,recent]}});
+ await cron.GET();
+ const recordReads=cron.reads.filter(path=>path.startsWith('/rest/v1/finance_records'));
+ assert.equal(recordReads.length,2);
+ assert.ok(recordReads.some(path=>path.includes('frequency=eq.Once')&&path.includes('date=gte.2026-09-17')&&!path.includes('select=*')),'cash flow from two weeks back, narrow columns');
+ assert.ok(recordReads.every(path=>path.includes('order=id.asc')&&path.includes('limit=500')),'paged by id');
+ assert.ok(cron.reads.some(path=>path.startsWith('/rest/v1/account_activity')&&path.includes('action=in.(repayment,mortgage)')));
+ assert.match(cron.sent[0].text,/Rent/);
+});
+
+test('background work over many owners runs a few at a time, finishes every item and stops after a failure',async()=>{
+ const {forEachLimited}=loadTS('lib/bounded-concurrency.ts');
+ let open=0,peak=0;const done=[];
+ await forEachLimited(Array.from({length:20},(_,index)=>index),3,async item=>{open++;peak=Math.max(peak,open);await new Promise(resolve=>setTimeout(resolve,1));open--;done.push(item);});
+ assert.equal(peak,3);assert.deepEqual([...done].sort((a,b)=>a-b),Array.from({length:20},(_,index)=>index));
+ await forEachLimited([],8,async()=>{throw Error('never called');});
+ const started=[];
+ await assert.rejects(forEachLimited([1,2,3,4,5],1,async item=>{started.push(item);if(item===2)throw Error('capture failed');}),/capture failed/);
+ assert.deepEqual(started,[1,2],'no new item starts after a failure');
 });

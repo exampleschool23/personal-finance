@@ -395,6 +395,11 @@ test('CategorySettingsDialog: rollover fund fields, starting balance currency an
  assert.equal(saved[2].rollover,false);assert.equal(saved[2].rollover_start,null);assert.equal(saved[2].rollover_balance,0);assert.equal(saved[2].rollover_currency,null);
 });
 
+test('CategorySettingsDialog: a rollover no rate converts shows — like Available, never 0',()=>{
+ const {view}=settingsDialog({category:category({rollover:true,rolloverStart:'2026-03',rolloverBalance:200,rolloverCurrency:'XYZ'}),figures:{budget:400,rolloverIn:0,rolloverMissing:true,actual:150,remaining:null}});
+ assert.equal(text(byClass(view,'budget-left-summary')[0]),`T:Planned${money(400)}T:Rolled over—T:Spent${money(150)}T:Available—`);
+});
+
 test('CategorySettingsDialog: zero starting balance stores no currency; new fund starts this month',async()=>{
  const {view,saved,submit}=settingsDialog({category:category()});
  all(view,'input',node=>node.props.type==='checkbox')[0].props.onChange({currentTarget:{checked:true}});view.render();
@@ -494,4 +499,9 @@ test('the Budget page drives the Left to budget tabs, so Income and Expenses nar
  const css=stylesheet();
  assert.match(css,/\.budget-section\{display:contents\}/);
  assert.match(css,/\.budget-table\[data-focus=income\]>\[data-section=expenses\],\.budget-table\[data-focus=expenses\]>\[data-section=income\]\{display:none\}/);
+});
+
+test('LeftToBudgetCard reads — for plans no rate converts, never $0',()=>{
+ const unknown=mount(React.createElement(page.LeftToBudgetCard,{left:{income:null,expenses:null,contributions:0,left:null,flexible:null,missing:1},rows:[],mode:'flex',currency:'USD'}));
+ assert.equal(text(byClass(unknown,'budget-left-summary')[0]),`T:Planned income—T:Planned spending—T:Contributions${money(0)}T:Left to budget—`);
 });

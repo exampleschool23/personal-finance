@@ -2,10 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {loadTS} from './helpers/load-ts.mjs';
+import {deliveryTable,recordsFor} from './helpers/telegram-cron.mjs';
 const {newGoalThresholds,netWorthHigh,milestoneMessage}=loadTS('lib/milestones.ts');
 const {sendActionMilestone,announceNetWorthHigh}=loadTS('lib/telegram-milestones.ts');
 const {periodTotals,topCategory,shiftDay}=loadTS('lib/period-summary.ts');
 const {recapMessage,shareLink}=loadTS('lib/recap-message.ts');
+const {monthlyReview}=loadTS('lib/transaction-tools.ts');
 const owner='11111111-1111-4111-8111-111111111111',goalId='22222222-2222-4222-8222-222222222222';
 const config={token:'T',webhookSecret:'S',botUsername:'bot'};
 
@@ -35,9 +37,11 @@ function world(seed={}){
    return Response.json(inserted,{status:201});
   },
  };
- return {tables,sent,db,send:async message=>{sent.push(message);return true;}};
+ // Reads made with the person's token (row security picks the open workspace) see the same tables here.
+ const tokens=[],rowsFor=db.read;
+ return {tables,sent,db,tokens,read:async(path,init,token)=>{tokens.push({path,token});return Response.json(await rowsFor(path));},send:async message=>{sent.push(message);return true;}};
 }
-const deps=w=>({db:w.db,config,send:w.send});
+const deps=w=>({db:w.db,config,send:w.send,read:w.read});
 const created=(extra={})=>({type:'record',created:true,kind:'Other expense',name:'Coffee',amount:5,currency:'USD',date:'2026-10-01',frequency:'Once',...extra});
 const contribution={type:'goal_activity',goal_id:goalId,activity:'contribution',amount:10,date:'2026-10-01'};
 const goal=(allocated,extra={})=>({id:goalId,user_id:owner,name:'Emergency fund <1>',allocated,target:1000,kind:'savings',archived:false,...extra});
@@ -203,20 +207,24 @@ test('spending more than earning is stated plainly, and optional lines and the b
  assert.match(recapMessage(recap(),'ru').text,/^📊 <b>Ваша неделя, Aziz<\/b>\n28 сентября 2026 – 4 октября 2026/);
 });
 
-function recapRoute({subscriptions,records={},categories={},events={},prefs={},snapshots={},sendResult=true}){
+function recapRoute({onRead=()=>{},subscriptions,records={},splits={},links={},categories={},events={},prefs={},snapshots={},sendResult=true,deliveries=deliveryTable()}){
  const sent=[];
  const db={
   async read(path){
+   onRead(path);
    const who=/user_id=eq\.([\w-]+)/.exec(path)?.[1];
    if(path.startsWith('/rest/v1/telegram_subscriptions'))return subscriptions;
-   if(path.startsWith('/rest/v1/finance_records'))return records[who]??[];
+   if(path.startsWith('/rest/v1/finance_records'))return recordsFor(records[who]??[],path);
    if(path.startsWith('/rest/v1/custom_categories'))return categories[who]??[];
    if(path.startsWith('/rest/v1/goal_events'))return events[who]??[];
+   if(path.startsWith('/rest/v1/transaction_splits'))return splits[who]??[];
+   if(path.startsWith('/rest/v1/investment_account_links'))return links[who]??[];
    if(path.startsWith('/rest/v1/user_preferences'))return who in prefs?[prefs[who]]:[];
    if(path.startsWith('/rest/v1/portfolio_snapshots'))return snapshots[who]??[];
    throw Error('unexpected '+path);
   },
-  async write(){throw Error('the recap never writes');},
+  // The recap writes nothing but its delivery claims.
+  write:deliveries.write,
  };
  const route=loadTS('app/api/cron/telegram-recap/route.ts',{
   '@/lib/service-role':{serviceDatabase:()=>db},
@@ -241,6 +249,43 @@ test('the recap cron sends each linked owner their own week, in their language, 
  assert.equal(anna.chat_id,1);assert.match(anna.text,/Ваша неделя, Анна/);assert.match(anna.text,/Pets/);assert.match(anna.text,/Целей продвинулось: 2/);
  assert.ok(anna.keyboard.inline[0][0].url.startsWith('https://t.me/share/url?url=https%3A%2F%2Fhoggish.app'));
  assert.match(bob.text,/^📊 <b>Your week<\/b>/);assert.match(bob.text,/A quiet week/);
+});
+
+// One expense split into an added and a built-in category, a Tracker fee on an investment, and a fee already copied into a record.
+const shop={id:'shop',...row('Living expense',100,'2026-10-02')},copy={id:'copy',...row('Other expense',30,'2026-10-03',{history_event_id:'copied'})},pay={id:'pay',...row('Salary',900,'2026-10-01')};
+const splitShop=[{record_id:'shop',position:0,category_id:'c-pets',amount:60},{record_id:'shop',position:1,category_id:'Charity',amount:40}];
+const trackerLink=(id,extra={},event={})=>({id,account_id:'cash',account_currency:'USD',amount:-12,investment_history:{occurred_on:'2026-10-01',record_id:'stock',event_type:'expense',...event},...extra});
+const trackerLinks=[trackerLink('fee'),trackerLink('copied',{amount:-30},{occurred_on:'2026-10-03'}),trackerLink('before',{},{occurred_on:'2026-09-20'}),trackerLink('withdrawal',{},{event_type:'withdrawal'})];
+test('period totals count splits and Tracker expenses exactly as the Monthly review does, and count amounts without a rate',()=>{
+ const totals=periodTotals({records:[pay,shop,copy],splits:splitShop,investmentLinks:trackerLinks},'2026-09-28','2026-10-04','USD');
+ assert.equal(totals.spending,100+30+12,'the Tracker fee counts once; the copied one through its record');
+ assert.deepEqual(totals.byCategory,{'c:c-pets':60,'k:Charity':40,'k:Other expense':42},'a split record counts in its parts');
+ assert.equal(totals.missing,0);
+ const review=monthlyReview([pay,shop,copy],splitShop,[],'2026-10','USD','2026-10-04',[],{USD:1},trackerLinks);
+ assert.equal(review.spent,totals.spending);assert.equal(review.received,totals.income);
+ assert.deepEqual(Object.fromEntries(review.categories.map(item=>[item.id,item.amount])),{'c-pets':60,Charity:40,'Other expense':42});
+ // A fee whose account currency cannot be told, or an amount without a rate, is missing rather than guessed.
+ assert.equal(periodTotals({records:[shop],investmentLinks:[trackerLink('fee',{account_currency:null,account_id:'gone'})]},'2026-09-28','2026-10-04','USD').missing,1);
+ const foreign=periodTotals([shop,{id:'x',...row('Living expense',5,'2026-10-02',{currency:'XYZ'})}],'2026-09-28','2026-10-04','USD');
+ assert.equal(foreign.missing,1);assert.equal(foreign.spending,100);
+});
+
+test('the recap cron reads the week\'s splits and Tracker expenses, bounded and narrow, and counts the Tracker fee',async()=>{
+ process.env.CRON_SECRET='test-secret';
+ const reads=[];
+ const cron=recapRoute({subscriptions:[{user_id:'anna',chat_id:1}],prefs:{anna:{language:'en',display_name:'',currencies:['USD']}},records:{anna:[pay,shop]},splits:{anna:splitShop},links:{anna:[trackerLink('fee')]},categories:{anna:[{id:'c-pets',name:'Pets'}]},onRead:path=>reads.push(path)});
+ await cron.GET();
+ assert.match(cron.sent[0].text,/You saved \$788 this week\./,'900 earned − 100 shopping − 12 Tracker fee');
+ assert.match(cron.sent[0].text,/Top spending: Pets · \$60/);
+ const splitRead=reads.find(path=>path.startsWith('/rest/v1/transaction_splits')),linkRead=reads.find(path=>path.startsWith('/rest/v1/investment_account_links'));
+ assert.match(splitRead,/select=record_id,position,category_id,amount&/);assert.match(splitRead,/record_id=in\.\(shop\)/);assert.match(splitRead,/limit=500/);
+ assert.match(linkRead,/investment_history\.occurred_on=gte\.2026-09-28/);assert.match(linkRead,/investment_history\.event_type=eq\.expense/);assert.match(linkRead,/order=id\.asc&limit=500/);
+});
+
+test('a recap or digest whose amounts could not all be converted says so instead of showing a partial total',()=>{
+ const text=recapMessage(recap({missing:2}),'en').text;
+ assert.match(text,/💰 Saved: Exchange rate unavailable\./);assert.doesNotMatch(text,/You saved|Top spending/);
+ assert.doesNotMatch(recapMessage(recap({income:0,spending:0,goalsMoved:0,top:null,missing:1}),'en').text,/A quiet week/,'a week with only unconvertible amounts is not quiet');
 });
 
 test('the recap cron refuses a wrong secret, reports unreachable owners, and is scheduled for Sunday evening',async()=>{
@@ -271,7 +316,7 @@ test('milestones are server-only: the table, its migration and the fresh-databas
 test('the daily snapshot cron announces highs per captured owner and a failed announcement never fails the capture',async()=>{
  process.env.CRON_SECRET='test-secret';process.env.SUPABASE_URL='https://db.local';process.env.SUPABASE_SERVICE_ROLE_KEY='sb_secret_test';
  const announced=[],realFetch=globalThis.fetch;
- globalThis.fetch=async(url)=>String(url).includes('/rpc/')?Response.json({}):Response.json(String(url).includes('offset=0')?[{id:'1',user_id:'anna',kind:'Cash'},{id:'2',user_id:'bob',kind:'Cash'}]:[]);
+ globalThis.fetch=async(url)=>String(url).includes('/rpc/')?Response.json({}):Response.json(String(url).includes('id=gt.')?[]:[{id:'1',user_id:'anna',kind:'Cash'},{id:'2',user_id:'bob',kind:'Cash'}]);
  try{
   const route=loadTS('app/api/cron/portfolio-snapshots/route.ts',{
    '@/lib/server-market':{loadMarket:async()=>({quotes:{},rates:{USD:1}})},
@@ -284,5 +329,66 @@ test('the daily snapshot cron announces highs per captured owner and a failed an
   assert.equal(response.status,200);
   assert.deepEqual(await response.json(),{captured:2,skipped:0,celebrated:1});
   assert.deepEqual(announced,['anna','bob']);
+ }finally{globalThis.fetch=realFetch;}
+});
+
+test('a household member contributing to a shared goal is celebrated: the goal and records are read with their own token',async()=>{
+ const householdOwner='33333333-3333-4333-8333-333333333333';
+ // The goal belongs to the workspace owner; the member's own chat and claims stay under their id.
+ const w=world({savings_goals:[goal(300,{user_id:householdOwner})]});
+ const serviceReads=[],read=w.db.read;w.db.read=async path=>{serviceReads.push(path);return read(path);};
+ assert.equal(await sendActionMilestone(auth,contribution,deps(w)),true);
+ assert.match(w.sent[0].text,/just passed 25%/);
+ assert.deepEqual(w.tokens.map(call=>call.token),['owner-token']);
+ assert.ok(!w.tokens[0].path.includes('user_id='),'row security picks the workspace, not an id from the app');
+ assert.ok(serviceReads.every(path=>!path.includes('savings_goals')&&!path.includes('finance_records')),'the service role never reads shared tables');
+ assert.ok(w.tables.telegram_milestones.every(row=>row.user_id===owner));
+ // A first record in a shared workspace that already has records is not the member's first.
+ const shared=world({finance_records:[{id:'a',user_id:householdOwner},{id:'b',user_id:householdOwner}]});
+ assert.equal(await sendActionMilestone(auth,created(),deps(shared)),false);assert.equal(shared.sent.length,0);
+ // A failed token read sends nothing.
+ const failing=world({savings_goals:[goal(300)]});
+ await assert.rejects(sendActionMilestone(auth,contribution,{...deps(failing),read:async()=>new Response(null,{status:500})}),/Milestone lookup failed/);
+ assert.equal(failing.sent.length,0);
+});
+
+test('a retried recap run sends each owner their week once',async()=>{
+ process.env.CRON_SECRET='test-secret';
+ const deliveries=deliveryTable(),setup={subscriptions:[{user_id:'anna',chat_id:1}],prefs:{anna:{language:'en',display_name:'A',currencies:['USD']}},deliveries};
+ const first=recapRoute(setup);
+ assert.deepEqual(await (await first.GET()).json(),{sent:1,failed:0});
+ assert.deepEqual(deliveries.rows,[{user_id:'anna',kind:'recap',period:'2026-10-04'}]);
+ const retry=recapRoute(setup);
+ assert.deepEqual(await (await retry.GET()).json(),{sent:0,failed:0});assert.equal(retry.sent.length,0);
+});
+
+test('the daily snapshot cron reads only holdings and debts, by id pages, and values owners a few at a time',async()=>{
+ process.env.CRON_SECRET='test-secret';process.env.SUPABASE_URL='https://db.local';process.env.SUPABASE_SERVICE_ROLE_KEY='sb_secret_test';
+ const urls=[],realFetch=globalThis.fetch,page=Array.from({length:500},(_,index)=>({id:String(index).padStart(4,'0'),user_id:'owner'+(index%20),kind:'Cash'}));
+ let open=0,peak=0,grouped=0;
+ globalThis.fetch=async(url)=>{
+  url=String(url);urls.push(url);
+  if(url.includes('/rpc/')){open++;peak=Math.max(peak,open);await new Promise(resolve=>setTimeout(resolve,1));open--;return Response.json({});}
+  return Response.json(url.includes('id=gt.0499')?[{id:'0500',user_id:'owner0',kind:'Loan'}]:url.includes('id=gt.')?[]:page);
+ };
+ try{
+  const route=loadTS('app/api/cron/portfolio-snapshots/route.ts',{
+   '@/lib/server-market':{loadMarket:async()=>({quotes:{},rates:{USD:1}})},
+   '@/lib/portfolio-snapshots':{snapshotTotals:holdings=>{grouped+=holdings.length;return {assets:1,debt:0,rates:{USD:1}};}},
+   '@/lib/deposit-interest':{depositToday:()=>'2026-10-04'},
+   '@/lib/telegram-milestones':{announceNetWorthHigh:async()=>false},
+  });
+  const response=await route.GET(new Request('https://local',{headers:{authorization:'Bearer test-secret'}}));
+  assert.deepEqual(await response.json(),{captured:20,skipped:0,celebrated:0});
+  assert.equal(grouped,501,'every holding reaches its owner once');
+  const reads=urls.filter(url=>url.includes('/finance_records'));
+  assert.equal(reads.length,2);assert.match(reads[1],/id=gt\.0499/);
+  for(const url of reads){
+   const params=new URL(url).searchParams;
+   assert.ok(!params.get('select').includes('*'));assert.match(params.get('select'),/metal_purity/);
+   assert.ok(params.get('kind').startsWith('in.(')&&params.get('kind').includes('Mortgage')&&!params.get('kind').includes('Living expense'));
+   assert.ok(!params.has('offset'));
+  }
+  assert.ok(peak>1&&peak<=8,'owners are captured at most eight at a time, peak '+peak);
  }finally{globalThis.fetch=realFetch;}
 });

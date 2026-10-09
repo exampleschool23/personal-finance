@@ -36,7 +36,7 @@ import { depositToday } from '@/lib/deposit-interest';
 import { showAction, showError, showNotice } from '@/lib/feedback';
 import { normalizeEntry, type Entry } from '@/lib/finance';
 import { formatMoney, formatNumber } from '@/lib/format';
-import { convertAmount } from '@/lib/market';
+import { convertAmount, marketRates } from '@/lib/market';
 import { emptyPlanning } from '@/lib/planning';
 import { chunks, emptyTransactionFilter, filtersTransactions, groupPageByDay, earliestTransactionDay, periodDays, signedAmount, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
 import { canRecategorize, canTakeCategory, categoryChoices, choiceKey, newRule, ruleFromBusiness, ruleFromChange, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
@@ -82,7 +82,7 @@ export function TransactionsScreen() {
  const records = transactionsIn(data.records, range, today, filter, nameOf, tagsOf).filter(record => !owners.length || inOwnerFilter(ownerFilter, ownerOf(record, homes!)));
  const tagById = new Map(tags.data.tags.map(tag => [tag.id, tag]));
  const createTag = async (name: string) => { const id = crypto.randomUUID(); await tags.save({ id, name, color: nextPaletteColor(tags.data.tags.map(tag => tag.color)) }); return id; };
- const rates = market?.rates ?? market?.fx?.rate;
+ const rates = marketRates(market);
  const convert = (amount: number, unit: string) => convertAmount(amount, unit, currency, rates);
  // Twenty transactions a page; changing the period or a filter starts again at the first page.
  const listKey = JSON.stringify([range, filter, ownerFilter]);

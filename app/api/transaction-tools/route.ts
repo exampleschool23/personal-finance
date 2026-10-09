@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { uuid } from '@/lib/api-validation';
+import { fiatCurrency, uuid } from '@/lib/api-validation';
 import { postgrestFailure, readJson, requestRejected, signInAgain } from '@/lib/api-route';
 import { sameOrigin, session, supa } from '@/lib/supabase';
 import { readOwnerRows } from '@/lib/server-records';
@@ -8,7 +8,7 @@ import { normalizeSplits } from '@/lib/transaction-tools';
 const id=uuid;
 const schema=z.discriminatedUnion('action',[
  z.object({action:z.literal('split'),data:z.object({record_id:id,splits:z.array(z.object({category_id:z.union([id,z.enum([...income,...expenses] as [string,...string[]])]),amount:z.number().finite().positive().max(1e15)})).max(50).refine(rows=>rows.length!==1)})}),
- z.object({action:z.literal('forecast'),data:z.object({record_id:id,account_id:id.nullable(),exchange_rate:z.number().finite().positive().max(1e15).optional(),from_currency:z.string().optional(),to_currency:z.string().optional()})})
+ z.object({action:z.literal('forecast'),data:z.object({record_id:id,account_id:id.nullable(),exchange_rate:z.number().finite().positive().max(1e15).optional(),from_currency:fiatCurrency.optional(),to_currency:fiatCurrency.optional()})})
 ]);
 export async function GET(){
  try{const auth=await session();if(!auth)return signInAgain();

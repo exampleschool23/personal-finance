@@ -1,9 +1,9 @@
 import { monthDays, shiftMonth } from './calendar-days';
-import { expenses, type Entry } from './finance';
+import type { Entry } from './finance';
 import { convertAmount } from './market';
 import type { PlanningData } from './planning';
 import type { PortfolioSnapshot } from './portfolio-snapshots';
-import { spendingAmount } from './spending';
+import { cashFlowItems } from './spending';
 import { monthlyReview, type TransactionSplit } from './transaction-tools';
 
 export type SpendingPacePoint = { day: number; current: number | null; previous: number | null };
@@ -34,14 +34,16 @@ export function spendingPace(input: Input, today: string, currency: string, rate
 }
 
 export type SpendingItem = { id: string; name: string; kind: string; amount: number };
-/** Where the money went on one day: that day's actual spending, by the Monthly review's definition, largest first.
- * An amount without a rate to `currency` is left out rather than guessed. */
-export function spendingOnDay(records: Entry[], date: string, currency: string, rates?: number | Record<string, number>): SpendingItem[] {
+/** Where the money went on one day: that day's actual spending, by the Monthly review's own walk (`cashFlowItems`),
+ * largest first. A Tracker expense is named after its holding. An amount without a rate to `currency` is left out rather than guessed. */
+export function spendingOnDay(records: Entry[], date: string, currency: string, rates?: number | Record<string, number>, investmentLinks: NonNullable<PlanningData['investmentLinks']> = []): SpendingItem[] {
+ const names = new Map(records.map(record => [record.id, record.name]));
  const items: SpendingItem[] = [];
- for (const record of records) {
-  if (record.frequency !== 'Once' || record.date !== date || !expenses.includes(record.kind)) continue;
-  const amount = convertAmount(spendingAmount(record), record.currency, currency, rates);
-  if (amount !== null && Number.isFinite(amount) && amount > 0) items.push({ id: record.id, name: record.name, kind: record.kind, amount });
+ for (const item of cashFlowItems(records, date, date, { investmentLinks })) {
+  const amount = item.income || item.currency === null ? null : convertAmount(item.amount, item.currency, currency, rates);
+  if (amount === null || !Number.isFinite(amount) || amount <= 0) continue;
+  const { record, link } = item;
+  items.push(record ? { id: record.id, name: record.name, kind: record.kind, amount } : { id: item.id, name: names.get(link?.investment_history?.record_id ?? '') ?? '', kind: 'Other expense', amount });
  }
  return items.sort((a, b) => b.amount - a.amount);
 }

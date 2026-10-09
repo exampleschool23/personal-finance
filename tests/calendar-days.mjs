@@ -88,3 +88,12 @@ test('no screen dates "today" by the UTC day instead of the app day', async () =
  assert.deepEqual(['app', 'components', 'hooks', 'lib'].flatMap(sources).filter(path => utcToday.test(readFileSync(root + path, 'utf8'))), []);
  assert.match(readFileSync(root + 'components/tax-prep-sheet.tsx', 'utf8'), /generated: formatDate\(depositToday\(\), locale\)/);
 });
+
+test('day and month arithmetic and "today" come from the shared helpers, never inline UTC or +5h maths',async()=>{
+ const fs=await import('node:fs');
+ for(const file of ['lib/expense-plans.ts','components/auth-showcase.tsx','components/reminder-panel.tsx','components/planning/debt-payoff-panel.tsx']){
+  const source=fs.readFileSync(file,'utf8');
+  assert.doesNotMatch(source,/Date\.UTC\(|86400000|5 \* 60 \* 60 \* 1000|getUTCDate\(\)/,file);
+ }
+ assert.match(fs.readFileSync('lib/expense-plans.ts','utf8'),/depositToday\(now\)\.slice\(0, 7\)/);
+});

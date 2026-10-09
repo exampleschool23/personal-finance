@@ -16,6 +16,7 @@ import { depositMonth } from '@/lib/deposit-interest';
 import { useEarningSources } from '@/hooks/use-earning-sources';
 import { withAssetIncomePlans, legacyEarningSources, sourceSchedule } from '@/lib/earning-sources';
 import { saveTrackingStartRequest } from '@/hooks/use-comparison-profile';
+import { marketRates } from '@/lib/market';
 import { usePortfolioSnapshots } from '@/hooks/use-portfolio-snapshots';
 import { useMarket } from '@/hooks/use-market';
 import { type Entry, normalizeEntry, kinds, income, expenses, estimatedCashFlow } from '@/lib/finance';
@@ -81,7 +82,7 @@ function useWorkspaceState() {
     const quoteLabel = (entry: Entry) => describeQuote(entry, market, currency, t, locale);
     const money = (n: number, c = currency) => formatMoney(n, c, locale);
     const [forecastMonth,setForecastMonth] = useState(() => depositMonth());
-    const basePlanning = usePlanning(user, demo, rows, reload, refreshRecords, demoHoldingAccounts, section==='Accounts'?'full':section==='Income & expenses'?'review':'workspace',section==='Income & expenses'?forecastMonth:undefined,sample.demoPlanning);
+    const basePlanning = usePlanning(user, demo, rows, reload, refreshRecords, demoHoldingAccounts, section==='Accounts'?'accounts':section==='Income & expenses'?'review':'workspace',section==='Income & expenses'?forecastMonth:undefined,sample.demoPlanning);
     const earningSources=useEarningSources(user,demo,reload,refreshRecords,(source,original)=>{
         if(original&&rows.some(row=>row.earning_source_id===source.id||row.income_source_id===source.schedule_id)&&['kind','currency','mode','frequency','recurrence_days','start_date','end_date','linked_record_id'].some(key=>original[key as keyof typeof original]!==source[key as keyof typeof source]))throw Error('Keep the type, currency and schedule compatible with recorded payments.');
         const schedule=sourceSchedule(source);
@@ -179,7 +180,7 @@ const WorkspaceContext = createContext<Workspace | null>(null);
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const workspace = useWorkspaceState();
     // Every category icon in the workspace shows the icon chosen for it in Settings.
-    return <WorkspaceContext.Provider value={workspace}><CategoryIconsContext.Provider value={workspace.categoryIcons.emojiOf}><CategoryHueContext.Provider value={workspace.categoryIcons.hueOf}><DisplayCurrencyProvider currency={workspace.currency} rates={workspace.market?.rates ?? workspace.market?.fx?.rate}>{children}</DisplayCurrencyProvider></CategoryHueContext.Provider></CategoryIconsContext.Provider></WorkspaceContext.Provider>;
+    return <WorkspaceContext.Provider value={workspace}><CategoryIconsContext.Provider value={workspace.categoryIcons.emojiOf}><CategoryHueContext.Provider value={workspace.categoryIcons.hueOf}><DisplayCurrencyProvider currency={workspace.currency} rates={marketRates(workspace.market)}>{children}</DisplayCurrencyProvider></CategoryHueContext.Provider></CategoryIconsContext.Provider></WorkspaceContext.Provider>;
 }
 
 export function useWorkspace() {
