@@ -16,7 +16,7 @@ import { LoadingPlaceholder, PanelSkeleton, WorkspaceSkeleton } from '@/componen
 import { MonthlyMortgagePayments } from '@/components/monthly-mortgage-payments';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { SpendingWatchlists } from '@/components/spending-watchlists';
-import { TransactionInsights } from '@/components/transaction-insights';
+import { DrawerLink } from '@/components/presentation-foundation/drawer-link';
 import { Button } from '@/components/ui/button';
 import { depositToday } from '@/lib/deposit-interest';
 import { sourcesIn } from '@/lib/monthly-income-cards';
@@ -24,7 +24,7 @@ import { RecordsTable } from '@/components/workspace/records-table';
 import { ScreenNotices, ToolsUnavailable } from '@/components/workspace/screen-notices';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
-const tabs = ['Overview', 'Income', 'Spending', 'Forecast', 'Transactions'] as const;
+const tabs = ['Overview', 'Income', 'Spending', 'Forecast'] as const;
 
 export function CashFlowScreen() {
  const { t } = useLanguage();
@@ -32,7 +32,7 @@ export function CashFlowScreen() {
  // The dashboard's forecast card links to #forecast.
  useEffect(() => { const sync = () => { if (window.location.hash === '#forecast') setTab('Forecast'); }; sync(); window.addEventListener('hashchange', sync); return () => window.removeEventListener('hashchange', sync); }, []);
  const { user, demo, rows, currency, market, reload, preferencesData, planning, earningSources, expensePlans, transactionTools, workspacePreferences, snapshots, forecast, forecastReady, forecastMonth, setForecastMonth, monthlyIncomeEntries, workspaceLoading, refreshRecords,
-  addCashFlow, editRecord, setPayingMortgage, recordFromSource, reviewRecurring, spendFromPlan, removePlan, showFirstPage } = useWorkspace();
+  addCashFlow, editRecord, setPayingMortgage, recordFromSource, spendFromPlan, removePlan, showFirstPage } = useWorkspace();
  // Approximate amounts of variable sources, in the display currency like the converted entries beside them.
  const incomeSources = sourcesIn(earningSources.sources, currency, market?.rates ?? market?.fx?.rate);
  const mortgages = <MonthlyMortgagePayments records={demo?rows:planning.data.records} currency={currency} market={market} loading={planning.loading} error={planning.error} onPay={setPayingMortgage} onEdit={editRecord}/>;
@@ -55,14 +55,12 @@ export function CashFlowScreen() {
     {tab==='Spending'&&mortgages}
     {tab==='Spending'&&<ExpensePlans {...expensePlans} remove={removePlan} currency={currency} currencies={preferencesData.currencies} onSpend={spendFromPlan} onRetry={refreshRecords}/>}
     {tab==='Forecast'&&<CashForecastView owner={user} data={planning.data} plans={expensePlans.plans} plansMonth={expensePlans.month} currency={currency} rates={market?.rates ?? market?.fx?.rate} loading={planning.loading||expensePlans.loading} error={planning.error||expensePlans.error} onRetry={refreshRecords}/>}
-    {tab==='Overview'&&<RecordsTable transactions title={t('Recent transactions')} limit={4} pagination={false}><Button variant="link" className="cashflow-view-history" onClick={()=>setTab('Transactions')}>{t('View full transactions')}</Button></RecordsTable>}
-    {tab==='Transactions'&&<RecordsTable transactions title={t('Transaction history')}/>}
+    {tab==='Overview'&&<RecordsTable transactions title={t('Recent transactions')} limit={4} pagination={false}><Button variant="link" className="cashflow-view-history" asChild><DrawerLink href="/transactions">{t('View full transactions')}</DrawerLink></Button></RecordsTable>}
    </>}
   </div>
   {(workspacePreferences.error||planning.error)&&<ToolsUnavailable/>}
-  {planning.loading&&(tab==='Transactions'||tab==='Spending')&&<div className="content review-content"><PanelSkeleton label={t('Loading records…')} rows={2}/></div>}
+  {planning.loading&&tab==='Spending'&&<div className="content review-content"><PanelSkeleton label={t('Loading records…')} rows={2}/></div>}
   {!planning.loading&&!planning.error&&<div className="content review-content" key={user??'demo'}>
-   {tab==='Transactions'&&<TransactionInsights owner={user} demo={demo} revision={reload} records={planning.data.records} today={depositToday()} onReview={reviewRecurring}/>}
    {tab==='Spending'&&watchlists}
   </div>}
  </>;

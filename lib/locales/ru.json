@@ -736,7 +736,6 @@
   "The exchange rate changed. Refresh the rate and review the amounts.": "Курс изменился. Обновите курс и проверьте суммы.",
   "Check the dated exchange rate.": "Проверьте курс валют на дату операции.",
   "This record has saved tracker updates or transactions and cannot be deleted.": "У этой записи есть сохранённые обновления трекера или операции, поэтому её нельзя удалить.",
-  "Transaction history": "История операций",
   "Manage accounts": "Управление счетами",
   "Projected quantity": "Прогнозируемое количество",
   "Debt repayments and deposit maturities": "Погашения долгов и сроки вкладов",

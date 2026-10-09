@@ -736,7 +736,6 @@
   "The exchange rate changed. Refresh the rate and review the amounts.": "อัตราแลกเปลี่ยนเปลี่ยนไป โปรดรีเฟรชอัตราและตรวจสอบจำนวนเงิน",
   "Check the dated exchange rate.": "ตรวจสอบอัตราแลกเปลี่ยนตามวันที่",
   "This record has saved tracker updates or transactions and cannot be deleted.": "รายการนี้มีการอัปเดตหรือธุรกรรมของตัวติดตามที่บันทึกไว้ และไม่สามารถลบได้",
-  "Transaction history": "ประวัติธุรกรรม",
   "Manage accounts": "จัดการบัญชี",
   "Projected quantity": "จำนวนที่คาดการณ์",
   "Debt repayments and deposit maturities": "การชำระหนี้และวันครบอายุเงินฝาก",

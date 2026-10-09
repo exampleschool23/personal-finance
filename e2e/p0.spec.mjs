@@ -135,7 +135,6 @@ test('TX-022 editing an expense moves its account once', async ({ page }) => {
 
 test('TX-024 DEL-004 deleting an expense returns its money and restoring takes it again, exactly once', async ({ page }) => {
   await page.goto('/income-expenses');
-  await page.getByRole('navigation', { name: 'Cash flow' }).getByRole('button', { name: 'Transactions' }).click();
   await page.getByRole('button', { name: 'Actions for E2E Lunch' }).click();
   await page.getByRole('menuitem', { name: 'Delete' }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete record' }).click();

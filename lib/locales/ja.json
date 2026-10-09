@@ -736,7 +736,6 @@
   "The exchange rate changed. Refresh the rate and review the amounts.": "為替レートが変更されました。レートを更新し、金額を確認してください。",
   "Check the dated exchange rate.": "日付時点の為替レートを確認してください。",
   "This record has saved tracker updates or transactions and cannot be deleted.": "この記録には、保存されたトラッカーの更新または取引があるため、削除できません。",
-  "Transaction history": "取引履歴",
   "Manage accounts": "口座を管理",
   "Projected quantity": "予測数量",
   "Debt repayments and deposit maturities": "債務の返済と預金の満期",
