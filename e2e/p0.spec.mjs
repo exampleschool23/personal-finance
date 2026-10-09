@@ -66,9 +66,12 @@ test('XAPP-003 DASH-001 net worth is the same on the Dashboard and Investments',
   await expect.poll(() => figureAfter(page, 'Net worth')).toBe(dashboard);
 });
 
-test('ACC-001 a new cash account keeps its exact opening balance and adds to USD balances', async ({ page }) => {
+test('ACC-001 a new cash account keeps its exact opening balance and adds it to the total', async ({ page }) => {
   await page.goto('/accounts');
-  await expect.poll(() => figureAfter(page, 'USD balances')).toBe(dollars(expected.usdCash));
+  // The total also holds the euro account at the day's rate, so it is checked by how much it grows.
+  const total = async () => Number((await figureAfter(page, 'Total'))?.replace(/[$,]/g, '') || NaN);
+  await expect.poll(total).toBeGreaterThan(expected.usdCash);
+  const before = await total();
   await page.getByRole('button', { name: 'Add account' }).click();
   await page.getByRole('dialog').getByRole('button', { name: /^Cash account/ }).click();
   const dialog = page.getByRole('dialog');
@@ -77,7 +80,8 @@ test('ACC-001 a new cash account keeps its exact opening balance and adds to USD
   await dialog.getByRole('button', { name: 'Save record' }).click();
   await expect(dialog).toBeHidden();
   await expect.poll(() => accountBalance(page, 'E2E Wallet')).toBe('$1,251');
-  await expect.poll(() => figureAfter(page, 'USD balances')).toBe(dollars(expected.usdCash + 1250.5));
+  // Whole-dollar totals: 1,250.50 more shows as 1,250 or 1,251 more, depending on the cents already there.
+  await expect.poll(async () => [1250, 1251].includes(await total() - before)).toBe(true);
 });
 
 test('ACC-005 XAPP-010 a transfer with a fee moves the money once and counts only the fee as spending', async ({ page }) => {
