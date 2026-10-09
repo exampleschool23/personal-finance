@@ -2390,7 +2390,7 @@
   "View forecast": "Tingnan ang pagtataya",
   "Direction": "Direksiyon",
   "Subscriptions": "Mga subscription",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Mga singil na umuulit mula sa iisang merchant sa matatag na presyo. Hindi kasama sa kabuuan ang mga subscription na mukhang kinansela, at hiwalay na nakalista ang magkakaibang currency.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Mga singil na umuulit mula sa iisang merchant sa matatag na presyo. Hindi kasama sa kabuuan ang mga subscription na mukhang kinansela.",
   "{monthly} a month · {yearly} a year": "{monthly} kada buwan · {yearly} kada taon",
   "{amount} a year": "{amount} kada taon",
   "Every quarter": "Kada quarter",

@@ -2390,7 +2390,7 @@
   "View forecast": "পূর্বাভাস দেখুন",
   "Direction": "দিক",
   "Subscriptions": "সাবস্ক্রিপশন",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "একই বিক্রেতার কাছ থেকে স্থির দামে বারবার হওয়া চার্জ। মোট হিসাবে বাতিল মনে হওয়া সাবস্ক্রিপশন বাদ থাকে, আর ভিন্ন মুদ্রা আলাদাভাবে দেখানো হয়।",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "একই বিক্রেতার কাছ থেকে স্থির দামে বারবার হওয়া চার্জ। মোট হিসাবে বাতিল মনে হওয়া সাবস্ক্রিপশন বাদ থাকে।",
   "{monthly} a month · {yearly} a year": "মাসে {monthly} · বছরে {yearly}",
   "{amount} a year": "বছরে {amount}",
   "Every quarter": "প্রতি ত্রৈমাসিকে",

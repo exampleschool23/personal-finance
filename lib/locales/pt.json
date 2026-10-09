@@ -2390,7 +2390,7 @@
   "View forecast": "Ver previsão",
   "Direction": "Direção",
   "Subscriptions": "Assinaturas",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Cobranças que se repetem do mesmo estabelecimento a um preço estável. Os totais deixam de fora as assinaturas que parecem canceladas, e moedas diferentes são listadas separadamente.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Cobranças que se repetem do mesmo estabelecimento a um preço estável. Os totais deixam de fora as assinaturas que parecem canceladas.",
   "{monthly} a month · {yearly} a year": "{monthly} por mês · {yearly} por ano",
   "{amount} a year": "{amount} por ano",
   "Every quarter": "A cada trimestre",

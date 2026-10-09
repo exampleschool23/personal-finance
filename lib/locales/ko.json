@@ -2390,7 +2390,7 @@
   "View forecast": "예측 보기",
   "Direction": "방향",
   "Subscriptions": "구독",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "같은 가맹점에서 일정한 가격으로 반복되는 결제입니다. 해지된 것으로 보이는 구독은 합계에서 제외되며, 통화별로 따로 표시됩니다.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "같은 가맹점에서 일정한 가격으로 반복되는 결제입니다. 해지된 것으로 보이는 구독은 합계에서 제외됩니다.",
   "{monthly} a month · {yearly} a year": "월 {monthly} · 연 {yearly}",
   "{amount} a year": "연 {amount}",
   "Every quarter": "분기마다",

@@ -2390,7 +2390,7 @@
   "View forecast": "Prognose bekijken",
   "Direction": "Richting",
   "Subscriptions": "Abonnementen",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Afschrijvingen van dezelfde verkoper die terugkomen tegen een vaste prijs. Totalen laten abonnementen weg die opgezegd lijken, en verschillende valuta worden apart vermeld.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Afschrijvingen van dezelfde verkoper die terugkomen tegen een vaste prijs. Totalen laten abonnementen weg die opgezegd lijken.",
   "{monthly} a month · {yearly} a year": "{monthly} per maand · {yearly} per jaar",
   "{amount} a year": "{amount} per jaar",
   "Every quarter": "Elk kwartaal",

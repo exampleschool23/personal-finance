@@ -2390,7 +2390,7 @@
   "View forecast": "Xem dự báo",
   "Direction": "Chiều",
   "Subscriptions": "Gói đăng ký",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Các khoản phí lặp lại từ cùng một người bán với giá ổn định. Tổng không tính các gói đăng ký có vẻ đã hủy, và các loại tiền khác nhau được liệt kê riêng.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Các khoản phí lặp lại từ cùng một người bán với giá ổn định. Tổng không tính các gói đăng ký có vẻ đã hủy.",
   "{monthly} a month · {yearly} a year": "{monthly} mỗi tháng · {yearly} mỗi năm",
   "{amount} a year": "{amount} mỗi năm",
   "Every quarter": "Mỗi quý",

@@ -2390,7 +2390,7 @@
   "View forecast": "پیش گوئی دیکھیں",
   "Direction": "سمت",
   "Subscriptions": "سبسکرپشنز",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "ایک ہی تاجر کی وہ ادائیگیاں جو مستحکم قیمت پر دہرائی جاتی ہیں۔ کل رقم میں وہ سبسکرپشنز شامل نہیں جو منسوخ لگتی ہیں، اور مختلف کرنسیاں الگ الگ دکھائی جاتی ہیں۔",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "ایک ہی تاجر کی وہ ادائیگیاں جو مستحکم قیمت پر دہرائی جاتی ہیں۔ کل رقم میں وہ سبسکرپشنز شامل نہیں جو منسوخ لگتی ہیں۔",
   "{monthly} a month · {yearly} a year": "{monthly} ماہانہ · {yearly} سالانہ",
   "{amount} a year": "{amount} سالانہ",
   "Every quarter": "ہر سہ ماہی",

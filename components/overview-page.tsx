@@ -10,6 +10,7 @@ import { DrawerLink } from '@/components/presentation-foundation/drawer-link';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { PartialTotal } from '@/components/presentation-foundation/partial-total';
 import { useLanguage } from '@/components/language-provider';
+import { useDisplayMoney } from '@/components/display-money';
 import { categoryColor } from '@/lib/category-colors';
 import { estimatedCashFlow, financialTotals, income, type Entry } from '@/lib/finance';
 import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
@@ -27,7 +28,8 @@ type Props = { entries: Entry[]; currency: string; excludedCurrencies: string[];
 /** Dashboard cards: each card carries its headline figure in its title, so it reads at a glance. */
 export function useOverviewCards({ entries, currency, excludedCurrencies, forecast, forecastReady, planning }: Props) {
  const { t, locale } = useLanguage();
- const money = (amount: number, unit = currency) => formatMoney(amount, unit, locale);
+ const { show } = useDisplayMoney();
+ const money = (amount: number) => formatMoney(amount, currency, locale);
  const percent = (value: number | null) => formatPercent(value ?? NaN, locale, 1, 1);
  const { totalAssets, totalDebt } = financialTotals(entries);
  const allocation = assetAllocation(entries);
@@ -62,7 +64,7 @@ export function useOverviewCards({ entries, currency, excludedCurrencies, foreca
   <PanelTitle title={<>{t('Upcoming payments')} {overdueCount > 0 ? <span className="panel-figure negative">{t('{count} overdue', { count: formatNumber(overdueCount, locale, 0) })}</span> : upcomingItems.length > 0 && figure(t('{count} due soon', { count: formatNumber(upcomingItems.length, locale, 0) }))}</>}><DrawerLink href="/upcoming">{t('View all')}</DrawerLink></PanelTitle>
   {due.length ? <ul className="overview-list overview-due">{due.map(item => {
    const incoming = income.includes(item.record.kind);
-   return <li key={item.key}><CategoryIcon kind={item.record.kind}/><span>{item.record.name}<small className={item.overdue ? 'negative' : undefined}>{item.overdue ? t('Overdue') + ' · ' : ''}{formatDate(item.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{money(item.amount, item.record.currency)}</strong></li>;
+   return <li key={item.key}><CategoryIcon kind={item.record.kind}/><span>{item.record.name}<small className={item.overdue ? 'negative' : undefined}>{item.overdue ? t('Overdue') + ' · ' : ''}{formatDate(item.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{show(item.amount, item.record.currency)}</strong></li>;
   })}</ul> : planning ? <EmptyState icon={<CalendarClock/>} description={t('Nothing is due in the next 31 days.')}/> : <LoadingPlaceholder label={t('Loading records…')} rows={3}/>}
  </section>;
  return { commitments, allocation: allocationCard, upcoming };

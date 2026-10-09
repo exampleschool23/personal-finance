@@ -2390,7 +2390,7 @@
   "View forecast": "Tahmini gör",
   "Direction": "Yön",
   "Subscriptions": "Abonelikler",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Aynı satıcıdan sabit fiyatla tekrarlanan ödemeler. Toplamlara iptal edilmiş görünen abonelikler dahil edilmez ve farklı para birimleri ayrı listelenir.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Aynı satıcıdan sabit fiyatla tekrarlanan ödemeler. Toplamlara iptal edilmiş görünen abonelikler dahil edilmez.",
   "{monthly} a month · {yearly} a year": "Aylık {monthly} · yıllık {yearly}",
   "{amount} a year": "Yıllık {amount}",
   "Every quarter": "Her çeyrek",

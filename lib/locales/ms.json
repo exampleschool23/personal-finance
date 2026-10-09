@@ -2390,7 +2390,7 @@
   "View forecast": "Lihat ramalan",
   "Direction": "Arah",
   "Subscriptions": "Langganan",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Caj yang berulang daripada peniaga yang sama pada harga yang stabil. Jumlah tidak termasuk langganan yang kelihatan dibatalkan, dan mata wang berbeza disenaraikan berasingan.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Caj yang berulang daripada peniaga yang sama pada harga yang stabil. Jumlah tidak termasuk langganan yang kelihatan dibatalkan.",
   "{monthly} a month · {yearly} a year": "{monthly} sebulan · {yearly} setahun",
   "{amount} a year": "{amount} setahun",
   "Every quarter": "Setiap suku tahun",

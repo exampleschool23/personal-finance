@@ -2,6 +2,7 @@
 import { useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import { ListChecks, Paperclip, Plus, ReceiptText, Search, Wand2 } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
+import { useDisplayMoney } from '@/components/display-money';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
@@ -36,7 +37,7 @@ import { normalizeEntry, type Entry } from '@/lib/finance';
 import { formatMoney, formatNumber } from '@/lib/format';
 import { convertAmount } from '@/lib/market';
 import { emptyPlanning } from '@/lib/planning';
-import { chunks, emptyTransactionFilter, filtersTransactions, groupPageByDay, periodRange, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
+import { chunks, emptyTransactionFilter, filtersTransactions, groupPageByDay, periodRange, signedAmount, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
 import { canRecategorize, canTakeCategory, categoryChoices, choiceKey, newRule, ruleFromBusiness, ruleFromChange, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
 import { RollingText } from '@/components/presentation-foundation/rolling-text';
 import { shownName } from '@/lib/record-names';
@@ -45,6 +46,7 @@ const transactionsPerPage = 20;
 
 export function TransactionsScreen() {
  const { t, locale } = useLanguage();
+ const { showSigned } = useDisplayMoney();
  const { user, demo, reload, currency, market, planning, transactionTools, workspaceLoading, addCashFlow, setViewing, storedRecord, categorize, assignTransactionsBusiness, businessList, tags, attachments, refreshRecords, household, readOnly, assignRecordOwner, removedCategories } = useWorkspace();
  // In a shared household: whose transactions to show, and who each one belongs to.
  const homes = household.state;
@@ -170,7 +172,7 @@ export function TransactionsScreen() {
      {day.records.map(record => {
       const editable = canRecategorize(record, splits);
       const recordTags = tagsOf(record.id).map(id => tagById.get(id)).filter(tag => !!tag);
-      return <li key={record.id} className="transaction-row" data-selected={selected.has(record.id) || undefined} tabIndex={0} aria-label={transactionRowLabel(t('View details for {name}', { name: shownName(record, t) }), record, nameOf(record), locale)} onClick={open(record)} onKeyDown={open(record)}>
+      return <li key={record.id} className="transaction-row" data-selected={selected.has(record.id) || undefined} tabIndex={0} aria-label={transactionRowLabel(t('View details for {name}', { name: shownName(record, t) }), record, nameOf(record), locale, showSigned(signedAmount(record), record.currency))} onClick={open(record)} onKeyDown={open(record)}>
        {selecting && <input type="checkbox" aria-label={t('Select {name}', { name: record.name })} checked={selected.has(record.id)} onChange={() => toggle(record.id)}/>}
        <span className="transaction-merchant"><CategoryIcon kind={record.custom_category_id ? nameOf(record) : record.kind}/><span>{attachments.counts.get(record.id) ? <span className="transaction-name"><strong>{shownName(record, t)}</strong><Paperclip className="transaction-attachment-mark" size={13} role="img" aria-label={t('Attachments: {count}', { count: attachments.counts.get(record.id)! })}/></span> : <strong>{shownName(record, t)}</strong>}{record.account_id && accounts.get(record.account_id) && <small>{accounts.get(record.account_id)}</small>}<MortgageSplit record={record}/>{recordTags.length > 0 && <span className="transaction-tags">{recordTags.map(tag => <TagChip key={tag.id} name={tag.name} color={tag.color}/>)}</span>}</span></span>
        <span className="transaction-labels">{owners.length > 0 && <OwnerPicker record={record} owner={ownerOption(record)} owners={owners} disabled={readOnly || selecting} onChange={owner => void giveTo(record, owner)}/>}<CategoryPicker record={record} categories={data.categories} removed={removedCategories.kinds} disabled={!editable || selecting || readOnly} onChange={choice => change([record], choice)}/>

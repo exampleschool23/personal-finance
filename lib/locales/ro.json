@@ -2390,7 +2390,7 @@
   "View forecast": "Vezi prognoza",
   "Direction": "Direcție",
   "Subscriptions": "Abonamente",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Plăți care se repetă la același comerciant, la un preț constant. Totalurile exclud abonamentele care par anulate, iar monedele diferite sunt listate separat.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Plăți care se repetă la același comerciant, la un preț constant. Totalurile exclud abonamentele care par anulate.",
   "{monthly} a month · {yearly} a year": "{monthly} pe lună · {yearly} pe an",
   "{amount} a year": "{amount} pe an",
   "Every quarter": "În fiecare trimestru",

@@ -2390,7 +2390,7 @@
   "View forecast": "予測を見る",
   "Direction": "方向",
   "Subscriptions": "サブスクリプション",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "同じ加盟店から一定の価格で繰り返される請求です。解約したと思われるサブスクリプションは合計に含まれず、通貨ごとに分けて表示されます。",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "同じ加盟店から一定の価格で繰り返される請求です。解約したと思われるサブスクリプションは合計に含まれません。",
   "{monthly} a month · {yearly} a year": "月 {monthly} · 年 {yearly}",
   "{amount} a year": "年 {amount}",
   "Every quarter": "四半期ごと",

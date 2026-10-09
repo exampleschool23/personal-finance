@@ -2390,7 +2390,7 @@
   "View forecast": "Prognozni ko‘rish",
   "Direction": "Yo‘nalish",
   "Subscriptions": "Obunalar",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Bir xil sotuvchidan barqaror narxda takrorlanadigan to‘lovlar. Jami summalarga bekor qilinganga o‘xshagan obunalar kirmaydi, turli valyutalar alohida ko‘rsatiladi.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Bir xil sotuvchidan barqaror narxda takrorlanadigan to‘lovlar. Jami summalarga bekor qilinganga o‘xshagan obunalar kirmaydi.",
   "{monthly} a month · {yearly} a year": "Oyiga {monthly} · yiliga {yearly}",
   "{amount} a year": "Yiliga {amount}",
   "Every quarter": "Har chorakda",

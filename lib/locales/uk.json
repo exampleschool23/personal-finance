@@ -2390,7 +2390,7 @@
   "View forecast": "Відкрити прогноз",
   "Direction": "Напрямок",
   "Subscriptions": "Підписки",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Списання від одного продавця, що повторюються за сталою ціною. До підсумків не входять підписки, які, схоже, скасовано; різні валюти показано окремо.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Списання від одного продавця, що повторюються за сталою ціною. До підсумків не входять підписки, які, схоже, скасовано.",
   "{monthly} a month · {yearly} a year": "{monthly} на місяць · {yearly} на рік",
   "{amount} a year": "{amount} на рік",
   "Every quarter": "Щокварталу",

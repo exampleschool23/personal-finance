@@ -1,5 +1,7 @@
 "use client";
-import { DeleteButton } from '@/components/presentation-foundation/delete-button';
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
+import { RowMenu } from '@/components/presentation-foundation/row-menu';
+import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { ExpensePlanChart } from '@/components/expense-plan-chart';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { CurrencySelect } from '@/components/presentation-foundation/currency-select';
@@ -7,7 +9,7 @@ import { useDraftDialog } from '@/components/discard-changes';
 import { StopScheduleDialog } from '@/components/stop-schedule-dialog';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { useState } from 'react';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, ShoppingBasket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -21,7 +23,8 @@ import { FormattedNumberInput } from '@/components/presentation-foundation/forma
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
 import { CategoryBadge } from '@/components/presentation-foundation/category-badge';
 import { useLanguage } from '@/components/language-provider';
-import { formatMoney, formatDate } from '@/lib/format';
+import { useDisplayMoney } from '@/components/display-money';
+import { formatDate } from '@/lib/format';
 import { expensePlanCategories, expensePlanTotals, type ExpensePlan } from '@/lib/expense-plans';
 
 type Props={plans:ExpensePlan[];month:string;currency:string;loading:boolean;error:string;save:(plan:ExpensePlan)=>Promise<void>;remove:(id:string)=>Promise<void>;onSpend:(plan:ExpensePlan)=>void;onRetry:()=>void;currencies:string[]};
@@ -29,7 +32,8 @@ export function ExpensePlans({plans,month,currency,currencies,loading,error,save
  const {t,locale}=useLanguage();
  const [draft,setDraft]=useState<ExpensePlan|null>(null),[deleting,setDeleting]=useState<ExpensePlan|null>(null),[busy,setBusy]=useState(false),[failure,setFailure]=useState('');
  const [stopping,setStopping]=useState<ExpensePlan|null>(null);
- const money=(amount:number,currency:string)=>formatMoney(amount,currency,locale);
+ // Listed in the display currency; the plan dialog keeps the plan's own.
+ const {show:money}=useDisplayMoney();
  const open=(plan?:ExpensePlan)=>setDraft(plan?{...plan,amount:plan.amount||plan.base_amount||0}:newExpensePlan(currency,month));
  return <section className="panel expense-plans">
   <PanelTitle title={t('Monthly expense plans')} hint={<>
@@ -37,12 +41,12 @@ export function ExpensePlans({plans,month,currency,currencies,loading,error,save
    <p>{t('The forecast uses the higher of planned or spent. Optional rollover carries positive unused amounts forward. Plans do not move money.')}</p>
    <p>{t('If a plan replaces an existing recurring expense, remove that recurring entry to avoid counting both.')}</p>
   </>}><Button variant="outline" disabled={loading||!!error} onClick={()=>open()}><Plus size={16}/>{t('Add monthly plan')}</Button></PanelTitle>
-  {error?<InlineError as="div" message={t(error)} onRetry={onRetry}/>:loading?<LoadingPlaceholder label={t('Loading plans…')}/>:!plans.length?<p className="expense-plans-empty">{t('No monthly plans yet. Add groceries, Mum’s allowance or another regular expense.')}</p>:<div className="table-scroll"><table><thead><tr><th>{t('Plan')}</th><th>{t('Planned')}</th><th>{t('Spent')}</th><th>{t('Remaining')}</th><th>{t('Budget used')}</th><th>{t('Actions')}</th></tr></thead><tbody>
+  {error?<InlineError as="div" message={t(error)} onRetry={onRetry}/>:loading?<LoadingPlaceholder label={t('Loading plans…')}/>:!plans.length?<EmptyState icon={<ShoppingBasket aria-hidden="true"/>} description={t('No monthly plans yet. Add groceries, Mum’s allowance or another regular expense.')}/>:<div className="table-scroll"><table className="expense-plan-table"><thead><tr><th>{t('Plan')}</th><th>{t('Planned')}</th><th>{t('Spent')}</th><th>{t('Remaining')}</th><th>{t('Budget used')}</th><th>{t('Actions')}</th></tr></thead><tbody>
    {[...plans].sort((a,b)=>a.category.localeCompare(b.category)||a.name.localeCompare(b.name)).map(plan=>{const totals=expensePlanTotals(plan,month);return <tr key={plan.id}>
     <td><div className="expense-plan-name"><strong>{plan.name}</strong><div className="expense-plan-meta"><CategoryBadge kind={plan.category} label={t(plan.category)}/><small className="muted">{formatDate(plan.start_date,locale)}{plan.end_date?` – ${formatDate(plan.end_date,locale)}`:''}</small></div>{!totals.active&&<small className="muted">{t('Not active in the selected month')}</small>}</div></td>
-    <td>{money(totals.planned,plan.currency)}{Number(plan.carryover)>0&&<small className="block">{t('Carried over')}: {money(Number(plan.carryover),plan.currency)}</small>}</td><td>{money(totals.spent,plan.currency)}</td><td className={totals.remaining<0?'negative':''}>{totals.remaining<0?t('Over budget by {amount}',{amount:money(-totals.remaining,plan.currency)}):money(totals.remaining,plan.currency)}</td>
+    <td>{money(totals.planned,plan.currency)}{Number(plan.carryover)>0&&<small className="block">{t('Carried over')}: {money(Number(plan.carryover),plan.currency)}</small>}</td><td data-label={t('Spent')}>{money(totals.spent,plan.currency)}</td><td data-label={t('Remaining')} className={totals.remaining<0?'negative':''}>{totals.remaining<0?t('Over budget by {amount}',{amount:money(-totals.remaining,plan.currency)}):money(totals.remaining,plan.currency)}</td>
     <td><ExpensePlanChart name={plan.name} category={plan.category} planned={totals.planned} spent={totals.spent}/></td>
-    <td><div className="row-actions">{!plan.end_date&&<Button size="sm" variant="outline" onClick={()=>setStopping(plan)}>{t('Stop')}</Button>}<Button size="sm" variant="outline" onClick={()=>onSpend(plan)}>{t('Record spending')}</Button><Button size="icon" variant="ghost" aria-label={t('Edit {name}',{name:plan.name})} onClick={()=>open(plan)}><Pencil size={15}/></Button><DeleteButton variant="ghost" label={t('Delete {name}',{name:plan.name})} onClick={()=>{setFailure('');setDeleting(plan);}}/></div></td>
+    <td><div className="row-actions"><Button size="sm" variant="outline" onClick={()=>onSpend(plan)}>{t('Record spending')}</Button><RowMenu label={t('Actions for {name}',{name:plan.name})} items={[{label:t('Edit'),onSelect:()=>open(plan)},!plan.end_date&&{label:t('Stop'),onSelect:()=>setStopping(plan)},{label:t('Delete'),deletes:true,onSelect:()=>{setFailure('');setDeleting(plan);}}]}/></div></td>
    </tr>;})}
   </tbody></table></div>}
   {stopping&&<StopScheduleDialog name={stopping.name} start={stopping.start_date} onClose={()=>setStopping(null)} onSave={end_date=>save({...stopping,end_date})}/>}
@@ -61,7 +65,7 @@ export function ExpensePlanDialog({plan,editing=false,savedCurrency,currencies,s
  const guard=useDraftDialog(draft,onClose,busy);
  async function submit(e:React.FormEvent){e.preventDefault();e.stopPropagation();if(!draft.amount)return;setBusy(true);setFailure('');try{await save(draft);onSaved?.(draft);onClose();}catch(e){setFailure((e as Error).message);}finally{setBusy(false);}}
  return <>
-  <Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(editing?'Edit monthly plan':'Add monthly plan')}</DialogTitle><DialogDescription>{t('Keep each person or purpose as a separate plan. The amount repeats every month.')}</DialogDescription>
+  <Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t(editing?'Edit monthly plan':'Add monthly plan')}<InfoHint>{t('Keep each person or purpose as a separate plan. The amount repeats every month.')}</InfoHint></DialogTitle><DialogDescription className="sr-only">{t('Keep each person or purpose as a separate plan. The amount repeats every month.')}</DialogDescription>
    <form className="record-form" onSubmit={submit}><fieldset className="tracker-fields" disabled={busy}>
     <label>{t('Plan name')}<Input required maxLength={120} value={draft.name} placeholder={t('e.g. Groceries or Mum’s allowance')} onChange={e=>setDraft({...draft,name:e.target.value})}/></label>
     <div className="form-grid"><label>{t('Category')}<NativeSelect value={draft.category} onChange={e=>setDraft({...draft,category:e.target.value as ExpensePlan['category']})}>{expensePlanCategories.map(category=><option key={category} value={category}>{t(category)}</option>)}</NativeSelect></label><CurrencySelect value={draft.currency} currencies={currencies} savedCurrency={savedCurrency} onChange={currency=>setDraft({...draft,currency})}/></div>

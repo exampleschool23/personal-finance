@@ -2390,7 +2390,7 @@
   "View forecast": "Angalia utabiri",
   "Direction": "Mwelekeo",
   "Subscriptions": "Usajili",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Malipo yanayojirudia kutoka kwa mfanyabiashara mmoja kwa bei thabiti. Jumla haziweki usajili unaoonekana kughairiwa, na sarafu tofauti zinaorodheshwa kando.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Malipo yanayojirudia kutoka kwa mfanyabiashara mmoja kwa bei thabiti. Jumla haziweki usajili unaoonekana kughairiwa.",
   "{monthly} a month · {yearly} a year": "{monthly} kwa mwezi · {yearly} kwa mwaka",
   "{amount} a year": "{amount} kwa mwaka",
   "Every quarter": "Kila robo mwaka",

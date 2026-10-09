@@ -2390,7 +2390,7 @@
   "View forecast": "查看预测",
   "Direction": "方向",
   "Subscriptions": "订阅",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "同一商家以稳定价格重复扣款。合计不含看起来已取消的订阅，不同币种分开列出。",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "同一商家以稳定价格重复扣款。合计不含看起来已取消的订阅。",
   "{monthly} a month · {yearly} a year": "每月 {monthly} · 每年 {yearly}",
   "{amount} a year": "每年 {amount}",
   "Every quarter": "每季度",

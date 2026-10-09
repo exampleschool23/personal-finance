@@ -8,6 +8,7 @@ import { AnimatedMoney } from '@/components/presentation-foundation/animated-mon
 import { BusinessFilter, type BusinessOption } from '@/components/presentation-foundation/business-filter';
 import { OwnerFilter } from '@/components/presentation-foundation/owner-filter';
 import { useLanguage } from '@/components/language-provider';
+import { useDisplayMoney } from '@/components/display-money';
 import { Button } from '@/components/ui/button';
 import type { HoldingAccount } from '@/lib/holding-accounts';
 import type { PlanningData } from '@/lib/planning';
@@ -18,10 +19,12 @@ import { HoldingRows, type HoldingActions } from './holding-rows';
 import { BusinessHoldings } from './business-holdings';
 import type { useAccountFilters } from './use-account-filters';
 
-/** The Overview view of Accounts: totals per currency, the filters, the directory beside the selected account, and
+/** The Overview view of Accounts: the total in the display currency, the filters, the directory beside the selected account, and
  * the holdings that belong to no account yet. */
 export function AccountsOverview({ items, data, filters, order, businesses, cardActions, holdingActions, onEditAccount, onAdd, onAddAccount }: { items: DirectoryItem[]; data: PlanningData; filters: ReturnType<typeof useAccountFilters>; order: Parameters<typeof AccountDirectory>[0]['order']; businesses: readonly BusinessOption[]; cardActions: BalanceCardActions; holdingActions: HoldingActions; onEditAccount: (account: HoldingAccount) => void; onAdd: (kind: HoldingAccount['kind'], accountId: string) => void; onAddAccount: () => void }) {
  const { t } = useLanguage();
+ const display = useDisplayMoney();
+ const totals = currencyTotals(items), total = totals.every(item => item.total !== null) ? display.sum(totals.map(item => ({ amount: item.total!, currency: item.currency }))) : null;
  const { query, setQuery, businessFilter, setBusinessFilter, owners, ownerFilter, setOwnerFilter, visible, details, businessHoldings } = filters;
  const [selected,setSelected]=useState<string|null>(null);
  const active=visible.find(item=>item.key===selected)??visible[0];
@@ -29,7 +32,7 @@ export function AccountsOverview({ items, data, filters, order, businesses, card
  const market=holdingActions.market;
  return <>
   {!!items.length&&<StatTiles columns="auto" label={t('About account totals')}>
-   {currencyTotals(items).map(({currency:code,total})=><StatTile key={code} label={t('{currency} balances',{currency:code})} value={total===null?'—':<AnimatedMoney value={total} currency={code}/>}/>)}
+   <StatTile label={t('Total')} value={total===null?'—':<AnimatedMoney value={total} currency={display.currency??totals[0]?.currency??'USD'}/>}/>
   </StatTiles>}
   {(businesses.length>0||owners.length>0)&&!!items.length&&<div className="transactions-tools">{businesses.length>0&&<BusinessFilter businesses={businesses} value={businessFilter} onChange={setBusinessFilter}/>}{owners.length>0&&<OwnerFilter owners={owners} value={ownerFilter} onChange={setOwnerFilter}/>}</div>}
   {!!items.length&&<div className="accounts-master-detail">

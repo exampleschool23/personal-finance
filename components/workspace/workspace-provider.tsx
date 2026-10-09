@@ -48,6 +48,7 @@ import { useSampleWorkspace } from './state/use-sample-workspace';
 import { workspaceLoading, workspaceTotals } from '@/lib/workspace-totals';
 import { useRecordTable } from './state/use-record-table';
 import { recordForms } from './state/record-forms';
+import { DisplayCurrencyProvider } from '@/components/display-money';
 
 
 /** Session, records and actions shared by the drawer, the top bar, the dialogs and every screen. */
@@ -184,7 +185,7 @@ const WorkspaceContext = createContext<Workspace | null>(null);
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
     const workspace = useWorkspaceState();
     // Every category icon in the workspace shows the icon chosen for it in Settings.
-    return <WorkspaceContext.Provider value={workspace}><CategoryIconsContext.Provider value={workspace.categoryIcons.emojiOf}><CategoryHueContext.Provider value={workspace.categoryIcons.hueOf}>{children}</CategoryHueContext.Provider></CategoryIconsContext.Provider></WorkspaceContext.Provider>;
+    return <WorkspaceContext.Provider value={workspace}><CategoryIconsContext.Provider value={workspace.categoryIcons.emojiOf}><CategoryHueContext.Provider value={workspace.categoryIcons.hueOf}><DisplayCurrencyProvider currency={workspace.currency} rates={workspace.market?.rates ?? workspace.market?.fx?.rate}>{children}</DisplayCurrencyProvider></CategoryHueContext.Provider></CategoryIconsContext.Provider></WorkspaceContext.Provider>;
 }
 
 export function useWorkspace() {

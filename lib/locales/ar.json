@@ -2390,7 +2390,7 @@
   "View forecast": "عرض التوقعات",
   "Direction": "الاتجاه",
   "Subscriptions": "الاشتراكات",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "رسوم تتكرر من التاجر نفسه بسعر ثابت. لا تشمل المجاميع الاشتراكات التي تبدو ملغاة، وتُعرض العملات المختلفة كلٌّ على حدة.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "رسوم تتكرر من التاجر نفسه بسعر ثابت. لا تشمل المجاميع الاشتراكات التي تبدو ملغاة.",
   "{monthly} a month · {yearly} a year": "{monthly} شهريًا · {yearly} سنويًا",
   "{amount} a year": "{amount} سنويًا",
   "Every quarter": "كل ربع سنة",

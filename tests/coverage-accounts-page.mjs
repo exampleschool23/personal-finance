@@ -25,6 +25,11 @@ const { AccountsPage } = r.load('components/planning/accounts-page.tsx', {
  '@/hooks/use-location-search': { useLocationSearch: () => search, queryList: (query, key) => new URLSearchParams(query).getAll(key) },
  '@/hooks/use-display-order': { useDisplayOrder: (key, items) => ({ items, reorder: (...move) => reorders.push(move), disabled: false, error: '' }) },
  '@/lib/feedback': { showError: message => errors.push(message) },
+ // Shown in a USD display currency at 1 USD = 0.9 EUR.
+ '@/components/display-money': { useDisplayMoney: () => {
+  const convert = (amount, from) => from === 'EUR' ? amount / 0.9 : amount, sum = list => list.reduce((total, row) => total + convert(row.amount, row.currency), 0);
+  return { currency: 'USD', convert, sum, show: (amount, from) => usd(convert(amount, from)), showSum: list => usd(sum(list)) };
+ } },
 });
 
 const wallet = { id: 'wallet', name: 'Wallet', kind: 'Cash', currency: 'USD', amount: 1000, rate: 0, date: '2026-01-01', shared: true };
@@ -71,12 +76,14 @@ test('the directory lists balances and investment accounts by group, with one to
  assert.deepEqual(directory.unassignedHoldings(data.records).map(record => record.id), ['btc']);
 });
 
-test('Accounts shows totals per currency, the grouped directory and the selected cash account', () => {
+test('Accounts shows one total in the display currency, the grouped directory and the selected cash account', () => {
  const calls = open();
- assert.deepEqual(r.all(node => node.type === 'StatTile').map(node => node.props.label), ['USD balances', 'EUR balances']);
+ // One total in the display currency, never a figure per currency (XAPP-019): wallet 1,000 + €500 / 0.9 + deposit 2,000 + broker 10 × 200.
+ assert.deepEqual(r.all(node => node.type === 'StatTile').map(node => node.props.label), ['Total']);
+ assert.equal(Math.round(r.find(node => node.type === 'StatTile').props.value.props.value), 5556);
  const groups = r.all(node => node.type === 'details').map(node => text(node.children[0]));
  assert.equal(groups.length, 3);
- assert.ok(groups[0].startsWith('Cash') && groups[0].includes(`${usd(1000)} · ${usd(500, 'EUR')}`));
+ assert.ok(groups[0].startsWith('Cash') && groups[0].includes(usd(1000 + 500 / 0.9)) && !groups[0].includes('€'), groups[0]);
  assert.ok(html().includes('Bakery'), 'the business of an account is named under it');
  assert.equal(r.all(node => node.props?.['aria-label'] === 'Search accounts').length, 0, 'no search with six accounts or fewer');
  // The first account is selected: its goals' share and what is left.

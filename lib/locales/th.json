@@ -2390,7 +2390,7 @@
   "View forecast": "ดูการคาดการณ์",
   "Direction": "ทิศทาง",
   "Subscriptions": "การสมัครสมาชิก",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "รายการเรียกเก็บจากร้านค้าเดียวกันที่เกิดซ้ำในราคาคงที่ ยอดรวมไม่นับการสมัครสมาชิกที่ดูเหมือนยกเลิกแล้ว และแสดงแต่ละสกุลเงินแยกกัน",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "รายการเรียกเก็บจากร้านค้าเดียวกันที่เกิดซ้ำในราคาคงที่ ยอดรวมไม่นับการสมัครสมาชิกที่ดูเหมือนยกเลิกแล้ว",
   "{monthly} a month · {yearly} a year": "{monthly} ต่อเดือน · {yearly} ต่อปี",
   "{amount} a year": "{amount} ต่อปี",
   "Every quarter": "ทุกไตรมาส",

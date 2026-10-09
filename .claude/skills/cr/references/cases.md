@@ -1,0 +1,187 @@
+# Code regression catalog
+
+Severity if failed: **R0** exploitable or data-corrupting, **R1** written rule broken or
+real risk, **R2** maintainability. Each case says how to check it. IDs are stable; append,
+never renumber. `[cr YYYY-MM-DD]` marks a case added from a finding in that run.
+
+Run log (newest first): 2026-10-09 catalog created from `AGENTS.md` and the source layout; no run yet.
+
+## SEC — authentication, secrets, request safety
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| SEC-001 | R0 | Every mutating route checks the origin | `grep -L "sameOrigin" app/api/**/route.ts` for files exporting POST/PUT/PATCH/DELETE | Each mutating handler starts with `if(!sameOrigin(req))return crossSite()`, except webhooks and cron, which authenticate by secret instead |
+| SEC-002 | R0 | Every user route resolves a session before touching data | Read each handler: `session()` before any `supa(` call with a token | No data path runs with an undefined token; missing session returns `signInAgain()` |
+| SEC-003 | R0 | Cron routes require the cron secret | `app/api/cron/**/route.ts` call `cronAuthorized(req)` first | Unauthorized requests get 401 before any read; secret compared in constant time (`lib/cron-auth.ts`) |
+| SEC-004 | R0 | Telegram webhook verifies its secret token | `app/api/telegram/webhook` checks `X-Telegram-Bot-Api-Secret-Token` | Requests without the configured token are refused before parsing the update |
+| SEC-005 | R0 | Signed payloads are verified, not trusted | `lib/standard-webhook.ts`, `lib/backup-signature.ts`, `lib/supabase-jwt.ts` | Signature checked with a timing-safe compare, timestamp tolerance enforced, algorithm pinned |
+| SEC-006 | R0 | No secrets in the repository or its history | `git grep -nE "sb_secret_|service_role|BEGIN (RSA|OPENSSH) PRIVATE|bot[0-9]{8,}:" ` and `git log -S` for the same | No key material committed; `.env*` ignored except examples with blanks. Report location only, never the value |
+| SEC-007 | R0 | Server-only keys never reach the client | `grep -rn "SUPABASE_SERVICE_ROLE_KEY\|TELEGRAM_BOT_TOKEN\|ANTHROPIC_API_KEY" components hooks app --include=*.tsx` and any `NEXT_PUBLIC_` name holding a secret | Secrets read only in server modules; no `NEXT_PUBLIC_` secret |
+| SEC-008 | R1 | Session cookies are hardened | `lib/supabase.ts` `saveSession` and `hf_workspace` cookie | `httpOnly`, `secure`, `sameSite=lax` or stricter, `path=/`, bounded `maxAge` |
+| SEC-009 | R1 | No raw HTML from data | `grep -rn "dangerouslySetInnerHTML\|innerHTML" components app` | Only static, app-authored strings (the font boot script); never record names, notes, bot text or assistant output |
+| SEC-010 | R1 | Redirect targets are allow-listed | Routes reading `next`, `redirect`, `returnTo` from the query | Only same-origin relative paths; no open redirect |
+| SEC-011 | R1 | Uploads are bounded and typed | `app/api/import`, `app/api/record-attachments` | Size cap before reading the body, MIME and extension checked, parser (zip, xlsx, ofx, qif) bounded against zip bombs and huge rows |
+| SEC-012 | R1 | Security headers set | `next.config.*` / middleware headers | CSP (or a documented reason for its absence), `X-Content-Type-Options`, `Referrer-Policy`, frame protection |
+
+## LEAK — data and secret leaks
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| LEAK-001 | R0 | Error replies never echo internals | `postgrestFailure` callers and every `catch` returning `error.message` | Clients get fixed, translated messages; PostgREST `details`/`hint`, SQL and stack traces stay server-side |
+| LEAK-002 | R0 | Logs carry no personal or financial data | `grep -rnE "console\.(log|error|warn)" app lib` and `lib/monitoring.ts` | No tokens, emails, phone numbers, amounts, account names or request bodies logged; ids at most |
+| LEAK-003 | R0 | Client error reports are scrubbed | `lib/client-errors.ts`, `app/api/client-errors` | URLs stripped of query strings, messages truncated, no form values; rate-limited |
+| LEAK-004 | R1 | Assistant prompt holds only the signed-in owner's workspace | `lib/assistant.ts`, `app/api/assistant` | Snapshot built from the caller's RLS-scoped reads; no other member's personal tables; no secrets or internal ids beyond need |
+| LEAK-005 | R1 | Telegram messages go only to the linked user | `lib/telegram-owner.ts`, digest/recap senders | Chat id comes from the subscription row of the owner; a household member's data is not sent to another member's chat unless shared |
+| LEAK-006 | R1 | Responses select only needed columns | `grep -rn "select=\*" app lib` | API responses don't forward whole rows with internal columns (tokens, hashes, other members' ids) to the browser |
+| LEAK-007 | R1 | Sensitive pages are not cached | Auth, backup and account routes | `Cache-Control: no-store` (or `reply` with `noReferrer`) on responses with personal data |
+| LEAK-008 | R2 | No personal data in URLs | Client `requestJson` calls and links | Emails, phones, amounts never in query strings; POST bodies instead |
+
+## AUTHZ — ownership and households
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| AUTHZ-001 | R0 | Routes use `workspaceOwner(auth)`, never `auth.user.id`, for owner ids | Lead grep in SKILL.md §2 | Every owner id in a shared-table write or filter comes from `workspaceOwner`; personal calls use `personalRequest()` |
+| AUTHZ-002 | R0 | Service-role paths scope to a verified owner | `grep -rn "serviceDatabase(" app lib`; read each caller | Every query carries `user_id=eq.<owner>` derived from a verified source (cron row, linked Telegram user), never from request input |
+| AUTHZ-003 | R0 | `hf_workspace` cannot open a stranger's workspace | `public.active_owner()` in `database/setup.sql` and migration 100 | The header is honoured only for an accepted household member; any other value falls back to `auth.uid()` |
+| AUTHZ-004 | R0 | Viewers cannot write | Shared-table triggers and restrictive policies | Every table in `shared_workspace_tables()` has the viewer write guard; `tests/households-sql.mjs` covers it |
+| AUTHZ-005 | R1 | Record owners read through helpers | `grep -rn "\.member_id\|\.shared\b" components lib` | Read with `ownerOf` / `holdingOwner`; no direct column logic |
+| AUTHZ-006 | R1 | Telegram acts only for the linked user in a private chat | `lib/telegram-bot*`, webhook handler | Group chats ignored; the Telegram user id must match the subscription; bot writes to the person's own workspace |
+| AUTHZ-007 | R1 | Ids from the client are re-checked by RLS | Routes passing ids to RPCs | The RPC or PostgREST call runs with the user's token so RLS rejects foreign ids; a service-role call with a client id is R0 |
+
+## DB — schema, policies, functions
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| DB-001 | R0 | Every table has RLS on and owner policies | Every `create table` in setup and migrations vs `enable row level security` | No table with user data lacks RLS; policies use `active_owner()` (shared) or `auth.uid()` (personal) |
+| DB-002 | R0 | New `user_id` tables are classified | `public.shared_workspace_tables()` and the personal list | Each is shared or personal; `tests/households-sql.mjs` fails otherwise |
+| DB-003 | R0 | `security definer` functions are locked down | `grep -niE "security definer" database/setup.sql migrations/*.sql` | Each sets `search_path` (e.g. `set search_path = public, pg_temp`), checks the caller's owner itself, and `revoke ... from public` / `anon` where not meant for them |
+| DB-004 | R0 | Functions on shared tables use `active_owner()` | Functions touching shared tables | No `auth.uid()` in a shared-table function (households would break or leak) |
+| DB-005 | R1 | Money columns are exact | Column types for amounts, prices, rates | `numeric` (with scale where fixed), never `float`/`real`/`double precision` |
+| DB-006 | R1 | Invalid states are impossible | `check`, `not null`, foreign keys on new columns | Currencies checked, amounts finite, enums constrained, references with explicit `on delete` behaviour |
+| DB-007 | R1 | Foreign keys and filters are indexed | Columns used in `where`, joins, `order by` on large tables (`records`, `payment_occurrences`) | An index for `(user_id, …)` access paths; no sequential scan on per-owner hot reads |
+| DB-008 | R1 | Unique rules live in the database | Idempotency and one-per-key rules (occurrences, links, rates per day) | A unique constraint or index, not only an app-side check |
+| DB-009 | R1 | Scheduled payments link by id | Queries joining payments to schedules | Only `occurrence_record_id` / `occurrence_due_on` (migration 119); no name, amount or date matching |
+| DB-010 | R2 | `database/setup.sql` matches the migrations | Diff the objects a new migration creates against setup | A fresh database equals an upgraded one; the e2e stand-in runs setup.sql, so drift hides bugs |
+
+## MIG — migrations
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| MIG-001 | R1 | Naming and order | `ls migrations` | `NNN_snake_case.sql`, next free number, no gaps or duplicates, no date prefixes, no other migrations folder |
+| MIG-002 | R1 | Re-runnable | Each new migration | `if not exists`, `create or replace`, `drop ... if exists`; safe if applied twice |
+| MIG-003 | R1 | Non-destructive by default | `drop column`, `drop table`, `update` without `where`, type narrowing | Data kept or migrated first; destructive steps called out to the user |
+| MIG-004 | R1 | Locks on big tables | `alter table records ...`, new indexes | Long locks avoided (`create index concurrently` where possible, defaults without rewrite) |
+| MIG-005 | R2 | A SQL test per migration | `tests/*-sql.mjs` | Each migration's functions and policies covered, including owner isolation |
+
+## API — route conventions
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| API-001 | R1 | Bodies parsed with zod | Every `req.json()` | `readJson` + a schema (`parseAction` for action unions); validators from `lib/api-validation.ts` (`uuid`, `isoDate`, `fiatCurrency`, `nonnegativeAmount`) |
+| API-002 | R1 | Abuse limits on sensitive routes | Sign-in, code sending, phone, account access, assistant, import, market lookups | `rateLimited` from `lib/rate-limit.ts` with per-IP and per-key limits |
+| API-003 | R1 | Paged reads are complete | Reads of lists that can exceed one page | `readAllPages` / `readOwnerRows`; no silent truncation at 1000 rows |
+| API-004 | R1 | Every outbound fetch has a timeout | `grep -rn "fetch(" lib app` | `AbortSignal.timeout(...)` or a wrapper that sets one (`supa`, `serviceDatabase` do) |
+| API-005 | R1 | Status codes mean what they say | Handlers | 400 invalid input, 401 no session, 403 forbidden/cross-site, 409 conflict, 429 limit, 503 upstream; not 200 with an error body |
+| API-006 | R2 | Client requests share one helper | `grep -rn "fetch('/api" components hooks` | `requestJson` from `lib/api-client.ts`; owner resources via `useOwnerResource` |
+
+## MONEY — financial correctness
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| MONEY-001 | R0 | Never add amounts of different currencies | Every `reduce`/sum over amounts | Converted first with `convertMoney` / `amountIn`; a missing rate makes the amount missing, never summed raw |
+| MONEY-002 | R0 | Rates are explicit and positive | Conversion call sites | No inferred, defaulted (`?? 1`) or inverted-by-guess rates |
+| MONEY-003 | R0 | Stored values keep their precision | Save paths (`lib/record-save.ts`, RPC payloads) | Rounding only at display; no `Math.round`, `toFixed` or formatted strings stored |
+| MONEY-004 | R1 | Float accumulation controlled | Long sums, interest, forecasts | `lib/decimal-amounts.ts` or minor-unit math where tails matter; displayed results whole (AGENTS.md formatting) |
+| MONEY-005 | R1 | "Today" and month maths use the calendar helpers | `grep -rn "new Date().toISOString()"` and manual month arithmetic | `depositToday()`, `shiftDay`, `shiftMonth`, `monthEnd` from `lib/calendar-days.ts`; date-only values never shift by timezone |
+| MONEY-006 | R1 | Display formatting through `lib/format.ts` | `tests/formatting-rules.mjs` plus a grep for `Intl.`, `toLocaleString` | No inline formatters on any surface |
+| MONEY-007 | R1 | Auto-filled amounts round up to meet targets | Goal contribution suggestions | Whole amounts, rounded up when needed (AGENTS.md) |
+
+## DRY — duplicated rules
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| DRY-001 | R1 | One implementation per financial rule | Search for a second copy of totals, balances, spending, schedule matching (`laterPayments`, `paymentSchedules`, `chooseSchedule`) | Callers reuse the `lib/` function; a second rule is a finding even if it agrees today |
+| DRY-002 | R1 | Schemas defined once | Zod schemas for the same payload in route and client | Shared from `lib/*-schemas.ts` |
+| DRY-003 | R2 | No copy-pasted components | Similar JSX blocks across screens | A `presentation-foundation` member once it has two real callers |
+| DRY-004 | R2 | SQL logic not duplicated in TS | The same rule computed in a SQL function and in TS | One source of truth, or a parity test (`tests/planning-read-parity.mjs` style) |
+| DRY-005 | R2 | Constants and catalogues defined once | Currencies, languages, categories, limits | `lib/currencies.ts`, `lib/languages.ts`, `lib/category-*.ts`; no hard-coded lists |
+
+## SOLID — module design
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| SOLID-001 | R1 | Single responsibility | Files near 24 KB, functions near 150 lines, entries in `eslint-suppressions.json` | Business rules in `lib/`, I/O in routes/hooks, rendering in components; a file doing two of these is a finding |
+| SOLID-002 | R1 | Calculations are pure and testable | `lib/` modules importing `fetch`, cookies, React or `process.env` alongside calculations | Pure functions take data and return data; I/O is injected (as `serviceDatabase(env, fetcher)` does) |
+| SOLID-003 | R2 | Open for extension | `switch`/`if` chains on record kind, asset kind, language repeated across files | A table or map in one module (`lib/record-kind.ts` style) so a new kind is one edit |
+| SOLID-004 | R2 | Narrow interfaces | Components taking whole workspace objects to read one field | Props carry what is used; presentation members never take workspace state |
+| SOLID-005 | R2 | Depend on abstractions at I/O edges | Modules that call `supa` directly deep in logic | Dependencies passed in (`Deps` objects as in `lib/notify-action.ts`) so tests substitute them |
+
+## ARCH — boundaries
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| ARCH-001 | R1 | Workspace structure holds | `node --test tests/workspace-structure.mjs` and imports of screens | Screens never import the drawer, shell, sidebar kit or another screen; drawer reads no workspace state |
+| ARCH-002 | R1 | Presentation foundation is pure | `tests/presentation-foundation.mjs` | Members read only `useLanguage()` and `lib/format`; no data hooks or network |
+| ARCH-003 | R1 | Server and client code separated | `"use client"` files importing server modules (`lib/supabase.ts`, `lib/service-role.ts`, `next/headers`) | No server-only module in a client bundle; mark server modules `server-only` where possible |
+| ARCH-004 | R1 | Access decided in the database | App-side permission checks standing in for RLS | The app may hide UI, but every rule is enforced by policies/functions |
+| ARCH-005 | R2 | Screen-local state stays local | State in `WorkspaceProvider` used by one screen | Lives in that screen |
+
+## RES — resource leaks
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| RES-001 | R1 | Effects clean up | `useEffect` with `setInterval`, `setTimeout`, `addEventListener`, observers, subscriptions | A cleanup that clears/removes/disconnects each one |
+| RES-002 | R1 | Stale requests cancelled | Effects that fetch on changing inputs | `AbortController` aborted in cleanup, or a guard so an old response cannot overwrite a newer one |
+| RES-003 | R1 | No unbounded in-memory caches on the server | Module-level `Map`/arrays in `lib/` used by routes | Bounded size or TTL; no per-user data cached across requests in a shared worker |
+| RES-004 | R2 | Object URLs and readers released | `URL.createObjectURL`, `FileReader`, streams in import/export | `revokeObjectURL` after use; streams closed on error |
+
+## CONC — concurrency and idempotency
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| CONC-001 | R0 | Balance changes are atomic | Read balance → compute → write sequences in TS | One SQL function or statement; no lost update when two saves race |
+| CONC-002 | R1 | Retries and double clicks are idempotent | Save buttons, Telegram callbacks, imports, webhook redelivery | Disabled while pending, plus a database uniqueness rule or idempotency key; Telegram `update_id` handled once |
+| CONC-003 | R1 | Cron jobs are safe to overlap | `app/api/cron/**` | A run marker or unique row per period so a retried cron does not send twice |
+| CONC-004 | R2 | Optimistic UI reconciles | `components/workspace/state/` saving hooks | Rolls back or refetches on failure; no stale totals after an error |
+
+## ERR — error handling
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| ERR-001 | R1 | Errors are not swallowed on write paths | `.catch(() => null)` and empty `catch {}` around writes | Writes surface failure to the caller; swallowing is allowed only for best-effort side effects, with a comment |
+| ERR-002 | R1 | Partial failures are visible | Multi-step saves and imports | Either all-or-nothing in one transaction or a reported partial result |
+| ERR-003 | R2 | Failed loads show `InlineError` / `ResourceState` | Data hooks | No silent empty lists on a failed read |
+
+## PERF — performance
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| PERF-001 | R1 | No N+1 requests | Loops calling `supa`/`fetch` per row | One query with `in.(...)`, an embed, or an RPC |
+| PERF-002 | R1 | Reads are bounded | Endpoints reading all history on every load | Date-bounded or paged reads; summaries computed in SQL |
+| PERF-003 | R2 | Heavy client code is split | Recharts, pdf-lib, xlsx/zip parsers in initial bundles | Dynamic import where used on demand |
+| PERF-004 | R2 | Renders are not quadratic | `find`/`filter` inside `map` over records | Index by id in a `Map` first |
+
+## DEP — dependencies and supply chain
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| DEP-001 | R1 | Known vulnerabilities | `npm audit --omit=dev` (read-only) | No high/critical in runtime dependencies, or a note why not exploitable |
+| DEP-002 | R1 | CI does not leak secrets | `.github/workflows/*.yml` | No secrets on `pull_request_target`, actions pinned, least `permissions:` |
+| DEP-003 | R2 | No unused or duplicate dependencies | `package.json` vs imports | Unused packages removed (memory `remove-unused-code`) |
+
+## BOT — Telegram bot
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| BOT-001 | R1 | Typed amounts parsed once | Amount parsing in flows | `parseTypedAmount`; no `parseFloat` on user text |
+| BOT-002 | R1 | Messages built with the kit and formatters | `lib/telegram-kit.ts` usage | `messageKit`, `keyboardRows`, `backButton`; amounts and dates via `lib/format.ts`; text escaped for the parse mode |
+| BOT-003 | R1 | Callback data is not trusted | Callback handlers reading ids from `callback_data` | Ids re-checked against the linked owner before any write |
+
+## TEST — regression coverage
+
+| ID | Sev | Case | Check | Expect |
+|---|---|---|---|---|
+| TEST-001 | R1 | Bug fixes carry a regression test | `git log` of fix commits vs `tests/` changes | Each fix adds a behavioural test, including the failure path |
+| TEST-002 | R1 | Owner isolation tested for new tables and functions | `tests/*-sql.mjs` | A second owner cannot read or write; a viewer cannot write |
+| TEST-003 | R2 | Coverage floor holds | `npm run test:coverage` | ≥ 95% lines; `scripts/coverage-floor.json` untested list only shrinks |
+| TEST-004 | R2 | Tests assert behaviour, not source text | Tests that `readFileSync` a source file and regex it | Prefer calling the function; source-text tests only for structural rules |

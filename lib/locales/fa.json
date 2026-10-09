@@ -2390,7 +2390,7 @@
   "View forecast": "دیدن پیش‌بینی",
   "Direction": "جهت",
   "Subscriptions": "اشتراک‌ها",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "پرداخت‌هایی که از یک فروشنده با قیمت ثابت تکرار می‌شوند. جمع‌ها اشتراک‌هایی را که لغوشده به نظر می‌رسند شامل نمی‌شوند و ارزهای مختلف جداگانه فهرست می‌شوند.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "پرداخت‌هایی که از یک فروشنده با قیمت ثابت تکرار می‌شوند. جمع‌ها اشتراک‌هایی را که لغوشده به نظر می‌رسند شامل نمی‌شوند.",
   "{monthly} a month · {yearly} a year": "ماهانه {monthly} · سالانه {yearly}",
   "{amount} a year": "سالانه {amount}",
   "Every quarter": "هر فصل",

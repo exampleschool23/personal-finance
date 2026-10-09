@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { isCurrency } from './currencies';
-import type { Entry } from './finance';
+import { scheduleDates, type Entry } from './finance';
+import { shiftDay, shiftMonth } from './calendar-days';
 import { salaryDueDate } from './income-sources';
 const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value=>Number.isFinite(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value);
 export const earningSourceSchema=z.object({
@@ -26,6 +27,17 @@ export function sourceSchedule(source:EarningSource):Entry|null{
 }
 export function selectEarningSource(entry:Entry,source:EarningSource,bonus=false):Partial<Entry>{
  return {earning_source_id:source.id,payment_type:bonus?'bonus':'regular',name:source.name,kind:bonus?'Other income':source.kind,frequency:'Once',recurrence_days:null,end_date:null,business_id:!bonus&&source.kind==='Business income'?source.linked_record_id:null,income_source_id:null,income_due_on:null,earning_due_on:source.mode==='fixed'&&!bonus?salaryDueDate({date:source.start_date!,recurrence_days:source.recurrence_days,frequency:source.frequency!},entry.date):null};
+}
+/** The due date a new receipt from a fixed source settles, as the database names a scheduled payment's (migration 119):
+ * the earliest date still open in the month it was received (never after it), else the earliest open one in the month
+ * before, else the date of the period it was received in. `settled` holds the source's paid or skipped due dates, so a
+ * late payment settles the week it was late for instead of leaving that week open beside a paid one. */
+export function openEarningDue(source:EarningSource,receivedOn:string,settled:ReadonlySet<string>):string|null{
+ if(source.mode!=='fixed'||!source.start_date||!source.frequency)return null;
+ const plan={date:source.start_date,frequency:source.frequency,recurrence_days:source.recurrence_days??null,end_date:source.end_date};
+ const month=receivedOn.slice(0,7)+'-01';
+ const open=(from:string,through:string)=>scheduleDates(plan,from,through).find(day=>!settled.has(day));
+ return open(month,receivedOn)??open(shiftMonth(month.slice(0,7),-1)+'-01',shiftDay(month,-1))??salaryDueDate(plan,receivedOn);
 }
 export function resolveEarningSource(entry:Entry,sources:EarningSource[],original?:Entry):Partial<Entry>{
  const source=sources.find(item=>item.id===entry.earning_source_id);

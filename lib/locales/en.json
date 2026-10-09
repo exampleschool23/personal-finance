@@ -2390,7 +2390,7 @@
   "View forecast": "View forecast",
   "Direction": "Direction",
   "Subscriptions": "Subscriptions",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.",
   "{monthly} a month · {yearly} a year": "{monthly} a month · {yearly} a year",
   "{amount} a year": "{amount} a year",
   "Every quarter": "Every quarter",

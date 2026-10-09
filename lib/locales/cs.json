@@ -2390,7 +2390,7 @@
   "View forecast": "Zobrazit předpověď",
   "Direction": "Směr",
   "Subscriptions": "Předplatná",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "Platby u stejného obchodníka, které se opakují za stálou cenu. Součty vynechávají předplatná, která vypadají zrušená, a různé měny jsou uvedeny zvlášť.",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "Platby u stejného obchodníka, které se opakují za stálou cenu. Součty vynechávají předplatná, která vypadají zrušená.",
   "{monthly} a month · {yearly} a year": "{monthly} měsíčně · {yearly} ročně",
   "{amount} a year": "{amount} ročně",
   "Every quarter": "Každé čtvrtletí",

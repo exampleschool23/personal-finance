@@ -1,7 +1,8 @@
 "use client";
 import { useLanguage } from '@/components/language-provider';
+import { useDisplayMoney } from '@/components/display-money';
 import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
-import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
+import { formatDate, formatNumber, formatPercent } from '@/lib/format';
 import { goalEmoji } from '@/lib/goal-emoji';
 import { goalStatus, goalStatusLabels, goalSummary } from '@/lib/goal-projection';
 import type { Goal } from '@/lib/planning';
@@ -10,7 +11,9 @@ import { RollingText } from '@/components/presentation-foundation/rolling-text';
 /** The head of a goal's page: its mark, name and status, saved of target with progress, then left to save, monthly saving and target date. */
 export function GoalDetail({ goal, current, currency, today }: { goal: Goal; current: number | null; currency: string; today: string }) {
  const { t, locale } = useLanguage();
- const money = (amount: number) => formatMoney(amount, currency, locale);
+ // The goal's own currency, shown in the display currency.
+ const { show } = useDisplayMoney();
+ const money = (amount: number) => show(amount, currency);
  const summary = goalSummary(goal, current, today), status = goalStatus(summary);
  return <section className="panel goal-detail" aria-label={goal.name}>
   <div className="goal-detail-head">

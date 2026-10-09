@@ -6,7 +6,8 @@ import {loadTS} from './helpers/load-ts.mjs';
 // A tiny renderer: function components are called with per-instance hook state, everything else stays a plain tree
 // whose handlers the tests call directly.
 const states=new Map();let scope='',cursor=0;
-const fakeReact={...React,useState(initial){const key=scope+'#'+cursor++;if(!states.has(key))states.set(key,typeof initial==='function'?initial():initial);return [states.get(key),value=>states.set(key,typeof value==='function'?value(states.get(key)):value)];}};
+// Outside a render a context reads its default, as it would with no provider above it.
+const fakeReact={...React,useContext:context=>context._currentValue,useState(initial){const key=scope+'#'+cursor++;if(!states.has(key))states.set(key,typeof initial==='function'?initial():initial);return [states.get(key),value=>states.set(key,typeof value==='function'?value(states.get(key)):value)];}};
 function expand(node,path){
  if(Array.isArray(node))return node.map((child,i)=>expand(child,path+'.'+(child?.key??i)));
  if(!node||typeof node!=='object')return node;

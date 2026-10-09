@@ -8,6 +8,7 @@ import type { MarketData } from '@/lib/market';
 import { signedAmount } from '@/lib/transaction-list';
 import type { TransactionSplit } from '@/lib/transaction-tools';
 import { useLanguage } from '@/components/language-provider';
+import { useDisplayMoney } from '@/components/display-money';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { DrawerLink } from '@/components/presentation-foundation/drawer-link';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
@@ -32,6 +33,7 @@ export function recentTransactions(records: Entry[], today: string, limit = 5) {
 
 export function RecentTransactionsCard({ owner = null, demo = false, revision = 0, data: provided }: { owner?: string | null; demo?: boolean; revision?: number; data: PlanningData }) {
  const { t, locale } = useLanguage();
+ const { show } = useDisplayMoney();
  const today = depositToday();
  const remote = useOwnerResource('/api/planning?scope=review&month=' + today.slice(0, 7), owner, !!owner && !demo, revision, emptyPlanning);
  const records = owner && !demo ? remote.data.records.map(normalizeEntry) : provided.records;
@@ -40,7 +42,7 @@ export function RecentTransactionsCard({ owner = null, demo = false, revision = 
   <PanelTitle title={t('Transactions')}><DrawerLink href="/transactions">{t('View all')}</DrawerLink></PanelTitle>
   {owner && !demo && remote.loading ? <LoadingPlaceholder label={t('Loading records…')} rows={4}/> : recent.length ? <ul className="overview-list overview-due">{recent.map(record => {
    const incoming = income.includes(record.kind);
-   return <li key={record.id}><CategoryIcon kind={record.kind}/><span>{shownName(record, t)}<small>{t(record.kind)} · {formatDate(record.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{formatMoney(Math.abs(signedAmount(record)), record.currency, locale)}</strong></li>;
+   return <li key={record.id}><CategoryIcon kind={record.kind}/><span>{shownName(record, t)}<small>{t(record.kind)} · {formatDate(record.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{show(Math.abs(signedAmount(record)), record.currency)}</strong></li>;
   })}</ul> : <EmptyState icon={<ReceiptText/>} description={t('No transactions recorded this month or last.')}/>}
  </section>;
 }
@@ -53,6 +55,7 @@ export function topGoals(goals: Goal[], order: readonly string[] = [], limit = 2
 /** `netWorth` gives the current net worth in a currency, or null when it cannot be converted. */
 export function GoalsCard({ goals, order, data, currency, netWorth }: { goals: Goal[]; order: readonly string[]; data: Pick<PlanningData, 'records' | 'holdingAccounts'>; currency: string; netWorth: (currency: string) => number | null }) {
  const { t, locale } = useLanguage();
+ const { show } = useDisplayMoney();
  const top = topGoals(goals, order);
  return <section className="panel overview-panel dashboard-goals">
   <PanelTitle title={t('Goals')}><DrawerLink href="/goals">{t('View all')}</DrawerLink></PanelTitle>
@@ -60,8 +63,8 @@ export function GoalsCard({ goals, order, data, currency, netWorth }: { goals: G
    const unit = goalCurrency(goal, data, currency), investment = goal.kind === 'investment';
    const value = investment ? null : goalCurrentValue(goal, netWorth(unit));
    const percent = investment ? investmentGoalCompletion(goal, data) : value === null || !(goal.target > 0) ? null : Math.max(0, Math.min(100, value / goal.target * 100));
-   const amount = investment ? (percent === null ? '—' : formatPercent(percent, locale, 0)) : value === null ? '—' : formatMoney(value, unit, locale);
-   const target = investment ? null : t('{amount} target', { amount: formatMoney(goal.target, unit, locale) });
+   const amount = investment ? (percent === null ? '—' : formatPercent(percent, locale, 0)) : value === null ? '—' : show(value, unit);
+   const target = investment ? null : t('{amount} target', { amount: show(goal.target, unit) });
    const date = goal.target_date ? formatDate(goal.target_date, locale) : null;
    return <li key={goal.id}><span className="dashboard-goal-cover" aria-hidden="true">{goalEmoji(goal)}</span><div><p><span>{goal.name}</span><strong>{amount}</strong></p><div className="progress-track"><div style={{ width: `${percent ?? 0}%` }}/></div><small>{[target, date].filter(Boolean).join(' · ') || t('No target date')}</small></div></li>;
   })}</ul> : <EmptyState icon={<GoalIcon/>} description={t('Set a goal to watch your savings grow.')}><DrawerLink href="/goals">{t('Add goal')}</DrawerLink></EmptyState>}

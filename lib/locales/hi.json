@@ -2390,7 +2390,7 @@
   "View forecast": "पूर्वानुमान देखें",
   "Direction": "दिशा",
   "Subscriptions": "सब्सक्रिप्शन",
-  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled, and different currencies are listed separately.": "एक ही व्यापारी से स्थिर कीमत पर दोहराए जाने वाले शुल्क। कुल में वे सब्सक्रिप्शन शामिल नहीं हैं जो रद्द लगते हैं, और अलग-अलग मुद्राएँ अलग दिखाई जाती हैं।",
+  "Charges that repeat from the same merchant at a steady price. Totals leave out subscriptions that look cancelled.": "एक ही व्यापारी से स्थिर कीमत पर दोहराए जाने वाले शुल्क। कुल में वे सब्सक्रिप्शन शामिल नहीं हैं जो रद्द लगते हैं।",
   "{monthly} a month · {yearly} a year": "{monthly} प्रति माह · {yearly} प्रति वर्ष",
   "{amount} a year": "{amount} प्रति वर्ष",
   "Every quarter": "हर तिमाही",

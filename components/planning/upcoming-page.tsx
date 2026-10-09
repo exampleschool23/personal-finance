@@ -10,6 +10,7 @@ import { Count } from '@/components/presentation-foundation/count';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
+import { useDisplayMoney } from '@/components/display-money';
 import { formatDate, formatMoney, formatMonthYear, formatNumber, weekdayLabels } from '@/lib/format';
 import { depositToday } from '@/lib/deposit-interest';
 import { shiftMonth } from '@/lib/calendar-days';
@@ -50,6 +51,7 @@ function SummaryBar({ label, done, remaining, doneLabel, currency, tone, pressed
 /** The month's spending plans under the dated bills: spent against planned, tapped to record spending. */
 export function UpcomingPage({ data, save, currency, rates, view, onView, onEdit, onAddRecurring, plans = [], plansMonth, onSpend, archivedPlans = [], onArchive, onDelete }: Props) {
  const { t, locale } = useLanguage(), today = depositToday();
+ const { show } = useDisplayMoney();
  const dueLabel = useDueLabel();
  const [operation, setOperation] = useState<Operation | null>(null), [error, setError] = useState(''), [busy, setBusy] = useState(false);
  const [month, setMonth] = useState(today.slice(0, 7));
@@ -113,7 +115,7 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onEdit
    <div className="table-scroll"><table><thead><tr><th>{t('Name')}</th><th>{t('Date')}</th><th>{t('Amount')}</th><th>{t('Actions')}</th></tr></thead><tbody>{reminders.map(item => <tr key={item.key}>
     <td><div className="record-name"><CategoryIcon kind={item.record.kind}/><div><strong>{item.record.name}</strong><small>{t(item.record.kind)}</small></div></div></td>
     <td className={item.overdue ? 'negative' : 'muted'}>{formatDate(item.date, locale)}<small className="block">{dueLabel(today, item.date)}</small></td>
-    <td className="amount">{formatMoney(item.amount, item.record.currency, locale)}</td>
+    <td className="amount">{show(item.amount, item.record.currency)}</td>
     <td><div className="row-actions">{item.type === 'maturity'
      ? <Button size="sm" disabled={busy || item.date > today} variant="outline" onClick={() => run(() => save('dismiss', { id: crypto.randomUUID(), target_id: item.record.id, date: item.date }))}>{t('Dismiss reminder')}</Button>
      : <Button size="sm" variant="outline" onClick={() => payDebt(item.record)}>{t('Record payment')}</Button>}</div></td>
@@ -132,6 +134,7 @@ export function UpcomingPage({ data, save, currency, rates, view, onView, onEdit
 /** The month as a Monday-first grid, each day holding its scheduled items as chips. */
 function RecurringCalendar({ month, items, reminders, today }: { month: string; items: RecurringItem[]; reminders: ReturnType<typeof upcomingPayments>; today: string }) {
  const { t, locale } = useLanguage();
+ const { show } = useDisplayMoney();
  const byDay = new Map<string, RecurringItem[]>();
  for (const item of items) byDay.set(item.date, [...(byDay.get(item.date) ?? []), item]);
  // Debt repayments and maturities sit on the calendar too, so it agrees with the list below it.
@@ -142,8 +145,8 @@ function RecurringCalendar({ month, items, reminders, today }: { month: string; 
    <div role="row" className="recurring-calendar-week">{weekdayLabels(locale).map(day => <span role="columnheader" key={day}>{day}</span>)}</div>
    {calendarWeeks(month).map((week, index) => <div role="row" className="recurring-calendar-week" key={index}>{week.map((day, position) => <div role="gridcell" key={day ?? 'empty' + position} className="recurring-calendar-day" data-empty={!day || undefined} data-today={day === today || undefined}>
     {day && <><span className="recurring-calendar-date">{formatNumber(Number(day.slice(8)), locale, 0)}</span>
-     {(byDay.get(day) ?? []).map(item => <span key={item.key} className="recurring-chip" data-direction={item.direction} data-status={item.status} title={`${item.record.name} · ${formatMoney(item.amount, item.record.currency, locale)}`}><span>{item.record.name}</span><strong>{formatMoney(item.amount, item.record.currency, locale)}</strong></span>)}
-     {(dueByDay.get(day) ?? []).map(item => <span key={item.key} className="recurring-chip" data-direction={item.type === 'maturity' || item.record.kind === 'Money lent' ? 'income' : 'expense'} data-status={item.overdue ? 'overdue' : 'due'} title={`${item.record.name} · ${t(item.record.kind)} · ${formatMoney(item.amount, item.record.currency, locale)}`}><span>{item.record.name}</span><strong>{formatMoney(item.amount, item.record.currency, locale)}</strong></span>)}</>}
+     {(byDay.get(day) ?? []).map(item => <span key={item.key} className="recurring-chip" data-direction={item.direction} data-status={item.status} title={`${item.record.name} · ${show(item.amount, item.record.currency)}`}><span>{item.record.name}</span><strong>{show(item.amount, item.record.currency)}</strong></span>)}
+     {(dueByDay.get(day) ?? []).map(item => <span key={item.key} className="recurring-chip" data-direction={item.type === 'maturity' || item.record.kind === 'Money lent' ? 'income' : 'expense'} data-status={item.overdue ? 'overdue' : 'due'} title={`${item.record.name} · ${t(item.record.kind)} · ${show(item.amount, item.record.currency)}`}><span>{item.record.name}</span><strong>{show(item.amount, item.record.currency)}</strong></span>)}</>}
    </div>)}</div>)}
   </div>
  </section>;
