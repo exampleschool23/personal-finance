@@ -43,7 +43,27 @@ async function krakenPrice(symbol: string) {
   if (result.error?.length || pairs.length !== 1 || !pairs[0][0].includes(symbol) || !pairs[0][0].endsWith('USD')) throw new Error('invalid_quote');
   return positive(pairs[0][1].c?.[0]);
 }
-export async function loadMarket(crypto:string[],stocks:string[],stockAccess:boolean,metals:string[]=[]):Promise<MarketData> {
+/** A metal's spot price per fine troy ounce from Twelve Data (XAU/USD and so on). */
+async function twelveDataMetal(symbol: string, key: string): Promise<Quote> {
+  const url = new URL('https://api.twelvedata.com/quote');
+  url.searchParams.set('symbol', `${symbol}/USD`); url.searchParams.set('apikey', key);
+  const result = await read(url.href, 300) as { symbol?: string; close?: string; timestamp?: number };
+  if (result.symbol !== `${symbol}/USD`) throw new Error('invalid_quote');
+  const quote: Quote = { usd: marketQuote(result.close), source: 'Twelve Data', fetchedAt: new Date().toISOString() };
+  if (Number.isFinite(result.timestamp)) quote.marketTime = new Date(result.timestamp! * 1000).toISOString();
+  return quote;
+}
+/** A metal's spot price per fine troy ounce in USD from gold-api.com, which needs no key. */
+async function goldApiMetal(symbol: string): Promise<Quote> {
+  const result = await read(`https://api.gold-api.com/price/${symbol}`, 300) as { symbol?: string; currency?: string; price?: number; updatedAt?: string };
+  if (result.symbol !== symbol || result.currency !== 'USD') throw new Error('invalid_quote');
+  const quote: Quote = { usd: marketQuote(result.price), source: 'gold-api.com', fetchedAt: new Date().toISOString() };
+  const marketTime = Date.parse(result.updatedAt ?? '');
+  if (Number.isFinite(marketTime)) quote.marketTime = new Date(marketTime).toISOString();
+  return quote;
+}
+/** `metalAccess` defaults to `stockAccess`; metals need no key of their own (gold-api.com), only a signed-in reader. */
+export async function loadMarket(crypto:string[],stocks:string[],stockAccess:boolean,metals:string[]=[],metalAccess=stockAccess):Promise<MarketData> {
   const key = process.env.TWELVE_DATA_API_KEY;
   const data: MarketData = { fx: null, quotes: {}, errors: {}, stocksConfigured: !!key };
   const jobs: Array<() => Promise<void>> = [async () => {
@@ -85,19 +105,16 @@ export async function loadMarket(crypto:string[],stocks:string[],stockAccess:boo
       data.quotes[`Stock:${symbol}`] = quote;
     } catch { data.errors[`Stock:${symbol}`] = 'Price unavailable. Saved price is shown.'; }
   });
-  // Spot prices per fine troy ounce, quoted as XAU/USD and so on; like stocks they use the market-data key.
+  // Spot prices per fine troy ounce. The Twelve Data plan quotes gold (XAU/USD) only, so silver, platinum and palladium
+  // come from gold-api.com (free, no key; INV-050). Each source stands in when the other fails.
   for (const symbol of metals) jobs.push(async () => {
-    if (!key) { data.errors[`Metal:${symbol}`] = 'Metal prices need a market-data API key.'; return; }
-    if (!stockAccess) { data.errors[`Metal:${symbol}`] = 'Sign in to fetch metal prices.'; return; }
-    try {
-      const url = new URL('https://api.twelvedata.com/quote');
-      url.searchParams.set('symbol', `${symbol}/USD`); url.searchParams.set('apikey', key!);
-      const result = await read(url.href, 300) as { symbol?: string; close?: string; timestamp?: number };
-      if (result.symbol !== `${symbol}/USD`) throw new Error('invalid_quote');
-      const quote: Quote = { usd: marketQuote(result.close), source: 'Twelve Data', fetchedAt: new Date().toISOString() };
-      if (Number.isFinite(result.timestamp)) quote.marketTime = new Date(result.timestamp! * 1000).toISOString();
-      data.quotes[`Metal:${symbol}`] = quote;
-    } catch { data.errors[`Metal:${symbol}`] = 'Price unavailable. Saved price is shown.'; }
+    if (!metalAccess) { data.errors[`Metal:${symbol}`] = 'Sign in to fetch metal prices.'; return; }
+    const twelveData = key ? [() => twelveDataMetal(symbol, key)] : [];
+    const sources = symbol === 'XAU' ? [...twelveData, () => goldApiMetal(symbol)] : [() => goldApiMetal(symbol), ...twelveData];
+    for (const source of sources) {
+      try { data.quotes[`Metal:${symbol}`] = await source(); return; } catch { /* try the next source */ }
+    }
+    data.errors[`Metal:${symbol}`] = 'Price unavailable. Saved price is shown.';
   });
   // Bound upstream concurrency; individual failures do not hide successful prices.
   let index = 0;

@@ -170,3 +170,40 @@ test('no more than four upstream requests run at once and every job still finish
   assert.deepEqual(Object.keys(data.quotes).sort(),coins.map(symbol=>'Crypto:'+symbol).sort());
  });
 });
+
+test('metals: gold from Twelve Data, silver, platinum and palladium from gold-api.com, each falling back to the other (INV-050)',async()=>{
+ const goldApi=(symbol,price)=>Response.json({currency:'USD',name:symbol,price,symbol,updatedAt:'2026-10-09T13:37:50Z'});
+ const plan=()=>Response.json({code:404,status:'error',message:'This symbol is available starting with the Grow or Venture plan.'});
+ await withFeeds(feeds({
+  'twelvedata.com/quote?symbol=XAU':Response.json({symbol:'XAU/USD',close:'4181.6828',timestamp:1791500000}),
+  'twelvedata.com':plan(),
+  'gold-api.com/price/XAG':goldApi('XAG',60.93),'gold-api.com/price/XPT':goldApi('XPT',1698),'gold-api.com/price/XPD':goldApi('XPD',1175),
+ }),async({calls})=>{
+  const data=await loadMarket([],[],true,['XAU','XAG','XPT','XPD']);
+  assert.deepEqual([data.quotes['Metal:XAU'].usd,data.quotes['Metal:XAU'].source],[4181.6828,'Twelve Data']);
+  assert.deepEqual(['XAG','XPT','XPD'].map(m=>[data.quotes['Metal:'+m].usd,data.quotes['Metal:'+m].source]),[[60.93,'gold-api.com'],[1698,'gold-api.com'],[1175,'gold-api.com']]);
+  assert.equal(data.quotes['Metal:XAG'].marketTime,'2026-10-09T13:37:50.000Z');
+  assert.deepEqual(data.errors,{});
+  // Silver never spends a Twelve Data request it would be refused, and gold never asks gold-api.com when Twelve Data answers.
+  assert.ok(!calls.some(call=>call.url.includes('twelvedata')&&call.url.includes('XAG')));
+  assert.ok(!calls.some(call=>call.url.includes('gold-api.com/price/XAU')));
+ });
+ // Gold falls back to gold-api.com, silver to Twelve Data; with neither, the saved price is kept.
+ await withFeeds(feeds({
+  'twelvedata.com/quote?symbol=XAG':Response.json({symbol:'XAG/USD',close:'61.2'}),
+  'twelvedata.com':plan(),
+  'gold-api.com/price/XAU':goldApi('XAU',4189.6),'gold-api.com/price/XAG':Response.json({error:'down'},{status:503}),
+  'gold-api.com/price/XPT':goldApi('XAG',1),'gold-api.com':goldApi('XPD',1175),
+ }),async()=>{
+  const data=await loadMarket([],[],true,['XAU','XAG','XPT']);
+  assert.deepEqual([data.quotes['Metal:XAU'].usd,data.quotes['Metal:XAU'].source],[4189.6,'gold-api.com']);
+  assert.deepEqual([data.quotes['Metal:XAG'].usd,data.quotes['Metal:XAG'].source],[61.2,'Twelve Data']);
+  assert.equal(data.errors['Metal:XPT'],'Price unavailable. Saved price is shown.','a quote for another metal is refused');
+ });
+ // No market-data key: metals still come from gold-api.com; a signed-out reader gets none.
+ await withFeeds(feeds({'gold-api.com/price/XAG':goldApi('XAG',60.93)}),async({calls})=>{
+  assert.equal((await loadMarket([],[],false,['XAG'],true)).quotes['Metal:XAG'].source,'gold-api.com');
+  assert.ok(!calls.some(call=>call.url.includes('twelvedata')));
+  assert.equal((await loadMarket([],[],false,['XAG'])).errors['Metal:XAG'],'Sign in to fetch metal prices.');
+ },{key:null});
+});

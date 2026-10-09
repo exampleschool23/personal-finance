@@ -17,6 +17,7 @@ export async function GET(req: Request) {
   const auth=await session().catch(()=>null),signedIn=!!auth;
   if(auth?await rateLimited(req,'market-user',limits.market,auth.user.id,{perIp:false}):await rateLimited(req,'market',limits.publicMarket))return tooManyAttempts();
   const stockAccess=signedIn&&stocks.length+metals.length>0&&!!process.env.TWELVE_DATA_API_KEY;
-  const data=await loadMarket(crypto,stocks,stockAccess,metals);
+  // Metals also have a free source (gold-api.com), so a signed-in reader gets them without the market-data key.
+  const data=await loadMarket(crypto,stocks,stockAccess,metals,signedIn&&metals.length>0);
   return Response.json(data,{headers:{'Cache-Control':'private, no-store'}});
 }
