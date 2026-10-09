@@ -183,10 +183,12 @@ test('LOAN-004 LOAN-012 a loan repayment moves loan and cash together, and delet
   await dialog.getByPlaceholder('0').first().fill('50');
   await expect(dialog.getByText('Outstanding balance after update: $4,950')).toBeVisible();
   await dialog.getByRole('button', { name: 'Save update' }).click();
-  await expect(dialog.getByText('Cash deducted from E2E Checking: $50')).toBeVisible();
-  await dialog.getByRole('button', { name: 'Delete update' }).click();
+  // The history entry, not the form's preview of the same line, which shows until the form resets.
+  const repayment = dialog.getByRole('listitem').filter({ hasText: 'Repayment made' });
+  await expect(repayment.getByText('Cash deducted from E2E Checking: $50')).toBeVisible();
+  await repayment.getByRole('button', { name: 'Delete update' }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete update' }).click();
-  await expect(dialog.getByText('Cash deducted from E2E Checking: $50')).toBeHidden();
+  await expect(repayment).toHaveCount(0);
   await dialog.getByRole('button', { name: 'Close', exact: true }).first().click();
   await expect(dialog).toBeHidden();
   await expect.poll(async () => (await pageText(page)).includes('$5,000')).toBe(true);
