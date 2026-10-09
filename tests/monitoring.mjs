@@ -150,7 +150,7 @@ test('cron runs report failures and partial runs as alerts with their tallies; t
  const reported=[],monitor={'@/lib/monitoring':{reportError:async(...args)=>{reported.push(args);}}};
  const cron=new Request('https://local',{headers:{authorization:'Bearer test-secret'}});
  const telegram={telegramConfig:()=>({token:'T',webhookSecret:'S',botUsername:'b'}),sendTelegramMessage:async message=>message.chat_id!==2,escapeHtml:text=>text};
- const owner={'@/lib/telegram-owner':{deliverToSubscribers:async(db,send)=>{let sent=0,failed=0;for(const chat_id of [1,2]){if(await send({user_id:'u'+chat_id,chat_id}).catch(()=>false))sent++;else failed++;}return {sent,failed};},ownerProfile:async()=>{throw Error('profile unavailable');},recentSnapshots:async()=>[]}};
+ const owner={'@/lib/telegram-owner':{deliverToSubscribers:async(db,delivery,send)=>{let sent=0,failed=0;for(const chat_id of [1,2]){if(await send({user_id:'u'+chat_id,chat_id}).catch(()=>false))sent++;else failed++;}return {sent,failed};},ownerProfile:async()=>{throw Error('profile unavailable');},recentSnapshots:async()=>[]}};
  const db={read:async()=>[],write:async()=>Response.json(true)};
  for(const name of ['telegram-digest','telegram-recap']){
   reported.length=0;
@@ -163,14 +163,14 @@ test('cron runs report failures and partial runs as alerts with their tallies; t
   assert.equal(response.status,503);assert.equal((await response.json()).sent,0);
   assert.equal(reported.length,2);assert.equal(reported[1][1].message,'subscribers unavailable');assert.deepEqual(reported[1][3],{alert:true});
  }
- const snapshots=(overrides)=>loadTS('app/api/cron/portfolio-snapshots/route.ts',{...monitor,'@/lib/server-market':{loadMarket:async()=>({})},'@/lib/owner-rows':{readAllPages:async()=>[{user_id:'a'},{user_id:'b'}]},'@/lib/market':{instrumentFor:()=>null,marketSymbols:()=>({crypto:[],stocks:[],metals:[]})},'@/lib/deposit-interest':{depositToday:()=>'2026-10-05'},'@/lib/telegram-milestones':{announceNetWorthHigh:async()=>false},'@/lib/service-role':{serviceDatabase:()=>db},...overrides});
+ const snapshots=(overrides)=>loadTS('app/api/cron/portfolio-snapshots/route.ts',{...monitor,'@/lib/server-market':{loadMarket:async()=>({})},'@/lib/owner-rows':{readIdPages:async()=>[{user_id:'a'},{user_id:'b'}]},'@/lib/market':{instrumentFor:()=>null,marketSymbols:()=>({crypto:[],stocks:[],metals:[]})},'@/lib/deposit-interest':{depositToday:()=>'2026-10-05'},'@/lib/telegram-milestones':{announceNetWorthHigh:async()=>false},'@/lib/service-role':{serviceDatabase:()=>db},...overrides});
  reported.length=0;
  let response=await snapshots({'@/lib/portfolio-snapshots':{snapshotTotals:holdings=>holdings[0].user_id==='a'?{USD:1}:null}}).GET(cron);
  assert.equal(response.status,503);assert.deepEqual(await response.json(),{captured:1,skipped:1,celebrated:0});
  assert.deepEqual(reported[0][2],{route:'/api/cron/portfolio-snapshots',status:503,counts:{captured:1,skipped:1}});
  response=await snapshots({'@/lib/portfolio-snapshots':{snapshotTotals:()=>({USD:1})}}).GET(cron);
  assert.equal(response.status,200);assert.equal(reported.length,1,'a full run reports nothing');
- response=await snapshots({'@/lib/owner-rows':{readAllPages:async()=>{throw Error('page failed');}},'@/lib/portfolio-snapshots':{snapshotTotals:()=>null}}).GET(cron);
+ response=await snapshots({'@/lib/owner-rows':{readIdPages:async()=>{throw Error('page failed');}},'@/lib/portfolio-snapshots':{snapshotTotals:()=>null}}).GET(cron);
  assert.equal(response.status,503);assert.equal(reported.length,2);assert.equal(reported[1][1].message,'page failed');assert.deepEqual(reported[1][3],{alert:true});
 });
 

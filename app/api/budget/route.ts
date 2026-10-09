@@ -35,6 +35,10 @@ export async function POST(req: Request) {
   if (input.action === 'amount') {
    const { data } = input;
    response = await supa('/rest/v1/rpc/set_budget_amount', { method: 'POST', body: JSON.stringify({ p_key: data.category_key, p_month: data.month + '-01', p_amount: data.amount, p_currency: data.currency, p_forward: data.applies_forward }) }, auth.token);
+  } else if (input.action === 'amounts') {
+   // Every item is saved in one transaction: a refused one leaves the budget as it was.
+   const { data } = input;
+   response = await supa('/rest/v1/rpc/set_budget_amounts', { method: 'POST', body: JSON.stringify({ p_month: data.month + '-01', p_currency: data.currency, p_items: data.items }) }, auth.token);
   } else if (input.action === 'category') {
    const { rollover_balance, rollover_currency, rollover_negative, ...data } = input.data;
    // Rollover details are saved only with a rollover fund (migration 098); other settings never depend on them.

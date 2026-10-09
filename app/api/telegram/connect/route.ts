@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { z } from 'zod';
+import { readJson, reply as answer } from '@/lib/api-route';
 import { serviceDatabase } from '@/lib/service-role';
 import { sameOrigin, session } from '@/lib/supabase';
 import { sendTelegramMessage, telegramConfig } from '@/lib/telegram';
@@ -7,7 +8,7 @@ import { connectedReply } from '@/lib/telegram-bot';
 import { cancelConnectRequest, connectCookie, connectMinutes, connectPage, consumeConnectRequest, findConnectRequest, isConnectToken, linkChat, linkRefusal } from '@/lib/telegram-connect';
 const cookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/' };
 const headers = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' };
-const reply = (data: unknown, status = 200) => Response.json(data, { status, headers });
+const reply = (data: unknown, status = 200) => answer(data, status, { noReferrer: true });
 const body = z.object({ action: z.enum(['preview', 'confirm', 'cancel']) });
 /** The bot's Sign in button. The token waits in a cookie while the person signs in with any method, then the confirmation page reads it. */
 export async function GET(req: Request) {
@@ -18,8 +19,8 @@ export async function GET(req: Request) {
 }
 /** The confirmation page: what is being connected, the confirmation itself, and Cancel. Nothing is linked until a signed-in person confirms. */
 export async function POST(req: Request) {
-  if (!sameOrigin(req) || req.headers.get('sec-fetch-site') === 'cross-site') return reply({ error: 'Request rejected.' }, 403);
-  const parsed = body.safeParse(await req.json().catch(() => null));
+  if (!sameOrigin(req)) return reply({ error: 'Request rejected.' }, 403);
+  const parsed = body.safeParse(await readJson(req));
   if (!parsed.success) return reply({ error: 'Could not connect Telegram. Please try again.' }, 400);
   const db = serviceDatabase(), config = telegramConfig();
   if (!db || !config) return reply({ error: 'Telegram notifications are awaiting server setup.' }, 503);

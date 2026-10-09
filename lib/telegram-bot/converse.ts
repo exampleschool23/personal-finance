@@ -2,13 +2,14 @@
 import type {Entry} from '../finance';
 import type {Language} from '../i18n';
 import type {Category} from '../planning';
-import {ownerRows} from '../owner-rows';
+import {shiftMonth} from '../calendar-days';
 import type {ServiceDatabase} from '../service-role';
 import {advance,mainMenu,needsRate,prompt,retryKeyboard,withRate,type Draft,type FlowContext,type FlowResult} from '../telegram-flow';
 import type {TelegramSubscription} from '../telegram-link';
 import {isOnboardDraft} from '../telegram-onboarding';
 import type {TelegramMessage} from '../telegram';
 import type {TransactionRule} from '../transaction-rules';
+import {ownerRecordsSince} from '../telegram-owner';
 import {loadDraft,storeDraft} from './drafts';
 import {onboard} from './onboard';
 import {ownerLanguage} from './owner';
@@ -19,8 +20,9 @@ import type {BotClock,FlowInput,Turn} from './types';
 type Context=FlowContext&{records:Entry[]};
 async function loadContext(db:ServiceDatabase,owner:string,language:Language,clock:BotClock,typed=false):Promise<Context>{
  const [records,categories,preferences,rules,removed]=await Promise.all([
-  // Every record, read in pages: a long history must not push accounts or schedules past the first page.
-  ownerRows<Entry>(db,'finance_records',owner).then(rows=>rows.sort((a,b)=>a.name.localeCompare(b.name))),
+  // Every account, holding and schedule, read in pages so a long history cannot push them past the first page; of the
+  // actual income and expenses only the last year, which is what guessing a typed entry's category and account needs.
+  ownerRecordsSince(db,owner,shiftMonth(clock.today.slice(0,7),-12)+'-01').then(rows=>rows.sort((a,b)=>a.name.localeCompare(b.name))),
   db.read<Category[]>(`/rest/v1/transaction_categories?select=id,name,direction&user_id=eq.${owner}`),
   db.read<Array<{currencies?:string[]}>>('/rest/v1/user_preferences?select=currencies&user_id=eq.'+owner),
   // Typed text may be an entry, which the owner's rules help categorise. Without the rules table it is guessed from history alone.

@@ -61,7 +61,7 @@ function route({db,signedIn=true,cookie,sent=[]}){
  const api=loadTS('app/api/telegram/connect/route.ts',{
   'next/headers':{cookies:async()=>jar},
   '@/lib/service-role':{serviceDatabase:()=>db},
-  '@/lib/supabase':{sameOrigin:req=>!req.headers.get('origin')||req.headers.get('origin')==='https://app.local',session:async()=>signedIn?{token:'access',user}:null},
+  '@/lib/supabase':{sameOrigin:req=>req.headers.get('sec-fetch-site')!=='cross-site'&&(!req.headers.get('origin')||req.headers.get('origin')==='https://app.local'),session:async()=>signedIn?{token:'access',user}:null},
   '@/lib/telegram':{telegramConfig:()=>config,sendTelegramMessage:async(message,used)=>{sent.push({message,used});return true;}},
   '@/lib/telegram-bot':{connectedReply:async(_,owner,chat)=>({chat_id:chat,text:'connected '+owner})},
  });

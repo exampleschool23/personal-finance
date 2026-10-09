@@ -19,14 +19,14 @@ const typeHints: Record<BudgetType, string> = {
  non_monthly: 'Comes now and then, such as a vacation, car repairs or yearly fees. Save ahead for it.',
 };
 
-export type BudgetFigures = Pick<BudgetRow, 'budget' | 'rolloverIn' | 'actual' | 'remaining'>;
+export type BudgetFigures = Pick<BudgetRow, 'budget' | 'rolloverIn' | 'rolloverMissing' | 'actual' | 'remaining'>;
 /** A fund's line for this month: planned, rolled over, spent and available. */
 function FundFigures({ figures, currency }: { figures: BudgetFigures; currency: string }) {
  const { t, locale } = useLanguage();
  const money = (value: number) => formatMoney(value, currency, locale);
  return <dl className="budget-left-summary">
   <div><dt>{t('Planned')}</dt><dd>{figures.budget === null ? '—' : money(figures.budget)}</dd></div>
-  <div><dt>{t('Rolled over')}</dt><dd>{formatSignedMoney(figures.rolloverIn, currency, locale)}</dd></div>
+  <div><dt>{t('Rolled over')}</dt><dd>{figures.rolloverMissing ? '—' : formatSignedMoney(figures.rolloverIn, currency, locale)}</dd></div>
   <div><dt>{t('Spent')}</dt><dd>{money(figures.actual)}</dd></div>
   <div className="budget-left-total"><dt>{t('Available')}</dt><dd data-tone={remainingTone(figures.remaining)}>{figures.remaining === null ? '—' : money(figures.remaining)}</dd></div>
  </dl>;

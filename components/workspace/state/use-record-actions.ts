@@ -53,9 +53,7 @@ export function useRecordActions({ demo, rows, setRows, refreshRecords, splits, 
         } else {
             const crossCurrency=payment.exchange_rate!==undefined;
             const payload=crossCurrency?{...payment,record_id:payment.mortgage_id,type:'mortgage_payment',amount:decimalSum([payment.principal,payment.interest]),balance:null}:payment;
-            const response = await fetch(crossCurrency?'/api/investment-history/exchange':'/api/mortgage-payments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            const result = await response.json() as { error?: string };
-            if (!response.ok) throw Object.assign(new Error(result.error || 'Payment could not be confirmed. Retry with the same details.'),{confirmedFailure:response.status<500});
+            await requestJson(crossCurrency?'/api/investment-history/exchange':'/api/mortgage-payments', { body: payload, fallback: 'Payment could not be confirmed. Retry with the same details.' });
             refreshRecords();
         }
         showSaved();

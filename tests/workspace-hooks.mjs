@@ -71,6 +71,28 @@ test('the Telegram link shows a load failure, retries, and keeps a later answer 
  assert.equal(JSON.parse(requests[2].options.body).action,'settings');assert.equal(run(false).status.digest_enabled,false);
  assert.equal(run(true).status.configured,false,'the sample workspace shows the sample status');
 });
+test('waiting for the Telegram link checks one request at a time and a late answer after Stop waiting changes nothing',async()=>{
+ const requests=[],timers=[];let saved=0;
+ const fetch=(url,options={})=>new Promise(resolve=>requests.push({url,options,reply:(data,status=200)=>resolve(Response.json(data,{status}))}));
+ const run=harness('hooks/use-telegram-link.ts','useTelegramLink',{fetch,telegramBotUrl:name=>'https://t.me/'+name,window:{open:()=>{}},showSaved:()=>{saved++;},
+  setInterval:callback=>{timers.push({callback,cleared:false});return timers.length-1;},clearInterval:index=>{timers[index].cleared=true;}});
+ const waiting={configured:true,linked:false,digest_enabled:true,actions_enabled:true,bot_username:'bot'};
+ run(false);requests[0].reply(waiting);await flush();
+ run(false).connect();assert.equal(run(false).waiting,true);
+ const [timer]=timers;
+ timer.callback();timer.callback();
+ assert.equal(requests.length,2,'a tick while a check is under way is skipped');
+ requests[1].reply(waiting);await flush();
+ timer.callback();assert.equal(requests.length,3,'the next tick checks again');
+ run(false).stopWaiting();run(false);
+ assert.equal(timer.cleared,true);assert.equal(requests[2].options.signal.aborted,true,'stopping cancels the check under way');
+ requests[2].reply({...waiting,linked:true});await flush();
+ assert.equal(run(false).status.linked,false);assert.equal(run(false).waiting,false);assert.equal(saved,0,'no toast after stopping');
+ // A new wait that sees the link reports it once.
+ run(false).connect();run(false);
+ timers[1].callback();requests[3].reply({...waiting,linked:true});await flush();
+ assert.equal(run(false).status.linked,true);assert.equal(run(false).waiting,false);assert.equal(saved,1);
+});
 test('identical reads that start together share one request, each with its own copy, and later reads ask again',async()=>{
  const requests=[];
  const refreshRead=(url,options)=>new Promise(resolve=>requests.push({url,signal:options.signal,reply:(data,status=200)=>resolve(Response.json(data,{status}))}));

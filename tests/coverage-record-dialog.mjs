@@ -7,7 +7,7 @@ const {formatMoney}=loadTS('lib/format.ts');
 const finance=loadTS('lib/finance.ts');
 const now=new Date('2026-09-30T07:00:00Z');// 30 September 2026 in Tashkent
 const stubs=['loading-placeholder','form-footer','schedule-fields','error-popup','amount-currency-fields','currency-select','currency-value','record-icon','date-picker','formatted-number-input','confirm-dialog','info-hint'].map(name=>'@/components/presentation-foundation/'+name);
-const components=['record-edit-history','cash-investment-option','investment-tracker','mortgage-payment-dialog','income-record-form','cash-account-field','instrument-picker','record-name-input','business-profile-fields','ui/tabs','ui/button','ui/native-select','ui/dialog'].map(name=>'@/components/'+name);
+const components=['record-edit-history','cash-investment-option','investment-tracker','investment-tracker-lazy','mortgage-payment-dialog','income-record-form','cash-account-field','instrument-picker','record-name-input','business-profile-fields','ui/tabs','ui/button','ui/native-select','ui/dialog'].map(name=>'@/components/'+name);
 
 const record=(id,kind,extra={})=>({id,name:id,kind,amount:100,quantity:1,cost:0,rate:0,currency:'USD',frequency:'Once',date:'2026-09-15',notes:'',...extra});
 const planning=(data={},state={})=>({loading:false,error:'',...state,data:{records:[],categories:[],holdingAccounts:[],...data}});

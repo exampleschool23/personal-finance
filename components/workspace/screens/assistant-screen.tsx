@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 import { assistantSuggestions, assistantUnavailable } from '@/lib/assistant';
+import { marketRates } from '@/lib/market';
 
 type Turn = { role: 'user' | 'assistant'; content: string };
 
@@ -40,7 +41,7 @@ export function AssistantScreen() {
  // Send says why it is off: the empty state already explains the sample workspace and a missing setup, so it points there.
  const reasonId = useId();
  const send = sendBlocker({ busy, demo, unavailable, asked: turns.length > 0, draft }, reasonId, t);
- const rates = typeof market?.rates === 'object' ? market.rates : {};
+ const rates = marketRates(market) ?? {};
  async function ask(question: string) {
   const text = question.trim();
   if (!text || busy || demo || !user || !available) return;

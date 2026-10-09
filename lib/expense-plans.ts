@@ -1,3 +1,4 @@
+import { depositToday } from './deposit-interest';
 export const expensePlanCategories = ['Groceries', 'Family support', 'Household', 'Other'] as const;
 export type ExpensePlan = {
  id: string; name: string; category: typeof expensePlanCategories[number]; currency: string;
@@ -7,7 +8,7 @@ export type ExpensePlan = {
  /** When it was archived; see `archivedIn`. */
  archive_pauses?: { from: string; to: string | null }[] | null;
 };
-export const expensePlanMonth = (now = new Date()) => new Date(now.getTime() + 5 * 60 * 60 * 1000).toISOString().slice(0, 7);
+export const expensePlanMonth = (now = new Date()) => depositToday(now).slice(0, 7);
 // Full monthly allowance for every calendar month overlapping the plan's dates. Callers pass the plans of the month,
 // without those archived in it (`plansOfMonth` in archive-pauses); in those months the server's allowance is 0 too.
 export function expensePlanTotals(plan: ExpensePlan, month = expensePlanMonth()) {

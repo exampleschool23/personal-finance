@@ -112,7 +112,7 @@ test('left to budget: income minus spending and contributions; flex replaces fle
  const amounts = [amount('Salary', '2026-09', 3000), amount('Rent expense', '2026-09', 1200), amount('Living expense', '2026-09', 300), amount('Other expense', '2026-09', 100), amount('Charity', '2026-09', 999), amount(flexBucketKey, '2026-09', 800)];
  const rows = budgetRows(categories, amounts, new Map(), '2026-09', 'USD', rates);
  const category = leftToBudget(rows, 'category', null, 250);
- assert.deepEqual(category, { income: 3000, expenses: 1600, contributions: 250, left: 1150, flexible: null });
+ assert.deepEqual(category, { income: 3000, expenses: 1600, contributions: 250, left: 1150, flexible: null, missing: 0 });
  const flex = leftToBudget(rows, 'flex', 800, 250);
  assert.equal(flex.expenses, 2100);
  assert.equal(flex.left, 650);
@@ -163,7 +163,7 @@ test('flex mode shows one coherent flexible plan: the bucket, or the categories\
  const flexible = groupRows(shown, true).find(group => group.type === 'flexible');
  assert.equal(flexible.actual, 120);
  const left = leftToBudget(shown, 'flex', bucket, 0);
- assert.deepEqual(left, { income: 1000, expenses: 500, contributions: 0, left: 500, flexible: 200 });
+ assert.deepEqual(left, { income: 1000, expenses: 500, contributions: 0, left: 500, flexible: 200, missing: 0 });
  // Once a bucket amount is saved it is the plan, whatever the categories had.
  const saved = [...before, amount(flexBucketKey, '2026-09', 450)];
  assert.equal(flexBucketBudget(saved, budgetRows(categories, saved, history, '2026-09', 'USD', rates), '2026-09', 'USD', rates), 450);
@@ -223,8 +223,11 @@ test('rollover in other currencies converts with explicit rates only', () => {
  assert.equal(startingBalanceIn(uzs, 'UZS', rates), 250000);
  // Without a rate neither the starting balance nor the budget is guessed.
  const eur = fundOf({ rollover_balance: 50, rollover_currency: 'EUR' });
- assert.equal(startingBalanceIn(eur, 'USD', rates), 0);
- assert.equal(rolloverBalance(eur, [amount('Charity', '2026-01', 10, true, 'EUR')], history, '2026-02', 'USD', rates), -2);
+ assert.equal(startingBalanceIn(eur, 'USD', rates), null, 'an unconvertible starting balance is unknown, not zero');
+ assert.equal(rolloverBalance(eur, [amount('Charity', '2026-01', 10, true, 'EUR')], history, '2026-02', 'USD', rates), null);
+ assert.equal(rolloverBalance(fundOf(), [amount('Charity', '2026-01', 10, true, 'EUR')], history, '2026-02', 'USD', rates), null, 'an unconvertible past budget leaves the carry unknown');
+ const [row] = budgetRows([eur], [amount('Charity', '2026-01', 10, true)], history, '2026-02', 'USD', rates);
+ assert.deepEqual([row.budget, row.rolloverIn, row.remaining, row.missing], [10, 0, null, true], 'the plan is known; what is available is not');
 });
 
 test('the Flexible bucket rolls over its plan minus all flexible spending', () => {
@@ -245,6 +248,37 @@ test('the Flexible bucket rolls over its plan minus all flexible spending', () =
 test('the overall line sums income and spending apart, actual and planned, and skips excluded categories', () => {
  const row = (direction, actual, budget, excluded = false) => ({ key: direction + actual, direction, actual, budget, excluded });
  assert.deepEqual(budgetOverall([row('income', 9150, 9150), row('income', 850, null), row('expense', 1482, 1400), row('expense', 1873, null), row('expense', 50, 100, true)]),
-  { income: 10000, expenses: 3355, plannedIncome: 9150, plannedExpenses: 1400 });
- assert.deepEqual(budgetOverall([]), { income: 0, expenses: 0, plannedIncome: 0, plannedExpenses: 0 });
+  { income: 10000, expenses: 3355, plannedIncome: 9150, plannedExpenses: 1400, missing: 0 });
+ assert.deepEqual(budgetOverall([]), { income: 0, expenses: 0, plannedIncome: 0, plannedExpenses: 0, missing: 0 });
+});
+
+test('unconvertible budgets, buckets and contributions leave their totals unknown and are counted for the note', () => {
+ const categories = budgetCategories([], []);
+ const amounts = [amount('Salary', '2026-09', 3000), amount('Rent expense', '2026-09', 900, false, 'EUR'), amount('Living expense', '2026-09', 200)];
+ const rows = budgetRows(categories, amounts, new Map(), '2026-09', 'USD', rates);
+ const rent = rows.find(row => row.key === 'Rent expense');
+ assert.deepEqual([rent.budget, rent.remaining, rent.missing, isUnbudgeted(rent)], [null, null, true, false], 'shown, as —, never hidden as unbudgeted');
+ const left = leftToBudget(rows, 'category', null, 100);
+ assert.deepEqual(left, { income: 3000, expenses: null, contributions: 100, left: null, flexible: null, missing: 1 });
+ assert.equal(leftToBudget(rows.filter(row => row.key !== 'Rent expense'), 'category', null, null, 2).missing, 2, 'unconvertible contributions are counted');
+ assert.equal(leftToBudget(rows.filter(row => row.key !== 'Rent expense'), 'category', null, null, 2).left, null);
+ const fixed = groupRows(rows, true).find(group => group.type === 'fixed');
+ assert.equal(fixed.missing, 1);
+ assert.equal(budgetOverall(rows).missing, 1);
+ // Flex mode: a bucket built from an unconvertible flexible budget is unknown too.
+ const euroFlexible = [amount('Living expense', '2026-09', 50, false, 'EUR')];
+ const flexRows = budgetRows(categories, euroFlexible, new Map(), '2026-09', 'USD', rates);
+ assert.equal(flexBucketBudget(euroFlexible, flexRows, '2026-09', 'USD', rates), null);
+ assert.equal(flexBucketPlan(euroFlexible, categories, '2026-09', 'USD', rates), null);
+ const flexLeft = leftToBudget(budgetRowsForMode(flexRows, 'flex'), 'flex', null, 0);
+ assert.deepEqual([flexLeft.expenses, flexLeft.flexible, flexLeft.missing], [null, null, 1]);
+});
+
+test('a rollover whose starting balance no rate converts is marked missing, so the settings dialog shows — rather than 0', () => {
+ const setting = currency => ({ category_key: 'Charity', budget_type: 'flexible', group_name: null, rollover: true, rollover_start: '2026-08', excluded: false, rollover_balance: 50, rollover_currency: currency });
+ const row = currency => budgetRows(budgetCategories([], [setting(currency)]), [amount('Charity', '2026-09', 100)], new Map(), '2026-09', 'USD', rates).find(r => r.key === 'Charity');
+ const unknown = row('XYZ');
+ assert.equal(unknown.rolloverMissing, true);assert.equal(unknown.rolloverIn, 0);assert.equal(unknown.remaining, null);
+ const known = row('USD');
+ assert.equal(known.rolloverMissing, false);assert.ok(known.rolloverIn > 0);
 });

@@ -1,13 +1,17 @@
 import { isoDate,uuid } from '@/lib/api-validation';
 import { z } from 'zod';
 import {readOwnerRows} from '@/lib/server-records';
-import { crossSite,postgrestFailure,readJson,signInAgain } from '@/lib/api-route';
+import { crossSite,postgrestFailure,readCapped,readJson,signInAgain,tooManyAttempts } from '@/lib/api-route';
+import { limits,rateLimited } from '@/lib/rate-limit';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { queueMilestoneCheck } from '@/lib/notify-action';
 const schema=z.object({batch_id:uuid,account_id:uuid,rows:z.array(z.object({name:z.string().trim().min(1).max(120),date:isoDate,amount:z.number().finite().min(-1e15).max(1e15).refine(n=>n!==0),notes:z.string().max(2000),sourceId:z.string().trim().min(1).max(200).optional(),selected:z.boolean().optional()})).min(1).max(500)});
 export async function POST(req:Request){
  if(!sameOrigin(req))return crossSite();
- try{const auth=await session();if(!auth)return signInAgain();const raw=await req.text();if(raw.length>2_000_000)return Response.json({error:'File is too large.'},{status:413});let body:unknown=null;try{body=JSON.parse(raw);}catch{}const parsed=schema.safeParse(body);if(!parsed.success)return Response.json({error:'Check the import fields.'},{status:400});
+ try{const auth=await session();if(!auth)return signInAgain();
+ // Each import writes up to 500 rows, so it is counted per person; the body is capped while it is read.
+ if(await rateLimited(req,'import',limits.import,auth.user.id,{perIp:false}))return tooManyAttempts();
+ const raw=await readCapped(req,2_000_000);if(raw===null)return Response.json({error:'File is too large.'},{status:413});let body:unknown=null;try{body=JSON.parse(raw);}catch{}const parsed=schema.safeParse(body);if(!parsed.success)return Response.json({error:'Check the import fields.'},{status:400});
  const counts=new Map<string,number>();const rows=[];
  for(const row of parsed.data.rows){const signature=row.sourceId?JSON.stringify(['source',parsed.data.account_id,row.sourceId]):JSON.stringify([parsed.data.account_id,row.date,row.name,row.amount]);const n=counts.get(signature)??0;counts.set(signature,n+1);const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(row.sourceId?signature:signature+':'+n));const key=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');if(row.selected!==false){const {selected,...entry}=row;void selected;rows.push({...entry,key});}}
  if(!rows.length)return Response.json({error:'Select at least one transaction.'},{status:400});

@@ -11,7 +11,8 @@ const usd = (value, currency = 'USD') => formatMoney(value, currency, 'en-US');
 
 const r = createRenderer();
 const ui = stubs();
-const errors = [], reorders = [];
+const errors = [], reorders = [], resources = [];
+const booked = { data: { records: [] }, loading: false, error: '' };
 let search = '';
 const { AccountsPage } = r.load('components/planning/accounts-page.tsx', {
  ...ui.modules,
@@ -25,6 +26,8 @@ const { AccountsPage } = r.load('components/planning/accounts-page.tsx', {
  '@/hooks/use-location-search': { useLocationSearch: () => search, queryList: (query, key) => new URLSearchParams(query).getAll(key) },
  '@/hooks/use-display-order': { useDisplayOrder: (key, items) => ({ items, reorder: (...move) => reorders.push(move), disabled: false, error: '' }) },
  '@/lib/feedback': { showError: message => errors.push(message) },
+ // A signed-in Recent activity reads what was booked to the accounts on its own.
+ '@/hooks/use-owner-resource': { useOwnerResource: (url, owner, enabled, revision, empty) => { resources.push({ url, owner, enabled, revision }); return { data: enabled ? booked.data : empty, initialLoading: enabled && booked.loading, error: enabled ? booked.error : '', retry() {} }; } },
  // Shown in a USD display currency at 1 USD = 0.9 EUR.
  '@/components/display-money': { useDisplayMoney: () => {
   const convert = (amount, from) => from === 'EUR' ? amount / 0.9 : amount, sum = list => list.reduce((total, row) => total + convert(row.amount, row.currency), 0);
@@ -208,4 +211,24 @@ test('Recent activity lists operations, movements and income and expenses a page
  open({ data: { ...data, activity: [], movements: [], records: [wallet] } });
  showActivity();
  assert.ok(html().includes('No account operations yet.'));
+});
+
+test('signed in, Recent activity reads the income and spending booked to accounts, which the Accounts read leaves out', () => {
+ const lunchless = { ...data, records: data.records.filter(record => record.id !== 'lunch') };
+ booked.loading = true; resources.length = 0;
+ open({ demo: false, data: lunchless, revision: 4 });
+ assert.equal(resources.length, 0, 'the overview reads nothing more');
+ showActivity();
+ assert.deepEqual(resources.at(-1), { url: '/api/planning?scope=account-activity', owner: 'me', enabled: true, revision: 4 });
+ assert.ok(html().includes('Loading records…') && !html().includes('Page 1 of'), 'the view waits for the booked records');
+ booked.loading = false; booked.data = { records: [lunch, wallet] };
+ open({ demo: false, data: lunchless, revision: 4 });
+ showActivity();
+ const page = html();
+ assert.ok(page.includes('Income &amp; expenses') && page.includes(usd(-25)), 'booked spending is listed');
+ assert.ok(page.includes('Page 1 of 1 · 3 records'), 'a record already loaded is listed once');
+ booked.data = { records: [] }; resources.length = 0;
+ open({ demo: true, data: lunchless });
+ showActivity();
+ assert.equal(resources.at(-1).enabled, false, 'the sample workspace has its records already');
 });

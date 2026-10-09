@@ -1,20 +1,20 @@
-import { isoDate,uuid,fiatCurrency } from '@/lib/api-validation';
+import { isoDate,uuid,fiatCurrency,month } from '@/lib/api-validation';
 import { workspaceOwner } from '@/lib/household';
 import { z } from 'zod';
 import { expensePlanCategories, expensePlanMonth } from '@/lib/expense-plans';
 import { crossSite, postgrestFailure, readJson, signInAgain } from '@/lib/api-route';
 import { session, supa, sameOrigin } from '@/lib/supabase';
 const date = isoDate;
-const schema = z.object({id:uuid,name:z.string().trim().min(1).max(120),category:z.enum(expensePlanCategories),currency:fiatCurrency,amount:z.number().finite().positive().max(1e15),start_date:date,end_date:date.nullable(),month:z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/).optional(),rollover:z.boolean().optional()}).refine(p=>!p.end_date || p.end_date>=p.start_date);
+const schema = z.object({id:uuid,name:z.string().trim().min(1).max(120),category:z.enum(expensePlanCategories),currency:fiatCurrency,amount:z.number().finite().positive().max(1e15),start_date:date,end_date:date.nullable(),month:month.optional(),rollover:z.boolean().optional()}).refine(p=>!p.end_date || p.end_date>=p.start_date);
 async function handle(req:Request, method:string) {
  if(method!=='GET'&&!sameOrigin(req))return crossSite();
  try {
   const auth=await session();if(!auth)return signInAgain();
   let path='/rest/v1/expense_plans', init:RequestInit;
   if(method==='GET') {
-   const month=new URL(req.url).searchParams.get('month') || expensePlanMonth();
-   if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))return Response.json({error:'Check the plan fields.'},{status:400});
-   path='/rest/v1/rpc/expense_plan_month';init={method:'POST',body:JSON.stringify({p_month:month+'-01'})};
+   const requested=new URL(req.url).searchParams.get('month') || expensePlanMonth();
+   if(!month.safeParse(requested).success)return Response.json({error:'Check the plan fields.'},{status:400});
+   path='/rest/v1/rpc/expense_plan_month';init={method:'POST',body:JSON.stringify({p_month:requested+'-01'})};
   } else if(method==='DELETE') {
    const {id}=(await readJson(req) ?? {}) as {id?:unknown};if(!uuid.safeParse(id).success)return new Response(null,{status:400});
    path='/rest/v1/rpc/move_item_to_deleted';init={method:'POST',body:JSON.stringify({p_id:id,p_source:'expense_plans'})};

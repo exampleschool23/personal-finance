@@ -11,9 +11,10 @@ import {parseTypedAmount} from './telegram-entry';
 import {mainMenu} from './telegram-flow';
 import {backLabel,keyboardRows as rows,t} from './telegram-kit';
 export type OnboardStep='language'|'currency'|'currency_other'|'account'|'balance';
-export type OnboardData={currency?:string;account_name?:string;search?:string};
+/** `account_id` is the first account's id, chosen once when its balance is asked for (lib/telegram-bot/onboard.ts). */
+export type OnboardData={currency?:string;account_name?:string;search?:string;account_id?:string};
 export type OnboardDraft={kind:'onboard';step:OnboardStep;data:OnboardData};
-export type OnboardEffects={language?:Language;currency?:string;account?:{name:string;amount:number;currency:string};finished?:boolean};
+export type OnboardEffects={language?:Language;currency?:string;account?:{id?:string;name:string;amount:number;currency:string};finished?:boolean};
 export type OnboardResult={draft:OnboardDraft|null;reply:TelegramMessage|null;effects:OnboardEffects};
 export type OnboardContext={language:Language;currency?:string};
 const checkMark='✓ ';
@@ -97,7 +98,7 @@ export function advanceOnboarding(draft:OnboardDraft,input:{text?:string;callbac
    const amount=text?parseTypedAmount(text,ctx.language,{allowZero:true}):null;
    if(amount===null)return again(t(ctx.language,'Type an amount, such as {large}, or 0 if it is empty.',{large:formatNumber(250000,locales[ctx.language])}));
    const currency=draft.data.currency??ctx.currency??'USD';
-   return {draft:null,reply:{chat_id:chat,text:t(ctx.language,'You are all set. Use the buttons below to add your first expense.'),keyboard:mainMenu(ctx.language)},effects:{account:{name:draft.data.account_name??t(ctx.language,'Cash'),amount,currency},finished:true}};
+   return {draft:null,reply:{chat_id:chat,text:t(ctx.language,'You are all set. Use the buttons below to add your first expense.'),keyboard:mainMenu(ctx.language)},effects:{account:{...(draft.data.account_id?{id:draft.data.account_id}:{}),name:draft.data.account_name??t(ctx.language,'Cash'),amount,currency},finished:true}};
   }
  }
 }

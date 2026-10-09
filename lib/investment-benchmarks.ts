@@ -6,7 +6,7 @@ import type { HistoryEvent } from './investment-history';
 import { compareInvestments, convertHistorical, type CashFlow, type WealthPoint } from './investment-comparison';
 import { isInvestmentRecord } from './comparison-profile';
 import { expenses, liabilities, value } from './finance';
-import { convertAmount, marketEntry } from './market';
+import { convertAmount, marketEntry, marketRates } from './market';
 import { validDay } from './benchmark-data';
 import { shiftDay } from './calendar-days';
 import { spendingAmount } from './spending';
@@ -256,7 +256,7 @@ export function investmentDecisionComparison(input:DecisionInput,data:BenchmarkD
  }
  if(missing)return null;
  const result=compareInvestments(0,flows,points,{...data,start},'USD',true,portfolio);
- const rates=input.market?.rates??(input.market?.fx?{UZS:input.market.fx.rate}:{});
+ const rates=marketRates(input.market)??{};
  if(convertAmount(1,'USD',input.currency,rates)===null)return null;
  // Each day leaves USD at that day's rate, the one it entered at: a UZS deposit shown in UZS only grows,
  // instead of moving with today's dollar. Today's live rate covers a day the feed has no rate for.

@@ -41,11 +41,14 @@ test('budget uses actual linked receipts through today, current plan version and
  assert.deepEqual(tables(r,'Budget plan / category')[0].rows,[['Leisure budget\nOther','$25','$30','-$5']]);
  assert.ok(text(r).includes('Budget overspend $5'));
 });
-test('missing rates or values never produce partial consolidated totals or fake zero goal progress',()=>{
+test('a currency without a rate is left out of the consolidated total and named, like Overview, and goals never show fake progress',()=>{
  const f=structuredClone(reportFixture);
  let r=buildFinancialReport(f,'en');
- assert.equal(tables(r,'Total assets').at(-1).rows[0][2],'Not available');
- assert.ok(text(r).includes('Not available / $1,000,000'));
+ // No rate for UZS: the USD holdings still total (BTC at its saved price), and UZS is named rather than added as dollars.
+ assert.deepEqual(tables(r,'Total assets').at(-1).rows,[['$4,700','$300','$4,400']]);
+ assert.ok(text(r).includes('Partial total · Excluded currencies: UZS'));
+ assert.ok(!text(buildFinancialReport(f,'en','',reportMarket)).includes('Partial total'),'with every rate the total is whole');
+ assert.ok(text(r).includes('Not available / $1,000,000'),'a net-worth goal is unknown while a currency is left out');
  f.tables.finance_records[0].amount=null;f.tables.finance_records.find(r=>r.kind==='Deposit').rate=null;
  r=buildFinancialReport(f,'en','',reportMarket);
  assert.equal(tables(r,'Total assets')[0].rows[0][1],'Not available');
@@ -109,4 +112,14 @@ test('reports read current version 2 backups exported by the database',()=>{
  assert.equal(parsed.version,2);assert.equal(parsed.tables.finance_records.length,reportFixture.tables.finance_records.length);
  assert.ok(buildFinancialReport(v2,'ru','',null,{currency:'USD'}).blocks.length);
  for(const version of [0,3,'2',undefined])assert.throws(()=>parseFinanceBackup({...v2,version}),/Could not read the complete backup/);
+});
+
+test('the report values holdings and totals net worth exactly as Overview does',()=>{
+ const {workspaceTotals}=loadTS('lib/workspace-totals.ts'),{normalizeEntry}=loadTS('lib/finance.ts');
+ const {reportLedger,reportWealth,wealthTotals}=loadTS('lib/report-figures.ts');
+ for(const market of [reportMarket,null,{...reportMarket,rates:{USD:1,EUR:.9},fx:null}]){
+  const ledger=reportLedger(reportFixture.tables),overview=workspaceTotals({records:reportFixture.tables.finance_records.map(normalizeEntry),planningRecords:[],currency:'USD',market});
+  const report=wealthTotals(reportWealth(ledger.records,ledger.byId,market),'USD',market);
+  assert.equal(report.net,overview.netWorth);assert.equal(report.debt,overview.totalDebt);assert.deepEqual(report.excluded,overview.excludedCurrencies);
+ }
 });

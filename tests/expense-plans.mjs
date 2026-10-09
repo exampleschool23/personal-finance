@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {expensePlanTotals,expensePlanMonth,previewPlans} from '../lib/expense-plans.ts';
+import {loadTS as loadPlans} from './helpers/load-ts.mjs';
+const {expensePlanTotals,expensePlanMonth,previewPlans}=loadPlans('lib/expense-plans.ts');
 import {estimatedCashFlow} from '../lib/finance.ts';
 import {convertAmount} from '../lib/market.ts';
 const plan={id:'p',amount:500,start_date:'2026-09-17',end_date:null,spent:100,currency:'USD'};
@@ -16,6 +17,8 @@ test('start/end months are inclusive, future and ended plans do not reserve fund
  assert.equal(expensePlanTotals({...plan,end_date:'2026-09-20',spent:0},'2026-10').projected,0);
  assert.equal(expensePlanTotals({...plan,spent:0},'2026-10').remaining,500);
  assert.equal(expensePlanMonth(new Date('2026-09-30T20:00:00Z')),'2026-10');
+ const {depositToday}=loadPlans('lib/deposit-interest.ts');
+ for(const at of ['2026-01-31T18:59:59Z','2026-01-31T19:00:00Z','2026-12-31T23:00:00Z'])assert.equal(expensePlanMonth(new Date(at)),depositToday(new Date(at)).slice(0,7),'the plan month is the month of the app\'s today');
 });
 test('multiple plans and legacy recurring expenses add without double counting',()=>{
  const totals=[plan,{...plan,id:'mum',amount:200,spent:210}].map(p=>expensePlanTotals(p,'2026-09'));
@@ -64,7 +67,7 @@ test('the month preview lists plans in every currency, only those running that m
  assert.deepEqual(previewPlans(plans,'2026-09',10).map(item=>item.id),['usd','uzs','a','b','c','d']);
 });
 test('plan totals are listed per currency, never added across currencies',async()=>{
- const {planTotalsByCurrency}=await import('../lib/expense-plans.ts');
+ const {planTotalsByCurrency}=loadPlans('lib/expense-plans.ts');
  const lines=planTotalsByCurrency([plan,{...plan,id:'q',amount:300,spent:50},{...plan,id:'u',currency:'UZS',amount:2000000,spent:0},{...plan,id:'f',start_date:'2026-11-01'}],'2026-09');
  assert.deepEqual(lines,[{currency:'USD',spent:150,planned:800},{currency:'UZS',spent:0,planned:2000000}]);
 });

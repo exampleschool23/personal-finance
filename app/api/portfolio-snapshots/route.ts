@@ -1,6 +1,7 @@
 import { loadMarket } from '@/lib/server-market';
 import { marketSymbols } from '@/lib/market';
-import { crossSite,signInAgain } from '@/lib/api-route';
+import { crossSite,signInAgain,tooManyAttempts } from '@/lib/api-route';
+import { limits,rateLimited } from '@/lib/rate-limit';
 import { pagePath,readAllPages } from '@/lib/owner-rows';
 import { session,supa,sameOrigin } from '@/lib/supabase';
 import { snapshotTotals } from '@/lib/portfolio-snapshots';
@@ -17,6 +18,8 @@ export async function POST(req:Request){
  if(!sameOrigin(req))return crossSite();
  try{
   const auth=await session();if(!auth)return signInAgain();
+  // Saving reads live quotes from the paid market feed, so it shares the person's market limit.
+  if(await rateLimited(req,'market-user',limits.market,auth.user.id,{perIp:false}))return tooManyAttempts();
   const params=new URLSearchParams({select:'*',kind:`in.(${trackedKinds.join(',')})`,order:'id.asc'});
   const records=await readAllPages<Entry>(range=>supa(pagePath('/rest/v1/finance_records?'+params,range),{},auth.token));
   const symbols=marketSymbols(records);

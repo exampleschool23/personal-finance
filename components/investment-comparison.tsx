@@ -11,7 +11,7 @@ import { readOverviewBenchmarks, overviewBenchmarkStorageKey, toggleOverviewBenc
 import { portfolioQuotes } from '@/lib/diversified-portfolio';
 import { stockBenchmarks } from '@/lib/benchmark-selection';
 import { refreshRead } from '@/lib/refresh-read';
-import { InvestmentValueChart } from '@/components/investment-value-chart';
+import { InvestmentValueChart } from '@/components/charts-lazy';
 import { useEffect,useMemo,useState,type ReactNode } from 'react';
 import { ChartSkeleton } from '@/components/presentation-foundation/loading-placeholder';
 import { InlineError } from '@/components/presentation-foundation/inline-error';

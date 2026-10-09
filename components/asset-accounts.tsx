@@ -10,7 +10,7 @@ import { useLanguage } from '@/components/language-provider';
 import { holdingAccountLabel, holdingAccountValue, type HoldingAccount } from '@/lib/holding-accounts';
 import { formatMoney, formatNumber } from '@/lib/format';
 import { value, type Entry } from '@/lib/finance';
-import { convertAmount, marketEntry, type MarketData } from '@/lib/market';
+import { convertAmount, marketEntry, type MarketData, marketRates } from '@/lib/market';
 
 export function AssetAccounts({accounts,records,market,loading,error,onRetry,onAdd,children,accountCount,onEdit,onTrack,demo,currency,portfolioTotal}: {
  currency:string;portfolioTotal:number;onEdit:(record:Entry)=>void;onTrack:(record:Entry)=>void;demo:boolean;children:ReactNode;accountCount:number;accounts:HoldingAccount[];records:Entry[];market:MarketData|null;loading:boolean;error:string;
@@ -21,7 +21,7 @@ export function AssetAccounts({accounts,records,market,loading,error,onRetry,onA
   <div className="asset-holdings-heading"><h2>{t('Accounts')}<Count value={accounts.length+accountCount}/></h2><Link className="panel-link" href="/accounts">{t('Manage accounts')}</Link></div>
   {error ? <InlineError message={t(error)} onRetry={onRetry}/> : loading ? <LoadingPlaceholder label={t('Loading records…')}/> : !accounts.length&&!accountCount ? <p className="muted">{t('No accounts yet.')}</p> : <div className="asset-card-grid">{children}{accounts.map(account=>{
    const {holdings,total}=holdingAccountValue(account,records,market);
-   const converted=total===null?null:convertAmount(total,account.currency,currency,market?.rates??market?.fx?.rate);
+   const converted=total===null?null:convertAmount(total,account.currency,currency,marketRates(market));
    const share=converted!==null&&portfolioTotal>0?converted/portfolioTotal*100:null;
    return <AssetCard key={account.id} record={account} label={t(holdingAccountLabel(account.kind))} worth={total===null?'—':formatMoney(converted??total,converted===null?account.currency:currency,locale)}
     fact={{label:t('Holdings'),value:formatNumber(holdings.filter(record=>record.kind===account.kind).length,locale,0)}} share={share}

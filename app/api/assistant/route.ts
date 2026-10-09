@@ -45,7 +45,8 @@ export async function POST(req: Request) {
   return Response.json({ error: 'Could not load your records. Please try again.' }, { status: 503 });
  }
  try {
-  const client = new Anthropic();
+  // One answer is short: a stuck request gives up after a minute with one retry instead of the SDK's ten minutes and two.
+  const client = new Anthropic({ timeout: 60_000, maxRetries: 1 });
   const response = await client.beta.messages.create({
    model: 'claude-opus-5-5',
    // Answers are brief by instruction; this bounds the cost of one that is not.
@@ -54,12 +55,15 @@ export async function POST(req: Request) {
    fallbacks: 'default',
    output_config: { effort: 'low' },
    system: [{ type: 'text', text: assistantInstructions, cache_control: { type: 'ephemeral' } }],
-   messages: [{ role: 'user', content: `Snapshot of my finances:\n\n${snapshot}` }, { role: 'assistant', content: 'Thanks, I have your snapshot. What would you like to know?' }, ...messages],
-  });
+   // The snapshot is cached too, so a follow-up question in the same conversation does not pay for it again.
+   messages: [{ role: 'user', content: [{ type: 'text', text: `Snapshot of my finances:\n\n${snapshot}`, cache_control: { type: 'ephemeral' } }] }, { role: 'assistant', content: 'Thanks, I have your snapshot. What would you like to know?' }, ...messages],
+  // A person who leaves the page stops paying for an answer nobody will read.
+  }, { signal: req.signal });
   if (response.stop_reason === 'refusal') return Response.json({ error: 'The assistant cannot answer that question.' }, { status: 422 });
   const text = response.content.flatMap(block => block.type === 'text' ? [block.text] : []).join('\n').trim();
   return Response.json({ answer: text || 'No answer was returned. Please try again.' }, { headers: { 'Cache-Control': 'no-store' } });
  } catch (error) {
+  if (req.signal.aborted) return new Response(null, { status: 499 });
   if (error instanceof Anthropic.RateLimitError) return Response.json({ error: 'The assistant is busy. Please try again in a minute.' }, { status: 429 });
   // A rejected key means nobody gets answers until it is replaced; anything else alerts once it keeps happening.
   if (error instanceof Anthropic.AuthenticationError) {

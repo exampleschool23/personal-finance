@@ -11,6 +11,7 @@ import { useSubscriptions } from '@/hooks/use-subscriptions';
 import { ExpensePlanDialog, newExpensePlan } from '@/components/expense-plans';
 import type { RecurringKind } from '@/components/planning/add-recurring-menu';
 import type { ExpensePlan } from '@/lib/expense-plans';
+import { marketRates } from '@/lib/market';
 
 export function UpcomingScreen() {
  const { t } = useLanguage();
@@ -23,7 +24,7 @@ export function UpcomingScreen() {
  return <>
   <div data-page="Upcoming payments" className="content">
    <PlanningError/>
-   {planning.loading ? <LoadingPlaceholder label={t('Loading records…')}/> : <UpcomingPage data={planning.data} save={planning.save} currency={currency} rates={market?.rates ?? market?.fx?.rate} view={view} onView={setView} onEdit={editRecord} onAddRecurring={readOnly ? undefined : addRecurring} plans={expensePlans.plans} plansMonth={expensePlans.month} onSpend={spendFromPlan} archivedPlans={expensePlans.archivedPlans} onArchive={archiveSchedule} onDelete={deleteSchedule}/>}
+   {planning.loading ? <LoadingPlaceholder label={t('Loading records…')}/> : <UpcomingPage data={planning.data} save={planning.save} currency={currency} rates={marketRates(market)} view={view} onView={setView} onEdit={editRecord} onAddRecurring={readOnly ? undefined : addRecurring} plans={expensePlans.plans} plansMonth={expensePlans.month} onSpend={spendFromPlan} archivedPlans={expensePlans.archivedPlans} onArchive={archiveSchedule} onDelete={deleteSchedule}/>}
    {view === 'subscriptions' && !planning.loading && <SubscriptionsPanel records={subscriptions.records} decisions={subscriptions.decisions} loading={subscriptions.loading} error={subscriptions.error} onRetry={subscriptions.retry} decide={subscriptions.decide} restore={subscriptions.restore} onTrack={reviewRecurring}/>}
   </div>
   {plan && <ExpensePlanDialog plan={plan} currencies={preferencesData.currencies} save={expensePlans.save} onClose={() => setPlan(null)}/>}

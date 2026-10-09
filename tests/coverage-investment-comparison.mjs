@@ -22,7 +22,7 @@ function comparison(t,props={},{store=storage(),decide,respond}={}){
   '@/components/language-provider':language('en'),
   '@/components/ui/native-select':hostModule(),'@/components/ui/dialog':hostModule(),'@/components/ui/button':hostModule(),'lucide-react':hostModule(),
   '@/components/presentation-foundation/date-picker':hostModule(),'@/components/presentation-foundation/loading-placeholder':hostModule(),'@/components/presentation-foundation/inline-error':hostModule(),'@/components/presentation-foundation/empty-state':hostModule(),
-  '@/components/benchmark-tooltip':hostModule(),'@/components/investment-value-chart':hostModule(),'next/link':{__esModule:true,default:'Link'},
+  '@/components/benchmark-tooltip':hostModule(),'@/components/investment-value-chart':hostModule(),'@/components/charts-lazy':hostModule(),'next/link':{__esModule:true,default:'Link'},
   '@/lib/feedback':{showError:message=>errors.push(message)},
   '@/lib/refresh-read':{refreshRead:async(url,{signal})=>{requests.push({url,signal});const answer=await reply(url,requests.length);return {ok:answer.ok,json:async()=>answer.body};}},
   '@/lib/investment-benchmarks':{...benchmarks,investmentDecisionComparison:(input,data,portfolio)=>{decisions.push({input,data,portfolio});return decide?decide(input,data,portfolio):{result:{points,unavailable:[]},details:{}};}},

@@ -16,7 +16,7 @@ import { useCategoryHue } from '@/components/category-icons-context';
 import { depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry } from '@/lib/finance';
 import { formatCompactMoney, formatMoney, formatMonthYear, formatPercent } from '@/lib/format';
-import type { MarketData } from '@/lib/market';
+import { marketRates, type MarketData } from '@/lib/market';
 import { emptyPlanning, type PlanningData } from '@/lib/planning';
 import type { TransactionSplit } from '@/lib/transaction-tools';
 import { measureLabel, sankeyLabelMargins } from '@/lib/sankey-labels';
@@ -53,7 +53,7 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
  const live = !!owner && !demo;
  const remote = useOwnerResource(`/api/planning?scope=budget&month=${month}&from=${series[0]}`, owner, live, revision, emptyPlanning);
  const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : provided, [live, remote.data, provided]);
- const rates = market?.rates ?? market?.fx?.rate;
+ const rates = marketRates(market);
  const report = useMemo(() => cashFlowReport(data, splits, periodMonths(month, period), currency, today, rates), [data, splits, month, period, currency, today, rates]);
  const trend = useMemo(() => cashFlowReport(data, splits, trailingMonths(month), currency, today, rates).series, [data, splits, month, currency, today, rates]);
  const money = (amount: number) => formatMoney(amount, currency, locale);

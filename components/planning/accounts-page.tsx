@@ -32,6 +32,8 @@ import { AccountsOverview } from './accounts/accounts-overview';
 
 type Props = {
  owner:string|null; onSaved:()=>void;
+ /** Bumped after every confirmed change, so views that read on their own read again. */
+ revision?:number;
  data: PlanningData; save: (action: string, data: unknown) => Promise<void>;
  onAdd: (kind: 'Cash'|'Deposit'|'Stock'|'Crypto', accountId?: string) => void;
  onEdit: (record: Entry) => void; onTrack?: (record: Entry) => void; onDelete: (record: Entry) => void;
@@ -46,7 +48,7 @@ type Props = {
  onAccountOwner: (accountId: string, owner: string) => Promise<number>;
 };
 
-export function AccountsPage({ owner,onSaved,data, save, onAdd, onEdit, onTrack, onDelete, demo, preferences, market, currencies, currency, saveAccount, assignHolding, businesses, onAccountBusiness, household, readOnly, onAccountOwner }: Props) {
+export function AccountsPage({ owner,onSaved,revision=0,data, save, onAdd, onEdit, onTrack, onDelete, demo, preferences, market, currencies, currency, saveAccount, assignHolding, businesses, onAccountBusiness, household, readOnly, onAccountOwner }: Props) {
  const { t } = useLanguage();
  const [statement,setStatement]=useState<Entry|null>(null),[corporate,setCorporate]=useState<Entry|null>(null);
  // The page's two views, switched from the top bar: the accounts themselves and their recent operations.
@@ -68,7 +70,7 @@ export function AccountsPage({ owner,onSaved,data, save, onAdd, onEdit, onTrack,
   {view==='accounts'&&<AccountsOverview items={accountItems} data={data} filters={filters} order={order} businesses={businesses} holdingActions={holdingActions} onEditAccount={setDraft} onAdd={onAdd} onAddAccount={()=>setChoosing(true)}
    cardActions={{onEdit,onTrack,onDelete:remove,onMove:setMovement,onOperation:setOperation,onStatement:owner?setStatement:undefined}}/>}
   {/* Account operations are their own view, opened from the top bar. */}
-  {view==='activity'&&<AccountActivity data={data} owner={owner} currency={currencies[0]}/>}
+  {view==='activity'&&<AccountActivity data={data} owner={owner} live={!!owner&&!demo} revision={revision} currency={currencies[0]}/>}
   <AddAccountDialog open={choosing} onOpenChange={setChoosing} onChoose={choose}/>
   <ErrorPopup message={order.error}/>
   {editingOwners&&household&&<AccountOwnersDialog records={data.records} accounts={investmentAccounts} market={market} household={household} owners={owners} onChange={onAccountOwner} onClose={()=>setEditingOwners(false)}/>}

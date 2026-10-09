@@ -1,15 +1,18 @@
 // Sends the celebrations in milestones.ts. Each is claimed in
 // telegram_milestones first, so a retry or a second device never repeats one.
 // The table is server-only; every query is scoped to an owner the caller has
-// already verified, like the other background Telegram work.
+// already verified, like the other background Telegram work. What a save in the
+// app touched (its records and goals) is read with the person's own token, so the
+// workspace they have open, their own or a household's, decides what is seen.
 import type {ActionAuth} from './notify-action';
 import type {ActionEvent} from './action-messages';
 import {firstRecordKey,goalKey,milestoneMessage,netWorthHigh,netWorthKey,newGoalThresholds,type Milestone} from './milestones';
 import {snapshotPoints} from './portfolio-snapshots';
 import {serviceDatabase,type ServiceDatabase} from './service-role';
+import {supa} from './supabase';
 import {ownerProfile,recentSnapshots} from './telegram-owner';
 import {sendTelegramMessage,telegramConfig,type TelegramConfig} from './telegram';
-type Deps={db?:ServiceDatabase|null;config?:TelegramConfig|null;send?:typeof sendTelegramMessage};
+type Deps={db?:ServiceDatabase|null;config?:TelegramConfig|null;send?:typeof sendTelegramMessage;read?:typeof supa};
 type Subscription={chat_id:number|null;actions_enabled:boolean};
 const table='/rest/v1/telegram_milestones';
 async function subscriptionOf(db:ServiceDatabase,owner:string){
@@ -21,6 +24,13 @@ async function claim(db:ServiceDatabase,owner:string,keys:string[]){
  const response=await db.write(table+'?on_conflict=user_id,key',{method:'POST',headers:{Prefer:'resolution=ignore-duplicates,return=representation'},body:JSON.stringify(keys.map(key=>({user_id:owner,key})))});
  if(!response.ok)throw Error('Database request failed.');
  return (await response.json() as Array<{key:string}>).map(row=>row.key);
+}
+/** Rows of the open workspace, read with the person's token: active_owner() applies, so a household member sees the
+ * shared records and goals they just changed. The service role never sees the workspace cookie. */
+async function workspaceRows<T>(path:string,token:string,read:typeof supa=supa){
+ const response=await read(path,{},token);
+ if(!response.ok)throw Error('Milestone lookup failed.');
+ return await response.json() as T[];
 }
 async function celebrate(db:ServiceDatabase,owner:string,subscription:NonNullable<Awaited<ReturnType<typeof subscriptionOf>>>,milestone:(currency:string)=>Milestone,{config=telegramConfig(),send=sendTelegramMessage}:Deps){
  if(!config)return false;
@@ -38,11 +48,11 @@ export async function sendActionMilestone(auth:ActionAuth,event:ActionEvent,deps
  if(event.type==='record'){
   if(!(await claim(db,owner,[firstRecordKey])).length)return false;
   // Someone who already had records before this feature is marked quietly.
-  if((await db.read<unknown[]>(`/rest/v1/finance_records?select=id&user_id=eq.${owner}&limit=2`)).length>1)return false;
+  if((await workspaceRows('/rest/v1/finance_records?select=id&limit=2',auth.token,deps.read)).length>1)return false;
   return celebrate(db,owner,subscription,()=>({type:'first_record'}),deps);
  }
  if(event.type!=='goal_activity')return false;
- const [goal]=await db.read<Array<{id:string;name:string;allocated:number;target:number;kind:string;archived:boolean}>>(`/rest/v1/savings_goals?select=id,name,allocated,target,kind,archived&id=eq.${event.goal_id}&user_id=eq.${owner}`);
+ const [goal]=await workspaceRows<{id:string;name:string;allocated:number;target:number;kind:string;archived:boolean}>(`/rest/v1/savings_goals?select=id,name,allocated,target,kind,archived&id=eq.${encodeURIComponent(event.goal_id)}`,auth.token,deps.read);
  if(!goal||goal.kind!=='savings'||goal.archived)return false;
  const prefix=`goal:${goal.id}:`;
  const achieved=(await db.read<Array<{key:string}>>(`${table}?select=key&user_id=eq.${owner}&key=like.${prefix}*`)).filter(row=>row.key.startsWith(prefix)).map(row=>Number(row.key.slice(prefix.length)));

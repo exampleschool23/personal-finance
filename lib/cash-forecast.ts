@@ -17,8 +17,11 @@ export type ForecastEvent = { key: string; date: string; name: string; kind: Ent
 export type ForecastPoint = { date: string; balance: number };
 /** A projected balance, day by day. A total has no account. `belowZero` is the first day the balance is negative. */
 export type ForecastSeries = { id: string; name: string; currency: string; accountId: string | null; start: number; end: number; points: ForecastPoint[]; lowest: ForecastPoint; belowZero: string | null };
-export type ForecastMonth = { month: string; events: ForecastEvent[]; totals: Array<{ currency: string; amount: number }> };
-export type CashForecast = { today: string; end: string; events: ForecastEvent[]; accounts: ForecastSeries[]; totals: ForecastSeries[]; converted: boolean; months: ForecastMonth[]; belowZero: ForecastSeries[] };
+/** A month of events: their net `total` in the display currency; `missing` counts events no rate converts (the total is then unknown). */
+export type ForecastMonth = { month: string; events: ForecastEvent[]; total: number; missing: number };
+/** `totals` holds one series, total cash in the display currency (AGENTS: never one total per currency). Balances and
+ * events no rate converts are left out of it and counted in `missing`; `converted` is true when none is. */
+export type CashForecast = { today: string; end: string; events: ForecastEvent[]; accounts: ForecastSeries[]; totals: ForecastSeries[]; converted: boolean; missing: number; months: ForecastMonth[]; belowZero: ForecastSeries[] };
 
 type Input = {
  records: Entry[]; occurrences: Occurrence[]; debtPayments?: DebtPayment[];
@@ -109,7 +112,7 @@ const addTo = (map: Map<string, number>, key: string, amount: number) => map.set
 
 /** Projects each cash account and total cash day by day.
  * An event moves an account only when it names that account in the same currency; every event moves the total.
- * The total is in the primary currency only when every balance and event converts with an explicit rate; otherwise there is one total per currency, never added together. */
+ * The total is in the display currency, converted with explicit rates; what no rate converts is left out and counted. */
 export function cashForecast(input: Input): CashForecast {
  const { today, days, currency, rates } = input;
  const end = shiftDay(today, days);
@@ -124,35 +127,32 @@ export function cashForecast(input: Input): CashForecast {
   for (const event of events) if (event.accountId === account.id) addTo(deltas, event.date, event.amount);
   return series(account.id, account.name, account.currency, account.id, Number(account.amount), deltas, today, days);
  });
- const convert = (amount: number, from: string) => convertAmount(amount, from, currency, rates);
- const converted = [...cash.map(account => convert(Number(account.amount), account.currency)), ...events.map(event => convert(event.amount, event.currency))].every(value => value !== null && Number.isFinite(value));
- const totals: ForecastSeries[] = [];
- if (converted) {
-  const deltas = new Map<string, number>();
-  for (const event of events) addTo(deltas, event.date, convert(event.amount, event.currency)!);
-  const start = cash.reduce((sum, account) => sum + convert(Number(account.amount), account.currency)!, 0);
-  totals.push(series('total', 'Total cash', currency, null, start, deltas, today, days));
- } else {
-  const currencies = [...new Set([...cash.map(account => account.currency), ...events.map(event => event.currency)])];
-  for (const code of currencies) {
-   const deltas = new Map<string, number>();
-   for (const event of events) if (event.currency === code) addTo(deltas, event.date, event.amount);
-   const start = cash.filter(account => account.currency === code).reduce((sum, account) => sum + Number(account.amount), 0);
-   totals.push(series('total:' + code, 'Total cash', code, null, start, deltas, today, days));
-  }
- }
+ const convert = (amount: number, from: string) => { const value = convertAmount(amount, from, currency, rates); return value !== null && Number.isFinite(value) ? value : null; };
+ let missing = 0, start = 0;
+ for (const account of cash) { const value = convert(Number(account.amount), account.currency); if (value === null) missing += 1; else start += value; }
+ const deltas = new Map<string, number>();
  const months: ForecastMonth[] = [];
  for (const event of events) {
-  const month = event.date.slice(0, 7);
+  const month = event.date.slice(0, 7), value = convert(event.amount, event.currency);
   let group = months.at(-1);
-  if (group?.month !== month) { group = { month, events: [], totals: [] }; months.push(group); }
+  if (group?.month !== month) { group = { month, events: [], total: 0, missing: 0 }; months.push(group); }
   group.events.push(event);
-  const code = converted ? currency : event.currency, amount = converted ? convert(event.amount, event.currency)! : event.amount;
-  const total = group.totals.find(item => item.currency === code);
-  if (total) total.amount += amount; else group.totals.push({ currency: code, amount });
+  if (value === null) { missing += 1; group.missing += 1; continue; }
+  addTo(deltas, event.date, value);
+  group.total += value;
  }
+ const totals = [series('total', 'Total cash', currency, null, start, deltas, today, days)];
  const belowZero = [...totals, ...accounts].filter(item => item.belowZero !== null);
- return { today, end, events, accounts, totals, converted, months, belowZero };
+ return { today, end, events, accounts, totals, converted: missing === 0, missing, months, belowZero };
+}
+
+/** A projected series in `currency` for display: every balance converted, or null when no rate converts it. */
+export function seriesIn(item: ForecastSeries, currency: string, rates?: number | Record<string, number>): ForecastSeries | null {
+ if (item.currency === currency) return item;
+ const rate = convertAmount(1, item.currency, currency, rates);
+ if (rate === null || !Number.isFinite(rate) || rate <= 0) return null;
+ const point = (value: ForecastPoint) => ({ date: value.date, balance: value.balance * rate });
+ return { ...item, currency, start: item.start * rate, end: item.end * rate, points: item.points.map(point), lowest: point(item.lowest) };
 }
 
 /** What-ifs read back from browser storage: anything malformed is dropped rather than trusted. */

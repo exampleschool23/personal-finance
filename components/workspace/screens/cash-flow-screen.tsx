@@ -23,6 +23,7 @@ import { sourcesIn } from '@/lib/monthly-income-cards';
 import { RecordsTable } from '@/components/workspace/records-table';
 import { ScreenNotices, ToolsUnavailable } from '@/components/workspace/screen-notices';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
+import { marketRates } from '@/lib/market';
 
 const tabs = ['Overview', 'Income', 'Spending', 'Forecast'] as const;
 
@@ -34,7 +35,7 @@ export function CashFlowScreen() {
  const { user, demo, rows, currency, market, reload, preferencesData, planning, earningSources, expensePlans, transactionTools, workspacePreferences, snapshots, forecast, forecastReady, forecastMonth, setForecastMonth, monthlyIncomeEntries, workspaceLoading, refreshRecords,
   addCashFlow, editRecord, setPayingMortgage, recordFromSource, spendFromPlan, removePlan, showFirstPage } = useWorkspace();
  // Approximate amounts of variable sources, in the display currency like the converted entries beside them.
- const incomeSources = sourcesIn(earningSources.sources, currency, market?.rates ?? market?.fx?.rate);
+ const incomeSources = sourcesIn(earningSources.sources, currency, marketRates(market));
  const mortgages = <MonthlyMortgagePayments records={demo?rows:planning.data.records} currency={currency} market={market} loading={planning.loading} error={planning.error} onPay={setPayingMortgage} onEdit={editRecord}/>;
  const watchlists = !transactionTools.loading&&!transactionTools.error ? <SpendingWatchlists data={planning.data} splits={transactionTools.data.splits} today={depositToday()} currency={currency} currencies={preferencesData.currencies} preferences={workspacePreferences}/> : null;
  return <>
@@ -54,7 +55,7 @@ export function CashFlowScreen() {
     {tab==='Income'&&(planning.loading || earningSources.loading ? <LoadingPlaceholder label={t('Loading records…')}/> : planning.error || earningSources.error ? <InlineError as="div" message={t(planning.error || earningSources.error)} onRetry={refreshRecords}/> : <EstimatedIncomeSources earningSources={incomeSources} entries={monthlyIncomeEntries} currency={currency} month={forecastMonth}/>)}
     {tab==='Spending'&&mortgages}
     {tab==='Spending'&&<ExpensePlans {...expensePlans} remove={removePlan} currency={currency} currencies={preferencesData.currencies} onSpend={spendFromPlan} onRetry={refreshRecords}/>}
-    {tab==='Forecast'&&<CashForecastView owner={user} data={planning.data} plans={expensePlans.plans} plansMonth={expensePlans.month} currency={currency} rates={market?.rates ?? market?.fx?.rate} loading={planning.loading||expensePlans.loading} error={planning.error||expensePlans.error} onRetry={refreshRecords}/>}
+    {tab==='Forecast'&&<CashForecastView owner={user} data={planning.data} plans={expensePlans.plans} plansMonth={expensePlans.month} currency={currency} rates={marketRates(market)} loading={planning.loading||expensePlans.loading} error={planning.error||expensePlans.error} onRetry={refreshRecords}/>}
     {tab==='Overview'&&<RecordsTable transactions title={t('Recent transactions')} limit={4} pagination={false}><Button variant="link" className="cashflow-view-history" asChild><DrawerLink href="/transactions">{t('View full transactions')}</DrawerLink></Button></RecordsTable>}
    </>}
   </div>

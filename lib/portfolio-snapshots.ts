@@ -1,12 +1,12 @@
 import { assets, liabilities, value, type Entry } from './finance';
-import { convertAmount, instrumentFor, instrumentKey, quotedUnitPrice, type MarketData } from './market';
+import { convertAmount, instrumentFor, instrumentKey, quotedUnitPrice, type MarketData, marketRates } from './market';
 import type { PortfolioPoint } from './portfolio-history';
 
 export type PortfolioSnapshot = { occurred_on: string; assets: number; debt: number; rates: Record<string,number>; updated_at: string };
 
 // Totals are in USD; original holdings, ownership and quantities remain untouched.
 export function snapshotTotals(records:Entry[],market:Pick<MarketData,'quotes'|'rates'|'fx'>){
- const rates={...(market.rates??(market.fx?{UZS:market.fx.rate}:{})),USD:1};
+ const rates={...marketRates(market),USD:1};
  let assetTotal=0,debt=0;
  for(const record of records){
   if(!assets.includes(record.kind)&&!liabilities.includes(record.kind))continue;

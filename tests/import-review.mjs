@@ -6,7 +6,7 @@ const id=n=>`d0000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 test('statement source identifiers survive CSV mapping and deduplicate overlapping rows independently of position',async()=>{
  const {mapCSV}=loadTS('lib/csv.ts');const mapped=mapCSV([['Name','Date','Amount','ID'],['Shop','2026-01-02','-5','bank-42']],{name:0,date:1,amount:2,notes:-1,sourceId:3,dateFormat:'iso',decimal:'.'});assert.equal(mapped[0].sourceId,'bank-42');
  assert.throws(()=>mapCSV([['Name','Date','Amount','ID'],['Shop','2026-01-02','-5','']],{name:0,date:1,amount:2,notes:-1,sourceId:3,dateFormat:'iso',decimal:'.'}),/identifiers/);
- const calls=[];const api=loadTS('app/api/import/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner'}),sameOrigin:()=>true,supa:async(path,init,token)=>{calls.push({path,body:JSON.parse(init.body),token});return Response.json({added:1,skipped:0});}},'@/lib/server-records':{readOwnerRows:async()=>[]}});
+ const calls=[];const api=loadTS('app/api/import/route.ts',{'@/lib/supabase':{session:async()=>({token:'owner',user:{id:'owner-id'}}),sameOrigin:()=>true,supa:async(path,init,token)=>{calls.push({path,body:JSON.parse(init.body),token});return Response.json({added:1,skipped:0});}},'@/lib/server-records':{readOwnerRows:async()=>[]}});
  const request=rows=>new Request('https://local',{method:'POST',body:JSON.stringify({batch_id:id(1),account_id:id(2),rows})});
  assert.equal((await api.POST(request(mapped))).status,200);assert.equal((await api.POST(request([{...mapped[0],sourceId:'another'},mapped[0]]))).status,200);assert.equal(calls[0].body.p_rows[0].key,calls[1].body.p_rows[1].key);assert.equal(calls[0].body.p_batch,id(1));assert.ok(calls.every(c=>c.path.endsWith('/import_statement')&&c.token==='owner'));
 });

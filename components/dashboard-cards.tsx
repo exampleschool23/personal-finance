@@ -4,7 +4,7 @@ import { BudgetProgress } from '@/components/budget/budget-rows';
 import { useBudget } from '@/hooks/use-budget';
 import { budgetCategories, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, leftToBudget, monthActuals, monthsBetween, remainingTone } from '@/lib/budget';
 import { expensePlanMonth } from '@/lib/expense-plans';
-import type { MarketData } from '@/lib/market';
+import { marketRates, type MarketData } from '@/lib/market';
 import { signedAmount } from '@/lib/transaction-list';
 import type { TransactionSplit } from '@/lib/transaction-tools';
 import { useLanguage } from '@/components/language-provider';
@@ -72,6 +72,17 @@ export function GoalsCard({ goals, order, data, currency, netWorth }: { goals: G
 }
 
 /** Weekly recap: last week's money in and out against the week before, where most went, and what is due this week. */
+/** Spent against planned. A plan no rate converts is unknown: it reads — with the note, rather than leaving that amount out. */
+function BudgetCardTotal({ plan, spent, currency }: { plan: number | null; spent: number; currency: string }) {
+ const { t, locale } = useLanguage();
+ const money = (amount: number) => formatMoney(amount, currency, locale);
+ if (plan === null) return <div className="dashboard-budget-total"><p><strong>{money(spent)}</strong><span>{t('of {amount}', { amount: '—' })}</span></p><small>{t('Exchange rate unavailable.')}</small></div>;
+ return <>
+  <div className="dashboard-budget-total"><p><strong>{money(spent)}</strong><span>{t('of {amount}', { amount: money(plan) })}</span></p><small data-tone={remainingTone(plan - spent)}>{t(plan - spent < 0 ? '{amount} over' : '{amount} remaining', { amount: money(Math.abs(plan - spent)) })}</small></div>
+  <BudgetProgress row={{ progress: spent / plan, direction: 'expense', remaining: plan - spent }}/>
+ </>;
+}
+
 /** This month's budget at a glance: planned spending against what is spent, and the categories closest to their limit. */
 export function BudgetCard({ owner = null, demo = false, revision = 0, data: provided, currency, market, splits }: { owner?: string | null; demo?: boolean; revision?: number; data: PlanningData; currency: string; market: MarketData | null; splits: TransactionSplit[] }) {
  const { t, locale } = useLanguage();
@@ -82,20 +93,19 @@ export function BudgetCard({ owner = null, demo = false, revision = 0, data: pro
  const range = budgetReadRange(month, 'month', budgetCategories(provided.categories, budget.state.categories, removed));
  const remote = useOwnerResource(`/api/planning?scope=budget&month=${month}&from=${range.from}`, owner, !!owner && !demo, revision, emptyPlanning);
  const data = owner && !demo ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : provided;
- const rates = market?.rates ?? market?.fx?.rate;
+ const rates = marketRates(market);
  const history = new Map(monthsBetween(range.from, month).map(item => [item, monthActuals(data, splits, item, currency, today, rates)]));
  const rows = budgetRows(budgetCategories(data.categories, budget.state.categories, removed), budget.state.amounts, history, month, currency, rates).filter(row => row.direction === 'expense' && !row.excluded);
- const flexible = budget.state.mode === 'flex' ? flexBucketBudget(budget.state.amounts, rows, month, currency, rates) ?? 0 : null;
- const planned = leftToBudget(rows, budget.state.mode, flexible, 0).expenses, spent = rows.reduce((sum, row) => sum + row.actual, 0);
+ const flexible = budget.state.mode === 'flex' ? flexBucketBudget(budget.state.amounts, rows, month, currency, rates) : null;
+  const plan = leftToBudget(rows, budget.state.mode, flexible, 0).expenses, spent = rows.reduce((sum, row) => sum + row.actual, 0);
  // In flex mode flexible categories share one bucket, so only fixed categories keep a budget of their own here, as on the Budget page.
  const watched = budgetRowsForMode(rows, budget.state.mode).filter(row => row.budget).sort((a, b) => b.progress - a.progress).slice(0, 3);
  const money = (amount: number) => formatMoney(amount, currency, locale);
  const loading = (owner && !demo && remote.loading) || budget.loading;
  return <section className="panel overview-panel dashboard-budget" aria-label={t('Budget')}>
   <PanelTitle title={<>{t('Budget')} <span className="panel-figure">{formatMonthYear(month, locale)}</span></>}><DrawerLink href="/budget">{t('View all')}</DrawerLink></PanelTitle>
-  {loading ? <LoadingPlaceholder label={t('Loading records…')} rows={3}/> : planned > 0 ? <>
-   <div className="dashboard-budget-total"><p><strong>{money(spent)}</strong><span>{t('of {amount}', { amount: money(planned) })}</span></p><small data-tone={remainingTone(planned - spent)}>{t(planned - spent < 0 ? '{amount} over' : '{amount} remaining', { amount: money(Math.abs(planned - spent)) })}</small></div>
-   <BudgetProgress row={{ progress: spent / planned, direction: 'expense', remaining: planned - spent }}/>
+  {loading ? <LoadingPlaceholder label={t('Loading records…')} rows={3}/> : plan === null || plan > 0 ? <>
+   <BudgetCardTotal plan={plan} spent={spent} currency={currency}/>
    <ul className="overview-list dashboard-budget-list">{watched.map(row => <li key={row.key}><CategoryIcon kind={row.custom ? row.name : row.key} size="sm"/><span>{row.custom ? row.name : t(row.name)}<BudgetProgress row={row}/></span><strong data-tone={remainingTone(row.remaining)}>{row.remaining === null ? '—' : money(row.remaining)}</strong></li>)}</ul>
   </> : <EmptyState icon={<ChartPie/>} description={t('Plan this month’s spending to track it here.')}><DrawerLink href="/budget">{t('Set up a budget')}</DrawerLink></EmptyState>}
  </section>;

@@ -1,7 +1,7 @@
 "use client";
 import { ConfirmDialog } from '@/components/presentation-foundation/confirm-dialog';
 import { IncomeSourceEditor } from '@/components/income-sources-panel';
-import { InvestmentTracker } from '@/components/investment-tracker';
+import { InvestmentTracker } from '@/components/investment-tracker-lazy';
 import { useLanguage } from '@/components/language-provider';
 import { MortgagePaymentDialog } from '@/components/mortgage-payment-dialog';
 import { RecordDialog } from '@/components/record-dialog';

@@ -1,15 +1,11 @@
 import { cookies } from 'next/headers';
 import { z } from 'zod';
-import { uuid } from '@/lib/api-validation';
+import { authSession } from '@/lib/api-validation';
 import { saveSession, supa } from '@/lib/supabase';
 import { GOOGLE_VERIFIER_COOKIE, googleCookieOptions, loginRedirect } from '@/lib/google-auth';
 
-const authSession = z.object({
-  access_token: z.string().min(1),
-  refresh_token: z.string().min(1),
-  expires_in: z.number().int().positive(),
-  user: z.object({ id: uuid, email: z.string().email() }),
-});
+// A Google sign-in always names the account's email.
+const googleSession = authSession.extend({ expires_in: z.number().int().positive(), user: authSession.shape.user.extend({ email: z.string().email() }) });
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -30,7 +26,7 @@ export async function GET(req: Request) {
       body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
     });
     if (!result.ok) return loginRedirect(url.origin, 'google_failed');
-    const session = authSession.parse(await result.json());
+    const session = googleSession.parse(await result.json());
     await saveSession(session);
     // Only return to the dashboard; never trust an arbitrary redirect parameter.
     return loginRedirect(url.origin);

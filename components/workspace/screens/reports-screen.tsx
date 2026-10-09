@@ -21,6 +21,7 @@ import { depositToday } from '@/lib/deposit-interest';
 import { formatDate } from '@/lib/format';
 import { inOwnerFilter, ownerOf, SHARED, workspaceOwners } from '@/lib/household';
 import { describeDrill, groupFinder, reportNames, reportTabsFor, tabLines, type ReportTab } from '@/lib/report-view';
+import { marketRates } from '@/lib/market';
 
 const tabLabels: Record<ReportTab, string> = { cash_flow: 'Cash flow', spending: 'Spending', income: 'Income', tax: 'Business tax prep' };
 
@@ -39,7 +40,7 @@ export function ReportsScreen() {
  const [custom, setCustom] = useState<ReportRange>(() => rangeFor('last_3_months', today));
  const range = preset === 'custom' ? readableRange(custom) : rangeFor(preset, today);
  const { data, loading, error, retry } = useRangeData(range);
- const rates = market?.rates ?? market?.fx?.rate;
+ const rates = marketRates(market);
  const splits = transactionTools.data.splits;
  const ledger = useMemo(() => reportLedger(data, splits, range, currency, today, rates), [data, splits, range, currency, today, rates]);
  // Costs that come from an asset's history rather than a transaction belong to the household.

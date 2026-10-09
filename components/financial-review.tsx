@@ -2,7 +2,7 @@
 import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { normalizeEntry } from '@/lib/finance';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
-import type { MarketData } from '@/lib/market';
+import { marketRates, type MarketData } from '@/lib/market';
 import { useState } from 'react';
 import { CircleHelp, CalendarDays, ReceiptText, X } from 'lucide-react';
 import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
@@ -34,8 +34,8 @@ export function MonthlyReview({data:providedData,owner,demo=false,revision=0,too
  const month=selectedMonth??localMonth;
  const remote=useOwnerResource('/api/planning?scope=review&month='+month,owner??null,!!owner&&!demo,revision,emptyPlanning);
  const data=owner&&!demo?{...remote.data,records:remote.data.records.map(normalizeEntry)}:providedData;
- const result=monthlyReview(data.records,tools.data.splits,snapshots,month,currency,today,data.activity,market?.rates??market?.fx?.rate,data.investmentLinks);
- const previous=monthlyReview(data.records,tools.data.splits,snapshots,shiftMonth(month,-1),currency,today,data.activity,market?.rates??market?.fx?.rate,data.investmentLinks);
+ const result=monthlyReview(data.records,tools.data.splits,snapshots,month,currency,today,data.activity,marketRates(market),data.investmentLinks);
+ const previous=monthlyReview(data.records,tools.data.splits,snapshots,shiftMonth(month,-1),currency,today,data.activity,marketRates(market),data.investmentLinks);
  const money=(amount:number)=>formatMoney(amount,currency,locale);
  if(compact&&owner&&!demo&&remote.loading)return <CashflowSummarySkeleton/>;
  if(owner&&!demo&&(remote.loading||remote.error))return <section className="panel tools-panel monthly-review"><h2>{t('Monthly review')} · {formatMonthYear(month,locale)}</h2>{remote.error?<InlineError message={t(remote.error)} onRetry={remote.retry}/>:<LoadingPlaceholder label={t('Loading records…')} rows={3}/>}</section>;

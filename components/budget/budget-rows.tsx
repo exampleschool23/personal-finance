@@ -45,9 +45,9 @@ export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgete
     <button type="button" className="budget-group-toggle" aria-expanded={open} onClick={onToggle}>{open ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}<span>{t(group.name)}{rolloverIn !== 0 && <RolledOver amount={rolloverIn} currency={currency}/>}</span></button>
     {onGroupSettings && <Button type="button" variant="ghost" size="icon-xs" aria-label={t('Category settings: {name}', { name: t(group.name) })} onClick={onGroupSettings}><Settings2/></Button>}
    </span>
-   <span className="budget-cell">{header ?? formatMoney(group.budget, currency, locale)}</span>
+   <span className="budget-cell">{header ?? (group.missing ? '—' : formatMoney(group.budget, currency, locale))}</span>
    <span className="budget-cell budget-actual" data-label={t('Actual')}>{formatMoney(group.actual, currency, locale)}</span>
-   <span className="budget-cell"><RemainingPill value={group.remaining} direction={group.direction} currency={currency}/></span>
+   <span className="budget-cell"><RemainingPill value={group.missing ? null : group.remaining} direction={group.direction} currency={currency}/></span>
   </div>
   {open && <>
    {visible.map(row => <div className="budget-row budget-category-row" key={row.key}>
@@ -77,9 +77,10 @@ export function BudgetSectionHeader({ title }: { title: string }) {
  return <div className="budget-row budget-section-header"><span>{title}</span><span className="budget-cell">{t('Planned')}</span><span className="budget-cell budget-actual">{t('Actual')}</span><span className="budget-cell">{t('Remaining')}</span></div>;
 }
 
-export function BudgetTotalRow({ label, planned, actual, remaining, direction, currency }: { label: string; planned: number; actual: number; remaining: number; direction: BudgetRow['direction']; currency: string }) {
+/** A section's totals. A null plan could not be converted: it and the remaining read —. */
+export function BudgetTotalRow({ label, planned, actual, remaining, direction, currency }: { label: string; planned: number | null; actual: number; remaining: number | null; direction: BudgetRow['direction']; currency: string }) {
  const { t, locale } = useLanguage();
- return <div className="budget-row budget-total-row"><span>{label}</span><span className="budget-cell">{formatMoney(planned, currency, locale)}</span><span className="budget-cell budget-actual" data-label={t('Actual')}>{formatMoney(actual, currency, locale)}</span><span className="budget-cell"><RemainingPill value={remaining} direction={direction} currency={currency}/></span></div>;
+ return <div className="budget-row budget-total-row"><span>{label}</span><span className="budget-cell">{planned === null ? '—' : formatMoney(planned, currency, locale)}</span><span className="budget-cell budget-actual" data-label={t('Actual')}>{formatMoney(actual, currency, locale)}</span><span className="budget-cell"><RemainingPill value={remaining} direction={direction} currency={currency}/></span></div>;
 }
 
 /** Goals with a planned monthly saving. Contributions are edited on the goal itself. */
@@ -97,4 +98,14 @@ export function ContributionRows({ goals, currency, amountOf }: { goals: Goal[];
   })}
   <div className="budget-row budget-contributions-link"><DrawerLink className="panel-link" href="/goals">{t('Edit contributions in Goals')}</DrawerLink></div>
  </section>;
+}
+
+/** Amounts no rate converts: plans read — (`planned` counts them) and transactions are left out of the actuals (`actual`). */
+export function BudgetRateNotice({ planned, actual }: { planned: number; actual: number }) {
+ const { t } = useLanguage();
+ if (!planned && !actual) return null;
+ return <>
+  {planned > 0 && <p role="status" className="muted">{t('Exchange rate unavailable.')}</p>}
+  {actual > 0 && <p role="status" className="muted">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
+ </>;
 }

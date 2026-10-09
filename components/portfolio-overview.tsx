@@ -8,7 +8,7 @@ import { InvestmentComparison } from '@/components/investment-comparison';
 import { investmentValueChange } from '@/lib/investment-portfolio';
 import { refreshRead } from '@/lib/refresh-read';
 import { PartialTotal } from '@/components/presentation-foundation/partial-total';
-import { IncomeHistoryChart } from '@/components/income-history-chart';
+import { IncomeHistoryChart } from '@/components/charts-lazy';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { changePercent } from '@/lib/overview';
@@ -22,7 +22,7 @@ import { mergePortfolioPoints, type PortfolioSnapshot } from '@/lib/portfolio-sn
 import { portfolioHistory, portfolioWindow, trackingWindowStart } from '@/lib/portfolio-history';
 import { useComparisonProfile } from '@/hooks/use-comparison-profile';
 import { type HistoryEvent } from '@/lib/investment-history';
-import { type MarketData } from '@/lib/market';
+import { type MarketData, marketRates } from '@/lib/market';
 
 type History = { movements?:BenchmarkMovement[]; records: Entry[]; events: HistoryEvent[]; cashflows?: Entry[]; incomeRecords?: Entry[] };
 export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecords, currency, market, demo, revision, onAddIncome, board }: { board: (cards: { netWorth: ReactNode; income: ReactNode }) => ReactNode; onAddIncome?: () => void; demoRecords?: Entry[]; excludedCurrencies?:string[]; snapshots: PortfolioSnapshot[]; snapshotError: string; onSnapshotRetry: () => void; entries: Entry[]; currency: string; market: MarketData | null; demo: boolean; revision: number }) {
@@ -47,7 +47,7 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
  const money = (amount: number) => formatMoney(amount, currency, locale);
  const {totalAssets:assetTotal,totalDebt:debt}=financialTotals(entries);
  const allRecords = history?.records ?? [];
- const rates = market?.rates ?? market?.fx?.rate;
+ const rates = marketRates(market);
  const recorded = portfolioHistory(allRecords, history?.events ?? [], currency, rates, today, true);
  const portfolioValue = assetTotal - debt;
  const points = mergePortfolioPoints(recorded.points, [], {date:today,assets:assetTotal,debt,net:portfolioValue});
@@ -75,5 +75,5 @@ export function PortfolioOverview({ entries, excludedCurrencies = [], demoRecord
     {excludedCurrencies.length > 0 && <p className="muted overview-hero-note">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
    </>}
   </section>;
- return board({ netWorth, income: !loading && !error && <IncomeHistoryChart records={history?.records??[]} events={history?.events??[]} incomeRecords={history?.incomeRecords??[]} currency={currency} rates={market?.rates??market?.fx?.rate} today={today} onAddIncome={onAddIncome}/> });
+ return board({ netWorth, income: !loading && !error && <IncomeHistoryChart records={history?.records??[]} events={history?.events??[]} incomeRecords={history?.incomeRecords??[]} currency={currency} rates={marketRates(market)} today={today} onAddIncome={onAddIncome}/> });
 }

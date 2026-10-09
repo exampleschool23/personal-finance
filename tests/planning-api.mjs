@@ -5,7 +5,8 @@ import fs from 'node:fs';
 import ts from 'typescript';
 import {z} from 'zod';
 import {loadTS} from './helpers/load-ts.mjs';
-const {planningReadFilters,currentReviewMonth}=loadTS('lib/planning-reads.ts');
+const {planningReadFilters,planningReadPlan,planningScopes,currentReviewMonth}=loadTS('lib/planning-reads.ts');
+const {sharedDayRate}=loadTS('lib/day-rates.ts');
 const {inScheduleCurrency}=loadTS('lib/schedule-currency.ts');
 const {categoryNameTaken,duplicateCategoryMessage}=loadTS('lib/category-names.ts');
 const {signBackup}=loadTS('lib/backup-signature.ts');
@@ -42,7 +43,7 @@ test('planning API rejects anonymous, cross-origin and malformed operations and 
 });
 test('statement import produces stable distinct duplicate keys and authenticates before any write',async()=>{
  let calls=[];
- const api=apiFunction('z','session','supa','sameOrigin',compile('app/api/import/route.ts')+';return POST;')(z,async()=>({token:'owner'}),async(path,init,token)=>{calls.push({body:JSON.parse(init.body),token});return Response.json({added:2,skipped:0});},r=>r.headers.get('origin')==='https://local');
+ const api=apiFunction('z','session','supa','sameOrigin',compile('app/api/import/route.ts')+';return POST;')(z,async()=>({token:'owner',user:{id:'owner-id'}}),async(path,init,token)=>{calls.push({body:JSON.parse(init.body),token});return Response.json({added:2,skipped:0});},r=>r.headers.get('origin')==='https://local');
  const row={name:'Shop',amount:-20,date:'2026-09-01',notes:''};const data={batch_id:id,account_id:id,rows:[row,row]};
  assert.equal((await api(req(data))).status,200);assert.equal((await api(req(data))).status,200);const keys=calls[0].body.p_rows.map(r=>r.key);assert.notEqual(keys[0],keys[1]);assert.deepEqual(keys,calls[1].body.p_rows.map(r=>r.key));assert.equal(calls[0].token,'owner');
  assert.equal((await api(req({...data,rows:[{...row,date:'2026-02-30'}]}))).status,400);
@@ -69,7 +70,7 @@ test('CSV backup exports owner records and cannot be misread as a signed bank st
 test('planning reads include holding accounts and computed deposit income exactly once',async()=>{
  const deposit={id:'deposit',kind:'Deposit',amount:1000,estimated_monthly_income:999};
  let fail=false;
- const get=apiFunction('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts','planningReadFilters','currentReviewMonth','debtPaymentsFrom','debtPaymentsInLoanCurrency','withExtraPayments','inScheduleCurrency',compile('app/api/planning/route.ts')+';return GET;')(instrumentFor,z,async()=>({token:'owner'}),()=>{},()=>true,async(table,token)=>{assert.equal(token,'owner');return table==='finance_records'?[deposit,{id:'cash',kind:'Cash',amount:20}]:table==='holding_accounts'?[{id:'broker',kind:'Stock'}]:table==='mortgage_payments'?[{mortgage_id:'flat',paid_on:'2026-10-01'}]:[];},()=>true,async token=>{assert.equal(token,'owner');if(fail)throw Error('missing history');return [{id:'deposit',estimated_monthly_income:10}];},planningReadFilters,currentReviewMonth,debtPaymentsFrom,debtPaymentsInLoanCurrency,withExtraPayments,inScheduleCurrency);
+ const get=apiFunction('instrumentFor','z','session','supa','sameOrigin','readOwnerRows','isCurrency','depositForecasts','planningReadFilters','currentReviewMonth','debtPaymentsFrom','debtPaymentsInLoanCurrency','withExtraPayments','inScheduleCurrency','planningReadPlan','planningScopes','sharedDayRate',compile('app/api/planning/route.ts')+';return GET;')(instrumentFor,z,async()=>({token:'owner'}),()=>{},()=>true,async(table,token)=>{assert.equal(token,'owner');return table==='finance_records'?[deposit,{id:'cash',kind:'Cash',amount:20}]:table==='holding_accounts'?[{id:'broker',kind:'Stock'}]:table==='mortgage_payments'?[{mortgage_id:'flat',paid_on:'2026-10-01'}]:[];},()=>true,async token=>{assert.equal(token,'owner');if(fail)throw Error('missing history');return [{id:'deposit',estimated_monthly_income:10}];},planningReadFilters,currentReviewMonth,debtPaymentsFrom,debtPaymentsInLoanCurrency,withExtraPayments,inScheduleCurrency,planningReadPlan,planningScopes,sharedDayRate);
  const result=await (await get()).json();
  assert.deepEqual(result.debtPayments,[{record_id:'flat',date:'2026-10-01'}]);
  assert.equal(result.records.length,2);assert.equal(result.records[0].estimated_monthly_income,10);assert.equal(result.records[0].amount,1000);assert.equal(result.holdingAccounts.length,1);

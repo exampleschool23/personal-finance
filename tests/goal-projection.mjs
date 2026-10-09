@@ -6,10 +6,10 @@ import ts from 'typescript';
 import * as days from '../lib/calendar-days.ts';
 import * as finance from '../lib/finance.ts';
 import * as market from '../lib/market.ts';
-import * as budgets from '../lib/expense-plans.ts';
 import {stylesheet} from './helpers/stylesheet.mjs';
 import {workspaceSource} from './helpers/workspace-source.mjs';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+const budgets=loadTS('lib/expense-plans.ts');
 const dependencies={...finance,...market,...budgets,...days};
 const {projectGoal,goalFinancials}=new Function(...Object.keys(dependencies),compile('lib/goal-projection.ts')+';return {projectGoal,goalFinancials};')(...Object.values(dependencies));
 

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
 import {z} from 'zod';
-import {expensePlanCategories,expensePlanMonth} from '../lib/expense-plans.ts';
+const {expensePlanCategories,expensePlanMonth}=loadCashAccountTS('lib/expense-plans.ts');
 import {isCurrency} from '../lib/currencies.ts';
 import {kinds,income,expenses} from '../lib/finance.ts';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;

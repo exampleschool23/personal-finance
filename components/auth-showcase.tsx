@@ -4,6 +4,8 @@ import { ChartNoAxesCombined, ChartPie, EyeOff, Globe, Target, TrendingDown, Use
 import type { ReactNode } from 'react';
 import { AppPreview } from '@/components/app-preview';
 import { useLanguage } from '@/components/language-provider';
+import { shiftDay, shiftMonth } from '@/lib/calendar-days';
+import { depositToday } from '@/lib/deposit-interest';
 import { formatDate, formatMoney, formatMonthShort, formatPercent } from '@/lib/format';
 import styles from './sign-in-screen.module.css';
 
@@ -37,17 +39,11 @@ function scale(width: number, height: number, low: number, high: number, count: 
 const path = (points: readonly number[], at: (value: number, index: number) => readonly [number, number]) =>
   points.map((value, index) => `${index ? 'L' : 'M'}${at(value, index).join(' ')}`).join(' ');
 
-/** `days` from today as `YYYY-MM-DD`. */
-function daysAhead(days: number) {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + days)).toISOString().slice(0, 10);
-}
+/** `days` from the app's today as `YYYY-MM-DD`. */
+const daysAhead = (days: number) => shiftDay(depositToday(), days);
 
-/** The last `count` calendar months as `YYYY-MM`, oldest first. */
-function recentMonths(count: number) {
-  const now = new Date();
-  return Array.from({ length: count }, (_, index) => new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (count - 1 - index), 1)).toISOString().slice(0, 7));
-}
+/** The last `count` calendar months as `YYYY-MM`, oldest first, ending with the app's current month. */
+const recentMonths = (count: number) => Array.from({ length: count }, (_, index) => shiftMonth(depositToday().slice(0, 7), index - (count - 1)));
 
 function Tile({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
   return <div className={styles.tile}><p className={styles.tileLabel}>{icon}{label}</p>{children}</div>;

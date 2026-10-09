@@ -26,6 +26,7 @@ function postgrest(){
   const value=rest.join('.'),target=`${alias}."${column}"`;
   let sql;
   if(op==='in'){values.push(list(value));sql=`${target} = ANY($${values.length})`;}
+  else if(op==='is')sql=`${target} IS ${{null:'NULL',true:'TRUE',false:'FALSE'}[value]}`;
   else{values.push(value);sql=`${target} ${{eq:'=',neq:'<>',gt:'>',gte:'>=',lt:'<',lte:'<='}[op]} $${values.length}`;}
   return negate?`NOT (${sql})`:sql;
  }
@@ -94,6 +95,8 @@ async function fixture(db){
   INSERT INTO holding_accounts(id,user_id,name,kind,currency) SELECT gen_random_uuid(),p.uid,'Broker '||i,'Stock','USD' FROM people p,generate_series(1,2) i;
   INSERT INTO asset_movements(id,user_id,kind,source_id,target_id,sent,received,source_value,target_value,occurred_on,source_before,source_after,target_before,target_after)
    SELECT gen_random_uuid(),p.uid,'transfer',(SELECT id FROM finance_records WHERE user_id=p.uid AND kind='Cash' ORDER BY id LIMIT 1),(SELECT id FROM finance_records WHERE user_id=p.uid AND kind='Stock' ORDER BY id LIMIT 1),1,1,1,1,date '2024-01-05'+i,0,0,0,0 FROM people p,generate_series(1,52*p.scale) i;
+  -- Some spending and income is booked to a cash account, as the Recent activity view of Accounts lists it.
+  UPDATE finance_records r SET account_id=(SELECT id FROM finance_records c WHERE c.user_id=r.user_id AND c.kind='Cash' ORDER BY id LIMIT 1) WHERE r.name LIKE 'Shop %' AND r.notes NOT LIKE '%0';
   SET session_replication_role=origin;ANALYZE;`);
 }
 
@@ -124,7 +127,7 @@ test('every planning scope answers the same as the offset reader, for the owner,
    '@/lib/deposit-forecasts':{depositForecasts:token=>depositForecasts(token)}});
   const answer=async(api,query)=>{const response=await api.GET(new Request('https://app.local/api/planning'+query));return {status:response.status,body:await response.json()};};
   const read=async(api,query)=>{const reply=await answer(api,query);assert.equal(reply.status,200,query);return reply.body;};
-  const scopes=['?scope=full','?scope=workspace','?scope=review&month=2026-03','?scope=budget&month=2026-03&from=2024-04','?scope=insights'];
+  const scopes=['?scope=full','?scope=accounts','?scope=account-activity','?scope=workspace','?scope=review&month=2026-03','?scope=budget&month=2026-03&from=2024-04','?scope=insights'];
   const ownerView={};
   for(const [who,as,open] of [['owner',owner,null],['member',partner,owner],['member at home',partner,null],['stranger',stranger,null],['stranger asking for the owner',stranger,owner]]){
    viewer=as;workspace=open;
@@ -139,7 +142,7 @@ test('every planning scope answers the same as the offset reader, for the owner,
      // Id-ordered pages never use an offset now, and deposits come from the records already read.
      assert.ok(paths.every(path=>!/offset=/.test(path)||/investment_history\?record_id/.test(path)),query);
      assert.ok(legacyPaths.some(path=>/offset=500/.test(path)),'the fixture spans several pages: '+query);
-     if(query!=='?scope=insights'){assert.equal(paths.filter(path=>/finance_records\?kind=in/.test(path)).length,0,query);assert.equal(legacyPaths.filter(path=>/finance_records\?kind=in/.test(path)).length,1,query);}
+     if(!['?scope=insights','?scope=account-activity'].includes(query)){assert.equal(paths.filter(path=>/finance_records\?kind=in/.test(path)).length,0,query);assert.equal(legacyPaths.filter(path=>/finance_records\?kind=in/.test(path)).length,1,query);}
     }
     if(who==='member')assert.deepEqual(after,ownerView[query],'a household member sees the owner’s workspace: '+query);
    }
@@ -157,6 +160,14 @@ test('every planning scope answers the same as the offset reader, for the owner,
   assert.ok(full.debtPayments.length>500);
   assert.equal(ownerView['?scope=review&month=2026-03'].records.filter(record=>record.frequency==='Once'&&['Salary','Living expense'].includes(record.kind)).every(record=>record.date>='2026-02-01'&&record.date<'2026-04-01'),true);
   // Someone else sees only their own rows; asking for a workspace they are not part of is refused.
+  // Accounts has every holding, schedule and operation but no income or spending; its activity view reads what was
+  // booked to an account, and the two together hold everything the full read lists there.
+  const accounts=ownerView['?scope=accounts'],booked=ownerView['?scope=account-activity'];
+  assert.deepEqual(accounts.records.map(record=>record.id),full.records.filter(record=>record.frequency!=='Once'||!['Salary','Rent income','Business income','Other income','Rent expense','Living expense','Charity','Other expense'].includes(record.kind)).map(record=>record.id));
+  assert.ok(accounts.records.length<full.records.length);
+  for(const key of ['activity','movements','investmentLinks','occurrences','goals','debtPayments'])assert.deepEqual(accounts[key],full[key],key);
+  assert.deepEqual(booked.records.map(record=>record.id),full.records.filter(record=>record.account_id).map(record=>record.id));
+  assert.ok(booked.records.length>0&&booked.records.every(record=>Object.keys(record).length===7));
   viewer=stranger;workspace=null;
   const own=await read(current,'?scope=full');assert.ok(own.records.length>0&&own.records.length<200);
   assert.ok(!own.records.some(record=>full.records.some(other=>other.id===record.id)));

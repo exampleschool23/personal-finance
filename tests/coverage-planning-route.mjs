@@ -12,7 +12,7 @@ function harness(){
   '@/lib/supabase':{session:async()=>state.auth,supa:async(path,init,token)=>{state.calls.push({path,init,token,body:init?.body?JSON.parse(init.body):undefined});return state.handler(path,init,token);},sameOrigin:loadTS('lib/api-route.ts').sameOrigin},
   '@/lib/server-records':{readOwnerRows:async(table,token,extra)=>{state.reads.push({table,token,extra});if(state.readError)throw state.readError;return state.rows[table]??[];}},
   '@/lib/deposit-forecasts':{depositForecasts:async token=>{state.forecastCalls++;assert.equal(token,'owner-token');return state.forecasts;}},
-  '@/lib/dated-exchange-rate':{loadDatedExchangeRate:async(...args)=>{state.rateCalls.push(args);if(state.rateError)throw state.rateError;return state.rate;}},
+  '@/lib/dated-exchange-rate':{loadDatedExchangeRate:async(...args)=>{state.rateCalls.push(args);await state.rateHook?.();if(state.rateError)throw state.rateError;return state.rate;}},
   '@/lib/notify-action':{queueMilestoneCheck:(auth,event)=>{assert.equal(auth.token,'owner-token');state.events.push(event);}},
  });
  return {api,state};
@@ -75,6 +75,35 @@ test('GET narrower scopes read only what they need',async()=>{
  assert.equal((await api.GET(get('?scope=budget&month=2026-09&from=2024-10'))).status,200);
  assert.deepEqual(tables(state),['holding_accounts','finance_records','transaction_categories','savings_goals','payment_occurrences','account_activity','investment_account_links','finance_records']);
  assert.match(state.reads[1].extra.or,/date\.gte\.2024-10-01,date\.lt\.2026-10-01/);
+});
+
+test('GET accounts reads holdings and every operation without the transaction history, which its activity view reads alone',async()=>{
+ let {api,state}=harness();
+ let body=await (await api.GET(get('?scope=accounts'))).json();
+ assert.deepEqual(tables(state).slice(0,8),['asset_movements','holding_accounts','finance_records','transaction_categories','savings_goals','payment_occurrences','account_activity','investment_account_links']);
+ assert.match(state.reads[2].extra.or,/^\(frequency\.neq\.Once,kind\.not\.in\.\(/);assert.doesNotMatch(state.reads[2].extra.or,/date\.gte/);
+ assert.deepEqual(body.debtPayments,[]);assert.equal(state.forecastCalls,1);
+ ({api,state}=harness());
+ state.rows.finance_records=[{id:'lunch',name:'Lunch',kind:'Living expense',amount:25,currency:'USD',date:'2026-10-02',account_id:'wallet'}];
+ body=await (await api.GET(get('?scope=account-activity'))).json();
+ assert.deepEqual(state.reads.map(read=>[read.table,read.extra]),[['finance_records',{select:'id,name,kind,amount,currency,date,account_id',account_id:'not.is.null'}]]);
+ assert.equal(state.forecastCalls,0);assert.equal(body.debtPayments,undefined);assert.deepEqual(body.records,state.rows.finance_records);
+});
+
+test('GET asks for each foreign payment day once, shared by loan and scheduled payments, a few at a time',async()=>{
+ const {api,state}=harness();
+ state.rows.finance_records=[{id:'loan',kind:'Loan',currency:'USD',amount:900},{id:'som',kind:'Cash',currency:'UZS',amount:1e7},{id:'rent',kind:'Rent income',currency:'USD',amount:500,frequency:'Monthly'},
+  // Later payments of the schedule in sum, on days the loan was also repaid from the sum account.
+  ...['2026-07-01','2026-08-01','2026-09-01','2026-09-01'].map((date,index)=>({id:'p'+index,occurrence_record_id:'rent',occurrence_due_on:date,amount:6e6,currency:'UZS',date}))];
+ state.rows.account_activity=['2026-06-01','2026-07-01','2026-08-01','2026-09-01','2026-09-01','2026-05-01','2026-04-01'].map((date,index)=>({id:'r'+index,action:'repayment',target_id:'loan',occurred_on:date,amount:1270000,fee:0,account_id:'som'}));
+ let open=0,peak=0;
+ state.rateHook=async()=>{open++;peak=Math.max(peak,open);await new Promise(resolve=>setTimeout(resolve,5));open--;};
+ state.rate={rate:1/12700,effective_date:'2026-09-01'};
+ const body=await (await api.GET(get('?scope=workspace'))).json();
+ const days=state.rateCalls.map(args=>args.join(' '));
+ assert.deepEqual([...days].sort(),['UZS USD 2026-04-01','UZS USD 2026-05-01','UZS USD 2026-06-01','UZS USD 2026-07-01','UZS USD 2026-08-01','UZS USD 2026-09-01'],'one request per pair and day');
+ assert.ok(peak<=4,'at most four rate requests at a time');
+ assert.equal(body.debtPayments.length,7);assert.ok(body.debtPayments.every(payment=>payment.currency==='USD'&&Math.abs(payment.amount-100)<1e-9));
 });
 
 test('GET answers 503 when a read fails',async()=>{

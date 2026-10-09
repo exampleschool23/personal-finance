@@ -1,6 +1,7 @@
 import type { DiversifiedPortfolio } from './diversified-portfolio';
-import type { Entry } from './finance';
-export const investmentKinds = ['Cash','Stock','Crypto','Precious metals','Equity compensation','Deposit','Treasury bill','Bond','Retirement account','Property','Business','Vehicle','Valuables','Money lent'] as const;
+import { assetKinds, type Entry } from './finance';
+/** Every kind of holding can be compared with a benchmark: the assets of lib/finance.ts. */
+export const investmentKinds = assetKinds;
 export const benchmarkKeys = ['BTC','SPY','HYG','BIL','depositUZS','depositUSD','CUSTOM','PORTFOLIO'] as const;
 export type BenchmarkKey = typeof benchmarkKeys[number] | `STOCK:${string}`;
 export type ComparisonPreferences = { benchmarks: BenchmarkKey[]; custom_symbol: string; portfolio?: DiversifiedPortfolio | null };

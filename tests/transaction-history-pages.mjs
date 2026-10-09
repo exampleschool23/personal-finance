@@ -35,5 +35,7 @@ test('workspace excludes transaction history; review includes both selected mont
  const workspace=planningReadFilters('workspace','2026-01');assert.match(workspace.records.or,/frequency.neq.Once/);assert.doesNotMatch(workspace.records.or,/date.gte/);
  const review=planningReadFilters('review','2026-01');assert.match(review.records.or,/date.gte.2025-12-01,date.lt.2026-02-01/);assert.match(review.activity.and,/2025-12-01/);assert.equal(review.investmentLinks['investment_history.and'],'(occurred_on.gte.2025-12-01,occurred_on.lt.2026-02-01)');
  assert.deepEqual(planningReadFilters('full','2026-01').records,{});
- assert.deepEqual(planningReadFilters('insights','2026-01').records,{});
+ // Accounts reads holdings and schedules only; its Recent activity view reads what was booked to an account itself.
+ assert.deepEqual(planningReadFilters('accounts','2026-01').records,workspace.records);
+ assert.deepEqual(planningReadFilters('account-activity','2026-01').records,{select:'id,name,kind,amount,currency,date,account_id',account_id:'not.is.null'});
 });

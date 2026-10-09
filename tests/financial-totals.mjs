@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { financialTotals, totalValue } from '../lib/finance.ts';
-import { monthlyBudgetTotals } from '../lib/expense-plans.ts';
+import { loadTS } from './helpers/load-ts.mjs';
+const { monthlyBudgetTotals } = loadTS('lib/expense-plans.ts');
 import { convertAmount } from '../lib/market.ts';
 
 const entry=(kind,amount,extra={})=>({kind,amount,quantity:0,...extra});

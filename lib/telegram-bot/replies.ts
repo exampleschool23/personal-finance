@@ -1,7 +1,6 @@
 // The bot's fixed answers: the welcome and invitation, the number button, web sign-in, signing out, the app link and
 // upcoming payments.
 import {paymentsSection} from '../digest-message';
-import type {Entry} from '../finance';
 import type {Language} from '../i18n';
 import {legalPaths} from '../legal';
 import {debtPaymentsFrom,upcomingPayments,type Occurrence} from '../planning';
@@ -11,6 +10,7 @@ import {createLoginToken} from '../telegram-account';
 import {connectMinutes,connectStartPath,createConnectRequest,unlinkChat} from '../telegram-connect';
 import {t} from '../telegram-kit';
 import {createdInTelegram,type TelegramSubscription} from '../telegram-link';
+import {ownerRecordsSince} from '../telegram-owner';
 import type {TelegramMessage} from '../telegram';
 import {ownerLanguage,stranger} from './owner';
 import type {BotEnv,TelegramFrom,Turn} from './types';
@@ -31,7 +31,8 @@ export async function signOut(db:ServiceDatabase,subscription:TelegramSubscripti
 /** Payments due in the next 31 days, as the morning digest lists them. */
 export async function upcomingReply(db:ServiceDatabase,owner:string,language:Language,today:string){
  const [records,occurrences,repayments,mortgagePayments]=await Promise.all([
-  ownerRows<Entry>(db,'finance_records',owner),
+  // Schedules and debts in full; no cash-flow history, which the payments due never read.
+  ownerRecordsSince(db,owner,today),
   ownerRows<Occurrence>(db,'payment_occurrences',owner,'id,record_id,due_on,status'),
   db.read<Array<{action:string;target_id:string|null;occurred_on:string}>>(`/rest/v1/account_activity?select=action,target_id,occurred_on&action=in.(repayment,mortgage)&user_id=eq.${owner}`),
   db.read<Array<{mortgage_id:string;paid_on:string}>>(`/rest/v1/mortgage_payments?select=mortgage_id,paid_on&user_id=eq.${owner}`),

@@ -24,6 +24,8 @@ export function useBudget(owner: string | null, demo: boolean, revision: number)
   retry: remote.retry,
   saveAmount: (category_key: string, month: string, amount: number, currency: string, applies_forward: boolean) =>
    change(current => ({ ...current, amounts: setBudgetAmount(current.amounts, category_key, month, amount, currency, applies_forward) }), 'amount', { category_key, month, amount, currency, applies_forward }),
+  saveAmounts: (month: string, currency: string, items: Array<{ category_key: string; amount: number; applies_forward: boolean }>) =>
+   change(current => ({ ...current, amounts: items.reduce((amounts, item) => setBudgetAmount(amounts, item.category_key, month, item.amount, currency, item.applies_forward), current.amounts) }), 'amounts', { month, currency, items }),
   saveCategory: (setting: BudgetCategorySetting) =>
    change(current => ({ ...current, categories: [...current.categories.filter(item => item.category_key !== setting.category_key), setting] }), 'category', setting),
   saveSettings: (mode: BudgetMode, applyForward: boolean) =>

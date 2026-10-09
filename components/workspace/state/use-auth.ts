@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
+import { requestJson } from '@/lib/api-client';
 
 const authErrors: Record<string, string> = { google_setup: 'Google sign-in is awaiting setup. You can still sign in with email.', google_unavailable: 'Google sign-in is temporarily unavailable. Please try again.', google_cancelled: 'Google sign-in was not completed. Please try again.', google_expired: 'Your sign-in attempt expired. Please start again.', google_failed: 'Google sign-in failed. Please try again or use email.' };
 type Session = { configured: boolean; user: null | { email: string }; next?: string };
@@ -26,9 +27,7 @@ export function useAuth({ setError, setBusy }: { setError: Dispatch<SetStateActi
         e.preventDefault(); setBusy(true); setError('');
         try {
             const f = new FormData(e.currentTarget);
-            const r = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(f)) });
-            const d = await r.json() as { error?: string; user: { email: string }; next?: string };
-            if (!r.ok) throw Error(d.error);
+            const d = await requestJson<{ user: { email: string }; next?: string }>('/api/auth', { body: Object.fromEntries(f), fallback: 'Sign-in could not be completed. Please try again.' });
             // A Telegram chat waiting to be connected takes over right after signing in.
             if (d.next) { window.location.replace(d.next); return; }
             setUser(d.user.email);

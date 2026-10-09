@@ -4,6 +4,7 @@ import type { HoldingAccount } from './holding-accounts';
 import { shiftDay } from './calendar-days';
 import { depositToday } from './deposit-interest';
 import { amountIn } from './money';
+import { sharedDayRate, type DayRate } from './day-rates';
 export type Category = {id:string;name:string;direction:'income'|'expense'};
 export type InvestmentTarget = {holding_account_id:string;asset_kind:'Stock'|'Crypto';asset_symbol:string;target:number;monthly_contribution?:number|null};
 export type Goal = {completed_on?:string|null;funding_priority?:number;funding_monthly?:number|null;funding_enabled?:boolean;paused_until?:string|null;funding_mode?:'one_time'|'refill';investment_targets?:InvestmentTarget[];id:string;name:string;account_id:string|null;target:number;allocated:number;target_date:string|null;archived:boolean;kind?:'savings'|'net_worth'|'investment';holding_account_id?:string|null;asset_kind?:'Stock'|'Crypto'|null;asset_symbol?:string|null;currency?:string;monthly_contribution?:number|null;annual_return?:number};
@@ -50,8 +51,10 @@ export function debtPaymentsFrom(activity:RepaymentRow[],mortgagePayments:Mortga
  return [...activity.filter(row=>(row.action==='repayment'||row.action==='mortgage')&&row.target_id&&!(row.id&&mortgageIds.has(row.id))).map(row=>({record_id:row.target_id!,date:row.occurred_on,...paid(row.amount,row.fee,currencyOf?.get(row.account_id??'')),...from(row.account_id)})),
   ...mortgagePayments.map(row=>({record_id:row.mortgage_id,date:row.paid_on,...paid(row.principal,row.interest,currencyOf?.get(row.mortgage_id)),...from(row.id?accountOf.get(row.id):undefined)}))];
 }
-/** Each payment's amount in its loan's currency, at the official rate of the payment's day; null when no rate is found. */
-export async function debtPaymentsInLoanCurrency(payments:DebtPayment[],currencyOf:Map<string,string>,rate:(from:string,to:string,date:string)=>Promise<number>):Promise<DebtPayment[]>{
+/** Each payment's amount in its loan's currency, at the official rate of the payment's day; null when no rate is found.
+ * Each currency pair and day is asked for once, a few at a time. */
+export async function debtPaymentsInLoanCurrency(payments:DebtPayment[],currencyOf:Map<string,string>,dayRate:DayRate):Promise<DebtPayment[]>{
+ const rate=sharedDayRate(dayRate);
  return Promise.all(payments.map(async payment=>{
   const loan=currencyOf.get(payment.record_id);
   if(payment.amount==null||!payment.currency||!loan||payment.currency===loan)return payment;
@@ -110,7 +113,7 @@ export function paymentSchedules(records:Entry[],payment:SchedulePayment):Entry[
 }
 /** A payment naming `schedule` by id, or none. It takes the schedule's name when it has none, its amount when it has none and
  * is in the schedule's currency, and rent its property. A payment in another currency keeps its own: the schedule counts it at the day's rate. */
-export function chooseSchedule(payment:Entry,schedule:Entry|null):Partial<Entry>{
+export function chooseSchedule(payment:Pick<Entry,'name'|'amount'|'currency'>,schedule:Entry|null):Partial<Entry>{
  if(!schedule)return {occurrence_record_id:null};
  return {occurrence_record_id:schedule.id,...(payment.name.trim()?{}:{name:schedule.name}),...(payment.amount>0||payment.currency!==schedule.currency?{}:{amount:Number(schedule.amount)}),...(schedule.kind==='Rent income'&&schedule.income_source_id?{income_source_id:schedule.income_source_id}:{})};
 }

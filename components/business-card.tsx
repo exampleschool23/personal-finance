@@ -16,7 +16,7 @@ import { businessNetAssets, cashFlowTrend, rangeFor, reportLedger, reportRangeLa
 import { depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry, type Entry } from '@/lib/finance';
 import { formatMoney, formatNumber } from '@/lib/format';
-import { marketEntry, type MarketData } from '@/lib/market';
+import { marketEntry, type MarketData, marketRates } from '@/lib/market';
 import { emptyPlanning, type PlanningData } from '@/lib/planning';
 import type { TransactionSplit } from '@/lib/transaction-tools';
 
@@ -45,7 +45,7 @@ export function BusinessCard({ owner, demo, revision, data: provided, splits, bu
  const live = !!owner && !demo;
  const remote = useOwnerResource(`/api/planning?scope=budget&month=${today.slice(0, 7)}&from=${from.slice(0, 7)}`, owner, live && businesses.length > 0, revision, emptyPlanning);
  const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : provided, [live, remote.data, provided]);
- const rates = market?.rates ?? market?.fx?.rate;
+ const rates = marketRates(market);
  const ledger = useMemo(() => reportLedger(data, splits, { from, to: today }, currency, today, rates).lines, [data, splits, from, today, currency, rates]);
  const assets = useMemo(() => businessNetAssets(provided.records.map(record => marketEntry(record, currency, market)), businesses.map(item => item.id)).byBusiness, [provided.records, currency, market, businesses]);
  const money = (amount: number) => formatMoney(amount, currency, locale);

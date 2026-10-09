@@ -157,6 +157,73 @@ test('a refused first account keeps the question and does not finish the setup',
  assert.equal(context.db.tables.user_preferences[0].onboarded_at,undefined);
 });
 
+// Telegram redelivers an update whose webhook answered 503. The database saves a record id again as the same record
+// (save_finance_record), so the stand-in keeps one row per id, and every id the clock hands out is new.
+function redelivery(){
+ const context=setup();let next=0,failNext='';
+ const clock={now,today:'2026-10-01',newId:()=>`99999999-9999-4999-8999-${String(++next).padStart(12,'0')}`};
+ const write=context.db.write;
+ context.db.write=async(path,init={})=>{
+  if(failNext&&path.includes(failNext)&&init.method!=='GET'){failNext='';return new Response(null,{status:500});}
+  const response=await write(path,init);
+  if(path==='/rest/v1/rpc/telegram_save_finance_record'){const record=JSON.parse(init.body).p_record,rows=context.db.tables.finance_records;if(!rows.some(row=>row.id===record.id))rows.push({...record,user_id:ownerId});}
+  return response;
+ };
+ return {context,failOnce:name=>{failNext=name;},send:update=>handleTelegramUpdate(update,context.db,clock,context.env)};
+}
+
+test('a balance answer redelivered after the preferences failed saves the first account once',async()=>{
+ const {context,failOnce,send}=redelivery();
+ await send(contact());await send(press('o:lang:en'));await send(press('o:cur:EUR'));await send(text('Wallet'));
+ const accountId=context.db.tables.telegram_drafts[0].data.account_id;
+ assert.ok(accountId,'the id is chosen when the balance is asked for');
+ failOnce('user_preferences');
+ await assert.rejects(send(text('250')),/Database request failed/);
+ assert.equal(context.db.tables.finance_records.length,1);
+ assert.equal(context.db.tables.telegram_drafts[0].step,'onboard:balance','the setup has not moved on');
+ // The redelivered answer saves the same id again and finishes the setup.
+ const done=await send(text('250'));
+ assert.equal(done.replies[0].text,t('en','You are all set. Use the buttons below to add your first expense.'));
+ assert.deepEqual(context.db.tables.finance_records.map(row=>[row.id,row.name,row.amount]),[[accountId,'Wallet',250]]);
+ assert.deepEqual(context.db.rpcs.map(rpc=>rpc.body.p_record.id),[accountId,accountId]);
+ assert.equal(context.db.tables.user_preferences[0].onboarded_at,now.toISOString());
+ assert.equal(context.db.tables.telegram_drafts.length,0);
+});
+
+test('a redelivered balance answer whose account was saved on another day still finishes the setup',async()=>{
+ const {context,send}=redelivery();
+ await send(contact());await send(press('o:lang:en'));await send(press('o:cur:EUR'));await send(text('Wallet'));
+ // The database refuses the same id with another date, but the account is there.
+ const accountId=context.db.tables.telegram_drafts[0].data.account_id;
+ context.db.tables.finance_records.push({id:accountId,user_id:ownerId,name:'Wallet',kind:'Cash'});
+ context.db.fail('rpc');
+ assert.equal((await send(text('250'))).replies[0].text,t('en','You are all set. Use the buttons below to add your first expense.'));
+ assert.equal(context.db.tables.finance_records.length,1);
+});
+
+test('a draft at the balance question from before ids were kept stores one before saving',async()=>{
+ const {context,send}=redelivery();
+ await send(contact());await send(press('o:lang:en'));await send(press('o:cur:EUR'));
+ Object.assign(context.db.tables.telegram_drafts[0],{step:'onboard:balance',data:{currency:'EUR',account_name:'Wallet'}});
+ await send(text('10'));
+ const draftWrites=context.db.writes.filter(write=>write.path.startsWith('/rest/v1/telegram_drafts')&&write.body?.data?.account_id);
+ assert.equal(draftWrites.at(-1).body.data.account_id,context.db.rpcs.at(-1).body.p_record.id);
+});
+
+test('a contact redelivered after the account was made but before its first question was stored starts the setup',async()=>{
+ const {context,failOnce,send}=redelivery();
+ failOnce('telegram_drafts');
+ await assert.rejects(send(contact()),/Database request failed/);
+ assert.equal(context.created.length,1);assert.equal(context.db.tables.telegram_drafts.length,0);
+ const resent=await send(contact());
+ assert.equal(context.created.length,1,'no second account');
+ assert.deepEqual(resent.replies.map(reply=>reply.text),[t('ru','Account created. Let us set up a few things.'),t('ru','Choose your language')]);
+ assert.deepEqual(context.db.tables.telegram_drafts.map(draft=>draft.step),['onboard:language']);
+ // Shared again halfway, the number repeats the open question instead of the menu.
+ await send(press('o:lang:en'));
+ assert.deepEqual((await send(contact())).replies.map(reply=>reply.text),[t('en','Which currency do you use most?')]);
+});
+
 test('only your own number counts, and a number can belong to one account',async()=>{
  const context=setup();
  // Someone else's contact card, a malformed number or no sender are all refused with a new request.
@@ -198,7 +265,7 @@ test('someone who pressed stop signs back in with the same number, and with no o
  assert.equal((await run(contact({},'998900000000'),stranger)).replies[0].text,t('ru','This number is already used with another Telegram account.'));
  assert.equal(stranger.db.tables.telegram_subscriptions[0].chat_id,null);
  // The same number from the linked chat is simply welcomed back.
- const linked=setup({seed:{telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:'Aziz'}]}});
+ const linked=setup({seed:{telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:'Aziz',onboarded_at:'2026-09-30T00:00:00Z'}]}});
  assert.match((await run(contact(),linked)).replies[0].text,/^Welcome, Aziz! You are connected and will get a morning digest/);
 });
 
@@ -227,7 +294,7 @@ test('a chat linked from the web never gets a phone number attached, so a chat l
 });
 
 test('an account created in Telegram keeps its number flow: the same number is welcomed, another is refused, and /phone offers the web',async()=>{
- const seed=()=>({telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:'Aziz'}]});
+ const seed=()=>({telegram_subscriptions:[subscription({chat_id:777,telegram_user_id:777,phone:'+998901234567',consented_at:'x'})],user_preferences:[{user_id:ownerId,language:'en',currencies:['USD'],display_name:'Aziz',onboarded_at:'2026-09-30T00:00:00Z'}]});
  const context=setup({seed:seed()});
  assert.match((await run(contact(),context)).replies[0].text,/^Welcome, Aziz! You are connected/);
  assert.equal((await run(contact({},'998900000000'),context)).replies[0].text,t('en','This chat is already linked to a different number.'));
