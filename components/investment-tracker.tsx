@@ -1,4 +1,5 @@
 "use client";
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { DeleteButton } from '@/components/presentation-foundation/delete-button';
 import { showDeleted, showSaved } from '@/lib/feedback';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
@@ -23,7 +24,7 @@ import { chartAxis, chartDot, chartGrid, chartHeight, chartLegend, chartLine, ch
 import { historyCashDelta, historySeries, historyChartDate, historyEventLabel, historyUpdateTypes, isLendingKind, type HistoryUpdateType, type HistoryEvent } from '@/lib/investment-history';
 import { depositInterest, depositProjection, depositToday } from '@/lib/deposit-interest';
 import { AssetMovementDialog, type MovementDraft } from '@/components/planning/asset-movement-dialog';
-import type { AssetMovement } from '@/lib/asset-movements';
+import { isHolding, type AssetMovement } from '@/lib/asset-movements';
 import { interestCompounding, interestKinds, valuedKinds, type Entry } from '@/lib/finance';
 import { categoryColor } from '@/lib/category-colors';
 import { requestJson, type RequestError } from '@/lib/api-client';
@@ -58,7 +59,8 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
  const deletableUpdate=(type:string)=>valuedKinds.includes(record.kind)?['valuation','contribution','withdrawal'].includes(type):['Money lent','Loan','Debt'].includes(record.kind)&&['contribution','withdrawal'].includes(type);
  const mortgage=record.kind==='Mortgage';
  const deposit=interestKinds.includes(record.kind);
- const security=record.kind==='Stock'||record.kind==='Crypto';
+ // Units at a quoted price: stocks, crypto, metals and vested equity are bought and sold by quantity.
+ const security=isHolding(record);
  const projection=depositProjection(events,record.rate,undefined,interestCompounding(record));
  const movementRecords=accounts.some(account=>account.id===record.id)?accounts:[...accounts,record];
  async function saveMovement(payload:AssetMovement){
@@ -122,8 +124,8 @@ export function InvestmentTracker({inline=false,onDraftState,initialType,record,
  if(inline)return <>{paymentFields}{guard.confirmation}</>;
  if(movement)return <AssetMovementDialog initial={movement} records={movementRecords} save={saveMovement} onClose={()=>setMovement(null)}/>;
  return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog investment-tracker" showCloseButton={!busy}>
-  <DialogTitle>{record.name} · {t('Tracker')}</DialogTitle>
-  <DialogDescription>{t(lending?'Track additions and repayments against the outstanding balance.':cash?'Track your cash balance and transfers between accounts.':'Dated values and actual cash movements. Estimates stay separate.')}</DialogDescription>
+  <DialogTitle>{record.name} · {t('Tracker')}<InfoHint>{t(lending?'Track additions and repayments against the outstanding balance.':cash?'Track your cash balance and transfers between accounts.':'Dated values and actual cash movements. Estimates stay separate.')}</InfoHint></DialogTitle>
+  <DialogDescription className="sr-only">{t(lending?'Track additions and repayments against the outstanding balance.':cash?'Track your cash balance and transfers between accounts.':'Dated values and actual cash movements. Estimates stay separate.')}</DialogDescription>
   {loading?<LoadingPlaceholder label={t('Loading history…')}/>:<>
    {deposit&&<div className="ownership-summary"><p>{t('Estimated interest for {month}: {amount}', {month:formatMonthYear(depositToday().slice(0,7),locale),amount:money(depositInterest(events,record.rate,undefined,interestCompounding(record)))})}</p><p>{t('Estimated balance including interest')}: {money(projection.total)}</p><p className="muted">{t(({monthly:'Monthly compounding',daily:'Daily compounding',none:'No compounding'})[record.deposit_compounding??'monthly'])}. {t('Top-ups and withdrawals affect interest from their recorded date. Estimates use the current annual rate. A confirmed balance or interest credit replaces the projection.')}</p><p className="muted">{t('Estimates start at the first dated balance. Record confirmed capitalized interest to update the available balance. Projections are not spendable cash.')}</p></div>}
    <div className="tracker-metrics">

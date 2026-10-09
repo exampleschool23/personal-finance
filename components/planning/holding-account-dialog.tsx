@@ -1,4 +1,5 @@
 "use client";
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import {FormFooter} from '@/components/presentation-foundation/form-footer';
 import { CurrencySelect } from '@/components/presentation-foundation/currency-select';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
@@ -16,7 +17,7 @@ export function HoldingAccountDialog({ account, existing, currencies, save, onCl
  const [initialDraft]=useState(()=>JSON.stringify(draft));
  const guard=useDiscardChanges(JSON.stringify(draft)!==initialDraft,onClose,busy);
  return <><Dialog open onOpenChange={open => { if (!open && !busy) guard.close(); }}><DialogContent className="record-dialog" showCloseButton={!busy}>
-  <DialogTitle>{t(existing ? 'Edit account' : 'Add account')}</DialogTitle><DialogDescription>{t('Group your holdings in one account. Its value is calculated from those holdings.')}</DialogDescription>
+  <DialogTitle>{t(existing ? 'Edit account' : 'Add account')}<InfoHint>{t('Group your holdings in one account. Its value is calculated from those holdings.')}</InfoHint></DialogTitle><DialogDescription className="sr-only">{t('Group your holdings in one account. Its value is calculated from those holdings.')}</DialogDescription>
   <form className="record-form" onSubmit={async event => { event.preventDefault(); setBusy(true); setError(''); try { await save(draft); onClose(); } catch (reason) { setError((reason as Error).message); } finally { setBusy(false); } }}>
    <fieldset className="tracker-fields" disabled={busy}>
     <label>{t('Account type')}<Input readOnly value={t(holdingAccountLabel(draft.kind))} /></label>

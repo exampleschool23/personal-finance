@@ -1,4 +1,5 @@
 "use client";
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import {FormFooter} from '@/components/presentation-foundation/form-footer';
 import {InlineError} from '@/components/presentation-foundation/inline-error';
@@ -26,7 +27,7 @@ const operationNames:Record<string,string>={transfer:'Transfer money',repayment:
 export function StatementReconciliation({account,owner,onClose,onSaved}:{account:Entry;owner:string|null;onClose:()=>void;onSaved:()=>void}){
  const {t,locale}=useLanguage(),today=depositToday();const [from,setFrom]=useState(today.slice(0,7)+'-01'),[to,setTo]=useState(today),[selected,setSelected]=useState<Statement|null>(null),[editing,setEditing]=useState(false);
  const resource=useOwnerResource(`/api/reconciliation?account=${account.id}&from=${from}&to=${to}`,owner,true,0,empty);
- return <Dialog open onOpenChange={open=>{if(!open&&!editing)onClose();}}><DialogContent className="record-dialog" showCloseButton={!editing}><DialogTitle>{t('Statement reconciliation')} · {account.name}</DialogTitle><DialogDescription>{t('Enter the opening cleared balance immediately before the first day. Match transactions to the bank statement. This review does not change your cash balance.')}</DialogDescription>
+ return <Dialog open onOpenChange={open=>{if(!open&&!editing)onClose();}}><DialogContent className="record-dialog" showCloseButton={!editing}><DialogTitle>{t('Statement reconciliation')} · {account.name}<InfoHint>{t('Enter the opening cleared balance immediately before the first day. Match transactions to the bank statement. This review does not change your cash balance.')}</InfoHint></DialogTitle><DialogDescription className="sr-only">{t('Enter the opening cleared balance immediately before the first day. Match transactions to the bank statement. This review does not change your cash balance.')}</DialogDescription>
  {!editing?<><div className="form-grid"><label>{t('First day')}<DatePicker value={from} max={to} onChange={v=>{setFrom(v);setSelected(null);}}/></label><label>{t('Statement closing date')}<DatePicker value={to} min={from} max={today} onChange={v=>{setTo(v);setSelected(null);}}/></label></div>
  {resource.error&&<InlineError message={t(resource.error)} onRetry={resource.retry}/>}
  {resource.loading?<LoadingPlaceholder label={t('Loading records…')} rows={2}/>:!resource.error&&<><Button onClick={()=>setEditing(true)}>{t(selected?'Review statement':'Start statement review')}</Button><h3>{t('Saved statements')}</h3><ul className="tool-list">{resource.data.saved.map(s=><li key={s.id}><span>{formatDate(s.start_date,locale)} — {formatDate(s.end_date,locale)}</span><Button variant="outline" onClick={()=>{setFrom(s.start_date);setTo(s.end_date);setSelected(s);}}>{t('Open')}</Button></li>)}</ul></>}

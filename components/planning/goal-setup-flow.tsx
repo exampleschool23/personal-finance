@@ -2,6 +2,7 @@
 import { ArrowLeft, Minus, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useStepFocus } from '@/hooks/use-step-focus';
 import { useLanguage } from '@/components/language-provider';
 import { CurrencySelect } from '@/components/presentation-foundation/currency-select';
 import { DatePicker } from '@/components/presentation-foundation/date-picker';
@@ -28,6 +29,7 @@ type Props = { goals: Goal[]; accounts: Entry[]; currency: string; currencies: s
 export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth, today, maxDate, save, onClose, onCreated, onInvestment }: Props) {
  const { t, locale } = useLanguage();
  const [step, setStep] = useState(0), [counts, setCounts] = useState<Record<string, number>>({}), [drafts, setDrafts] = useState<SetupDraft[]>([]);
+ const { ref: stepRef, onOpenAutoFocus: focusStep } = useStepFocus<HTMLDivElement>(step);
  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [touched, setTouched] = useState(false);
  const name = goalSetupSteps[step];
  const list = drafts.map(draft => draft.goal);
@@ -72,7 +74,7 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
  const problems = (goal: Goal) => touched ? draftProblems(goal, name, today) : [];
 
  return <Dialog open onOpenChange={open => { if (!open && !busy) onClose(); }}>
-  <DialogContent className="goal-setup top-0 left-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:max-w-none" showCloseButton={false}>
+  <DialogContent className="goal-setup top-0 left-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:max-w-none" showCloseButton={false} onOpenAutoFocus={focusStep}>
    <header className="goal-setup-bar">
     {step ? <Button variant="ghost" size="icon" disabled={busy} aria-label={t('Back')} onClick={() => { setTouched(false); setStep(step - 1); }}><ArrowLeft size={18} aria-hidden="true"/></Button> : <span className="goal-setup-spacer"/>}
     <DialogTitle className="sr-only">{t('Add goal')}</DialogTitle><DialogDescription className="sr-only">{t(stepLabels[name])}</DialogDescription>
@@ -83,7 +85,7 @@ export function GoalSetupFlow({ goals, accounts, currency, currencies, netWorth,
    </header>
    <div className="goal-setup-progress" aria-hidden="true"><span style={{ width: `${(step + 1) / goalSetupSteps.length * 100}%` }}/></div>
 
-   <div className="goal-setup-body">
+   <div className="goal-setup-body" ref={stepRef}>
     {name === 'select' && <section className="goal-setup-select">
      <h1>{t('Select goals to add')}</h1>
      {!accounts.length && <p className="goal-funding-notice">{t('Savings goals keep money in a cash account. Add one first, or pick a net-worth goal.')} <Link href="/accounts">{t('Accounts')}</Link></p>}

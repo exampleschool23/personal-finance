@@ -1,7 +1,8 @@
 "use client";
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { useLanguage } from '@/components/language-provider';
-import { assets, income, expenses, type Entry } from '@/lib/finance';
+import { assetRecordKinds, assets, income, expenses, type Entry } from '@/lib/finance';
 import type { RecordDialogProps } from '../record-dialog';
 
 type Translate=ReturnType<typeof useLanguage>['t'];
@@ -19,7 +20,8 @@ const assetDescription=(editing:Entry|null,t:Translate)=>isAccount(editing)?t("R
 function title({props,saved,assetRecord}:Heading,t:Translate){
  const {accountMode=false,editing,editingCashFlow}=props;
  if(saved)return t("Edit record");
- if(assetRecord)return assetTitle(editing,t);
+ // Investments' Add asset lets the person pick any kind, so the dialog keeps the button's name.
+ if(assetRecord)return props.recordKinds.length===assetRecordKinds.length&&assetRecordKinds.every(kind=>props.recordKinds.includes(kind))?t("Add asset"):assetTitle(editing,t);
  if(accountMode)return isHolding(editing)?t("Add holding"):t("Add account");
  if(editingCashFlow)return income.includes(editing!.kind)?t("Add income"):editing!.frequency!=='Once'?t("Recurring bill"):t("Add expense");
  return editing?.kind==='Money lent'?t("Add money lent"):t("Add a record");
@@ -34,10 +36,10 @@ function description({props,existing,assetRecord,liability}:Heading,t:Translate)
  if(editingCashFlow)return t(editing?.frequency==='Once'&&props.earningSources?"Choose an income source and record the amount received.":"Enter an amount and choose how often it repeats.");
  return recordKinds===assets||liability?t("Keep a current balance for this record."):t("Keep a current balance or record income and expenses.");
 }
-/** The dialog's title and description. An expense form shows its description to screen readers only. */
+/** The dialog's title, with its description behind the ⓘ (and read to screen readers), so the form itself leads. */
 export function RecordDialogHeading(heading:Heading){
  const {t}=useLanguage();
- const editing=heading.props.editing;
- return <><DialogTitle>{title(heading,t)}</DialogTitle>
-  <DialogDescription className={editing&&expenses.includes(editing.kind)?"sr-only":undefined}>{description(heading,t)}</DialogDescription></>;
+ const text=description(heading,t);
+ return <><DialogTitle>{title(heading,t)}<InfoHint>{text}</InfoHint></DialogTitle>
+  <DialogDescription className="sr-only">{text}</DialogDescription></>;
 }

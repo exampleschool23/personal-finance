@@ -109,7 +109,7 @@ test('a failed history request shows its error, and responses after closing are 
 test('a cash balance update needs an entered value, saves it, reloads history and offers transfers', async () => {
  const { view, calls, saveButton, save, setNumber, button } = await open(record('Cash', { amount: 800 }), [event('b', 'baseline', '2026-09-01', { balance: 800 })]);
  let html = view.html();
- assert.match(html, /<h2>Cash asset · Tracker<\/h2>/);
+ assert.match(html, /<h2>Cash asset · Tracker<i data-hint="Track your cash balance and transfers between accounts."><\/i><\/h2>/);
  assert.match(html, /Track your cash balance and transfers between accounts./);
  assert.ok(html.includes(`<small>Account balance</small><strong>${money(800)}</strong>`));
  assert.doesNotMatch(html, /Income received|Expense paid|data-line="contributions"/);

@@ -104,13 +104,17 @@ test('stock prices need a key and a signed-in caller, and only accept USD quotes
   const symbol=new URL(url).searchParams.get('symbol');
   if(symbol==='AAPL')return Response.json({symbol,currency:'USD',close:'201.5',timestamp:1790640000});
   if(symbol==='MSFT')return Response.json({symbol,currency:'USD',close:'400'});
+  if(symbol==='NVDA')return Response.json({symbol,currency:'USD',close:'238.89999'});
+  if(symbol==='PENNY')return Response.json({symbol,currency:'USD',close:'0.000123456'});
   if(symbol==='SAP')return Response.json({symbol,currency:'EUR',close:'200'});
   if(symbol==='BRK.B')return Response.json({symbol:'BRK',currency:'USD',close:'1'});
   return Response.json({symbol,currency:'USD',close:'-1'});
  }}),async({calls})=>{
-  const data=await loadMarket([],['AAPL','MSFT','SAP','BRK.B','BAD'],true);
+  const data=await loadMarket([],['AAPL','MSFT','NVDA','PENNY','SAP','BRK.B','BAD'],true);
   assert.deepEqual({...data.quotes['Stock:AAPL'],fetchedAt:undefined},{usd:201.5,source:'Twelve Data',fetchedAt:undefined,marketTime:new Date(1790640000*1000).toISOString()});
   assert.equal(data.quotes['Stock:MSFT'].usd,400);assert.equal(data.quotes['Stock:MSFT'].marketTime,undefined);
+  // Single-precision noise from the feed is dropped (FMT-023); a sub-cent price keeps six significant digits.
+  assert.equal(data.quotes['Stock:NVDA'].usd,238.9);assert.equal(data.quotes['Stock:PENNY'].usd,0.000123456);
   for(const symbol of ['SAP','BRK.B','BAD'])assert.equal(data.errors['Stock:'+symbol],'Price unavailable. Saved price is shown.',symbol);
   const url=new URL(calls.find(call=>call.url.includes('twelvedata')).url);
   assert.equal(url.origin+url.pathname,'https://api.twelvedata.com/quote');assert.equal(url.searchParams.get('apikey'),KEY);

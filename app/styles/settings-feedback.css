@@ -143,10 +143,6 @@
 .benchmark-settings-footer [role=status]{flex-basis:100%}
 @media(max-width:600px){.benchmark-stocks{padding:16px}.benchmark-stock-row .benchmark-stock-remove{width:44px;height:44px}.benchmark-settings-footer>button{width:100%}.benchmark-stocks .instrument-add-trigger{width:100%}}
 
-.reminders-panel > summary{cursor:pointer;min-height:44px;align-content:center}
-.reminders-panel > summary h2{display:inline;margin:0}
-.reminders-panel > summary:focus-visible{outline:2px solid var(--ring);outline-offset:3px}
-.reminders-panel[open] > summary{margin-bottom:16px}
 .portfolio-instrument-group{display:flex;flex-direction:column;gap:16px}
 .portfolio-instrument-heading{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
 .portfolio-instrument-heading h3{margin:0;font-size:var(--type-body);font-weight:600}

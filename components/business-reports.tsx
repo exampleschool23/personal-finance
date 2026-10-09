@@ -1,5 +1,5 @@
 "use client";
-import { Fragment, useState, type CSSProperties } from 'react';
+import { Fragment, useId, useState, type CSSProperties } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Sankey, Tooltip, XAxis, YAxis } from 'recharts';
 import type { LinkProps } from 'recharts/types/chart/Sankey';
 import { ChevronDown, Download, ReceiptText, X } from 'lucide-react';
@@ -59,10 +59,12 @@ function grouped(lines: readonly PnlLine[], groupOf: (key: string) => string) {
 export function ProfitLossTable({ pnl, breakdown, names, groupOf, currency, onDrill }: { pnl: ProfitAndLoss; breakdown: Breakdown; names: ReportNames; groupOf: (key: string) => string; currency: string; onDrill: (drill: Drill) => void }) {
  const { t, locale } = useLanguage();
  const [closed, setClosed] = useState<string[]>([]);
+ // Each drill button is named by its own words and its row's label, which may hold an icon or a business mark.
+ const idBase = useId(), rowId = (key: string) => `${idBase}${encodeURIComponent(key)}`; // keys hold category names with spaces
  const money = (amount: number) => formatMoney(amount, currency, locale);
  const toggle = (key: string) => setClosed(list => list.includes(key) ? list.filter(item => item !== key) : [...list, key]);
  const row = (key: string, label: React.ReactNode, amount: number, level: number, drill: Drill | null, kind: 'line' | 'subtotal' | 'total' = 'line', tone?: 'positive' | 'negative', section?: string) => <tr key={key} data-kind={kind} style={{ '--level': level } as CSSProperties}>
-  <th scope="row">{section && <button type="button" className="pnl-toggle" aria-expanded={!closed.includes(key)} aria-label={t(closed.includes(key) ? 'Show {name}' : 'Hide {name}', { name: section })} onClick={() => toggle(key)}><ChevronDown size={15} aria-hidden="true"/></button>}<span className="pnl-label">{label}</span>{drill && <button type="button" className="pnl-drill" aria-label={t('Show transactions')} title={t('Show transactions')} onClick={() => onDrill(drill)}><ReceiptText size={14} aria-hidden="true"/></button>}</th>
+  <th scope="row">{section && <button type="button" className="pnl-toggle" aria-expanded={!closed.includes(key)} aria-label={t(closed.includes(key) ? 'Show {name}' : 'Hide {name}', { name: section })} onClick={() => toggle(key)}><ChevronDown size={15} aria-hidden="true"/></button>}<span className="pnl-label" id={rowId(key) + ":label"}>{label}</span>{drill && <button type="button" className="pnl-drill" id={rowId(key) + ":drill"} aria-label={t('Show transactions')} aria-labelledby={[`${rowId(key)}:drill`, `${rowId(key)}:label`, ...(/^b:[^:]+:/.test(key) ? [`${rowId(key.split(':').slice(0, 2).join(':'))}:label`] : [])].join(' ')} title={t('Show transactions')} onClick={() => onDrill(drill)}><ReceiptText size={14} aria-hidden="true"/></button>}</th>
   <td className={tone}>{tone === 'negative' && amount > 0 ? '−' + money(amount) : money(amount)}</td>
  </tr>;
  const lines = (items: readonly PnlLine[], level: number, base: Drill, prefix: string) => breakdown === 'category'

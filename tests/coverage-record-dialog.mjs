@@ -6,7 +6,7 @@ import {loadTS} from './helpers/load-ts.mjs';
 const {formatMoney}=loadTS('lib/format.ts');
 const finance=loadTS('lib/finance.ts');
 const now=new Date('2026-09-30T07:00:00Z');// 30 September 2026 in Tashkent
-const stubs=['loading-placeholder','form-footer','schedule-fields','error-popup','amount-currency-fields','currency-select','currency-value','record-icon','date-picker','formatted-number-input','confirm-dialog'].map(name=>'@/components/presentation-foundation/'+name);
+const stubs=['loading-placeholder','form-footer','schedule-fields','error-popup','amount-currency-fields','currency-select','currency-value','record-icon','date-picker','formatted-number-input','confirm-dialog','info-hint'].map(name=>'@/components/presentation-foundation/'+name);
 const components=['record-edit-history','cash-investment-option','investment-tracker','mortgage-payment-dialog','income-record-form','cash-account-field','instrument-picker','record-name-input','business-profile-fields','ui/tabs','ui/button','ui/native-select','ui/dialog'].map(name=>'@/components/'+name);
 
 const record=(id,kind,extra={})=>({id,name:id,kind,amount:100,quantity:1,cost:0,rate:0,currency:'USD',frequency:'Once',date:'2026-09-15',notes:'',...extra});
@@ -32,7 +32,7 @@ function dialog(t,start,props={}){
  const labelled=(name,type)=>{const label=r.find(node=>node.type==='label'&&node.children[0]===name);return type?r.find(byType(type),label):label;};
  const select=(...values)=>r.find(node=>node.type==='NativeSelect'&&values.every(value=>node.children.some(option=>option.type==='option'&&option.props.value===value)));
  return {r,state,settings,saves,fetches,debtPayments,navigations,labelled,select,
-  title:()=>text(r.find(byType('DialogTitle'))),description:()=>text(r.find(byType('DialogDescription'))),
+  title:()=>text(r.find(byType('DialogTitle')).children.filter(node=>node?.type!=='InfoHint')),hint:()=>text(r.find(byType('InfoHint'),r.find(byType('DialogTitle')))),description:()=>text(r.find(byType('DialogDescription'))),
   confirm:()=>r.find(node=>node.type==='ConfirmDialog')};
 }
 
@@ -127,13 +127,16 @@ test('closing asks before discarding a changed record and ignores close requests
  assert.equal(text(busy.r.find(node=>node.type==='Button'&&node.props.className==='primary')),'Saving…');
 });
 
-test('opening focuses the expense amount when there is one, and otherwise leaves focus to the dialog',t=>{
+test('opening focuses the expense amount, else the form\'s first field, and otherwise leaves focus to the dialog',t=>{
  const d=dialog(t,record('cash','Cash'));
  const content=d.r.find(byType('DialogContent'));
  let focused=0;const input={focus(){focused++;}};
  const withInput=event({currentTarget:{querySelector:selector=>{assert.equal(selector,'.expense-form .amount-value-field input:not([disabled])');return input;}}});
  content.props.onOpenAutoFocus(withInput);
  assert.equal(withInput.defaultPrevented,true);assert.equal(focused,1);
+ const asked=[];const firstField=event({currentTarget:{querySelector:selector=>{asked.push(selector);return asked.length===2?input:null;}}});
+ content.props.onOpenAutoFocus(firstField);
+ assert.match(asked[1],/^form :is\(input/);assert.equal(firstField.defaultPrevented,true);assert.equal(focused,2);
  const without=event({currentTarget:{querySelector:()=>null}});
  content.props.onOpenAutoFocus(without);
  assert.equal(without.defaultPrevented,false);
@@ -363,6 +366,7 @@ test('an expense opens on the expense tab with its category, amount, date and ac
  assert.equal(d.r.find(byType('DialogContent')).props.className,'record-dialog expense-dialog');
  assert.equal(d.r.find(byType('DialogDescription')).props.className,'sr-only');
  assert.equal(d.description(),'Choose a plan or enter an expense amount. Add notes if needed.');
+ assert.equal(d.hint(),d.description(),'the explanation sits behind the ⓘ in the title, not under it');
  assert.equal(d.r.find(byType('Tabs')).props.value,'expense');
  assert.deepEqual(d.r.all(byType('TabsTrigger')).map(text),['Plan','Expense'],'no debt tab without a debt payment action');
  const category=d.labelled('Category','NativeSelect');
@@ -563,4 +567,10 @@ test('Add expense records one payment: no Repeats, a cash account, and the Plan 
  assert.equal(d.r.all(byType('ScheduleFields')).length,0);
  assert.equal(d.r.all(byType('CashAccountField')).length,1);
  assert.equal(d.r.all(byType('RecordNameInput')).length,0);
+});
+
+test('Investments’ Add asset opens a dialog of the same name, whatever kind it starts on (I18N-013)',t=>{
+ const d=dialog(t,record('new','Cash'),{recordKinds:finance.assetRecordKinds});
+ assert.equal(d.title(),'Add asset');
+ assert.equal(d.hint(),'Record an existing account balance. This adds to your assets; it does not record income or transfer money.');
 });

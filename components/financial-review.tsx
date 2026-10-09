@@ -1,4 +1,5 @@
 "use client";
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { normalizeEntry } from '@/lib/finance';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import type { MarketData } from '@/lib/market';
@@ -54,8 +55,8 @@ export function MonthlyReview({data:providedData,owner,demo=false,revision=0,too
     <DialogContent className="monthly-review-help-dialog" showCloseButton={false}>
      <DialogClose className="monthly-review-help-close" aria-label={t('Close')}><X size={18} aria-hidden="true"/></DialogClose>
      <div className="monthly-review-help-icon"><CircleHelp size={26} aria-hidden="true"/></div>
-     <DialogTitle>{t('How this review is calculated')}</DialogTitle>
-     <DialogDescription>{t('Recorded income and spending converted to {currency}. Includes principal and interest payments.',{currency})}</DialogDescription>
+     <DialogTitle>{t('How this review is calculated')}<InfoHint>{t('Recorded income and spending converted to {currency}. Includes principal and interest payments.',{currency})}</InfoHint></DialogTitle>
+     <DialogDescription className="sr-only">{t('Recorded income and spending converted to {currency}. Includes principal and interest payments.',{currency})}</DialogDescription>
      <div className="monthly-review-help-note"><ReceiptText size={21} aria-hidden="true"/><p>{t('Recorded expenses include full mortgage and loan payments. Other currencies use available exchange rates. Recurring plans and transfers are excluded.')}</p></div>
      <div className="monthly-review-help-note"><CalendarDays size={21} aria-hidden="true"/><p>{t('The current month includes transactions through today; the previous month is a full month. Net-worth observations may not fall on month boundaries.')}</p></div>
      <DialogClose asChild><Button type="button" className="monthly-review-help-done">{t('Close')}</Button></DialogClose>

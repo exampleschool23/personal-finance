@@ -5,8 +5,9 @@ import { useLanguage } from '@/components/language-provider';
 import { Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+/** Follows the device's light or dark setting until the person picks one with the toggle, which is remembered (THEME-009). */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  return <NextThemeProvider attribute="data-theme" defaultTheme="light" enableSystem={false} storageKey="hoggish-theme" disableTransitionOnChange>{children}</NextThemeProvider>;
+  return <NextThemeProvider attribute="data-theme" defaultTheme="system" enableSystem storageKey="hoggish-theme" disableTransitionOnChange>{children}</NextThemeProvider>;
 }
 
 export function ThemeToggle() {

@@ -171,8 +171,10 @@ export function stubs() {
  const FormFooter = named('FormFooter', ({ children, cancelLabel }) => h('footer', { 'data-cancel': cancelLabel }, children));
  const ErrorPopup = named('ErrorPopup', ({ message, detail }) => message ? h('p', { role: 'alert', 'data-detail': detail }, message) : null);
  const ExchangeRatePreview = named('ExchangeRatePreview', ({ fx }) => h('p', { className: 'fx' }, 'rate ' + fx.rate));
+ // The ⓘ keeps its explanation in an attribute, so a title's text stays the title.
+ const InfoHint = named('InfoHint', ({ children }) => h('i', { 'data-hint': text(children) }));
  return {
-  Button, NativeSelect, DatePicker, FormattedNumberInput, Dialog, DialogContent, DialogTitle, DialogDescription, FormFooter, ErrorPopup, ExchangeRatePreview,
+  Button, NativeSelect, DatePicker, FormattedNumberInput, Dialog, DialogContent, DialogTitle, DialogDescription, FormFooter, ErrorPopup, ExchangeRatePreview, InfoHint,
   modules: {
    '@/components/ui/button': { Button },
    '@/components/ui/native-select': { NativeSelect },
@@ -182,6 +184,7 @@ export function stubs() {
    '@/components/presentation-foundation/form-footer': { FormFooter },
    '@/components/presentation-foundation/error-popup': { ErrorPopup },
    '@/components/presentation-foundation/exchange-rate-preview': { ExchangeRatePreview },
+   '@/components/presentation-foundation/info-hint': { InfoHint },
    '@/components/language-provider': language('en-US'),
   },
  };

@@ -53,7 +53,7 @@ roll-strip>roll-char{display:block;height:1lh}
 /* Touch screens: every control the thumb aims at is at least 44px; small icons grow an invisible hit area instead of a bigger glyph. */
 @media(pointer:coarse){
  /* One floor for every tappable control; screen-specific sizes above it only ever make controls larger. */
- :is(button,[role=button],[role=tab],summary,.date-picker-trigger,a[data-slot=button],input[type=range]):not(.pos-day,.drag-handle,.info-hint,.recurring-chip,.switch){min-height:44px!important}
+ :is(button,[role=button],[role=tab],summary,.date-picker-trigger,a[data-slot=button],input[type=range]):not(.pos-day,.drag-handle,.info-hint,.recurring-chip,.switch,.pnl-toggle,.pnl-drill,.report-drill>button){min-height:44px!important}
  :is(button,a)[data-size^=icon]:not(.drag-handle,.info-hint){min-width:44px!important}
  .topbar-actions :is(button,a),.theme-toggle,[data-sidebar=trigger]{min-width:44px}
  .nav-item,.user-link,.brand-compact{min-height:44px!important}
@@ -64,6 +64,9 @@ roll-strip>roll-char{display:block;height:1lh}
  .business-card-list li>a{min-height:44px;justify-content:center}
  .business-card-list li>a:not(.business-card-name,.business-card-net){display:inline-flex;align-items:center}
  .info-hint::after{inset:-11px}
+ /* Small controls inside report rows keep their size; like the ⓘ, an invisible area around them takes the tap (RESP-018). */
+ :is(.pnl-toggle,.pnl-drill)::after{content:"";position:absolute;inset:-11px}
+ .report-drill>button::after{content:"";position:absolute;inset:-12px}
  .drag-handle{min-width:32px;min-height:44px}
  /* Switches keep their shape; an invisible area around them takes the tap. */
  .switch{position:relative}.switch::after{content:"";position:absolute;inset:-12px -6px}
@@ -71,7 +74,7 @@ roll-strip>roll-char{display:block;height:1lh}
 /* On a phone each record is a card: name and value, then category and dates under the name text, then the actions on their own line.
  * Wider screens keep the table, which scrolls sideways with the name column frozen. */
 @container content (max-width:560px){
- .records table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .records table thead{position:absolute;display:block;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
  .records table,.records table tbody{display:block;white-space:normal}
  .records table tbody tr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;padding:14px 16px;border-bottom:1px solid var(--hairline)}
  /* A zero-height full-width break after the value: the second line always starts with the category, however short the name. */
@@ -83,9 +86,9 @@ roll-strip>roll-char{display:block;height:1lh}
  .records table td:first-child{position:static;flex:1 1 calc(100% - 10rem);min-width:0;padding:0;background:none}
  .records table td.amount{order:1;flex:none;margin-inline-start:auto;text-align:end}
  /* The second line starts under the name text: the 44px record icon plus its 12px gap. */
- .records table td:nth-child(2){order:2;display:flex;flex-wrap:wrap;gap:6px;margin-inline-start:56px}
- /* Dates stay beside the category and wrap inside their own space, so the second line never falls back to the card's edge. */
- .records table td:nth-child(3){order:3;flex:1 1 0;min-width:0;font-size:var(--type-caption)}
+ .records table td:nth-child(2){order:2;display:flex;flex-wrap:wrap;flex:0 1 auto;min-width:0;gap:6px;margin-inline-start:56px}
+ /* Dates stay beside the category, whose chips wrap first; a date never shrinks below its own text (it once collapsed to 8px). */
+ .records table td:nth-child(3){order:3;flex:1 0 auto;max-width:100%;font-size:var(--type-caption)}
  /* Actions take their own line on every card, so they sit in the same place card after card. */
  .records table td:last-child{order:4;flex:1 0 100%;width:auto;padding:0}
  .records table td:last-child .row-actions{justify-content:flex-end}
@@ -93,7 +96,7 @@ roll-strip>roll-char{display:block;height:1lh}
 }
 /* Narrow columns: upcoming payments and small summary tables become cards instead of sideways-scrolling rows. */
 @container content (max-width:720px){
- .upcoming-section thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .upcoming-section thead{position:absolute;display:block;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
  .upcoming-section :is(table,tbody){display:block;white-space:normal}
  .upcoming-section tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 12px;padding:14px 16px;border-bottom:1px solid var(--hairline)}
  .upcoming-section tbody tr{padding-inline:0}
@@ -102,7 +105,7 @@ roll-strip>roll-char{display:block;height:1lh}
  .upcoming-section td:last-child{grid-column:1/-1;text-align:start}
  .upcoming-section td:last-child:empty,.upcoming-section td:last-child:has(.row-actions:empty){display:none}
  /* Small summary tables: name and main figure on one line, the remaining columns beneath, right-aligned. */
- .stack-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .stack-table thead{position:absolute;display:block;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
  .stack-table,.stack-table tbody{display:block;white-space:normal}
  /* Two lines: the name and its detail line on the left across both; the main figure top right, the remaining figures (received,
   * progress, actions) side by side under it, instead of each on its own right-aligned line beside empty space. */
@@ -119,6 +122,15 @@ roll-strip>roll-char{display:block;height:1lh}
  .upcoming-section tbody tr.table-group-row{display:block;padding:16px 0 4px;border-bottom:0}
  .upcoming-section tbody:has(>.table-group-row) tr:not(.table-group-row){padding-inline:16px}
  .upcoming-section .table-group-row th{display:block;padding:0;border:0}
+}
+/* Small figure tables on a phone: each row is a card, the name first and every figure on its own line beside its column label (`data-label`). */
+@container content (max-width:560px){
+ .label-table thead{position:absolute;display:block;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .label-table,.label-table tbody{display:block;white-space:normal}
+ .label-table tbody tr{display:grid;gap:6px;padding:12px 0;border-bottom:1px solid var(--hairline)}
+ .label-table tbody tr:last-child{border-bottom:0}
+ .panel .label-table tbody td{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:0;border:0;text-align:end}
+ .label-table tbody td[data-label]::before{content:attr(data-label);color:var(--muted-foreground);font-size:var(--type-caption);text-align:start}
 }
 
 .record-dialog{max-height:90svh;overflow:auto}

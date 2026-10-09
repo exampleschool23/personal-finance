@@ -48,7 +48,7 @@
 .topbar-location>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topbar-actions{display:flex;align-items:center;gap:8px}
 .topbar-actions [data-slot=button]{height:38px;min-height:38px}
-@media(max-width:640px){.topbar{gap:8px}.topbar-page-title .page-eyebrow{display:none}.topbar-actions{gap:6px}.quick-expense{width:38px;padding:0}@media(pointer:coarse){.quick-expense{width:44px}}.quick-expense>span{display:none}}
+@media(max-width:640px){.topbar{gap:8px}.topbar-page-title .page-eyebrow{display:none}.topbar-page-title h1{white-space:normal;line-height:1.2;overflow-wrap:break-word}.topbar-actions{gap:6px}.quick-expense{width:38px;padding:0}@media(pointer:coarse){.quick-expense{width:44px}}.quick-expense>span{display:none}}
 .content{padding:32px 36px;max-width:1640px;margin:auto}
 .workspace .content{container:content/inline-size;display:flex;flex-direction:column;gap:var(--space-page);width:100%;max-width:1440px;margin-inline:auto;padding:28px 36px 0}
 .workspace .content>*{flex-shrink:0;margin-block:0}

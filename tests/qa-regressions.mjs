@@ -170,7 +170,7 @@ test('QA 2026-10-02: dialogs explain limits, prefill scheduled amounts and offer
 test('dashboard payments show each instalment, and the comparison line is labelled as investments',()=>{
  const read=path=>fs.readFileSync(path,'utf8');
  const overview=read('components/overview-page.tsx');
- assert.match(overview,/money\(item\.amount, item\.record\.currency\)/,'a loan shows its monthly payment, not the outstanding balance');
+ assert.match(overview,/show\(item\.amount, item\.record\.currency\)/,'a loan shows its monthly payment, not the outstanding balance');
  assert.doesNotMatch(overview,/money\(item\.record\.amount, item\.record\.currency\)/);
  assert.match(overview,/upcomingPayments\(planning\.records, planning\.occurrences, undefined, undefined, planning\.debtPayments\)/);
  const comparison=read('components/investment-comparison.tsx');
@@ -312,6 +312,7 @@ test('Record payment starts from the account that last paid the loan or bill, el
 
 test('a disabled Save in an account operation says why beside it', () => {
  const source = fs.readFileSync('components/planning/account-operation.tsx', 'utf8');
- assert.match(source, /\{blocked&&!busy&&<p className="muted" role="status">\{t\(blocked\)\}<\/p>\}/);
+ assert.match(source, /\{blocked&&!busy&&<p className="muted" role="status" id=\{blockedId\}>\{t\(blocked\)\}<\/p>\}/);
+ assert.match(source, /aria-describedby=\{blocked&&!busy\?blockedId:undefined\}/, 'the disabled Save names its reason');
  assert.match(source, /'Choose a cash account\.'/);
 });

@@ -155,7 +155,7 @@ function WhatIfPanel({ adjustments, currency, today, onChange }: { adjustments: 
    <label>{t('Amount')}<FormattedNumberInput value={amount} required={false} onValueChange={setAmount} ariaLabel={t('Amount')}/></label>
    <Segmented label={t('Repeats')} options={[{ value: 'Once', label: t('One time') }, { value: 'Monthly', label: t('Every month') }] as const} value={frequency} onChange={setFrequency}/>
    <label>{t('Start date')}<DatePicker value={date} min={today} onChange={setDate}/></label>
-   <Button type="submit" disabled={!(amount > 0) || !date || adjustments.length >= 50}>{t('Add change')}</Button>
+   <Button type="submit" disabled={!(amount > 0) || !date || adjustments.length >= 50} title={amount > 0 ? undefined : t('Enter an amount greater than zero.')}>{t('Add change')}</Button>
   </form>
   {adjustments.length > 0 && <ul className="tool-list">{adjustments.map(item => <li key={item.id}>
    <span><strong>{item.name || t('What-if change')}</strong><p>{t(item.frequency === 'Monthly' ? 'Every month' : 'One time')} · {t('From {date}', { date: formatDate(item.date, locale) })}</p></span>

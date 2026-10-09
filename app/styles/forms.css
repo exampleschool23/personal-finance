@@ -143,10 +143,23 @@
 .expense-plans td { vertical-align: middle; padding-top: 12px; padding-bottom: 12px; }
 .expense-plan-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .expense-plan-name { display: flex; align-items: flex-start; flex-direction: column; gap: 6px; min-width: 170px; }
-.expense-plans-empty { padding: 24px 0; color: var(--muted-foreground); }
 @media (max-width: 640px) {
  .expense-plans .panel-title { align-items: flex-start; gap: 12px; flex-direction: column; }
  .expense-plans .row-actions { flex-wrap: wrap; }
+}
+/* On a phone each plan is a card: name and planned amount, labelled Spent and Remaining, the budget bar, then the actions. */
+@container content (max-width:560px){
+ .expense-plan-table thead{position:absolute;display:block;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .expense-plan-table,.expense-plan-table tbody{display:block;white-space:normal}
+ .expense-plan-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:8px 12px;padding:14px 0;border-bottom:1px solid var(--hairline)}
+ .expense-plan-table tbody tr:last-child{border-bottom:0}
+ .expense-plans .expense-plan-table tbody td{display:block;padding:0;border:0}
+ .expense-plan-table .expense-plan-name{min-width:0}
+ .expense-plan-table td:is(:nth-child(2),:nth-child(4)){text-align:end}
+ .expense-plan-table td:is(:nth-child(3),:nth-child(4)){font-size:var(--type-caption)}
+ .expense-plan-table td:is(:nth-child(3),:nth-child(4))::before{content:attr(data-label) " ";color:var(--muted-foreground)}
+ .expense-plan-table td:nth-child(n+5){grid-column:1/-1}
+ .expense-plan-table .row-actions{justify-content:flex-end}
 }
 
 /* Shared loading placeholders use theme colors and respect reduced motion. */
@@ -186,8 +199,8 @@
 .comparison-legend button:disabled{opacity:.4;cursor:not-allowed}
 .comparison-legend i,.comparison-table i{width:9px;height:9px;display:inline-block;border-radius:50%;flex-shrink:0}
 .comparison-table i{margin-inline-end:8px}
-.comparison-table{width:100%;font-size:var(--type-compact)}.comparison-table th{text-align:start}.comparison-table th,.comparison-table td{padding:12px 10px;border-bottom:1px solid var(--border)}
-.comparison-table td:not(:first-child){white-space:nowrap;font-variant-numeric:tabular-nums}
+.comparison-table{width:100%;font-size:var(--type-compact)}.comparison-table th{text-align:start;white-space:normal;vertical-align:bottom}.comparison-table th,.comparison-table td{padding:12px 10px;border-bottom:1px solid var(--border)}
+.comparison-table :is(th,td):not(:first-child){text-align:end}.comparison-table td:first-child{white-space:normal}.comparison-table td:not(:first-child){white-space:nowrap;font-variant-numeric:tabular-nums}
 .comparison-settings{margin-top:24px}
 .comparison-settings-options{display:flex;flex-wrap:wrap;gap:14px 24px;margin:20px 0}
 .comparison-settings-options label{display:flex;align-items:center;gap:9px;font-size:var(--type-body)}

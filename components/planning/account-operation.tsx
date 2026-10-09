@@ -4,7 +4,7 @@ import { ExchangeRatePreview } from '@/components/presentation-foundation/exchan
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { useDatedExchangeRate } from '@/hooks/use-dated-exchange-rate';
 import { useDiscardChanges } from '@/components/discard-changes';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Dialog,DialogContent,DialogTitle,DialogDescription } from '@/components/ui/dialog';
@@ -32,6 +32,7 @@ export function AccountOperation({operation,records,activity,save,onClose}:{oper
  const convertedPayment=['repayment','mortgage','occurrence'].includes(operation.action)&&!!account&&!!target&&account.currency!==target.currency;
  const fx=useDatedExchangeRate(convertedPayment?account?.currency:undefined,target?.currency,draft.paid_on??draft.date);
  const noAmount=(['transfer','repayment'].includes(operation.action)&&draft.amount<=0)||(operation.action==='mortgage'&&draft.amount+draft.fee<=0);
+ const blockedId=useId();
  const blocked=!draft.account_id?'Choose a cash account.':noAmount?'Enter an amount greater than zero.':convertedPayment&&!fx.rate&&!fx.loading?'Exchange rate unavailable.':'';
  const [initialDraft]=useState(()=>JSON.stringify(draft));
  const guard=useDiscardChanges(JSON.stringify(draft)!==initialDraft,onClose,busy);
@@ -63,7 +64,7 @@ export function AccountOperation({operation,records,activity,save,onClose}:{oper
  {convertedPayment&&<><ExchangeRatePreview fx={fx}/>{fx.rate&&account&&<p className="muted">{t('Account amount')}: {formatMoney((operation.action==='occurrence'?draft.amount:draft.amount+draft.fee)/fx.rate,account.currency,locale)}</p>}</>}
  <ErrorPopup message={error}/>
  {/* Why Save is off, said beside it: a disabled button shows no tooltip on most screens. */}
- {blocked&&!busy&&<p className="muted" role="status">{t(blocked)}</p>}
- <FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy||!!blocked||(operation.action==='reconcile'&&balanceBlank)||(convertedPayment&&!fx.rate)}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></FormFooter>
+ {blocked&&!busy&&<p className="muted" role="status" id={blockedId}>{t(blocked)}</p>}
+ <FormFooter busy={busy} onCancel={guard.close}><Button disabled={busy||!!blocked||(operation.action==='reconcile'&&balanceBlank)||(convertedPayment&&!fx.rate)} aria-describedby={blocked&&!busy?blockedId:undefined}>{t(busy?'Saving…':submitted?'Retry':'Save')}</Button></FormFooter>
  </form></DialogContent></Dialog>{guard.confirmation}</>;
 }

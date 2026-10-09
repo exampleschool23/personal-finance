@@ -26,6 +26,14 @@ function positive(value: unknown) {
   if (!Number.isFinite(number) || number <= 0) throw new Error('invalid_price');
   return number;
 }
+/** A Twelve Data price without its float noise: `close` arrives as single precision, so 330.32 reads "330.32001" and 238.9
+ * "238.89999" (FMT-023). Four decimals, or six significant digits below a dollar, keep every real quote. */
+export function marketQuote(value: unknown) {
+  const number = positive(value);
+  const places = Math.max(4, 5 - Math.floor(Math.log10(number)));
+  const scale = 10 ** places;
+  return Math.round(number * scale) / scale;
+}
 // Coinbase's spot endpoint has no market for these coins, or answers with an unrelated asset that shares the ticker (JUP).
 export const krakenCoins = new Set(['XMR', 'JUP', 'KAS', 'MNT', 'OKB', 'BGB', 'NEO', 'XDC', 'QTUM', 'CELO', 'AR', 'RUNE', 'A', 'DYDX', 'GMX', 'LRC', 'STORJ', 'GRASS', 'GALA', 'ENJ', 'NOT', 'MEW', 'USDE', 'RLUSD', 'XAUT']);
 async function krakenPrice(symbol: string) {
@@ -72,7 +80,7 @@ export async function loadMarket(crypto:string[],stocks:string[],stockAccess:boo
       const result = await read(url.href, 300) as { symbol?: string; currency?: string; close?: string; datetime?: string; timestamp?: number; is_market_open?: boolean };
       // Only USD-denominated stocks are supported; never treat a foreign quote as USD.
       if (result.symbol !== symbol || result.currency !== 'USD') throw new Error('invalid_quote');
-      const quote: Quote = { usd: positive(result.close), source: 'Twelve Data', fetchedAt: new Date().toISOString() };
+      const quote: Quote = { usd: marketQuote(result.close), source: 'Twelve Data', fetchedAt: new Date().toISOString() };
       if (Number.isFinite(result.timestamp)) quote.marketTime = new Date(result.timestamp! * 1000).toISOString();
       data.quotes[`Stock:${symbol}`] = quote;
     } catch { data.errors[`Stock:${symbol}`] = 'Price unavailable. Saved price is shown.'; }
@@ -86,7 +94,7 @@ export async function loadMarket(crypto:string[],stocks:string[],stockAccess:boo
       url.searchParams.set('symbol', `${symbol}/USD`); url.searchParams.set('apikey', key!);
       const result = await read(url.href, 300) as { symbol?: string; close?: string; timestamp?: number };
       if (result.symbol !== `${symbol}/USD`) throw new Error('invalid_quote');
-      const quote: Quote = { usd: positive(result.close), source: 'Twelve Data', fetchedAt: new Date().toISOString() };
+      const quote: Quote = { usd: marketQuote(result.close), source: 'Twelve Data', fetchedAt: new Date().toISOString() };
       if (Number.isFinite(result.timestamp)) quote.marketTime = new Date(result.timestamp! * 1000).toISOString();
       data.quotes[`Metal:${symbol}`] = quote;
     } catch { data.errors[`Metal:${symbol}`] = 'Price unavailable. Saved price is shown.'; }

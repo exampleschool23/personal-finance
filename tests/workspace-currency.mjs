@@ -8,7 +8,7 @@ const passthrough=({children})=>React.createElement('div',null,children);
 function component(file,name){
  const states=[];let cursor=0;
  const loaded=loadTS(file,{
-  react:{...React,useState(initial){const index=cursor++;if(!(index in states))states[index]=typeof initial==='function'?initial():initial;return [states[index],value=>{states[index]=value;}];}},
+  react:{...React,useContext:context=>context._currentValue,useState(initial){const index=cursor++;if(!(index in states))states[index]=typeof initial==='function'?initial():initial;return [states[index],value=>{states[index]=value;}];}},
   '@/hooks/use-owner-resource':{useOwnerResource:()=>({data:{records:[]},loading:false,error:'',retry(){}})},
   'next/link':{__esModule:true,default:passthrough},
   '@/components/language-provider':{useLanguage:()=>({t:key=>key,locale:'en-US'})},
@@ -71,7 +71,8 @@ test('new expense plans inherit current header currency while editing preserves 
  find(tree,node=>node.props?.onClick&&React.Children.toArray(node.props.children).includes('Add monthly plan')).props.onClick();
  tree=render.tree(props);
  assert.equal(currencyChoice(form(tree)).props.value,'EUR');
- find(tree,node=>node.props?.['aria-label']==='Edit {name}').props.onClick();
+ // Edit is a rare action, so it sits in the row's ⋯ menu.
+ find(tree,node=>node.props?.label==='Actions for {name}'&&Array.isArray(node.props.items)).props.items.find(item=>item&&item.label==='Edit').onSelect();
  tree=render.tree(props);
  assert.equal(currencyChoice(form(tree)).props.value,'USD');
  assert.equal(find(form(tree),node=>node.props?.value===12.125).props.value,12.125);

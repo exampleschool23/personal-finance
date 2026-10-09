@@ -105,7 +105,7 @@ export function OnboardingScreen({ brand, initial, telegram, savePreferences, ap
       {current === 'goal' && <>
         <h1 ref={heading} tabIndex={-1}>{t('Set a first target.')}</h1>
         <p className={styles.lead}>{t('A net worth to aim for. Skip this if you would rather start with your records.')}</p>
-        <label className={styles.field} htmlFor="onboarding-target">{t('Target amount')}<span className={styles.amount}><FormattedNumberInput value={goal.target} required={false} onValueChange={value => setGoal({ ...goal, target: value })}/><span>{primary}</span></span></label>
+        <label className={styles.field}>{t('Target amount')}<span className={styles.amount}><FormattedNumberInput value={goal.target} required={false} onValueChange={value => setGoal({ ...goal, target: value })}/><span>{primary}</span></span></label>
         <p className={styles.groupLabel} id="onboarding-horizon">{t('When do you want to reach it?')}</p>
         <div className={styles.options} role="group" aria-labelledby="onboarding-horizon">
           {goalHorizons.map(years => <button key={years} type="button" className={styles.option} aria-pressed={goal.horizon === years} onClick={() => setGoal({ ...goal, horizon: goal.horizon === years ? null : years })}><span className={styles.optionMark}><Check size={14} strokeWidth={3} aria-hidden="true"/></span><strong>{t(years === 1 ? 'In 1 year' : 'In {years} years', { years })}</strong><span>{formatDate(horizonDate(today, years), locale)}</span></button>)}

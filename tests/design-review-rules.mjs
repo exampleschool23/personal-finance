@@ -181,8 +181,10 @@ test('cards line up on one edge, and summary tables keep their figures together 
  const css=stylesheet();
  // The table's 24px first and last cell padding stays out of a record card; the second line starts under the name text.
  assert.match(css,/\.records table td:first-child\{position:static;flex:1 1 calc\(100% - 10rem\);min-width:0;padding:0;/);
- assert.match(css,/\.records table td:nth-child\(2\)\{order:2;display:flex;flex-wrap:wrap;gap:6px;margin-inline-start:56px\}/);
- assert.match(css,/\.records table td:nth-child\(3\)\{order:3;flex:1 1 0;min-width:0;/,'dates wrap beside the category, not back at the card edge');
+ assert.match(css,/\.records table td:nth-child\(2\)\{order:2;display:flex;flex-wrap:wrap;flex:0 1 auto;min-width:0;gap:6px;margin-inline-start:56px\}/,'category chips wrap first');
+ assert.match(css,/\.records table td:nth-child\(3\)\{order:3;flex:1 0 auto;max-width:100%;/,'a date keeps its own width beside the category (it once collapsed to 8px and spilled out of the card)');
+ // A visually hidden header is a block, so its overflow:hidden applies; table sections ignore it and widened the card scroller by 26px.
+ for (const table of ['.records table thead','.upcoming-section thead','.stack-table thead','.label-table thead','.expense-plan-table thead']) assert.match(css,new RegExp(table.replace(/[.]/g,'\\.')+'\\{position:absolute;display:block;'),table);
  // Summary tables (Income this month, Spending plans): name across two lines, figures side by side on the right.
  assert.match(css,/\.stack-table tbody tr\{display:grid;grid-template-columns:minmax\(0,1fr\) auto auto;/);
  assert.match(css,/\.stack-table tbody td:first-child\{grid-row:1\/3;/);
@@ -265,4 +267,55 @@ test('Reports keeps the 8 October 2026 review fixes (SCR-095, SCR-096, HEAD-011,
  const {sankeyColumns,sankeyMinWidth}=loadTS('lib/sankey-labels.ts');
  const flows={nodes:[{name:'a'},{name:'b'},{name:'c'},{name:'d'}],links:[{source:0,target:2,value:1},{source:1,target:2,value:1},{source:2,target:3,value:1}]};
  assert.equal(sankeyColumns(flows),3);assert.equal(sankeyMinWidth(flows,{left:150,right:140}),570);assert.equal(sankeyMinWidth(flows,{left:150,right:140,middle:180}),698,'a long middle label widens its gap');
+});
+
+test('the 9 October 2026 full review fixes stay fixed (SCR-097…SCR-104, HEAD-016, DLG-023, COMP-040, A11Y-017)', () => {
+ const css=stylesheet(),read=file=>fs.readFileSync(file,'utf8');
+ // Names and goal meta lines wrap instead of ellipsising (LIST-007).
+ assert.match(css,/\.goal-row-line>strong:first-child\{min-width:0;font-size:var\(--type-body\);font-weight:500;overflow-wrap:break-word\}/);
+ assert.match(css,/\.goal-row-meta>span:first-child>span:last-child\{min-width:0;overflow-wrap:break-word\}/);
+ assert.match(css,/\.recurring-edit\{[^}]*overflow-wrap:break-word/);assert.doesNotMatch(css,/\.recurring-edit\{[^}]*text-overflow:ellipsis/);
+ assert.match(css,/\.transaction-merchant strong\{overflow-wrap:break-word;/);
+ // Stacked recurring rows: the progress line shrinks to its column instead of running under the actions.
+ assert.match(css,/\[data-layout=stacked\]>\.recurring-row>\.progress-line\{min-width:0;/);
+ // The phone top bar wraps a long title (the greeting) rather than cutting it mid-letter; the h1 is a flex box, so ellipsis never applied.
+ assert.match(css,/@media\(max-width:640px\)\{[^}]*\}[^@]*\.topbar-page-title h1\{white-space:normal;/);
+ // The dashboard income table fits its card: headers wrap, amounts end-aligned.
+ assert.match(css,/\.comparison-table th\{text-align:start;white-space:normal;/);assert.match(css,/\.comparison-table :is\(th,td\):not\(:first-child\)\{text-align:end\}/);
+ // Small figure tables and expense plans become labelled cards on a phone.
+ assert.match(css,/\.label-table tbody td\[data-label\]::before\{content:attr\(data-label\)/);
+ assert.match(read('components/portfolio-allocation-plan.tsx'),/<table className="label-table">/);
+ const plans=read('components/expense-plans.tsx');
+ assert.match(plans,/<table className="expense-plan-table">/);assert.match(plans,/<RowMenu label=\{t\('Actions for \{name\}'/,'Stop, Edit and Delete sit in the ⋯ menu');
+ assert.match(plans,/<EmptyState icon=\{<ShoppingBasket/);assert.doesNotMatch(plans,/expense-plans-empty/);
+ // Reminders: the explanation is behind the ⓘ, not a grey sentence under the heading.
+ assert.match(read('components/reminder-panel.tsx'),/<PanelTitle title=\{t\('Reminders'\)\} hint=/);
+ // Form dialogs keep their explanation behind the ⓘ and read it to screen readers only.
+ for(const file of ['components/stop-schedule-dialog.tsx','components/expense-plans.tsx','components/investment-comparison-settings.tsx','components/financial-review.tsx','components/investment-tracker.tsx','components/transaction-tools-panel.tsx','components/income-sources-panel.tsx','components/planning/goals-page.tsx','components/planning/statement-reconciliation.tsx','components/planning/corporate-event-dialog.tsx','components/planning/holding-account-dialog.tsx','components/transaction-details-dialog.tsx','components/planning/accounts/add-account-dialog.tsx','components/account-owners-dialog.tsx','components/record-dialog/heading.tsx'])
+  assert.doesNotMatch(read(file),/<DialogDescription>/,file);
+ // Disabled controls say why.
+ assert.match(read('components/cash-forecast.tsx'),/title=\{amount > 0 \? undefined : t\('Enter an amount greater than zero\.'\)\}/);
+ assert.match(read('components/transaction-tools-panel.tsx'),/title=\{!name\.trim\(\)&&!disabled\?t\('Enter a name\.'\):undefined\}/);
+ assert.match(read('components/planning/goal-forecast.tsx'),/aria-describedby=\{`\$\{id\}-status`\} onClick=\{savePlan\}/);
+ assert.match(read('components/import-history.tsx'),/batch\.result\.added>0&&<Button type="button" disabled=\{busy\}/,'an import that added nothing offers no Undo');
+ // Full-screen steppers start on the step's question, and a standalone access page has its one h1.
+ for(const file of ['components/planning/goal-setup-flow.tsx','components/business-setup-flow.tsx'])assert.match(read(file),/onOpenAutoFocus=\{focusStep\}[\s\S]*ref=\{stepRef\}/,file);
+ assert.match(read('components/account-access-panel.tsx'),/const Heading=settings\?'h2':'h1';/);
+ assert.doesNotMatch(read('components/onboarding-screen.tsx'),/htmlFor="onboarding-target"/,'the target amount keeps its wrapping label');
+});
+
+test('the 9 October 2026 follow-up stays fixed (THEME-009, MOT-001, MOT-005, A11Y-019, RESP-018)', () => {
+ const css=stylesheet(),read=file=>fs.readFileSync(file,'utf8');
+ // The theme follows the device until the person picks one with the toggle.
+ assert.match(read('components/theme-provider.tsx'),/defaultTheme="system" enableSystem storageKey="hoggish-theme"/);
+ // The landing hero and pillar buttons stand still under reduced motion.
+ assert.match(read('components/landing-page.module.css'),/@media\(prefers-reduced-motion:reduce\)\{[^@]*\.heroReplay\{animation:none\}\.pillarList button\{transition:none\}/);
+ // Every P&L drill button is named after its row (and its business), through ids safe for category names with spaces.
+ const reports=read('components/business-reports.tsx');
+ assert.match(reports,/rowId = \(key: string\) => `\$\{idBase\}\$\{encodeURIComponent\(key\)\}`/);
+ assert.match(reports,/className="pnl-drill" id=\{rowId\(key\) \+ ":drill"\} aria-label=\{t\('Show transactions'\)\} aria-labelledby=/);
+ // Small report-row controls keep their size but take a 44px tap on touch screens.
+ assert.match(css,/:not\([^)]*\.pnl-toggle,\.pnl-drill,\.report-drill>button\)\{min-height:44px!important\}/);
+ assert.match(css,/:is\(\.pnl-toggle,\.pnl-drill\)::after\{content:"";position:absolute;inset:-11px\}/);
+ assert.match(css,/\.report-drill>button::after\{content:"";position:absolute;inset:-12px\}/);
 });

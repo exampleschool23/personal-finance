@@ -1,6 +1,7 @@
 "use client";
 import { ArrowLeft, Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
+import { useStepFocus } from '@/hooks/use-step-focus';
 import { useLanguage } from '@/components/language-provider';
 import { BusinessProfileFields } from '@/components/business-profile-fields';
 import { BusinessMark } from '@/components/presentation-foundation/business-mark';
@@ -27,6 +28,7 @@ type Props = { businesses: readonly Entry[]; records: readonly Entry[]; newBusin
 export function BusinessSetupFlow({ businesses, records, newBusiness, saveBusiness, setAccountBusiness, onClose, guideOnly = false, hasTags = false, onAddAccount }: Props) {
  const { t, locale } = useLanguage();
  const [step, setStep] = useState(guideOnly ? steps.length - 1 : 0), [trackedBefore, setTrackedBefore] = useState<boolean | null>(null);
+ const { ref: stepRef, onOpenAutoFocus: focusStep } = useStepFocus<HTMLDivElement>(step);
  const [drafts, setDrafts] = useState<Entry[]>(() => businesses.length ? businesses.map(item => ({ ...item })) : [{ ...newBusiness(), business_color: nextPaletteColor([]) }]);
  const [assignments, setAssignments] = useState<Record<string, string | null>>(() => Object.fromEntries(records.filter(isBusinessAccount).map(record => [record.id, record.business_id ?? null])));
  const [busy, setBusy] = useState(false), [error, setError] = useState('');
@@ -69,7 +71,7 @@ export function BusinessSetupFlow({ businesses, records, newBusiness, saveBusine
  const guidance = setupGuide(trackedBefore, hasTags);
 
  return <Dialog open onOpenChange={open => { if (!open && !busy) onClose(); }}>
-  <DialogContent className="goal-setup business-setup top-0 left-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:max-w-none" showCloseButton={false}>
+  <DialogContent className="goal-setup business-setup top-0 left-0 flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:max-w-none" showCloseButton={false} onOpenAutoFocus={focusStep}>
    <header className="goal-setup-bar">
     {step && name !== 'done' ? <Button variant="ghost" size="icon" disabled={busy} aria-label={t('Back')} onClick={() => setStep(step - 1)}><ArrowLeft size={18} aria-hidden="true"/></Button> : <span className="goal-setup-spacer"/>}
     <DialogTitle className="sr-only">{t('Set up business tracking')}</DialogTitle><DialogDescription className="sr-only">{t(stepLabels[name])}</DialogDescription>
@@ -77,7 +79,7 @@ export function BusinessSetupFlow({ businesses, records, newBusiness, saveBusine
     <Button variant="ghost" size="icon" disabled={busy} aria-label={t('Close')} onClick={onClose}><X size={18} aria-hidden="true"/></Button>
    </header>
    {!guideOnly && <div className="goal-setup-progress" aria-hidden="true"><span style={{ width: `${(step + 1) / steps.length * 100}%` }}/></div>}
-   <div className="goal-setup-body">
+   <div className="goal-setup-body" ref={stepRef}>
     {name === 'start' && <section className="goal-setup-single">
      <h1>{t('Have you tracked a business here before?')}</h1>
      <ul className="goal-template-grid business-setup-choices">{([[true, '🗂️', 'Yes, I track one by hand', 'With category groups or tags'], [false, '✨', 'No, I’m starting fresh', 'Set up a business from scratch']] as const).map(([choice, emoji, title, detail]) => <li key={String(choice)} className="goal-template" data-selected={trackedBefore === choice || undefined}>

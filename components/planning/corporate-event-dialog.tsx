@@ -1,4 +1,5 @@
 "use client";
+import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import {FormFooter} from '@/components/presentation-foundation/form-footer';
 import {ResourceState} from '@/components/presentation-foundation/resource-state';
 import { showSaved } from '@/lib/feedback';
@@ -26,7 +27,7 @@ export function CorporateEventDialog({record,records,accounts,owner,onSaved,onCl
  const guard=useDiscardChanges(draft.gross>0||draft.quantity>0||draft.numerator>0||!!draft.notes,onClose,busy);
  const targets=records.filter(r=>r.id!==record.id&&r.currency===record.currency&&(draft.kind==='dividend'?r.kind==='Cash':r.kind===record.kind&&r.name===record.name));
  const valid=corporateEventSchema.safeParse(draft).success;
- return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t('Investment events')} · {record.name}</DialogTitle><DialogDescription>{t('Use confirmed broker figures. Linked cash, shares and history are saved together. Recorded events cannot be edited here.')}</DialogDescription>
+ return <><Dialog open onOpenChange={open=>{if(!open&&!busy)guard.close();}}><DialogContent className="record-dialog" showCloseButton={!busy}><DialogTitle>{t('Investment events')} · {record.name}<InfoHint>{t('Use confirmed broker figures. Linked cash, shares and history are saved together. Recorded events cannot be edited here.')}</InfoHint></DialogTitle><DialogDescription className="sr-only">{t('Use confirmed broker figures. Linked cash, shares and history are saved together. Recorded events cannot be edited here.')}</DialogDescription>
  <form className="record-form" onSubmit={async e=>{e.preventDefault();if(busy||!valid)return;setBusy(true);setSubmitted(true);setError('');try{await requestJson('/api/corporate-events',{body:draft});showSaved();onSaved();onClose();}catch(e){if((e as RequestError).confirmedFailure)setSubmitted(false);setError((e as Error).message);}finally{setBusy(false);}}}>
  <fieldset className="tracker-fields" disabled={busy||submitted}><label>{t('Event type')}<NativeSelect value={draft.kind} onChange={e=>setDraft({...draft,kind:e.target.value as CorporateEvent['kind'],target_id:null,target_revision:null,gross:0,withholding:0,reinvest_amount:0,quantity:0,numerator:0,denominator:0})}>{record.kind==='Stock'&&<><option value="dividend">{t('Dividend')}</option><option value="split">{t('Stock split')}</option></>}<option value="security_transfer">{t('Security transfer')}</option></NativeSelect></label>
  <p>{t('Quantity')}: {formatNumber(record.quantity,locale,8)} · {t('Purchase cost')}: {formatMoney(record.quantity*record.cost,record.currency,locale)}</p>

@@ -30,19 +30,19 @@
 .pnl-table tbody th>*{vertical-align:middle}
 .pnl-label{display:inline-flex;align-items:center;gap:8px}
 .pnl-label small{color:var(--muted-foreground);font-size:var(--type-caption);font-weight:400}
-.pnl-toggle{display:inline-grid;place-items:center;width:22px;height:22px;margin-inline:-4px 4px;border-radius:6px;color:var(--muted-foreground);vertical-align:middle}
+.pnl-toggle{position:relative;display:inline-grid;place-items:center;width:22px;height:22px;margin-inline:-4px 4px;border-radius:6px;color:var(--muted-foreground);vertical-align:middle}
 .pnl-toggle:hover{background:var(--muted);color:var(--foreground)}
 .pnl-toggle>svg{transition:transform .15s}
 .pnl-toggle[aria-expanded=false]>svg{transform:rotate(-90deg)}
 [dir=rtl] .pnl-toggle[aria-expanded=false]>svg{transform:rotate(90deg)}
 @media (prefers-reduced-motion:reduce){.pnl-toggle>svg{transition:none}}
-.pnl-drill{display:inline-grid;place-items:center;width:24px;height:24px;margin-inline-start:6px;border-radius:6px;color:var(--muted-foreground);opacity:0}
+.pnl-drill{position:relative;display:inline-grid;place-items:center;width:24px;height:24px;margin-inline-start:6px;border-radius:6px;color:var(--muted-foreground);opacity:0}
 .pnl-table tr:hover .pnl-drill,.pnl-drill:focus-visible{opacity:1}
 .pnl-drill:hover{background:var(--muted);color:var(--foreground)}
 @media (hover:none){.pnl-drill{opacity:1}}
 .report-transactions{display:flex;flex-direction:column;gap:12px}
 .report-drill{display:inline-flex;align-items:center;gap:6px;padding:2px 4px 2px 10px;border-radius:999px;background:color-mix(in srgb,var(--mark-bg) 12%,transparent);font-size:var(--type-caption);font-weight:500}
-.report-drill>button{display:grid;place-items:center;width:20px;height:20px;border-radius:50%}
+.report-drill>button{position:relative;display:grid;place-items:center;width:20px;height:20px;border-radius:50%}
 .report-drill>button:hover{background:color-mix(in srgb,var(--mark-bg) 20%,transparent)}
 .report-transaction-list{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
 .report-transaction-list>li>*{display:grid;grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr) minmax(max-content,.45fr);align-items:center;gap:12px;width:100%;padding:9px 0;font-size:var(--type-small);text-align:start}
