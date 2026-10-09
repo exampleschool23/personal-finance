@@ -210,7 +210,7 @@ test('an expense amount in the transaction details stays in the ink colour',()=>
 test('Cash flow, Dashboard and Goals estimate the monthly surplus from the same full rows, loan payments included',()=>{
  const provider=fs.readFileSync('components/workspace/workspace-provider.tsx','utf8');
  // Summary rows carry no estimated_monthly_payment for loans and debts; Goals already reads the planning rows.
- assert.match(provider,/estimatedCashFlow\(monthlyIncomeEntries, planningMonth\)/);
+ assert.match(provider,/estimatedCashFlow\(monthlyIncomeEntries, planningMonth, monthBudget\.lines\)/);
  assert.match(fs.readFileSync('components/planning/goals-page.tsx','utf8'),/goalFinancials\(data\.records,/);
  const {estimatedCashFlow}=loadTS('lib/finance.ts');
  const loan={id:'l',name:'QA Car loan',kind:'Loan',currency:'USD',amount:7200,quantity:1,cost:0,rate:7.5,date:'2028-12-31',frequency:'Once',notes:'',estimated_monthly_payment:350};

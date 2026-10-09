@@ -79,13 +79,33 @@ export const monthly=(e:Entry,month?:string)=>e.source_paused||(month?archivedIn
 const duplicatesBusinessEstimate = (entry: Entry, businessIds: Set<string>) => ['Other income','Business income'].includes(entry.kind) && !!entry.business_id && businessIds.has(entry.business_id);
 export const duplicatesAssetEstimate = (entry:Entry,businessIds:Set<string>,propertyIds:Set<string>) => duplicatesBusinessEstimate(entry,businessIds)||(entry.kind==='Rent income'&&!!entry.income_source_id&&propertyIds.has(entry.income_source_id));
 
-export function estimatedCashFlow(entries: Entry[], month?: string) {
+// Budget lines as the forecasts read them (lib/budget-forecast.ts makes them from a Budget state).
+/** A month's spending budget as the forecasts read it: one Budget line, the spending categories it covers and its
+ * amount in the display currency. In flex mode the Flexible bucket is one line over every flexible category. */
+export type BudgetLine = { key: string; name: string; categoryKeys: string[]; amount: number };
+/** The category a transaction or schedule is budgeted under: its own category, else its kind. */
+export const budgetKey = (record: { custom_category_id?: string | null; kind: string }) => record.custom_category_id ?? record.kind;
+
+/** Expected spending of each line: its budget, or what is already scheduled in its categories when that is more.
+ * A bill inside a budget is part of it, so the two are never added. `scheduled` is per category key. */
+export function budgetedSpending(lines: readonly BudgetLine[], scheduled: ReadonlyMap<string, number>) {
+ const covered = new Set(lines.flatMap(line => line.categoryKeys));
+ const outside = [...scheduled].filter(([key]) => !covered.has(key)).reduce((sum, [, amount]) => sum + amount, 0);
+ const inside = lines.reduce((sum, line) => sum + Math.max(line.amount, line.categoryKeys.reduce((total, key) => total + (scheduled.get(key) ?? 0), 0)), 0);
+ return outside + inside;
+}
+
+/** The month's estimate. With the month's Budget `lines` (in the entries' currency), each budgeted category expects the
+ * larger of its budget and its recurring bills; spending outside a budget is its recurring bills alone. */
+export function estimatedCashFlow(entries: Entry[], month?: string, lines?: readonly BudgetLine[]) {
  const estimatedAssets = entries.filter(e => ['Business','Property',...interestKinds].includes(e.kind) && (e.estimated_monthly_income ?? 0) > 0);
  const businessIds = new Set(estimatedAssets.filter(e => e.kind === 'Business').map(e => e.id));
  const propertyIds = new Set(estimatedAssets.filter(e=>e.kind==='Property').map(e=>e.id));
  const estimatedIncome = estimatedAssets.reduce((sum,e) => sum + (e.estimated_monthly_income ?? 0), 0);
  const otherIncome = entries.filter(e => income.includes(e.kind) && !duplicatesAssetEstimate(e, businessIds, propertyIds)).reduce((sum,e) => sum + monthly(e, month), 0);
- const monthlyExpenses = entries.filter(e => expenses.includes(e.kind)).reduce((sum,e) => sum + monthly(e, month), 0);
+ const scheduled = new Map<string, number>();
+ for (const e of entries) if (expenses.includes(e.kind)) scheduled.set(budgetKey(e), (scheduled.get(budgetKey(e)) ?? 0) + monthly(e, month));
+ const monthlyExpenses = budgetedSpending(lines ?? [], scheduled);
  const monthlyPayment = (kinds: string[]) => entries.filter(e => kinds.includes(e.kind) && e.amount > 0).reduce((sum,e) => sum + (e.estimated_monthly_payment ?? 0), 0);
  const mortgagePayments = monthlyPayment(['Mortgage']);
  // Loans and debts with a monthly payment are due every month too (see hasMonthlyInstallment in planning).

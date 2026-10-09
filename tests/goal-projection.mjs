@@ -58,7 +58,7 @@ test('a deadline today has not passed; the required amount shown is a whole amou
 test('only Cash flow follows its month picker; other screens plan for the current month',()=>{
  const provider=workspaceSource();
  assert.match(provider,/const planningMonth = section === 'Income & expenses' \? forecastMonth : depositMonth\(\);/);
- assert.match(provider,/estimatedCashFlow\(monthlyIncomeEntries, planningMonth\)/);
+ assert.match(provider,/estimatedCashFlow\(monthlyIncomeEntries, planningMonth, monthBudget\.lines\)/);
 });
 
 test('milestones mark the months that receive an investment and show both monthly amounts',()=>{

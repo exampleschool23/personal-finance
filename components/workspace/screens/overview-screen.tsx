@@ -24,7 +24,7 @@ import { marketRates } from '@/lib/market';
 
 export function OverviewScreen() {
  const { t } = useLanguage();
- const { user, demo, rows, addCashFlow, current, currency, market, reload, preferencesData, excludedCurrencies, snapshots, forecast, forecastReady, planning, transactionTools, workspacePreferences, workspaceLoading, businessList, setSettingUpBusinesses } = useWorkspace();
+ const { user, demo, rows, addCashFlow, current, currency, market, forecastBudget, reload, preferencesData, excludedCurrencies, snapshots, forecast, forecastReady, planning, transactionTools, workspacePreferences, workspaceLoading, businessList, setSettingUpBusinesses } = useWorkspace();
  const planningReady = demo || (!planning.loading && !planning.error);
  const cards = useOverviewCards({ entries: current, currency, excludedCurrencies, forecast, forecastReady, planning: planningReady ? planning.data : null });
  const { layout, change } = useDashboardLayout(workspacePreferences, demo);
@@ -41,7 +41,7 @@ export function OverviewScreen() {
   goals: planningReady && <GoalsCard goals={planning.data.goals} order={savedGoalOrder(workspacePreferences.data.preferences)} data={planning.data} currency={currency} netWorth={code => goalFinancials(planning.data.records, depositToday().slice(0, 7), code, market).netWorth}/>,
   transactions: planningReady && <RecentTransactionsCard owner={user} demo={demo} revision={reload} data={planning.data}/>,
   upcoming: cards.upcoming,
-  forecast: planningReady && <LowestBalanceCard data={planning.data} currency={currency} rates={marketRates(market)}/>,
+  forecast: planningReady && <LowestBalanceCard data={planning.data} budget={forecastBudget} currency={currency} rates={marketRates(market)}/>,
   income,
  });
  return <>

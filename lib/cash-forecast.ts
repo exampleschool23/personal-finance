@@ -1,6 +1,6 @@
 import { validDay } from './benchmark-data';
-import { shiftDay } from './calendar-days';
-import { income, liabilities, scheduleDates, type Entry } from './finance';
+import { shiftDay, shiftMonth } from './calendar-days';
+import { budgetKey, expenses, income, liabilities, scheduleDates, type BudgetLine, type Entry } from './finance';
 import { convertAmount } from './market';
 import { hasMonthlyInstallment, installmentAnchor, installmentsFrom, paidInstallmentMonths, upcomingPayments, type DebtPayment, type Occurrence } from './planning';
 
@@ -10,9 +10,10 @@ export type ForecastHorizon = typeof forecastHorizons[number];
 
 /** A temporary what-if: money in (positive) or out (negative), once or every month from its date. Kept on the screen, never saved. */
 export type ForecastAdjustment = { id: string; name: string; amount: number; frequency: 'Once' | 'Monthly'; date: string };
-export type ForecastSource = 'scheduled' | 'installment' | 'repayment' | 'maturity' | 'adjustment';
-/** One dated movement of cash. `amount` is signed (income positive) in `currency`; `accountId` is the cash account it moves, when known. */
-export type ForecastEvent = { key: string; date: string; name: string; kind: Entry['kind']; source: ForecastSource; amount: number; currency: string; accountId: string | null };
+export type ForecastSource = 'scheduled' | 'installment' | 'repayment' | 'maturity' | 'budget' | 'adjustment';
+/** One dated movement of cash. `amount` is signed (income positive) in `currency`; `accountId` is the cash account it moves, when known.
+ * A scheduled income or bill carries the Budget `category` it falls under. */
+export type ForecastEvent = { key: string; date: string; name: string; kind: Entry['kind']; source: ForecastSource; amount: number; currency: string; accountId: string | null; category?: string };
 export type ForecastPoint = { date: string; balance: number };
 /** A projected balance, day by day. A total has no account. `belowZero` is the first day the balance is negative. */
 export type ForecastSeries = { id: string; name: string; currency: string; accountId: string | null; start: number; end: number; points: ForecastPoint[]; lowest: ForecastPoint; belowZero: string | null };
@@ -22,9 +23,14 @@ export type ForecastMonth = { month: string; events: ForecastEvent[]; total: num
  * events no rate converts are left out of it and counted in `missing`; `converted` is true when none is. */
 export type CashForecast = { today: string; end: string; events: ForecastEvent[]; accounts: ForecastSeries[]; totals: ForecastSeries[]; converted: boolean; missing: number; months: ForecastMonth[]; belowZero: ForecastSeries[] };
 
+/** Budget as the projected cash reads it, in the display currency: each month's spending lines, and this month's
+ * spending so far per category key. */
+export type CashForecastBudget = { linesFor: (month: string) => BudgetLine[]; spent: ReadonlyMap<string, number> };
+
 type Input = {
  records: Entry[]; occurrences: Occurrence[]; debtPayments?: DebtPayment[];
  adjustments?: readonly ForecastAdjustment[];
+ budget?: CashForecastBudget;
  today: string; days: number; currency: string; rates?: number | Record<string, number>;
 };
 
@@ -48,6 +54,26 @@ function installmentEvents(record: Entry, today: string, end: string, paid: Set<
  return result;
 }
 
+/** What each month's budgets add beyond the bills already scheduled in their categories, in the display currency:
+ * this month what is left after the spending so far and the bills still due, today; a later month the rest, on its
+ * first day. A bill that no rate converts leaves its budget out rather than counting it twice. */
+function budgetEvents(scheduled: readonly ForecastEvent[], input: Input, end: string): ForecastEvent[] {
+ const budget = input.budget, { today, currency, rates } = input;
+ if (!budget) return [];
+ const result: ForecastEvent[] = [];
+ for (let month = today.slice(0, 7); month <= end.slice(0, 7); month = shiftMonth(month, 1)) {
+  const current = month === today.slice(0, 7);
+  for (const line of budget.linesFor(month)) {
+   const bills = scheduled.filter(event => event.amount < 0 && event.date.slice(0, 7) === month && line.categoryKeys.includes(event.category ?? '')).map(event => convertAmount(-event.amount, event.currency, currency, rates));
+   if (bills.some(amount => amount === null)) continue;
+   const spent = current ? line.categoryKeys.reduce((sum, key) => sum + (budget.spent.get(key) ?? 0), 0) : 0;
+   const rest = line.amount - spent - bills.reduce<number>((sum, amount) => sum + amount!, 0);
+   if (rest > 0) result.push({ key: 'budget:' + line.key + ':' + month, date: current ? today : month + '-01', name: line.name, kind: expenses.includes(line.key) ? line.key as Entry['kind'] : 'Other expense', source: 'budget', amount: -rest, currency, accountId: null, category: line.key });
+  }
+ }
+ return result;
+}
+
 /** Every cash movement from today through the horizon, by date. Overdue items are left out: the forecast starts from today's balances. */
 export function forecastEvents(input: Input): ForecastEvent[] {
  const { records, occurrences, today, currency } = input;
@@ -57,7 +83,7 @@ export function forecastEvents(input: Input): ForecastEvent[] {
   if (item.date < today) continue;
   const record = item.record;
   if (item.type === 'scheduled') {
-   events.push({ key: item.key, date: item.date, name: record.name, kind: record.kind, source: 'scheduled', amount: (income.includes(record.kind) ? 1 : -1) * Number(item.amount), currency: record.currency, accountId: record.account_id ?? null });
+   events.push({ key: item.key, date: item.date, name: record.name, kind: record.kind, source: 'scheduled', amount: (income.includes(record.kind) ? 1 : -1) * Number(item.amount), currency: record.currency, accountId: record.account_id ?? null, category: budgetKey(record) });
   } else if (item.type === 'maturity' || record.kind === 'Money lent') {
    events.push({ key: item.key, date: item.date, name: record.name, kind: record.kind, source: item.type, amount: Number(item.amount), currency: record.currency, accountId: record.account_id ?? null });
   } else if (liabilities.includes(record.kind) && !hasMonthlyInstallment(record)) {
@@ -66,6 +92,7 @@ export function forecastEvents(input: Input): ForecastEvent[] {
  }
  const paid = paidInstallmentMonths(input.debtPayments ?? []);
  for (const record of records) events.push(...installmentEvents(record, today, end, paid));
+ events.push(...budgetEvents(events.filter(event => event.source === 'scheduled'), input, end));
  for (const adjustment of input.adjustments ?? []) {
   if (!Number.isFinite(adjustment.amount) || !adjustment.amount) continue;
   for (const date of scheduleDates({ date: adjustment.date, frequency: adjustment.frequency }, today, end))

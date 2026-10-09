@@ -42,7 +42,7 @@ export function useOverviewCards({ entries, currency, excludedCurrencies, foreca
   <PanelTitle title={<>{t("Monthly commitments")} {forecastReady && figure(t('{amount} left', { amount: money(forecast.forecast) }))}</>} hint={<>
    <p>{t('Estimated asset income: {amount}', { amount: money(forecast.estimatedIncome) })}</p>
    <p>{t('Other recurring income: {amount}', { amount: money(forecast.otherIncome) })}</p>
-   <p>{t("Yearly records are divided by 12. One-time records are excluded.")}</p>
+   <p>{t("Yearly records are divided by 12. A category's budget counts when it is more than the bills in that category. One-time records are excluded.")}</p>
   </>}/>
   <ul className="overview-list overview-commitments">
    <li><CategoryIcon kind="Salary"/><span>{t("Income")}</span><strong className="positive">{money(forecast.plannedIncome)}</strong></li>

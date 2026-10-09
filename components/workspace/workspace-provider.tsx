@@ -44,6 +44,7 @@ import { useRecordFormTool } from './state/use-record-form-tool';
 import { useRecordSave } from './state/use-record-save';
 import { useOpenDialogs } from './state/use-open-dialogs';
 import { useSampleWorkspace } from './state/use-sample-workspace';
+import { useForecastBudget } from './state/use-forecast-budget';
 import { workspaceLoading, workspaceTotals } from '@/lib/workspace-totals';
 import { useRecordTable } from './state/use-record-table';
 import { recordForms } from './state/record-forms';
@@ -121,10 +122,13 @@ function useWorkspaceState() {
         }
         clearLocalSession();
     }
-    const forecastReady = !planning.loading && !planning.error;
     const { current, monthlyIncomeEntries, excludedCurrencies, totalDebt, netWorth } = workspaceTotals({ records: demo ? rows : summary, planningRecords: planning.data.records, currency, market });
+    // Budget amounts count in the monthly estimate and the projected cash; a budget no rate converts leaves the estimate unknown.
+    const budgetForecast = useForecastBudget({ user, demo, reload, data: planning.data, splits: transactionTools.data.splits, currency, market });
+    const monthBudget = budgetForecast.linesIn(planningMonth);
+    const forecastReady = !planning.loading && !planning.error && budgetForecast.ready && !monthBudget.missing;
     // Full planning rows, as on Goals: summary rows leave out loan and debt payments.
-    const forecast = estimatedCashFlow(monthlyIncomeEntries, planningMonth);
+    const forecast = estimatedCashFlow(monthlyIncomeEntries, planningMonth, monthBudget.lines);
     const table = useRecordTable({ user, demo, section, locale, currency, market, reload, rows, setRows, setSummary, setError, current, planning });
     const { sectionKey, historyPage, tableLoading, summaryLoaded } = table;
     // Viewing someone's household as a viewer records no daily snapshot; wait to know the role first.
@@ -161,7 +165,7 @@ function useWorkspaceState() {
         currency, setCurrency: settings.setCurrency, preferencesData, applyPreferences: settings.applyPreferences, savePreferences: settings.savePreferences, settingsLoading, settingsError: settings.settingsError, retrySettings: settings.retrySettings, workspacePreferences, onboardingNeeded: settings.onboardingNeeded, restartOnboarding: settings.restartOnboarding, saveTrackingStart: saveTrackingStartRequest,
         // Records and market data
         rows, summary, current, categoryIcons, removedCategories, market, marketLoading, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, snapshots,
-        reload, refreshRecords, forecast, forecastReady, forecastMonth, setForecastMonth, excludedCurrencies, netWorth, totalDebt, monthlyIncomeEntries,
+        reload, refreshRecords, forecast, forecastReady, forecastBudget: budgetForecast.cash, goalBudget: budgetForecast.view, forecastMonth, setForecastMonth, excludedCurrencies, netWorth, totalDebt, monthlyIncomeEntries,
         availableBusinesses, businessList, tags, attachments, overdueCount, workspaceLoading: loading, deletedItems: bin.deletedItems, restoreDemoItem: bin.restoreDemoItem, discardDeletedItem: bin.discardDeletedItem,
         // Record table
         filters: table.filters, setFilters: table.setFilters, filtersActive: table.filtersActive, historyOnly: table.historyOnly, useFilteredRecords: table.useFilteredRecords, remoteHistory: table.remoteHistory, historyPage, visible: table.visible, totalRecords: table.totalRecords, pageCount: table.pageCount, tablePage: table.tablePage, tableLoading,
