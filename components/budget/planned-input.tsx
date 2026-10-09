@@ -35,8 +35,18 @@ function HistoryPanel({ history, direction, currency, amount, forward, onForward
  </div>;
 }
 
-/** An editable planned amount. Focusing it opens the History popover; leaving it saves. */
-export function PlannedInput({ label, value, history, direction, currency, defaultForward, onSave }: { label: string; value: number; history: BudgetHistory; direction: BudgetRow['direction']; currency: string; defaultForward: boolean; onSave: (amount: number, forward: boolean) => Promise<void> }) {
+type PlannedProps = { label: string; value: number; history: BudgetHistory; direction: BudgetRow['direction']; currency: string; defaultForward: boolean; onSave: (amount: number, forward: boolean) => Promise<void> };
+
+/** An editable planned amount. A saved amount no rate converts (`value` null) reads — and is not editable here:
+ * a 0 in its place would overwrite the real amount on save. */
+export function PlannedInput({ value, ...props }: Omit<PlannedProps, 'value'> & { value: number | null }) {
+ const { t } = useLanguage();
+ if (value === null) return <span className="budget-pill" role="img" aria-label={`${props.label}: ${t('Exchange rate unavailable.')}`} title={t('Exchange rate unavailable.')}>—</span>;
+ return <EditablePlannedInput {...props} value={value}/>;
+}
+
+/** Focusing the amount opens the History popover; leaving it saves. */
+function EditablePlannedInput({ label, value, history, direction, currency, defaultForward, onSave }: PlannedProps) {
  const { t } = useLanguage();
  const anchor = useRef<HTMLSpanElement>(null);
  const [open, setOpen] = useState(false);
@@ -54,7 +64,7 @@ export function PlannedInput({ label, value, history, direction, currency, defau
     <FormattedNumberInput ariaLabel={label} value={draft} onValueChange={next => setDraft(next)} required={false} displayFractionDigits={0}/>
    </span>
   </PopoverAnchor>
-  <PopoverContent className="budget-history-popover" align="end" onOpenAutoFocus={event => event.preventDefault()} onInteractOutside={event => { if (anchor.current?.contains(event.target as Node)) event.preventDefault(); }}>
+  <PopoverContent className="budget-history-popover" align="end" collisionPadding={16} onOpenAutoFocus={event => event.preventDefault()} onInteractOutside={event => { if (anchor.current?.contains(event.target as Node)) event.preventDefault(); }}>
    <HistoryPanel history={history} direction={direction} currency={currency} amount={draft} forward={forward} onForward={setForward}/>
   </PopoverContent>
  </Popover>;
