@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Monedă salvată · Conversie indisponibilă",
   "Saved value": "Valoare salvată",
   "Share of holdings": "Pondere în portofoliu",
-  "Show more assets": "Arată mai multe active",
   "Your holdings": "Dețineri tale",
   "{shown} of {total} assets": "{shown} din {total} active",
   "No matching assets": "Niciun activ corespunzător",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Această imagine nu a putut fi citită.",
   "Could not update transactions. Check that the latest migrations are installed.": "Tranzacțiile nu au putut fi actualizate. Verifică dacă sunt instalate cele mai recente migrări.",
   "Create rules": "Creează reguli",
-  "Custom range": "Interval personalizat",
   "Date range": "Interval de date",
   "Deductible meals": "Mese deductibile",
   "Depletion": "Epuizare",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Această tranzacție nu aparține niciunei operațiuni. Șterge-o în mod obișnuit.",
   "Delete later trades of this holding first.": "Șterge mai întâi tranzacțiile ulterioare ale acestei dețineri.",
   "This operation cannot be deleted.": "Această operațiune nu poate fi ștearsă.",
-  "Record not found.": "Înregistrarea nu a fost găsită."
+  "Record not found.": "Înregistrarea nu a fost găsită.",
+  "Asset pages": "Pagini de active",
+  "{date} – pick the last day": "{date} – alegeți ultima zi",
+  "Pick the first and last day": "Alegeți prima și ultima zi"
 }

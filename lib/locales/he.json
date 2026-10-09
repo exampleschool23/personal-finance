@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "מטבע שמור · ההמרה אינה זמינה",
   "Saved value": "שווי שמור",
   "Share of holdings": "חלק מהאחזקות",
-  "Show more assets": "הצגת עוד נכסים",
   "Your holdings": "האחזקות שלכם",
   "{shown} of {total} assets": "{shown} מתוך {total} נכסים",
   "No matching assets": "אין נכסים תואמים",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "לא ניתן לקרוא את התמונה הזו.",
   "Could not update transactions. Check that the latest migrations are installed.": "לא ניתן לעדכן את העסקאות. יש לוודא שהמיגרציות האחרונות מותקנות.",
   "Create rules": "יצירת כללים",
-  "Custom range": "טווח מותאם",
   "Date range": "טווח תאריכים",
   "Deductible meals": "ארוחות מוכרות לניכוי",
   "Depletion": "אזילה",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "לעסקה הזו אין פעולה מקושרת. מחקו אותה כרגיל.",
   "Delete later trades of this holding first.": "מחקו קודם עסקאות מאוחרות יותר של הנכס הזה.",
   "This operation cannot be deleted.": "לא ניתן למחוק את הפעולה הזו.",
-  "Record not found.": "הרשומה לא נמצאה."
+  "Record not found.": "הרשומה לא נמצאה.",
+  "Asset pages": "דפי נכסים",
+  "{date} – pick the last day": "{date} – בחרו את היום האחרון",
+  "Pick the first and last day": "בחרו את היום הראשון והאחרון"
 }

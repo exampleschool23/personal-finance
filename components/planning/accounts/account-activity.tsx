@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { useLanguage } from '@/components/language-provider';
-import { Button } from '@/components/ui/button';
+import { Pagination } from '@/components/presentation-foundation/pagination';
 import { accountActivityPage } from '@/lib/account-activity-page';
 import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { income, type Entry } from '@/lib/finance';
@@ -48,6 +48,6 @@ export function AccountActivity({ data, owner, currency }: { data: PlanningData;
   <OperationsTable activity={activity} data={data} fallback={currency}/>{!activity.total&&<p className="muted">{t('No account operations yet.')}</p>}
   <MovementsTable activity={activity} data={data} fallback={currency}/>
   <CashFlowTable activity={activity} data={data} fallback={currency}/>
-  <nav className="records-pagination" aria-label={t('Account activity')}><span>{t('Page {page} of {pages} · {count} records',{page:formatNumber(activity.page,locale,0),pages:formatNumber(activity.pages,locale,0),count:formatNumber(activity.total,locale,0)})}</span><div><Button variant="outline" disabled={activity.page<=1} onClick={()=>setActivityPage({owner,page:activity.page-1})}>{t('Previous')}</Button><Button variant="outline" disabled={activity.page>=activity.pages} onClick={()=>setActivityPage({owner,page:activity.page+1})}>{t('Next')}</Button></div></nav>
+  <Pagination label={t('Account activity')} summary={t('Page {page} of {pages} · {count} records',{page:formatNumber(activity.page,locale,0),pages:formatNumber(activity.pages,locale,0),count:formatNumber(activity.total,locale,0)})} page={activity.page} pageCount={activity.pages} hasNext={activity.page<activity.pages} onPage={page=>setActivityPage({owner,page})}/>
  </section>;
 }

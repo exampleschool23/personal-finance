@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "सेव की गई मुद्रा · रूपांतरण उपलब्ध नहीं",
   "Saved value": "सेव किया गया मूल्य",
   "Share of holdings": "होल्डिंग्स में हिस्सा",
-  "Show more assets": "और संपत्तियाँ दिखाएं",
   "Your holdings": "आपकी होल्डिंग्स",
   "{shown} of {total} assets": "{total} में से {shown} संपत्तियाँ",
   "No matching assets": "कोई मिलती-जुलती संपत्ति नहीं",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "यह इमेज पढ़ी नहीं जा सकी।",
   "Could not update transactions. Check that the latest migrations are installed.": "लेन-देन अपडेट नहीं हो सके। जांचें कि नवीनतम माइग्रेशन इंस्टॉल हैं।",
   "Create rules": "नियम बनाएं",
-  "Custom range": "कस्टम अवधि",
   "Date range": "तारीख की अवधि",
   "Deductible meals": "कटौती योग्य भोजन",
   "Depletion": "अवक्षय",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "यह लेन-देन किसी जुड़ी हुई कार्रवाई से नहीं है। इसे सामान्य तरीके से हटाएँ।",
   "Delete later trades of this holding first.": "पहले इस होल्डिंग के बाद वाले ट्रेड हटाएँ।",
   "This operation cannot be deleted.": "यह कार्रवाई हटाई नहीं जा सकती।",
-  "Record not found.": "रिकॉर्ड नहीं मिला।"
+  "Record not found.": "रिकॉर्ड नहीं मिला।",
+  "Asset pages": "संपत्ति पृष्ठ",
+  "{date} – pick the last day": "{date} – अंतिम दिन चुनें",
+  "Pick the first and last day": "पहला और अंतिम दिन चुनें"
 }

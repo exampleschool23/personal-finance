@@ -81,6 +81,6 @@ export function RecordsTable({ title, transactions = false, limit, pagination = 
    </tr>)}</tbody>
   </table></div> : <EmptyState icon={<Wallet />} title={t(filtersActive?'No matching records':'A fresh start')} description={t(filtersActive?'Try another search or clear the filters.':'Add a record in {currency} to start building your overview.', { currency })}>{filtersActive&&<Button variant="outline" onClick={()=>setFilters(emptyRecordFilters)}>{t('Clear filters')}</Button>}<Button variant="outline" onClick={addRecord}><Plus />{transactions ? t("Add your first expense") : t("Add your first record")}</Button></EmptyState>}
   {children}
-  {!tableLoading && pagination && <Pagination label={t('Record pages')} summary={t('Page {page} of {pages} · {count} records', { page: formatNumber(tablePage, locale, 0), pages: formatNumber(pageCount, locale, 0), count: formatNumber(totalRecords, locale, 0) })} page={tablePage} hasNext={tablePage < pageCount} disabled={recordsLoading || busy} onPage={showPage}/>}
+  {!tableLoading && pagination && <Pagination label={t('Record pages')} summary={t('Page {page} of {pages} · {count} records', { page: formatNumber(tablePage, locale, 0), pages: formatNumber(pageCount, locale, 0), count: formatNumber(totalRecords, locale, 0) })} page={tablePage} pageCount={pageCount} hasNext={tablePage < pageCount} disabled={recordsLoading || busy} onPage={showPage}/>}
  </section>;
 }

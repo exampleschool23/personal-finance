@@ -47,7 +47,7 @@ const charts = hostModule({ attributeColor: (attribute, key) => attribute + ':' 
 const modules = {
  ...ui.modules,
  'lucide-react': hostModule(), '@/components/business-reports': charts, '@/components/cash-flow-report': hostModule(), '@/components/tax-prep-sheet': hostModule(),
- ...Object.fromEntries(['page-header', 'segmented', 'panel-title', 'stat-tile', 'business-filter', 'owner-filter', 'inline-error', 'loading-placeholder'].map(name => ['@/components/presentation-foundation/' + name, hostModule()])),
+ ...Object.fromEntries(['page-header', 'segmented', 'panel-title', 'stat-tile', 'business-filter', 'owner-filter', 'inline-error', 'loading-placeholder', 'date-range-picker'].map(name => ['@/components/presentation-foundation/' + name, hostModule()])),
  '@/components/presentation-foundation/tone': { signTone: value => value > 0 ? 'positive' : value < 0 ? 'negative' : undefined },
  '@/components/workspace/workspace-provider': { useWorkspace: () => workspace },
  '@/hooks/use-budget': { useBudget: () => ({ state: { categories: [] } }) },
@@ -148,12 +148,15 @@ test('a link opens a tab, a business and a view; tax prep needs a business', () 
 
 test('a custom range picks its own days, and loading or failed reads show their state', () => {
  open();
- r.fire(r.find(byType(ui.NativeSelect)), 'onChange', { currentTarget: { value: 'custom' } });
- const pickers = r.all(byType(ui.DatePicker));
- assert.equal(pickers.length, 2);
- r.fire(pickers[0], 'onChange', `${Number(year) - 3}-01-01`);
+ const picker = () => r.find(byType('DateRangePicker'));
+ assert.deepEqual([picker().props.preset, picker().props.range], ['this_year', { from: `${year}-01-01`, to: today }], 'a preset shows its own days on the calendar');
+ r.fire(picker(), 'onRange', { from: `${Number(year) - 3}-01-01`, to: today });
+ assert.equal(picker().props.preset, 'custom');
+ assert.deepEqual(picker().props.range, { from: `${Number(year) - 3}-01-01`, to: today });
  assert.ok(r.html().includes('Reports cover up to 24 months.'));
- r.fire(r.all(byType(ui.DatePicker))[1], 'onChange', null);
+ r.fire(picker(), 'onPreset', 'last_month');
+ assert.equal(picker().props.preset, 'last_month');
+ assert.ok(!r.html().includes('Reports cover up to 24 months.'));
  range = { ...range, loading: true };r.update();
  assert.ok(r.find(byType('PanelSkeleton')));
  range = { ...range, loading: false, error: 'Could not load records.' };r.update();

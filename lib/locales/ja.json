@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "保存済みの通貨 · 換算できません",
   "Saved value": "保存済みの価値",
   "Share of holdings": "保有割合",
-  "Show more assets": "さらに資産を表示",
   "Your holdings": "保有資産",
   "{shown} of {total} assets": "{total}件中{shown}件の資産",
   "No matching assets": "一致する資産はありません",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "この画像を読み込めませんでした。",
   "Could not update transactions. Check that the latest migrations are installed.": "取引を更新できませんでした。最新のマイグレーションがインストールされているか確認してください。",
   "Create rules": "ルールを作成",
-  "Custom range": "カスタム期間",
   "Date range": "期間",
   "Deductible meals": "控除対象の飲食費",
   "Depletion": "減耗償却費",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "この取引は他の操作に紐づいていません。通常どおり削除してください。",
   "Delete later trades of this holding first.": "先にこの保有資産のその後の取引を削除してください。",
   "This operation cannot be deleted.": "この操作は削除できません。",
-  "Record not found.": "記録が見つかりません。"
+  "Record not found.": "記録が見つかりません。",
+  "Asset pages": "資産のページ",
+  "{date} – pick the last day": "{date} – 最終日を選択",
+  "Pick the first and last day": "開始日と最終日を選択"
 }

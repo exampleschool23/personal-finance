@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "저장된 통화 · 환산 불가",
   "Saved value": "저장된 가치",
   "Share of holdings": "보유 비중",
-  "Show more assets": "자산 더 보기",
   "Your holdings": "내 보유 자산",
   "{shown} of {total} assets": "자산 {total}개 중 {shown}개",
   "No matching assets": "일치하는 자산이 없어요",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "이 이미지를 읽을 수 없습니다.",
   "Could not update transactions. Check that the latest migrations are installed.": "거래를 업데이트할 수 없습니다. 최신 마이그레이션이 설치되었는지 확인하세요.",
   "Create rules": "규칙 만들기",
-  "Custom range": "사용자 지정 기간",
   "Date range": "기간",
   "Deductible meals": "공제 가능한 식비",
   "Depletion": "감모상각비",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "이 거래는 연결된 작업이 없습니다. 평소처럼 삭제하세요.",
   "Delete later trades of this holding first.": "이 보유 자산의 이후 거래를 먼저 삭제하세요.",
   "This operation cannot be deleted.": "이 작업은 삭제할 수 없습니다.",
-  "Record not found.": "기록을 찾을 수 없습니다."
+  "Record not found.": "기록을 찾을 수 없습니다.",
+  "Asset pages": "자산 페이지",
+  "{date} – pick the last day": "{date} – 마지막 날을 선택하세요",
+  "Pick the first and last day": "첫날과 마지막 날을 선택하세요"
 }

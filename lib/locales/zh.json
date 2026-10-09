@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "已保存币种 · 无法换算",
   "Saved value": "已保存价值",
   "Share of holdings": "持仓占比",
-  "Show more assets": "显示更多资产",
   "Your holdings": "您的持仓",
   "{shown} of {total} assets": "共 {total} 项资产，显示 {shown} 项",
   "No matching assets": "没有匹配的资产",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "无法读取此图片。",
   "Could not update transactions. Check that the latest migrations are installed.": "无法更新交易。请检查是否已安装最新的迁移。",
   "Create rules": "创建规则",
-  "Custom range": "自定义范围",
   "Date range": "日期范围",
   "Deductible meals": "可抵扣餐费",
   "Depletion": "折耗",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "这笔交易不属于任何关联操作，请按常规方式删除。",
   "Delete later trades of this holding first.": "请先删除该持仓之后的交易。",
   "This operation cannot be deleted.": "此操作无法删除。",
-  "Record not found.": "未找到记录。"
+  "Record not found.": "未找到记录。",
+  "Asset pages": "资产分页",
+  "{date} – pick the last day": "{date} – 选择最后一天",
+  "Pick the first and last day": "选择第一天和最后一天"
 }

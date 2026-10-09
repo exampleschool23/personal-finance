@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "محفوظ شدہ کرنسی · تبدیلی دستیاب نہیں",
   "Saved value": "محفوظ شدہ مالیت",
   "Share of holdings": "ہولڈنگز کا حصہ",
-  "Show more assets": "مزید اثاثے دکھائیں",
   "Your holdings": "آپ کی ہولڈنگز",
   "{shown} of {total} assets": "{total} میں سے {shown} اثاثے",
   "No matching assets": "کوئی مماثل اثاثہ نہیں",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "یہ تصویر پڑھی نہیں جا سکی۔",
   "Could not update transactions. Check that the latest migrations are installed.": "لین دین اپ ڈیٹ نہیں ہو سکے۔ چیک کریں کہ تازہ ترین مائیگریشنز انسٹال ہیں۔",
   "Create rules": "اصول بنائیں",
-  "Custom range": "حسب ضرورت مدت",
   "Date range": "تاریخ کی حد",
   "Deductible meals": "قابل کٹوتی کھانے",
   "Depletion": "فرسودگیِ وسائل",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "یہ لین دین کسی منسلک عمل سے نہیں ہے۔ اسے عام طریقے سے حذف کریں۔",
   "Delete later trades of this holding first.": "پہلے اس ہولڈنگ کی بعد والی ٹریڈز حذف کریں۔",
   "This operation cannot be deleted.": "یہ عمل حذف نہیں کیا جا سکتا۔",
-  "Record not found.": "ریکارڈ نہیں ملا۔"
+  "Record not found.": "ریکارڈ نہیں ملا۔",
+  "Asset pages": "اثاثوں کے صفحات",
+  "{date} – pick the last day": "{date} – آخری دن منتخب کریں",
+  "Pick the first and last day": "پہلا اور آخری دن منتخب کریں"
 }

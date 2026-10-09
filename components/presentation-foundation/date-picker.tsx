@@ -66,7 +66,8 @@ function DayPicker({ value, onChange, min, max, required = true, presets = defau
 
 // Port of the POS MonthCalendar markup and 42-day, Monday-first grid.
 // Radix only handles positioning/focus; no third-party calendar renderer is used.
-function MonthCalendar({ monthKey, draft, min, max, onSelect, onYearChange, previous, next }: { monthKey: string; draft: string; min?: string; max?: string; onSelect: (date: string) => void; onYearChange: (year: number) => void; previous?: () => void; next?: () => void }) {
+// With `rangeTo` it marks a range: `draft` and `rangeTo` are its ends, the days between are tinted.
+export function MonthCalendar({ monthKey, draft, rangeTo, min, max, onSelect, onYearChange, previous, next }: { monthKey: string; draft: string; rangeTo?: string; min?: string; max?: string; onSelect: (date: string) => void; onYearChange: (year: number) => void; previous?: () => void; next?: () => void }) {
   const { locale, t } = useLanguage();
   const weekdays = weekdayLabels(locale);
   const today = calendarIso(new Date());
@@ -80,7 +81,7 @@ function MonthCalendar({ monthKey, draft, min, max, onSelect, onYearChange, prev
     {choosingYear ? <button type="button" disabled={yearStart + 23 > 9999} onClick={() => setYearStart(yearStart + 12)} aria-label={t('Next years')}><ChevronRight size={17}/></button> : next ? <button type="button" disabled={!!max && monthKey >= max.slice(0, 7)} onClick={next} aria-label={t('Next month')}><ChevronRight size={17}/></button> : <span/>}
   </div>{choosingYear ? <div className="pos-year-grid">{Array.from({ length: 12 }, (_, index) => yearStart + index).map(option => <button type="button" key={option} aria-pressed={option === year} onClick={() => { onYearChange(option); setChoosingYear(false); yearTrigger.current?.focus(); }}>{formatYear(option, locale)}</button>)}</div> : <div className="pos-month-grid" aria-label={formatMonthYear(monthKey, locale)}>
     {weekdays.map(day => <span className="pos-weekday" key={day}>{day}</span>)}
-    {buildRangeCalendar(monthKey).map(day => <button key={day.date} type="button" disabled={!day.inMonth || (!!min && day.date < min) || (!!max && day.date > max)} aria-label={formatDate(day.date, locale)} aria-current={day.date === today ? 'date' : undefined} aria-pressed={day.date === draft} data-outside={!day.inMonth || undefined} className={'pos-day' + (day.date === draft ? ' pos-selected' : day.date === today ? ' pos-today' : '')} onClick={() => onSelect(day.date)} onKeyDown={event => {
+    {buildRangeCalendar(monthKey).map(day => <button key={day.date} type="button" disabled={!day.inMonth || (!!min && day.date < min) || (!!max && day.date > max)} aria-label={formatDate(day.date, locale)} aria-current={day.date === today ? 'date' : undefined} aria-pressed={day.date === draft || day.date === rangeTo} data-outside={!day.inMonth || undefined} className={'pos-day' + (day.date === draft || day.date === rangeTo ? ' pos-selected' : !!rangeTo && day.date > draft && day.date < rangeTo ? ' pos-in-range' : day.date === today ? ' pos-today' : '')} onClick={() => onSelect(day.date)} onKeyDown={event => {
       const offset = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[event.key];
       if (offset === undefined) return;
       event.preventDefault();

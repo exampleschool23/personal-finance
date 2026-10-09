@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { Segmented } from '@/components/presentation-foundation/segmented';
 import { AttributeTab } from '@/components/reports/attribute-tab';
 import { CashFlowTab } from '@/components/reports/cash-flow-tab';
-import { CustomRange, ReportFilters, type RangeChoice } from '@/components/reports/report-filters';
+import { ReportFilters, type RangeChoice } from '@/components/reports/report-filters';
 import { TaxTab } from '@/components/reports/tax-tab';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 import { useBudget } from '@/hooks/use-budget';
@@ -16,7 +16,7 @@ import { useReportLink } from '@/hooks/use-report-link';
 import { useRangeData } from '@/hooks/use-report-data';
 import { budgetCategories } from '@/lib/budget';
 import { HOUSEHOLD } from '@/lib/business';
-import { drillMatches, filterLines, rangeFor, readableRange, reportLedger, type Drill, type LedgerLine, type ReportRange } from '@/lib/business-report';
+import { drillMatches, filterLines, rangeFor, rangeMonths, readableRange, reportLedger, type Drill, type LedgerLine, type ReportRange } from '@/lib/business-report';
 import { depositToday } from '@/lib/deposit-interest';
 import { formatDate } from '@/lib/format';
 import { inOwnerFilter, ownerOf, SHARED, workspaceOwners } from '@/lib/household';
@@ -61,9 +61,9 @@ export function ReportsScreen() {
 
  return <div data-page="Reports" className="content reports-content">
   <PageHeader title={t('Reports')} tabs={<Segmented as="nav" className="page-tabs" label={t('Reports')} options={visibleTabs.map(value => ({ value, label: t(tabLabels[value]) }))} value={shownTab} onChange={reset(setTab)}/>} hint={t('Cash flow, spending and income for your household and each business. Click any part of a chart or table to see its transactions.')}>
-   {shownTab !== 'tax' && <ReportFilters businesses={businessList} business={businesses} onBusiness={reset(setBusinesses)} owners={owners} owner={ownerFilter} onOwner={reset(setOwnerFilter)} preset={preset} onPreset={reset(setPreset)}/>}
+   {shownTab !== 'tax' && <ReportFilters businesses={businessList} business={businesses} onBusiness={reset(setBusinesses)} owners={owners} owner={ownerFilter} onOwner={reset(setOwnerFilter)} preset={preset} range={preset === 'custom' ? custom : { from: range.from, to: range.to < today ? range.to : today }} today={today} onPreset={reset(setPreset)} onRange={reset((next: ReportRange) => { setCustom(next); setPreset('custom'); })}/>}
   </PageHeader>
-  {shownTab !== 'tax' && preset === 'custom' && <CustomRange range={custom} today={today} onChange={setCustom}/>}
+  {shownTab !== 'tax' && preset === 'custom' && rangeMonths(custom).length > 24 && <p className="bulk-bar-note" role="status">{t('Reports cover up to 24 months.')}</p>}
   {shownTab === 'tax' ? <TaxTab preferences={workspacePreferences.data.preferences} save={workspacePreferences.save} names={names} onOpen={open}/>
    : error ? <InlineError message={t(error)} onRetry={retry}/> : loading ? <PanelSkeleton label={t('Loading records…')} rows={6}/> : <ReportBody tab={shownTab} lines={lines} names={names} currency={currency} drill={drill} onClear={() => setDrill(null)} missing={ledger.missing} fileName={`${shownTab.replace('_', '-')}-${range.from}-${end}`} onOpen={open}>
     {shownTab === 'cash_flow' ? <CashFlowTab {...tabProps} lines={lines} includeHousehold={!businesses.length || businesses.includes(HOUSEHOLD)} businessIds={businessList.map(item => item.id).filter(id => businesses.includes(id) || (!businesses.length && lines.some(line => line.business === id)))} view={cashView} onView={setCashView} mode={cashMode} onMode={setCashMode}/>

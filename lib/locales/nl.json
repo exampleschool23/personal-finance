@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Opgeslagen valuta · Omrekening niet beschikbaar",
   "Saved value": "Opgeslagen waarde",
   "Share of holdings": "Aandeel in bezit",
-  "Show more assets": "Meer bezittingen tonen",
   "Your holdings": "Uw bezittingen",
   "{shown} of {total} assets": "{shown} van {total} bezittingen",
   "No matching assets": "Geen overeenkomende bezittingen",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Kan deze afbeelding niet lezen.",
   "Could not update transactions. Check that the latest migrations are installed.": "Kan transacties niet bijwerken. Controleer of de nieuwste migraties zijn geïnstalleerd.",
   "Create rules": "Regels maken",
-  "Custom range": "Aangepaste periode",
   "Date range": "Periode",
   "Deductible meals": "Aftrekbare maaltijden",
   "Depletion": "Uitputting",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Deze transactie hoort niet bij een actie. Verwijder hem op de gewone manier.",
   "Delete later trades of this holding first.": "Verwijder eerst latere transacties van deze positie.",
   "This operation cannot be deleted.": "Deze actie kan niet worden verwijderd.",
-  "Record not found.": "Record niet gevonden."
+  "Record not found.": "Record niet gevonden.",
+  "Asset pages": "Pagina's met bezittingen",
+  "{date} – pick the last day": "{date} – kies de laatste dag",
+  "Pick the first and last day": "Kies de eerste en laatste dag"
 }

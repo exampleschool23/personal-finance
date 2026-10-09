@@ -18,7 +18,7 @@ const { AccountsPage } = r.load('components/planning/accounts-page.tsx', {
  '@/components/ui/dialog': { ...ui.modules['@/components/ui/dialog'], DialogTrigger: 'DialogTrigger' },
  '@/components/ui/dropdown-menu': hostModule(), '@/components/ui/input': hostModule(), 'lucide-react': hostModule(),
  'next/link': { __esModule: true, default: 'a' },
- ...Object.fromEntries(['page-header', 'segmented', 'empty-state', 'panel-title', 'stat-tile', 'animated-money', 'business-filter', 'business-mark', 'owner-filter', 'person-avatar', 'category-icon', 'count', 'sortable']
+ ...Object.fromEntries(['page-header', 'segmented', 'empty-state', 'panel-title', 'stat-tile', 'animated-money', 'business-filter', 'business-mark', 'owner-filter', 'person-avatar', 'category-icon', 'count', 'sortable', 'pagination']
   .map(name => ['@/components/presentation-foundation/' + name, hostModule()])),
  ...Object.fromEntries(['./statement-reconciliation', './corporate-event-dialog', './asset-movement-dialog', './account-operation', './holding-account-dialog', '@/components/account-businesses-dialog', '@/components/account-owners-dialog']
   .map(name => [name, hostModule()])),
@@ -203,8 +203,8 @@ test('Recent activity lists operations, movements and income and expenses a page
  assert.ok(page.includes('Reconcile balance') && page.includes('Counted') && page.includes(usd(40)));
  assert.ok(page.includes('Buy holding') && page.includes('10 units') && page.includes(usd(2000)));
  assert.ok(page.includes('Income &amp; expenses') && page.includes(usd(-25)), 'spending is money out');
- assert.ok(page.includes('Page 1 of 1 · 3 records'));
- assert.equal(button('Previous').props.disabled, true);assert.equal(button('Next').props.disabled, true);
+ const pages = r.find(byType('Pagination')).props;
+ assert.deepEqual([pages.summary, pages.page, pages.pageCount, pages.hasNext], ['Page 1 of 1 · 3 records', 1, 1, false]);
  open({ data: { ...data, activity: [], movements: [], records: [wallet] } });
  showActivity();
  assert.ok(html().includes('No account operations yet.'));

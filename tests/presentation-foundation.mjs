@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {loadTS} from './helpers/load-ts.mjs';
+import {byType,createRenderer,hostModule} from './helpers/component-tree.mjs';
 
 const dir='components/presentation-foundation';
 const language={useLanguage:()=>({locale:'en-US',t:(text,values={})=>text.replace(/\{(\w+)\}/g,(_,key)=>values[key]??key)})};
@@ -324,17 +325,48 @@ test('number fields fill in the maximum and say so instead of ignoring an over-l
  cursor=0;assert.equal(renderToStaticMarkup(FormattedNumberInput({value:100,max:100,onValueChange(){}}).props.children[1]),'<small role="alert" class="muted">Enter 100 or less</small>');
 });
 
-test('pagination hides itself when there is no other page, and otherwise moves one page at a time',()=>{
- const {Pagination}=load('pagination.tsx');
+test('pagination numbers its pages, hides itself when there is no other page, and moves to the page clicked',()=>{
+ const {Pagination,pageNumbers}=load('pagination.tsx');
+ assert.deepEqual(pageNumbers(1,4),[1,2,3,4]);
+ assert.deepEqual(pageNumbers(1,12),[1,2,3,4,5,'gap',12]);
+ assert.deepEqual(pageNumbers(6,12),[1,'gap',5,6,7,'gap',12]);
+ assert.deepEqual(pageNumbers(12,12),[1,'gap',8,9,10,11,12]);
  const pages=[];const props={label:'Record pages',summary:'Page 1',page:1,hasNext:false,onPage:page=>pages.push(page)};
  assert.equal(render(Pagination,props),'');
- assert.equal(render(Pagination,{...props,hasNext:true}),'<nav class="records-pagination" aria-label="Record pages"><span>Page 1</span><div><button disabled="">Previous</button><button>Next</button></div></nav>');
+ const html=render(Pagination,{...props,pageCount:3,hasNext:true});
+ assert.match(html,/^<nav class="records-pagination" aria-label="Record pages"><span>Page 1<\/span><div><button type="button" class="page-step" aria-label="Previous" disabled="">/);
+ assert.match(html,/aria-label="Page 1" aria-current="page">1<\/button>.*aria-label="Page 2">2<\/button>.*aria-label="Page 3">3<\/button>/);
+ // A list read a page at a time knows only whether one more page follows.
+ assert.match(render(Pagination,{...props,page:2,hasNext:true}),/>1<\/button>.*aria-current="page">2<\/button>.*>3<\/button>/);
  // A later page stays reachable back even when it came up empty.
- assert.match(render(Pagination,{...props,page:2,summary:'Page 2'}),/<button>Previous<\/button><button disabled="">Next<\/button>/);
- const tree=Pagination({...props,page:2,hasNext:true});
- const [previous,next]=tree.props.children[1].props.children;previous.props.onClick();next.props.onClick();
- assert.deepEqual(pages,[1,3]);
- assert.match(render(Pagination,{...props,page:2,hasNext:true,disabled:true}),/<button disabled="">Previous<\/button><button disabled="">Next<\/button>/);
+ assert.match(render(Pagination,{...props,page:2,summary:'Page 2'}),/aria-label="Next" disabled=""/);
+ const tree=Pagination({...props,page:2,pageCount:4,hasNext:true});
+ const [previous,numbers,next]=tree.props.children[1].props.children;previous.props.onClick();next.props.onClick();numbers[3].props.onClick();numbers[1].props.onClick();
+ assert.deepEqual(pages,[1,3,4],'clicking the current page does nothing');
+ assert.match(render(Pagination,{...props,page:2,hasNext:true,disabled:true}),/aria-label="Previous" disabled="".*aria-label="Next" disabled=""/);
+});
+
+test('the range picker applies a preset at once, takes a custom range from two clicks in either order, and closes',()=>{
+ const r=createRenderer();
+ const {DateRangePicker}=r.load(`${dir}/date-range-picker.tsx`,{...overrides,'@/components/ui/popover':hostModule(),'@/components/presentation-foundation/date-picker':hostModule(),'lucide-react':hostModule()});
+ const chosen=[];let props={label:'Period',presets:['this_month','last_month'],presetLabels:{this_month:'This month',last_month:'Last month'},preset:'this_month',range:{from:'2026-10-01',to:'2026-10-09'},max:'2026-10-09',onPreset:preset=>chosen.push(preset),onRange:range=>chosen.push(range)};
+ r.mount(React.createElement(DateRangePicker,props));
+ const popover=()=>r.find(byType('Popover'));const calendar=()=>r.find(byType('MonthCalendar'));
+ assert.match(r.html(),/aria-label="Period: This month"/);
+ r.fire(popover(),'onOpenChange',true);
+ assert.deepEqual([calendar().props.draft,calendar().props.rangeTo,calendar().props.max],['2026-10-01','2026-10-09','2026-10-09'],'the calendar marks the chosen days');
+ r.fire(calendar(),'onSelect','2026-10-07');
+ assert.deepEqual([calendar().props.draft,calendar().props.rangeTo,popover().props.open],['2026-10-07',undefined,true],'the first click waits for the last day');
+ assert.match(r.html(),/7 October 2026 – pick the last day/);
+ r.fire(calendar(),'onSelect','2026-10-02');
+ assert.deepEqual(chosen.pop(),{from:'2026-10-02',to:'2026-10-07'});
+ assert.equal(popover().props.open,false);
+ r.fire(popover(),'onOpenChange',true);
+ const lastMonth=r.find(node=>node.type===overrides['@/components/ui/button'].Button&&node.props['aria-pressed']===false);
+ r.fire(lastMonth,'onClick');
+ assert.deepEqual([chosen.pop(),popover().props.open],['last_month',false]);
+ r.mount(React.createElement(DateRangePicker,{...props,preset:'custom',range:{from:'2026-10-02',to:'2026-10-07'}}));
+ assert.match(r.html(),/<span>2 October 2026 – 7 October 2026<\/span>/,'a custom range shows its days through the date formatter');
 });
 
 test('the owner filter lists what is shared and each person; nothing selected shows everyone',()=>{

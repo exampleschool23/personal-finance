@@ -32,13 +32,13 @@
 .account-group-skeleton-head{display:flex;align-items:center;gap:10px;min-height:62px;padding:16px 20px}
 .account-group>summary>strong{margin-inline-start:auto;font-size:var(--type-title);font-weight:650;font-variant-numeric:tabular-nums}
 .account-group>summary:focus-visible{outline:2px solid var(--ring);outline-offset:-3px}
-.account-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:12px;padding:0 16px 16px}
-.account-list-row{display:flex;flex-direction:column;align-items:flex-start;gap:12px;width:100%;height:100%;min-height:128px;padding:16px;border-radius:inherit;font-size:var(--type-small);text-align:start;cursor:pointer;transition:background .15s}
+.account-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:8px;padding:0 16px 16px}
+.account-list-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;width:100%;height:100%;min-height:68px;padding:12px 36px 12px 14px;border-radius:inherit;font-size:var(--type-small);text-align:start;cursor:pointer;transition:background .15s}
 .account-list-row:hover{background:color-mix(in srgb,var(--accent) 35%,transparent)}
 .account-list-row[aria-pressed=true]{background:color-mix(in srgb,var(--accent) 70%,transparent)}
 .account-list-row:focus-visible{outline:2px solid var(--ring);outline-offset:-3px}
-.account-list-row>strong{margin-top:auto;max-width:100%;font-size:var(--type-title);font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.account-list-name{max-width:100%;min-width:0;padding-inline-end:20px;font-weight:600;overflow-wrap:anywhere}
+.account-list-row>strong{margin-inline-start:auto;max-width:100%;font-size:var(--type-body);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.account-list-name{flex:1 1 7rem;min-width:0;font-weight:600;overflow-wrap:anywhere}
 .account-list-name small{display:block;margin-top:1px;font-size:var(--type-caption);font-weight:400;color:var(--muted-foreground)}
 .account-search-empty{padding:28px 20px;font-size:var(--type-small)}
 .account-selected-panel{position:sticky;top:84px;min-width:0}
@@ -46,7 +46,7 @@
 .account-activity .records-pagination{margin:12px -20px -20px}
 .account-activity td{font-variant-numeric:tabular-nums}
 @container content (max-width:900px){.accounts-master-detail{grid-template-columns:minmax(0,1fr)}.account-selected-panel{position:static}}
-@container content (max-width:560px){.account-group>summary{padding-inline:16px}.account-card-grid{gap:8px}.account-list-row{min-height:0}.account-activity .records-pagination{margin:12px -16px -20px}}
+@container content (max-width:560px){.account-group>summary{padding-inline:16px}.account-card-grid{gap:8px}.account-list-row{min-height:0;padding-block:10px}.account-activity .records-pagination{margin:12px -16px -20px}}
 
 /* Settings: quiet navigation and focused preference cards. */
 .settings-layout .page-heading{margin-bottom:24px}

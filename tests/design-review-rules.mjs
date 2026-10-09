@@ -220,11 +220,12 @@ test('pages and dialogs never grow wider than the screen, and fit short screens 
 test('switches, chips and names show their whole text (SCR-085, LIST-024, LIST-025, LIST-007)',()=>{
  const css=stylesheet();
  assert.match(css,/\.budget-left-tabs\{display:flex;width:100%;flex-wrap:wrap;overflow:visible\}/,'Summary, Income and Expenses never scroll');
- // Account cards stack icon, name and balance, so the name has the card's whole width and never breaks between letters.
- assert.match(css,/\.account-list-row\{display:flex;flex-direction:column;/);
- assert.match(css,/\.account-list-row>strong\{margin-top:auto;max-width:100%;/);
- assert.match(css,/\.account-list-name\{max-width:100%;min-width:0;padding-inline-end:20px;font-weight:600;overflow-wrap:anywhere\}/);
- assert.match(css,/\.account-card-grid\{display:grid;grid-template-columns:repeat\(auto-fill,minmax\(min\(100%,220px\),1fr\)\);/);
+ // Account cards are one compact line, icon, name and balance; the balance wraps under the name by itself
+ // when the line is full, so the name keeps at least 7rem and never breaks between letters.
+ assert.match(css,/\.account-list-row\{display:flex;flex-wrap:wrap;align-items:center;/);
+ assert.match(css,/\.account-list-row>strong\{margin-inline-start:auto;max-width:100%;[^}]*white-space:nowrap\}/);
+ assert.match(css,/\.account-list-name\{flex:1 1 7rem;min-width:0;font-weight:600;overflow-wrap:anywhere\}/);
+ assert.match(css,/\.account-card-grid\{display:grid;grid-template-columns:repeat\(auto-fill,minmax\(min\(100%,280px\),1fr\)\);/);
  assert.match(css,/\.account-group>summary\{display:flex;flex-wrap:wrap;/);
  // Transaction chips keep their equal columns, and a long name wraps inside its column.
  for(const chip of ['.transaction-category>span:last-child','.transaction-business>span:last-child','.report-transaction-list>li>*>span:nth-child(2)>*']){
@@ -261,8 +262,8 @@ test('Reports keeps the 8 October 2026 review fixes (SCR-095, SCR-096, HEAD-011,
  assert.doesNotMatch(reports,/minWidth=\{columns/,'the Sankey width follows its labels and columns, not a fixed guess');
  assert.match(reports,/<PanelTitle title=\{t\('Transactions'\)\} count=\{<Count/,'the transactions panel opens with PanelTitle and a Count pill');
  assert.doesNotMatch(reports,/budget-left-empty/,'report charts use EmptyState');
- assert.match(filters,/label=\{t\('From'\)\}[\s\S]*label=\{t\('To'\)\}/,'custom range fields are named');
- assert.match(css,/\.report-custom-range>\.date-picker-trigger\{width:auto\}/);
+ assert.match(filters,/<DateRangePicker label=\{t\('Date range'\)\}/,'the range is the shared calendar, presets beside it');
+ assert.doesNotMatch(filters,/NativeSelect/);
  assert.doesNotMatch(css,/\.business-mark[^{]*\{[^}]*border-radius:\d+px/,'business marks round in proportion to their size');
  const {sankeyColumns,sankeyMinWidth}=loadTS('lib/sankey-labels.ts');
  const flows={nodes:[{name:'a'},{name:'b'},{name:'c'},{name:'d'}],links:[{source:0,target:2,value:1},{source:1,target:2,value:1},{source:2,target:3,value:1}]};

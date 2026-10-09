@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Moneda guardada · Conversión no disponible",
   "Saved value": "Valor guardado",
   "Share of holdings": "Peso en la cartera",
-  "Show more assets": "Mostrar más activos",
   "Your holdings": "Tus posiciones",
   "{shown} of {total} assets": "{shown} de {total} activos",
   "No matching assets": "No hay activos que coincidan",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "No se pudo leer esta imagen.",
   "Could not update transactions. Check that the latest migrations are installed.": "No se pudieron actualizar las transacciones. Comprueba que las últimas migraciones estén instaladas.",
   "Create rules": "Crear reglas",
-  "Custom range": "Rango personalizado",
   "Date range": "Rango de fechas",
   "Deductible meals": "Comidas deducibles",
   "Depletion": "Agotamiento",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Esta transacción no pertenece a ninguna operación. Elimínala de la forma habitual.",
   "Delete later trades of this holding first.": "Elimina primero las operaciones posteriores de este activo.",
   "This operation cannot be deleted.": "Esta operación no se puede eliminar.",
-  "Record not found.": "No se encontró el registro."
+  "Record not found.": "No se encontró el registro.",
+  "Asset pages": "Páginas de activos",
+  "{date} – pick the last day": "{date} – elige el último día",
+  "Pick the first and last day": "Elige el primer y el último día"
 }

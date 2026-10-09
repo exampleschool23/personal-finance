@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Tiền tệ đã lưu · Không thể quy đổi",
   "Saved value": "Giá trị đã lưu",
   "Share of holdings": "Tỷ trọng trong danh mục nắm giữ",
-  "Show more assets": "Hiện thêm tài sản",
   "Your holdings": "Tài sản nắm giữ của bạn",
   "{shown} of {total} assets": "{shown}/{total} tài sản",
   "No matching assets": "Không có tài sản phù hợp",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Không thể đọc ảnh này.",
   "Could not update transactions. Check that the latest migrations are installed.": "Không thể cập nhật giao dịch. Hãy kiểm tra xem các migration mới nhất đã được cài đặt chưa.",
   "Create rules": "Tạo quy tắc",
-  "Custom range": "Khoảng tùy chỉnh",
   "Date range": "Khoảng ngày",
   "Deductible meals": "Chi phí ăn uống được khấu trừ",
   "Depletion": "Khấu hao tài nguyên",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Giao dịch này không gắn với thao tác nào. Hãy xóa như bình thường.",
   "Delete later trades of this holding first.": "Hãy xóa trước các giao dịch mua bán sau đó của tài sản này.",
   "This operation cannot be deleted.": "Không thể xóa thao tác này.",
-  "Record not found.": "Không tìm thấy bản ghi."
+  "Record not found.": "Không tìm thấy bản ghi.",
+  "Asset pages": "Trang tài sản",
+  "{date} – pick the last day": "{date} – chọn ngày cuối",
+  "Pick the first and last day": "Chọn ngày đầu và ngày cuối"
 }

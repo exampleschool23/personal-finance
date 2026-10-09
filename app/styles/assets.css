@@ -75,7 +75,7 @@
 .asset-card-holdings [data-slot=button]{height:32px;min-height:32px;font-size:var(--type-caption)}
 .asset-card-actions{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;margin-top:auto;padding-top:12px;border-top:1px solid var(--hairline)}
 .asset-card-actions :is(button,a){height:36px;min-height:36px;font-size:var(--type-small)}
-.asset-load-more{text-align:center;margin-top:20px}
+.asset-holdings .records-pagination{margin-top:20px;padding-inline:0}
 /* Compact view: one holding per line, value and actions aligned in columns. */
 .asset-layout-list{grid-template-columns:minmax(0,1fr);gap:8px}
 .asset-layout-list .asset-card{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(110px,.7fr) minmax(0,1.5fr) auto;align-items:center;gap:0 20px;padding:12px 16px;border-radius:14px;box-shadow:none}
@@ -109,8 +109,13 @@
 .recovery-delete:hover{background:color-mix(in srgb,var(--negative) 12%,transparent);color:var(--negative)}
 @container content (max-width:860px){.recovery-row{grid-template-columns:auto minmax(0,1fr);padding-inline:16px}.recovery-value{grid-column:2;text-align:start}.recovery-row>.row-actions{grid-column:1/-1;justify-content:flex-start}}
 .records-pagination{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;border-top:1px solid var(--border);font-size:var(--type-caption);color:var(--muted-foreground)}
-.records-pagination>div{display:flex;gap:8px}
-.records-pagination button{height:36px;min-height:36px;font-size:var(--type-small)}
+.records-pagination>div{display:flex;align-items:center;gap:4px}
+.records-pagination button{display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:36px;min-height:36px;padding:0 8px;border-radius:var(--radius-control);font-size:var(--type-small);font-weight:500;font-variant-numeric:tabular-nums;color:var(--foreground)}
+.records-pagination button:hover:not(:disabled,[aria-current]){background:var(--accent)}
+.records-pagination button[aria-current=page]{background:var(--primary);color:var(--primary-foreground)}
+.records-pagination button:disabled{opacity:.35;cursor:default}
+.records-pagination button:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+.records-pagination .page-gap{min-width:20px;text-align:center}
 @media(max-width:600px){.records-pagination{flex-wrap:wrap;padding:14px 16px}.records-pagination>div{margin-inline-start:auto}}
 
 .workspace .content .settings-page{max-width:none}

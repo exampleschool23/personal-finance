@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "สกุลเงินที่บันทึกไว้ · ไม่สามารถแปลงได้",
   "Saved value": "มูลค่าที่บันทึกไว้",
   "Share of holdings": "สัดส่วนของสินทรัพย์ที่ถือ",
-  "Show more assets": "แสดงสินทรัพย์เพิ่มเติม",
   "Your holdings": "สินทรัพย์ของคุณ",
   "{shown} of {total} assets": "{shown} จาก {total} สินทรัพย์",
   "No matching assets": "ไม่มีสินทรัพย์ที่ตรงกัน",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "อ่านรูปภาพนี้ไม่ได้",
   "Could not update transactions. Check that the latest migrations are installed.": "อัปเดตธุรกรรมไม่ได้ ตรวจสอบว่าได้ติดตั้งการย้ายข้อมูลล่าสุดแล้ว",
   "Create rules": "สร้างกฎ",
-  "Custom range": "ช่วงที่กำหนดเอง",
   "Date range": "ช่วงวันที่",
   "Deductible meals": "ค่าอาหารที่หักลดหย่อนได้",
   "Depletion": "ค่าเสื่อมสิ้น",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "ธุรกรรมนี้ไม่ได้เชื่อมกับการดำเนินการใด ลบตามปกติได้เลย",
   "Delete later trades of this holding first.": "ลบรายการซื้อขายที่เกิดภายหลังของสินทรัพย์นี้ก่อน",
   "This operation cannot be deleted.": "ไม่สามารถลบการดำเนินการนี้ได้",
-  "Record not found.": "ไม่พบรายการ"
+  "Record not found.": "ไม่พบรายการ",
+  "Asset pages": "หน้าสินทรัพย์",
+  "{date} – pick the last day": "{date} – เลือกวันสุดท้าย",
+  "Pick the first and last day": "เลือกวันแรกและวันสุดท้าย"
 }

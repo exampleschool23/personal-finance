@@ -4,7 +4,7 @@ import { loadTS } from './helpers/load-ts.mjs';
 const { categoryChoices, canRecategorize, recategorize, ruleMatches, ruleTargets, suggestedPattern, directionOf } = loadTS('lib/transaction-rules.ts');
 const { assignBusiness, moveAccountToBusiness, withAccount } = loadTS('lib/business.ts');
 const { changeTags } = loadTS('lib/tags.ts');
-const { periodRange, transactionsIn, groupByDay, groupPageByDay, summarizeTransactions, emptyTransactionFilter } = loadTS('lib/transaction-list.ts');
+const { periodRange, periodDays, earliestTransactionDay, transactionsIn, groupByDay, groupPageByDay, summarizeTransactions, emptyTransactionFilter } = loadTS('lib/transaction-list.ts');
 
 const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Once', notes: '', ...extra });
 const categories = [{ id: 'pets', name: 'Pets', direction: 'expense' }, { id: 'tips', name: 'Tips', direction: 'income' }];
@@ -66,6 +66,17 @@ test('rules can set a business and tags in both directions; business income keep
  assert.equal(withAccount(record('n', 'New', 'Other expense', 1, '2026-09-01', { business_id: 'mine' }), 'acc', account.records).business_id, 'mine');
  const tagged = changeTags([{ record_id: 'a', tag_id: 't' }], rows, ['a', 'b'], ['u'], ['t']);
  assert.equal(tagged.changed, 2);assert.deepEqual(tagged.links.map(link => link.record_id + link.tag_id).sort(), ['au', 'bu']);
+});
+
+test('a period covers whole days up to today, and a custom range of days narrows the list to those days', () => {
+ assert.deepEqual(periodDays('this_month', '2026-10-09'), { from: '2026-10-01', to: '2026-10-09' }, 'never past today');
+ assert.deepEqual(periodDays('last_month', '2026-03-09'), { from: '2026-02-01', to: '2026-02-28' });
+ assert.deepEqual(periodDays('three_months', '2026-10-09'), { from: '2026-08-01', to: '2026-10-09' });
+ assert.equal(earliestTransactionDay('2026-10-09'), '2024-11-01', 'a custom range stays inside the 24 months one read covers');
+ const rows = [record('a', 'Coffee', 'Living expense', 4, '2026-10-01'), record('b', 'Tea', 'Living expense', 3, '2026-10-05'), record('c', 'Lunch', 'Living expense', 9, '2026-10-06'), record('d', 'Bus', 'Living expense', 2, '2026-09-30')];
+ const name = row => row.kind;
+ assert.deepEqual(transactionsIn(rows, { from: '2026-10-01', to: '2026-10-05' }, '2026-10-09', emptyTransactionFilter, name).map(row => row.id), ['b', 'a'], 'both ends are included');
+ assert.deepEqual(transactionsIn(rows, { from: '2026-09', to: '2026-10' }, '2026-10-09', emptyTransactionFilter, name).map(row => row.id), ['c', 'b', 'a', 'd'], 'months still cover every day in them');
 });
 
 test('the list keeps the period, search and filters, newest first, grouped by day with net totals', () => {

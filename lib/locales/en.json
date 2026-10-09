@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Saved currency · Conversion unavailable",
   "Saved value": "Saved value",
   "Share of holdings": "Share of holdings",
-  "Show more assets": "Show more assets",
   "Your holdings": "Your holdings",
   "{shown} of {total} assets": "{shown} of {total} assets",
   "No matching assets": "No matching assets",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Could not read this image.",
   "Could not update transactions. Check that the latest migrations are installed.": "Could not update transactions. Check that the latest migrations are installed.",
   "Create rules": "Create rules",
-  "Custom range": "Custom range",
   "Date range": "Date range",
   "Deductible meals": "Deductible meals",
   "Depletion": "Depletion",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "This transaction has no linked operation. Delete it normally.",
   "Delete later trades of this holding first.": "Delete later trades of this holding first.",
   "This operation cannot be deleted.": "This operation cannot be deleted.",
-  "Record not found.": "Record not found."
+  "Record not found.": "Record not found.",
+  "Asset pages": "Asset pages",
+  "{date} – pick the last day": "{date} – pick the last day",
+  "Pick the first and last day": "Pick the first and last day"
 }

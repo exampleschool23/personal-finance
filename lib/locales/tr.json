@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Kayıtlı para birimi · Dönüştürme kullanılamıyor",
   "Saved value": "Kayıtlı değer",
   "Share of holdings": "Varlıklardaki pay",
-  "Show more assets": "Daha fazla varlık göster",
   "Your holdings": "Varlıklarınız",
   "{shown} of {total} assets": "{shown} / {total} varlık",
   "No matching assets": "Eşleşen varlık yok",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Bu görsel okunamadı.",
   "Could not update transactions. Check that the latest migrations are installed.": "İşlemler güncellenemedi. En son geçişlerin yüklendiğinden emin olun.",
   "Create rules": "Kurallar oluştur",
-  "Custom range": "Özel aralık",
   "Date range": "Tarih aralığı",
   "Deductible meals": "İndirilebilir yemek giderleri",
   "Depletion": "Tükenme payı",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Bu işlem bağlı bir eyleme ait değil. Her zamanki gibi silin.",
   "Delete later trades of this holding first.": "Önce bu varlığın sonraki alım satımlarını silin.",
   "This operation cannot be deleted.": "Bu eylem silinemez.",
-  "Record not found.": "Kayıt bulunamadı."
+  "Record not found.": "Kayıt bulunamadı.",
+  "Asset pages": "Varlık sayfaları",
+  "{date} – pick the last day": "{date} – son günü seçin",
+  "Pick the first and last day": "İlk ve son günü seçin"
 }

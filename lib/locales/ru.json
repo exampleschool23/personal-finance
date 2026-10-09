@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Исходная валюта · Конвертация недоступна",
   "Saved value": "Сохранённая стоимость",
   "Share of holdings": "Доля в активах",
-  "Show more assets": "Показать ещё активы",
   "Your holdings": "Стоимость ваших активов",
   "{shown} of {total} assets": "Показано {shown} из {total} активов",
   "No matching assets": "Подходящих активов нет",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Не удалось прочитать это изображение.",
   "Could not update transactions. Check that the latest migrations are installed.": "Не удалось обновить операции. Проверьте, что установлены последние миграции.",
   "Create rules": "Создать правила",
-  "Custom range": "Свой период",
   "Date range": "Период",
   "Deductible meals": "Представительские расходы на питание",
   "Depletion": "Истощение недр",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Эта операция не связана с другим действием. Удалите её обычным способом.",
   "Delete later trades of this holding first.": "Сначала удалите более поздние сделки с этим активом.",
   "This operation cannot be deleted.": "Это действие нельзя удалить.",
-  "Record not found.": "Запись не найдена."
+  "Record not found.": "Запись не найдена.",
+  "Asset pages": "Страницы активов",
+  "{date} – pick the last day": "{date} – выберите последний день",
+  "Pick the first and last day": "Выберите первый и последний день"
 }

@@ -11,6 +11,7 @@ import type { BusinessOption } from '@/components/presentation-foundation/busine
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { Count } from '@/components/presentation-foundation/count';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
+import { Pagination } from '@/components/presentation-foundation/pagination';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { toggleKey } from '@/components/presentation-foundation/series-legend';
 import { Button } from '@/components/ui/button';
@@ -168,13 +169,18 @@ export function attributeColor(attribute: 'category' | 'group' | 'business', key
  return hueColor(hueOf(attribute === 'category' ? names.icon(key) : key));
 }
 
+const reportLinesPerPage = 20;
 /** The transactions behind a report, narrowed by the last click on a chart or table. A row opens its transaction. */
 export function ReportTransactions({ lines, drill, label, names, currency, onClear, onOpen }: { lines: readonly LedgerLine[]; drill: Drill | null; label: string | null; names: ReportNames; currency: string; onClear: () => void; onOpen?: (line: LedgerLine) => void }) {
  const { t, locale } = useLanguage();
- const [limit, setLimit] = useState(25);
+ // Twenty a page; narrowing by another chart part starts again at the first page.
+ const listKey = JSON.stringify([label, lines.length, lines[0]?.id]);
+ const [paging, setPaging] = useState({ key: listKey, page: 1 });
+ const pageCount = Math.max(1, Math.ceil(lines.length / reportLinesPerPage));
+ const page = paging.key === listKey ? Math.min(paging.page, pageCount) : 1;
  return <section className="panel report-transactions" aria-label={t('Transactions')}>
   <PanelTitle title={t('Transactions')} count={<Count value={lines.length}/>}>{drill && label && <span className="report-drill">{label}<button type="button" aria-label={t('Clear filter')} onClick={onClear}><X size={14} aria-hidden="true"/></button></span>}</PanelTitle>
-  {lines.length ? <ul className="report-transaction-list">{lines.slice(0, limit).map(line => {
+  {lines.length ? <ul className="report-transaction-list">{lines.slice((page - 1) * reportLinesPerPage, page * reportLinesPerPage).map(line => {
    const cells = <>
     <CategoryIcon kind={names.icon(line.category)} size="sm"/>
     <span><strong>{shownName(line, t)}</strong><small>{formatDate(line.date, locale)} · {names.category(line.category)}</small></span>
@@ -183,7 +189,7 @@ export function ReportTransactions({ lines, drill, label, names, currency, onCle
    </>;
    return <li key={line.id}>{onOpen && line.record ? <button type="button" aria-label={t('View details for {name}', { name: shownName(line, t) })} onClick={() => onOpen(line)}>{cells}</button> : <div>{cells}</div>}</li>;
   })}</ul> : <EmptyState icon={<ReceiptText/>} description={t('Nothing recorded in this period.')}/>}
-  {lines.length > limit && <Button variant="outline" onClick={() => setLimit(limit + 50)}>{t('Show more')}</Button>}
+  <Pagination label={t('Transaction pages')} summary={t('Page {page} of {pages} · {count} transactions', { page: formatNumber(page, locale, 0), pages: formatNumber(pageCount, locale, 0), count: formatNumber(lines.length, locale, 0) })} page={page} pageCount={pageCount} hasNext={page < pageCount} onPage={next => setPaging({ key: listKey, page: next })}/>
  </section>;
 }
 

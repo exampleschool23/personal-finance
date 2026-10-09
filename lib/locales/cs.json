@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Uložená měna · Převod není dostupný",
   "Saved value": "Uložená hodnota",
   "Share of holdings": "Podíl na držbách",
-  "Show more assets": "Zobrazit více majetku",
   "Your holdings": "Vaše držby",
   "{shown} of {total} assets": "{shown} z {total} položek majetku",
   "No matching assets": "Žádný odpovídající majetek",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Tento obrázek se nepodařilo přečíst.",
   "Could not update transactions. Check that the latest migrations are installed.": "Transakce se nepodařilo aktualizovat. Zkontrolujte, zda jsou nainstalovány nejnovější migrace.",
   "Create rules": "Vytvořit pravidla",
-  "Custom range": "Vlastní rozsah",
   "Date range": "Časové období",
   "Deductible meals": "Odečitatelné stravování",
   "Depletion": "Těžba zdrojů",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Tato transakce nemá propojenou operaci. Smažte ji běžným způsobem.",
   "Delete later trades of this holding first.": "Nejprve smažte pozdější obchody s tímto aktivem.",
   "This operation cannot be deleted.": "Tuto operaci nelze smazat.",
-  "Record not found.": "Záznam nebyl nalezen."
+  "Record not found.": "Záznam nebyl nalezen.",
+  "Asset pages": "Stránky majetku",
+  "{date} – pick the last day": "{date} – vyberte poslední den",
+  "Pick the first and last day": "Vyberte první a poslední den"
 }

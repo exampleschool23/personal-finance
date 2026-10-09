@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "সংরক্ষিত মুদ্রা · রূপান্তর অনুপলব্ধ",
   "Saved value": "সংরক্ষিত মূল্য",
   "Share of holdings": "হোল্ডিংয়ের অংশ",
-  "Show more assets": "আরও সম্পদ দেখান",
   "Your holdings": "আপনার হোল্ডিং",
   "{shown} of {total} assets": "{total}টির মধ্যে {shown}টি সম্পদ",
   "No matching assets": "কোনো মিলে যাওয়া সম্পদ নেই",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "এই ছবিটি পড়া যায়নি।",
   "Could not update transactions. Check that the latest migrations are installed.": "লেনদেন আপডেট করা যায়নি। সর্বশেষ মাইগ্রেশনগুলো ইনস্টল আছে কিনা দেখুন।",
   "Create rules": "নিয়ম তৈরি করুন",
-  "Custom range": "কাস্টম সময়সীমা",
   "Date range": "তারিখের সীমা",
   "Deductible meals": "কর্তনযোগ্য খাবার",
   "Depletion": "অবক্ষয় (প্রাকৃতিক সম্পদ)",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "এই লেনদেনের সঙ্গে কোনো সংযুক্ত কাজ নেই। সাধারণভাবে মুছুন।",
   "Delete later trades of this holding first.": "আগে এই হোল্ডিংয়ের পরের ট্রেডগুলো মুছুন।",
   "This operation cannot be deleted.": "এই কাজটি মোছা যাবে না।",
-  "Record not found.": "রেকর্ড পাওয়া যায়নি।"
+  "Record not found.": "রেকর্ড পাওয়া যায়নি।",
+  "Asset pages": "সম্পদের পৃষ্ঠা",
+  "{date} – pick the last day": "{date} – শেষ দিন বেছে নিন",
+  "Pick the first and last day": "প্রথম ও শেষ দিন বেছে নিন"
 }

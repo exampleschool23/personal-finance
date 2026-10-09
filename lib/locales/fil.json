@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Naka-save na currency · Hindi available ang conversion",
   "Saved value": "Naka-save na halaga",
   "Share of holdings": "Bahagi ng mga hawak",
-  "Show more assets": "Magpakita ng higit pang asset",
   "Your holdings": "Mga hawak mo",
   "{shown} of {total} assets": "{shown} sa {total} asset",
   "No matching assets": "Walang katugmang asset",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Hindi mabasa ang larawang ito.",
   "Could not update transactions. Check that the latest migrations are installed.": "Hindi ma-update ang mga transaksyon. Tiyaking naka-install ang mga pinakabagong migration.",
   "Create rules": "Gumawa ng mga panuntunan",
-  "Custom range": "Custom na saklaw",
   "Date range": "Saklaw ng petsa",
   "Deductible meals": "Mga deductible na pagkain",
   "Depletion": "Depletion",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Walang kaugnay na aksyon ang transaksyong ito. Burahin ito sa karaniwang paraan.",
   "Delete later trades of this holding first.": "Burahin muna ang mga mas huling trade ng holding na ito.",
   "This operation cannot be deleted.": "Hindi mabubura ang aksyong ito.",
-  "Record not found.": "Hindi nakita ang record."
+  "Record not found.": "Hindi nakita ang record.",
+  "Asset pages": "Mga pahina ng asset",
+  "{date} – pick the last day": "{date} – piliin ang huling araw",
+  "Pick the first and last day": "Piliin ang una at huling araw"
 }

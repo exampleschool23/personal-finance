@@ -217,7 +217,7 @@
 /* Accounts: each account is a bordered card, its drag handle in the top corner. */
 .account-sortable-row{position:relative;border:1px solid var(--hairline);border-radius:var(--radius-control);background:var(--card)}
 .account-sortable-row:has(>[aria-pressed=true]){border-color:var(--primary)}
-.account-sortable-row>.drag-handle{position:absolute;top:8px;inset-inline-end:6px;z-index:1;opacity:0;transition:opacity .15s}
+.account-sortable-row>.drag-handle{position:absolute;top:50%;inset-inline-end:8px;translate:0 -50%;z-index:1;opacity:0;transition:opacity .15s}
 .account-sortable-row:hover>.drag-handle,.account-sortable-row>.drag-handle:focus-visible,.account-sortable-row[data-dragging]>.drag-handle{opacity:1}
 @media (hover:none){.account-sortable-row>.drag-handle{opacity:1}}
 .account-sortable-row[data-dragging]{box-shadow:var(--shadow-card)}

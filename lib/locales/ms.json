@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Mata wang disimpan · Penukaran tidak tersedia",
   "Saved value": "Nilai disimpan",
   "Share of holdings": "Bahagian pegangan",
-  "Show more assets": "Tunjuk lebih banyak aset",
   "Your holdings": "Pegangan anda",
   "{shown} of {total} assets": "{shown} daripada {total} aset",
   "No matching assets": "Tiada aset sepadan",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Tidak dapat membaca imej ini.",
   "Could not update transactions. Check that the latest migrations are installed.": "Tidak dapat mengemas kini transaksi. Pastikan migrasi terkini telah dipasang.",
   "Create rules": "Cipta peraturan",
-  "Custom range": "Julat tersuai",
   "Date range": "Julat tarikh",
   "Deductible meals": "Makan yang boleh ditolak",
   "Depletion": "Susutan sumber",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Transaksi ini tidak dikaitkan dengan sebarang tindakan. Padamkannya seperti biasa.",
   "Delete later trades of this holding first.": "Padam dahulu dagangan kemudian bagi pegangan ini.",
   "This operation cannot be deleted.": "Tindakan ini tidak boleh dipadam.",
-  "Record not found.": "Rekod tidak ditemui."
+  "Record not found.": "Rekod tidak ditemui.",
+  "Asset pages": "Halaman aset",
+  "{date} – pick the last day": "{date} – pilih hari terakhir",
+  "Pick the first and last day": "Pilih hari pertama dan terakhir"
 }

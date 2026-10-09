@@ -7,7 +7,7 @@ import { signTone } from '@/components/presentation-foundation/tone';
 import { useMemo, useRef, useState, type CSSProperties } from 'react';
 import { AssetCard } from '@/components/presentation-foundation/asset-card';
 import { AnimatedMoney } from '@/components/presentation-foundation/animated-money';
-import { ChevronDown, Ellipsis, LayoutGrid, List, Search, Trash2 } from 'lucide-react';
+import { Ellipsis, LayoutGrid, List, Search, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AssetAccounts } from '@/components/asset-accounts';
 import type { HoldingAccount } from '@/lib/holding-accounts';
@@ -21,6 +21,7 @@ import { sortAssetsByWorth } from '@/lib/asset-sort';
 import { isInvestmentRecord } from '@/lib/comparison-profile';
 import { marketEntry, type MarketData } from '@/lib/market';
 import { Segmented } from '@/components/presentation-foundation/segmented';
+import { Pagination } from '@/components/presentation-foundation/pagination';
 
 type Props = {
  excludedCurrencies?:string[];
@@ -31,12 +32,14 @@ type Props = {
  quoteLabel: (entry: Entry) => string;
 };
 
+const assetsPerPage = 12;
+
 export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoading, accountsError, onRetryAccounts, onAddHolding, records, currency, market, netWorth, debt, loading, demo, onAdd, onEdit, onTrack, onDelete, quoteLabel }: Props) {
  const { t, locale } = useLanguage();
  const [category, setCategory] = useState('all');
  const holdingsRef = useRef<HTMLElement>(null);
  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
- const [limit, setLimit] = useState(12);
+ const [assetPage, setAssetPage] = useState(1);
  const holdings = useMemo(() => sortAssetsByWorth(records.filter(record => assetRecordKinds.includes(record.kind) && (record.kind !== 'Cash' || isInvestmentRecord(record))), record => marketEntry(record, currency, market)).map(original => ({ original, converted: marketEntry(original, currency, market) })), [records, currency, market]);
  const total = totalValue(holdings.flatMap(holding => holding.converted ? [holding.converted] : []));
  const categories = assetRecordKinds.map(kind => ({ kind, count: holdings.filter(h => h.original.kind === kind).length, amount: totalValue(holdings.flatMap(holding => holding.converted ? [holding.converted] : []), [kind]) })).filter(group => group.count).sort((a, b) => b.amount - a.amount);
@@ -45,12 +48,15 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
  const otherHoldings = holdings.filter(({original})=>!['Cash','Deposit'].includes(original.kind)&&!groupedIds.has(original.id));
  const otherCategories = categories.map(group=>({...group,count:otherHoldings.filter(({original})=>original.kind===group.kind).length})).filter(group=>group.count);
  const filtered = otherHoldings.filter(({ original }) => category === 'all' || original.kind === category);
- const visible = filtered.slice(0, limit);
+ // Twelve assets a page; choosing a category starts again at the first page.
+ const pageCount = Math.max(1, Math.ceil(filtered.length / assetsPerPage));
+ const page = Math.min(assetPage, pageCount);
+ const visible = filtered.slice((page - 1) * assetsPerPage, page * assetsPerPage);
  const money = (amount: number, unit = currency) => formatMoney(amount, unit, locale);
- const selectCategory = (kind: string) => { setCategory(kind); setLimit(12); };
+ const selectCategory = (kind: string) => { setCategory(kind); setAssetPage(1); };
  // Tapping a row in the allocation list moves the reader down to the filtered assets it now shows.
  const showCategory = (kind: string) => { selectCategory(kind); holdingsRef.current?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
- const clearFilters = () => { setCategory('all'); setLimit(12); };
+ const clearFilters = () => { setCategory('all'); setAssetPage(1); };
 
  const renderCard = ({ original, converted }: (typeof holdings)[number]) => {
     const record = converted ?? original;
@@ -94,9 +100,9 @@ export function AssetDashboard({ excludedCurrencies=[], accounts, accountsLoadin
    <div className="asset-holdings-heading"><h2>{t('Other assets')}<Count value={otherHoldings.length}/></h2><div className="asset-layout-switch" role="group" aria-label={t('Asset layout')}><Button variant="ghost" size="icon" aria-label={t('Card view')} aria-pressed={layout === 'grid'} onClick={() => setLayout('grid')}><LayoutGrid size={17}/></Button><Button variant="ghost" size="icon" aria-label={t('Compact view')} aria-pressed={layout === 'list'} onClick={() => setLayout('list')}><List size={18}/></Button></div></div>
 
    <Segmented className="asset-category-filters" label={t('Filter assets by category')} value={category} onChange={selectCategory} options={[{ value: 'all', label: <>{t('All assets')}<span>{formatNumber(otherHoldings.length, locale, 0)}</span></> }, ...otherCategories.map(group => ({ value: group.kind, label: <><i style={{ '--asset-color': categoryColor(group.kind) } as CSSProperties}/>{t(group.kind)}<span>{formatNumber(group.count, locale, 0)}</span></> }))]}/>
-   {(category !== 'all' || filtered.length > limit) && <p className="asset-result-count" role="status">{t('{shown} of {total} assets', { shown: formatNumber(Math.min(limit, filtered.length), locale, 0), total: formatNumber(filtered.length, locale, 0) })}{(category !== 'all') && <button onClick={clearFilters}>{t('Clear filters')}</button>}</p>}
+   {category !== 'all' && <p className="asset-result-count" role="status">{t('{shown} of {total} assets', { shown: formatNumber(filtered.length, locale, 0), total: formatNumber(otherHoldings.length, locale, 0) })}<button onClick={clearFilters}>{t('Clear filters')}</button></p>}
    {loading ? <LoadingPlaceholder label={t('Loading records…')}/> : !filtered.length ? <EmptyState icon={<Search size={26}/>} title={t(otherHoldings.length ? 'No matching assets' : 'A fresh start')} description={t(otherHoldings.length ? 'Try another category.' : 'Add your first asset to start building your portfolio.')}><Button variant="outline" onClick={otherHoldings.length ? clearFilters : onAdd}>{t(otherHoldings.length ? 'Clear filters' : 'Add your first record')}</Button></EmptyState> : <div className={'asset-card-grid asset-layout-' + layout}>{visible.map(renderCard)}</div>}
-   {!loading && filtered.length > limit && <div className="asset-load-more"><Button variant="outline" onClick={() => setLimit(previous => previous + 12)}>{t('Show more assets')}<ChevronDown size={16}/></Button></div>}
+   {!loading && <Pagination label={t('Asset pages')} summary={t('Page {page} of {pages} · {count} records', { page: formatNumber(page, locale, 0), pages: formatNumber(pageCount, locale, 0), count: formatNumber(filtered.length, locale, 0) })} page={page} pageCount={pageCount} hasNext={page < pageCount} onPage={next => { setAssetPage(next); holdingsRef.current?.scrollIntoView({ block: 'start' }); }}/>}
   </section>
  </div>;
 }

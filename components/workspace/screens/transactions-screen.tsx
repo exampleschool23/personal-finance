@@ -7,6 +7,7 @@ import { CategoryIcon } from '@/components/presentation-foundation/category-icon
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { PanelSkeleton } from '@/components/presentation-foundation/loading-placeholder';
+import { DateRangePicker, type DateRange } from '@/components/presentation-foundation/date-range-picker';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
 import { Pagination } from '@/components/presentation-foundation/pagination';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
@@ -37,7 +38,7 @@ import { normalizeEntry, type Entry } from '@/lib/finance';
 import { formatMoney, formatNumber } from '@/lib/format';
 import { convertAmount } from '@/lib/market';
 import { emptyPlanning } from '@/lib/planning';
-import { chunks, emptyTransactionFilter, filtersTransactions, groupPageByDay, periodRange, signedAmount, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
+import { chunks, emptyTransactionFilter, filtersTransactions, groupPageByDay, earliestTransactionDay, periodDays, signedAmount, summarizeTransactions, transactionPeriodLabels, transactionPeriods, transactionsIn, type TransactionPeriod } from '@/lib/transaction-list';
 import { canRecategorize, canTakeCategory, categoryChoices, choiceKey, newRule, ruleFromBusiness, ruleFromChange, type CategoryChoice, type TransactionRule } from '@/lib/transaction-rules';
 import { TransactionInsights } from '@/components/transaction-insights';
 import { RollingText } from '@/components/presentation-foundation/rolling-text';
@@ -55,7 +56,8 @@ export function TransactionsScreen() {
  const [ownerFilter, setOwnerFilter] = useState<string[]>([]);
  const ownerOption = (record: Entry) => { const id = ownerOf(record, homes!); return owners.find(item => item.id === id) ?? owners[0]; };
  const today = depositToday();
- const [period, setPeriod] = useState<TransactionPeriod>('three_months');
+ const [period, setPeriod] = useState<TransactionPeriod | 'custom'>('three_months');
+ const [custom, setCustom] = useState<DateRange>(() => periodDays('three_months', today));
  const [filter, setFilter] = useState(emptyTransactionFilter);
  // Links such as /transactions?tag=… or ?business=… open the list already filtered.
  const search = useLocationSearch();
@@ -68,8 +70,8 @@ export function TransactionsScreen() {
  const [rule, setRule] = useState<TransactionRule | null>(null);
  const [rulesOpen, setRulesOpen] = useState(false);
  const live = !!user && !demo;
- const range = periodRange(period, today);
- const remote = useOwnerResource(`/api/planning?scope=budget&month=${range.to}&from=${range.from}`, user, live, reload, emptyPlanning);
+ const range = period === 'custom' ? custom : periodDays(period, today);
+ const remote = useOwnerResource(`/api/planning?scope=budget&month=${range.to.slice(0, 7)}&from=${range.from.slice(0, 7)}`, user, live, reload, emptyPlanning);
  const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : planning.data, [live, remote.data, planning.data]);
  const splits = transactionTools.data.splits;
  const tagMap = useMemo(() => tagsByRecord(tags.data.links), [tags.data.links]);
@@ -83,7 +85,7 @@ export function TransactionsScreen() {
  const rates = market?.rates ?? market?.fx?.rate;
  const convert = (amount: number, unit: string) => convertAmount(amount, unit, currency, rates);
  // Twenty transactions a page; changing the period or a filter starts again at the first page.
- const listKey = JSON.stringify([period, filter, ownerFilter]);
+ const listKey = JSON.stringify([range, filter, ownerFilter]);
  const [paging, setPaging] = useState({ key: listKey, page: 1 });
  // Forget the old page as soon as the list changes, so coming back to an earlier period does not reopen its last page.
  if (paging.key !== listKey) setPaging({ key: listKey, page: 1 });
@@ -157,7 +159,7 @@ export function TransactionsScreen() {
   </PageHeader>
   <div className="transactions-tools">
    <label className="transactions-search"><Search size={16} aria-hidden="true"/><Input type="search" placeholder={t('Search transactions')} aria-label={t('Search transactions')} maxLength={200} value={filter.query} onChange={event => setFilter({ ...filter, query: event.currentTarget.value })}/></label>
-   <NativeSelect aria-label={t('Period')} value={period} onChange={event => setPeriod(event.currentTarget.value as TransactionPeriod)}>{transactionPeriods.map(item => <option key={item} value={item}>{t(transactionPeriodLabels[item])}</option>)}</NativeSelect>
+   <DateRangePicker label={t('Period')} presets={transactionPeriods} presetLabels={transactionPeriodLabels} preset={period} range={range} min={earliestTransactionDay(today)} max={today} onPreset={setPeriod} onRange={next => { setCustom(next); setPeriod('custom'); }}/>
    <NativeSelect aria-label={t('Category')} value={filter.category} onChange={event => setFilter({ ...filter, category: event.currentTarget.value })}>
     <option value="all">{t('All categories')}</option>
     {categoryOptions.map(choice => <option key={choiceKey(choice)} value={choiceKey(choice)}>{choice.custom ? choice.name : t(choice.name)}</option>)}
@@ -182,7 +184,7 @@ export function TransactionsScreen() {
       </li>;
      })}
     </DayGroup>) : <EmptyState icon={<ReceiptText/>} title={t('No transactions')} description={t(filtersTransactions(filter) || ownerFilter.length ? 'Nothing matches these filters in this period.' : 'Income and spending you record appear here, grouped by day.')}><AddTransactionMenu onAdd={addCashFlow}/></EmptyState>}
-    <Pagination label={t('Transaction pages')} summary={t('Page {page} of {pages} · {count} transactions', { page: formatNumber(page, locale, 0), pages: formatNumber(pageCount, locale, 0), count: formatNumber(records.length, locale, 0) })} page={page} hasNext={page < pageCount} onPage={next => { setPaging({ key: listKey, page: next }); document.querySelector('.transactions-list')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); }}/>
+    <Pagination label={t('Transaction pages')} summary={t('Page {page} of {pages} · {count} transactions', { page: formatNumber(page, locale, 0), pages: formatNumber(pageCount, locale, 0), count: formatNumber(records.length, locale, 0) })} page={page} pageCount={pageCount} hasNext={page < pageCount} onPage={next => { setPaging({ key: listKey, page: next }); document.querySelector('.transactions-list')?.scrollIntoView({ block: 'start', behavior: 'smooth' }); }}/>
    </section>
    <aside className="panel transactions-summary" aria-label={t('Summary')}>
     <PanelTitle title={t('Summary')}/>

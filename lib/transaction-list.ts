@@ -1,4 +1,4 @@
-import { shiftMonth } from './calendar-days';
+import { monthEnd, shiftMonth } from './calendar-days';
 import { inBusinessFilter } from './business';
 import { income, type Entry } from './finance';
 import { spendingAmount } from './spending';
@@ -18,15 +18,25 @@ export function periodRange(period: TransactionPeriod, today: string) {
  return { from, to };
 }
 
+/** The days a period covers: from the first of its first month to the end of its last month, never past today. */
+export function periodDays(period: TransactionPeriod, today: string) {
+ const { from, to } = periodRange(period, today);
+ const end = monthEnd(to);
+ return { from: from + '-01', to: end < today ? end : today };
+}
+/** The earliest day a custom range may start: a transaction read covers at most 24 months. */
+export const earliestTransactionDay = (today: string) => shiftMonth(today.slice(0, 7), -23) + '-01';
+
 /** `businesses` holds business ids and `household`, `tags` holds tag ids (none means all); `tagMatch` says whether a row needs any or all of the tags. */
 export type TransactionFilter = { query: string; direction: 'all' | 'income' | 'expense'; category: string; businesses: string[]; tags: string[]; tagMatch: TagMatch };
 export const emptyTransactionFilter: TransactionFilter = { query: '', direction: 'all', category: 'all', businesses: [], tags: [], tagMatch: 'any' };
 export const filtersTransactions = (filter: TransactionFilter) => !!filter.query || filter.category !== 'all' || filter.direction !== 'all' || filter.businesses.length > 0 || filter.tags.length > 0;
 
-/** Recorded income and spending in the period, newest first, matching the search and filters. */
+/** Recorded income and spending in the period, newest first, matching the search and filters. The range is months (`2026-10`) or days (`2026-10-05`). */
 export function transactionsIn(records: readonly Entry[], range: { from: string; to: string }, today: string, filter: TransactionFilter, categoryName: (record: Entry) => string, tagsOf: (id: string) => readonly string[] = () => []) {
  const query = filter.query.trim().toLowerCase();
- return records.filter(record => isTransactionHistory(record) && record.date <= today && record.date.slice(0, 7) >= range.from && record.date.slice(0, 7) <= range.to
+ const from = range.from.length === 7 ? range.from + '-01' : range.from, to = range.to.length === 7 ? monthEnd(range.to) : range.to;
+ return records.filter(record => isTransactionHistory(record) && record.date <= today && record.date >= from && record.date <= to
   && (filter.direction === 'all' || (filter.direction === 'income') === income.includes(record.kind))
   && (filter.category === 'all' || (record.custom_category_id ?? record.kind) === filter.category)
   && inBusinessFilter(filter.businesses, record.business_id) && matchesTags(tagsOf(record.id), filter.tags, filter.tagMatch)

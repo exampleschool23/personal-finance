@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "عملة محفوظة · التحويل غير متاح",
   "Saved value": "القيمة المحفوظة",
   "Share of holdings": "حصة الحيازات",
-  "Show more assets": "اعرض المزيد من الأصول",
   "Your holdings": "حيازاتك",
   "{shown} of {total} assets": "{shown} من {total} أصل",
   "No matching assets": "لا توجد أصول مطابقة",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "تعذّرت قراءة هذه الصورة.",
   "Could not update transactions. Check that the latest migrations are installed.": "تعذّر تحديث المعاملات. تأكد من تثبيت أحدث عمليات الترحيل.",
   "Create rules": "إنشاء قواعد",
-  "Custom range": "نطاق مخصص",
   "Date range": "النطاق الزمني",
   "Deductible meals": "الوجبات القابلة للخصم",
   "Depletion": "النضوب",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "هذه المعاملة غير مرتبطة بأي عملية. احذفها بالطريقة المعتادة.",
   "Delete later trades of this holding first.": "احذف أولًا الصفقات اللاحقة لهذا الأصل.",
   "This operation cannot be deleted.": "لا يمكن حذف هذه العملية.",
-  "Record not found.": "لم يُعثر على السجل."
+  "Record not found.": "لم يُعثر على السجل.",
+  "Asset pages": "صفحات الأصول",
+  "{date} – pick the last day": "{date} – اختر اليوم الأخير",
+  "Pick the first and last day": "اختر اليوم الأول والأخير"
 }

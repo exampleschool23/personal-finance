@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Sarafu iliyohifadhiwa · Ubadilishaji haupatikani",
   "Saved value": "Thamani iliyohifadhiwa",
   "Share of holdings": "Sehemu ya hazina",
-  "Show more assets": "Onyesha mali zaidi",
   "Your holdings": "Vitu ulivyomiliki",
   "{shown} of {total} assets": "Mali {shown} kati ya {total}",
   "No matching assets": "Hakuna mali zinazolingana",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Imeshindwa kusoma picha hii.",
   "Could not update transactions. Check that the latest migrations are installed.": "Imeshindwa kusasisha miamala. Hakikisha uhamishaji wa hivi karibuni umesakinishwa.",
   "Create rules": "Unda kanuni",
-  "Custom range": "Kipindi maalum",
   "Date range": "Kipindi cha tarehe",
   "Deductible meals": "Milo inayokatwa kodi",
   "Depletion": "Upungufu wa rasilimali",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Muamala huu hauhusiani na kitendo chochote. Ufute kwa njia ya kawaida.",
   "Delete later trades of this holding first.": "Futa kwanza biashara za baadaye za mali hii.",
   "This operation cannot be deleted.": "Kitendo hiki hakiwezi kufutwa.",
-  "Record not found.": "Rekodi haikupatikana."
+  "Record not found.": "Rekodi haikupatikana.",
+  "Asset pages": "Kurasa za mali",
+  "{date} – pick the last day": "{date} – chagua siku ya mwisho",
+  "Pick the first and last day": "Chagua siku ya kwanza na ya mwisho"
 }

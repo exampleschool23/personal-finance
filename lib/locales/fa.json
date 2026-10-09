@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "ارز ذخیره‌شده · تبدیل در دسترس نیست",
   "Saved value": "ارزش ذخیره‌شده",
   "Share of holdings": "سهم از دارایی‌ها",
-  "Show more assets": "نمایش دارایی‌های بیشتر",
   "Your holdings": "دارایی‌های شما",
   "{shown} of {total} assets": "{shown} از {total} دارایی",
   "No matching assets": "دارایی مطابقی یافت نشد",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "خواندن این تصویر ممکن نشد.",
   "Could not update transactions. Check that the latest migrations are installed.": "به‌روزرسانی تراکنش‌ها ممکن نشد. بررسی کنید که آخرین مهاجرت‌ها نصب شده باشند.",
   "Create rules": "ساخت قاعده‌ها",
-  "Custom range": "بازه سفارشی",
   "Date range": "بازه تاریخ",
   "Deductible meals": "هزینه‌های غذای قابل کسر",
   "Depletion": "استهلاک منابع طبیعی",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "این تراکنش به هیچ عملیاتی متصل نیست. آن را به روش معمول حذف کنید.",
   "Delete later trades of this holding first.": "ابتدا معاملات بعدی این دارایی را حذف کنید.",
   "This operation cannot be deleted.": "این عملیات قابل حذف نیست.",
-  "Record not found.": "سابقه پیدا نشد."
+  "Record not found.": "سابقه پیدا نشد.",
+  "Asset pages": "صفحه‌های دارایی",
+  "{date} – pick the last day": "{date} – روز آخر را انتخاب کنید",
+  "Pick the first and last day": "روز اول و آخر را انتخاب کنید"
 }

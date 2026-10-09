@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Збережена валюта · Конвертація недоступна",
   "Saved value": "Збережена вартість",
   "Share of holdings": "Частка в активах",
-  "Show more assets": "Показати більше активів",
   "Your holdings": "Ваші активи",
   "{shown} of {total} assets": "{shown} з {total} активів",
   "No matching assets": "Відповідних активів немає",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Не вдалося прочитати це зображення.",
   "Could not update transactions. Check that the latest migrations are installed.": "Не вдалося оновити транзакції. Перевірте, що встановлено останні міграції.",
   "Create rules": "Створити правила",
-  "Custom range": "Власний період",
   "Date range": "Період",
   "Deductible meals": "Представницькі витрати на харчування",
   "Depletion": "Виснаження надр",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Ця операція не пов’язана з іншою дією. Видаліть її звичайним способом.",
   "Delete later trades of this holding first.": "Спершу видаліть пізніші угоди з цим активом.",
   "This operation cannot be deleted.": "Цю дію не можна видалити.",
-  "Record not found.": "Запис не знайдено."
+  "Record not found.": "Запис не знайдено.",
+  "Asset pages": "Сторінки активів",
+  "{date} – pick the last day": "{date} – виберіть останній день",
+  "Pick the first and last day": "Виберіть перший і останній день"
 }

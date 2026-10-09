@@ -371,7 +371,6 @@
   "Saved currency · Conversion unavailable": "Saqlangan valyuta · Konvertatsiya mavjud emas",
   "Saved value": "Saqlangan qiymat",
   "Share of holdings": "Aktivlardagi ulushi",
-  "Show more assets": "Yana aktivlarni ko‘rsatish",
   "Your holdings": "Aktivlaringiz qiymati",
   "{shown} of {total} assets": "{total} ta aktivdan {shown} tasi",
   "No matching assets": "Mos aktivlar topilmadi",
@@ -2139,7 +2138,6 @@
   "Could not read this image.": "Bu rasmni o‘qib bo‘lmadi.",
   "Could not update transactions. Check that the latest migrations are installed.": "Operatsiyalarni yangilab bo‘lmadi. So‘nggi migratsiyalar o‘rnatilganini tekshiring.",
   "Create rules": "Qoidalar yaratish",
-  "Custom range": "Maxsus davr",
   "Date range": "Sana oralig‘i",
   "Deductible meals": "Chegiriladigan ovqatlanish xarajatlari",
   "Depletion": "Resurslar kamayishi",
@@ -2625,5 +2623,8 @@
   "This transaction has no linked operation. Delete it normally.": "Bu tranzaksiya hech qaysi amalga bog‘lanmagan. Uni odatdagidek o‘chiring.",
   "Delete later trades of this holding first.": "Avval shu aktivning keyingi savdolarini o‘chiring.",
   "This operation cannot be deleted.": "Bu amalni o‘chirib bo‘lmaydi.",
-  "Record not found.": "Yozuv topilmadi."
+  "Record not found.": "Yozuv topilmadi.",
+  "Asset pages": "Aktivlar sahifalari",
+  "{date} – pick the last day": "{date} – oxirgi kunni tanlang",
+  "Pick the first and last day": "Birinchi va oxirgi kunni tanlang"
 }

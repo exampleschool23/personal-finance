@@ -56,17 +56,15 @@ function catalog() {
       return rows.map(row => row.name);
     },
     /** How `table` embeds `other`: one row it points at, or the rows pointing at it. `hint` names the foreign-key
-     * column when the tables are linked more than once (`finance_records!transaction_id`). As in PostgREST, rows
-     * pointing at it through a unique column (`investment_account_links.id`) are one-to-one: one object or null. */
+     * column when the tables are linked more than once (`finance_records!transaction_id`). */
     async relation(db, table, other, hint) {
       const key = table + '>' + other;
       if (!relations.has(key)) {
         const { rows } = await db.query(`SELECT src.relname AS source, (SELECT attname FROM pg_attribute WHERE attrelid=k.conrelid AND attnum=k.conkey[1]) AS source_column,
-            (SELECT attname FROM pg_attribute WHERE attrelid=k.confrelid AND attnum=k.confkey[1]) AS target_column,
-            EXISTS (SELECT 1 FROM pg_index i WHERE i.indrelid=k.conrelid AND i.indisunique AND i.indnkeyatts=1 AND i.indkey[0]=k.conkey[1]) AS unique_source
+            (SELECT attname FROM pg_attribute WHERE attrelid=k.confrelid AND attnum=k.confkey[1]) AS target_column
           FROM pg_constraint k JOIN pg_class src ON src.oid=k.conrelid JOIN pg_class tgt ON tgt.oid=k.confrelid JOIN pg_namespace n ON n.oid=src.relnamespace
           WHERE k.contype='f' AND n.nspname='public' AND ((src.relname=$1 AND tgt.relname=$2) OR (src.relname=$2 AND tgt.relname=$1))`, [table, other]);
-        relations.set(key, rows.map(row => row.source === table ? { many: false, local: row.source_column, remote: row.target_column, column: row.source_column } : { many: !row.unique_source, local: row.target_column, remote: row.source_column, column: row.source_column }));
+        relations.set(key, rows.map(row => row.source === table ? { many: false, local: row.source_column, remote: row.target_column, column: row.source_column } : { many: true, local: row.target_column, remote: row.source_column, column: row.source_column }));
       }
       const links = relations.get(key).filter(link => !hint || link.column === hint);
       if (!links.length) throw httpError(400, 'PGRST200', `Could not find a relationship between '${table}' and '${other}'`);
