@@ -86,7 +86,12 @@ test('a metal is counted by its weight and other holdings in units (INV-051)', (
 
 test('holding rows and Recently deleted show amounts in the display currency, quotes with their decimals (XAPP-020)', async () => {
  const money = displayMoney({ currency: 'EUR', rates: { EUR: 0.9 } });
- assert.equal(money.show(711.28, 'USD', true), formatMoney(711.28 * 0.9, 'EUR', 'en', true));
+ // A converted quote reads to the cent (or four significant digits below one), never a calculation tail.
+ assert.equal(money.show(711.28, 'USD', true), formatMoney(640.15, 'EUR', 'en', true));
+ assert.doesNotMatch(money.show(711.28, 'USD', true), /\.\d{3,}/);
+ assert.equal(money.show(0.00012345, 'USD', true), formatMoney(0.0001111, 'EUR', 'en', true));
+ // A quote already in the display currency keeps its own decimals.
+ assert.equal(displayMoney({ currency: 'USD', rates: { EUR: 0.9 } }).show(0.00012345, 'USD', true), formatMoney(0.00012345, 'USD', 'en', true));
  assert.equal(money.show(2845, 'USD'), formatMoney(2845 * 0.9, 'EUR', 'en'));
  const fs = await import('node:fs');
  for (const file of ['components/planning/accounts/holding-rows.tsx', 'components/recently-deleted.tsx']) {
