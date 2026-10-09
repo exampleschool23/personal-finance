@@ -71,13 +71,12 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
   <div className="cash-flow-report-tools">
    <Segmented label={t('Period')} options={reportPeriods.map(value => ({ value, label: t(periodLabels[value]) }))} value={period} onChange={setPeriod}/>
   </div>
-  {/* A single month is already summed up by the review tiles above, so the totals appear only for longer periods. */}
-  {period !== 'month' && <StatTiles columns={4} label={t('Cash flow')}>
+  <StatTiles columns={4} label={t('Cash flow')}>
    <StatTile label={t('Income')} value={money(report.income)} tone={report.income > 0 ? 'positive' : undefined}/>
    <StatTile label={t('Expenses')} value={money(report.expenses)}/>
    <StatTile label={t('Total savings')} value={money(report.savings)} tone={signTone(report.savings)}/>
    <StatTile label={t('Savings rate')} value={report.savingsRate === null ? '—' : formatPercent(report.savingsRate, locale)} tone={report.savingsRate === null ? undefined : signTone(report.savingsRate)}/>
-  </StatTiles>}
+  </StatTiles>
   <section className="panel">
    <PanelTitle title={t('Income and spending by month')}/>
    <div className="cash-flow-chart"><ResponsiveContainer width="100%" height={chartHeight.regular}>
