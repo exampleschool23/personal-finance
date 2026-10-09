@@ -157,7 +157,7 @@ test('Goals, Reports and Cash flow switch their views from tabs beside the title
  assert.doesNotMatch(fs.readFileSync('components/workspace/screens/cash-flow-screen.tsx','utf8'),/addCashFlow\('Other expense'\)/);
  // Recurring sets up schedules through Add recurring: income as a fixed income source, a bill already repeating, or a plan.
  const recurringScreen=fs.readFileSync('components/workspace/screens/upcoming-screen.tsx','utf8');
- assert.match(recurringScreen,/addRecurringIncome\(\)/);assert.match(recurringScreen,/addCashFlow\('Other expense', 'Monthly'\)/);assert.match(recurringScreen,/<ExpensePlanDialog /);
+ assert.match(recurringScreen,/addRecurringIncome\(\)/);assert.match(recurringScreen,/addCashFlow\('Other expense', 'Monthly'\)/);assert.doesNotMatch(recurringScreen,/ExpensePlan/,'spending plans are Budget categories now');
  const header=fs.readFileSync('components/presentation-foundation/page-header.tsx','utf8'),bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),css=stylesheet();
  assert.match(header,/\{slot\.actions && tabs\}<\/>, slot\.title\)/,'tabs join the title only when the actions do');
  assert.match(header,/\(tabs \|\| actions\) && <header className=\{`\$\{classes\} page-heading-actions`\}>\{tabs\}\{actions\}<\/header>/,'otherwise they open the page');

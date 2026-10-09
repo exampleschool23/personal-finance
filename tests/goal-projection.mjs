@@ -6,11 +6,10 @@ import ts from 'typescript';
 import * as days from '../lib/calendar-days.ts';
 import * as finance from '../lib/finance.ts';
 import * as market from '../lib/market.ts';
-import * as budgets from '../lib/expense-plans.ts';
 import {stylesheet} from './helpers/stylesheet.mjs';
 import {workspaceSource} from './helpers/workspace-source.mjs';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const dependencies={...finance,...market,...budgets,...days};
+const dependencies={...finance,...market,...days};
 const {projectGoal,goalFinancials}=new Function(...Object.keys(dependencies),compile('lib/goal-projection.ts')+';return {projectGoal,goalFinancials};')(...Object.values(dependencies));
 
 test('million-dollar goal compounds new monthly surplus and required path hits exact deadline',()=>{
@@ -35,15 +34,14 @@ test('zero return, negative net worth, reached targets and short or expired dead
 const record=(kind,amount,extra={})=>({id:kind,name:kind,kind,amount,cost:0,quantity:0,currency:'USD',date:'2026-01-01',frequency:'Once',...extra});
 test('goal baseline respects ownership, quantities, debt and complete FX coverage',()=>{
  const records=[record('Cash',100),record('Stock',10,{quantity:5}),record('Business',1000,{ownership_percentage:25}),record('Loan',200),record('Salary',500,{frequency:'Monthly'}),record('Living expense',100,{frequency:'Monthly'})];
- assert.deepEqual(goalFinancials(records,[{amount:50,currency:'USD',start_date:'2026-01-01'}],'2026-09','USD',null,true),{netWorth:200,surplus:350});
- assert.deepEqual(goalFinancials([...records,record('Property',100,{currency:'EUR'})],[],'2026-09','USD',null,true),{netWorth:null,surplus:null});
- assert.equal(goalFinancials(records,[],'2026-09','USD',null,false).surplus,null);
- assert.equal(goalFinancials(records,[{amount:50,currency:'EUR',start_date:'2026-01-01'}],'2026-09','USD',null,true).surplus,null);
- assert.equal(goalFinancials(records,[],'2026-09','EUR',{rates:{EUR:.9},quotes:{},fx:null},true).netWorth,180);
+ assert.deepEqual(goalFinancials(records,'2026-09','USD',null),{netWorth:200,surplus:400});
+ assert.deepEqual(goalFinancials([...records,record('Property',100,{currency:'EUR'})],'2026-09','USD',null),{netWorth:null,surplus:null});
+ assert.equal(goalFinancials([...records,record('Living expense',50,{currency:'EUR',frequency:'Monthly'})],'2026-09','USD',null).surplus,null,'spending that cannot be converted leaves the surplus unknown');
+ assert.equal(goalFinancials(records,'2026-09','EUR',{rates:{EUR:.9},quotes:{},fx:null}).netWorth,180);
 });
 test('surplus excludes ended schedules and one-off income, and includes mortgage commitments',()=>{
  const records=[record('Salary',1000,{frequency:'Monthly',end_date:'2026-08-31'}),record('Other income',10000),record('Mortgage',500,{estimated_monthly_payment:100})];
- assert.equal(goalFinancials(records,[],'2026-09','USD',null,true).surplus,-100);
+ assert.equal(goalFinancials(records,'2026-09','USD',null).surplus,-100);
 });
 
 test('a deadline today has not passed; the required amount shown is a whole amount that meets the target',()=>{
@@ -59,9 +57,8 @@ test('a deadline today has not passed; the required amount shown is a whole amou
 });
 test('only Cash flow follows its month picker; other screens plan for the current month',()=>{
  const provider=workspaceSource();
- assert.match(provider,/const planningMonth = section === 'Income & expenses' \? forecastMonth : expensePlanMonth\(\);/);
- assert.match(provider,/estimatedCashFlow\(monthlyIncomeEntries, planProjection, planningMonth\)/);
- assert.match(provider,/useExpensePlans\(user, demo, rows, reload, refreshRecords, planningMonth\)/);
+ assert.match(provider,/const planningMonth = section === 'Income & expenses' \? forecastMonth : depositMonth\(\);/);
+ assert.match(provider,/estimatedCashFlow\(monthlyIncomeEntries, planningMonth\)/);
 });
 
 test('milestones mark the months that receive an investment and show both monthly amounts',()=>{

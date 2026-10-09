@@ -53,32 +53,12 @@ test('monthly review follows header currency on rerender without changing stored
 function find(node,predicate){
  if(!node||typeof node!=='object')return;
  // The expense form's parts render where the form puts them.
- if(['CurrencySelect','IncomeRecordForm','AmountCurrencyFields','PlanFields','CategoryAmount','DateDetails','DebtPayment','ExpenseActions'].includes(node.type?.name))return find(node.type(node.props),predicate);
+ if(['CurrencySelect','IncomeRecordForm','AmountCurrencyFields','CategoryAmount','DateDetails','DebtPayment','ExpenseActions'].includes(node.type?.name))return find(node.type(node.props),predicate);
  if(predicate(node))return node;
  for(const child of React.Children.toArray(node.props?.children)){
   const result=find(child,predicate);if(result)return result;
  }
 }
-test('new expense plans inherit current header currency while editing preserves saved currency and precision',()=>{
- const render=component('components/expense-plans.tsx','ExpensePlans');
- const plan={id:'existing',name:'Groceries',category:'Groceries',currency:'USD',amount:12.125,start_date:'2026-09-01',end_date:null};
- const props={plans:[plan],month:'2026-09',currency:'EUR',currencies:['EUR','USD'],loading:false,error:'',save:async()=>{},remove:async()=>{},onSpend(){},onRetry(){}};
- const currencyChoice=tree=>find(tree,node=>node.props?.value&&React.Children.toArray(node.props.children).some(option=>option.type==='option'&&option.props.value==='EUR'));
- let tree=render.tree({...props,currency:'USD'});
- tree=render.tree(props);
- // The plan form is its own component (the expense form's Plan tab opens it too): render the one the list opens.
- const form=tree=>component('components/expense-plans.tsx','ExpensePlanDialog').tree(find(tree,node=>node.type?.name==='ExpensePlanDialog').props);
- find(tree,node=>node.props?.onClick&&React.Children.toArray(node.props.children).includes('Add monthly plan')).props.onClick();
- tree=render.tree(props);
- assert.equal(currencyChoice(form(tree)).props.value,'EUR');
- // Edit is a rare action, so it sits in the row's ⋯ menu.
- find(tree,node=>node.props?.label==='Actions for {name}'&&Array.isArray(node.props.items)).props.items.find(item=>item&&item.label==='Edit').onSelect();
- tree=render.tree(props);
- assert.equal(currencyChoice(form(tree)).props.value,'USD');
- assert.equal(find(form(tree),node=>node.props?.value===12.125).props.value,12.125);
- assert.equal(plan.currency,'USD');assert.equal(plan.amount,12.125);
-});
-
 function expenseForm(props){
  const render=component('components/record-dialog.tsx','RecordDialog');
  const tree=render.tree(props);
@@ -88,7 +68,7 @@ function expenseForm(props){
 test('expense currency selector uses preferences, retains saved currency, and preserves amount and account',()=>{
  const editing={id:'expense',kind:'Other expense',currency:'EUR',amount:12.125,frequency:'Once',date:'2026-09-18',notes:'',account_id:'cash',account_exchange_rate:123,account_currency:'USD'};
  let updated;
- const props={editing,setEditing:value=>{updated=value;},rows:[editing],currencies:['USD','UZS'],recordKinds:[],expensePlans:{plans:[]},planning:{data:{records:[],categories:[]}}};
+ const props={editing,setEditing:value=>{updated=value;},rows:[editing],currencies:['USD','UZS'],recordKinds:[],planning:{data:{records:[],categories:[]}}};
  const tree=expenseForm(props);
  const select=find(tree,node=>node.props?.value==='EUR'&&node.props?.onChange);
  assert.deepEqual(React.Children.toArray(select.props.children).map(node=>node.props.value),['USD','UZS','EUR']);
@@ -104,21 +84,19 @@ test('expense currency selector uses preferences, retains saved currency, and pr
  assert.deepEqual(React.Children.toArray(freshSelect.props.children).map(node=>node.props.value),['USD','UZS']);
  const busy=expenseForm({...props,busy:true});
  assert.equal(find(busy,node=>node.props?.value==='EUR'&&node.props?.onChange).props.disabled,true);
- const linked=expenseForm({...props,editing:{...editing,expense_plan_id:'plan'}});
- assert.equal(find(linked,node=>node.props?.value==='EUR'&&node.props?.onChange),undefined);
 });
 
 test('expense uses one category above amount, including user categories and safe fallback changes',()=>{
  const category={id:'category-food',name:'Eating out',direction:'expense'};
  const editing={id:'expense',kind:'Living expense',custom_category_id:category.id,currency:'USD',amount:12.125,frequency:'Once',date:'2026-09-18',notes:''};
  let updated;
- const props={editing,setEditing:value=>{updated=value;},rows:[editing],currencies:['USD'],recordKinds:[],expensePlans:{plans:[]},planning:{data:{records:[],categories:[category]}}};
+ const props={editing,setEditing:value=>{updated=value;},rows:[editing],currencies:['USD'],recordKinds:[],planning:{data:{records:[],categories:[category]}}};
  const tree=expenseForm(props);
  const selector=find(tree,node=>node.props?.value===category.id&&node.props?.onChange);
  assert.ok(selector);
  assert.ok(React.Children.toArray(selector.props.children).some(node=>node.props.children===category.name));
  const labels=[];
- const visit=node=>{if(!node||typeof node!=='object')return;if(['AmountCurrencyFields','PlanFields','CategoryAmount','DateDetails','DebtPayment','ExpenseActions'].includes(node.type?.name))return visit(node.type(node.props));if(node.type==='label')labels.push(React.Children.toArray(node.props.children)[0]);for(const child of React.Children.toArray(node.props?.children))visit(child);};
+ const visit=node=>{if(!node||typeof node!=='object')return;if(['AmountCurrencyFields','CategoryAmount','DateDetails','DebtPayment','ExpenseActions'].includes(node.type?.name))return visit(node.type(node.props));if(node.type==='label')labels.push(React.Children.toArray(node.props.children)[0]);for(const child of React.Children.toArray(node.props?.children))visit(child);};
  visit(tree);
  assert.equal(labels.filter(label=>label==='Category').length,1);
  assert.ok(labels.indexOf('Category')<labels.indexOf('Amount'));
@@ -147,7 +125,7 @@ test('income source selectors match category, supply the name, and keep Name for
  const records=[{id:'rental',name:'Apartment',kind:'Property'},{id:'cafe',name:'Cafe',kind:'Business'},{id:'plan',name:'Employer salary',kind:'Salary',frequency:'Monthly',date:'2026-01-18'}];
  for(const [kind,sourceId] of [['Rent income','rental'],['Business income','cafe'],['Salary','plan']]){
   let updated;
-  const props={currencies:['USD'],rows:[],recordKinds:[],editingCashFlow:true,summary:[],expensePlans:{plans:[]},availableBusinesses:[],planning:{data:{records,categories:[]}},setEditing:value=>{updated=value;},editing:{id:'new',kind,currency:'USD',amount:12.125,frequency:'Once',notes:'',date:'2026-09-18'}};
+  const props={currencies:['USD'],rows:[],recordKinds:[],editingCashFlow:true,summary:[],availableBusinesses:[],planning:{data:{records,categories:[]}},setEditing:value=>{updated=value;},editing:{id:'new',kind,currency:'USD',amount:12.125,frequency:'Once',notes:'',date:'2026-09-18'}};
   const render=component('components/record-dialog.tsx','RecordDialog');
   const tree=render.tree(props);
   const select=find(tree,node=>node.props?.onChange&&React.Children.toArray(node.props?.children).some(child=>child.props?.value===sourceId));
@@ -165,7 +143,7 @@ test('all income forms select preferred currencies and retain saved currency and
  for(const kind of ['Salary','Rent income','Business income','Other income']){
   let updated;
   const editing={id:'income',kind,currency:'EUR',amount:12.125,frequency:'Once',date:'2026-09-18',notes:'',business_id:'cafe',account_id:'cash',account_exchange_rate:2,account_rate_date:'2026-09-18',account_currency:'USD'};
-  const props={editing,currencies:['USD','UZS'],rows:[editing],recordKinds:[kind],editingCashFlow:true,summary:[],expensePlans:{plans:[]},availableBusinesses:[{id:'cafe',name:'Cafe'}],planning:{data:{records:[],categories:[]}},setEditing:value=>{updated=value;}};
+  const props={editing,currencies:['USD','UZS'],rows:[editing],recordKinds:[kind],editingCashFlow:true,summary:[],availableBusinesses:[{id:'cafe',name:'Cafe'}],planning:{data:{records:[],categories:[]}},setEditing:value=>{updated=value;}};
   const render=component('components/record-dialog.tsx','RecordDialog');
   const select=find(render.tree(props),node=>node.props?.value==='EUR'&&node.props?.onChange);
   assert.deepEqual(React.Children.toArray(select.props.children).map(node=>node.props.value),['USD','UZS','EUR']);

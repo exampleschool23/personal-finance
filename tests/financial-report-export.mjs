@@ -16,19 +16,19 @@ function fixture(){
 }
 test('report download uses only the owner backup and local font; failures never download a partial file',async()=>{
  const original={fetch:globalThis.fetch,document:globalThis.document,setTimeout:globalThis.setTimeout,create:URL.createObjectURL,revoke:URL.revokeObjectURL};
- let downloads=0,failed=true,budgetFailed=false;const requests=[];
- globalThis.fetch=async path=>{requests.push(path);return path==='/api/backup'?(failed?Response.json({error:'Offline'},{status:503}):Response.json({version:1})):path==='/api/expense-plans'?(budgetFailed?Response.json({error:'Offline'},{status:503}):Response.json([])):new Response(new Uint8Array([1]));};
+ let downloads=0,failed=true,fontFailed=false;const requests=[];
+ globalThis.fetch=async path=>{requests.push(path);return path==='/api/backup'?(failed?Response.json({error:'Offline'},{status:503}):Response.json({version:1})):fontFailed?new Response('',{status:503}):new Response(new Uint8Array([1]));};
  globalThis.document={body:{appendChild(){}},createElement:()=>({click(){downloads++;},remove(){}})};
  URL.createObjectURL=()=> 'blob:report';URL.revokeObjectURL=()=>{};globalThis.setTimeout=()=>0;
  const flush=()=>new Promise(resolve=>setImmediate(resolve));
  try{
   const h=fixture();const tree=h.render();assert.equal(find(tree,node=>node.type==='textarea'),undefined);
   find(tree,node=>typeof node.props?.onClick==='function').props.onClick();assert.equal(find(h.render(),node=>typeof node.props?.onClick==='function').props.disabled,true);find(h.render(),node=>typeof node.props?.onClick==='function').props.onClick();await flush();await flush();
-  assert.equal(requests.length,3);assert.equal(downloads,0);assert.equal(h.built.length,0);assert.equal(find(h.render(),node=>node.type?.name==='ErrorPopup').props.message,'Could not export all data. No incomplete backup was created.');
-  failed=false;budgetFailed=true;find(h.render(),node=>typeof node.props?.onClick==='function').props.onClick();await flush();await flush();
-  assert.equal(downloads,0);assert.equal(h.built.length,0);
-  budgetFailed=false;find(h.render(),node=>typeof node.props?.onClick==='function').props.onClick();await flush();await flush();
-  assert.equal(downloads,1);assert.deepEqual(h.built,[{backup:{version:1},language:'uz',context:'',market:null,options:{currency:'UZS',plans:[]}}]);assert.ok(requests.every(path=>path==='/api/backup'||path==='/fonts/NotoSans-Regular.ttf'||path==='/api/expense-plans'));
+  assert.equal(requests.length,2);assert.equal(downloads,0);assert.equal(h.built.length,0);assert.equal(find(h.render(),node=>node.type?.name==='ErrorPopup').props.message,'Could not export all data. No incomplete backup was created.');
+  failed=false;fontFailed=true;find(h.render(),node=>typeof node.props?.onClick==='function').props.onClick();await flush();await flush();
+  assert.equal(downloads,0);assert.equal(h.built.length,0);assert.equal(find(h.render(),node=>node.type?.name==='ErrorPopup').props.message,'Could not create the PDF. Please try again.');
+  fontFailed=false;find(h.render(),node=>typeof node.props?.onClick==='function').props.onClick();await flush();await flush();
+  assert.equal(downloads,1);assert.deepEqual(h.built,[{backup:{version:1},language:'uz',context:'',market:null,options:{currency:'UZS'}}]);assert.ok(requests.every(path=>path==='/api/backup'||path==='/fonts/NotoSans-Regular.ttf'));
   assert.equal(find(h.render(true),node=>typeof node.props?.onClick==='function').props.disabled,true);
  }finally{globalThis.fetch=original.fetch;globalThis.document=original.document;globalThis.setTimeout=original.setTimeout;URL.createObjectURL=original.create;URL.revokeObjectURL=original.revoke;}
 });

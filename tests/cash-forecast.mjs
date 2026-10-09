@@ -17,13 +17,12 @@ test('the horizons are 30, 90, 180 and 365 days, with one point per day from tod
  assert.deepEqual(forecast.totals[0].lowest, { date: today, balance: 100 });
 });
 
-test('scheduled income and bills move the account they name; skipped, paid, overdue and plan-linked items do not', () => {
+test('scheduled income and bills move the account they name; skipped, paid and overdue items do not', () => {
  const records = [
   record('cash', 'Checking', 'Cash', 1000, '2026-01-01'),
   record('pay', 'Pay', 'Salary', 3000.55, '2026-01-15', { frequency: 'Monthly', account_id: 'cash' }),
   record('rent', 'Rent', 'Rent expense', 1200.25, '2026-01-12', { frequency: 'Monthly', account_id: 'cash' }),
   record('gym', 'Gym', 'Living expense', 40, '2026-01-05', { frequency: 'Monthly' }),
-  record('food', 'Food', 'Living expense', 99, '2026-01-20', { frequency: 'Monthly', expense_plan_id: 'plan' }),
  ];
  const occurrences = [{ id: 'o', record_id: 'rent', due_on: '2026-10-12', status: 'dismissed' }];
  const forecast = cashForecast({ ...base, records, occurrences, days: 30 });
@@ -57,16 +56,6 @@ test('loans are paid by their monthly payment with monthly interest until repaid
  assert.ok(!events.some(event => event.source === 'repayment'), 'the balance is not charged again on the due date');
  const lump = forecastEvents({ ...base, records: [record('debt', 'Friend', 'Debt', 500, '2026-11-01'), record('lent', 'Lent', 'Money lent', 300, '2026-11-03'), record('cd', 'CD', 'Deposit', 2000, '2026-12-01')], days: 90 });
  assert.deepEqual(lump.map(event => [event.name, event.source, event.amount]), [['Friend', 'repayment', -500], ['Lent', 'repayment', 300], ['CD', 'maturity', 2000]]);
-});
-
-test('expense plans spend what is left this month today, and their full allowance on the first of later months', () => {
- const plans = [{ id: 'groceries', name: 'Groceries', category: 'Groceries', currency: 'USD', amount: 600, start_date: '2026-09-01', end_date: '2026-11-30', spent: 250 }];
- const events = forecastEvents({ ...base, records: [], plans, plansMonth: '2026-10', days: 90 });
- assert.deepEqual(events.map(event => [event.date, event.amount]), [[today, -350], ['2026-11-01', -600]]);
- const otherMonth = forecastEvents({ ...base, records: [], plans, plansMonth: '2026-09', days: 30 });
- assert.equal(otherMonth[0].amount, -600, 'spending of another month is not subtracted');
- const overspent = forecastEvents({ ...base, records: [], plans: [{ ...plans[0], spent: 900 }], plansMonth: '2026-10', days: 10 });
- assert.equal(overspent.length, 0);
 });
 
 test('what-if adjustments apply once or every month from their date, in the primary currency', () => {

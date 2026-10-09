@@ -325,11 +325,9 @@ test('delete_schedule sends the choice about history to the database and names i
  assert.deepEqual(await json(await api.POST(post({action:'delete_schedule',data:{source:'record',id:TARGET,remove_history:true}}))),{status:200,body:{ok:true}});
  assert.deepEqual(state.calls.at(-1).path,'/rest/v1/rpc/delete_schedule');
  assert.deepEqual(state.calls.at(-1).body,{p_source:'record',p_id:TARGET,p_remove_history:true});
- await api.POST(post({action:'delete_schedule',data:{source:'plan',id:GOAL,remove_history:false}}));
- assert.deepEqual(state.calls.at(-1).body,{p_source:'plan',p_id:GOAL,p_remove_history:false});
  // The choice is never assumed.
  const before=state.calls.length;
- for(const data of [{source:'record',id:TARGET},{source:'account',id:TARGET,remove_history:false},{source:'record',id:'x',remove_history:false}])assert.equal((await api.POST(post({action:'delete_schedule',data}))).status,400,JSON.stringify(data));
+ for(const data of [{source:'record',id:TARGET},{source:'plan',id:GOAL,remove_history:false},{source:'account',id:TARGET,remove_history:false},{source:'record',id:'x',remove_history:false}])assert.equal((await api.POST(post({action:'delete_schedule',data}))).status,400,JSON.stringify(data));
  assert.equal(state.calls.length,before);
  state.handler=()=>Response.json({code:'P0001',message:'Only repeating income and expenses are deleted here.'},{status:400});
  assert.deepEqual(await json(await api.POST(post({action:'delete_schedule',data:{source:'record',id:ACCOUNT,remove_history:false}}))),{status:409,body:{error:'Only repeating income and expenses are deleted here.'}});

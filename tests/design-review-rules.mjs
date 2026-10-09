@@ -184,8 +184,8 @@ test('cards line up on one edge, and summary tables keep their figures together 
  assert.match(css,/\.records table td:nth-child\(2\)\{order:2;display:flex;flex-wrap:wrap;flex:0 1 auto;min-width:0;gap:6px;margin-inline-start:56px\}/,'category chips wrap first');
  assert.match(css,/\.records table td:nth-child\(3\)\{order:3;flex:1 0 auto;max-width:100%;/,'a date keeps its own width beside the category (it once collapsed to 8px and spilled out of the card)');
  // A visually hidden header is a block, so its overflow:hidden applies; table sections ignore it and widened the card scroller by 26px.
- for (const table of ['.records table thead','.upcoming-section thead','.stack-table thead','.label-table thead','.expense-plan-table thead']) assert.match(css,new RegExp(table.replace(/[.]/g,'\\.')+'\\{position:absolute;display:block;'),table);
- // Summary tables (Income this month, Spending plans): name across two lines, figures side by side on the right.
+ for (const table of ['.records table thead','.upcoming-section thead','.stack-table thead','.label-table thead']) assert.match(css,new RegExp(table.replace(/[.]/g,'\\.')+'\\{position:absolute;display:block;'),table);
+ // Summary tables (Income this month): name across two lines, figures side by side on the right.
  assert.match(css,/\.stack-table tbody tr\{display:grid;grid-template-columns:minmax\(0,1fr\) auto auto;/);
  assert.match(css,/\.stack-table tbody td:first-child\{grid-row:1\/3;/);
  assert.match(css,/\.stack-table tbody td:nth-child\(n\+3\)\{grid-row:2;/);
@@ -283,16 +283,13 @@ test('the 9 October 2026 full review fixes stay fixed (SCR-097…SCR-104, HEAD-0
  assert.match(css,/@media\(max-width:640px\)\{[^}]*\}[^@]*\.topbar-page-title h1\{white-space:normal;/);
  // The dashboard income table fits its card: headers wrap, amounts end-aligned.
  assert.match(css,/\.comparison-table th\{text-align:start;white-space:normal;/);assert.match(css,/\.comparison-table :is\(th,td\):not\(:first-child\)\{text-align:end\}/);
- // Small figure tables and expense plans become labelled cards on a phone.
+ // Small figure tables become labelled cards on a phone.
  assert.match(css,/\.label-table tbody td\[data-label\]::before\{content:attr\(data-label\)/);
  assert.match(read('components/portfolio-allocation-plan.tsx'),/<table className="label-table">/);
- const plans=read('components/expense-plans.tsx');
- assert.match(plans,/<table className="expense-plan-table">/);assert.match(plans,/<RowMenu label=\{t\('Actions for \{name\}'/,'Stop, Edit and Delete sit in the ⋯ menu');
- assert.match(plans,/<EmptyState icon=\{<ShoppingBasket/);assert.doesNotMatch(plans,/expense-plans-empty/);
  // Reminders: the explanation is behind the ⓘ, not a grey sentence under the heading.
  assert.match(read('components/reminder-panel.tsx'),/<PanelTitle title=\{t\('Reminders'\)\} hint=/);
  // Form dialogs keep their explanation behind the ⓘ and read it to screen readers only.
- for(const file of ['components/stop-schedule-dialog.tsx','components/expense-plans.tsx','components/investment-comparison-settings.tsx','components/financial-review.tsx','components/investment-tracker.tsx','components/transaction-tools-panel.tsx','components/income-sources-panel.tsx','components/planning/goals-page.tsx','components/planning/statement-reconciliation.tsx','components/planning/corporate-event-dialog.tsx','components/planning/holding-account-dialog.tsx','components/transaction-details-dialog.tsx','components/planning/accounts/add-account-dialog.tsx','components/account-owners-dialog.tsx','components/record-dialog/heading.tsx'])
+ for(const file of ['components/stop-schedule-dialog.tsx','components/investment-comparison-settings.tsx','components/financial-review.tsx','components/investment-tracker.tsx','components/transaction-tools-panel.tsx','components/income-sources-panel.tsx','components/planning/goals-page.tsx','components/planning/statement-reconciliation.tsx','components/planning/corporate-event-dialog.tsx','components/planning/holding-account-dialog.tsx','components/transaction-details-dialog.tsx','components/planning/accounts/add-account-dialog.tsx','components/account-owners-dialog.tsx','components/record-dialog/heading.tsx'])
   assert.doesNotMatch(read(file),/<DialogDescription>/,file);
  // Disabled controls say why.
  assert.match(read('components/cash-forecast.tsx'),/title=\{amount > 0 \? undefined : t\('Enter an amount greater than zero\.'\)\}/);

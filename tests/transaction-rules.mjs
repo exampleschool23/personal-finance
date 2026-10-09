@@ -45,11 +45,11 @@ test('rules match a name fragment case-insensitively within one direction', () =
 
 test('rules can set a business and tags in both directions; business income keeps its business', () => {
  const rows = [record('a', 'CandleScience order', 'Other expense', 50, '2026-09-01'), record('b', 'CandleScience refund', 'Other income', 5, '2026-09-02'), record('c', 'CandleScience', 'Other expense', 9, '2026-09-03', { business_id: 'biz' }),
-  record('d', 'Payout', 'Business income', 90, '2026-09-04', { business_id: 'biz' }), record('e', 'CandleScience plan', 'Other expense', 9, '2026-09-05', { expense_plan_id: 'plan' })];
+  record('d', 'Payout', 'Business income', 90, '2026-09-04', { business_id: 'biz' })];
  const rule = { id: 'r', pattern: 'candlescience', direction: 'any', kind: null, category_id: null, business_id: 'biz', tag_ids: [] };
  assert.ok(ruleMatches(rule, rows[0]) && ruleMatches(rule, rows[1]));
- assert.deepEqual(ruleTargets(rule, rows), ['a', 'b'], 'rows already in the business and planned spending are left alone');
- assert.deepEqual(ruleTargets({ ...rule, business_id: null, tag_ids: ['t'] }, rows, [], id => id === 'a' ? ['t'] : []), ['b', 'c', 'e'], 'tags go only where they are missing');
+ assert.deepEqual(ruleTargets(rule, rows), ['a', 'b'], 'rows already in a business are left alone');
+ assert.deepEqual(ruleTargets({ ...rule, business_id: null, tag_ids: ['t'] }, rows, [], id => id === 'a' ? ['t'] : []), ['b', 'c'], 'tags go only where they are missing');
  // Business transactions change category freely; only a transaction with a business may become business income.
  assert.ok(canRecategorize(rows[2]));
  assert.equal(recategorize(rows, ['a', 'b'], { kind: 'Business income', category_id: null }).changed, 0);
@@ -172,13 +172,13 @@ test('business helpers: colours, filters, who can take a business, account group
  assert.equal(nextPaletteColor(['teal', 'blue', 'indigo', 'violet', 'pink', 'red', 'orange', 'amber', 'green']), 'slate', 'grey is the last resort');
  assert.equal(paletteColor('nope'), paletteColor('slate'));assert.notEqual(paletteColor('teal'), paletteColor('blue'));assert.equal(paletteColor(null), paletteColor(undefined));
  const rows = [record('biz', 'Candles', 'Business', 0, '2026-01-01'), record('cash', 'Checking', 'Cash', 10, '2026-01-01'), record('loan', 'Loan', 'Loan', 10, '2026-01-01'), record('pay', 'Pay', 'Salary', 10, '2026-01-01', { income_source_id: 'job' }),
-  record('sale', 'Sale', 'Business income', 10, '2026-01-01', { business_id: 'biz' }), record('plan', 'Groceries', 'Living expense', 10, '2026-01-01', { expense_plan_id: 'p' }), record('buy', 'Wax', 'Other expense', 10, '2026-01-01')];
+  record('sale', 'Sale', 'Business income', 10, '2026-01-01', { business_id: 'biz' }), record('plan', 'Groceries', 'Living expense', 10, '2026-01-01'), record('buy', 'Wax', 'Other expense', 10, '2026-01-01')];
  assert.deepEqual(businessesIn(rows).map(row => row.id), ['biz']);
  assert.ok(inBusinessFilter([], null) && inBusinessFilter([HOUSEHOLD], undefined) && inBusinessFilter(['biz', HOUSEHOLD], 'biz') && !inBusinessFilter(['biz'], null) && !inBusinessFilter([HOUSEHOLD], 'biz'));
  assert.ok(canAssignBusiness(rows[6], 'biz') && !canAssignBusiness(rows[6], null), 'a household transaction can move to a business, and is already in the household');
  assert.ok(!canAssignBusiness(rows[3], 'biz'), 'salary from a source follows its source');
  assert.ok(!canAssignBusiness(rows[4], null) && !canAssignBusiness(rows[4], 'biz'), 'business income keeps a business');
- assert.ok(!canAssignBusiness(rows[5], 'biz'), 'planned spending stays household spending');
+ assert.ok(canAssignBusiness(rows[5], 'biz'), 'any household spending can move to a business');
  assert.ok(!canAssignBusiness(rows[1], 'biz'), 'an account is not a transaction');
  // Every record that can belong to a business falls in exactly one group.
  for (const kind of ['Cash', 'Deposit', 'Treasury bill', 'Stock', 'Crypto', 'Property', 'Valuables', 'Money lent', 'Mortgage', 'Loan', 'Debt']) {

@@ -96,7 +96,7 @@ test('tracker valuations must be typed and amounts use the required entry rule',
 
 test('actual transactions and payments cannot be dated in the future',()=>{
  const dialog=sourceWithParts('components/record-dialog.tsx'),income=fs.readFileSync('components/income-record-form.tsx','utf8');
- assert.match(dialog,/max=\{\[editing\.frequency==='Once'\?today\(\):undefined,linkedExpensePlan\?\.end_date\?\?undefined\]/);
+ assert.match(dialog,/max=\{editing\.frequency==='Once'\?today\(\):undefined\}/);
  assert.match(income,/const actual=editing\.frequency==='Once'&&!salaryPlan;/);assert.match(income,/<DatePicker value=\{editing\.date\}[^>]*max=\{latestDate\}/);
  assert.match(fs.readFileSync('components/mortgage-payment-dialog.tsx','utf8'),/<DatePicker value=\{payment\.date\}[^>]*max=\{depositToday\(\)\}/);
  assert.match(fs.readFileSync('components/planning/asset-movement-dialog.tsx','utf8'),/<DatePicker value=\{draft\.date\} max=\{depositToday\(\)\}/);
@@ -210,11 +210,11 @@ test('an expense amount in the transaction details stays in the ink colour',()=>
 test('Cash flow, Dashboard and Goals estimate the monthly surplus from the same full rows, loan payments included',()=>{
  const provider=fs.readFileSync('components/workspace/workspace-provider.tsx','utf8');
  // Summary rows carry no estimated_monthly_payment for loans and debts; Goals already reads the planning rows.
- assert.match(provider,/estimatedCashFlow\(monthlyIncomeEntries, planProjection, planningMonth\)/);
+ assert.match(provider,/estimatedCashFlow\(monthlyIncomeEntries, planningMonth\)/);
  assert.match(fs.readFileSync('components/planning/goals-page.tsx','utf8'),/goalFinancials\(data\.records,/);
  const {estimatedCashFlow}=loadTS('lib/finance.ts');
  const loan={id:'l',name:'QA Car loan',kind:'Loan',currency:'USD',amount:7200,quantity:1,cost:0,rate:7.5,date:'2028-12-31',frequency:'Once',notes:'',estimated_monthly_payment:350};
- assert.equal(estimatedCashFlow([loan],0,'2026-10').forecast,-350);
+ assert.equal(estimatedCashFlow([loan],'2026-10').forecast,-350);
 });
 
 // Full QA run, 6 October 2026.

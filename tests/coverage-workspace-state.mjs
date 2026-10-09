@@ -42,7 +42,6 @@ const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 const shown = { saved: 0, errors: [] }, router = { pushed: [], replaced: [], push(path) { this.pushed.push(path); }, replace(path) { this.replaced.push(path); } };
 let pathname = '/', marketReply = null, languageCalls = [];
 const household = { state: null, loading: false, attribute: async () => 3, setAccountOwner: async () => 4 };
-const plans = { plans: [{ id: 'plan', name: 'Groceries', category: 'Groceries', currency: 'USD', amount: 300, start_date: '2020-01-01', end_date: null }], month: today.slice(0, 7), loading: false, error: '', seeded: [], removed: [], restored: [], seedDemo(list) { this.seeded.push(list); }, restoreDemo(plan) { this.restored.push(plan.id); }, async remove(id) { this.removed.push(id); } };
 const r = createRenderer();
 const { WorkspaceProvider } = r.load('components/workspace/workspace-provider.tsx', {
  'next/navigation': { usePathname: () => pathname, useRouter: () => router },
@@ -58,7 +57,6 @@ const { WorkspaceProvider } = r.load('components/workspace/workspace-provider.ts
  '@/hooks/use-workspace-preferences': { useWorkspacePreferences: () => ({ data: { preferences: [] } }) },
  '@/hooks/use-tags': { useTags: () => ({ data: { tags: [] } }) },
  '@/hooks/use-record-attachments': { useRecordAttachments: () => ({}) },
- '@/hooks/use-expense-plans': { useExpensePlans: () => plans },
  '@/hooks/use-owner-resource': { useOwnerResource: (url, user, enabled, reload, empty) => ({ data: empty, loading: false }) },
  '@/hooks/use-record-filters': { useRecordFilters: () => ({ filters: emptyRecordFilters, setFilters() {} }) },
  '@/hooks/use-comparison-profile': { saveTrackingStartRequest: async () => {} },
@@ -111,7 +109,7 @@ test('the sample workspace starts from the backend and changes only its own copy
  const ws = mount();
  await settle();
  await ws().startDemo();await settle();
- assert.equal(ws().demo, true);assert.ok(ws().rows.length > 5);assert.equal(plans.seeded.length, 1);
+ assert.equal(ws().demo, true);assert.ok(ws().rows.length > 5);
  assert.equal(ws().market.rates.USD, 1);
  const expense = ws().rows.find(row => row.kind === 'Living expense' && row.frequency === 'Once' && row.account_id), cash = ws().rows.find(row => row.id === expense.account_id);
  // Opening forms: each offers the kinds that fit and starts in the workspace currency.
@@ -122,7 +120,6 @@ test('the sample workspace starts from the backend and changes only its own copy
  ws().closeEditing();ws().addAccountRecord('Stock');r.update();
  assert.deepEqual(ws().recordKinds, ['Stock', 'Crypto']);
  ws().quickExpense();r.update();assert.equal(ws().editing.kind, 'Other expense');
- ws().spendFromPlan(plans.plans[0]);r.update();assert.equal(ws().editing.kind, 'Living expense');assert.equal(ws().editing.expense_plan_id, 'plan');
  ws().reviewRecurring(expense);r.update();assert.equal(ws().editing.id, expense.id);
  ws().recordFromSource({ id: 'src', kind: 'Salary', currency: 'USD', amount: 100, mode: 'fixed', frequency: 'Monthly', start_date: '2026-01-01' });r.update();
  assert.deepEqual(ws().recordKinds, ws().recordKinds.filter(kind => kind !== 'Cash'));
@@ -138,8 +135,6 @@ test('the sample workspace starts from the backend and changes only its own copy
  await ws().save(formEvent({}));assert.equal(shown.errors.at(-1), 'Enter an amount greater than zero.');
  ws().setEditing({ ...expense, account_id: null });r.update();
  await ws().save(formEvent({}));r.update();assert.equal(shown.errors.at(-1), 'Choose a cash account.');
- ws().setEditing({ ...expense, expense_plan_id: 'plan', currency: 'EUR' });r.update();
- await ws().save(formEvent({}));r.update();assert.equal(shown.errors.at(-1), 'Check the expense plan, currency and spending date.');
  // A blank expense is named after its note.
  const saved = shown.saved;
  ws().setEditing({ ...expense, name: '', notes: 'Weekly shop' });r.update();
@@ -152,11 +147,7 @@ test('the sample workspace starts from the backend and changes only its own copy
  const [binned] = ws().deletedItems;
  ws().restoreDemoItem(binned);r.update();
  assert.ok(ws().rows.some(row => row.id === expense.id));assert.equal(ws().deletedItems.length, 0);
- await ws().removePlan('plan');r.update();
- assert.deepEqual(plans.removed, ['plan']);assert.equal(ws().deletedItems[0].source, 'expense_plans');
- ws().restoreDemoItem(ws().deletedItems[0]);r.update();assert.deepEqual(plans.restored, ['plan']);
  ws().restoreDemoItem({ id: 'goal', source: 'savings_goals', data: {} });
- await ws().removePlan('plan');r.update();ws().discardDeletedItem(ws().deletedItems[0]);r.update();assert.equal(ws().deletedItems.length, 0);
  assert.throws(() => ws().restoreDemoItem({ id: 'x', source: 'finance_records', data: { ...expense, business_id: 'gone' } }), /Could not restore this item/);
  // Bulk changes resolve to how many records changed.
  assert.equal(await ws().categorize([expense.id], { kind: 'Charity', category_id: null }), 1);r.update();
@@ -291,9 +282,9 @@ test('the pure save rules and the table view behave as the provider relied on', 
  const totals = workspaceTotals({ records: [{ id: 'c', kind: 'Cash', currency: 'USD', amount: 100, quantity: 1 }, { id: 'e', kind: 'Cash', currency: 'JPY', amount: 5, quantity: 1 }], planningRecords: [], currency: 'USD', market: { rates: { USD: 1 }, quotes: {}, errors: {} } });
  assert.deepEqual([totals.netWorth, totals.excludedCurrencies], [100, ['JPY']]);
  const { workspaceLoading } = loadTS('lib/workspace-totals.ts');
- const ready = { demo: false, settingsLoading: false, summaryLoaded: true, tableLoading: true, plansLoading: false, marketReady: true, marketLoading: true };
+ const ready = { demo: false, settingsLoading: false, summaryLoaded: true, tableLoading: true, marketReady: true, marketLoading: true };
  assert.equal(workspaceLoading(ready), false, 'a later page read or market refresh does not cover the workspace');
- assert.deepEqual([{ settingsLoading: true }, { summaryLoaded: false }, { plansLoading: true }, { marketReady: false }].map(change => workspaceLoading({ ...ready, ...change })), [true, true, true, true]);
+ assert.deepEqual([{ settingsLoading: true }, { summaryLoaded: false }, { marketReady: false }].map(change => workspaceLoading({ ...ready, ...change })), [true, true, true]);
  assert.equal(workspaceLoading({ ...ready, demo: true, settingsLoading: true }), false);
 });
 

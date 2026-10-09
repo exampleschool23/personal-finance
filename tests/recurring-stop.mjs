@@ -4,13 +4,13 @@ import {readFileSync} from 'node:fs';
 import {estimatedCashFlow} from '../lib/finance.ts';
 test('stopping preserves prior forecasts and excludes later months for monthly and yearly records',()=>{
  const entries=[{kind:'Salary',amount:1200,frequency:'Monthly',date:'2026-01-15',end_date:'2026-06-02'},{kind:'Living expense',amount:1200,frequency:'Yearly',date:'2026-02-01',end_date:'2026-06-30'}];
- assert.equal(estimatedCashFlow(entries,0,'2025-12').forecast,0);
- assert.equal(estimatedCashFlow(entries,0,'2026-01').forecast,1200);
- assert.equal(estimatedCashFlow(entries,0,'2026-05').forecast,1100);
- assert.equal(estimatedCashFlow(entries,0,'2026-06').forecast,1100);
- assert.equal(estimatedCashFlow(entries,0,'2026-07').forecast,0);
+ assert.equal(estimatedCashFlow(entries,'2025-12').forecast,0);
+ assert.equal(estimatedCashFlow(entries,'2026-01').forecast,1200);
+ assert.equal(estimatedCashFlow(entries,'2026-05').forecast,1100);
+ assert.equal(estimatedCashFlow(entries,'2026-06').forecast,1100);
+ assert.equal(estimatedCashFlow(entries,'2026-07').forecast,0);
  assert.equal(entries.length,2);
- assert.equal(estimatedCashFlow([{...entries[0],end_date:null}],0,'2026-07').forecast,1200);
+ assert.equal(estimatedCashFlow([{...entries[0],end_date:null}],'2026-07').forecast,1200);
 });
 test('summary preserves recurrence intervals rather than merging stopped and active records',()=>{
  const sql=readFileSync(new URL('../migrations/014_recurring_stop_dates.sql',import.meta.url),'utf8');

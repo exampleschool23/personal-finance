@@ -95,12 +95,11 @@ test('the sample workspace is a seven-figure household with a $180K mortgage', (
  // Holdings belong to accounts that exist.
  const accounts = new Set(workspace.holdingAccounts.map(account => account.id));
  assert.ok(workspace.records.filter(row => ['Stock', 'Crypto'].includes(row.kind)).every(row => accounts.has(row.holding_account_id)));
- // Day-to-day spending linked to plans stays inside the plan's dates and currency.
- const plans = new Map(workspace.expensePlans.map(plan => [plan.id, plan]));
- for (const row of workspace.records.filter(row => row.expense_plan_id)) {
-  const plan = plans.get(row.expense_plan_id);
-  assert.ok(plan && row.currency === plan.currency && row.date >= plan.start_date && row.date <= today, row.id);
- }
+ // Groceries and household spending sit in sample categories that carry their own budget.
+ const categories = new Set(workspace.categories.map(category => category.id));
+ assert.ok(categories.has('demo-cat-groceries') && categories.has('demo-cat-household'));
+ assert.ok(workspace.records.filter(row => row.custom_category_id).every(row => categories.has(row.custom_category_id)));
+ assert.ok(workspace.records.some(row => row.custom_category_id === 'demo-cat-groceries'));
 });
 
 test('sample goals include paying down the mortgage and track real holdings', () => {

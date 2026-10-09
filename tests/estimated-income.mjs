@@ -27,17 +27,17 @@ test('salary from an owned business is added independently of the business incom
  const business={id:'cafe',kind:'Business',estimated_monthly_income:1000};
  const salary={id:'salary',kind:'Salary',business_id:'cafe',amount:2500,frequency:'Monthly',date:'2026-09-01'};
  const distribution={kind:'Other income',business_id:'cafe',amount:1000,frequency:'Monthly',date:'2026-09-01'};
- const result=estimatedCashFlow([business,salary,distribution],0,'2026-09');
+ const result=estimatedCashFlow([business,salary,distribution],'2026-09');
  assert.equal(result.otherIncome,2500);assert.equal(result.plannedIncome,3500);assert.equal(result.forecast,3500);
- assert.equal(estimatedCashFlow([business,{...salary,frequency:'Yearly',amount:30000}],0,'2026-09').plannedIncome,3500);
- assert.equal(estimatedCashFlow([business,{...salary,frequency:'Once'}],0,'2026-09').plannedIncome,1000);
- assert.equal(estimatedCashFlow([business,{...salary,date:'2026-10-01'}],0,'2026-09').plannedIncome,1000);
- assert.equal(estimatedCashFlow([business,{...salary,date:'2026-01-01',end_date:'2026-08-31'}],0,'2026-09').plannedIncome,1000);
+ assert.equal(estimatedCashFlow([business,{...salary,frequency:'Yearly',amount:30000}],'2026-09').plannedIncome,3500);
+ assert.equal(estimatedCashFlow([business,{...salary,frequency:'Once'}],'2026-09').plannedIncome,1000);
+ assert.equal(estimatedCashFlow([business,{...salary,date:'2026-10-01'}],'2026-09').plannedIncome,1000);
+ assert.equal(estimatedCashFlow([business,{...salary,date:'2026-01-01',end_date:'2026-08-31'}],'2026-09').plannedIncome,1000);
 });
 
 test('foreign-currency salary is converted before adding it to the monthly forecast',()=>{
  const salary=marketEntry({kind:'Salary',currency:'UZS',amount:12000000,cost:0,frequency:'Monthly',date:'2026-09-01',business_id:'b'},'USD',{fx:{rate:12000},quotes:{}});
- assert.equal(estimatedCashFlow([{id:'b',kind:'Business',estimated_monthly_income:500},salary],0,'2026-09').plannedIncome,1500);
+ assert.equal(estimatedCashFlow([{id:'b',kind:'Business',estimated_monthly_income:500},salary],'2026-09').plannedIncome,1500);
 });
 test('monthly commitments count loan and debt payments alongside mortgages',()=>{
  const result=estimatedCashFlow([{kind:'Mortgage',amount:119300,estimated_monthly_payment:900},{kind:'Loan',amount:7650,estimated_monthly_payment:350},{kind:'Debt',amount:500,estimated_monthly_payment:50},{kind:'Loan',amount:0,estimated_monthly_payment:200},{kind:'Living expense',amount:40,frequency:'Monthly'}]);

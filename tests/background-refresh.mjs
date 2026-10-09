@@ -1,8 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {harness} from './helpers/hooks.mjs';
-import {loadTS} from './helpers/load-ts.mjs';
-const {plansOfMonth}=loadTS('lib/archive-pauses.ts');
 
 // Exercise hook state transitions with manually controlled network responses.
 function network(){const requests=[];return {requests,fetch:(url,options={})=>new Promise(resolve=>requests.push({url,options,reply:(data,status=200)=>resolve(Response.json(data,{status}))}))};}
@@ -53,19 +51,4 @@ test('superseded reads cannot undo a confirmed payment and a different user neve
  app.requests[2].reply(fixture);await flush();
  assert.equal(app.render().data.occurrences.length,1);
  const other=app.render('other');assert.equal(other.loading,true);assert.deepEqual(other.data,emptyPlanning);
-});
-
-test('expense plans stay visible during same-month refreshes and isolate other months and users',async()=>{
- const net=network();
- const run=harness('hooks/use-expense-plans.ts','useExpensePlans',{fetch:net.fetch,expensePlanMonth:()=> '2026-09',plansOfMonth});
- const render=(revision=0,month='2026-09',user='owner')=>run(user,false,[],revision,()=>{},month);
- assert.equal(render().loading,true);net.requests[0].reply([{id:'rent',amount:'100',spent:'20'}]);await flush();
- assert.equal(render().plans[0].amount,100);
- assert.equal(render(1).loading,false);assert.equal(render(1).plans.length,1);
- net.requests[1].reply({error:'Offline'},503);await flush();
- assert.equal(render(1).plans.length,1);assert.equal(render(1).error,'Offline');
- assert.equal(render(1,'2026-10').loading,true);assert.deepEqual(render(1,'2026-10').plans,[]);
- net.requests[2].reply({error:'Offline'},503);await flush();
- assert.deepEqual(render(1,'2026-10').plans,[]);
- assert.equal(render(1,'2026-10','other').loading,true);assert.deepEqual(render(1,'2026-10','other').plans,[]);
 });

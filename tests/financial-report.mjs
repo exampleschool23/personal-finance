@@ -9,7 +9,7 @@ export const reportFixture={version:1,exported_at:'2026-09-18T10:30:00Z',tables:
  savings_goals:[{id:'goal',name:'Emergency fund',kind:'savings',target:3000.12345678,allocated:300.12345678,currency:'USD',target_date:'2027-01-01',notes:'PRIVATE NOTE'},{id:'net',name:'Millionaire Net Worth',kind:'net_worth',allocated:0,target:1000000,currency:'USD',target_date:'2030-12-01',annual_return:0}],
  account_activity:[],investment_history:[],transaction_splits:[],investment_account_links:[],
  deleted_items:[{id:'deleted',source:'finance_records',data:entry('SECRET DELETED','Cash',99000)}],user_preferences:[{language:'en',currencies:['USD','UZS']}],portfolio_snapshots:[],transaction_categories:[{id:'leisure',name:'Leisure custom',direction:'expense'}],
- expense_plans:[{id:'budget',name:'Leisure budget',category:'Other',currency:'USD',amount:20,start_date:'2026-01-01',end_date:null}]
+ budget_amounts:[{category_key:'leisure',month:'2026-01-01',amount:20,currency:'USD',applies_forward:true},{category_key:'leisure',month:'2026-09-01',amount:25,currency:'USD',applies_forward:false}]
  },income_sources:[{id:'source',name:'Freelance',kind:'Other income',mode:'variable',currency:'USD',amount:null,frequency:null}]};
 export const reportMarket={rates:{USD:1,UZS:10000},ratesDate:'2026-09-18',fx:{rate:10000,date:'2026-09-18',source:'CBU'},quotes:{'Crypto:BTC':{usd:150,source:'Test market',fetchedAt:'2026-09-18T10:00:00Z'}},errors:{},stocksConfigured:false};
 const text=r=>r.blocks.map(b=>b.kind==='table'?[b.headers.join(' | '),...b.rows.map(r=>r.join(' | '))].join('\n'):b.text).join('\n');
@@ -33,12 +33,11 @@ test('actual cash flow excludes plans, deduplicates linked debt payments, and se
  assert.equal(tables(r,'Expense category')[0].rows.find(row=>row[0]==='Other expense')[1],'$40');
  assert.equal(tables(r,'Expected monthly equivalent')[0].rows[0][1],'Not available'); // variable source
 });
-test('budget uses actual linked receipts through today, current plan version and carryover, never future or recurring plans',()=>{
+test('a category budget uses its spending through today and the month\'s own amount, never future or recurring records',()=>{
  const f=structuredClone(reportFixture);
- f.tables.finance_records.push(entry('Purchase','Other expense',30,'USD',{expense_plan_id:'budget'}),entry('Future purchase','Other expense',999,'USD',{expense_plan_id:'budget',date:'2026-09-30'}),entry('Recurring commitment','Other expense',888,'USD',{expense_plan_id:'budget',frequency:'Monthly'}));
- const plans=[{...f.tables.expense_plans[0],amount:20,carryover:5,spent:99999}];
- const r=buildFinancialReport(f,'en','',null,{plans});
- assert.deepEqual(tables(r,'Budget plan / category')[0].rows,[['Leisure budget\nOther','$25','$30','-$5']]);
+ f.tables.finance_records.push(entry('Purchase','Other expense',30,'USD',{custom_category_id:'leisure'}),entry('Future purchase','Other expense',999,'USD',{custom_category_id:'leisure',date:'2026-09-30'}),entry('Recurring commitment','Other expense',888,'USD',{custom_category_id:'leisure',frequency:'Monthly'}));
+ const r=buildFinancialReport(f,'en');
+ assert.deepEqual(tables(r,'Budget plan / category')[0].rows,[['Leisure custom','$25','$30','-$5']]);
  assert.ok(text(r).includes('Budget overspend $5'));
 });
 test('missing rates or values never produce partial consolidated totals or fake zero goal progress',()=>{
@@ -79,7 +78,7 @@ test('all relevant records and long names remain present in readable multipage P
 
 test('selected reporting currency converts even a single foreign currency and attributes mixed FX sources',()=>{
  const f=structuredClone(reportFixture);f.tables.finance_records=f.tables.finance_records.filter(r=>r.currency==='UZS');
- f.income_sources=[];f.tables.expense_plans=[];
+ f.income_sources=[];f.tables.budget_amounts=[];
  const market={...reportMarket,rates:{USD:1,UZS:10000,EUR:.9}};
  const r=buildFinancialReport(f,'en','',market,{currency:'EUR'});
  assert.deepEqual(tables(r,'Total assets').at(-1).rows,[['€180','€0','€180']]);

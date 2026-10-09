@@ -21,7 +21,7 @@ function dialog(t,start,props={}){
   'next/link':{__esModule:true,default:'Link'},
   '@/components/language-provider':language('en'),
  });
- const settings={currencies:['USD','EUR'],household:null,busy:false,rows:[],save:e=>{e.preventDefault?.();saves.push(state.editing);},editingCashFlow:false,recordKinds:finance.assets,demo:false,summary:[],availableBusinesses:[],expensePlans:{plans:[],month:'2026-09',loading:false,error:''},money:(amount,currency)=>formatMoney(amount,currency,'en'),fetchingPrice:false,fetchPrice:()=>fetches.push(true),priceMessage:'',error:'',planning:planning(),navigate:path=>navigations.push(path),...props};
+ const settings={currencies:['USD','EUR'],household:null,busy:false,rows:[],save:e=>{e.preventDefault?.();saves.push(state.editing);},editingCashFlow:false,recordKinds:finance.assets,demo:false,summary:[],availableBusinesses:[],money:(amount,currency)=>formatMoney(amount,currency,'en'),fetchingPrice:false,fetchPrice:()=>fetches.push(true),priceMessage:'',error:'',planning:planning(),navigate:path=>navigations.push(path),...props};
  function Host(){
   const [editing,setEditing]=r.react.useState(start);
   state.editing=editing;
@@ -329,9 +329,6 @@ test('a scheduled record of another kind repeats, ends, links a business and an 
  assert.equal(d.state.editing.notes,'Gift');
  d.r.fire(d.r.find(byType('form')),'onSubmit',event());
  assert.equal(d.saves.at(-1).notes,'Gift');
- // A plan-linked record hides the repeat and business choices.
- const linked=dialog(t,record('plan','Valuables',{expense_plan_id:'p1'}),{editingCashFlow:true});
- assert.equal(linked.r.all(node=>node.type==='label'&&node.children[0]==='Repeats').length,0);
  // Business income requires its business.
  const required=dialog(t,record('x','Valuables',{kind:'Valuables'}),{editingCashFlow:true});
  assert.equal(required.labelled('Linked business (optional)','NativeSelect').props.required,false);
@@ -353,8 +350,6 @@ test('cash-flow records in a household follow the owner of the account they move
 
 // The expense form.
 const expense=(extra={})=>record('spend','Living expense',{amount:45.5,...extra});
-const plans=[{id:'p1',name:'Groceries',category:'Groceries',currency:'USD',amount:400,start_date:'2026-01-01',end_date:null},{id:'p2',name:'Trips',category:'Travel',currency:'EUR',amount:300,start_date:'2026-01-01',end_date:'2026-12-31'}];
-const plansState=(extra={})=>({plans,month:'2026-09',loading:false,error:'',...extra});
 
 test('an expense opens on the expense tab with its category, amount, date and account',t=>{
  const categories=[{id:'c1',name:'Eating out',direction:'expense'},{id:'c2',name:'Bonus',direction:'income'}];
@@ -365,10 +360,10 @@ test('an expense opens on the expense tab with its category, amount, date and ac
  assert.equal(saved.title(),'Edit record');
  assert.equal(d.r.find(byType('DialogContent')).props.className,'record-dialog expense-dialog');
  assert.equal(d.r.find(byType('DialogDescription')).props.className,'sr-only');
- assert.equal(d.description(),'Choose a plan or enter an expense amount. Add notes if needed.');
+ assert.equal(d.description(),'Choose a category and enter an expense amount. Add notes if needed.');
  assert.equal(d.hint(),d.description(),'the explanation sits behind the ⓘ in the title, not under it');
  assert.equal(d.r.find(byType('Tabs')).props.value,'expense');
- assert.deepEqual(d.r.all(byType('TabsTrigger')).map(text),['Plan','Expense'],'no debt tab without a debt payment action');
+ assert.equal(d.r.all(byType('TabsTrigger')).length,0,'no tabs without a debt payment action');
  const category=d.labelled('Category','NativeSelect');
  assert.deepEqual(category.children.map(text),[...finance.expenses,'Eating out']);
  d.r.fire(category,'onChange',{target:{value:'c1'}});
@@ -379,7 +374,7 @@ test('an expense opens on the expense tab with its category, amount, date and ac
  const follow=event();untouched.r.fire(untouched.r.find(byType('Link')),'onNavigate',follow);
  assert.equal(untouched.state.editing,null);assert.equal(follow.defaultPrevented,false);
  const amount=d.r.find(byType('AmountCurrencyFields'));
- assert.equal(amount.props.currencyLocked,false);assert.equal(amount.props.savedCurrency,undefined);
+ assert.equal(amount.props.currencyLocked,undefined);assert.equal(amount.props.savedCurrency,undefined);
  d.r.fire(amount,'onAmountChange',12.75);assert.equal(d.state.editing.amount,12.75);
  d.r.fire(d.r.find(byType('AmountCurrencyFields')),'onCurrencyChange','EUR');
  assert.equal(d.state.editing.currency,'EUR');assert.equal(d.state.editing.account_exchange_rate,null);
@@ -412,59 +407,14 @@ test('a recurring expense shows its schedule, end date and plan summary through 
  // A bill opened as a schedule cannot turn into one payment, and takes no cash account.
  assert.ok(!d.r.find(byType('ScheduleFields')).props.once);
  assert.equal(d.r.all(byType('CashAccountField')).length,0);
- assert.equal(d.r.all(node=>node.props?.['aria-label']==='Expense type').length,0,'no Plan or Debt tabs on a schedule');
+ assert.equal(d.r.all(node=>node.props?.['aria-label']==='Expense type').length,0,'no Debt tab on a schedule');
  d.r.fire(d.r.find(byType('ScheduleFields')),'onChange','Weekly',null);
  d.r.fire(d.labelled('End date (optional)','DatePicker'),'onChange','2027-02-01');
  d.r.fire(d.r.find(byType('ScheduleFields')),'onChange','Monthly',null);
  assert.equal(d.state.editing.end_date,'2027-02-01','changing between schedules keeps the end date');
 });
 
-test('the plan tab links a monthly plan, which supplies the name, kind and currency',t=>{
- const d=dialog(t,expense({currency:'USD',account_id:'acct'}),{editingCashFlow:true,expensePlans:plansState()});
- d.r.fire(d.r.find(byType('Tabs')),'onValueChange','plan');
- assert.equal(d.r.find(byType('Tabs')).props.value,'plan');
- assert.equal(d.state.editing.frequency,'Once');
- const plan=()=>d.labelled('Monthly expense plan','NativeSelect');
- assert.deepEqual(plan().children.map(text),['Choose a plan',`Groceries · Planned: ${formatMoney(400,'USD','en')}`,`Trips · Planned: ${formatMoney(300,'EUR','en')}`]);
- assert.equal(d.r.find(byType('AmountCurrencyFields')).props.currencyLocked,true);
- assert.equal(d.r.find(node=>node.type==='Button'&&node.props.className==='primary').props.disabled,true,'a plan must be chosen first');
- d.r.fire(plan(),'onChange',{target:{value:'p1'}});
- assert.equal(d.state.editing.expense_plan_id,'p1');assert.equal(d.state.editing.name,'Groceries');assert.equal(d.state.editing.kind,'Living expense');assert.equal(d.state.editing.account_id,'acct','the same currency keeps the account');
- d.r.fire(plan(),'onChange',{target:{value:'p2'}});
- assert.equal(d.state.editing.kind,'Other expense');assert.equal(d.state.editing.currency,'EUR');assert.equal(d.state.editing.account_id,null,'another currency clears the account');
- d.r.fire(plan(),'onChange',{target:{value:''}});
- assert.equal(d.state.editing.expense_plan_id,null);
- // Returning to the expense tab unlinks the plan and drops its name.
- d.r.fire(plan(),'onChange',{target:{value:'p1'}});
- d.r.fire(d.r.find(byType('Tabs')),'onValueChange','expense');
- assert.equal(d.state.editing.expense_plan_id,null);assert.equal(d.state.editing.name,'Groceries','without a linked plan prop the name is kept');
-});
-
-test('an expense linked to a plan opens on the plan tab; switching away clears the plan name it supplied',t=>{
- const linkedExpensePlan=plans[0];
- const d=dialog(t,expense({expense_plan_id:'p1',name:'Groceries'}),{editingCashFlow:true,expensePlans:plansState(),linkedExpensePlan});
- assert.equal(d.r.find(byType('Tabs')).props.value,'plan');
- assert.ok(d.r.find(node=>node.props.className==='muted expense-plan-hint'));
- assert.equal(d.r.find(node=>node.type==='Button'&&node.props.className==='primary').props.disabled,false);
- const date=d.labelled('Record date','DatePicker');
- assert.equal(date.props.min,'2026-01-01');
- d.r.fire(d.r.find(byType('Tabs')),'onValueChange','expense');
- assert.equal(d.state.editing.name,'');assert.equal(d.state.editing.expense_plan_id,null);
- const ended=dialog(t,expense({expense_plan_id:'p2'}),{editingCashFlow:true,expensePlans:plansState(),linkedExpensePlan:plans[1]});
- assert.equal(ended.labelled('Record date','DatePicker').props.max,'2026-09-30','today comes before the plan’s end');
- const old=dialog(t,expense({expense_plan_id:'p2'}),{editingCashFlow:true,expensePlans:plansState(),linkedExpensePlan:{...plans[1],end_date:'2026-06-30'}});
- assert.equal(old.labelled('Record date','DatePicker').props.max,'2026-06-30','a plan that ended earlier caps the date');
- const kept=dialog(t,expense({expense_plan_id:'p1',name:'Weekly shop'}),{editingCashFlow:true,expensePlans:plansState(),linkedExpensePlan});
- kept.r.fire(kept.r.find(byType('Tabs')),'onValueChange','expense');
- assert.equal(kept.state.editing.name,'Weekly shop','a name the person typed is kept');
-});
-
-test('plans that are loading or failed disable the plan choice and explain why',t=>{
- const loading=dialog(t,expense({expense_plan_id:'p1'}),{editingCashFlow:true,expensePlans:plansState({loading:true,plans:[]})});
- const select=loading.labelled('Monthly expense plan','NativeSelect');
- assert.equal(select.props.disabled,true);assert.equal(text(select.children[0]),'Loading plans…');
- const failed=dialog(t,expense({expense_plan_id:'p1'}),{editingCashFlow:true,expensePlans:plansState({error:'Plans are unavailable.'})});
- assert.equal(text(failed.r.find(node=>node.props.role==='alert')),'Plans are unavailable.');
+test('a failed record read disables the category choice and explains why',t=>{
  const planningFailed=dialog(t,expense(),{editingCashFlow:true,planning:planning({},{error:'Records are unavailable.'})});
  assert.equal(planningFailed.labelled('Category','NativeSelect').props.disabled,true);
  assert.ok(planningFailed.r.all(node=>node.props.role==='alert').map(text).every(message=>message==='Records are unavailable.'));
@@ -475,7 +425,7 @@ test('the debt tab lists outstanding debts and records a payment through the tra
  const payments=[],done=[],saved=[];
  const props={editingCashFlow:true,planning:planning({records:debts}),onDebtPayment:debt=>payments.push(debt.id),onMortgageSave:async payment=>saved.push(payment),onMortgageDone:()=>done.push(true),onDebtSaved:()=>done.push('saved')};
  const d=dialog(t,expense(),props);
- assert.deepEqual(d.r.all(byType('TabsTrigger')).map(text),['Plan','Expense','Debt / mortgage']);
+ assert.deepEqual(d.r.all(byType('TabsTrigger')).map(text),['Expense','Debt / mortgage']);
  d.r.fire(d.r.find(byType('Tabs')),'onValueChange','debt');
  const choice=()=>d.labelled('Loans & debts','NativeSelect');
  assert.deepEqual(choice().children.map(text),['Choose a debt',`loan · Loan · ${formatMoney(2500,'USD','en')}`,`home · Mortgage · ${formatMoney(150000,'USD','en')}`],'paid-off debts and other records are not offered');
@@ -562,7 +512,7 @@ test('a debt payment from a changed expense asks before leaving the expense',t=>
  d.r.fire(d.confirm(),'onConfirm');
  assert.deepEqual(payments,['home']);
 });
-test('Add expense records one payment: no Repeats, a cash account, and the Plan and Debt tabs',t=>{
+test('Add expense records one payment: no Repeats, a cash account, and the Debt tab',t=>{
  const d=dialog(t,expense({frequency:'Once'}),{editingCashFlow:true});
  assert.equal(d.r.all(byType('ScheduleFields')).length,0);
  assert.equal(d.r.all(byType('CashAccountField')).length,1);

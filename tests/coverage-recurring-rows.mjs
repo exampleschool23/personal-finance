@@ -8,7 +8,7 @@ const { formatMoney } = loadTS('lib/format.ts');
 const r = createRenderer();
 const ui = stubs();
 const RowMenu = Object.assign(({ items }) => React.createElement('menu', null, items.map(item => React.createElement('li', { key: item.label }, item.label))), { displayName: 'RowMenu' });
-const { OccurrenceRow, PlanRows, ArchivedFold } = r.load('components/planning/recurring-rows.tsx', { ...ui.modules, '@/components/presentation-foundation/row-menu': { RowMenu } });
+const { OccurrenceRow, ArchivedFold } = r.load('components/planning/recurring-rows.tsx', { ...ui.modules, '@/components/presentation-foundation/row-menu': { RowMenu } });
 const mount = (Component, props) => (r.mount(React.createElement(Component, props)), r);
 const usd = value => formatMoney(value, 'USD', 'en-US');
 
@@ -45,28 +45,13 @@ test('a settled row keeps only Archive; a loan payment and a read-only row have 
  assert.match(text(mount(OccurrenceRow, { item: item('paid', { recorded: null }), dated: false, today: '2026-10-05', busy: false, onPay() {}, onSkip() {} }).tree), /Paid · Exchange rate unavailable\./, 'a payment that could not be converted shows no figure');
 });
 
-test('spending plans show spent over planned with a bar that turns red when overspent, and are tapped to record spending', () => {
- const plan = { id: 'g', name: 'Groceries', category: 'Groceries', currency: 'USD', amount: 400, start_date: '2026-01-01', end_date: null };
- const spent = [], archived = [];
- const view = mount(PlanRows, { plans: [{ plan, planned: 400, spent: 100 }, { plan: { ...plan, id: 'm', name: 'Mum' }, planned: 200, spent: 300 }], onSpend: item => spent.push(item.id), onArchive: item => archived.push(item.id) });
- assert.match(text(view.tree), new RegExp(`Spending plans2.*25%.*\\${usd(100)} / \\${usd(400)}.*150%.*\\${usd(300)} / \\${usd(200)}`));
- const bars = view.all(node => node.props?.className === 'progress-line');
- assert.deepEqual(bars.map(bar => bar.props['data-over']), [undefined, true]);
- assert.deepEqual(view.all(node => node.props?.style?.width).map(node => node.props.style.width), ['25%', '100%'], 'the bar stops at full');
- view.all(byType('li')).filter(node => node.props.className === 'recurring-row')[0].props.onClick(tap);
- view.all(byType(RowMenu))[1].props.items[0].onSelect();
- assert.deepEqual([spent, archived], [['g'], ['m']]);
- assert.equal(text(mount(PlanRows, { plans: [] }).tree), '');
-});
-
-test('the Archived fold lists schedules and plans with Restore, and is absent when nothing is archived', () => {
+test('the Archived fold lists schedules with Restore, and is absent when nothing is archived', () => {
  const restored = [];
- const plan = { id: 'g', name: 'Groceries', category: 'Groceries', currency: 'USD', amount: 400 };
- const view = mount(ArchivedFold, { records: [rent], plans: [plan], busy: false, onRestore: target => restored.push(target.source) });
- assert.match(text(view.tree), new RegExp(`Archived2Rent · Rent expense · \\${usd(900)}RestoreGroceries · Groceries · \\${usd(400)}Restore`));
+ const view = mount(ArchivedFold, { records: [rent], busy: false, onRestore: target => restored.push(target.source) });
+ assert.match(text(view.tree), new RegExp(`Archived1Rent · Rent expense · \\${usd(900)}Restore`));
  view.all(byType(ui.Button)).forEach(button => button.props.onClick());
- assert.deepEqual(restored, ['record', 'plan']);
- assert.equal(text(mount(ArchivedFold, { records: [], plans: [], busy: false, onRestore() {} }).tree), '');
+ assert.deepEqual(restored, ['record']);
+ assert.equal(text(mount(ArchivedFold, { records: [], busy: false, onRestore() {} }).tree), '');
 });
 
 test('archiving changes the sample copies locally and sends signed-in changes before reading again', async () => {
@@ -75,19 +60,18 @@ test('archiving changes the sample copies locally and sends signed-in changes be
   '@/lib/api-client': { requestJson: async (url, options) => { sent.push([url, options.body]); } },
   '@/lib/feedback': { showSaved: () => saved.push(true) },
  });
- let rows = [rent], plans = [], refreshed = 0;
+ let rows = [rent], refreshed = 0;
  const setRows = next => { rows = next(rows); };
- const demo = useArchive({ demo: true, setRows, restoreDemoPlan: plan => plans.push(plan), refreshRecords: () => refreshed++ });
+ const demo = useArchive({ demo: true, setRows, refreshRecords: () => refreshed++ });
  await demo({ source: 'record', record: rent }, true);
- await demo({ source: 'plan', plan: { id: 'g' } }, true);
- assert.deepEqual([rows[0].archived, plans[0].archived, refreshed, sent.length], [true, true, 0, 0]);
- const live = useArchive({ demo: false, setRows, restoreDemoPlan() {}, refreshRecords: () => refreshed++ });
- await live({ source: 'plan', plan: { id: 'g' } }, false);
- assert.deepEqual(sent, [['/api/planning', { action: 'archive', data: { source: 'plan', id: 'g', archived: false } }]]);
- assert.deepEqual([refreshed, saved.length], [1, 3]);
+ assert.deepEqual([rows[0].archived, refreshed, sent.length], [true, 0, 0]);
+ const live = useArchive({ demo: false, setRows, refreshRecords: () => refreshed++ });
+ await live({ source: 'record', record: rent }, false);
+ assert.deepEqual(sent, [['/api/planning', { action: 'archive', data: { source: 'record', id: 'rent', archived: false } }]]);
+ assert.deepEqual([refreshed, saved.length], [1, 2]);
 });
 
-test('Delete sits last in a schedule\'s and a plan\'s menu, marked as a delete (the bin), only where deleting is offered', () => {
+test('Delete sits last in a schedule\'s menu, marked as a delete (the bin), only where deleting is offered', () => {
  const calls = [];
  const view = mount(OccurrenceRow, { item: item('paid', { recorded: 900 }), dated: false, today: '2026-10-05', busy: false, onPay() {}, onSkip() {}, onArchive: () => calls.push('archive'), onDelete: target => calls.push(target.source + ' ' + target.record.id) });
  const items = view.find(byType(RowMenu)).props.items;
@@ -95,13 +79,7 @@ test('Delete sits last in a schedule\'s and a plan\'s menu, marked as a delete (
  items[1].onSelect();
  const busy = mount(OccurrenceRow, { item: item('due'), dated: false, today: '2026-10-05', busy: true, onPay() {}, onSkip() {}, onDelete() {} });
  assert.equal(busy.find(byType(RowMenu)).props.items.at(-1).disabled, true, 'not while something is saving');
- const plan = { id: 'g', name: 'Groceries', category: 'Groceries', currency: 'USD', amount: 400 };
- const plans = mount(PlanRows, { plans: [{ plan, planned: 400, spent: 0 }], onDelete: target => calls.push(target.source + ' ' + target.plan.id) });
- const planItems = plans.find(byType(RowMenu)).props.items;
- assert.deepEqual(planItems.map(entry => entry.label), ['Delete'], 'Delete alone when archiving is not offered');
- planItems[0].onSelect();
- assert.deepEqual(calls, ['record rent', 'plan g']);
- assert.equal(mount(PlanRows, { plans: [{ plan, planned: 400, spent: 0 }] }).all(byType(RowMenu)).length, 0, 'a read-only list has no menu');
+ assert.deepEqual(calls, ['record rent']);
 });
 
 test('the delete dialog asks about history only when payments were recorded, and stays open on a refusal', async () => {
@@ -168,31 +146,26 @@ test('deleting a schedule changes the sample copies, reversing deleted payments,
  const cash = { id: 'cash', name: 'Cash', kind: 'Cash', currency: 'USD', amount: 1000, frequency: 'Once', date: '2026-01-01' };
  const paid = { id: 'p1', name: 'Rent', kind: 'Rent expense', currency: 'USD', amount: 900, frequency: 'Once', date: '2026-10-01', account_id: 'cash' };
  const extra = { ...paid, id: 'p2', amount: 50, occurrence_record_id: 'rent', occurrence_due_on: '2026-10-01' };
- const food = { ...paid, id: 'f1', name: 'Food', kind: 'Living expense', amount: 100, account_id: null, expense_plan_id: 'g' };
+ const food = { ...paid, id: 'f1', name: 'Food', kind: 'Living expense', amount: 100, account_id: null };
  const occurrences = [{ id: 'o1', record_id: 'rent', due_on: '2026-10-01', status: 'paid', transaction_id: 'p1' }];
  const run = async (target, removeHistory) => {
   let rows = [cash, rent, paid, extra, food];
-  const binned = [], dropped = [];
-  const remove = deleteScheduleWith({ demo: true, rows, setRows: next => { rows = next; }, occurrences, bin: { binRecord: row => binned.push(row.id), binPlan: plan => binned.push('plan ' + plan.id) }, dropDemoPlan: id => dropped.push(id), refreshRecords() { throw Error('no reads in the sample'); } });
+  const binned = [];
+  const remove = deleteScheduleWith({ demo: true, rows, setRows: next => { rows = next; }, occurrences, bin: { binRecord: row => binned.push(row.id) }, refreshRecords() { throw Error('no reads in the sample'); } });
   await remove(target, removeHistory);
-  return { ids: rows.map(row => row.id), cash: rows.find(row => row.id === 'cash').amount, food: rows.find(row => row.id === 'f1'), binned, dropped };
+  return { ids: rows.map(row => row.id), cash: rows.find(row => row.id === 'cash').amount, binned };
  };
  const kept = await run({ source: 'record', record: rent }, false);
  assert.deepEqual([kept.ids, kept.binned], [['cash', 'p1', 'p2', 'f1'], ['rent']], 'payments stay');
  const removed = await run({ source: 'record', record: rent }, true);
  assert.deepEqual([removed.ids, removed.binned], [['cash', 'f1'], ['p1', 'p2', 'rent']]);
  assert.equal(removed.cash, kept.cash + 950, 'both payments are reversed');
- const plan = { id: 'g', name: 'Food', category: 'Groceries', currency: 'USD', amount: 400 };
- const unlinked = await run({ source: 'plan', plan }, false);
- assert.deepEqual([unlinked.food.expense_plan_id, unlinked.binned, unlinked.dropped], [null, ['plan g'], ['g']]);
- assert.equal((await run({ source: 'plan', plan }, true)).food, undefined);
 
  let refreshed = 0;
- const live = deleteScheduleWith({ demo: false, rows: [], setRows() { throw Error('signed in, the server decides'); }, occurrences: [], bin: {}, dropDemoPlan() {}, refreshRecords: () => refreshed++ });
+ const live = deleteScheduleWith({ demo: false, rows: [], setRows() { throw Error('signed in, the server decides'); }, occurrences: [], bin: {}, refreshRecords: () => refreshed++ });
  await live({ source: 'record', record: rent }, true);
- await live({ source: 'plan', plan }, false);
- assert.deepEqual(sent, [['/api/planning', { action: 'delete_schedule', data: { source: 'record', id: 'rent', remove_history: true } }], ['/api/planning', { action: 'delete_schedule', data: { source: 'plan', id: 'g', remove_history: false } }]]);
- assert.deepEqual([refreshed, saved.length], [2, 6]);
+ assert.deepEqual(sent, [['/api/planning', { action: 'delete_schedule', data: { source: 'record', id: 'rent', remove_history: true } }]]);
+ assert.deepEqual([refreshed, saved.length], [1, 3]);
 });
 
 test('an overdue row due yesterday says Yesterday, never "1 days ago"', () => {

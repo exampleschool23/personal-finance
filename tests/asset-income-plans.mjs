@@ -37,7 +37,7 @@ test('demo generates selectable linked plans without counting asset income twice
  const rows=withAssetIncomePlans([asset]);assert.equal(rows.length,2);assert.equal(rows[1].income_source_id,asset.id);
  assert.equal(legacyEarningSources(rows)[0].linked_record_id,asset.id);
  assert.equal(withAssetIncomePlans(rows).length,2);
- assert.equal(estimatedCashFlow(rows,0,'2020-01').plannedIncome,450.125);
+ assert.equal(estimatedCashFlow(rows,'2020-01').plannedIncome,450.125);
  assert.equal(withAssetIncomePlans([asset],[{linked_record_id:asset.id,archived:true}]).length,1);
 });
 test('picker supports category hover, focus, touch, searching, and keyboard selection',()=>{
