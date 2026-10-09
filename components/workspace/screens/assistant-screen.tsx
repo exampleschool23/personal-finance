@@ -10,18 +10,10 @@ import { assistantSuggestions, assistantUnavailable } from '@/lib/assistant';
 
 type Turn = { role: 'user' | 'assistant'; content: string };
 
-/** AI assistant: ask about your own money in plain words. Questions and a summary of your records go to the model. */
-export function AssistantScreen() {
- const { t, language } = useLanguage();
- const { user, demo, currency, market } = useWorkspace();
- const [turns, setTurns] = useState<Turn[]>([]);
- const [draft, setDraft] = useState('');
- const [busy, setBusy] = useState(false);
- const [error, setError] = useState('');
- const end = useRef<HTMLDivElement>(null);
- // Ask the server up front whether the assistant is configured, so nobody types a question it cannot answer.
+// Ask the server up front whether the assistant is configured, so nobody types a question it cannot answer.
+// Null while unknown, or when nobody is signed in (sample workspace).
+function useAssistantAvailability(live: boolean, user: string | null) {
  const [status, setStatus] = useState<{ owner: string | null; available: boolean | null }>({ owner: null, available: null });
- const live = !demo && !!user;
  useEffect(() => {
   if (!live) return;
   const controller = new AbortController();
@@ -31,7 +23,19 @@ export function AssistantScreen() {
    .catch(() => { if (!controller.signal.aborted) setStatus({ owner: user, available: true }); });
   return () => controller.abort();
  }, [live, user]);
- const available = !live ? null : status.owner === user ? status.available : null;
+ return [live && status.owner === user ? status.available : null, setStatus] as const;
+}
+
+/** AI assistant: ask about your own money in plain words. Questions and a summary of your records go to the model. */
+export function AssistantScreen() {
+ const { t, language } = useLanguage();
+ const { user, demo, currency, market } = useWorkspace();
+ const [turns, setTurns] = useState<Turn[]>([]);
+ const [draft, setDraft] = useState('');
+ const [busy, setBusy] = useState(false);
+ const [error, setError] = useState('');
+ const end = useRef<HTMLDivElement>(null);
+ const [available, setStatus] = useAssistantAvailability(!demo && !!user, user);
  const unavailable = available === false;
  // Send says why it is off: the empty state already explains the sample workspace and a missing setup, so it points there.
  const reasonId = useId();
