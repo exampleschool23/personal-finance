@@ -32,7 +32,7 @@ function description({props,existing,assetRecord,liability}:Heading,t:Translate)
  if(assetRecord)return existing?t("Keep a current balance for this record."):assetDescription(editing,t);
  if(accountMode)return t("Cash and deposits hold a balance. Stocks and crypto are holdings within an account.");
  if(editing?.kind==='Money lent')return t("Keep track of who owes you, how much, and when.");
- if(editing&&expenses.includes(editing.kind))return t(editing.frequency==='Once'?"Choose a plan or enter an expense amount. Add notes if needed.":"Enter an amount and choose how often it repeats.");
+ if(editing&&expenses.includes(editing.kind))return t(editing.frequency==='Once'?"Choose a category and enter an expense amount. Add notes if needed.":"Enter an amount and choose how often it repeats.");
  if(editingCashFlow)return t(editing?.frequency==='Once'&&props.earningSources?"Choose an income source and record the amount received.":"Enter an amount and choose how often it repeats.");
  return recordKinds===assets||liability?t("Keep a current balance for this record."):t("Keep a current balance or record income and expenses.");
 }

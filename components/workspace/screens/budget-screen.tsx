@@ -20,8 +20,7 @@ import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { ageOfMoneyTrend } from '@/lib/age-of-money';
 import { budgetCategories, budgetedIn, budgetHistory, budgetOverall, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, flexBucketCategory, flexBucketKey, flexBucketPlan, flexBucketRollover, goalContribution, groupRows, leftToBudget, monthActuals, monthsBetween, suggestedBudget, type BudgetAmount, type BudgetCategory, type BudgetOverall, type BudgetRow, type MonthActuals } from '@/lib/budget';
 import { shiftMonth } from '@/lib/calendar-days';
-import { depositToday } from '@/lib/deposit-interest';
-import { expensePlanMonth } from '@/lib/expense-plans';
+import { depositMonth, depositToday } from '@/lib/deposit-interest';
 import { normalizeEntry, type Entry } from '@/lib/finance';
 import { formatMoney, formatMonthShort, formatMonthYear, formatNumber, formatYear } from '@/lib/format';
 import { convertAmount } from '@/lib/market';
@@ -32,7 +31,7 @@ export function BudgetScreen() {
  const name = useCategoryName();
  const { user, demo, reload, currency, market, planning, transactionTools, workspaceLoading } = useWorkspace();
  const budget = useBudget(user, demo, reload);
- const today = depositToday(), thisMonth = expensePlanMonth();
+ const today = depositToday(), thisMonth = depositMonth();
  const [month, setMonth] = useState(thisMonth);
  const [view, setView] = useState<'month' | 'year'>('month');
  const [focus, setFocus] = useState<BudgetFocus>('summary');

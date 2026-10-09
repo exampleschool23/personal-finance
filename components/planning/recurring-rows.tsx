@@ -8,12 +8,11 @@ import { RowMenu, type RowMenuItem } from '@/components/presentation-foundation/
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
 import { useDisplayMoney } from '@/components/display-money';
-import type { ExpensePlan } from '@/lib/expense-plans';
 import type { Category } from '@/lib/planning';
 import { shownName } from '@/lib/record-names';
 import { frequencyLabels, income, type Entry } from '@/lib/finance';
 import { formatDate, formatNumber } from '@/lib/format';
-import { daysFrom, type ArchiveTarget, type RecurringItem, type RecurringPlan } from '@/lib/recurring';
+import { daysFrom, type ArchiveTarget, type RecurringItem } from '@/lib/recurring';
 
 /** "in 3 days", "today", "yesterday", "2 days ago": how far a due date is from today. */
 export function useDueLabel() {
@@ -37,7 +36,7 @@ const rowTap = (action?: () => void) => action && ((event: MouseEvent) => { if (
 
 type OccurrenceProps = { item: RecurringItem; dated: boolean; today: string; busy: boolean; categories?: readonly Category[]; onEdit?: (record: Entry) => void; onOpen?: (item: RecurringItem) => void; onPay: (item: RecurringItem) => void; onSkip: (item: RecurringItem) => void; /** Undoes a skip: the occurrence is due again. */onRestore?: (item: RecurringItem) => void; onArchive?: () => void; onDelete?: (target: ArchiveTarget) => void };
 
-/** A schedule's or plan's ⋯ menu: Edit, Skip while an occurrence is open, then Archive and Delete where they are offered. */
+/** A schedule's ⋯ menu: Edit, Skip while an occurrence is open, then Archive and Delete where they are offered. */
 function scheduleMenu(t: (key: string) => string, busy: boolean, { edit, skip, restore, archive, remove }: { edit?: () => void; skip?: () => void; restore?: () => void; archive?: () => void; remove?: () => void }): RowMenuItem[] {
  return [...(edit ? [{ label: t('Edit'), onSelect: edit }] : []), ...(skip ? [{ label: t('Skip this occurrence'), disabled: busy, onSelect: skip }] : []), ...(restore ? [{ label: t('Restore occurrence'), disabled: busy, onSelect: restore }] : []), ...(archive ? [{ label: t('Archive'), disabled: busy, onSelect: archive }] : []), ...(remove ? [{ label: t('Delete'), deletes: true, disabled: busy, onSelect: remove }] : [])];
 }
@@ -93,33 +92,13 @@ function OccurrenceStatus({ item, today }: { item: RecurringItem; today: string 
  return <span className={item.status === 'overdue' ? 'status-badge is-overdue' : 'status-badge'}>{dueLabel(today, item.date)}</span>;
 }
 
-/** The month's spending plans under the dated bills, as on the Spending tab: spent against planned with a progress bar, tapped to record spending. */
-export function PlanRows({ plans, onSpend, onArchive, onDelete }: { plans: RecurringPlan[]; onSpend?: (plan: ExpensePlan) => void; onArchive?: (plan: ExpensePlan) => void; onDelete?: (target: ArchiveTarget) => void }) {
+/** Archived incomes and bills, folded at the foot of the page, each with Restore. Only when there are some: an empty fold is just noise. */
+export function ArchivedFold({ records, busy, onRestore }: { records: Entry[]; busy: boolean; onRestore: (target: ArchiveTarget) => void }) {
  const { t } = useLanguage();
  const { show } = useDisplayMoney();
- if (!plans.length) return null;
- return <>
-  <li className="transaction-day-heading"><h3>{t('Spending plans')}<Count value={plans.length}/></h3></li>
-  {plans.map(({ plan, planned, spent }) => {
-   const spend = onSpend && (() => onSpend(plan));
-   return <li key={'plan:' + plan.id} className="recurring-row" data-editable={spend ? '' : undefined} onClick={rowTap(spend)}>
-    <span className="transaction-merchant"><DoneTick done={false}/><CategoryIcon kind={plan.category}/><RowName name={plan.name} label={t('Record spending') + ' · ' + plan.name} onOpen={spend} detail={[t(frequencyLabels.Monthly), t(plan.category)].join(' · ')}/></span>
-    <ProgressLine value={spent} target={planned} tone="expense"/>
-    <strong className="transaction-amount">{show(spent, plan.currency)} / {show(planned, plan.currency)}</strong>
-    <div className="row-actions">{spend && <Button size="sm" variant="outline" onClick={spend}>{t('Record spending')}</Button>}{(onArchive || onDelete) && <RowMenu label={t('Actions for {name}', { name: plan.name })} items={scheduleMenu(t, false, { archive: onArchive && (() => onArchive(plan)), remove: onDelete && (() => onDelete({ source: 'plan', plan })) })}/>}</div>
-   </li>;
-  })}
- </>;
-}
-
-/** Archived incomes, bills and plans, folded at the foot of the page, each with Restore. Only when there are some: an empty fold is just noise. */
-export function ArchivedFold({ records, plans, busy, onRestore }: { records: Entry[]; plans: readonly ExpensePlan[]; busy: boolean; onRestore: (target: ArchiveTarget) => void }) {
- const { t } = useLanguage();
- const { show } = useDisplayMoney();
- if (!records.length && !plans.length) return null;
- const restore = (target: ArchiveTarget, name: string, detail: string, amount: string) => <li key={target.source + (target.source === 'plan' ? target.plan.id : target.record.id)}><span>{[name, detail, amount].join(' · ')}</span><Button size="sm" variant="outline" disabled={busy} onClick={() => onRestore(target)}>{t('Restore')}</Button></li>;
- return <details className="panel tools-panel"><summary>{t('Archived')}<Count value={records.length + plans.length}/></summary><ul className="tool-list">
+ if (!records.length) return null;
+ const restore = (target: ArchiveTarget, name: string, detail: string, amount: string) => <li key={target.record.id}><span>{[name, detail, amount].join(' · ')}</span><Button size="sm" variant="outline" disabled={busy} onClick={() => onRestore(target)}>{t('Restore')}</Button></li>;
+ return <details className="panel tools-panel"><summary>{t('Archived')}<Count value={records.length}/></summary><ul className="tool-list">
   {records.map(record => restore({ source: 'record', record }, record.name, t(record.kind), show(record.amount, record.currency)))}
-  {plans.map(plan => restore({ source: 'plan', plan }, plan.name, t(plan.category), show(plan.base_amount ?? plan.amount, plan.currency)))}
  </ul></details>;
 }

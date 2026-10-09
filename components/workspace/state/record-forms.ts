@@ -1,6 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { newEarningSource, selectEarningSource, type EarningSource } from '@/lib/earning-sources';
-import type { ExpensePlan } from '@/lib/expense-plans';
 import { assetRecordKinds, expenses, income, kinds, lendingRecordKinds, type Entry } from '@/lib/finance';
 import type { HoldingAccount } from '@/lib/holding-accounts';
 import { depositToday } from '@/lib/deposit-interest';
@@ -51,12 +50,6 @@ export function recordForms({ editable, setError, setRecordKinds, setEditing, se
         setRecordKinds(income.includes(record.kind) ? income : expenses.includes(record.kind) ? expenses : assetRecordKinds.includes(record.kind) ? assetRecordKinds : lendingRecordKinds);
         setEditing(storedRecord(record));
     };
-    /** Spending from a monthly expense plan, dated today or the nearest day the plan covers. */
-    const spendFromPlan = (plan: ExpensePlan) => {
-        setError(''); setRecordKinds(expenses);
-        const date = depositToday() < plan.start_date ? plan.start_date : plan.end_date && depositToday() > plan.end_date ? plan.end_date : depositToday();
-        setEditing({ ...fresh(), name: plan.name, ...start(plan.category === 'Groceries' || plan.category === 'Household' ? 'Living expense' : 'Other expense'), currency: plan.currency, frequency: 'Once', expense_plan_id: plan.id, date });
-    };
     /** Recurring's Add recurring › Income: the income source form, already a fixed schedule. */
     const addRecurringIncome = () => { if (!editable()) return; setError(''); setEditingIncomeSource(newEarningSource(currency, 'fixed', depositToday())); };
     const quickExpense = () => { if (!editable()) return; setError(''); setRecordKinds(expenses); setEditing({ ...fresh(), currency, ...start('Other expense'), frequency: 'Once' }); };
@@ -67,5 +60,5 @@ export function recordForms({ editable, setError, setRecordKinds, setEditing, se
     const closeDeleting = () => { setError(''); setDeleting(null); };
     const field = (key: keyof Entry, v: string | number) => setEditing(p => p ? { ...p, [key]: v, ...(key === 'currency' ? {account_id: null} : {}) } : p);
     const newBusiness = (name = ''): Entry => ({ ...fresh(), name, kind: 'Business', currency, amount: 0 });
-    return { addCashFlow, addRecurringIncome, addRecord, addAccountRecord, editRecord, spendFromPlan, quickExpense, recordFromSource, reviewRecurring, requestDelete, closeEditing, closeDeleting, field, newBusiness };
+    return { addCashFlow, addRecurringIncome, addRecord, addAccountRecord, editRecord, quickExpense, recordFromSource, reviewRecurring, requestDelete, closeEditing, closeDeleting, field, newBusiness };
 }

@@ -2,13 +2,12 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { requestJson } from '@/lib/api-client';
 import { withAssetIncomePlans, resolveEarningSource, type EarningSource } from '@/lib/earning-sources';
-import type { ExpensePlan } from '@/lib/expense-plans';
 import { showDeleted, showSaved } from '@/lib/feedback';
 import { liabilities, type Entry } from '@/lib/finance';
 import { resolveIncomeSource } from '@/lib/income-sources';
 import type { Category } from '@/lib/planning';
 import { applyRecordChange, lendFromAccount, withSavedRecord } from '@/lib/record-balance';
-import { businessMoveFrom, cashAccountProblem, debtDatesProblem, duplicateSalaryPayment, duplicateScheduledPayment, expenseName, fitsExpensePlan, recordSaveProblem } from '@/lib/record-save';
+import { businessMoveFrom, cashAccountProblem, debtDatesProblem, duplicateSalaryPayment, duplicateScheduledPayment, expenseName, recordSaveProblem } from '@/lib/record-save';
 import { depositToday } from '@/lib/deposit-interest';
 import { savedRecord } from '@/lib/record-table';
 import { isLinkedTransaction } from '@/lib/linked-transactions';
@@ -23,7 +22,7 @@ export type RecordSaveInput = {
     /** Shows why a change was refused. */
     fail: (message: string) => void;
     planning: { loading: boolean; error: string; data: { records: Entry[]; categories: Category[] }; updateRecords?: (change: (records: Entry[]) => Entry[]) => void };
-    plans: ExpensePlan[]; sources: EarningSource[];
+    sources: EarningSource[];
     refreshRecords: () => void;
     setAccountBusiness: (accountId: string, business: string | null) => Promise<number>;
     /** Keeps a deleted sample record in Recently deleted. */
@@ -53,7 +52,6 @@ export function useRecordSave(input: RecordSaveInput) {
         if (problem) { fail(problem); return; }
         setBusy(true); setError('');
         try {
-            if (editing.expense_plan_id && !fitsExpensePlan(editing, input.plans.find(p => p.id === editing.expense_plan_id))) throw Error('Check the expense plan, currency and spending date.');
             const rate=Number(new FormData(e.currentTarget as HTMLFormElement).get('account_exchange_rate'));
             const accountProblem=cashAccountProblem(editing,planning.data.records,!planning.loading&&!planning.error,rate);
             if(accountProblem)throw Error(accountProblem);

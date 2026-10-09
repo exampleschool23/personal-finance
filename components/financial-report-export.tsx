@@ -13,11 +13,10 @@ export function FinancialReportExport({demo,market=null,currency}:{demo:boolean;
   if(demo||downloading.current)return;
   downloading.current=true;setBusy(true);setError('');setDone(false);
   try{
-   const [response,fontResponse,planResponse,model,pdf]=await Promise.all([fetch('/api/backup',{cache:'no-store'}),fetch('/fonts/NotoSans-Regular.ttf'),fetch('/api/expense-plans',{cache:'no-store'}),import('@/lib/financial-report'),import('@/lib/financial-report-pdf')]);
+   const [response,fontResponse,model,pdf]=await Promise.all([fetch('/api/backup',{cache:'no-store'}),fetch('/fonts/NotoSans-Regular.ttf'),import('@/lib/financial-report'),import('@/lib/financial-report-pdf')]);
    if(!response.ok)throw Error('Could not export all data. No incomplete backup was created.');
-   if(!planResponse.ok)throw Error('Could not load monthly budgets. Please try again.');
    if(!fontResponse.ok)throw Error('Could not create the PDF. Please try again.');
-   const report=model.buildFinancialReport(await response.json(),pdfUnsupportedLanguages.includes(language)?'en':language,'',market,{currency,plans:await planResponse.json()});
+   const report=model.buildFinancialReport(await response.json(),pdfUnsupportedLanguages.includes(language)?'en':language,'',market,{currency});
    const bytes=await pdf.renderFinancialReportPdf(report,new Uint8Array(await fontResponse.arrayBuffer()));
    const url=URL.createObjectURL(new Blob([new Uint8Array(bytes)],{type:'application/pdf'}));
    const link=document.createElement('a');link.href=url;link.download='personal-financial-report.pdf';document.body.appendChild(link);link.click();link.remove();

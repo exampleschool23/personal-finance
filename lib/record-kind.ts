@@ -26,7 +26,6 @@ export function changeRecordKind(entry: Entry, kind: Entry['kind'], today: strin
   holding_account_id: null,
   account_id: null,
   end_date: cashFlow.includes(kind) ? entry.end_date : null,
-  expense_plan_id: expenses.includes(kind) ? entry.expense_plan_id : null,
   // Profile fields belong to a Business record; they are cleared only where they were set, so older databases accept the save.
   business_id: kind === 'Business' ? null : entry.business_id,
   business_structure: kind === 'Business' ? entry.business_structure : entry.business_structure == null ? undefined : null,

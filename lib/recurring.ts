@@ -1,6 +1,5 @@
 import { daysBetween, monthDays, monthEnd, shiftDay } from './calendar-days';
 import { archivedIn, scheduleDates, income, type Entry } from './finance';
-import { expensePlanTotals, type ExpensePlan } from './expense-plans';
 import { amountIn } from './money';
 import { installmentDates, installmentsFrom, isRecurringCashFlow, laterPayments, paidInstallmentAmounts, paidInstallmentMonths, scheduleAssets, scheduleStart, settledOccurrences, type DebtPayment, type Occurrence } from './planning';
 
@@ -65,13 +64,12 @@ export function occurrencesBetween(records: Entry[], occurrences: Occurrence[], 
  return items.sort((a, b) => a.date.localeCompare(b.date) || a.record.name.localeCompare(b.record.name));
 }
 
-/** A repeating income or bill, or a spending plan, to archive or restore. */
-export type ArchiveTarget = { source: 'record'; record: Entry } | { source: 'plan'; plan: ExpensePlan };
+/** A repeating income or bill to archive or restore. */
+export type ArchiveTarget = { source: 'record'; record: Entry };
 
-/** The transactions recorded against a schedule or spending plan: each recorded occurrence's payment and any later payment for it, or a plan's spending.
+/** The transactions recorded against a schedule: each recorded occurrence's payment and any later payment for it.
  * Deleting the schedule keeps them in history or deletes them too. */
 export function scheduleHistory(target: ArchiveTarget, records: Entry[], occurrences: Occurrence[]): string[] {
- if (target.source === 'plan') return records.filter(record => record.expense_plan_id === target.plan.id).map(record => record.id);
  const id = target.record.id;
  const ids = new Set(occurrences.flatMap(item => item.record_id === id && item.status === 'paid' && item.transaction_id ? [item.transaction_id] : []));
  for (const record of records) if (record.occurrence_record_id === id) ids.add(record.id);
@@ -81,23 +79,14 @@ export function scheduleHistory(target: ArchiveTarget, records: Entry[], occurre
 /** Repeating incomes and bills that were archived, by name; loan payments are never archived here. */
 export const archivedSchedules = (records: Entry[]) => records.filter(record => record.archived && !record.source_paused && isRecurringCashFlow(record)).sort((a, b) => a.name.localeCompare(b.name));
 
-/** A monthly spending plan (groceries, family support) beside the month's bills: what it allows and what was spent from it. */
-export type RecurringPlan = { plan: ExpensePlan; planned: number; spent: number };
-
-/** The spending plans running in a month, by name. */
-export function monthPlans(plans: readonly ExpensePlan[], month: string): RecurringPlan[] {
- return plans.flatMap(plan => { const totals = expensePlanTotals(plan, month); return totals.active && !archivedIn(plan, month) ? [{ plan, planned: totals.planned, spent: totals.spent }] : []; })
-  .sort((a, b) => a.plan.name.localeCompare(b.plan.name));
-}
-
-/** The list narrowed to one side when Income or Expenses is tapped; spending plans are expenses. */
-export function onlyDirection(items: RecurringItem[], carried: RecurringItem[], plans: RecurringPlan[], only: RecurringItem['direction'] | null) {
+/** The list narrowed to one side when Income or Expenses is tapped. */
+export function onlyDirection(items: RecurringItem[], carried: RecurringItem[], only: RecurringItem['direction'] | null) {
  const keep = (item: RecurringItem) => !only || item.direction === only;
- return { shown: items.filter(keep), shownCarried: carried.filter(keep), shownPlans: only === 'income' ? [] : plans };
+ return { shown: items.filter(keep), shownCarried: carried.filter(keep) };
 }
 
-/** Summary bars: how much came in or went out, and how much is still to come. Skipped items count as neither. A spending plan adds what was spent and what it still allows; overspending adds nothing still to come. */
-export function recurringSummary(items: RecurringItem[], convert: (amount: number, currency: string) => number | null, plans: readonly RecurringPlan[] = []) {
+/** Summary bars: how much came in or went out, and how much is still to come. Skipped items count as neither. */
+export function recurringSummary(items: RecurringItem[], convert: (amount: number, currency: string) => number | null) {
  const totals = { income: { done: 0, remaining: 0 }, expense: { done: 0, remaining: 0 }, missing: 0 };
  for (const item of items) {
   if (item.status === 'skipped') continue;
@@ -106,11 +95,6 @@ export function recurringSummary(items: RecurringItem[], convert: (amount: numbe
   const value = convert(item.status === 'paid' ? item.recorded ?? item.amount : item.amount, item.record.currency);
   if (value === null) { totals.missing++; continue; }
   totals[item.direction][item.status === 'paid' ? 'done' : 'remaining'] += value;
- }
- for (const { plan, planned, spent } of plans) {
-  const done = convert(spent, plan.currency), remaining = convert(Math.max(planned - spent, 0), plan.currency);
-  if (done === null || remaining === null) { totals.missing++; continue; }
-  totals.expense.done += done; totals.expense.remaining += remaining;
  }
  return totals;
 }

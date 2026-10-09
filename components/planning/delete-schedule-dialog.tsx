@@ -9,12 +9,12 @@ import type { PlanningData } from '@/lib/planning';
 import { scheduleHistory, type ArchiveTarget } from '@/lib/recurring';
 
 
-/** Deleting a schedule or spending plan from Recurring. When payments were recorded against it, the person chooses
+/** Deleting a schedule from Recurring. When payments were recorded against it, the person chooses
  * whether they stay in history or are deleted too; otherwise it is a plain yes or no. Either way everything can be restored from Recently deleted. */
 export function DeleteScheduleDialog({ target, history, onDelete, onClose }: { target: ArchiveTarget | null; history: number; onDelete: (removeHistory: boolean) => Promise<void>; onClose: () => void }) {
  const { t, locale } = useLanguage();
  const [busy, setBusy] = useState(false), [error, setError] = useState('');
- const name = target ? target.source === 'plan' ? target.plan.name : target.record.name : '';
+ const name = target?.record.name ?? '';
  async function remove(removeHistory: boolean) {
   setBusy(true); setError('');
   try { await onDelete(removeHistory); onClose(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
@@ -33,7 +33,7 @@ export function DeleteScheduleDialog({ target, history, onDelete, onClose }: { t
  </AlertDialogContent></AlertDialog>;
 }
 
-/** Delete on Recurring: `open` (absent where deleting is not offered) asks about a schedule or plan, and `dialog` is the question, counting the payments recorded against it. */
+/** Delete on Recurring: `open` (absent where deleting is not offered) asks about a schedule, and `dialog` is the question, counting the payments recorded against it. */
 export function useScheduleDeletion(data: Pick<PlanningData, 'records' | 'occurrences'>, onDelete?: (target: ArchiveTarget, removeHistory: boolean) => Promise<void>) {
  const [target, setTarget] = useState<ArchiveTarget | null>(null);
  const history = target ? scheduleHistory(target, data.records, data.occurrences).length : 0;

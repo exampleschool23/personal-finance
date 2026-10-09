@@ -1,6 +1,5 @@
 import { validDay } from './benchmark-data';
 import { shiftDay, shiftMonth } from './calendar-days';
-import { expensePlanTotals, type ExpensePlan } from './expense-plans';
 import { income, liabilities, scheduleDates, type Entry } from './finance';
 import { convertAmount } from './market';
 import { hasMonthlyInstallment, installmentAnchor, installmentsFrom, paidInstallmentMonths, upcomingPayments, type DebtPayment, type Occurrence } from './planning';
@@ -11,7 +10,7 @@ export type ForecastHorizon = typeof forecastHorizons[number];
 
 /** A temporary what-if: money in (positive) or out (negative), once or every month from its date. Kept on the screen, never saved. */
 export type ForecastAdjustment = { id: string; name: string; amount: number; frequency: 'Once' | 'Monthly'; date: string };
-export type ForecastSource = 'scheduled' | 'installment' | 'repayment' | 'maturity' | 'plan' | 'adjustment';
+export type ForecastSource = 'scheduled' | 'installment' | 'repayment' | 'maturity' | 'adjustment';
 /** One dated movement of cash. `amount` is signed (income positive) in `currency`; `accountId` is the cash account it moves, when known. */
 export type ForecastEvent = { key: string; date: string; name: string; kind: Entry['kind']; source: ForecastSource; amount: number; currency: string; accountId: string | null };
 export type ForecastPoint = { date: string; balance: number };
@@ -22,7 +21,7 @@ export type CashForecast = { today: string; end: string; events: ForecastEvent[]
 
 type Input = {
  records: Entry[]; occurrences: Occurrence[]; debtPayments?: DebtPayment[];
- plans?: readonly ExpensePlan[]; plansMonth?: string; adjustments?: readonly ForecastAdjustment[];
+ adjustments?: readonly ForecastAdjustment[];
  today: string; days: number; currency: string; rates?: number | Record<string, number>;
 };
 
@@ -46,19 +45,6 @@ function installmentEvents(record: Entry, today: string, end: string, paid: Set<
  return result;
 }
 
-/** Each plan's allowance leaves at the start of its month; this month only what is still unspent leaves, today. */
-function planEvents(plan: ExpensePlan, today: string, end: string, plansMonth?: string): ForecastEvent[] {
- const result: ForecastEvent[] = [];
- for (let month = today.slice(0, 7); month <= end.slice(0, 7); month = shiftMonth(month, 1)) {
-  const totals = expensePlanTotals(plan, month);
-  if (!totals.active) continue;
-  const current = month === today.slice(0, 7);
-  const amount = current && plansMonth === month ? Math.max(0, totals.remaining) : Number(plan.amount);
-  if (amount > 0) result.push({ key: plan.id + ':plan:' + month, date: current ? today : month + '-01', name: plan.name, kind: 'Living expense', source: 'plan', amount: -amount, currency: plan.currency, accountId: null });
- }
- return result;
-}
-
 /** Every cash movement from today through the horizon, by date. Overdue items are left out: the forecast starts from today's balances. */
 export function forecastEvents(input: Input): ForecastEvent[] {
  const { records, occurrences, today, currency } = input;
@@ -68,8 +54,6 @@ export function forecastEvents(input: Input): ForecastEvent[] {
   if (item.date < today) continue;
   const record = item.record;
   if (item.type === 'scheduled') {
-   // Spending linked to an expense plan is covered by the plan's allowance.
-   if (record.expense_plan_id) continue;
    events.push({ key: item.key, date: item.date, name: record.name, kind: record.kind, source: 'scheduled', amount: (income.includes(record.kind) ? 1 : -1) * Number(item.amount), currency: record.currency, accountId: record.account_id ?? null });
   } else if (item.type === 'maturity' || record.kind === 'Money lent') {
    events.push({ key: item.key, date: item.date, name: record.name, kind: record.kind, source: item.type, amount: Number(item.amount), currency: record.currency, accountId: record.account_id ?? null });
@@ -79,7 +63,6 @@ export function forecastEvents(input: Input): ForecastEvent[] {
  }
  const paid = paidInstallmentMonths(input.debtPayments ?? []);
  for (const record of records) events.push(...installmentEvents(record, today, end, paid));
- for (const plan of input.plans ?? []) events.push(...planEvents(plan, today, end, input.plansMonth));
  for (const adjustment of input.adjustments ?? []) {
   if (!Number.isFinite(adjustment.amount) || !adjustment.amount) continue;
   for (const date of scheduleDates({ date: adjustment.date, frequency: adjustment.frequency }, today, end))

@@ -44,7 +44,7 @@ export const businessAccountGroups: ReadonlyArray<readonly [label: string, match
 /** Whether a business can be set on a transaction by hand, mirroring `public.assign_transaction_business`. */
 export function canAssignBusiness(record: Entry, business: string | null) {
  return record.frequency === 'Once' && [...income, ...expenses].includes(record.kind) && !record.history_event_id && !record.earning_source_id
-  && !(record.kind === 'Salary' && record.income_source_id) && (business !== null || record.kind !== 'Business income') && (business === null || !record.expense_plan_id)
+  && !(record.kind === 'Salary' && record.income_source_id) && (business !== null || record.kind !== 'Business income')
   && (record.business_id ?? null) !== business;
 }
 
@@ -86,7 +86,7 @@ export function moveAccountToBusiness(records: readonly Entry[], accountId: stri
 export function withAccount(entry: Entry, accountId: string | null, records: readonly Entry[]): Entry {
  const before = records.find(record => record.id === entry.account_id)?.business_id ?? null;
  const after = records.find(record => record.id === accountId)?.business_id ?? null;
- const follows = (entry.business_id ?? null) === before && entry.kind !== 'Business income' && !entry.expense_plan_id && !(entry.kind === 'Salary' && entry.income_source_id);
+ const follows = (entry.business_id ?? null) === before && entry.kind !== 'Business income' && !(entry.kind === 'Salary' && entry.income_source_id);
  return { ...entry, account_id: accountId, ...(follows && after && after !== before ? { business_id: after } : follows && !after && before ? { business_id: null } : {}) };
 }
 

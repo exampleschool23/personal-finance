@@ -52,7 +52,7 @@ export function guessDelimiter(text:string){
  for(const delimiter of [',',';','\t'])if(header.split(delimiter).length-1>most){best=delimiter;most=header.split(delimiter).length-1;}
  return best;
 }
-export const FINANCE_RECORD_CSV_COLUMNS=['id','name','kind','currency','amount','quantity','cost','rate','date','frequency','end_date','notes','account_id','custom_category_id','expense_plan_id'] as const;
+export const FINANCE_RECORD_CSV_COLUMNS=['id','name','kind','currency','amount','quantity','cost','rate','date','frequency','end_date','notes','account_id','custom_category_id'] as const;
 export function mapCSV(rows:string[][],mapping:ColumnMapping):ImportRow[]{
  // A raw records export contains positive expense amounts, multiple currencies,
  // assets and schedules. Treating it as a bank statement would create bad entries.

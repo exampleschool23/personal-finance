@@ -3,6 +3,8 @@ import type { HistoryEvent } from './investment-history';
 export type DepositCompounding = 'monthly' | 'daily' | 'none';
 // Use the account's reporting timezone, independent of the server/browser timezone.
 export const depositToday = (now = new Date()) => new Date(now.getTime() + 5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+/** The current month (`YYYY-MM`) on the same Tashkent calendar as `depositToday`. */
+export const depositMonth = (now = new Date()) => depositToday(now).slice(0, 7);
 const dayLength = 86400000;
 
 /** Dated deposit projection. Monthly interest uses annual rate / twelve, weighted

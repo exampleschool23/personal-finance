@@ -12,13 +12,13 @@ import { transferAmount } from './spending';
 import { upcomingPayments, type Activity, type Goal, type Occurrence, type PlanningData } from './planning';
 import { legacyEarningSources, sourceSchedule, type EarningSource } from './earning-sources';
 import { investmentGoalItems, investmentGoalPlan } from './investment-goals';
-import type { ExpensePlan } from './expense-plans';
+import { budgetAmountFor, type BudgetAmount } from './budget';
 
 export type ReportRow=Record<string,unknown>;
 export type FinanceBackup={version:number;exported_at:string;tables:Record<string,ReportRow[]>;income_sources?:ReportRow[]};
 export type ReportBlock={kind:'title'|'heading'|'subheading'|'text'|'pageBreak';text:string}|{kind:'table';text:string;headers:string[];rows:string[][];widths:number[];numeric?:number[]};
 export type FinancialReport={title:string;generated:string;locale:string;blocks:ReportBlock[]};
-export type ReportOptions={currency?:string;plans?:ExpensePlan[]};
+export type ReportOptions={currency?:string};
 // Version 1 kept income sources beside tables; version 2 (migration 059+) signs owner-scoped tables.
 const SUPPORTED_BACKUP_VERSIONS=[1,2];
 export function parseFinanceBackup(signed:unknown):FinanceBackup {
@@ -53,7 +53,7 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
  const reporting=options.currency??(Array.isArray(preferred)?String(preferred[0]):'USD');
  if(!isCurrency(reporting))throw Error('Choose a valid reporting currency.');
  const rates=market?.rates??market?.fx?.rate;
- const currencies=[...new Set([...records.map(r=>r.currency),...(tables.income_sources??[]).map(r=>String(r.currency)),...(tables.expense_plans??[]).map(r=>String(r.currency))])].filter(isCurrency).sort();
+ const currencies=[...new Set([...records.map(r=>r.currency),...(tables.income_sources??[]).map(r=>String(r.currency)),...(tables.budget_amounts??[]).map(r=>String(r.currency))])].filter(isCurrency).sort();
  const title=t('Personal financial report');
  const wealth=records.filter(r=>assets.includes(r.kind)||liabilities.includes(r.kind)).map(record=>{
   const original=byId.get(record.id)!;
@@ -176,16 +176,15 @@ export function buildFinancialReport(input:unknown,language:Language,context='',
   for(const category of f.review.categories)rows.set(category.id,category.amount);
   table(['Expense category','Actual expenses'],[...rows].map(([id,amount])=>[categories.get(id)??(expenses.includes(id)||liabilities.includes(id)?t(id):t('Uncategorized expense')),money(f.spent===null?null:amount,c)]),[.65,.35],[1]);
  }
- add('text',t('Categories show actual expenses, excluding principal. Budgets below follow linked plans; category budgets are not stored.'));
- const plans=(options.plans??tables.expense_plans??[]) as ExpensePlan[];
- const activePlans=plans.filter(p=>p.start_date<=end&&(!p.end_date||p.end_date>=start));
- table(['Budget plan / category','Planned full month','Actual spending','Remaining / overspend'],activePlans.map(p=>{
-  const actual=sum(records.filter(r=>r.expense_plan_id===p.id&&expenses.includes(r.kind)&&r.frequency==='Once'&&inPeriod(r.date)).map(r=>{const n=number(byId.get(r.id)?.amount);return n===null?null:convertAmount(n,r.currency,p.currency,rates);}));
-  const planned=number(p.amount)===null?null:options.plans?Number(p.amount)+Number(p.carryover??0):p.rollover?null:Number(p.amount);
-  const remaining=planned===null||actual===null?null:planned-actual;
-  if(remaining!==null&&remaining<0)issues.add(`${p.name}: ${t('Budget overspend')} ${money(-remaining,p.currency)}`);
-  if(planned===null)issues.add(`${p.name}: ${t('Monthly budget or rollover unavailable')}`);
-  return [`${p.name}\n${t(p.category)}`,money(planned,p.currency),money(actual,p.currency),money(remaining,p.currency)];
+ // The month's budget per spending category (Budget): its amount for the month and what was spent in that category.
+ const budgetAmounts=(tables.budget_amounts??[]).map(row=>({...row,category_key:String(row.category_key),month:String(row.month).slice(0,7),amount:Number(row.amount),currency:String(row.currency),applies_forward:!!row.applies_forward})) as BudgetAmount[];
+ const budgeted=[...new Set(budgetAmounts.map(row=>row.category_key))].flatMap(key=>{const saved=budgetAmountFor(budgetAmounts,key,month);return saved&&saved.amount>0&&(expenses.includes(key)||categories.has(key))?[saved]:[];});
+ table(['Budget plan / category','Planned full month','Actual spending','Remaining / overspend'],budgeted.map(b=>{
+  const name=categories.get(b.category_key)??t(b.category_key);
+  const actual=sum(records.filter(r=>(r.custom_category_id??r.kind)===b.category_key&&expenses.includes(r.kind)&&r.frequency==='Once'&&inPeriod(r.date)).map(r=>{const n=number(byId.get(r.id)?.amount);return n===null?null:convertAmount(n,r.currency,b.currency,rates);}));
+  const remaining=actual===null?null:b.amount-actual;
+  if(remaining!==null&&remaining<0)issues.add(`${name}: ${t('Budget overspend')} ${money(-remaining,b.currency)}`);
+  return [name,money(b.amount,b.currency),money(actual,b.currency),money(remaining,b.currency)];
  }),[.34,.22,.22,.22],[1,2,3]);
  if(records.some(r=>expenses.includes(r.kind)&&r.frequency!=='Once'&&!r.source_paused&&!r.archived))add('subheading',t('Recurring expense commitments'));
  table(['Commitment','Amount','Frequency','End date'],records.filter(r=>expenses.includes(r.kind)&&r.frequency!=='Once'&&!r.source_paused&&!r.archived).map(r=>[r.name,money(number(byId.get(r.id)?.amount),r.currency),t(r.frequency),date(r.end_date)]),[.36,.24,.2,.2],[1]);

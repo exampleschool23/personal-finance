@@ -2,13 +2,13 @@
 import { useState } from 'react';
 import { saveOwnerResource, useOwnerResource } from '@/hooks/use-owner-resource';
 import { demoBudget, emptyBudget, setBudgetAmount, type BudgetCategorySetting, type BudgetMode, type BudgetState } from '@/lib/budget';
-import { expensePlanMonth } from '@/lib/expense-plans';
+import { depositMonth } from '@/lib/deposit-interest';
 import { showSaved } from '@/lib/feedback';
 
 /** Saved budgets, category settings and the budget style. The sample workspace keeps its own copy in memory. */
 export function useBudget(owner: string | null, demo: boolean, revision: number) {
  const remote = useOwnerResource<BudgetState>('/api/budget', owner, !!owner && !demo, revision, emptyBudget);
- const [sample, setSample] = useState<BudgetState>(() => demoBudget(expensePlanMonth()));
+ const [sample, setSample] = useState<BudgetState>(() => demoBudget(depositMonth()));
  const state = demo ? sample : remote.data;
  // Changes show at once; a failed save reloads what is really stored.
  async function change(next: (state: BudgetState) => BudgetState, action: string, data: unknown) {

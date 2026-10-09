@@ -301,20 +301,12 @@ input[type="checkbox"] {width:18px!important;height:18px!important;min-width:18p
 .status-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .status-badge.is-overdue{background:color-mix(in srgb,var(--negative) 12%,transparent);color:var(--pill-negative)}
 
-.expense-plan-choice{display:grid;gap:10px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--accent)}
-.expense-plan-choice p{font-size:var(--type-small);line-height:1.5;margin:0}
 
 .record-dialog.expense-dialog{display:flex;flex-direction:column;overflow:hidden}
 .expense-dialog>[data-slot="dialog-title"],.expense-dialog>[data-slot="dialog-description"]{flex-shrink:0}
 .expense-dialog .expense-form{display:flex;flex-direction:column;min-height:0;overflow:hidden;gap:16px}
 .expense-form-scroll{display:grid;gap:20px;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px}
 .expense-form-actions{flex-shrink:0}
-.expense-plan-hint{font-size:var(--type-small);margin:-8px 0 0}
-.expense-plan-picker{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
-.expense-plan-picker>label{flex:1 1 220px;min-width:0}
-.expense-plan-picker>button{min-height:44px}
-.expense-plan-empty{display:grid;justify-items:start;gap:10px}
-.expense-plan-empty>p{font-size:var(--type-small)}
 .record-dialog .record-form .amount-currency-row{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
 .amount-currency-row>.amount-value-field:only-child{grid-column:1/-1}
 .amount-currency-row>label{min-width:0}

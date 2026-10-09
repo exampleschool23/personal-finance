@@ -2,7 +2,6 @@ import { cashFlowAmountMissing, requiresCashAccount } from './cash-account-requi
 import { depositToday } from './deposit-interest';
 import { isBusinessAccount } from './business';
 import { expenses, liabilities, simpleInterestKinds, type Entry } from './finance';
-import type { ExpensePlan } from './expense-plans';
 
 const today = depositToday;
 
@@ -17,11 +16,6 @@ export function recordSaveProblem(editing: Entry) {
  if (cashFlowAmountMissing(editing)) return 'Enter an amount greater than zero.';
  if (requiresCashAccount(editing) && editing.date > today()) return 'Actual income and expenses cannot be dated in the future.';
  return '';
-}
-
-/** Spending from an expense plan stays within it: its currency, a single expense with no business, inside its dates. */
-export function fitsExpensePlan(editing: Entry, plan: ExpensePlan | undefined) {
- return !!plan && editing.currency === plan.currency && editing.frequency === 'Once' && expenses.includes(editing.kind) && !editing.business_id && editing.date >= plan.start_date && (!plan.end_date || editing.date <= plan.end_date);
 }
 
 /** The name an expense is saved under when left blank: its note, its custom category, or its kind's key, which

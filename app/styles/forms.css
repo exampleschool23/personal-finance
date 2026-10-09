@@ -141,31 +141,6 @@
 .tracker-history p{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px;color:var(--muted-foreground)}
 @media(max-width:600px){.tracker-metrics{grid-template-columns:1fr}.tracker-metrics>div{display:flex;align-items:center;justify-content:space-between;gap:12px}.tracker-metrics small{margin:0}.tracker-history li{flex-direction:column;gap:4px}.tracker-history li>div:last-child{text-align:start}}
 
-/* Monthly expense planning shares the record table and finance theme. */
-.expense-plans > .muted { margin: 12px 0; }
-.expense-plans .table-scroll { margin-top: 20px; }
-.expense-plans td { vertical-align: middle; padding-top: 12px; padding-bottom: 12px; }
-.expense-plan-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
-.expense-plan-name { display: flex; align-items: flex-start; flex-direction: column; gap: 6px; min-width: 170px; }
-@media (max-width: 640px) {
- .expense-plans .panel-title { align-items: flex-start; gap: 12px; flex-direction: column; }
- .expense-plans .row-actions { flex-wrap: wrap; }
-}
-/* On a phone each plan is a card: name and planned amount, labelled Spent and Remaining, the budget bar, then the actions. */
-@container content (max-width:560px){
- .expense-plan-table thead{position:absolute;display:block;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
- .expense-plan-table,.expense-plan-table tbody{display:block;white-space:normal}
- .expense-plan-table tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:8px 12px;padding:14px 0;border-bottom:1px solid var(--hairline)}
- .expense-plan-table tbody tr:last-child{border-bottom:0}
- .expense-plans .expense-plan-table tbody td{display:block;padding:0;border:0}
- .expense-plan-table .expense-plan-name{min-width:0}
- .expense-plan-table td:is(:nth-child(2),:nth-child(4)){text-align:end}
- .expense-plan-table td:is(:nth-child(3),:nth-child(4)){font-size:var(--type-caption)}
- .expense-plan-table td:is(:nth-child(3),:nth-child(4))::before{content:attr(data-label) " ";color:var(--muted-foreground)}
- .expense-plan-table td:nth-child(n+5){grid-column:1/-1}
- .expense-plan-table .row-actions{justify-content:flex-end}
-}
-
 /* Shared loading placeholders use theme colors and respect reduced motion. */
 .shimmer{position:relative;overflow:hidden;isolation:isolate}
 .shimmer::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--foreground) 9%,transparent),transparent);animation:loading-shimmer 1.6s ease-in-out infinite}

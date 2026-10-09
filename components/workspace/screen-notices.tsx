@@ -5,15 +5,13 @@ import { InlineError } from '@/components/presentation-foundation/inline-error';
 import { marketEntry } from '@/lib/market';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 
-/** Warnings that qualify the totals on a screen: excluded currencies, stale prices and plans that failed to load. */
-export function ScreenNotices({ planErrors = true }: { planErrors?: boolean }) {
+/** Warnings that qualify the totals on a screen: excluded currencies, and stale prices. */
+export function ScreenNotices() {
  const { t } = useLanguage();
- const { demo, rows, summary, currency, market, marketError, expensePlans, budget, error, refreshRecords } = useWorkspace();
+ const { demo, rows, summary, currency, market, marketError, error } = useWorkspace();
  return <>
   {(demo ? rows : summary).some(r => marketEntry(r, currency, market) === null) && <p className="muted">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
   {marketError && <p role="status" className="muted">{t(marketError)}</p>}
-  {planErrors && expensePlans.error && <InlineError message={t(expensePlans.error)} onRetry={refreshRecords}/>}
-  {budget.missingCurrencies.length > 0 && <p className="muted">{t('Some expense plans could not be converted and are excluded from the forecast.')}</p>}
   <ErrorPopup message={error}/>
  </>;
 }

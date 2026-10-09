@@ -1,13 +1,5 @@
 /* Budget use, the Accounts directory, Settings cards, exchange rates and Cash flow. */
 
-/* Budget use belongs to its plan row, with the exact percentage above the line. */
-.expense-plan-usage { width: 140px; margin: 0; }
-.expense-plan-usage-label { display: flex; align-items: baseline; justify-content: flex-end; gap: 16px; font-size: var(--type-micro); color: var(--muted-foreground); margin-bottom: 6px; }
-.expense-plan-usage-label strong { font-size: var(--type-caption); font-variant-numeric: tabular-nums; color: var(--foreground); }
-.expense-plan-usage-label strong.negative { color: var(--destructive); }
-.expense-plan-usage-track { height: 6px; border-radius: 999px; background: var(--border); overflow: hidden; }
-.expense-plan-usage-fill { display: block; height: 100%; border-radius: inherit; }
-
 .chart-point-details{max-height:85dvh;overflow-y:auto;overscroll-behavior:contain}
 .chart-point-details .portfolio-tooltip{width:100%;max-width:none;box-shadow:none}
 .chart-point-details .portfolio-tooltip-body{max-height:none;overflow:visible}
@@ -113,7 +105,6 @@
 .cashflow-spending-preview .monthly-mortgage-payments .panel-title{margin-bottom:8px}
 .cashflow-spending-preview .monthly-mortgage-payments h2{font-size:var(--type-small)}
 .cashflow-spending-preview .monthly-mortgage-payments :is(th,td):nth-child(3){display:none}
-.cashflow-spending-preview .expense-plan-usage{min-width:90px;margin-inline-start:auto}
 .cashflow-view-history{display:flex;margin:4px 16px 12px auto;font-size:var(--type-small)}
 @container content (max-width:900px){.cashflow-preview-grid{grid-template-columns:minmax(0,1fr)}}
 

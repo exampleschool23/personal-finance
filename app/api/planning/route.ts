@@ -72,8 +72,8 @@ export async function POST(req:Request){
   return Response.json({ok:true});
  }
  if(action==='archive'&&'source' in value&&'archived' in value){
-  // Only a repeating income or bill, or a spending plan, is archived; its recorded payments are untouched.
-  const path=value.source==='plan'?`expense_plans?id=eq.${value.id}`:`finance_records?id=eq.${value.id}&frequency=neq.Once`;
+  // Only a repeating income or bill is archived; its recorded payments are untouched.
+  const path=`finance_records?id=eq.${value.id}&frequency=neq.Once`;
   const response=await supa('/rest/v1/'+path,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({archived:value.archived})},auth.token);
   if(!response.ok)return postgrestFailure(response,'Could not update the scheduled occurrence.',{codes:{PGRST204:['The app database needs an update. Ask the administrator to apply the latest migrations.',503],'42703':['The app database needs an update. Ask the administrator to apply the latest migrations.',503]}});
   if(!(await response.json() as unknown[]).length)return Response.json({error:'Could not update the scheduled occurrence.'},{status:404});

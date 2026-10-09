@@ -12,7 +12,7 @@ export function workspaceTotals({ records, planningRecords, currency, market }: 
  return { current, monthlyIncomeEntries: convert(planningRecords), excludedCurrencies, totalDebt, netWorth };
 }
 
-/** A signed-in workspace shows its loading state until its settings, its first records (or summary), its expense
- * plans and, the first time, the market have arrived. The sample workspace never waits. */
-export const workspaceLoading = ({ demo, settingsLoading, summaryLoaded, tableLoading, plansLoading, marketReady, marketLoading }: { demo: boolean; settingsLoading: boolean; summaryLoaded: boolean; tableLoading: boolean; plansLoading: boolean; marketReady: boolean; marketLoading: boolean }) =>
- !demo && (settingsLoading || (!summaryLoaded && tableLoading) || plansLoading || (!marketReady && marketLoading));
+/** A signed-in workspace shows its loading state until its settings, its first records (or summary) and, the first
+ * time, the market have arrived. The sample workspace never waits. */
+export const workspaceLoading = ({ demo, settingsLoading, summaryLoaded, tableLoading, marketReady, marketLoading }: { demo: boolean; settingsLoading: boolean; summaryLoaded: boolean; tableLoading: boolean; marketReady: boolean; marketLoading: boolean }) =>
+ !demo && (settingsLoading || (!summaryLoaded && tableLoading) || (!marketReady && marketLoading));

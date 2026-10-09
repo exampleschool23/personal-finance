@@ -63,6 +63,8 @@ BEGIN
  UPDATE public.deleted_items SET data=data||jsonb_build_object('custom_category_id',category,'expense_plan_id',NULL)
   WHERE user_id=owner AND source='finance_records' AND data->>'expense_plan_id'=plan.id::text;
  DELETE FROM public.expense_plans WHERE id=plan.id;
+ -- The plan lives on as its category, so it does not go to Recently deleted (archive_deleted_item files it there for a signed-in caller).
+ DELETE FROM public.deleted_items WHERE user_id=owner AND source='expense_plans' AND data->>'id'=plan.id::text;
  RETURN category;
 END $$;
 REVOKE ALL ON FUNCTION public.convert_expense_plan(uuid) FROM PUBLIC,anon,authenticated;
@@ -71,6 +73,7 @@ REVOKE ALL ON FUNCTION public.convert_expense_plan(uuid) FROM PUBLIC,anon,authen
 CREATE OR REPLACE FUNCTION public.convert_restored_expense_plan() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 BEGIN
+ -- Also inside a verified restore (public.finance_restore_active()): an old backup's plans become categories.
  PERFORM public.convert_expense_plan(NEW.id);
  RETURN NULL;
 END $$;
@@ -86,6 +89,11 @@ END $$;
 -- Nothing writes plans directly any more.
 REVOKE INSERT,UPDATE ON public.expense_plans FROM authenticated;
 REVOKE EXECUTE ON FUNCTION public.save_budget_plan(jsonb,date,boolean) FROM authenticated;
+
+-- The capability version moves to 130, so the app can ask for this migration.
+CREATE OR REPLACE FUNCTION public.finance_capabilities() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
+ SELECT jsonb_build_object('schema_version',130,'record_revisions',true,'verified_restore',true)
+$$;
 
 NOTIFY pgrst,'reload schema';
 COMMIT;

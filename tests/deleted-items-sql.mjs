@@ -23,26 +23,14 @@ test('deletion archives atomically; owner-only restore keeps details, dependenci
   await db.query('SELECT restore_deleted_item($1)',[archived.id]);await db.query('SELECT restore_deleted_item($1)',[archived.id]);
   assert.deepEqual((await db.query('SELECT * FROM finance_records WHERE id=$1',[record])).rows[0],original);
   assert.equal((await db.query('SELECT * FROM deleted_items')).rows.length,0);
-  await db.exec(`INSERT INTO expense_plans(id,name,category,currency,amount,start_date) VALUES('${plan}','Food','Groceries','USD',500,'2026-01-01');INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,expense_plan_id) VALUES('${payment}','${owner}','Food','Living expense','USD',100,'2026-09-01','${plan}');`);
-  const savedPayment=(await db.query('SELECT * FROM finance_records WHERE id=$1',[payment])).rows[0];
-  const revisedPlan={id:plan,name:'New household budget',category:'Household',currency:'USD',amount:725.123456,start_date:'2026-01-01',end_date:'2026-09-30'};
-  await db.query('SELECT save_budget_plan($1,$2,$3)',[revisedPlan,'2026-09-01',false]);
-  assert.deepEqual((await db.query('SELECT * FROM finance_records WHERE id=$1',[payment])).rows[0],savedPayment,'renaming, recategorizing, changing budget and stopping preserve the saved expense');
-  const earlier=(await db.query("SELECT expense_plan_month('2026-08-01') AS plans")).rows[0].plans.find(p=>p.id===plan);
-  assert.equal(Number(earlier.amount),500,'earlier allowance remains unchanged');
-  await assert.rejects(db.query("SELECT move_item_to_deleted($1,'expense_plans')",[plan]),/foreign key/);
-  assert.deepEqual((await db.query('SELECT * FROM finance_records WHERE id=$1',[payment])).rows[0],savedPayment,'failed plan deletion preserves the saved expense');
-
+  // A spending plan deleted before plans became Budget categories (migration 130) comes back as a category with its budget.
+  await db.exec('RESET ROLE');
+  await db.query("INSERT INTO deleted_items(id,user_id,source,data) VALUES($1,$2,'expense_plans',$3)",[payment,owner,{id:plan,user_id:owner,name:'Food',category:'Groceries',currency:'USD',amount:500,start_date:'2026-01-01',end_date:null,created_at:'2026-01-01T00:00:00Z',archived:false,archive_pauses:[]}]);
+  await db.exec('SET ROLE authenticated');
+  await db.query('SELECT restore_deleted_item($1)',[payment]);
   assert.equal((await db.query('SELECT * FROM deleted_items')).rows.length,0);
-  await db.query("SELECT move_item_to_deleted($1,'finance_records')",[payment]);
-  const removedPayment=(await db.query("SELECT id FROM deleted_items WHERE source='finance_records'")).rows[0].id;
-  await db.query("SELECT move_item_to_deleted($1,'expense_plans')",[plan]);
-  const removedPlan=(await db.query("SELECT id FROM deleted_items WHERE source='expense_plans'")).rows[0].id;
-  await assert.rejects(db.query('SELECT restore_deleted_item($1)',[removedPayment]),/Check the expense plan/);
-  assert.equal((await db.query('SELECT * FROM deleted_items')).rows.length,2);
-  await db.query('SELECT restore_deleted_item($1)',[removedPlan]);
-  await db.query('SELECT restore_deleted_item($1)',[removedPayment]);
-  assert.equal((await db.query('SELECT * FROM deleted_items')).rows.length,0);
-  assert.equal((await db.query('SELECT expense_plan_id FROM finance_records WHERE id=$1',[payment])).rows[0].expense_plan_id,plan);
+  assert.equal((await db.query('SELECT count(*)::int AS n FROM expense_plans')).rows[0].n,0);
+  const food=(await db.query("SELECT id FROM transaction_categories WHERE name='Food' AND direction='expense'")).rows[0].id;
+  assert.deepEqual((await db.query("SELECT to_char(month,'YYYY-MM') AS month,amount::float AS amount,currency FROM budget_amounts WHERE category_key=$1",[food])).rows,[{month:'2026-01',amount:500,currency:'USD'}]);
  }finally{await db.close();}
 });

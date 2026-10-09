@@ -23,7 +23,7 @@ import { useWorkspace } from '@/components/workspace/workspace-provider';
 
 export function OverviewScreen() {
  const { t } = useLanguage();
- const { user, demo, rows, addCashFlow, current, currency, market, reload, preferencesData, excludedCurrencies, snapshots, forecast, forecastReady, planning, transactionTools, expensePlans, workspacePreferences, workspaceLoading, businessList, setSettingUpBusinesses } = useWorkspace();
+ const { user, demo, rows, addCashFlow, current, currency, market, reload, preferencesData, excludedCurrencies, snapshots, forecast, forecastReady, planning, transactionTools, workspacePreferences, workspaceLoading, businessList, setSettingUpBusinesses } = useWorkspace();
  const planningReady = demo || (!planning.loading && !planning.error);
  const cards = useOverviewCards({ entries: current, currency, excludedCurrencies, forecast, forecastReady, planning: planningReady ? planning.data : null });
  const { layout, change } = useDashboardLayout(workspacePreferences, demo);
@@ -37,10 +37,10 @@ export function OverviewScreen() {
   business: planningReady && <BusinessCard owner={user} demo={demo} revision={reload} data={planning.data} splits={transactionTools.data.splits} businesses={businessList} currency={currency} market={market} onSetup={() => setSettingUpBusinesses(true)}/>,
   commitments: cards.commitments,
   allocation: cards.allocation,
-  goals: planningReady && <GoalsCard goals={planning.data.goals} order={savedGoalOrder(workspacePreferences.data.preferences)} data={planning.data} currency={currency} netWorth={code => goalFinancials(planning.data.records, [], depositToday().slice(0, 7), code, market, false).netWorth}/>,
+  goals: planningReady && <GoalsCard goals={planning.data.goals} order={savedGoalOrder(workspacePreferences.data.preferences)} data={planning.data} currency={currency} netWorth={code => goalFinancials(planning.data.records, depositToday().slice(0, 7), code, market).netWorth}/>,
   transactions: planningReady && <RecentTransactionsCard owner={user} demo={demo} revision={reload} data={planning.data}/>,
   upcoming: cards.upcoming,
-  forecast: planningReady && !expensePlans.loading && <LowestBalanceCard data={planning.data} plans={expensePlans.plans} plansMonth={expensePlans.month} currency={currency} rates={market?.rates ?? market?.fx?.rate}/>,
+  forecast: planningReady && <LowestBalanceCard data={planning.data} currency={currency} rates={market?.rates ?? market?.fx?.rate}/>,
   income,
  });
  return <>
@@ -51,6 +51,6 @@ export function OverviewScreen() {
    {workspaceLoading ? <WorkspaceSkeleton label={t("Loading your workspace…")} section="Overview" columns={dashboardColumns(layout)}/> : <PortfolioOverview excludedCurrencies={excludedCurrencies} snapshots={snapshots.snapshots} snapshotError={snapshots.error} onSnapshotRetry={snapshots.retry} key={demo ? 'demo' : user} entries={current} demoRecords={demo ? rows : undefined} currency={currency} market={market} demo={demo} revision={reload} onAddIncome={() => addCashFlow('Other income')} board={nodes => <DashboardBoard layout={layout} cards={card(nodes)} arranging={arranging} onChange={change}/>}/>}
   </div>
   {customizing&&<CustomizeDashboardDialog layout={layout} onChange={change} onRearrange={() => { setCustomizing(false); setArranging(true); }} onClose={() => setCustomizing(false)}/>}
-  {(workspacePreferences.error||planning.error||transactionTools.error||expensePlans.error)&&<ToolsUnavailable/>}
+  {(workspacePreferences.error||planning.error||transactionTools.error)&&<ToolsUnavailable/>}
  </>;
 }

@@ -39,7 +39,6 @@ import { GoalSummaryRow } from './goal-summary-row';
 import { GoalSetupFlow } from './goal-setup-flow';
 import { savingsDefaults } from '@/lib/goal-setup';
 import { depositToday } from '@/lib/deposit-interest';
-import type { ExpensePlan } from '@/lib/expense-plans';
 import type { MarketData } from '@/lib/market';
 import type { PortfolioSnapshot } from '@/lib/portfolio-snapshots';
 import { GoalFundingPanel } from './goal-funding-panel';
@@ -48,8 +47,8 @@ import {GoalScenarios} from './goal-scenarios';
 import type {PreferenceResource} from '@/hooks/use-workspace-preferences';
 import { GoalForecast } from './goal-forecast';
 
-type Props={preferences:PreferenceResource;owner:string|null;demo:boolean;revision:number;onSaved:()=>void;data:PlanningData;save:(action:string,data:unknown)=>Promise<void>;currencies:string[];currency:string;market:MarketData|null;plans:ExpensePlan[];plansReady:boolean;snapshots:PortfolioSnapshot[];historyError:string};
-export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,currencies,currency,market,plans,plansReady,snapshots,historyError}:Props){
+type Props={preferences:PreferenceResource;owner:string|null;demo:boolean;revision:number;onSaved:()=>void;data:PlanningData;save:(action:string,data:unknown)=>Promise<void>;currencies:string[];currency:string;market:MarketData|null;snapshots:PortfolioSnapshot[];historyError:string};
+export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,currencies,currency,market,snapshots,historyError}:Props){
  const {t,locale}=useLanguage();
  const {show}=useDisplayMoney();
  // The page's three views, switched from the top bar: the goals, the chosen goal's planner, and cash goal history.
@@ -68,7 +67,7 @@ export function GoalsPage({preferences,owner,demo,revision,onSaved,data,save,cur
  const openInvestment=()=>{const account=investmentAccounts[0];setSetup(false);setError('');setDraft({id:crypto.randomUUID(),name:'',kind:'investment',currency:account?.currency??currency,account_id:null,target:0,allocated:0,target_date:null,archived:false,monthly_contribution:null,annual_return:0,holding_account_id:account?.id??null,asset_kind:account?.kind??null,asset_symbol:null,investment_targets:account?[{holding_account_id:account.id,asset_kind:account.kind,asset_symbol:'',target:0,monthly_contribution:null}]:[]});};
  const order=useGoalOrder(data.goals,preferences,owner,demo);
  const visible=order.goals.filter(goal=>!!goal.archived===archived),active=visible.find(goal=>goal.id===selected)??visible[0];
- const totals=new Map([...new Set([...currencies,...data.goals.map(goalCurrency)])].map(currency=>[currency,goalFinancials(data.records,plans,today.slice(0,7),currency,market,plansReady)]));
+ const totals=new Map([...new Set([...currencies,...data.goals.map(goalCurrency)])].map(currency=>[currency,goalFinancials(data.records,today.slice(0,7),currency,market)]));
  const financials=active?totals.get(goalCurrency(active)):null;
  const archivedCount=order.goals.filter(goal=>goal.archived).length;
  // Goals page: one list in the person's own order (drag the six dots) with the chosen goal and what is free for goals;

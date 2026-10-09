@@ -3,7 +3,6 @@ import { ChartPie, Goal as GoalIcon, ReceiptText } from 'lucide-react';
 import { BudgetProgress } from '@/components/budget/budget-rows';
 import { useBudget } from '@/hooks/use-budget';
 import { budgetCategories, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketBudget, leftToBudget, monthActuals, monthsBetween, remainingTone } from '@/lib/budget';
-import { expensePlanMonth } from '@/lib/expense-plans';
 import type { MarketData } from '@/lib/market';
 import { signedAmount } from '@/lib/transaction-list';
 import type { TransactionSplit } from '@/lib/transaction-tools';
@@ -15,7 +14,7 @@ import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { LoadingPlaceholder } from '@/components/presentation-foundation/loading-placeholder';
 import { PanelTitle } from '@/components/presentation-foundation/panel-title';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
-import { depositToday } from '@/lib/deposit-interest';
+import { depositMonth, depositToday } from '@/lib/deposit-interest';
 import { expenses, income, normalizeEntry, type Entry } from '@/lib/finance';
 import { formatDate, formatMoney, formatMonthYear, formatPercent } from '@/lib/format';
 import { goalEmoji } from '@/lib/goal-emoji';
@@ -75,7 +74,7 @@ export function GoalsCard({ goals, order, data, currency, netWorth }: { goals: G
 /** This month's budget at a glance: planned spending against what is spent, and the categories closest to their limit. */
 export function BudgetCard({ owner = null, demo = false, revision = 0, data: provided, currency, market, splits }: { owner?: string | null; demo?: boolean; revision?: number; data: PlanningData; currency: string; market: MarketData | null; splits: TransactionSplit[] }) {
  const { t, locale } = useLanguage();
- const today = depositToday(), month = expensePlanMonth();
+ const today = depositToday(), month = depositMonth();
  const budget = useBudget(owner, demo, revision);
  const removed = provided.removedKinds ?? [];
  // Rollover categories need every month since their rollover started.

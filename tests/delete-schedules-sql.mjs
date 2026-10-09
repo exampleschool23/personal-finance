@@ -57,22 +57,6 @@ test('deleting a schedule with its history moves every payment to Recently delet
  }finally{await d.close();}
 });
 
-test('deleting a spending plan keeps or removes its spending',async()=>{
- const d=await db(setup);
- try{
-  await signIn(d);
-  const plan=n=>d.query("INSERT INTO expense_plans(id,name,category,currency,amount,start_date) VALUES($1,'Food','Groceries','USD',500,'2026-09-01')",[id(n)]);
-  const spend=(n,p)=>d.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,expense_plan_id) VALUES($1,$2,'Food','Living expense','USD',100,'2026-09-10',$3)",[id(n),id(1),id(p)]);
-  await plan(30);await spend(31,30);
-  await remove(d,'plan',30,false);
-  assert.equal((await d.query('SELECT count(*)::int AS n FROM expense_plans')).rows[0].n,0);
-  assert.equal((await d.query('SELECT expense_plan_id FROM finance_records WHERE id=$1',[id(31)])).rows[0].expense_plan_id,null,'the spending stays, unlinked');
-  await plan(40);await spend(41,40);
-  await remove(d,'plan',40,true);
-  assert.equal(await exists(d,41),false,'the spending goes with the plan');
- }finally{await d.close();}
-});
-
 test('only repeating income and expenses of the open workspace are deleted here',async()=>{
  const d=await db(setup);
  try{

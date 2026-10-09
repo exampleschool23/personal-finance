@@ -222,7 +222,7 @@ export function recurringPlanDraft(record: Entry, cadence: Cadence, next: string
  return {
   ...record, ...schedule, id, revision: undefined, date: next,
   account_id: null, account_currency: null, account_exchange_rate: null, account_rate_date: null,
-  import_key: null, expense_plan_id: null, custom_category_id: record.custom_category_id ?? null,
+  import_key: null, custom_category_id: record.custom_category_id ?? null,
  };
 }
 

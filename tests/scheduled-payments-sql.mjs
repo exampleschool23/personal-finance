@@ -63,7 +63,7 @@ test('migration 110 dates a scheduled payment on the day it was paid, never ahea
 });
 
 
-test('migration 111 adds archiving to schedules and spending plans, is safe to re-run, and archives without touching amounts',async()=>{
+test('migration 111 adds archiving to schedules, is safe to re-run, and archives without touching amounts',async()=>{
  const archive=fs.readFileSync('migrations/111_archived_schedules.sql','utf8');
  const start=setup.indexOf(archive);
  assert.ok(start>0,'setup.sql includes migration 111');
@@ -73,12 +73,9 @@ test('migration 111 adds archiving to schedules and spending plans, is safe to r
  try{
   await signIn(d);
   await d.query("INSERT INTO finance_records(id,user_id,name,kind,currency,amount,date,frequency) VALUES($1,$2,'Rent','Rent expense','USD',500,'2026-01-01','Monthly')",[id(70),id(1)]);
-  await d.query("INSERT INTO expense_plans(id,user_id,name,category,currency,amount,start_date) VALUES($1,$2,'Groceries','Groceries','USD',300,'2026-01-01')",[id(71),id(1)]);
   assert.deepEqual((await d.query('SELECT archived FROM finance_records WHERE id=$1',[id(70)])).rows,[{archived:false}]);
   await d.query('UPDATE finance_records SET archived=true WHERE id=$1',[id(70)]);
-  await d.query('UPDATE expense_plans SET archived=true WHERE id=$1',[id(71)]);
   assert.deepEqual((await d.query('SELECT archived,amount::float AS amount FROM finance_records WHERE id=$1',[id(70)])).rows,[{archived:true,amount:500}]);
-  assert.equal((await d.query("SELECT (public.expense_plan_month('2026-10-01')->0->>'archived')::boolean AS archived")).rows[0].archived,true,'plans read with their archived flag');
  }finally{await d.close();}
 });
 

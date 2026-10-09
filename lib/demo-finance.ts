@@ -2,7 +2,6 @@ import { shiftDay, shiftMonth } from './calendar-days';
 import { defaultComparisonPreferences, isInvestmentRecord } from './comparison-profile';
 import { assets, expenses, income, interestKinds, liabilities, scheduleDates, unitPricedKinds, value, type Entry } from './finance';
 import { withAssetIncomePlans } from './earning-sources';
-import type { ExpensePlan } from './expense-plans';
 import type { HoldingAccount } from './holding-accounts';
 import { demoPeople, ownedBy } from './household';
 import type { HistoryEvent } from './investment-history';
@@ -99,14 +98,6 @@ export function demoRecords(today: string): Entry[] {
  ];
 }
 
-function demoExpensePlans(today: string): ExpensePlan[] {
- const start = previousMonth(today.slice(0, 7), 3) + '-01';
- return [
-  { id: 'demo-plan-groceries', name: 'Groceries', category: 'Groceries', currency: 'USD', amount: 1100, start_date: start, end_date: null },
-  { id: 'demo-plan-household', name: 'Household', category: 'Household', currency: 'USD', amount: 450, start_date: start, end_date: null },
- ];
-}
-
 export function demoGoals(today: string): Goal[] {
  const months = (count: number) => { const date = new Date(today + 'T00:00:00Z'); date.setUTCMonth(date.getUTCMonth() + count); return date.toISOString().slice(0, 10); };
  return [
@@ -124,7 +115,7 @@ function demoOccurrences(records: Entry[], today: string): Occurrence[] {
   .flatMap(record => scheduleDates(record, record.date, yesterday).map(date => ({ id: `${record.id}:${date}`, record_id: record.id, due_on: date, status: 'paid' as const })));
 }
 
-/** Categories the sample businesses use, beside the built-in ones. */
+/** Categories the sample businesses use, and two household spending categories with their own budget, beside the built-in ones. */
 const demoCategories: Category[] = [
  { id: 'demo-cat-sales', name: 'Product sales', direction: 'income' },
  { id: 'demo-cat-supplies', name: 'Supplies', direction: 'expense' },
@@ -134,6 +125,8 @@ const demoCategories: Category[] = [
  { id: 'demo-cat-cleaning', name: 'Cleaning', direction: 'expense' },
  { id: 'demo-cat-repairs', name: 'Repairs & maintenance', direction: 'expense' },
  { id: 'demo-cat-management', name: 'Property management', direction: 'expense' },
+ { id: 'demo-cat-groceries', name: 'Groceries', direction: 'expense' },
+ { id: 'demo-cat-household', name: 'Household', direction: 'expense' },
 ];
 
 /** Six months of trading for the side business (a small loss) and the rentals (a profit), paid through their own
@@ -175,7 +168,7 @@ function demoTags(records: Entry[]): TagData {
 export function demoWorkspace(today: string) {
  // Rent and café income schedules exist up front, so their past payments are settled too.
  const records = withAssetIncomePlans(demoRecords(today)).map(record => record.id.startsWith('demo-') ? record : { ...record, id: 'demo-income-' + (record.income_source_id ?? record.business_id), date: shiftDay(today, -365) });
- return { today, records, goals: demoGoals(today), occurrences: demoOccurrences(records, today), holdingAccounts: demoHoldingAccounts, expensePlans: demoExpensePlans(today), categories: demoCategories, tags: demoTags(records) };
+ return { today, records, goals: demoGoals(today), occurrences: demoOccurrences(records, today), holdingAccounts: demoHoldingAccounts, categories: demoCategories, tags: demoTags(records) };
 }
 export type DemoWorkspace = ReturnType<typeof demoWorkspace>;
 
@@ -198,10 +191,10 @@ function demoSpending(today: string, record: (id: string, name: string, kind: En
   const current = previousMonth(month, back);
   // Recent months run slightly ahead of earlier ones, as real spending often does.
   const factor = [.95, 1.02, .98, 1, 1.04, .97, 1.12][6 - back];
-  purchases.forEach(([name, amount, kind, plan], index) => {
+  purchases.forEach(([name, amount, kind, category], index) => {
    const day = 1 + Math.floor(index * 27 / purchases.length);
    if (back === 0 && day > todayDay) return;
-   spends.push(record(`spend-${back}-${index}`, name, kind, Math.round(amount * factor), { date: `${current}-${String(day).padStart(2, '0')}`, expense_plan_id: plan && back <= 3 ? 'demo-plan-' + plan : null, ...personal[name] }));
+   spends.push(record(`spend-${back}-${index}`, name, kind, Math.round(amount * factor), { date: `${current}-${String(day).padStart(2, '0')}`, custom_category_id: category ? 'demo-cat-' + category : null, ...personal[name] }));
   });
  }
  // One larger trip last month.

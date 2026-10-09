@@ -9,15 +9,13 @@ import { usePlanning } from '@/hooks/use-planning';
 import { upcomingPayments } from '@/lib/planning';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney } from '@/lib/format';
-import { useExpensePlans } from '@/hooks/use-expense-plans';
 import { useRemovedCategories } from '@/hooks/use-removed-categories';
 import { useCategoryIcons } from '@/hooks/use-category-icons';
 import { CategoryHueContext, CategoryIconsContext } from '@/components/category-icons-context';
-import { expensePlanMonth, monthlyBudgetTotals } from '@/lib/expense-plans';
+import { depositMonth } from '@/lib/deposit-interest';
 import { useEarningSources } from '@/hooks/use-earning-sources';
 import { withAssetIncomePlans, legacyEarningSources, sourceSchedule } from '@/lib/earning-sources';
 import { saveTrackingStartRequest } from '@/hooks/use-comparison-profile';
-import { convertAmount } from '@/lib/market';
 import { usePortfolioSnapshots } from '@/hooks/use-portfolio-snapshots';
 import { useMarket } from '@/hooks/use-market';
 import { type Entry, normalizeEntry, kinds, income, expenses, estimatedCashFlow } from '@/lib/finance';
@@ -82,7 +80,7 @@ function useWorkspaceState() {
     const price = usePriceFetch(editing, setEditing);
     const quoteLabel = (entry: Entry) => describeQuote(entry, market, currency, t, locale);
     const money = (n: number, c = currency) => formatMoney(n, c, locale);
-    const [forecastMonth,setForecastMonth] = useState(expensePlanMonth);
+    const [forecastMonth,setForecastMonth] = useState(() => depositMonth());
     const basePlanning = usePlanning(user, demo, rows, reload, refreshRecords, demoHoldingAccounts, section==='Accounts'?'full':section==='Income & expenses'?'review':'workspace',section==='Income & expenses'?forecastMonth:undefined,sample.demoPlanning);
     const earningSources=useEarningSources(user,demo,reload,refreshRecords,(source,original)=>{
         if(original&&rows.some(row=>row.earning_source_id===source.id||row.income_source_id===source.schedule_id)&&['kind','currency','mode','frequency','recurrence_days','start_date','end_date','linked_record_id'].some(key=>original[key as keyof typeof original]!==source[key as keyof typeof source]))throw Error('Keep the type, currency and schedule compatible with recorded payments.');
@@ -103,18 +101,17 @@ function useWorkspaceState() {
     const businessList=orderById(businessesIn(planning.data.records),savedOrder(workspacePreferences.data.preferences,'business_order'));
     const overdueCount = upcomingPayments(planning.data.records, planning.data.occurrences, undefined, undefined, planning.data.debtPayments).filter(item => item.overdue).length;
     // The month picker belongs to Cash flow. Every other screen plans for the current month.
-    const planningMonth = section === 'Income & expenses' ? forecastMonth : expensePlanMonth();
-    const expensePlans = useExpensePlans(user, demo, rows, reload, refreshRecords, planningMonth);
-    const bin = useDemoBin({ demo, rows, setRows, expensePlans });
+    const planningMonth = section === 'Income & expenses' ? forecastMonth : depositMonth();
+    const bin = useDemoBin({ rows, setRows });
     const actions = useRecordActions({ demo, rows, setRows, refreshRecords, splits: transactionTools.data.splits, categories: planning.data.categories, household, demoHoldingAccounts, setDemoHoldingAccounts, stopping });
-    const archiveSchedule = useArchive({ demo, setRows, restoreDemoPlan: expensePlans.restoreDemo, refreshRecords });
-    const deleteSchedule = useDeleteSchedule({ demo, rows, setRows, occurrences: planning.data.occurrences, bin, dropDemoPlan: expensePlans.dropDemo, refreshRecords });
+    const archiveSchedule = useArchive({ demo, setRows, refreshRecords });
+    const deleteSchedule = useDeleteSchedule({ demo, rows, setRows, occurrences: planning.data.occurrences, bin, refreshRecords });
     useRecordFormTool({ user, demo, openForm: () => { setRecordKinds(kinds); setEditing(fresh()); } });
     // A repeated message leaves the error state unchanged, so show the popup directly as well.
     const fail = (message: string) => { const shown = readOnly ? 'This shared workspace is view-only.' : message; setError(shown); showError(shown); };
     /** Opens a form only where the person may change the workspace. */
     const editable = () => { if (readOnly) showError('This shared workspace is view-only.'); return !readOnly; };
-    const { save, remove } = useRecordSave({ demo, rows, setRows, editing, setEditing, deleting, setDeleting, setBusy, setError, fail, planning, plans: expensePlans.plans, sources: earningSources.sources, refreshRecords, setAccountBusiness: actions.setAccountBusiness, binRecord: bin.binRecord });
+    const { save, remove } = useRecordSave({ demo, rows, setRows, editing, setEditing, deleting, setDeleting, setBusy, setError, fail, planning, sources: earningSources.sources, refreshRecords, setAccountBusiness: actions.setAccountBusiness, binRecord: bin.binRecord });
     function clearLocalSession() { setEditing(null); setDeleting(null); closeRecordDialogs(); setRecordKinds(kinds); price.resetPrice(); settings.resetSettings(); table.resetTable(); setSummary([]); setUser(null); setDemo(false); sample.clearSample(); bin.emptyBin(); setRows([]); setError(''); }
     async function logout() {
         if (!demo) {
@@ -123,22 +120,19 @@ function useWorkspaceState() {
         }
         clearLocalSession();
     }
-    const budget = monthlyBudgetTotals(expensePlans.plans, expensePlans.month, (amount, source) => convertAmount(amount, source, currency, market?.rates ?? market?.fx?.rate));
-    const planProjection = budget.partial.projected;
-    const forecastReady = !expensePlans.loading && !expensePlans.error;
+    const forecastReady = !planning.loading && !planning.error;
     const { current, monthlyIncomeEntries, excludedCurrencies, totalDebt, netWorth } = workspaceTotals({ records: demo ? rows : summary, planningRecords: planning.data.records, currency, market });
     // Full planning rows, as on Goals: summary rows leave out loan and debt payments.
-    const forecast = estimatedCashFlow(monthlyIncomeEntries, planProjection, planningMonth);
+    const forecast = estimatedCashFlow(monthlyIncomeEntries, planningMonth);
     const table = useRecordTable({ user, demo, section, locale, currency, market, reload, rows, setRows, setSummary, setError, current, planning });
     const { sectionKey, historyPage, tableLoading, summaryLoaded } = table;
     // Viewing someone's household as a viewer records no daily snapshot; wait to know the role first.
     const snapshots = usePortfolioSnapshots(demo ? null : user, market, summaryLoaded && !marketLoading && (household.state ? !readOnly : !household.loading), reload);
-    const loading = workspaceLoading({ demo, settingsLoading, summaryLoaded, tableLoading, plansLoading: expensePlans.loading, marketReady: !!market, marketLoading });
+    const loading = workspaceLoading({ demo, settingsLoading, summaryLoaded, tableLoading, marketReady: !!market, marketLoading });
 
     const cashFlowSection = section === 'Income & expenses';
     const availableBusinesses = demo ? rows.filter(r => r.kind === 'Business') : table.businesses;
     const editingCashFlow = !!editing && [...income, ...expenses].includes(editing.kind);
-    const linkedExpensePlan = expensePlans.plans.find(plan => plan.id === editing?.expense_plan_id);
     // Tables show display-currency copies. Dialogs must work on the saved record, in its own
     // currency. Transaction history returns raw rows, so normalize to the record shape forms expect.
     const storedRecord = (record: Entry) => storedEntry(record, { history: historyPage.data.records, planning: planning.data.records, rows, summary }, demo);
@@ -153,7 +147,7 @@ function useWorkspaceState() {
             const response = await fetch('/api/demo', { cache: 'no-store' });
             if (!response.ok) throw Error();
             const sample = await response.json() as DemoWorkspace;
-            setRows(withAssetIncomePlans(sample.records.map(normalizeEntry))); seedSample(sample); expensePlans.seedDemo(sample.expensePlans); setDemo(true);
+            setRows(withAssetIncomePlans(sample.records.map(normalizeEntry))); seedSample(sample); setDemo(true);
         } catch { setError('Connection unavailable. Please try again.'); }
         finally { setBusy(false); }
     }
@@ -165,17 +159,17 @@ function useWorkspaceState() {
         // Preferences
         currency, setCurrency: settings.setCurrency, preferencesData, applyPreferences: settings.applyPreferences, savePreferences: settings.savePreferences, settingsLoading, settingsError: settings.settingsError, retrySettings: settings.retrySettings, workspacePreferences, onboardingNeeded: settings.onboardingNeeded, restartOnboarding: settings.restartOnboarding, saveTrackingStart: saveTrackingStartRequest,
         // Records and market data
-        rows, summary, current, categoryIcons, removedCategories, market, marketLoading, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, expensePlans, snapshots,
-        reload, refreshRecords, budget, forecast, forecastReady, forecastMonth, setForecastMonth, excludedCurrencies, netWorth, totalDebt, monthlyIncomeEntries,
+        rows, summary, current, categoryIcons, removedCategories, market, marketLoading, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, snapshots,
+        reload, refreshRecords, forecast, forecastReady, forecastMonth, setForecastMonth, excludedCurrencies, netWorth, totalDebt, monthlyIncomeEntries,
         availableBusinesses, businessList, tags, attachments, overdueCount, workspaceLoading: loading, deletedItems: bin.deletedItems, restoreDemoItem: bin.restoreDemoItem, discardDeletedItem: bin.discardDeletedItem,
         // Record table
         filters: table.filters, setFilters: table.setFilters, filtersActive: table.filtersActive, historyOnly: table.historyOnly, useFilteredRecords: table.useFilteredRecords, remoteHistory: table.remoteHistory, historyPage, visible: table.visible, totalRecords: table.totalRecords, pageCount: table.pageCount, tablePage: table.tablePage, tableLoading,
         recordsLoading: table.recordsLoading, showFirstPage: table.showFirstPage, showPage: table.showPage,
         // Actions
-        ...forms, storedRecord, navigate, removePlan: bin.removePlan,
+        ...forms, storedRecord, navigate,
         saveHoldingAccount: actions.saveHoldingAccount, assignHolding: actions.assignHolding, recordMortgagePayment: actions.recordMortgagePayment, save, remove, stopRecord: actions.stopRecord, archiveSchedule, deleteSchedule, categorize: actions.categorize, assignTransactionsBusiness: actions.assignTransactionsBusiness, setAccountBusiness: actions.setAccountBusiness, saveBusiness: actions.saveBusiness, fetchPrice: price.fetchPrice, fetchingPrice: price.fetchingPrice, priceMessage: price.priceMessage,
         // Open dialogs
-        editing, setEditing, editingCashFlow, recordKinds, linkedExpensePlan, deleting, setDeleting, ...dialogs,
+        editing, setEditing, editingCashFlow, recordKinds, deleting, setDeleting, ...dialogs,
     };
 }
 
