@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import React from 'react';
 import { createRenderer, event, hostModule, language, stubs, text } from './helpers/component-tree.mjs';
 
-test('Add recurring offers income, a bill and a spending plan, each opening its schedule form', () => {
+test('Add recurring offers income and a bill, each opening its schedule form', () => {
  const r = createRenderer(), ui = stubs(), chosen = [];
  const { AddRecurringMenu } = r.load('components/planning/add-recurring-menu.tsx', {
   ...ui.modules, '@/components/language-provider': language('en'), '@/components/ui/dropdown-menu': hostModule(), 'lucide-react': hostModule(),
@@ -11,9 +11,9 @@ test('Add recurring offers income, a bill and a spending plan, each opening its 
  r.mount(React.createElement(AddRecurringMenu, { onAdd: kind => chosen.push(kind) }));
  assert.equal(text(r.find(node => node.type?.displayName === 'Button')), 'Add recurring');
  const items = r.all(node => node.type === 'DropdownMenuItem');
- assert.deepEqual(items.map(text), ['Recurring income', 'Recurring bill', 'Monthly spending plan']);
+ assert.deepEqual(items.map(text), ['Recurring income', 'Recurring bill']);
  for (const item of items) r.fire(item, 'onSelect');
- assert.deepEqual(chosen, ['income', 'bill', 'plan']);
+ assert.deepEqual(chosen, ['income', 'bill']);
 });
 
 test('a stepper focuses the step heading when it opens and after each step, not on its first render', () => {

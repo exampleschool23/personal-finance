@@ -91,9 +91,9 @@ test('no screen dates "today" by the UTC day instead of the app day', async () =
 
 test('day and month arithmetic and "today" come from the shared helpers, never inline UTC or +5h maths',async()=>{
  const fs=await import('node:fs');
- for(const file of ['lib/expense-plans.ts','components/auth-showcase.tsx','components/reminder-panel.tsx','components/planning/debt-payoff-panel.tsx']){
+ for(const file of ['components/auth-showcase.tsx','components/reminder-panel.tsx','components/planning/debt-payoff-panel.tsx']){
   const source=fs.readFileSync(file,'utf8');
   assert.doesNotMatch(source,/Date\.UTC\(|86400000|5 \* 60 \* 60 \* 1000|getUTCDate\(\)/,file);
  }
- assert.match(fs.readFileSync('lib/expense-plans.ts','utf8'),/depositToday\(now\)\.slice\(0, 7\)/);
+ assert.match(fs.readFileSync('lib/deposit-interest.ts','utf8'),/depositMonth = \(now = new Date\(\)\) => depositToday\(now\)\.slice\(0, 7\)/);
 });
