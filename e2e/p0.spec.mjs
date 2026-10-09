@@ -51,7 +51,8 @@ test('XAPP-001 DASH-013 spending is one figure on the Dashboard, Cash flow, Tran
   await expect.poll(() => figureAfter(page, 'Actual spending')).toBe(spending);
   await expect.poll(() => figureAfter(page, 'Income received')).toBe(dollars(expected.incomeThisMonth));
   await open(page, 'Transactions');
-  await page.getByLabel('Period').selectOption('this_month');
+  await page.getByRole('button', { name: /^Period: / }).click();
+  await page.getByRole('dialog', { name: 'Period' }).getByRole('button', { name: 'This month', exact: true }).click();
   await expect.poll(() => figureAfter(page, 'Spending')).toBe(spending);
   await open(page, 'Budget');
   // Total expenses reads Planned, Actual, Remaining.
