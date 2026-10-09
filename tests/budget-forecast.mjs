@@ -32,6 +32,10 @@ test('the month\'s budget lines skip income, excluded and non-monthly budgets, c
  assert.deepEqual(lines.map(line => [line.key, line.amount]), [['Rent expense', 600], ['flex:flexible', 900]], 'flexible categories share the bucket');
  assert.deepEqual(lines[1].categoryKeys, ['Living expense', 'Other expense', 'food']);
  assert.deepEqual(forecastBudget({ state: flex, categories, removed: [] }).linesIn('2026-10', 'USD', rates).lines, lines);
+ // Without a saved Flexible amount the bucket is the flexible categories' plans, as Budget shows it (CF-046).
+ const unsaved = { ...state, mode: 'flex', amounts: [...state.amounts, amount('Living expense', 250)] };
+ assert.deepEqual(budgetLines({ state: unsaved, categories, removed: [] }, '2026-10', 'USD', rates).lines.map(line => [line.key, line.amount]), [['Rent expense', 600], ['flex:flexible', 650]], 'food 400 + Living expense 250');
+ assert.equal(budgetLines({ state: { ...unsaved, amounts: [...state.amounts, amount('Living expense', 250, 'GBP')] }, categories, removed: [] }, '2026-10', 'USD', rates).missing, 1, 'a flexible plan no rate converts leaves the bucket unknown');
 });
 
 test('the monthly estimate and the goals surplus count each budget once beside the recurring bills', () => {
