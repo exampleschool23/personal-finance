@@ -23,7 +23,8 @@ test('text-patching migrations change nothing when applied again',async()=>{
  try{
   const before=await functions(d);
   // finance_capabilities is left out: each migration sets its own version, and a later one (128) has moved it on.
-  for(const name of ['110_scheduled_payment_date.sql','118_newest_records_first.sql','124_database_integrity.sql','125_repair_recategorize_names.sql','127_category_delete_moves_budget.sql','128_review_integrity.sql','129_telegram_deliveries.sql','130_attachment_files_first.sql','132_income_source_one_id.sql','133_plan_categories_fixed.sql','134_source_ids_and_plan_currency.sql']){
+  // 133 is left out too: its one-time update reads budget_categories.group_name, which 142 dropped.
+  for(const name of ['110_scheduled_payment_date.sql','118_newest_records_first.sql','124_database_integrity.sql','125_repair_recategorize_names.sql','127_category_delete_moves_budget.sql','128_review_integrity.sql','129_telegram_deliveries.sql','130_attachment_files_first.sql','132_income_source_one_id.sql','134_source_ids_and_plan_currency.sql','142_drop_budget_group_name.sql']){
    await d.exec(fs.readFileSync('migrations/'+name,'utf8'));
    assert.equal(await functions(d),before,name+' re-applied leaves every function as it was');
   }

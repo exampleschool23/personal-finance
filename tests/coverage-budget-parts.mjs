@@ -381,15 +381,15 @@ test('CategorySettingsDialog: expense category shows figures and types, no group
  assert.equal(byClass(view,'budget-rollover-fields').length,0);
  assert.equal(all(view,'input',node=>node.props.type==='checkbox').length,2);
  await submit();
- assert.deepEqual(saved,[{category_key:'groceries',budget_type:'flexible',group_name:null,rollover:false,rollover_start:null,excluded:false,rollover_balance:0,rollover_currency:null,rollover_negative:false}]);
+ assert.deepEqual(saved,[{category_key:'groceries',budget_type:'flexible',rollover:false,rollover_start:null,excluded:false,rollover_balance:0,rollover_currency:null,rollover_negative:false}]);
  assert.equal(closed.length,1);
 });
 
-test('CategorySettingsDialog: changing type saves it, and a group saved before is cleared',async()=>{
- const {view,saved,submit}=settingsDialog({category:category({group:'Pets'})});
+test('CategorySettingsDialog: changing type saves it, and no group is sent',async()=>{
+ const {view,saved,submit}=settingsDialog({category:category()});
  all(view,'input',node=>node.props.type==='radio')[0].props.onChange();view.render();
  await submit();
- assert.equal(saved[0].budget_type,'fixed');assert.equal(saved[0].group_name,null);
+ assert.equal(saved[0].budget_type,'fixed');assert.equal('group_name' in saved[0],false);
 });
 
 test('CategorySettingsDialog: rollover fund fields, starting balance currency and exclusion',async()=>{
@@ -402,7 +402,7 @@ test('CategorySettingsDialog: rollover fund fields, starting balance currency an
  const picker=one(view,'x-date-picker');assert.equal(picker.props.value,'2026-03');assert.equal(picker.props.mode,'month');
  // Saved as is: balance keeps its EUR currency.
  await submit();
- assert.deepEqual(saved[0],{category_key:'custom:trip',budget_type:'non_monthly',group_name:null,rollover:true,rollover_start:'2026-03',excluded:false,rollover_balance:200,rollover_currency:'EUR',rollover_negative:true});
+ assert.deepEqual(saved[0],{category_key:'custom:trip',budget_type:'non_monthly',rollover:true,rollover_start:'2026-03',excluded:false,rollover_balance:200,rollover_currency:'EUR',rollover_negative:true});
  // Change start, balance (now in the workspace currency), negative carry and exclusion.
  one(view,'x-date-picker').props.onChange('2026-06');
  one(view,'x-number-input').props.onValueChange(350);view.render();
@@ -412,7 +412,7 @@ test('CategorySettingsDialog: rollover fund fields, starting balance currency an
  checks()[1].props.onChange({currentTarget:{checked:false}});
  checks()[2].props.onChange({currentTarget:{checked:true}});view.render();
  await submit();
- assert.deepEqual(saved[1],{category_key:'custom:trip',budget_type:'non_monthly',group_name:null,rollover:true,rollover_start:'2026-06',excluded:true,rollover_balance:350,rollover_currency:'USD',rollover_negative:false});
+ assert.deepEqual(saved[1],{category_key:'custom:trip',budget_type:'non_monthly',rollover:true,rollover_start:'2026-06',excluded:true,rollover_balance:350,rollover_currency:'USD',rollover_negative:false});
  // Turning rollover off drops the fund fields and stored values.
  checks()[0].props.onChange({currentTarget:{checked:false}});view.render();
  assert.equal(byClass(view,'budget-rollover-fields').length,0);
@@ -442,7 +442,7 @@ test('CategorySettingsDialog: the Flexible bucket only offers its rollover',asyn
  assert.equal(all(view,'input',node=>node.props.type==='checkbox').length,1,'no exclude option');
  assert.equal(byClass(view,'budget-left-summary').length,0,'no figures passed');
  await submit();
- assert.equal(saved[0].budget_type,'flexible');assert.equal(saved[0].excluded,false);assert.equal(saved[0].group_name,null);
+ assert.equal(saved[0].budget_type,'flexible');assert.equal(saved[0].excluded,false);assert.equal('group_name' in saved[0],false);
 });
 
 test('CategorySettingsDialog: income categories are fixed, without fund or figures',async()=>{
@@ -451,7 +451,7 @@ test('CategorySettingsDialog: income categories are fixed, without fund or figur
  assert.equal(all(view,'input',node=>node.props.type==='radio').length,0);
  assert.equal(all(view,'input',node=>node.props.type==='checkbox').length,1);
  await submit();
- assert.deepEqual(saved[0],{category_key:'salary',budget_type:'fixed',group_name:null,rollover:false,rollover_start:null,excluded:false,rollover_balance:0,rollover_currency:null,rollover_negative:false});
+ assert.deepEqual(saved[0],{category_key:'salary',budget_type:'fixed',rollover:false,rollover_start:null,excluded:false,rollover_balance:0,rollover_currency:null,rollover_negative:false});
 });
 
 test('CategorySettingsDialog: busy state, failed save and dialog close rules',async()=>{

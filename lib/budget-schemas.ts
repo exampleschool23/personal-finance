@@ -12,7 +12,7 @@ export const budgetSchemas = {
  amount_once: z.object({ category_key: key, month, amount, currency: fiatCurrency }),
  amounts: z.object({ month, currency: fiatCurrency, items: z.array(z.object({ category_key: key, amount, applies_forward: z.boolean() })).min(1).max(500)
   .refine(items => new Set(items.map(item => item.category_key)).size === items.length) }),
- category: z.object({ category_key: key, budget_type: z.enum(budgetTypes), group_name: z.string().trim().min(1).max(60).nullable(), rollover: z.boolean(), rollover_start: month.nullable(), excluded: z.boolean(),
+ category: z.object({ category_key: key, budget_type: z.enum(budgetTypes), rollover: z.boolean(), rollover_start: month.nullable(), excluded: z.boolean(),
   rollover_balance: z.number().finite().min(0).max(1e15).optional(), rollover_currency: fiatCurrency.nullable().optional(), rollover_negative: z.boolean().optional() })
   .refine(data => !data.rollover_balance || !!data.rollover_currency, { path: ['rollover_currency'] }),
  settings: z.object({ mode: z.enum(['category', 'flex']), apply_forward: z.boolean() }),

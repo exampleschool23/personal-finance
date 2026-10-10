@@ -8,7 +8,7 @@ const { goalFinancials } = loadTS('lib/goal-projection.ts');
 
 const record = (id, name, kind, amount, date, extra = {}) => ({ id, name, kind, currency: 'USD', amount, quantity: 1, cost: 0, rate: 0, date, frequency: 'Once', notes: '', ...extra });
 const amount = (category_key, value, currency = 'USD', month = '2026-01') => ({ category_key, month, amount: value, currency, applies_forward: true });
-const setting = (category_key, budget_type, extra = {}) => ({ category_key, budget_type, group_name: null, rollover: false, rollover_start: null, excluded: false, ...extra });
+const setting = (category_key, budget_type, extra = {}) => ({ category_key, budget_type, rollover: false, rollover_start: null, excluded: false, ...extra });
 const categories = [{ id: 'food', name: 'Groceries', direction: 'expense' }, { id: 'trips', name: 'Travel', direction: 'expense' }];
 const rates = { USD: 1, EUR: 0.5 };
 

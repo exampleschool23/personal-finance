@@ -40,7 +40,7 @@ test('"this month only" keeps later months, "all future months" replaces them', 
 });
 
 test('categories cover built-in kinds and custom categories, with default types; repayments are not categories', () => {
- const list = budgetCategories([{ id: 'c1', name: 'Pets', direction: 'expense' }, { id: 'c2', name: 'Tips', direction: 'income' }], [{ category_key: 'Living expense', budget_type: 'non_monthly', group_name: 'Home', rollover: true, rollover_start: '2026-01', excluded: false }]);
+ const list = budgetCategories([{ id: 'c1', name: 'Pets', direction: 'expense' }, { id: 'c2', name: 'Tips', direction: 'income' }], [{ category_key: 'Living expense', budget_type: 'non_monthly', rollover: true, rollover_start: '2026-01', excluded: false }]);
  const by = key => list.find(item => item.key === key);
  assert.equal(by('Salary').direction, 'income');
  assert.equal(by('c2').direction, 'income');
@@ -48,7 +48,7 @@ test('categories cover built-in kinds and custom categories, with default types;
  assert.equal(by('Charity').type, 'flexible');
  assert.equal(by('c1').group, 'Everyday spending');
  assert.equal(by('Living expense').type, 'non_monthly');
- assert.equal(by('Living expense').group, 'Home');
+ assert.equal(by('Living expense').group, 'Future spending', 'a category\'s group follows its budget type');
  assert.equal(by('Living expense').rolloverStart, '2026-01');
  for (const key of ['Mortgage', 'Loan', 'Debt']) assert.equal(by(key), undefined, 'principal repayments are transfers, not budget categories');
  assert.equal(by('Groceries'), undefined, 'unknown keys without a category are not invented');
@@ -73,7 +73,7 @@ test('actuals reuse the monthly review for spending, add income by category and 
 });
 
 test('rows show planned, actual and remaining with rollover; history averages six months', () => {
- const categories = budgetCategories([], [{ category_key: 'Charity', budget_type: 'flexible', group_name: null, rollover: true, rollover_start: '2026-07', excluded: false }]);
+ const categories = budgetCategories([], [{ category_key: 'Charity', budget_type: 'flexible', rollover: true, rollover_start: '2026-07', excluded: false }]);
  const history = new Map([['2026-07', { byCategory: new Map([['Charity', 10], ['Living expense', 300]]) }], ['2026-08', { byCategory: new Map([['Charity', 40]]) }], ['2026-09', { byCategory: new Map([['Charity', 5], ['Living expense', 120]]) }]]);
  const amounts = [amount('Charity', '2026-07', 25, true), amount('Living expense', '2026-09', 100), amount('Salary', '2026-09', 18000000, false, 'UZS')];
  const rows = budgetRows(categories, amounts, history, '2026-09', 'USD', rates);
@@ -110,7 +110,7 @@ test('rows show planned, actual and remaining with rollover; history averages si
 });
 
 test('left to budget: income minus spending and contributions; flex replaces flexible categories with one amount', () => {
- const categories = budgetCategories([], [{ category_key: 'Other expense', budget_type: 'non_monthly', group_name: null, rollover: false, rollover_start: null, excluded: false }, { category_key: 'Charity', budget_type: 'flexible', group_name: null, rollover: false, rollover_start: null, excluded: true }]);
+ const categories = budgetCategories([], [{ category_key: 'Other expense', budget_type: 'non_monthly', rollover: false, rollover_start: null, excluded: false }, { category_key: 'Charity', budget_type: 'flexible', rollover: false, rollover_start: null, excluded: true }]);
  const amounts = [amount('Salary', '2026-09', 3000), amount('Rent expense', '2026-09', 1200), amount('Living expense', '2026-09', 300), amount('Other expense', '2026-09', 100), amount('Charity', '2026-09', 999), amount(flexBucketKey, '2026-09', 800)];
  const rows = budgetRows(categories, amounts, new Map(), '2026-09', 'USD', rates);
  const category = leftToBudget(rows, 'category', null, 250);
@@ -183,7 +183,7 @@ test('flex mode shows one coherent flexible plan: the bucket, or the categories\
 });
 
 const { rolloverCarry, startingBalanceIn, flexBucketCategory, flexBucketRollover, flexBucketPlan } = loadTS('lib/budget.ts');
-const fundSetting = (category_key, extra = {}) => ({ category_key, budget_type: 'flexible', group_name: null, rollover: true, rollover_start: '2026-01', excluded: false, ...extra });
+const fundSetting = (category_key, extra = {}) => ({ category_key, budget_type: 'flexible', rollover: true, rollover_start: '2026-01', excluded: false, ...extra });
 const fundOf = (extra, key = 'Charity') => budgetCategories([], [fundSetting(key, extra)]).find(category => category.key === key);
 const spentEach = entries => new Map(Object.entries(entries).map(([month, byKey]) => [month, { byCategory: new Map(Object.entries(byKey)) }]));
 
@@ -287,7 +287,7 @@ test('unconvertible budgets, buckets and contributions leave their totals unknow
 });
 
 test('a rollover whose starting balance no rate converts is marked missing, so the settings dialog shows — rather than 0', () => {
- const setting = currency => ({ category_key: 'Charity', budget_type: 'flexible', group_name: null, rollover: true, rollover_start: '2026-08', excluded: false, rollover_balance: 50, rollover_currency: currency });
+ const setting = currency => ({ category_key: 'Charity', budget_type: 'flexible', rollover: true, rollover_start: '2026-08', excluded: false, rollover_balance: 50, rollover_currency: currency });
  const row = currency => budgetRows(budgetCategories([], [setting(currency)]), [amount('Charity', '2026-09', 100)], new Map(), '2026-09', 'USD', rates).find(r => r.key === 'Charity');
  const unknown = row('XYZ');
  assert.equal(unknown.rolloverMissing, true);assert.equal(unknown.rolloverIn, 0);assert.equal(unknown.remaining, null);

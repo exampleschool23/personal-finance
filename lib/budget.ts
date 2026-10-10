@@ -16,7 +16,7 @@ export type BudgetMode = 'category' | 'flex';
 export type BudgetDirection = 'income' | 'expense';
 
 /** Per-category settings. `category_key` is a built-in kind ("Rent expense") or a custom category id. */
-export type BudgetCategorySetting = { category_key: string; budget_type: BudgetType; group_name: string | null; rollover: boolean; rollover_start: string | null; excluded: boolean;
+export type BudgetCategorySetting = { category_key: string; budget_type: BudgetType; rollover: boolean; rollover_start: string | null; excluded: boolean;
  /** The fund's balance going into its start month, in `rollover_currency`. */
  rollover_balance?: number; rollover_currency?: string | null;
  /** Whether overspending carries into the next month as a negative amount; off resets an overspent fund to zero. */
@@ -60,7 +60,7 @@ export function budgetCategories(categories: readonly Category[], settings: read
  const build = (key: string, name: string, custom: boolean, direction: BudgetDirection): BudgetCategory => {
   const setting = byKey.get(key);
   const type: BudgetType = direction === 'income' ? 'fixed' : setting?.budget_type ?? (fixedKinds.includes(key) ? 'fixed' : 'flexible');
-  return { key, name, custom, direction, type, group: setting?.group_name?.trim() || (direction === 'income' ? defaultGroups.income : defaultGroups[type]), ...rolloverFund(direction === 'expense' ? setting : undefined), excluded: !!setting?.excluded };
+  return { key, name, custom, direction, type, group: direction === 'income' ? defaultGroups.income : defaultGroups[type], ...rolloverFund(direction === 'expense' ? setting : undefined), excluded: !!setting?.excluded };
  };
  return [
   ...offeredKinds('income', removed).map(kind => build(kind, kind, false, 'income')),

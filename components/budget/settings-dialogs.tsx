@@ -53,7 +53,7 @@ export function CategorySettingsDialog({ category, month, currency, figures, onS
   setBusy(true);
   try {
    const on = fund && rollover;
-   await onSave({ category_key: category.key, budget_type: bucket ? 'flexible' : expense ? type : 'fixed', group_name: null, rollover: on, rollover_start: on ? start : null, excluded: !bucket && excluded,
+   await onSave({ category_key: category.key, budget_type: bucket ? 'flexible' : expense ? type : 'fixed', rollover: on, rollover_start: on ? start : null, excluded: !bucket && excluded,
     rollover_balance: on ? balance : 0, rollover_currency: on && balance ? balanceCurrency : null, rollover_negative: negative });
    onClose();
   } catch (error) { showError(t((error as Error).message)); }
