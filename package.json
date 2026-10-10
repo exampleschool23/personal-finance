@@ -16,6 +16,7 @@
     "test": "node scripts/test.mjs",
     "test:integration": "node scripts/test.mjs --integration",
     "test:coverage": "node scripts/test.mjs --coverage",
+    "migrations:check": "node scripts/check-migrations.mjs",
     "build:production": "next build --webpack",
     "typecheck": "tsc --noEmit --incremental false",
     "test:e2e": "playwright test",

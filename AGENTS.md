@@ -180,7 +180,11 @@ new query uses a PostgREST feature the stand-in lacks, extend it there rather th
 
 # Database migrations
 
-Keep all incremental SQL migrations in the root `migrations/` folder. Name them with sequential three-digit prefixes and descriptive snake_case names: `001_lending_dates.sql`, `002_charity.sql`, `003_record_pagination.sql`. Use the next available number for new migrations, in execution order. Do not use date prefixes or create another migrations folder. `database/setup.sql` is the fresh-database setup script, not an incremental migration.
+Keep all incremental SQL migrations in the root `migrations/` folder. Name them with sequential three-digit prefixes and descriptive snake_case names: `001_lending_dates.sql`, `002_charity.sql`, `003_record_pagination.sql`. Use the next available number for new migrations, in execution order. Do not use date prefixes or create another migrations folder. `database/setup.sql` is the fresh-database setup script, not an incremental migration. Every migration bumps
+`finance_capabilities()`'s `schema_version` to its own number and `requiredSchemaVersion` in
+`lib/database-capabilities.ts` follows it; the pre-commit hook runs `scripts/check-migrations.mjs`
+(`npm run migrations:check`), which reads that version from the database named in `.env` / `.env.local` and
+lists the migration files not yet applied (a warning; `MIGRATIONS_CHECK=strict` refuses the commit instead).
 
 # Account settings and fiat currencies
 

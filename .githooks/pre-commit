@@ -6,3 +6,10 @@ if ! npm run lint --silent; then
   echo "pre-commit: lint failed, commit aborted. Fix the problems above and commit again." >&2
   exit 1
 fi
+# Say which migrations the database has not applied yet (scripts/check-migrations.mjs).
+# A warning by default; MIGRATIONS_CHECK=strict refuses the commit while the database is behind.
+echo "pre-commit: checking applied migrations"
+if ! node scripts/check-migrations.mjs; then
+  echo "pre-commit: commit aborted until the migrations above are applied (or unset MIGRATIONS_CHECK)." >&2
+  exit 1
+fi
