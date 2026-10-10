@@ -3,29 +3,28 @@ import { DeleteButton } from '@/components/presentation-foundation/delete-button
 import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { InfoHint } from '@/components/presentation-foundation/info-hint';
 import { InlineError } from '@/components/presentation-foundation/inline-error';
-import { Pencil, RotateCcw } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { DeleteCategoryDialog } from '@/components/delete-category-dialog';
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
-import { CategoryBadge } from '@/components/presentation-foundation/category-badge';
 import { CategoryIconPicker } from '@/components/category-icon-picker';
 import { EditCategoryDialog } from '@/components/edit-category-dialog';
 import type { CategoryIconsController, CategoryLookChange } from '@/hooks/use-category-icons';
 import type { RemovedCategoriesController } from '@/hooks/use-removed-categories';
-import { canRemoveCategory } from '@/lib/removed-categories';
-import { categoryHue } from '@/lib/category-colors';
+import { canRemoveCategory, offeredKinds } from '@/lib/removed-categories';
+import { categoryHue, chosenCategoryHue } from '@/lib/category-colors';
 import { categoryEmoji } from '@/lib/category-icons';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useDiscardChanges, useUnsavedNavigation } from '@/components/discard-changes';
 import { formatMoney } from '@/lib/format';
 import { decimalTotalEquals } from '@/lib/decimal-amounts';
 import type { Category } from '@/lib/planning';
-import { income, expenses, type Entry } from '@/lib/finance';
+import { income, type Entry } from '@/lib/finance';
 import type { TransactionTools } from '@/lib/transaction-tools';
 import { SortableItem, SortableList } from '@/components/presentation-foundation/sortable';
 import { useDisplayOrder } from '@/hooks/use-display-order';
@@ -35,23 +34,21 @@ import { categoryChoices } from '@/lib/transaction-rules';
 export type ToolsController={data:TransactionTools;loading:boolean;error:string;save:(action:string,data:unknown)=>Promise<void>;retry:()=>void};
 type CategoryItem={id:string;name:string;direction:Category['direction'];category?:Category};
 export function TransactionToolsPanel({categories,saveCategory,icons,removed,loading,error,onRetry,onDeleted,preferences,owner,demo}:{categories:Category[];saveCategory:(name:string,direction:Category['direction'],id?:string)=>Promise<string>;icons:CategoryIconsController;removed:RemovedCategoriesController;loading:boolean;error:string;onRetry:()=>void;onDeleted:()=>void;preferences:PreferenceResource;owner:string|null;demo:boolean}){
- const {t}=useLanguage();const [deleting,setDeleting]=useState<Category|null>(null),[restoreError,setRestoreError]=useState('');
- const kept=(kind:string)=>!removed.kinds.includes(kind);
+ const {t}=useLanguage();const [deleting,setDeleting]=useState<Category|null>(null);
  // Built-in categories are listed by name and added ones by id, in the order the person drags them into.
- const items:CategoryItem[]=[...income.filter(kept).map(kind=>({id:kind,name:kind,direction:'income' as const})),...expenses.filter(kept).map(kind=>({id:kind,name:kind,direction:'expense' as const})),...categories.map(category=>({id:category.id,name:category.name,direction:category.direction,category}))];
+ const items:CategoryItem[]=[...offeredKinds('income',removed.kinds).map(kind=>({id:kind,name:kind,direction:'income' as const})),...offeredKinds('expense',removed.kinds).map(kind=>({id:kind,name:kind,direction:'expense' as const})),...categories.map(category=>({id:category.id,name:category.name,direction:category.direction,category}))];
  const order=useDisplayOrder('category_order',items,preferences,owner,demo);
  return <section id="categories" className="panel tools-panel category-settings"><h2>{t('Categories')}<InfoHint>{t('Add income and expense categories to use when recording transactions.')}</InfoHint></h2>
  {error&&<InlineError message={t(error)} onRetry={onRetry}/>}
  {(['income','expense'] as const).map(direction=><CategoryGroup key={direction} direction={direction} items={order.items.filter(item=>item.direction===direction)} categories={categories} onMove={order.reorder} moveDisabled={order.disabled||loading||!!error} saveCategory={saveCategory} icons={icons} disabled={loading||!!error} removed={removed.kinds} onDelete={category=>{if(demo&&!categories.includes(category))removed.hideForVisit(category.id);else setDeleting(category);}}/>)}
- {removed.kinds.length>0&&<div className="category-restore"><span>{t('Deleted categories')}</span>{removed.kinds.map(kind=><Button key={kind} type="button" variant="outline" size="sm" disabled={removed.disabled} aria-label={t('Restore {name}',{name:t(kind)})} onClick={()=>{setRestoreError('');removed.restore(kind).catch(reason=>setRestoreError((reason as Error).message));}}><RotateCcw aria-hidden="true"/>{t(kind)}</Button>)}</div>}
- <ErrorPopup message={order.error||restoreError}/>
- {deleting&&<DeleteCategoryDialog key={deleting.id} category={deleting} categories={categories} onClose={()=>setDeleting(null)} onDeleted={()=>{if(!categories.includes(deleting))removed.deleted(deleting.id);onDeleted();}}/>}
+ <ErrorPopup message={order.error}/>
+ {deleting&&<DeleteCategoryDialog key={deleting.id} category={deleting} categories={categories} removed={removed.kinds} onClose={()=>setDeleting(null)} onDeleted={()=>{if(!categories.includes(deleting))removed.deleted(deleting.id);onDeleted();}}/>}
  </section>;
 }
 /** One direction's categories. Deleting a built-in one passes it on as a category whose id is its kind. */
 function CategoryGroup({direction,items,categories,onMove,moveDisabled,saveCategory,icons,disabled,removed,onDelete}:{direction:Category['direction'];items:CategoryItem[];categories:Category[];onMove:(id:string,target:string,visible:string[])=>void;moveDisabled:boolean;saveCategory:(name:string,direction:Category['direction'],id?:string)=>Promise<string>;icons:CategoryIconsController;disabled:boolean;removed:readonly string[];onDelete:(category:Category)=>void}){
  const {t}=useLanguage();const [name,setName]=useState(''),[icon,setIcon]=useState<string|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
- const [editing,setEditing]=useState<CategoryItem|null>(null);
+ const [editing,setEditing]=useState<CategoryItem|null>(null);const hueOf=(id:string)=>chosenCategoryHue(id,icons.colors??{});
  const emojiOf=(item:CategoryItem)=>icons.emojiOf(item.category?item.name:item.id);
  // Tapping a pill edits its icon and, for an added category, its name; the name is saved before the icon.
  const saveEdit=async(item:CategoryItem,{name:renamed,...look}:CategoryLookChange&{name?:string})=>{if(renamed)await saveCategory(renamed,direction,item.id);if(look.icon!==undefined||look.color!==undefined)await icons.update(item.id,look);};
@@ -61,8 +58,9 @@ function CategoryGroup({direction,items,categories,onMove,moveDisabled,saveCateg
  // Names differing only in letter case would look like the same category in every list.
  const taken=categoryNameTaken(name,direction,categories,items.filter(item=>!item.category).map(label));
  return <section className="category-group"><h3>{t(direction==='income'?'Income categories':'Expense categories')}</h3>
- <SortableList id={`categories-${direction}`} layout="grid" items={ids} nameOf={id=>{const item=items.find(entry=>entry.id===id);return item?label(item):'';}} onMove={(moved,over)=>onMove(moved,over,ids)} disabled={moveDisabled}>
- <ul className="category-badges">{items.map(item=><SortableItem as="li" key={item.id} id={item.id} label={label(item)}><button type="button" className="category-edit-button" disabled={disabled} aria-label={t('Edit {name}',{name:label(item)})} onClick={()=>setEditing(item)}><CategoryBadge kind={item.id} label={label(item)} icon={<span aria-hidden="true">{emojiOf(item)}</span>}><Pencil size={12} aria-hidden="true" className="category-edit-icon"/></CategoryBadge></button></SortableItem>)}</ul>
+ {/* One row per category, like the reference app: handle, icon tile, name and Edit; the whole row opens the editor. */}
+ <SortableList id={`categories-${direction}`} items={ids} nameOf={id=>{const item=items.find(entry=>entry.id===id);return item?label(item):'';}} onMove={(moved,over)=>onMove(moved,over,ids)} disabled={moveDisabled}>
+ <ul className="category-rows">{items.map(item=><SortableItem as="li" key={item.id} id={item.id} label={label(item)}><button type="button" className="category-edit-button" disabled={disabled} aria-label={t('Edit {name}',{name:label(item)})} onClick={()=>setEditing(item)}><span className="category-icon" data-size="sm" style={{'--category-hue':hueOf(item.id)} as CSSProperties} aria-hidden="true">{emojiOf(item)}</span><span className="category-row-name">{label(item)}</span><span className="category-row-edit" aria-hidden="true"><Pencil size={14} className="category-edit-icon"/>{t('Edit')}</span></button></SortableItem>)}</ul>
  </SortableList>
  <form className="category-create-form" onSubmit={async event=>{event.preventDefault();if(disabled||busy||!name.trim()||taken)return;setBusy(true);setError('');try{const id=await saveCategory(name.trim(),direction);if(icon)await icons.choose(id,icon);setName('');setIcon(null);}catch(reason){setError((reason as Error).message);}finally{setBusy(false);}}}>
  <CategoryIconPicker icon={icon??categoryEmoji(name)} label={t('Choose an icon')} chosen={!!icon} disabled={busy||icons.disabled} onChoose={setIcon}/>

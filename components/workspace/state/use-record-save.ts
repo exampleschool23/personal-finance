@@ -56,18 +56,18 @@ export function useRecordSave(input: RecordSaveInput) {
             const accountProblem=cashAccountProblem(editing,planning.data.records,!planning.loading&&!planning.error,rate);
             if(accountProblem)throw Error(accountProblem);
             const converted=!!editing.account_id&&planning.data.records.find(record=>record.id===editing.account_id)?.currency!==editing.currency;
-            const savedRecord=recordToSave(editing,rate,converted);
+            const record=recordToSave(editing,rate,converted);
             // An account that changes business takes its transactions along, so the business moves through set_account_business after the save.
             const move=businessMoveFrom(editing,planning.data.records.find(record=>record.id===editing.id)??rows.find(record=>record.id===editing.id));
-            if(move)savedRecord.business_id=move.from;
-            const datesProblem=debtDatesProblem(savedRecord);
+            if(move)record.business_id=move.from;
+            const datesProblem=debtDatesProblem(record);
             if(datesProblem)throw Error(datesProblem);
-            if (demo) { const lent=lendFromAccount(rows,savedRecord); setRows(withAssetIncomePlans(applyRecordChange(lent.rows,lent.rows.find(record=>record.id===savedRecord.id),lent.loan),input.sources)); }
+            if (demo) { const lent=lendFromAccount(rows,record); setRows(withAssetIncomePlans(applyRecordChange(lent.rows,lent.rows.find(row=>row.id===record.id),lent.loan),input.sources)); }
             else {
-                await requestJson('/api/records', { body: savedRecord });
+                await requestJson('/api/records', { body: record });
                 // The lists show the change now; the reload that follows takes a few seconds.
-                planning.updateRecords?.(records => withSavedRecord(records, savedRecord));
-                setRows(previous => previous.some(row => row.id === savedRecord.id) ? withSavedRecord(previous, savedRecord) : previous);
+                planning.updateRecords?.(records => withSavedRecord(records, record));
+                setRows(previous => previous.some(row => row.id === record.id) ? withSavedRecord(previous, record) : previous);
                 input.refreshRecords();
             }
             if(move)await input.setAccountBusiness(editing.id,editing.business_id??null);

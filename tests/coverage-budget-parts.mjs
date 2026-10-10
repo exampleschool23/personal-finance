@@ -12,6 +12,7 @@ const hookState={store:new Map(),key:'',index:0};
 const reactStub={...React,
  useState(initial){const id=hookState.key+'#'+hookState.index++;const store=hookState.store;if(!store.has(id))store.set(id,typeof initial==='function'?initial():initial);return [store.get(id),value=>store.set(id,typeof value==='function'?value(store.get(id)):value)];},
  useRef(initial){const id=hookState.key+'#'+hookState.index++;const store=hookState.store;if(!store.has(id))store.set(id,{current:initial});return store.get(id);},
+ useMemo:factory=>factory(),
 };
 const errors=[];
 const host=name=>'x-'+name;
@@ -34,7 +35,14 @@ const overrides={
  '@/components/ui/dialog':{Dialog:host('dialog'),DialogContent:host('dialog-content'),DialogTitle:host('dialog-title')},
  '@/components/ui/popover':{Popover:host('popover'),PopoverAnchor:host('popover-anchor'),PopoverContent:host('popover-content')},
  '@/lib/feedback':{showError:message=>errors.push(message)},
+ // Drag and drop: the hooks report `dnd` (what is over a group, what is dragged); the context is a host element whose handlers the tests call.
+ '@dnd-kit/core':{DndContext:host('dnd-context'),DragOverlay:host('drag-overlay'),closestCorners:()=>['closest'],pointerWithin:args=>args.hits,
+  useDroppable:({id,disabled})=>({setNodeRef:'drop:'+id,isOver:!disabled&&dnd.over===id,active:dnd.active?{id:dnd.active}:null}),
+  useDraggable:({id,disabled})=>({attributes:{'aria-roledescription':'draggable'},listeners:{onPointerDown:'pd'},setNodeRef:'drag:'+id,setActivatorNodeRef:'handle:'+id,isDragging:!disabled&&dnd.active===id})},
+ '@/components/presentation-foundation/sortable':{useSortableSensors:()=>'sensors',sortableAccessibility:(t,nameOf)=>({nameOf})},
+ '@/lib/budget-groups':loadTS('lib/budget-groups.ts'),
 };
+const dnd={over:null,active:null};
 // The budget screen's parts, loaded together as one module would be.
 const cache=new Map();
 const page=Object.assign({},...['budget-rows','planned-input','left-to-budget-card','settings-dialogs'].map(name=>loadTS(`components/budget/${name}.tsx`,overrides,cache)));
@@ -101,7 +109,7 @@ test('BudgetSectionHeader and BudgetTotalRow show columns and formatted totals',
 test('BudgetGroupCard: collapsed card shows only totals and the toggle',()=>{
  const calls=[];
  const group={name:'Everyday spending',direction:'expense',type:'flexible',rows:[row()],budget:500,actual:200,remaining:300};
- const view=mount(React.createElement(page.BudgetGroupCard,{group,currency:'USD',open:false,onToggle:()=>calls.push('toggle'),showUnbudgeted:false,onShowUnbudgeted(){},renderPlanned:()=>'P',onSettings(){}}));
+ const view=mount(React.createElement(page.BudgetGroupCard,{group,currency:'USD',open:false,onToggle:()=>calls.push('toggle'),showUnbudgeted:false,onShowUnbudgeted(){},renderPlanned:()=>'P',onOpen(){}}));
  assert.equal(view.tree.props['data-open'],undefined);
  const toggle=byClass(view,'budget-group-toggle')[0];
  assert.equal(toggle.props['aria-expanded'],false);
@@ -113,6 +121,17 @@ test('BudgetGroupCard: collapsed card shows only totals and the toggle',()=>{
  toggle.props.onClick();assert.deepEqual(calls,['toggle']);
 });
 
+test('BudgetGroupCard: each row ends with its menu, after Remaining; every row keeps that last column',()=>{
+ const group={name:'Everyday spending',direction:'expense',type:'flexible',rows:[row(),row({key:'rent',name:'Rent',budget:900})],budget:1400,actual:200,remaining:1200};
+ const view=mount(React.createElement(page.BudgetGroupCard,{group,currency:'USD',open:true,onToggle(){},showUnbudgeted:false,onShowUnbudgeted(){},renderPlanned:()=>'P',onOpen(){},rowMenu:item=>item.key==='rent'?'MENU:'+item.key:null}));
+ const rows=byClass(view,'budget-row budget-category-row');
+ assert.equal(rows.length,2);
+ // The menu cell comes right after the Remaining cell (only the progress line follows it).
+ const cells=rows.map(item=>item.children.flat(Infinity).filter(child=>child&&typeof child==='object'));
+ assert.deepEqual(cells.map(list=>list.findIndex(child=>child.props?.className==='budget-row-end')),[4,4]);
+ assert.deepEqual(byClass(view,'budget-row-end').map(text),['','','MENU:rent'],'the group row has an empty end cell; the menu shows only where there is one');
+});
+
 test('BudgetGroupCard: open card renders rows, rollover, settings and the unbudgeted toggle',()=>{
  const calls=[];
  const rows=[
@@ -121,7 +140,7 @@ test('BudgetGroupCard: open card renders rows, rollover, settings and the unbudg
   row({key:'books',name:'Books',budget:null,actual:0,rolloverIn:0,remaining:null,progress:0}),
  ];
  const group={name:'Everyday spending',direction:'expense',type:'flexible',rows,budget:600,actual:320,remaining:280};
- const props={group,currency:'USD',open:true,onToggle(){},showUnbudgeted:false,onShowUnbudgeted:()=>calls.push('unbudgeted'),renderPlanned:item=>'planned:'+item.key,onSettings:item=>calls.push('settings:'+item.key),header:'HEADER',footer:'FOOTER',rolloverIn:-15,onGroupSettings:()=>calls.push('group')};
+ const props={group,currency:'USD',open:true,onToggle(){},showUnbudgeted:false,onShowUnbudgeted:()=>calls.push('unbudgeted'),renderPlanned:item=>'planned:'+item.key,onOpen:item=>calls.push('open:'+item.key),header:'HEADER',footer:'FOOTER',rolloverIn:-15,onGroupSettings:()=>calls.push('group')};
  let view=mount(React.createElement(page.BudgetGroupCard,props));
  assert.equal(view.tree.props['data-open'],true);
  assert.equal(all(view,'icon-ChevronDown').length,1);
@@ -133,8 +152,8 @@ test('BudgetGroupCard: open card renders rows, rollover, settings and the unbudg
  const categoryRows=byClass(view,'budget-row budget-category-row');
  assert.equal(categoryRows.length,2,'unbudgeted Books is hidden');
  const names=byClass(view,'budget-category-name');
- assert.equal(names[0].props['aria-label'],'T:Category settings: T:Groceries');
- assert.equal(names[1].props['aria-label'],'T:Category settings: Dog walker');
+ assert.equal(names[0].props['aria-label'],'T:Open T:Groceries','tapping a category opens its details');
+ assert.equal(names[1].props['aria-label'],'T:Open Dog walker');
  assert.equal(one(view,'x-category-icon',node=>node.props.kind==='Dog walker').props.size,'sm');
  assert.equal(all(view,'x-category-icon',node=>node.props.kind==='groceries').length,1);
  assert.equal(all(view,'icon-RefreshCw').length,1);
@@ -146,7 +165,7 @@ test('BudgetGroupCard: open card renders rows, rollover, settings and the unbudg
  const unbudgeted=byClass(view,'budget-unbudgeted')[0];
  assert.equal(text(unbudgeted),'T:Show 1 unbudgeted');assert.equal(all(view,'icon-Eye').length,1);
  unbudgeted.props.onClick();
- assert.deepEqual(calls,['group','settings:custom:1','unbudgeted']);
+ assert.deepEqual(calls,['group','open:custom:1','unbudgeted']);
  const pills=byClass(view,'budget-pill');
  assert.deepEqual(pills.map(pill=>pill.props['data-tone']),['positive','positive','negative']);
  // Expanded: every row is visible and the toggle collapses them again.
@@ -159,9 +178,58 @@ test('BudgetGroupCard: open card renders rows, rollover, settings and the unbudg
 
 test('BudgetGroupCard: no unbudgeted toggle when every row has a budget',()=>{
  const group={name:'Income',direction:'income',type:null,rows:[row({direction:'income',budget:1000,actual:1200,remaining:-200})],budget:1000,actual:1200,remaining:-200};
- const view=mount(React.createElement(page.BudgetGroupCard,{group,currency:'USD',open:true,onToggle(){},showUnbudgeted:false,onShowUnbudgeted(){},renderPlanned:()=>null,onSettings(){}}));
+ const view=mount(React.createElement(page.BudgetGroupCard,{group,currency:'USD',open:true,onToggle(){},showUnbudgeted:false,onShowUnbudgeted(){},renderPlanned:()=>null,onOpen(){}}));
  assert.equal(byClass(view,'budget-unbudgeted').length,0);
  assert.deepEqual(byClass(view,'budget-pill').map(pill=>pill.props['data-tone']),['positive','positive'],'income above plan is green');
+});
+
+test('BudgetGroupCard: a movable card has drag handles and is outlined while another group\'s category is over it',()=>{
+ const group={name:'Household',direction:'expense',type:null,rows:[row()],budget:500,actual:200,remaining:300};
+ const props={group,currency:'USD',open:true,onToggle(){},showUnbudgeted:false,onShowUnbudgeted(){},renderPlanned:()=>'P',onOpen(){}};
+ let view=mount(React.createElement(page.BudgetGroupCard,props));
+ assert.equal(byClass(view,'drag-handle').length,0,'only inside GroupMoves');
+ view=mount(React.createElement(page.BudgetGroupCard,{...props,movable:true}));
+ const handle=one(view,'button',node=>node.props.className==='drag-handle');
+ assert.equal(handle.props['aria-label'],'T:Move T:Groceries');
+ assert.equal(handle.props.ref,'handle:groceries');
+ assert.equal(byClass(view,'budget-row budget-category-row')[0].props['data-movable'],true);
+ assert.equal(view.tree.props.ref,'drop:expense:Household');
+ Object.assign(dnd,{over:'expense:Household',active:'other'});
+ assert.equal(mount(React.createElement(page.BudgetGroupCard,{...props,movable:true})).tree.props['data-drop-target'],true);
+ Object.assign(dnd,{active:'groceries'});
+ view=mount(React.createElement(page.BudgetGroupCard,{...props,movable:true}));
+ assert.equal(view.tree.props['data-drop-target'],undefined,'its own group is no target');
+ assert.equal(byClass(view,'budget-row budget-category-row')[0].props['data-dragging'],true);
+ Object.assign(dnd,{over:null,active:null});
+});
+
+test('GroupMoves saves a dropped category\'s new group, shows the dragged copy and reports a failed save',async()=>{
+ const saved=[];errors.length=0;
+ const household={name:'Household',direction:'expense',type:null,rows:[row({type:'flexible',group:'Household',rollover:false,excluded:false})],budget:0,actual:0,remaining:0};
+ const everyday={name:'Everyday spending',direction:'expense',type:null,rows:[row({key:'leisure',name:'Leisure',type:'flexible',group:'Everyday spending',rollover:false,excluded:false})],budget:0,actual:0,remaining:0};
+ let fail=false;
+ const onSave=async setting=>{if(fail)throw new Error('Could not save changes.');saved.push(setting);};
+ const view=mount(React.createElement(page.GroupMoves,{groups:[household,everyday],onSave},'CARDS'));
+ const context=one(view,'x-dnd-context');
+ assert.equal(context.props.collisionDetection({hits:['g']})[0],'g','the group under the pointer');
+ assert.deepEqual(context.props.collisionDetection({hits:[]}),['closest'],'else the nearest, for the keyboard');
+ assert.equal(context.props.accessibility.nameOf('leisure'),'T:Leisure');
+ assert.equal(context.props.accessibility.nameOf('gone'),'');
+ context.props.onDragStart({active:{id:'groceries'}});
+ view.render();
+ assert.equal(text(one(view,'x-drag-overlay')),'T:Groceries');
+ context.props.onDragEnd({active:{id:'groceries'},over:{id:'expense:Everyday spending'}});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.deepEqual(saved.map(item=>[item.category_key,item.group_name]),[['groceries',null]],'the type\'s own group is stored as no group');
+ view.render();assert.equal(text(one(view,'x-drag-overlay')),'');
+ context.props.onDragEnd({active:{id:'groceries'},over:{id:'expense:Household'}});
+ context.props.onDragEnd({active:{id:'groceries'},over:null});
+ assert.equal(saved.length,1,'the same group or no group saves nothing');
+ fail=true;
+ context.props.onDragEnd({active:{id:'leisure'},over:{id:'expense:Household'}});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.deepEqual(errors,['T:Could not save changes.']);
+ context.props.onDragStart({active:{id:'gone'}});context.props.onDragCancel();
 });
 
 test('ContributionRows lists goals with their monthly amount or a dash and links to Goals',()=>{
@@ -240,8 +308,9 @@ test('LeftToBudgetCard expenses tab buckets spending by type; flex mode uses the
 const history={months:[{month:'2026-05',amount:100,planned:80},{month:'2026-06',amount:0,planned:null},{month:'2026-07',amount:50,planned:200}],lastMonth:50,average:50};
 
 test('PlannedInput opens History on focus, edits the draft and saves on close',async()=>{
- const saves=[];
- const view=mount(React.createElement(page.PlannedInput,{label:'Planned: Groceries',value:500,history,direction:'expense',currency:'USD',defaultForward:false,appliesForward:false,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));
+ const saves=[],repeats=[];
+ const onRepeat=async(amount,forward)=>{repeats.push([amount,forward]);};
+ const view=mount(React.createElement(page.PlannedInput,{label:'Planned: Groceries',value:500,history,direction:'expense',currency:'USD',defaultForward:false,appliesForward:false,onSave:async(amount,forward)=>{saves.push([amount,forward]);},onRepeat}));
  const popover=()=>one(view,'x-popover');
  assert.equal(popover().props.open,false);
  const input=one(view,'x-number-input');
@@ -267,11 +336,12 @@ test('PlannedInput opens History on focus, edits the draft and saves on close',a
  assert.match(text(byClass(view,'budget-history-forward')[0]),new RegExp(`Apply \\${money(620)} to all future months`));
  const checkbox=one(view,'input',node=>node.props.type==='checkbox');assert.equal(checkbox.props.checked,false);
  checkbox.props.onChange({currentTarget:{checked:true}});await flush();
- assert.deepEqual(saves,[[620,true]],'the tick saves right away');
- view.rerender(React.createElement(page.PlannedInput,{label:'Planned: Groceries',value:620,history,direction:'expense',currency:'USD',defaultForward:false,appliesForward:true,onSave:async(amount,forward)=>{saves.push([amount,forward]);}}));
+ assert.deepEqual(repeats,[[620,true]],'the tick saves right away, through the repeat save');
+ view.rerender(React.createElement(page.PlannedInput,{label:'Planned: Groceries',value:620,history,direction:'expense',currency:'USD',defaultForward:false,appliesForward:true,onSave:async(amount,forward)=>{saves.push([amount,forward]);},onRepeat}));
  assert.equal(one(view,'input',node=>node.props.type==='checkbox').props.checked,true,'the tick follows what is saved');
  one(view,'input',node=>node.props.type==='checkbox').props.onChange({currentTarget:{checked:false}});await flush();
- assert.deepEqual(saves,[[620,true],[620,false]],'unticking saves this month only');
+ assert.deepEqual(repeats,[[620,true],[620,false]],'unticking saves this month only (BUD-027: later months then plan nothing)');
+ assert.deepEqual(saves,[],'the tick never goes through the amount save');
 });
 
 test('PlannedInput: an amount edited while it applies forward keeps applying forward',async()=>{
@@ -527,4 +597,43 @@ test('the Budget page drives the Left to budget tabs, so Income and Expenses nar
 test('LeftToBudgetCard reads — for plans no rate converts, never $0',()=>{
  const unknown=mount(React.createElement(page.LeftToBudgetCard,{left:{income:null,expenses:null,contributions:0,left:null,flexible:null,missing:1},rows:[],mode:'flex',currency:'USD'}));
  assert.equal(text(byClass(unknown,'budget-left-summary')[0]),`T:Planned income—T:Planned spending—T:Contributions${money(0)}T:Left to budget—`);
+});
+
+// TEST-004: the Budget page itself, with the workspace and the planning read stubbed, so the row menu's Make recurring
+// is exercised rather than matched in the source.
+test('Make recurring presets the bill from its row: a custom row with history starts at its first recent payment, one without starts today, a built-in kind starts today (TEST-004)',()=>{
+ const {depositToday}=loadTS('lib/deposit-interest.ts');const {shiftMonth}=loadTS('lib/calendar-days.ts');const {emptyPlanning}=loadTS('lib/planning.ts');
+ const today=depositToday(),month=today.slice(0,7);
+ const payment=(id,date,amount,custom_category_id,kind='Other expense')=>({id,name:id,kind,currency:'USD',amount,quantity:1,cost:0,rate:0,date,frequency:'Once',notes:'',custom_category_id});
+ // Gym: paid three months in a row; Books: planned nothing, one payment this month; Living expense: a built-in kind with a payment.
+ const records=[payment('g1',shiftMonth(month,-2)+'-03',100,'c1'),payment('g2',shiftMonth(month,-1)+'-05',110,'c1'),payment('g3',today,120,'c1'),payment('b1',today,45,'c2'),payment('l1',today,80,null,'Living expense')];
+ const categories=[{id:'c1',name:'Gym',direction:'expense'},{id:'c2',name:'Books',direction:'expense'}];
+ const calls=[];
+ const budget={state:{mode:'category',applyForward:false,categories:[],amounts:[{category_key:'c1',month,amount:120,currency:'USD',applies_forward:true}]},loading:false,error:'',retry(){},saveAmount:async()=>{},saveRepeat:async()=>{},saveAmounts:async()=>{},saveCategory:async()=>{},saveSettings:async()=>{}};
+ const workspace={user:null,demo:true,reload:0,currency:'USD',market:null,planning:{data:{...emptyPlanning,records,categories,removedKinds:[]},loading:false,error:''},transactionTools:{data:{splits:[]}},workspaceLoading:false,budget,
+  addCashFlow:(kind,frequency,preset)=>calls.push({kind,frequency,preset}),editRecord(){},archiveSchedule:async()=>{},readOnly:false};
+ const screenOverrides={...overrides,
+  '@/components/workspace/workspace-provider':{useWorkspace:()=>workspace},
+  '@/hooks/use-owner-resource':{useOwnerResource:()=>({data:emptyPlanning,loading:false,initialLoading:false,error:'',retry(){}})},
+  '@/components/display-money':{useDisplayMoney:()=>({show:value=>String(value)})},
+  '@/components/presentation-foundation/tone':{signTone:()=>undefined},
+  ...Object.fromEntries([['inline-error','InlineError'],['today-button','TodayButton'],['page-header','PageHeader'],['row-menu','RowMenu'],['stat-tile','StatTile'],['history-chart','HistoryChart'],['empty-state','EmptyState']].map(([file,name])=>[`@/components/presentation-foundation/${file}`,{[name]:host(file)}])),
+  '@/components/presentation-foundation/loading-placeholder':{PanelSkeleton:host('panel-skeleton'),LoadingPlaceholder:host('loading-placeholder')},
+  '@/components/presentation-foundation/stat-tile':{StatTile:host('stat-tile'),StatTiles:host('stat-tiles')},
+ };
+ const {BudgetScreen}=loadTS('components/workspace/screens/budget-screen.tsx',screenOverrides);
+ const view=mount(React.createElement(BudgetScreen));
+ const menus=all(view,'x-row-menu');
+ const choose=(name,item)=>{const menu=menus.find(node=>node.props.label==='T:Actions for '+name);assert.ok(menu,name+' has a menu');const entry=menu.props.items.find(entry=>entry&&entry.label==='T:'+item);assert.ok(entry,name+' offers '+item);entry.onSelect();return calls.pop();};
+ assert.deepEqual(choose('Gym','Make recurring'),{kind:'Other expense',frequency:'Monthly',preset:{name:'Gym',amount:120,custom_category_id:'c1',date:shiftMonth(month,-2)+'-03'}},'the planned amount, from the first payment of the unbroken run');
+ assert.deepEqual(choose('Books','Make recurring'),{kind:'Other expense',frequency:'Monthly',preset:{name:'Books',amount:45,custom_category_id:'c2',date:today}},'nothing planned: what it spent, from today');
+ assert.deepEqual(choose('T:Living expense','Make recurring'),{kind:'Living expense',frequency:'Monthly',preset:{name:'T:Living expense',amount:80,custom_category_id:null,date:today}},'a built-in kind is too broad to take a history');
+ assert.equal(calls.length,0);
+ // A row whose category already has a running bill offers Stop recurring instead; a paused bill is not running (DRY-006).
+ const bill={...payment('gym-bill','2026-01-01',100,'c1'),frequency:'Monthly'};
+ for(const [extra,expected] of [[{},'Stop recurring'],[{source_paused:true},'Make recurring'],[{archived:true},'Make recurring']]){
+  workspace.planning={...workspace.planning,data:{...workspace.planning.data,records:[...records,{...bill,...extra}]}};
+  const menu=all(mount(React.createElement(BudgetScreen)),'x-row-menu').find(node=>node.props.label==='T:Actions for Gym');
+  assert.deepEqual(menu.props.items.filter(Boolean).map(entry=>entry.label).filter(label=>label!=='T:Edit'),['T:'+expected],JSON.stringify(extra));
+ }
 });

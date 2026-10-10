@@ -55,7 +55,7 @@ export async function DELETE(req:Request) {
   const parsed=z.object({id:uuid}).safeParse(await readJson(req));
   if(!parsed.success)return Response.json({error:'Check the record fields.'},{status:400});
   const result=await supa('/rest/v1/rpc/permanently_delete_item',{method:'POST',body:JSON.stringify({p_id:parsed.data.id})},auth.token);
-  if(!result.ok)return Response.json({error:'Could not permanently delete this item. Check that database update 048 is installed and try again.'},{status:409});
+  if(!result.ok)return postgrestFailure(result,'Could not permanently delete this item. Check that database update 048 is installed and try again.',{codes:{PGRST202:['The app database needs an update. Ask the administrator to apply the latest migrations.',503]}});
   // Attachments of a transaction that is gone for good come back as paths; their files are removed too.
   const paths=((await result.json().catch(()=>({})) as {paths?:unknown}).paths);
   if(Array.isArray(paths))await removeOrphanFiles(auth,paths);

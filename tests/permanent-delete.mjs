@@ -28,12 +28,14 @@ test('permanent deletion erases recovery data, is idempotent and isolates owners
  }finally{await db.close();}
 });
 test('permanent-delete API validates owner session, origin, id and reports failed writes',async()=>{
- let auth=true,origin=true,fail=false,offline=false;const calls=[];
- const api=loadTS('app/api/deleted-items/route.ts',{'@/lib/supabase':{sameOrigin:()=>origin,session:async()=>auth?{user:{id:id(1)},token:'owner-token'}:null,supa:async(path,init,token)=>{calls.push({path,init,token});if(offline)throw Error();return Response.json(path.startsWith('/rest/v1/rpc/')?{}:[], {status:fail?404:200});}}});
+ let auth=true,origin=true,fail=false,offline=false,missing=false;const calls=[];
+ const api=loadTS('app/api/deleted-items/route.ts',{'@/lib/supabase':{sameOrigin:()=>origin,session:async()=>auth?{user:{id:id(1)},token:'owner-token'}:null,supa:async(path,init,token)=>{calls.push({path,init,token});if(offline)throw Error();if(missing)return Response.json({code:'PGRST202',message:'Could not find the function'},{status:404});return Response.json(path.startsWith('/rest/v1/rpc/')?{}:[], {status:fail?404:200});}}});
  const req=(value=id(3))=>new Request('https://local/api/deleted-items',{method:'DELETE',body:JSON.stringify({id:value})});
  origin=false;assert.equal((await api.DELETE(req())).status,403);origin=true;
  auth=false;assert.equal((await api.DELETE(req())).status,401);auth=true;
  assert.equal((await api.DELETE(req('bad'))).status,400);assert.equal(calls.length,0);
  assert.equal((await api.DELETE(req())).status,200);assert.equal(calls[0].token,'owner-token');assert.equal(calls[0].path,'/rest/v1/rpc/permanently_delete_item');assert.deepEqual(JSON.parse(calls[0].init.body),{p_id:id(3)});
- fail=true;assert.equal((await api.DELETE(req())).status,409);offline=true;assert.equal((await api.DELETE(req())).status,503);
+ fail=true;assert.equal((await api.DELETE(req())).status,409);fail=false;
+ missing=true;const absent=await api.DELETE(req());assert.equal(absent.status,503,'a database without the function is a 503, not a conflict');assert.match((await absent.json()).error,/needs an update/);missing=false;
+ offline=true;assert.equal((await api.DELETE(req())).status,503);
 });

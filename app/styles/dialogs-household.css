@@ -1,3 +1,6 @@
+/* Every popover fits the room on its side of the trigger and scrolls inside, so its top never sits above the screen on a short or
+ * landscape phone (category and business pickers, Money invested, asset details; DLG-024). Menus already do this in dropdown-menu.tsx; `:where` lets a popover's own class choose otherwise. */
+:where([data-slot=popover-content]){max-height:var(--radix-popover-content-available-height);overflow-y:auto;overscroll-behavior:contain}
 /* Wide dialogs, ordered Settings lists, tax prep, the rule dialog and household sharing. */
 
 /* Wide screens: a wider dialog with the accounts in a grid of bordered cells, so long lists need less scrolling. */
@@ -18,7 +21,7 @@
 .donut-slice{cursor:pointer;outline:none}
 @container content (max-width:640px){.breakdown-donut{grid-template-columns:minmax(0,1fr)}}
 .report-business-name{display:inline-flex;align-items:center;gap:8px;min-width:0}
-.report-business-name>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.report-business-name>span:last-child{min-width:0;overflow-wrap:break-word}
 .pnl-table{width:100%;border-collapse:collapse;font-size:var(--type-small);font-variant-numeric:tabular-nums}
 .pnl-table th,.pnl-table td{padding:9px 12px;text-transform:none;letter-spacing:normal;border-top:1px solid var(--hairline);text-align:start;font-weight:400}
 .pnl-table thead th{border-top:0;color:var(--muted-foreground);font-size:var(--type-caption);font-weight:500}
@@ -59,6 +62,9 @@
 .dashboard-business{display:flex;flex-direction:column;gap:12px}
 .dashboard-business>[data-slot=native-select-wrapper]{width:auto;align-self:flex-start}
 .business-card-list li{grid-template-columns:auto minmax(0,1fr) auto minmax(max-content,.35fr)}
+/* A phone-wide card has no room for the name beside the bars and the net: the name takes the line, bars and net go under it. */
+.business-card-list{container:business-list/inline-size}
+@container business-list (max-width:340px){.business-card-list li{grid-template-columns:auto minmax(0,1fr) auto}.business-card-list li>.business-card-name{grid-column:2/-1}.business-card-list li>:nth-child(3){grid-column:2;justify-self:start}}
 .business-card-list li>:last-child{justify-self:end}
 .business-card-name{display:flex;flex-direction:column;min-width:0;font-weight:500;overflow-wrap:anywhere}
 .business-card-name small{min-width:0;color:var(--muted-foreground);font-size:var(--type-caption);font-weight:400;text-align:start}
@@ -193,6 +199,7 @@ summary.tax-line-heading>svg{flex-shrink:0;color:var(--muted-foreground);transit
 .recurring-details-history li>span{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}
 .recurring-details-history li>strong{font-weight:500;text-align:end}
 .recurring-details-history li>strong small{display:block;color:var(--muted-foreground);font-weight:400;font-size:var(--type-caption)}
+.budget-details .recurring-details-history li>strong small{display:inline;margin-inline-start:6px}
 @media (max-width:560px){
  .recurring-details .stat-tiles{grid-template-columns:minmax(0,1fr);gap:0;border:1px solid var(--hairline);border-radius:var(--radius-card)}
  .recurring-details .stat-tile{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 12px;border:0;border-radius:0;background:none}

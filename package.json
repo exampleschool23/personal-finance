@@ -12,6 +12,7 @@
     "start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "lint:prune": "eslint . --ignore-pattern dist --ignore-pattern .next --prune-suppressions",
+    "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
     "test": "node scripts/test.mjs",
     "test:integration": "node scripts/test.mjs --integration",
     "test:coverage": "node scripts/test.mjs --coverage",

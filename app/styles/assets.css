@@ -43,15 +43,17 @@
 .asset-result-count button{padding:4px;text-decoration:underline;text-underline-offset:3px}
 
 .asset-card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px;align-items:stretch}
+/* The narrowest phones keep a whole word of the name beside the icon and ⋯ ("Neighborhoo/d café" broke at 280 px). */
+@container content (max-width:360px){.asset-card{padding:16px}}
 .asset-card{display:flex;flex-direction:column;min-width:0;padding:20px;border:1px solid var(--border);border-radius:var(--radius-card);background:var(--card);box-shadow:var(--shadow-card);transition:border-color .15s}
 .asset-card:is(:hover,:focus-within){border-color:color-mix(in srgb,var(--asset-color) 45%,var(--border))}
 .asset-card-header{display:flex;align-items:flex-start;gap:12px}
 .asset-card-icon{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--asset-color) 14%,transparent);color:var(--asset-color)}
 .asset-symbol{width:22px;height:22px;flex-shrink:0}
 .asset-card-header>div{display:grid;justify-items:start;gap:4px;flex:1;min-width:0}
-.asset-card-header h3{font-size:var(--type-body);font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.asset-card-header h3{font-size:var(--type-body);font-weight:600;line-height:1.35;overflow-wrap:break-word}
 .asset-card-header .category-badge{max-width:100%;padding:1px 8px;font-size:var(--type-micro);white-space:normal}
-.asset-card-header>button{flex-shrink:0;width:32px;height:32px;min-height:32px;margin:-4px -6px 0 0;color:var(--muted-foreground)}
+.asset-card-header>button{flex-shrink:0;width:32px;height:32px;min-height:32px;margin:-4px 0 0;margin-inline-end:-6px;color:var(--muted-foreground)}
 .asset-card-worth{display:grid;gap:4px;margin:18px 0 14px}
 .asset-card-worth>strong{font-size:var(--type-stat);font-weight:650;letter-spacing:-.03em;line-height:1.2;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .asset-card-worth small{font-size:var(--type-caption);line-height:1.5;color:var(--muted-foreground)}
@@ -109,7 +111,7 @@
 .recovery-delete:hover{background:color-mix(in srgb,var(--negative) 12%,transparent);color:var(--negative)}
 @container content (max-width:860px){.recovery-row{grid-template-columns:auto minmax(0,1fr);padding-inline:16px}.recovery-value{grid-column:2;text-align:start}.recovery-row>.row-actions{grid-column:1/-1;justify-content:flex-start}}
 .records-pagination{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;border-top:1px solid var(--border);font-size:var(--type-caption);color:var(--muted-foreground)}
-.records-pagination>div{display:flex;align-items:center;gap:4px}
+.records-pagination>div{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:4px}
 .records-pagination button{display:inline-flex;align-items:center;justify-content:center;min-width:36px;height:36px;min-height:36px;padding:0 8px;border-radius:var(--radius-control);font-size:var(--type-small);font-weight:500;font-variant-numeric:tabular-nums;color:var(--foreground)}
 .records-pagination button:hover:not(:disabled,[aria-current]){background:var(--accent)}
 .records-pagination button[aria-current=page]{background:var(--primary);color:var(--primary-foreground)}

@@ -8,7 +8,9 @@ const clock={now,today:'2026-09-30',newId:()=>'99999999-9999-4999-8999-999999999
 const owner='11111111-1111-4111-8111-111111111111',other='22222222-2222-4222-8222-222222222222';
 const id=n=>`77000000-0000-4000-8000-0000000000${String(n).padStart(2,'0')}`;
 const entry=(n,name,kind,amount,currency='UZS')=>({id:id(n),user_id:owner,name,kind,amount,currency,quantity:0,cost:0,rate:0,date:'2026-01-01',frequency:'Once',notes:''});
-function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurrences=[],activity=[],mortgagePayments=[],drafts=[],failWrites=false,rpcFailure=null,rules=null,currencies,snapshots=[{occurred_on:'2026-09-29',assets:0,debt:0,rates:{UZS:12000},updated_at:''}]}={}){
+/** `rpcRejects` is how many RPC writes break off (a timeout, a lost connection) before one answers; `removed` is the
+ * workspace's deleted built-in categories, and `failPreferences` makes that read fail like an unreachable database. */
+function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurrences=[],activity=[],mortgagePayments=[],drafts=[],failWrites=false,rpcFailure=null,rpcRejects=0,rules=null,currencies,removed=[],failPreferences=false,snapshots=[{occurred_on:'2026-09-29',assets:0,debt:0,rates:{UZS:12000},updated_at:''}]}={}){
  const writes=[],reads=[];
  return {writes,drafts,reads,
   async read(path){
@@ -33,6 +35,7 @@ function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurren
    if(path.startsWith('/rest/v1/mortgage_payments'))return mortgagePayments;
    if(path.startsWith('/rest/v1/portfolio_snapshots'))return snapshots;
    if(path.startsWith('/rest/v1/telegram_drafts'))return drafts.filter(d=>d.user_id===owner);
+   if(path.startsWith('/rest/v1/workspace_preferences')){if(failPreferences)throw Error('Database request failed.');return removed.length?[{data:{kinds:removed}}]:[];}
    throw Error('unexpected read '+path);
   },
   async write(path,init={}){
@@ -41,6 +44,7 @@ function fakeDb({subscriptions=[],languages={},records=[],categories=[],occurren
     if(init.method==='DELETE')drafts.splice(0,drafts.length,...drafts.filter(d=>!path.includes(d.user_id)));
     else{drafts.splice(0,drafts.length,...drafts.filter(d=>d.user_id!==body.user_id));drafts.push(body);}
    }
+   if(path.startsWith('/rest/v1/rpc/')&&rpcRejects>0){rpcRejects--;throw Error('The operation was aborted due to timeout');}
    if(path.startsWith('/rest/v1/rpc/')&&rpcFailure)return Response.json(rpcFailure,{status:400});
    return new Response(path.startsWith('/rest/v1/rpc/')?'[{}]':null,{status:failWrites?500:path.startsWith('/rest/v1/rpc/')?200:204});
   },
@@ -165,6 +169,40 @@ test('a loan with a monthly payment is due every month on its start day, until a
 test('database failures surface so the webhook can ask Telegram to retry',async()=>{
  const db=fakeDb({subscriptions:[linked],languages:{[owner]:'en'},failWrites:true});
  await assert.rejects(handleTelegramUpdate(message(500,'/stop'),db,clock),/Database request failed/);
+ // The removed-categories read is one of them: a failure must not pass as "none removed" and offer deleted categories.
+ const preferences=fakeDb({...workspace(),failPreferences:true});
+ await assert.rejects(handleTelegramUpdate(message(500,'Expense'),preferences,clock),/Database request failed/);
+ assert.equal(preferences.drafts.length,0);
+});
+
+const confirmDraft=(data={})=>({user_id:owner,step:'repayment:confirm',data:{id:clock.newId(),target_id:id(10),account_id:id(2),amount:100,date:'2026-09-30',...data},updated_at:clock.now.toISOString()});
+test('a save whose write breaks off keeps the draft, so the redelivered Save saves the entry once',async()=>{
+ const db=fakeDb({...workspace(),drafts:[confirmDraft()],rpcRejects:1});
+ // The write timed out before an answer: the webhook fails (503) and Telegram will send the same Save again.
+ await assert.rejects(handleTelegramUpdate(press(500,'f:save'),db,clock),/aborted/);
+ assert.deepEqual(db.drafts.map(d=>d.step),['repayment:confirm'],'the draft is still there for the redelivery');
+ const again=await handleTelegramUpdate(press(500,'f:save'),db,clock);
+ assert.match(again.replies[0].text,/^Saved\.\n/);
+ assert.equal(db.writes.filter(write=>write.path==='/rest/v1/rpc/telegram_planning_action').length,2,'the broken-off attempt and the one that answered');
+ assert.equal(db.drafts.length,0);
+ // The same id travels with the redelivery, so the database can recognise a write that did reach it.
+ const ids=new Set(db.writes.filter(write=>write.path.startsWith('/rest/v1/rpc/')).map(write=>write.body.p_data.id));
+ assert.deepEqual([...ids],[clock.newId()]);
+});
+
+test('a redelivered Save after a write that reached the database confirms instead of complaining about a duplicate',async()=>{
+ // The database refuses the same id as a duplicate of its primary key, and the row is there: that is a save.
+ const duplicate={code:'23505',message:'duplicate key value violates unique constraint "account_activity_pkey"',details:`Key (id)=(${clock.newId()}) already exists.`};
+ const db=fakeDb({...workspace(),activity:[{id:clock.newId()}],drafts:[confirmDraft()],rpcFailure:duplicate});
+ const saved=await handleTelegramUpdate(press(500,'f:save'),db,clock);
+ assert.match(saved.replies[0].text,/^Saved\.\n/);
+ assert.ok(saved.replies[0].keyboard.reply,'back to the menu');
+ assert.equal(db.drafts.length,0);
+ // A duplicate of something else (a name, a payment of the same due date) is still a refusal that keeps the draft.
+ const clash=fakeDb({...workspace(),drafts:[confirmDraft()],rpcFailure:{code:'23505',message:'duplicate key value violates unique constraint "payment_occurrences_unique_due"'}});
+ const refused=await handleTelegramUpdate(press(500,'f:save'),clash,clock);
+ assert.equal(refused.replies[0].text,'Could not save. This name or payment already exists.');
+ assert.deepEqual(clash.drafts.map(d=>d.step),['repayment:confirm']);
 });
 
 test('pressing Back in the chat returns to the previous question, stores the shorter draft and saves the corrected choice',async()=>{

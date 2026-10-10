@@ -27,6 +27,20 @@ export function sourcesIn(sources: readonly EarningSource[], currency: string, r
  });
 }
 
+/** Variable income has no schedule; its approximate amount is its monthly estimate. */
+const estimatedVariably = (source: EarningSource) => source.mode === 'variable' && !source.archived && (source.approx_monthly ?? 0) > 0;
+
+/** The variable sources' approximate monthly income in `currency`: the part of "Income this month" that no schedule
+ * carries, so the monthly estimate (`estimatedCashFlow`) counts the same income as the cards (CF-048). `missing` counts
+ * the sources whose currency no rate converts: their income is unknown, so the estimate that adds it is too (shown as
+ * —, with the Exchange rate unavailable note), never counted as zero. */
+export function approximateIncome(sources: readonly EarningSource[], currency: string, rates?: number | Record<string, number>): { amount: number; missing: number } {
+ const converted = sourcesIn(sources, currency, rates);
+ const amount = converted.filter(estimatedVariably).reduce((sum, source) => sum + source.approx_monthly!, 0);
+ const missing = sources.filter((source, index) => estimatedVariably(source) && converted[index].approx_monthly === null).length;
+ return { amount, missing };
+}
+
 /** A variable source's approximate monthly income, as a card that this month's receipts from it join. */
 const approximateCard = (source: EarningSource): IncomeCard => ({
  entry: { id: 'source:' + source.id, earning_source_id: source.id, name: source.name, kind: source.kind, currency: source.currency, amount: source.approx_monthly!, date: '', frequency: 'Monthly', quantity: 1, cost: 0, rate: 0, notes: '' },
@@ -59,8 +73,7 @@ export function monthlyIncomeCards(entries: Entry[], month: string, sources: Ear
  const cards: IncomeCard[] = [
   ...included.map(entry => ({ entry, amount: monthly(entry, month), asset: false, excluded: false, notes: [] as string[], received: false, receivedAmount: 0, missing: 0 })),
   ...assets.map(entry => ({ entry, amount: entry.estimated_monthly_income ?? 0, asset: true, excluded: false, notes: [] as string[], received: false, receivedAmount: 0, missing: 0 })),
-  // Variable income has no schedule; its approximate amount is the monthly estimate shown beside receipts.
-  ...sources.filter(source => source.mode === 'variable' && !source.archived && (source.approx_monthly ?? 0) > 0).map(approximateCard),
+  ...sources.filter(estimatedVariably).map(approximateCard),
  ];
  for (const entry of recurring.filter(entry => !included.includes(entry))) {
   // Undated summary rows and receipts from other months are not monthly income.

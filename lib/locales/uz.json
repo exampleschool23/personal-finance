@@ -2576,7 +2576,6 @@
   "Recurring income": "Takroriy daromad",
   "Recurring bill": "Takroriy to‘lov",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Sof daromad — bu davrdagi daromaddan xarajatlar ayirilgani: hisoblaringizda qolgan yoki jamg‘arma, investitsiya yoki qarz asosiy summasiga ketgan pul.",
-  "Deleted categories": "Oʻchirilgan toifalar",
   "Restore {name}": "{name}ni tiklash",
   "Keep at least one category of this type.": "Bu turdagi kamida bitta toifani qoldiring.",
   "Rules and templates: {count}": "Qoidalar va andozalar: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Yozuv topilmadi.",
   "Asset pages": "Aktivlar sahifalari",
   "{date} – pick the last day": "{date} – oxirgi kunni tanlang",
-  "Pick the first and last day": "Birinchi va oxirgi kunni tanlang"
+  "Pick the first and last day": "Birinchi va oxirgi kunni tanlang",
+  "Make recurring": "Takroriy qilish",
+  "{amount} recurring": "{amount} takroriy",
+  "This category already has a recurring bill.": "Bu turkumda allaqachon takroriy hisob bor.",
+  "Split allocations can only move to an added category.": "Bo‘lingan summalarni faqat qo‘shilgan turkumga o‘tkazish mumkin.",
+  "Both categories have a recurring bill. Archive one of them first.": "Ikkala toifada ham takrorlanuvchi hisob bor. Avval ulardan birini arxivlang.",
+  "Stop recurring": "Takrorlashni to‘xtatish",
+  "Where the money went": "Pul qayerga ketdi",
+  "Where the money came from": "Pul qayerdan keldi",
+  "Spent this month": "Shu oy sarflandi",
+  "Personal": "Shaxsiy"
 }

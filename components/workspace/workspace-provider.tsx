@@ -15,6 +15,7 @@ import { CategoryHueContext, CategoryIconsContext } from '@/components/category-
 import { depositMonth } from '@/lib/deposit-interest';
 import { useEarningSources } from '@/hooks/use-earning-sources';
 import { withAssetIncomePlans, legacyEarningSources, sourceSchedule } from '@/lib/earning-sources';
+import { approximateIncome } from '@/lib/monthly-income-cards';
 import { saveTrackingStartRequest } from '@/hooks/use-comparison-profile';
 import { marketRates } from '@/lib/market';
 import { usePortfolioSnapshots } from '@/hooks/use-portfolio-snapshots';
@@ -53,6 +54,9 @@ import { DisplayCurrencyProvider } from '@/components/display-money';
 
 
 /** Session, records and actions shared by the drawer, the top bar, the dialogs and every screen. */
+/** The monthly estimate is known only when every budget line, planning record and variable income source converts to the display currency: each count of unconvertible ones is zero. */
+const estimateConverted = (missingBudget: number, missingPlanning: number, missingSources: number) => missingBudget === 0 && missingPlanning === 0 && missingSources === 0;
+
 function useWorkspaceState() {
     const pathname = usePathname();
     const router = useRouter();
@@ -129,10 +133,12 @@ function useWorkspaceState() {
     const budget = useBudget(user, demo, reload);
     const budgetForecast = useForecastBudget({ budget, data: planning.data, splits: transactionTools.data.splits, currency, market });
     const monthBudget = budgetForecast.linesIn(planningMonth);
-    // A schedule or budget no rate converts leaves the estimate unknown (—), as on Goals, never counted as zero.
-    const forecastReady = !planning.loading && !planning.error && budgetForecast.ready && !monthBudget.missing && !unconvertedPlanning;
+    // Variable income sources count their approximate amount, as the Cash flow income cards do (CF-048).
+    const variableIncome = approximateIncome(earningSources.sources, currency, marketRates(market));
+    // A schedule, budget or income source no rate converts leaves the estimate unknown (—), as on Goals, never counted as zero.
+    const forecastReady = !planning.loading && !planning.error && budgetForecast.ready && estimateConverted(monthBudget.missing, unconvertedPlanning, variableIncome.missing);
     // Full planning rows, as on Goals: summary rows leave out loan and debt payments.
-    const forecast = estimatedCashFlow(monthlyIncomeEntries, planningMonth, monthBudget.lines);
+    const forecast = estimatedCashFlow(monthlyIncomeEntries, planningMonth, monthBudget.lines, variableIncome.amount);
     const table = useRecordTable({ user, demo, section, locale, currency, market, reload, rows, setRows, setSummary, setError, current, planning });
     const { sectionKey, historyPage, tableLoading, summaryLoaded } = table;
     // Viewing someone's household as a viewer records no daily snapshot; wait to know the role first.
@@ -162,13 +168,13 @@ function useWorkspaceState() {
     }
     return {
         // Session
-        ready, user, demo, preview, pathname, section, sectionKey, cashFlowSection, busy, configured, error, login, logout, startDemo, clearLocalSession,
+        ready, user, demo, preview, pathname, section, sectionKey, busy, configured, error, login, logout, startDemo, clearLocalSession,
         // Household sharing
         household, readOnly, pendingInvite, dismissInvite, assignRecordOwner: actions.assignRecordOwner, setAccountOwner: actions.setAccountOwner,
         // Preferences
         currency, setCurrency: settings.setCurrency, preferencesData, applyPreferences: settings.applyPreferences, savePreferences: settings.savePreferences, settingsLoading, settingsError: settings.settingsError, retrySettings: settings.retrySettings, workspacePreferences, onboardingNeeded: settings.onboardingNeeded, restartOnboarding: settings.restartOnboarding, saveTrackingStart: saveTrackingStartRequest,
         // Records and market data
-        rows, summary, current, categoryIcons, removedCategories, market, marketLoading, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, snapshots,
+        rows, summary, current, categoryIcons, removedCategories, market, marketError, refresh, quoteLabel, money, planning, earningSources, transactionTools, snapshots,
         reload, refreshRecords, forecast, forecastReady, budget, forecastBudget: budgetForecast.cash, forecastBudgetState: { loading: budgetForecast.loading, error: budgetForecast.error, retry: budget.retry }, goalBudget: budgetForecast.view, forecastMonth, setForecastMonth, excludedCurrencies, netWorth, totalDebt, monthlyIncomeEntries,
         availableBusinesses, businessList, tags, attachments, overdueCount, workspaceLoading: loading, deletedItems: bin.deletedItems, restoreDemoItem: bin.restoreDemoItem, discardDeletedItem: bin.discardDeletedItem,
         // Record table

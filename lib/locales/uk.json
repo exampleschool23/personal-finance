@@ -2576,7 +2576,6 @@
   "Recurring income": "Регулярний дохід",
   "Recurring bill": "Регулярний рахунок",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Чистий дохід — це доходи мінус витрати за період: те, що залишилося на рахунках або пішло на заощадження, інвестиції чи погашення основного боргу.",
-  "Deleted categories": "Видалені категорії",
   "Restore {name}": "Відновити {name}",
   "Keep at least one category of this type.": "Залиште принаймні одну категорію цього типу.",
   "Rules and templates: {count}": "Правила й шаблони: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Запис не знайдено.",
   "Asset pages": "Сторінки активів",
   "{date} – pick the last day": "{date} – виберіть останній день",
-  "Pick the first and last day": "Виберіть перший і останній день"
+  "Pick the first and last day": "Виберіть перший і останній день",
+  "Make recurring": "Зробити регулярним",
+  "{amount} recurring": "{amount} регулярно",
+  "This category already has a recurring bill.": "Ця категорія вже має регулярний рахунок.",
+  "Split allocations can only move to an added category.": "Розділені суми можна перенести лише до доданої категорії.",
+  "Both categories have a recurring bill. Archive one of them first.": "Обидві категорії мають регулярний рахунок. Спочатку заархівуйте один із них.",
+  "Stop recurring": "Зупинити повторення",
+  "Where the money went": "Куди пішли гроші",
+  "Where the money came from": "Звідки прийшли гроші",
+  "Spent this month": "Витрачено цього місяця",
+  "Personal": "Особисте"
 }

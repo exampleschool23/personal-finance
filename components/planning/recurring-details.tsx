@@ -1,17 +1,15 @@
 "use client";
 import { useMemo, useState } from 'react';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { chartAxis, chartGrid, chartHeight, chartMargin, chartTooltip, chartValueAxis, moneyTick, monthLabel, monthTick, plannedBar, recordedBar } from '@/components/presentation-foundation/chart';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { EmptyState } from '@/components/presentation-foundation/empty-state';
 import { Segmented } from '@/components/presentation-foundation/segmented';
-import { SeriesLegend, toggleKey } from '@/components/presentation-foundation/series-legend';
+import { HistoryChart } from '@/components/presentation-foundation/history-chart';
 import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/components/language-provider';
 import { useDisplayMoney } from '@/components/display-money';
 import { frequencyLabels } from '@/lib/finance';
-import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
+import { formatDate, formatNumber, formatPercent } from '@/lib/format';
 import type { PlanningData } from '@/lib/planning';
 import type { RecurringItem } from '@/lib/recurring';
 import { nextOccurrence, scheduleTrack } from '@/lib/recurring-history';
@@ -19,33 +17,12 @@ import { useDueLabel } from './recurring-rows';
 import { BarChart3 } from 'lucide-react';
 
 type Props = { item: RecurringItem; data: PlanningData; today: string; onClose: () => void };
-type Track = ReturnType<typeof scheduleTrack>;
 
 /** The details dialog the Recurring list opens on a tap: `open` shows an occurrence's schedule, `dialog` renders it. Edit and
  * Record payment stay on the row, so the dialog only reads; its × closes it. */
 export function useRecurringDetails(data: PlanningData, today: string) {
  const [item, setItem] = useState<RecurringItem | null>(null);
  return { open: setItem, dialog: item && <RecurringDetails item={item} data={data} today={today} onClose={() => setItem(null)}/> };
-}
-
-/** Month by month, what was recorded (solid) inside the outline of what was scheduled, so a short payment shows an unfilled top. */
-function HistoryChart({ points, currency, fill, done }: { points: Track['points']; currency: string; fill: string; done: string }) {
- const { t, locale } = useLanguage();
- const [hidden, setHidden] = useState<string[]>([]);
- const money = (value: number) => formatMoney(value, currency, locale);
- const names: Record<string, string> = { recorded: done, scheduled: t('Scheduled payment') };
- return <>
-  <div className="portfolio-chart"><ResponsiveContainer width="100%" height={chartHeight.compact}><BarChart data={points} accessibilityLayer margin={chartMargin}>
-   <CartesianGrid {...chartGrid}/>
-   <XAxis xAxisId="scheduled" dataKey="month" hide/>
-   <XAxis xAxisId="recorded" dataKey="month" tickFormatter={monthTick(locale)} minTickGap={16} {...chartAxis}/>
-   <YAxis tickFormatter={moneyTick(currency, locale)} {...chartValueAxis}/>
-   <Tooltip {...chartTooltip} labelFormatter={monthLabel(locale)} formatter={(amount, name) => [money(Number(amount)), names[String(name)] ?? name]}/>
-   {!hidden.includes('scheduled') && <Bar xAxisId="scheduled" dataKey="scheduled" name="scheduled" {...plannedBar}/>}
-   {!hidden.includes('recorded') && <Bar xAxisId="recorded" dataKey="recorded" name="recorded" {...recordedBar} fill={fill}/>}
-  </BarChart></ResponsiveContainer></div>
-  <SeriesLegend items={[{ key: 'recorded', label: done, swatch: <i style={{ background: fill }}/> }, { key: 'scheduled', label: t('Scheduled payment'), swatch: <i className="chart-planned-key"/> }]} hidden={hidden} onToggle={key => setHidden(previous => toggleKey(previous, key))}/>
- </>;
 }
 
 /** Each occurrence in the period, newest first: its date, whether it was settled, and what came against what was scheduled. */

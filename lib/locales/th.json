@@ -2576,7 +2576,6 @@
   "Recurring income": "รายได้ประจำ",
   "Recurring bill": "บิลประจำ",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "รายได้สุทธิคือรายได้หักค่าใช้จ่ายในช่วงนี้ ได้แก่เงินที่เหลืออยู่ในบัญชี หรือไปเป็นเงินออม การลงทุน หรือการชำระเงินต้นของเงินกู้",
-  "Deleted categories": "หมวดหมู่ที่ลบแล้ว",
   "Restore {name}": "กู้คืน {name}",
   "Keep at least one category of this type.": "เก็บหมวดหมู่ประเภทนี้ไว้อย่างน้อยหนึ่งรายการ",
   "Rules and templates: {count}": "กฎและเทมเพลต: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "ไม่พบรายการ",
   "Asset pages": "หน้าสินทรัพย์",
   "{date} – pick the last day": "{date} – เลือกวันสุดท้าย",
-  "Pick the first and last day": "เลือกวันแรกและวันสุดท้าย"
+  "Pick the first and last day": "เลือกวันแรกและวันสุดท้าย",
+  "Make recurring": "ตั้งเป็นรายการประจำ",
+  "{amount} recurring": "ประจำ {amount}",
+  "This category already has a recurring bill.": "หมวดหมู่นี้มีบิลประจำอยู่แล้ว",
+  "Split allocations can only move to an added category.": "ย้ายรายการที่แบ่งได้เฉพาะไปยังหมวดหมู่ที่เพิ่มเอง",
+  "Both categories have a recurring bill. Archive one of them first.": "ทั้งสองหมวดหมู่มีบิลประจำ กรุณาเก็บถาวรบิลใดบิลหนึ่งก่อน",
+  "Stop recurring": "หยุดรายการประจำ",
+  "Where the money went": "เงินไปที่ไหน",
+  "Where the money came from": "เงินมาจากไหน",
+  "Spent this month": "ใช้จ่ายเดือนนี้",
+  "Personal": "ส่วนตัว"
 }

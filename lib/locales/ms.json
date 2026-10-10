@@ -2576,7 +2576,6 @@
   "Recurring income": "Pendapatan berulang",
   "Recurring bill": "Bil berulang",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Pendapatan bersih ialah pendapatan ditolak perbelanjaan dalam tempoh ini: wang yang kekal dalam akaun anda atau pergi ke simpanan, pelaburan atau pokok pinjaman.",
-  "Deleted categories": "Kategori yang dipadam",
   "Restore {name}": "Pulihkan {name}",
   "Keep at least one category of this type.": "Kekalkan sekurang-kurangnya satu kategori jenis ini.",
   "Rules and templates: {count}": "Peraturan dan templat: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Rekod tidak ditemui.",
   "Asset pages": "Halaman aset",
   "{date} – pick the last day": "{date} – pilih hari terakhir",
-  "Pick the first and last day": "Pilih hari pertama dan terakhir"
+  "Pick the first and last day": "Pilih hari pertama dan terakhir",
+  "Make recurring": "Jadikan berulang",
+  "{amount} recurring": "{amount} berulang",
+  "This category already has a recurring bill.": "Kategori ini sudah mempunyai bil berulang.",
+  "Split allocations can only move to an added category.": "Pecahan hanya boleh dipindahkan ke kategori yang ditambah.",
+  "Both categories have a recurring bill. Archive one of them first.": "Kedua-dua kategori mempunyai bil berulang. Arkibkan salah satunya dahulu.",
+  "Stop recurring": "Hentikan berulang",
+  "Where the money went": "Ke mana wang pergi",
+  "Where the money came from": "Dari mana wang datang",
+  "Spent this month": "Dibelanjakan bulan ini",
+  "Personal": "Peribadi"
 }

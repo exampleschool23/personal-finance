@@ -2576,7 +2576,6 @@
   "Recurring income": "Umuulit na kita",
   "Recurring bill": "Umuulit na bayarin",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Ang netong kita ay ang kita bawas ang gastos sa panahong ito: ang naiwan sa iyong mga account o napunta sa ipon, pamumuhunan o prinsipal ng utang.",
-  "Deleted categories": "Mga binurang kategorya",
   "Restore {name}": "Ibalik ang {name}",
   "Keep at least one category of this type.": "Mag-iwan ng kahit isang kategorya ng ganitong uri.",
   "Rules and templates: {count}": "Mga patakaran at template: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Hindi nakita ang record.",
   "Asset pages": "Mga pahina ng asset",
   "{date} – pick the last day": "{date} – piliin ang huling araw",
-  "Pick the first and last day": "Piliin ang una at huling araw"
+  "Pick the first and last day": "Piliin ang una at huling araw",
+  "Make recurring": "Gawing paulit-ulit",
+  "{amount} recurring": "{amount} paulit-ulit",
+  "This category already has a recurring bill.": "May paulit-ulit na bayarin na ang kategoryang ito.",
+  "Split allocations can only move to an added category.": "Ang mga hati ay maililipat lamang sa idinagdag na kategorya.",
+  "Both categories have a recurring bill. Archive one of them first.": "Parehong may paulit-ulit na bill ang dalawang kategorya. I-archive muna ang isa sa mga ito.",
+  "Stop recurring": "Ihinto ang pag-ulit",
+  "Where the money went": "Saan napunta ang pera",
+  "Where the money came from": "Saan nanggaling ang pera",
+  "Spent this month": "Nagastos ngayong buwan",
+  "Personal": "Personal"
 }

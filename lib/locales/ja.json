@@ -2576,7 +2576,6 @@
   "Recurring income": "定期収入",
   "Recurring bill": "定期支払い",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "純収入はこの期間の収入から支出を引いたものです。口座に残ったお金、または貯蓄・投資・ローン元金の返済に回ったお金です。",
-  "Deleted categories": "削除したカテゴリ",
   "Restore {name}": "{name}を元に戻す",
   "Keep at least one category of this type.": "この種類のカテゴリを少なくとも1つ残してください。",
   "Rules and templates: {count}": "ルールとテンプレート：{count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "記録が見つかりません。",
   "Asset pages": "資産のページ",
   "{date} – pick the last day": "{date} – 最終日を選択",
-  "Pick the first and last day": "開始日と最終日を選択"
+  "Pick the first and last day": "開始日と最終日を選択",
+  "Make recurring": "定期にする",
+  "{amount} recurring": "定期 {amount}",
+  "This category already has a recurring bill.": "このカテゴリにはすでに定期請求があります。",
+  "Split allocations can only move to an added category.": "分割は追加したカテゴリにのみ移動できます。",
+  "Both categories have a recurring bill. Archive one of them first.": "両方のカテゴリに定期的な請求があります。まずどちらかをアーカイブしてください。",
+  "Stop recurring": "定期をやめる",
+  "Where the money went": "お金の行き先",
+  "Where the money came from": "お金の出どころ",
+  "Spent this month": "今月の支出",
+  "Personal": "個人"
 }

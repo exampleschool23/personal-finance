@@ -2576,7 +2576,6 @@
   "Recurring income": "Opakovaný příjem",
   "Recurring bill": "Opakovaná platba",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Čistý příjem jsou příjmy minus výdaje za toto období: co zůstalo na vašich účtech nebo šlo na úspory, investice či splátky jistiny úvěrů.",
-  "Deleted categories": "Smazané kategorie",
   "Restore {name}": "Obnovit {name}",
   "Keep at least one category of this type.": "Ponechte alespoň jednu kategorii tohoto typu.",
   "Rules and templates: {count}": "Pravidla a šablony: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Záznam nebyl nalezen.",
   "Asset pages": "Stránky majetku",
   "{date} – pick the last day": "{date} – vyberte poslední den",
-  "Pick the first and last day": "Vyberte první a poslední den"
+  "Pick the first and last day": "Vyberte první a poslední den",
+  "Make recurring": "Nastavit jako opakující se",
+  "{amount} recurring": "{amount} opakovaně",
+  "This category already has a recurring bill.": "Tato kategorie už má opakovaný účet.",
+  "Split allocations can only move to an added category.": "Rozdělené částky lze přesunout jen do přidané kategorie.",
+  "Both categories have a recurring bill. Archive one of them first.": "Obě kategorie mají opakovaný účet. Nejprve jeden z nich archivujte.",
+  "Stop recurring": "Ukončit opakování",
+  "Where the money went": "Kam šly peníze",
+  "Where the money came from": "Odkud přišly peníze",
+  "Spent this month": "Utraceno tento měsíc",
+  "Personal": "Osobní"
 }

@@ -147,3 +147,24 @@ test('income totals add every card received and only included estimates', () => 
  const { incomeCardTotals } = loadTS('lib/monthly-income-cards.ts');
  assert.deepEqual(incomeCardTotals([{ amount: 5700, excluded: false, receivedAmount: 5700 }, { amount: 1000, excluded: false, receivedAmount: 424 }, { amount: 200, excluded: true, receivedAmount: 200 }]), { estimate: 6700, received: 6324, missing: 0 });
 });
+
+test('CF-048: the monthly estimate counts the variable sources\' approximate income, as the income cards do', () => {
+ const { estimatedCashFlow } = loadTS('lib/finance.ts');
+ const { approximateIncome, incomeCardTotals } = loadTS('lib/monthly-income-cards.ts');
+ const salary = entry('salary', 'Salary', { amount: 2000 });
+ const sources = [
+  { id: 'v1', name: 'QA Freelance', kind: 'Other income', currency: 'USD', mode: 'variable', archived: false, approx_monthly: 1200 },
+  { id: 'v2', name: 'QA Clients', kind: 'Other income', currency: 'USD', mode: 'variable', archived: false, approx_monthly: 600 },
+  { id: 'v3', name: 'QA Old', kind: 'Other income', currency: 'USD', mode: 'variable', archived: true, approx_monthly: 900 },
+  { id: 'v4', name: 'QA EUR', kind: 'Other income', currency: 'EUR', mode: 'variable', archived: false, approx_monthly: 100 },
+ ];
+ const rates = { EUR: 0.8 };
+ const variable = approximateIncome(sources, 'USD', rates);
+ assert.deepEqual(variable, { amount: 1800 + 125, missing: 0 }, 'archived sources drop out; EUR 100 at 0.8 EUR per USD is $125');
+ const cards = monthlyIncomeCards([salary], '2026-09', sources.map(source => source.currency === 'EUR' ? { ...source, currency: 'USD', approx_monthly: 125 } : source));
+ const estimate = estimatedCashFlow([salary], '2026-09', undefined, variable.amount);
+ assert.equal(estimate.plannedIncome, incomeCardTotals(cards).estimate);
+ assert.equal(estimate.forecast, 2000 + 1925);
+ assert.deepEqual(approximateIncome([{ ...sources[3] }], 'USD', {}), { amount: 0, missing: 1 }, 'MONEY-008: no rate: left out and counted missing, so the estimate reads —, never too low');
+ assert.deepEqual(approximateIncome([sources[0], sources[3], sources[2], { ...sources[3], mode: 'fixed' }], 'USD', {}), { amount: 1200, missing: 1 }, 'an archived or fixed source is neither counted nor missing');
+});

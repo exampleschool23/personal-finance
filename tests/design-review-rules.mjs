@@ -152,12 +152,12 @@ test('names, chips and filters show their text instead of an ellipsis (LIST-018,
  assert.doesNotMatch(fs.readFileSync('components/workspace/records-table.tsx','utf8'),/useColumnsFit/);
  assert.match(css,/\.records :is\(th,td\):first-child\{position:sticky;inset-inline-start:0;z-index:1;min-width:13rem;/);
  assert.match(css,/@container content \(max-width:560px\)\{\n \.records table thead/);
- assert.match(css,/\.records table td:first-child\{position:static;flex:1 1 calc\(100% - 10rem\)/,'name and value share the card\'s first line');
+ assert.match(css,/\.records table td:first-child\{position:static;flex:1 1 max\(12rem,calc\(100% - 10rem\)\)/,'name and value share the card\'s first line');
  assert.match(css,/\.records table tbody tr::after\{content:"";order:1;flex-basis:100%;height:0\}/,'the category always starts the second line');
  assert.doesNotMatch(css,/\.record-name (?:strong|small)\{[^}]*text-overflow:ellipsis/);
  // Record filters wrap by themselves rather than shrink in four fixed columns.
  assert.match(css,/\.record-filter-options\{min-width:0;display:flex;flex-wrap:wrap/);
- assert.match(css,/\.record-filter-options>label\{flex:1 1 9\.5rem;max-width:16rem\}/);
+ assert.match(css,/\.record-filter-options>label\{flex:1 1 11rem;max-width:16rem\}/);
  assert.doesNotMatch(css,/@media\(max-width:1200px\)\{\.workspace \.content \.records \.record-filters/,'a window-width guess, not the page width');
  // A loan, debt or mortgage leads with Record payment; its tracker waits in the ⋯ menu.
  const table=fs.readFileSync('components/workspace/records-table.tsx','utf8');
@@ -180,7 +180,7 @@ test('budget rows never hide Actual: it moves under the name with its label when
 test('cards line up on one edge, and summary tables keep their figures together (LIST-021, LIST-023)',()=>{
  const css=stylesheet();
  // The table's 24px first and last cell padding stays out of a record card; the second line starts under the name text.
- assert.match(css,/\.records table td:first-child\{position:static;flex:1 1 calc\(100% - 10rem\);min-width:0;padding:0;/);
+ assert.match(css,/\.records table td:first-child\{position:static;flex:1 1 max\(12rem,calc\(100% - 10rem\)\);min-width:0;padding:0;/);
  assert.match(css,/\.records table td:nth-child\(2\)\{order:2;display:flex;flex-wrap:wrap;flex:0 1 auto;min-width:0;gap:6px;margin-inline-start:56px\}/,'category chips wrap first');
  assert.match(css,/\.records table td:nth-child\(3\)\{order:3;flex:1 0 auto;max-width:100%;/,'a date keeps its own width beside the category (it once collapsed to 8px and spilled out of the card)');
  // A visually hidden header is a block, so its overflow:hidden applies; table sections ignore it and widened the card scroller by 26px.
@@ -273,7 +273,7 @@ test('Reports keeps the 8 October 2026 review fixes (SCR-095, SCR-096, HEAD-011,
 test('the 9 October 2026 full review fixes stay fixed (SCR-097…SCR-104, HEAD-016, DLG-023, COMP-040, A11Y-017)', () => {
  const css=stylesheet(),read=file=>fs.readFileSync(file,'utf8');
  // Names and goal meta lines wrap instead of ellipsising (LIST-007).
- assert.match(css,/\.goal-row-line>strong:first-child\{min-width:0;font-size:var\(--type-body\);font-weight:500;overflow-wrap:break-word\}/);
+ assert.match(css,/\.goal-row-line>strong:first-child\{flex:1 1 8rem;min-width:0;font-size:var\(--type-body\);font-weight:500;overflow-wrap:break-word\}/);
  assert.match(css,/\.goal-row-meta>span:first-child>span:last-child\{min-width:0;overflow-wrap:break-word\}/);
  assert.match(css,/\.recurring-edit\{[^}]*overflow-wrap:break-word/);assert.doesNotMatch(css,/\.recurring-edit\{[^}]*text-overflow:ellipsis/);
  assert.match(css,/\.transaction-merchant strong\{overflow-wrap:break-word;/);
@@ -329,4 +329,32 @@ test('budget History reads on every bar and fits the window; the Year view marks
  assert.match(css,/\.budget-year \[data-current\]\{background-image:/);
  const screen=fs.readFileSync('components/workspace/screens/budget-screen.tsx','utf8');
  assert.equal((screen.match(/'data-current': months\[position\] === current/g)||[]).length,2,'category and overall cells mark the current month');
+});
+
+// 10 October 2026 size sweep (`.claude/skills/dr/scripts/size-sweep.mjs`): rows at 280–375 px squeezed names to one letter a line,
+// covered them with fields and buttons, and ellipsised account names.
+test('narrow rows keep names whole and never stack controls on them (RESP-030, RESP-031, RESP-041)',()=>{
+ const css=stylesheet();
+ const rule=selector=>{const at=css.indexOf(selector+'{');assert.ok(at>=0,`${selector} exists`);return css.slice(at,css.indexOf('}',at));};
+ // Figures never break between digits; names and account lines wrap at spaces instead of being cut with an ellipsis.
+ assert.doesNotMatch(rule('.portfolio-headline strong'),/overflow-wrap:anywhere/);
+ for(const selector of ['.transaction-merchant small','.report-business-name>span:last-child','.goal-funding-allocations>li>span']) assert.doesNotMatch(rule(selector),/text-overflow:ellipsis|white-space:nowrap/,selector);
+ // A share bar's label may wrap inside its column instead of running under the amount.
+ assert.doesNotMatch(rule('.share-bar'),/min-width:max-content/);
+ // Names keep a minimum beside their figures; the figures move to the next line below it.
+ assert.match(rule('.goal-row-line>strong:first-child'),/flex:1 1 8rem/);
+ assert.match(rule('.goal-row-line'),/flex-wrap:wrap/);
+ assert.match(rule(' .records table td:first-child'),/flex:1 1 max\(12rem/);
+ // Phone layouts: summary-table names, budget rows, business cards and recurring actions each take their own line.
+ assert.match(css,/@container content \(max-width:420px\)\{\s*\.stack-table tbody td:first-child\{grid-row:1;grid-column:1\/-1\}/);
+ assert.match(css,/@container content \(max-width:420px\)\{\.budget-row:has\(>\.budget-actual\[data-label\]\)\{grid-template-columns:minmax\(0,1fr\) auto 28px\}\.budget-row:has\(>\.budget-actual\[data-label\]\)>\.budget-row-end\{grid-area:1\/3\/3\/4\}/);
+ // The row menu has its own last column on every width, after Remaining.
+ assert.match(css,/\.budget-row\{display:grid;grid-template-columns:minmax\(9rem,1fr\) repeat\(3,minmax\(92px,128px\)\) 28px;/);
+ assert.match(css,/\.business-card-list\{container:business-list\/inline-size\}/);
+ assert.match(css,/@container recurring \(max-width:340px\)\{[^\n]*\.row-actions\{grid-area:3\/1\/4\/4\}/);
+ // Long compound words in other languages hyphenate instead of overflowing a phone column (German budget and recurring rows).
+ assert.match(css,/:root:not\(:lang\(en\)\) body\{hyphens:auto;hyphenate-limit-chars:12 5 5\}/);
+ // Popovers never start above the screen or run past its bottom; menu items take the 44px touch floor (DLG-024).
+ assert.match(css,/:where\(\[data-slot=popover-content\]\)\{max-height:var\(--radix-popover-content-available-height\);overflow-y:auto/);
+ assert.match(css,/:is\(button,\[role=button\],\[role=tab\],\[role\^=menuitem\],/);
 });

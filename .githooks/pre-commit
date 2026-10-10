@@ -1,0 +1,8 @@
+#!/bin/sh
+# Refuse the commit when ESLint (the size limits in eslint.config.mjs, this
+# project's SwiftLint equivalent) reports a problem.
+echo "pre-commit: running npm run lint"
+if ! npm run lint --silent; then
+  echo "pre-commit: lint failed, commit aborted. Fix the problems above and commit again." >&2
+  exit 1
+fi

@@ -77,7 +77,18 @@ goal detail, edit, scenarios, delete confirm. Settings: delete category
   **test account** (sparse data, empty states). Enter the sample once and move only
   with the sidebar; a reload leaves it.
 - Viewports: desktop (pane width), tablet `resize_window` 768×1024, mobile preset
-  375×812. Reset to desktop at the end.
+  375×812. Reset to desktop at the end. For size cases (RESP, DLG-021–032, COMP-041–048)
+  use the full ladder: 280×653, 320×568, 375×812, 667×375 (landscape), 768×1024,
+  1024×768, 1185×800, 1440×900, plus the seams 414, 540, 600, 820, 912, 1180 and wide
+  1920 / 2560. Phones and tablets with a coarse pointer, desktops with a fine one.
+- **Size sweep** (fast, covers every workspace screen at every size): with a dev server
+  running, `node .claude/skills/dr/scripts/size-sweep.mjs` enters the sample workspace in
+  headless Chromium and prints Audits A, J, M, N and the 16px-input check per screen ×
+  size. `BASE=http://localhost:5001` picks the server, `ONLY=/budget,/goals` limits
+  routes, `LANG_CODE=de` sets the language, `TOUCH_ONLY=1` skips desktop sizes and
+  `DIALOGS=1` also opens every page button's dialog, menu or popover at 320, 667×375 and
+  1024 and runs Audit O inside it. It reads only; demo-mode changes stay in that
+  browser. Confirm each hit with a screenshot before reporting it.
 - Themes: light and dark (top-bar toggle); restore the user's theme at the end.
 - Languages: English, then Arabic (RTL) and German (long words) for layout cases;
   restore English.
@@ -166,6 +177,58 @@ phone and wide desktop, where guessed breakpoints misfire). A hit is a RESP-022
 failure unless the second line is deliberate (a wrapped chip list that
 fills its first line, a chart legend); fix it with `useColumnsFit` or a layout
 that wraps by itself (AGENTS.md, Interface design system).
+
+```js
+// M. Overlap: two visible text or control boxes on top of each other (RESP-030). Skips hidden content
+// (closed <details> still has boxes in Chrome), clipped content, sticky/fixed bars and charts.
+const shown=e=>{if(!e.checkVisibility({opacityProperty:true,visibilityProperty:true,contentVisibilityAuto:true})||e.closest('svg,.sr-only,[data-dragging]'))return false;const o=e.getBoundingClientRect();for(let p=e;p;p=p.parentElement){const c=getComputedStyle(p);if(/fixed|sticky/.test(c.position))return false;if(p!==e&&/hidden|clip|auto|scroll/.test(c.overflowX+c.overflowY)){const q=p.getBoundingClientRect();if(o.bottom<=q.top+1||o.top>=q.bottom-1||o.right<=q.left+1||o.left>=q.right-1)return false}}return o.width>2&&o.height>2};
+const leaf=[...document.querySelectorAll('main :is(button,a,input,select,.status-badge,strong,small,h1,h2,h3,label,span,p,td)')].filter(e=>(e.matches('button,a,input,select')||[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim()))&&shown(e)).map(e=>[e,e.getBoundingClientRect()]),hits=[];
+for(let i=0;i<leaf.length&&hits.length<10;i++)for(let j=i+1;j<leaf.length;j++){const[a,r]=leaf[i],[b,q]=leaf[j];if(a.contains(b)||b.contains(a))continue;const w=Math.min(r.right,q.right)-Math.max(r.left,q.left),h=Math.min(r.bottom,q.bottom)-Math.max(r.top,q.top);if(w>3&&h>3){hits.push(`"${a.textContent.trim().slice(0,24)}" × "${b.textContent.trim().slice(0,24)}" ${Math.round(w)}x${Math.round(h)}`);break}}
+hits
+```
+```js
+// N. Words broken between letters (RESP-031, TYPE-012): a word (split at spaces, hyphens and slashes) whose glyphs sit on two lines.
+const hits=[],walk=document.createTreeWalker(document.querySelector('main'),NodeFilter.SHOW_TEXT);
+for(let n;(n=walk.nextNode())&&hits.length<15;){if(!n.parentElement?.checkVisibility()||n.parentElement.closest('svg,.sr-only')||getComputedStyle(n.parentElement).hyphens==='auto')continue;
+ for(const m of n.textContent.matchAll(/[^\s\-‐‑–—/]{3,}/g)){const r=document.createRange();r.setStart(n,m.index);r.setEnd(n,m.index+m[0].length);
+  if(new Set([...r.getClientRects()].filter(q=>q.width>0).map(q=>Math.round(q.top))).size>1){hits.push(n.parentElement.className+' "'+m[0]+'"');break}}}
+hits
+```
+The usual cause is `overflow-wrap:anywhere` (it lets flex and grid squeeze a column to one letter) or a
+`minmax(0,1fr)` name track beside wide trailing cells. Fix by giving the name a minimum (`flex:1 1 8rem` with
+`flex-wrap`) or moving the figures to a second line below a container width, never by shrinking the type.
+Outside English, words of 12+ letters hyphenate (`hyphens:auto` in `foundation.css`), so the audit skips
+hyphenating text; check those by eye for a visible hyphen.
+```js
+// O. Dialog fit (DLG-021, DLG-024–DLG-027): run with one dialog, menu or popover open.
+const d=[...document.querySelectorAll('[role=dialog],[role=alertdialog],[role=menu],[data-slot=popover-content]')].pop(),r=d.getBoundingClientRect(),out=[];
+if(r.left<-1||r.right>innerWidth+1)out.push(`wider than screen ${Math.round(r.left)}..${Math.round(r.right)}/${innerWidth}`);
+const sc=[d,...d.querySelectorAll('*')].find(e=>/auto|scroll/.test(getComputedStyle(e).overflowY)&&e.scrollHeight>e.clientHeight+1);
+if(r.top<-1||(r.bottom>innerHeight+1&&!sc))out.push(`taller than screen ${Math.round(r.top)}..${Math.round(r.bottom)}/${innerHeight}, ${sc?'scrolls':'no scroller'}`);
+if(d.scrollWidth>d.clientWidth+1)out.push(`sideways scroll ${d.scrollWidth}>${d.clientWidth}`);
+const btn=[...d.querySelectorAll('button')].filter(b=>b.offsetParent&&b.innerText.trim());
+btn.filter(b=>{const g=document.createRange();g.selectNodeContents(b);return new Set([...g.getClientRects()].map(q=>Math.round(q.top))).size>1}).forEach(b=>out.push('two-line button: '+b.innerText.trim()));
+const foot=d.querySelector('.record-form-footer,footer');if(foot){const hs=[...foot.querySelectorAll('button')].filter(b=>b.offsetParent).map(b=>b.offsetHeight);if(new Set(hs).size>1)out.push('footer heights '+hs)}
+({title:d.querySelector('h2,[data-slot$=title]')?.textContent.trim(),width:Math.round(r.width),out})
+```
+```js
+// P. Button sizes (COMP-041–COMP-045): heights by size and variant, two-line labels, square icon buttons, filled buttons per surface.
+const bs=[...document.querySelectorAll('main [data-slot=button],[role=dialog] [data-slot=button]')].filter(b=>b.offsetParent),by={};
+bs.forEach(b=>{const k=(b.dataset.size||'default')+'/'+(b.dataset.variant||'default');(by[k]??=new Set).add(b.offsetHeight)});
+({heights:Object.fromEntries(Object.entries(by).map(([k,v])=>[k,[...v].sort((a,b)=>a-b)])),
+ twoLine:bs.filter(b=>{const g=document.createRange();g.selectNodeContents(b);return new Set([...g.getClientRects()].map(q=>Math.round(q.top))).size>1}).map(b=>b.innerText.trim().slice(0,30)),
+ notSquare:bs.filter(b=>!b.innerText.trim()&&Math.abs(b.offsetWidth-b.offsetHeight)>1).map(b=>(b.getAttribute('aria-label')||'?')+' '+b.offsetWidth+'x'+b.offsetHeight),
+ filledPerSurface:[...document.querySelectorAll('.page-heading,.topbar,[role=dialog] .record-form-footer,.empty-state')].map(s=>[s.className.split(' ')[0],s.querySelectorAll('[data-slot=button][data-variant=default],[data-slot=button]:not([data-variant])').length]).filter(([,n])=>n>1)})
+```
+```js
+// Q. Motion inventory (MOT-003, MOT-009–MOT-011, MOT-015): start it, then open a dialog or switch a page, then read window.__motion.
+window.__motion={anims:[],shift:0};new PerformanceObserver(l=>l.getEntries().forEach(e=>{if(!e.hadRecentInput)window.__motion.shift+=e.value})).observe({type:'layout-shift',buffered:false});
+const grab=()=>document.getAnimations().forEach(a=>{const t=a.effect?.getTiming?.(),k=a.effect?.getKeyframes?.()??[];window.__motion.anims.push({target:(a.effect?.target?.className||'').toString().slice(0,40),ms:t?.duration,props:[...new Set(k.flatMap(f=>Object.keys(f).filter(p=>!['offset','easing','composite','computedOffset'].includes(p))))].join(',')})});
+let n=0;const id=setInterval(()=>{grab();if(++n>20)clearInterval(id)},50);
+// later: [...new Map(window.__motion.anims.map(a=>[a.target+a.props,a])).values()], window.__motion.shift
+```
+Expect durations ≤ 300ms (dialogs ≤ 200ms in, ≤ 150ms out), only `opacity`/`transform` (or the shimmer's
+`background-position`), and a shift total ≤ 0.1 per page switch.
 
 
 Source checks (Bash, read-only): inline `Intl.`/`toLocaleString`/`toFixed` in

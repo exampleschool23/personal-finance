@@ -2576,7 +2576,6 @@
   "Recurring income": "دخل متكرر",
   "Recurring bill": "فاتورة متكررة",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "صافي الدخل هو الدخل مطروحًا منه الإنفاق في هذه الفترة: ما بقي في حساباتك أو ذهب إلى المدخرات أو الاستثمارات أو أصل القروض.",
-  "Deleted categories": "الفئات المحذوفة",
   "Restore {name}": "استعادة {name}",
   "Keep at least one category of this type.": "احتفظ بفئة واحدة على الأقل من هذا النوع.",
   "Rules and templates: {count}": "القواعد والقوالب: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "لم يُعثر على السجل.",
   "Asset pages": "صفحات الأصول",
   "{date} – pick the last day": "{date} – اختر اليوم الأخير",
-  "Pick the first and last day": "اختر اليوم الأول والأخير"
+  "Pick the first and last day": "اختر اليوم الأول والأخير",
+  "Make recurring": "اجعله متكررًا",
+  "{amount} recurring": "{amount} متكرر",
+  "This category already has a recurring bill.": "لهذه الفئة فاتورة متكررة بالفعل.",
+  "Split allocations can only move to an added category.": "لا يمكن نقل التقسيمات إلا إلى فئة مضافة.",
+  "Both categories have a recurring bill. Archive one of them first.": "لكلتا الفئتين فاتورة متكررة. أرشِف إحداهما أولاً.",
+  "Stop recurring": "إيقاف التكرار",
+  "Where the money went": "أين ذهب المال",
+  "Where the money came from": "من أين جاء المال",
+  "Spent this month": "المنفق هذا الشهر",
+  "Personal": "شخصي"
 }

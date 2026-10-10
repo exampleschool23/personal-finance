@@ -2576,7 +2576,6 @@
   "Recurring income": "Регулярный доход",
   "Recurring bill": "Регулярный счёт",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Чистый доход — это доходы минус расходы за период: то, что осталось на счетах или ушло в сбережения, инвестиции или на погашение основного долга.",
-  "Deleted categories": "Удалённые категории",
   "Restore {name}": "Восстановить {name}",
   "Keep at least one category of this type.": "Оставьте хотя бы одну категорию этого типа.",
   "Rules and templates: {count}": "Правила и шаблоны: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Запись не найдена.",
   "Asset pages": "Страницы активов",
   "{date} – pick the last day": "{date} – выберите последний день",
-  "Pick the first and last day": "Выберите первый и последний день"
+  "Pick the first and last day": "Выберите первый и последний день",
+  "Make recurring": "Сделать регулярным",
+  "{amount} recurring": "{amount} регулярно",
+  "This category already has a recurring bill.": "У этой категории уже есть регулярный счёт.",
+  "Split allocations can only move to an added category.": "Разделённые суммы можно перенести только в добавленную категорию.",
+  "Both categories have a recurring bill. Archive one of them first.": "У обеих категорий есть регулярный счёт. Сначала архивируйте один из них.",
+  "Stop recurring": "Остановить повторение",
+  "Where the money went": "Куда ушли деньги",
+  "Where the money came from": "Откуда пришли деньги",
+  "Spent this month": "Потрачено в этом месяце",
+  "Personal": "Личное"
 }

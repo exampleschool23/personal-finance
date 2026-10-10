@@ -44,10 +44,10 @@ test('the monthly estimate and the goals surplus count each budget once beside t
  const lines = [{ key: 'food', name: 'Groceries', categoryKeys: ['food'], amount: 500 }];
  assert.equal(estimatedCashFlow(entries, '2026-10', lines).monthlyExpenses, 1700, 'the $40 gym bill is inside the $500 groceries budget');
  const budget = forecastBudget({ state: { mode: 'category', applyForward: false, categories: [], amounts: [amount('food', 500)] }, categories, removed: [] });
- assert.equal(goalFinancials(entries, '2026-10', 'USD', null, budget).surplus, 5000 - 1700);
+ assert.equal(goalFinancials(entries, '2026-10', 'USD', null, { budget }).surplus, 5000 - 1700);
  assert.equal(goalFinancials(entries, '2026-10', 'USD', null).surplus, 5000 - 1240);
  const euros = forecastBudget({ state: { mode: 'category', applyForward: false, categories: [], amounts: [amount('food', 500, 'EUR')] }, categories, removed: [] });
- assert.equal(goalFinancials(entries, '2026-10', 'USD', null, euros).surplus, null, 'a budget no rate converts leaves the surplus unknown');
+ assert.equal(goalFinancials(entries, '2026-10', 'USD', null, { budget: euros }).surplus, null, 'a budget no rate converts leaves the surplus unknown');
 });
 
 test('the projected cash spends what is left of each budget: this month after spending and bills, later months beside their bills', () => {
@@ -90,10 +90,27 @@ test('flex mode: Budget, the Overview card and the forecasts plan the same Flexi
  const forecast = budgetLines({ state, categories, removed: [] }, '2026-10', 'USD', rates).lines.find(line => line.key === 'flex:flexible');
  assert.equal(forecast.amount, plan, 'Budget and the forecasts agree');
  // The bucket's own rollover carries September's leftover, once: 400 + 100 available, not 600.
- const carried = flexBucketRollover(flexBucketCategory(settings), all, state.amounts, history, '2026-10', 'USD', rates);
+ const carried = flexBucketRollover(flexBucketCategory(settings), all, { amounts: state.amounts, schedules: [] }, history, '2026-10', 'USD', rates);
  assert.equal(carried, 100);
  assert.equal(plan + carried, 500);
  const shown = budgetRowsForMode(rows, 'flex');
  assert.equal(shown.find(row => row.key === 'food').rolloverIn, 0, 'in flex mode the category carries nothing of its own');
  assert.equal(leftToBudget(shown.filter(row => row.direction === 'expense'), 'flex', plan, 0).expenses, 400, 'the Overview Budget card plans the same 400');
+});
+
+test('DRY-001: the monthly estimate and Budget count scheduled bills by one rule (scheduledByKey)', () => {
+ const { scheduledByKey, expenses } = loadTS('lib/finance.ts');
+ const { scheduledByCategory } = loadTS('lib/budget-schedules.ts');
+ const bill = (id, kind, amount, extra = {}) => record(id, id, kind, amount, '2026-01-01', { frequency: 'Monthly', ...extra });
+ const entries = [bill('rent', 'Rent expense', 1200), bill('food', 'Living expense', 300, { custom_category_id: 'food' }), bill('more', 'Other expense', 50, { custom_category_id: 'food' }),
+  bill('paused', 'Other expense', 70, { source_paused: true }), bill('gone', 'Other expense', 80, { archived: true }), bill('yearly', 'Charity', 120, { frequency: 'Yearly' }),
+  bill('later', 'Charity', 500, { date: '2026-12-01' }), record('one', 'one', 'Other expense', 999, '2026-10-02'), bill('pay', 'Salary', 3000)];
+ const spending = scheduledByKey(entries, '2026-10', entry => expenses.includes(entry.kind), amount => amount);
+ assert.deepEqual([...spending], [['Rent expense', 1200], ['food', 350], ['Charity', 10]], 'one-time, paused, archived and not yet started records add nothing; income is not spending');
+ const budget = scheduledByCategory(entries, '2026-10', 'USD', { USD: 1 });
+ assert.deepEqual([...budget].filter(([key]) => key !== 'Salary'), [...spending], 'Budget reads the same figures');
+ assert.equal(budget.get('Salary'), 3000);
+ assert.deepEqual([...scheduledByKey(entries, '2026-10', () => true, (amount, currency) => currency === 'USD' ? null : amount)], [['Rent expense', null], ['food', null], ['Charity', null], ['Salary', null]], 'a schedule without a rate makes its key unknown');
+ assert.equal(estimatedCashFlow(entries, '2026-10').monthlyExpenses, 1560, 'the estimate spends what is scheduled');
+ assert.equal(estimatedCashFlow(entries, '2026-10', [{ key: 'food', name: 'Food', categoryKeys: ['food'], amount: 500 }]).monthlyExpenses, 1200 + 500 + 10, 'a budget covers its bills');
 });

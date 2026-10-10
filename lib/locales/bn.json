@@ -2576,7 +2576,6 @@
   "Recurring income": "পুনরাবৃত্ত আয়",
   "Recurring bill": "পুনরাবৃত্ত বিল",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "নিট আয় হলো এই সময়ের আয় থেকে ব্যয় বাদ দিয়ে: যা আপনার অ্যাকাউন্টে রয়ে গেছে বা সঞ্চয়, বিনিয়োগ বা ঋণের আসলে গেছে।",
-  "Deleted categories": "মুছে ফেলা বিভাগ",
   "Restore {name}": "{name} ফিরিয়ে আনুন",
   "Keep at least one category of this type.": "এই ধরনের অন্তত একটি বিভাগ রাখুন।",
   "Rules and templates: {count}": "নিয়ম ও টেমপ্লেট: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "রেকর্ড পাওয়া যায়নি।",
   "Asset pages": "সম্পদের পৃষ্ঠা",
   "{date} – pick the last day": "{date} – শেষ দিন বেছে নিন",
-  "Pick the first and last day": "প্রথম ও শেষ দিন বেছে নিন"
+  "Pick the first and last day": "প্রথম ও শেষ দিন বেছে নিন",
+  "Make recurring": "পুনরাবৃত্ত করুন",
+  "{amount} recurring": "{amount} পুনরাবৃত্ত",
+  "This category already has a recurring bill.": "এই বিভাগে ইতিমধ্যে একটি পুনরাবৃত্ত বিল আছে।",
+  "Split allocations can only move to an added category.": "ভাগ করা অংশগুলো শুধু যোগ করা বিভাগে সরানো যায়।",
+  "Both categories have a recurring bill. Archive one of them first.": "দুটি বিভাগেরই একটি পুনরাবৃত্ত বিল আছে। প্রথমে একটিকে আর্কাইভ করুন।",
+  "Stop recurring": "পুনরাবৃত্তি বন্ধ করুন",
+  "Where the money went": "টাকা কোথায় গেল",
+  "Where the money came from": "টাকা কোথা থেকে এল",
+  "Spent this month": "এই মাসে খরচ",
+  "Personal": "ব্যক্তিগত"
 }

@@ -165,7 +165,7 @@
 .portfolio-headline{display:flex;gap:40px;flex-wrap:wrap;margin:22px 0 12px}
 .portfolio-headline>div{display:grid;gap:5px}
 .portfolio-headline span{font-size:var(--type-small);color:var(--muted-foreground)}
-.portfolio-headline strong{font-size:var(--type-stat);letter-spacing:-.8px;overflow-wrap:anywhere}
+.portfolio-headline strong{font-size:var(--type-stat);letter-spacing:-.8px;white-space:nowrap}
 .portfolio-headline>div+div strong{font-size:var(--type-stat)}
 .portfolio-chart{width:100%;min-width:0;margin:16px 0}
 @media(max-width:700px){.portfolio-trend{padding:18px}.portfolio-headline{gap:18px}.portfolio-chart{margin-inline-start:-12px;width:calc(100% + 24px)}}

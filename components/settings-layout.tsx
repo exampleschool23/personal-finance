@@ -2,39 +2,51 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import { PageHeader } from '@/components/presentation-foundation/page-header';
-import { Segmented } from '@/components/presentation-foundation/segmented';
 
-// Nine settings areas grouped into five views, switched from tabs beside the title. Each area keeps its own anchor
-// (#rules, #tags, #security…) so older links still open the right view and land on the area.
-const views = [
- {id:'account',label:'Account',areas:['preferences','benchmarks','security']},
- {id:'household',label:'Household sharing',areas:['household']},
- {id:'categories',label:'Categories',areas:['categories','tags','rules']},
- {id:'businesses',label:'Businesses',areas:['businesses']},
- {id:'data-tools',label:'Import & backup',areas:['data-tools']},
+// Settings is a sub-navigation of two groups beside one section at a time, like the reference app's settings. Each
+// section keeps its own anchor (#rules, #tags, #security…), and the old view anchors (#account) still open the right one.
+const groups = [
+ {label:'Personal',sections:[
+  {id:'preferences',label:'Profile & preferences'},
+  {id:'telegram',label:'Telegram'},
+  {id:'security',label:'Account access'},
+ ]},
+ {label:'Workspace',sections:[
+  {id:'household',label:'Household sharing'},
+  {id:'categories',label:'Categories'},
+  {id:'tags',label:'Tags'},
+  {id:'rules',label:'Rules'},
+  {id:'businesses',label:'Businesses'},
+  {id:'benchmarks',label:'Investment benchmarks'},
+  {id:'data-tools',label:'Import & backup'},
+ ]},
 ] as const;
-type View = (typeof views)[number]['id'];
-export const viewOf = (hash: string) => views.find(view => view.id === hash || (view.areas as readonly string[]).includes(hash))?.id ?? 'account';
+type Section = (typeof groups)[number]['sections'][number]['id'];
+const sections = groups.flatMap(group => group.sections.map(section => section.id)) as Section[];
+export const sectionOf = (hash: string): Section => (sections as string[]).includes(hash) ? hash as Section : 'preferences';
 
-export function SettingsLayout({preferences,household,benchmarks,security,categories,businesses,tags,rules,data,actions}:{actions?:ReactNode;preferences:ReactNode;household:ReactNode;benchmarks:ReactNode;security:ReactNode;categories:ReactNode;businesses:ReactNode;tags:ReactNode;rules:ReactNode;data:ReactNode}){
+export function SettingsLayout({actions,...panels}:{actions?:ReactNode}&Record<Section,ReactNode>){
  const {t}=useLanguage();
- const [active,setActive]=useState<View>('account');
+ const [active,setActive]=useState<Section>('preferences');
  useEffect(()=>{
-  const sync=()=>{
-   const hash=window.location.hash.slice(1);
-   setActive(viewOf(hash));
-   // A link to one area of a view scrolls to it once the view shows.
-   if(hash&&!views.some(view=>view.id===hash))requestAnimationFrame(()=>document.getElementById(`settings-${hash}`)?.scrollIntoView({block:'start'}));
-  };
+  const sync=()=>setActive(sectionOf(window.location.hash.slice(1)));
   // Links followed by the router change the address without a hashchange event.
   const followed=(event:MouseEvent)=>{if(event.target instanceof Element&&event.target.closest('a[href*="#"]'))setTimeout(sync,0);};
   sync();window.addEventListener('hashchange',sync);window.addEventListener('popstate',sync);document.addEventListener('click',followed);
   return()=>{window.removeEventListener('hashchange',sync);window.removeEventListener('popstate',sync);document.removeEventListener('click',followed);};
  },[]);
- const panels:Record<string,ReactNode>={preferences,household,benchmarks,security,categories,businesses,tags,rules,'data-tools':data};
+ const open=(section:Section)=>{setActive(section);window.history.replaceState(null,'','#'+section);};
  return <div className="settings-layout">
-  <PageHeader title={t('Settings')} tabs={<Segmented className="page-tabs" as="nav" label={t('Settings')} options={views.map(view=>({value:view.id,label:t(view.label)}))} value={active} onChange={view=>{setActive(view);window.history.replaceState(null,'','#'+view);}}/>}>{actions}</PageHeader>
-  {/* Every view stays mounted so unsaved fields survive switching tabs. */}
-  {views.map(view=><div key={view.id} className="settings-view" hidden={active!==view.id}>{view.areas.map(area=><section key={area} id={`settings-${area}`} className="settings-area">{panels[area]}</section>)}</div>)}
+  <PageHeader title={t('Settings')}>{actions}</PageHeader>
+  <div className="settings-columns">
+   <nav className="settings-nav" aria-label={t('Settings')}>
+    {groups.map(group=><div key={group.label} className="settings-nav-group">
+     <h2>{t(group.label)}</h2>
+     <ul>{group.sections.map(section=><li key={section.id}><button type="button" aria-current={active===section.id?'page':undefined} onClick={()=>open(section.id)}>{t(section.label)}</button></li>)}</ul>
+    </div>)}
+   </nav>
+   {/* Every section stays mounted so unsaved fields survive switching. */}
+   <div className="settings-sections">{sections.map(section=><section key={section} id={`settings-${section}`} className="settings-area" hidden={active!==section}>{panels[section]}</section>)}</div>
+  </div>
  </div>;
 }

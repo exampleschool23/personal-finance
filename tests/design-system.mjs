@@ -95,7 +95,7 @@ test('selectors that once had a later override keep one rule with the value that
   ['.goal-chart-canvas','width:100%;min-width:0;height:100%'],
   ['.import-preview','max-height:400px;overflow:auto;margin-block:16px;'],
   ['.record-dialog textarea','width:100%;resize:vertical;min-height:80px!important;max-height:180px'],
-  ['.category-settings .category-badges','display:flex;flex-wrap:wrap;align-items:center;gap:8px;list-style:none;padding:0;margin:0'],
+  ['.category-settings .category-rows','display:grid;list-style:none;padding:0;margin:0'],
  ])assert.deepEqual(rules(selector),[body],selector);
  assert.deepEqual(rules('.portfolio-editor-dialog').length,1);
  assert.match(rules('.portfolio-editor-dialog')[0],/scrollbar-gutter:auto/);
@@ -158,14 +158,17 @@ test('the top bar switches between the two display currencies in place, and the 
 });
 
 test('Goals, Reports and Cash flow switch their views from tabs beside the title, which fall back to the page when the bar is full',()=>{
- for(const [file,label] of [['components/workspace/screens/reports-screen.tsx','Reports'],['components/workspace/screens/cash-flow-screen.tsx','Cash flow'],['components/planning/goals-page.tsx','Goals'],['components/planning/accounts-page.tsx','Accounts'],['components/workspace/screens/budget-screen.tsx','Budget'],['components/settings-layout.tsx','Settings'],['components/workspace/screens/assets-screen.tsx','Investments'],['components/workspace/screens/loans-debts-screen.tsx','Loans & debts'],['components/planning/upcoming-page.tsx','Recurring'],['components/workspace/screens/transactions-screen.tsx','Transactions']]){
+ for(const [file,label] of [['components/workspace/screens/reports-screen.tsx','Reports'],['components/workspace/screens/cash-flow-screen.tsx','Cash flow'],['components/planning/goals-page.tsx','Goals'],['components/planning/accounts-page.tsx','Accounts'],['components/workspace/screens/budget-screen.tsx','Budget'],['components/workspace/screens/assets-screen.tsx','Investments'],['components/workspace/screens/loans-debts-screen.tsx','Loans & debts'],['components/planning/upcoming-page.tsx','Recurring'],['components/workspace/screens/transactions-screen.tsx','Transactions']]){
   const source=fs.readFileSync(file,'utf8');
   assert.match(source,new RegExp(`<PageHeader title=\\{t\\('${label}'\\)\\} tabs=\\{<Segmented (as="nav" )?className="page-tabs"`),file);
   assert.doesNotMatch(source,/cashflow-tabs/,file);
  }
- // Settings groups its nine areas into five views; old anchors (#rules, #tags…) still open the right one.
- const {viewOf}=loadTS('components/settings-layout.tsx',{'@/components/language-provider':{useLanguage:()=>({t:text=>text})},'@/components/presentation-foundation/page-header':{PageHeader:()=>null},'@/components/presentation-foundation/segmented':{Segmented:()=>null}});
- for(const [hash,view] of [['','account'],['preferences','account'],['security','account'],['benchmarks','account'],['household','household'],['rules','categories'],['tags','categories'],['categories','categories'],['businesses','businesses'],['data-tools','data-tools'],['unknown','account']])assert.equal(viewOf(hash),view,hash);
+ // Settings opens one section at a time from a grouped sub-navigation; old anchors (#account) fall back to the first.
+ const {sectionOf}=loadTS('components/settings-layout.tsx',{'@/components/language-provider':{useLanguage:()=>({t:text=>text})},'@/components/presentation-foundation/page-header':{PageHeader:()=>null}});
+ for(const [hash,section] of [['','preferences'],['account','preferences'],['preferences','preferences'],['telegram','telegram'],['security','security'],['benchmarks','benchmarks'],['household','household'],['rules','rules'],['tags','tags'],['categories','categories'],['businesses','businesses'],['data-tools','data-tools'],['unknown','preferences']])assert.equal(sectionOf(hash),section,hash);
+ const settingsLayout=fs.readFileSync('components/settings-layout.tsx','utf8');
+ assert.match(settingsLayout,/<nav className="settings-nav" aria-label=\{t\('Settings'\)\}>/);
+ assert.match(settingsLayout,/aria-current=\{active===section\.id\?'page':undefined\}/);
  assert.match(fs.readFileSync('components/planning/upcoming-page.tsx','utf8'),/\{skipped\.length > 0 && <details className="panel tools-panel">/,'no empty Skipped occurrences fold');
  assert.match(fs.readFileSync('components/planning/upcoming-page.tsx','utf8'),/\{reminders\.length > 0 && <section className="panel upcoming-section"/,'no empty debt and maturity card');
  // Accounts keeps its operations behind a Recent activity tab; Cash flow adds expenses from the bar's own Add expense.
@@ -174,7 +177,13 @@ test('Goals, Reports and Cash flow switch their views from tabs beside the title
  assert.doesNotMatch(fs.readFileSync('components/workspace/screens/cash-flow-screen.tsx','utf8'),/addCashFlow\('Other expense'\)/);
  // Recurring sets up schedules through Add recurring: income as a fixed income source, a bill already repeating, or a plan.
  const recurringScreen=fs.readFileSync('components/workspace/screens/upcoming-screen.tsx','utf8');
- assert.match(recurringScreen,/addRecurringIncome\(\)/);assert.match(recurringScreen,/addCashFlow\('Other expense', 'Monthly'\)/);assert.doesNotMatch(recurringScreen,/ExpensePlan/,'spending plans are Budget categories now');
+ assert.match(recurringScreen,/addRecurringIncome\(\)/);
+ const budgetScreen=fs.readFileSync('components/workspace/screens/budget-screen.tsx','utf8');
+ // A Budget row's ⋯ menu edits the category and makes it recurring or stops its bills; tapping the name opens its details.
+ assert.match(budgetScreen,/\{ label: t\('Edit'\), onSelect: \(\) => edit\(row\) \}/,'a Budget row is edited from its ⋯ menu');
+ assert.match(budgetScreen,/bills\.length \? \{ label: t\('Stop recurring'\), onSelect: \(\) => stopRecurring\(bills\) \} : \{ label: t\('Make recurring'\), onSelect: \(\) => makeRecurring\(row\) \}/,'a Budget row becomes recurring, or stops its bills');
+ assert.match(budgetScreen,/archiveSchedule\(\{ source: 'record', record: bill \}, true\)/,'stopping archives the bills, as Recurring does');
+ assert.match(budgetScreen,/onOpen=\{setViewing\}/);assert.match(budgetScreen,/<CategoryDetailsDialog /);assert.match(budgetScreen,/addCashFlow\([^\n]*'Monthly', \{ name: name\(row\), amount: Math\.round\(row\.budget \|\| row\.actual\)/);assert.match(recurringScreen,/addCashFlow\('Other expense', 'Monthly'\)/);assert.doesNotMatch(recurringScreen,/ExpensePlan/,'spending plans are Budget categories now');
  const header=fs.readFileSync('components/presentation-foundation/page-header.tsx','utf8'),bar=fs.readFileSync('components/workspace/top-bar.tsx','utf8'),css=stylesheet();
  assert.match(header,/\{slot\.actions && tabs\}<\/>, slot\.title\)/,'tabs join the title only when the actions do');
  assert.match(header,/\(tabs \|\| actions\) && <header className=\{`\$\{classes\} page-heading-actions`\}>\{tabs\}\{actions\}<\/header>/,'otherwise they open the page');

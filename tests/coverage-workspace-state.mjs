@@ -6,6 +6,7 @@ import { createRenderer, translate } from './helpers/component-tree.mjs';
 
 const { demoWorkspace } = loadTS('lib/demo-finance.ts');
 const { depositToday } = loadTS('lib/deposit-interest.ts');
+const { shiftMonth } = loadTS('lib/calendar-days.ts');
 const { emptyRecordFilters } = loadTS('lib/record-filters.ts');
 const { defaultPreferences } = loadTS('lib/currencies.ts');
 const today = depositToday();
@@ -37,6 +38,7 @@ globalThis.fetch = async (url, options = {}) => {
  if (path === '/api/settings') return reply(method === 'PUT' ? body : server.settings);
  if (path === '/api/records') return reply(method === 'GET' ? server.records : {});
  if (path === '/api/transaction-rules') return reply({ changed: 2 });
+ if (path === '/api/budget') return reply(method === 'GET' ? { mode: 'category', applyForward: false, categories: [], amounts: [] } : {});
  return reply({});
 };
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
@@ -59,7 +61,9 @@ const { WorkspaceProvider } = r.load('components/workspace/workspace-provider.ts
  '@/hooks/use-workspace-preferences': { useWorkspacePreferences: () => ({ data: { preferences: [] } }) },
  '@/hooks/use-tags': { useTags: () => ({ data: { tags: [] } }) },
  '@/hooks/use-record-attachments': { useRecordAttachments: () => ({}) },
- '@/hooks/use-owner-resource': { useOwnerResource: (url, user, enabled, reload, empty) => ({ data: empty, loading: false }) },
+ // A stateful stand-in: `update` shows a change at once, as the real hook does, so saves can be read back from the state.
+ '@/hooks/use-owner-resource': { useOwnerResource: (url, user, enabled, reload, empty) => { const [data, setData] = r.react.useState(empty); return { data, loading: false, initialLoading: false, error: '', retry() {}, update: change => setData(previous => change(previous)), invalidate() { setData(empty); } }; },
+  saveOwnerResource: async (url, action, data) => { const response = await fetch(url, { method: 'POST', body: JSON.stringify({ action, data }) }); if (!response.ok) throw Error('Could not save changes.'); return response.json(); } },
  '@/hooks/use-record-filters': { useRecordFilters: () => ({ filters: emptyRecordFilters, setFilters() {} }) },
  '@/hooks/use-comparison-profile': { saveTrackingStartRequest: async () => {} },
 });
@@ -199,6 +203,28 @@ test('one Budget for the workspace: a change on Budget reaches the forecasts at 
  assert.equal(ws().goalBudget.linesIn(month, 'USD', 1).lines.find(line => line.key === 'Other expense').amount, flexible.amount + 5000, 'the Goals surplus reads it');
  assert.notDeepEqual(ws().forecastBudget.linesFor(month).lines, lines, 'the projected cash reads it');
  assert.deepEqual(ws().forecastBudgetState.error, '');
+ // BUD-027 in the sample workspace: unticked, the amount is this month's only and later months plan nothing.
+ await ws().budget.saveRepeat('Other expense', month, 300, 'USD', true);await settle();
+ await ws().budget.saveRepeat('Other expense', month, 300, 'USD', false);await settle();
+ const next = ws().budget.state.amounts.filter(item => item.category_key === 'Other expense' && item.month > month);
+ assert.deepEqual(next.map(item => [item.amount, item.applies_forward]), [[0, true]]);
+ assert.equal(ws().budget.state.amounts.find(item => item.category_key === 'Other expense' && item.month === month).applies_forward, false);
+});
+
+test('signed in, the "Apply to all future months" tick is one request either way (SOLID-001, CONC-008)', async () => {
+ browser('https://app.test/');
+ pathname = '/budget';
+ server.session = { configured: true, user: { email: 'me@example.com' } };
+ const ws = mount();
+ await settle();
+ const month = today.slice(0, 7), posts = () => requests.filter(request => request.method === 'POST' && request.url === '/api/budget');
+ const before = posts().length;
+ await ws().budget.saveRepeat('Other expense', month, 300, 'USD', false);await settle();
+ assert.deepEqual(posts().slice(before).map(request => request.body), [{ action: 'amount_once', data: { category_key: 'Other expense', month, amount: 300, currency: 'USD' } }], 'off: one request does both steps, so a failure never leaves the budget half-changed');
+ assert.deepEqual(ws().budget.state.amounts.map(item => [item.month, item.amount, item.applies_forward]), [[month, 300, false], [shiftMonth(month, 1), 0, true]]);
+ await ws().budget.saveRepeat('Other expense', month, 300, 'USD', true);await settle();
+ assert.deepEqual(posts().at(-1).body, { action: 'amount', data: { category_key: 'Other expense', month, amount: 300, currency: 'USD', applies_forward: true } });
+ assert.equal(posts().length, before + 2);
 });
 
 test('signed in, settings and records are read, and every change is sent and read again', async () => {

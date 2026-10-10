@@ -2576,7 +2576,6 @@
   "Recurring income": "Recurring income",
   "Recurring bill": "Recurring bill",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.",
-  "Deleted categories": "Deleted categories",
   "Restore {name}": "Restore {name}",
   "Keep at least one category of this type.": "Keep at least one category of this type.",
   "Rules and templates: {count}": "Rules and templates: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Record not found.",
   "Asset pages": "Asset pages",
   "{date} – pick the last day": "{date} – pick the last day",
-  "Pick the first and last day": "Pick the first and last day"
+  "Pick the first and last day": "Pick the first and last day",
+  "Make recurring": "Make recurring",
+  "{amount} recurring": "{amount} recurring",
+  "This category already has a recurring bill.": "This category already has a recurring bill.",
+  "Split allocations can only move to an added category.": "Split allocations can only move to an added category.",
+  "Both categories have a recurring bill. Archive one of them first.": "Both categories have a recurring bill. Archive one of them first.",
+  "Stop recurring": "Stop recurring",
+  "Where the money went": "Where the money went",
+  "Where the money came from": "Where the money came from",
+  "Spent this month": "Spent this month",
+  "Personal": "Personal"
 }

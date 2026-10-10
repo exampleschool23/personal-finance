@@ -2576,7 +2576,6 @@
   "Recurring income": "Dochód cykliczny",
   "Recurring bill": "Rachunek cykliczny",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Dochód netto to dochody minus wydatki w tym okresie: to, co zostało na Twoich kontach lub trafiło na oszczędności, inwestycje albo spłatę kapitału pożyczek.",
-  "Deleted categories": "Usunięte kategorie",
   "Restore {name}": "Przywróć {name}",
   "Keep at least one category of this type.": "Zachowaj co najmniej jedną kategorię tego typu.",
   "Rules and templates: {count}": "Reguły i szablony: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Nie znaleziono rekordu.",
   "Asset pages": "Strony aktywów",
   "{date} – pick the last day": "{date} – wybierz ostatni dzień",
-  "Pick the first and last day": "Wybierz pierwszy i ostatni dzień"
+  "Pick the first and last day": "Wybierz pierwszy i ostatni dzień",
+  "Make recurring": "Ustaw jako cykliczne",
+  "{amount} recurring": "{amount} cyklicznie",
+  "This category already has a recurring bill.": "Ta kategoria ma już cykliczny rachunek.",
+  "Split allocations can only move to an added category.": "Podziały można przenieść tylko do dodanej kategorii.",
+  "Both categories have a recurring bill. Archive one of them first.": "Obie kategorie mają rachunek cykliczny. Najpierw zarchiwizuj jeden z nich.",
+  "Stop recurring": "Zatrzymaj cykliczność",
+  "Where the money went": "Gdzie poszły pieniądze",
+  "Where the money came from": "Skąd przyszły pieniądze",
+  "Spent this month": "Wydano w tym miesiącu",
+  "Personal": "Osobiste"
 }

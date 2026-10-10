@@ -147,6 +147,9 @@
 [data-font="inter"]{--font-ui:"Inter Variable",var(--font-system)}
 [data-font="onest"]{--font-ui:"Onest Variable",var(--font-system)}
 body{margin:0;background:var(--background);color:var(--foreground);font-family:var(--font-ui);font-size:var(--type-body);line-height:1.6}
+/* Long compound words (German "Unternehmenseinnahmen", Russian, Dutch) hyphenate where a phone column is narrower than the word,
+ * instead of running under the next column or breaking without a hyphen. Only words of 12 letters or more; English keeps its look. */
+:root:not(:lang(en)) body{hyphens:auto;hyphenate-limit-chars:12 5 5}
 button,a,input,select{touch-action:manipulation}
 button{cursor:pointer}
 /* Buttons that stay focusable while unavailable look disabled too. */

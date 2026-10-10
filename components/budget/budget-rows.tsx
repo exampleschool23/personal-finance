@@ -1,11 +1,15 @@
 "use client";
-import type { ReactNode } from 'react';
-import { ChevronDown, ChevronRight, Eye, EyeOff, RefreshCw, Settings2 } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { closestCorners, DndContext, DragOverlay, pointerWithin, useDraggable, useDroppable, type CollisionDetection, type DragEndEvent } from '@dnd-kit/core';
+import { ChevronDown, ChevronRight, Eye, EyeOff, GripVertical, RefreshCw, Settings2 } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 import { CategoryIcon } from '@/components/presentation-foundation/category-icon';
 import { DrawerLink } from '@/components/presentation-foundation/drawer-link';
+import { sortableAccessibility, useSortableSensors } from '@/components/presentation-foundation/sortable';
 import { Button } from '@/components/ui/button';
-import { isUnbudgeted, remainingTone, type BudgetCategory, type BudgetGroup, type BudgetRow } from '@/lib/budget';
+import { isUnbudgeted, remainingTone, type BudgetCategory, type BudgetCategorySetting, type BudgetGroup, type BudgetRow } from '@/lib/budget';
+import { moveToGroup } from '@/lib/budget-groups';
+import { showError } from '@/lib/feedback';
 import { formatMoney, formatSignedMoney } from '@/lib/format';
 import { goalEmoji } from '@/lib/goal-emoji';
 import type { Goal } from '@/lib/planning';
@@ -29,17 +33,21 @@ export function BudgetProgress({ row }: { row: Pick<BudgetRow, 'progress' | 'dir
  return <div className="budget-progress" data-over={over || undefined} aria-hidden="true"><div style={{ width: `${Math.min(100, Math.max(0, row.progress * 100))}%` }}/></div>;
 }
 
-type GroupProps = { group: BudgetGroup; currency: string; open: boolean; onToggle: () => void; showUnbudgeted: boolean; onShowUnbudgeted: () => void; renderPlanned: (row: BudgetRow) => ReactNode; onSettings: (row: BudgetRow) => void; header?: ReactNode; footer?: ReactNode;
+type GroupProps = { group: BudgetGroup; currency: string; open: boolean; onToggle: () => void; showUnbudgeted: boolean; onShowUnbudgeted: () => void; renderPlanned: (row: BudgetRow) => ReactNode; onOpen: (row: BudgetRow) => void; rowMenu?: (row: BudgetRow) => ReactNode; header?: ReactNode; footer?: ReactNode;
  /** Money the group itself carries in (the Flexible bucket in flex mode), and its settings. */
- rolloverIn?: number; onGroupSettings?: () => void };
+ rolloverIn?: number; onGroupSettings?: () => void;
+ /** Inside `GroupMoves`: its categories can be dragged to another group, and others dropped here. */
+ movable?: boolean };
 
 /** One collapsible group card: its total in the heading row, its categories below, unbudgeted ones behind a toggle. */
-export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgeted, onShowUnbudgeted, renderPlanned, onSettings, header, footer, rolloverIn = 0, onGroupSettings }: GroupProps) {
+export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgeted, onShowUnbudgeted, renderPlanned, onOpen, rowMenu, header, footer, rolloverIn = 0, onGroupSettings, movable = false }: GroupProps) {
  const { t, locale } = useLanguage();
  const name = useCategoryName();
  const hidden = group.rows.filter(isUnbudgeted);
  const visible = showUnbudgeted ? group.rows : group.rows.filter(row => !isUnbudgeted(row));
- return <section className="budget-group" data-open={open || undefined}>
+ const { setNodeRef, isOver, active } = useDroppable({ id: groupId(group), disabled: !movable });
+ const target = isOver && !group.rows.some(row => row.key === active?.id);
+ return <section ref={setNodeRef} className="budget-group" data-open={open || undefined} data-drop-target={target || undefined}>
   <div className="budget-row budget-group-row">
    <span className="budget-group-name">
     <button type="button" className="budget-group-toggle" aria-expanded={open} onClick={onToggle}>{open ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}<span>{t(group.name)}{rolloverIn !== 0 && <RolledOver amount={rolloverIn} currency={currency}/>}</span></button>
@@ -48,21 +56,64 @@ export function BudgetGroupCard({ group, currency, open, onToggle, showUnbudgete
    <span className="budget-cell">{header ?? (group.missing ? '—' : formatMoney(group.budget, currency, locale))}</span>
    <span className="budget-cell budget-actual" data-label={t('Actual')}>{formatMoney(group.actual, currency, locale)}</span>
    <span className="budget-cell"><RemainingPill value={group.missing ? null : group.remaining} direction={group.direction} currency={currency}/></span>
+   <RowEnd/>
   </div>
   {open && <>
-   {visible.map(row => <div className="budget-row budget-category-row" key={row.key}>
-    <button type="button" className="budget-category-name" onClick={() => onSettings(row)} aria-label={t('Category settings: {name}', { name: name(row) })}>
-     <CategoryIcon kind={row.custom ? row.name : row.key} size="sm"/><span>{name(row)}{row.rolloverIn !== 0 && <RolledOver amount={row.rolloverIn} currency={currency}/>}</span>{row.rollover && <RefreshCw size={13} aria-label={t('Rollover')}/>}
+   {visible.map(row => <MovableRow key={row.key} id={row.key} label={name(row)} movable={movable}>
+    <button type="button" className="budget-category-name" onClick={() => onOpen(row)} aria-label={t('Open {name}', { name: name(row) })}>
+     <CategoryIcon kind={row.custom ? row.name : row.key} size="sm"/><span>{name(row)}{row.rolloverIn !== 0 && <RolledOver amount={row.rolloverIn} currency={currency}/>}{!!row.scheduled && <small className="budget-rollover">{t('{amount} recurring', { amount: formatMoney(row.scheduled, currency, locale) })}</small>}</span>{row.rollover && <RefreshCw size={13} aria-label={t('Rollover')}/>}
     </button>
     <span className="budget-cell">{renderPlanned(row)}</span>
     <span className="budget-cell budget-actual" data-label={t('Actual')}>{formatMoney(row.actual, currency, locale)}</span>
     <span className="budget-cell"><RemainingPill value={row.remaining} direction={row.direction} currency={currency}/></span>
+    <RowEnd>{rowMenu?.(row)}</RowEnd>
     <BudgetProgress row={row}/>
-   </div>)}
+   </MovableRow>)}
    {footer}
    {hidden.length > 0 && <button type="button" className="budget-unbudgeted" onClick={onShowUnbudgeted}>{showUnbudgeted ? <EyeOff size={14}/> : <Eye size={14}/>}{t(showUnbudgeted ? 'Collapse {count} unbudgeted' : 'Show {count} unbudgeted', { count: hidden.length })}</button>}
   </>}
  </section>;
+}
+
+const groupId = (group: Pick<BudgetGroup, 'direction' | 'name'>) => group.direction + ':' + group.name;
+
+/** A category row; a movable one has a handle that lifts it into another group. The row stays put while a copy follows the pointer. */
+function MovableRow({ id, label, movable, children }: { id: string; label: string; movable: boolean; children: ReactNode }) {
+ const { t } = useLanguage();
+ const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({ id, disabled: !movable });
+ return <div ref={setNodeRef} className="budget-row budget-category-row" data-movable={movable || undefined} data-dragging={isDragging || undefined}>
+  {movable && <button type="button" ref={setActivatorNodeRef} className="drag-handle" aria-label={t('Move {name}', { name: label })} {...attributes} {...listeners}><GripVertical size={15} aria-hidden="true"/></button>}
+  {children}
+ </div>;
+}
+
+// The group under the pointer; with the keyboard (no pointer), the nearest one.
+const groupUnder: CollisionDetection = args => { const hits = pointerWithin(args); return hits.length ? hits : closestCorners(args); };
+
+/** Spending groups whose categories can be dragged from one group to another. A drop saves the category's new group
+ * the way Category settings does (`moveToGroup`), and the usual Saved notice confirms it. */
+export function GroupMoves({ groups, onSave, children }: { groups: readonly BudgetGroup[]; onSave: (setting: BudgetCategorySetting) => Promise<void>; children: ReactNode }) {
+ const { t } = useLanguage();
+ const name = useCategoryName();
+ const sensors = useSortableSensors();
+ const [active, setActive] = useState<BudgetRow | null>(null);
+ const rowOf = (key: string) => groups.flatMap(group => group.rows).find(row => row.key === key);
+ const end = ({ active: dragged, over }: DragEndEvent) => {
+  setActive(null);
+  const row = rowOf(String(dragged.id)), group = groups.find(item => groupId(item) === over?.id);
+  const setting = row && group ? moveToGroup(row, group) : null;
+  if (setting) onSave(setting).catch(error => showError(t((error as Error).message)));
+ };
+ return <DndContext id="budget-groups" sensors={sensors} collisionDetection={groupUnder} onDragStart={event => setActive(rowOf(String(event.active.id)) ?? null)} onDragEnd={end} onDragCancel={() => setActive(null)}
+  accessibility={sortableAccessibility(t, key => { const row = rowOf(key); return row ? name(row) : ''; })}>
+  {children}
+  <DragOverlay dropAnimation={null}>{active && <div className="budget-drag-copy"><CategoryIcon kind={active.custom ? active.name : active.key} size="sm"/><span>{name(active)}</span></div>}</DragOverlay>
+ </DndContext>;
+}
+
+/** The last column of every budget row: a category's ⋯ menu, empty elsewhere so the columns line up. */
+function RowEnd({ children }: { children?: ReactNode }) {
+ return <span className="budget-row-end">{children}</span>;
 }
 
 /** "+$40 rolled over" under a name: money a rollover fund brings into this month. */
@@ -74,13 +125,13 @@ function RolledOver({ amount, currency }: { amount: number; currency: string }) 
 /** A grey band naming a section and its columns: the Income / Expenses / Contributions headers. */
 export function BudgetSectionHeader({ title }: { title: string }) {
  const { t } = useLanguage();
- return <div className="budget-row budget-section-header"><span>{title}</span><span className="budget-cell">{t('Planned')}</span><span className="budget-cell budget-actual">{t('Actual')}</span><span className="budget-cell">{t('Remaining')}</span></div>;
+ return <div className="budget-row budget-section-header"><span>{title}</span><span className="budget-cell">{t('Planned')}</span><span className="budget-cell budget-actual">{t('Actual')}</span><span className="budget-cell">{t('Remaining')}</span><RowEnd/></div>;
 }
 
 /** A section's totals. A null plan could not be converted: it and the remaining read —. */
 export function BudgetTotalRow({ label, planned, actual, remaining, direction, currency }: { label: string; planned: number | null; actual: number; remaining: number | null; direction: BudgetRow['direction']; currency: string }) {
  const { t, locale } = useLanguage();
- return <div className="budget-row budget-total-row"><span>{label}</span><span className="budget-cell">{planned === null ? '—' : formatMoney(planned, currency, locale)}</span><span className="budget-cell budget-actual" data-label={t('Actual')}>{formatMoney(actual, currency, locale)}</span><span className="budget-cell"><RemainingPill value={remaining} direction={direction} currency={currency}/></span></div>;
+ return <div className="budget-row budget-total-row"><span>{label}</span><span className="budget-cell">{planned === null ? '—' : formatMoney(planned, currency, locale)}</span><span className="budget-cell budget-actual" data-label={t('Actual')}>{formatMoney(actual, currency, locale)}</span><span className="budget-cell"><RemainingPill value={remaining} direction={direction} currency={currency}/></span><RowEnd/></div>;
 }
 
 /** Goals with a planned monthly saving. Contributions are edited on the goal itself. */
@@ -94,6 +145,7 @@ export function ContributionRows({ goals, currency, amountOf }: { goals: Goal[];
     <span className="budget-cell">{amount === null ? '—' : formatMoney(amount, currency, locale)}</span>
     <span className="budget-cell budget-empty-cell budget-actual">—</span>
     <span className="budget-cell budget-empty-cell">—</span>
+    <RowEnd/>
    </div>;
   })}
   <div className="budget-row budget-contributions-link"><DrawerLink className="panel-link" href="/goals">{t('Edit contributions in Goals')}</DrawerLink></div>

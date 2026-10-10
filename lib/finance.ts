@@ -86,6 +86,22 @@ export type BudgetLine = { key: string; name: string; categoryKeys: string[]; am
 /** The category a transaction or schedule is budgeted under: its own category, else its kind. */
 export const budgetKey = (record: { custom_category_id?: string | null; kind: string }) => record.custom_category_id ?? record.kind;
 
+/** What the recurring records `include` picks come to per budget key in `month`: each schedule's `monthly` amount
+ * (nothing while it is paused or in an archived month), converted by `convert`, which may answer null for a currency
+ * without a rate; a key with one unknown amount is unknown. Budget (`scheduledByCategory`) and the monthly estimate
+ * read this one rule. */
+export function scheduledByKey<T extends number | null>(entries: readonly Entry[], month: string | undefined, include: (entry: Entry) => boolean, convert: (amount: number, currency: string) => T): Map<string, T> {
+ const totals = new Map<string, T>();
+ for (const entry of entries) {
+  if (entry.frequency === 'Once' || !include(entry)) continue;
+  const amount = monthly(entry, month);
+  if (!amount) continue;
+  const value = convert(amount, entry.currency), before = totals.get(budgetKey(entry)) ?? 0;
+  totals.set(budgetKey(entry), (value === null || before === null ? null : before + (value as number)) as T);
+ }
+ return totals;
+}
+
 /** Expected spending of each line: its budget, or what is already scheduled in its categories when that is more.
  * A bill inside a budget is part of it, so the two are never added. `scheduled` is per category key. */
 export function budgetedSpending(lines: readonly BudgetLine[], scheduled: ReadonlyMap<string, number>) {
@@ -96,16 +112,16 @@ export function budgetedSpending(lines: readonly BudgetLine[], scheduled: Readon
 }
 
 /** The month's estimate. With the month's Budget `lines` (in the entries' currency), each budgeted category expects the
- * larger of its budget and its recurring bills; spending outside a budget is its recurring bills alone. */
-export function estimatedCashFlow(entries: Entry[], month?: string, lines?: readonly BudgetLine[]) {
+ * larger of its budget and its recurring bills; spending outside a budget is its recurring bills alone.
+ * `variableIncome` is the variable sources' approximate monthly income (`approximateIncome`), in the same currency. */
+export function estimatedCashFlow(entries: Entry[], month?: string, lines?: readonly BudgetLine[], variableIncome = 0) {
  const estimatedAssets = entries.filter(e => ['Business','Property',...interestKinds].includes(e.kind) && (e.estimated_monthly_income ?? 0) > 0);
  const businessIds = new Set(estimatedAssets.filter(e => e.kind === 'Business').map(e => e.id));
  const propertyIds = new Set(estimatedAssets.filter(e=>e.kind==='Property').map(e=>e.id));
  const estimatedIncome = estimatedAssets.reduce((sum,e) => sum + (e.estimated_monthly_income ?? 0), 0);
- const otherIncome = entries.filter(e => income.includes(e.kind) && !duplicatesAssetEstimate(e, businessIds, propertyIds)).reduce((sum,e) => sum + monthly(e, month), 0);
- const scheduled = new Map<string, number>();
- for (const e of entries) if (expenses.includes(e.kind)) scheduled.set(budgetKey(e), (scheduled.get(budgetKey(e)) ?? 0) + monthly(e, month));
- const monthlyExpenses = budgetedSpending(lines ?? [], scheduled);
+ const otherIncome = variableIncome + entries.filter(e => income.includes(e.kind) && !duplicatesAssetEstimate(e, businessIds, propertyIds)).reduce((sum,e) => sum + monthly(e, month), 0);
+ // Entries are already in one currency, so every bill converts to itself.
+ const monthlyExpenses = budgetedSpending(lines ?? [], scheduledByKey(entries, month, e => expenses.includes(e.kind), amount => amount));
  const monthlyPayment = (kinds: string[]) => entries.filter(e => kinds.includes(e.kind) && e.amount > 0).reduce((sum,e) => sum + (e.estimated_monthly_payment ?? 0), 0);
  const mortgagePayments = monthlyPayment(['Mortgage']);
  // Loans and debts with a monthly payment are due every month too (see hasMonthlyInstallment in planning).

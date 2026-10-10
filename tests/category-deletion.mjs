@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
 import {loadTS} from './helpers/load-ts.mjs';
+const {chosenCategoryHue}=loadTS('lib/category-colors.ts');
 const id=n=>`e0000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const request=(body,method='DELETE')=>new Request('https://local/api/categories?id='+id(1),{method,...(method==='GET'?{}:{body:JSON.stringify(body)})});
 function api({auth=true,origin=true,failure=null}={}){
@@ -68,7 +69,8 @@ test('tapping a category pill edits its name and icon together; built-in names s
  const pills=[];(function walk(node){if(!node||typeof node!=='object')return;if(node.props?.className==='category-edit-button')pills.push(node);for(const child of React.Children.toArray(node.props?.children))walk(child);})(tree);
  assert.equal(pills.length,5,'built-in and added categories alike');
  const leisure=pills.find(pill=>pill.props['aria-label']==='Edit Leisure');
- assert.equal(find(leisure,node=>node.type?.name==='CategoryBadge').props.icon.props.children,'🎬');
+ assert.equal(find(leisure,node=>node.props?.className==='category-icon').props.children,'🎬');
+ assert.equal(find(leisure,node=>node.props?.className==='category-icon').props.style['--category-hue'],chosenCategoryHue(id(1),icons.colors),'the chosen colour tints the row icon');
  leisure.props.onClick();tree=group();
  let dialog=find(tree,node=>node.type?.name==='EditCategoryDialog');
  assert.deepEqual([dialog.props.item.label,dialog.props.icon,dialog.props.chosen,dialog.props.color],['Leisure','🎬',true,'violet']);
@@ -111,16 +113,16 @@ test('the category edit dialog saves only what changed (name, icon and colour), 
  assert.equal(find(builtIn,node=>node.props?.className==='category-edit-delete').props.reason,'Keep at least one category of this type.','the last category of a direction shows the bin, disabled, with the reason');
 });
 
-test('deleted built-in categories leave the list, can be restored, and the last category of a direction stays',async()=>{
- const h=harness('components/transaction-tools-panel.tsx','TransactionToolsPanel');const restored=[];
- const removed={kinds:['Rent expense','Salary','Rent income','Business income'],restore:async kind=>{restored.push(kind);},hideForVisit(){},deleted(){},disabled:false};
+test('deleted built-in categories leave the list, are never shown again, and the last category of a direction stays',async()=>{
+ const h=harness('components/transaction-tools-panel.tsx','TransactionToolsPanel');
+ const removed={kinds:['Rent expense','Salary','Rent income','Business income'],hideForVisit(){},deleted(){}};
  const props={categories:[],saveCategory:async()=>id(5),icons:{icons:{},colors:{},disabled:false,choose:async()=>{},update:async()=>{},emojiOf:()=>'🏷️'},removed,loading:false,error:'',onRetry(){},onDeleted(){},preferences:{data:{preferences:[]},loading:false,error:'',save:async()=>{}},owner:id(9),demo:false};
  const panel=h.render(props);
  const groupOf=direction=>{const node=find(panel,item=>item.type?.name==='CategoryGroup'&&item.props.direction===direction);return node;};
  assert.deepEqual(groupOf('expense').props.items.map(item=>item.id),['Living expense','Charity','Other expense']);
  assert.deepEqual(groupOf('income').props.items.map(item=>item.id),['Other income']);
- const restore=find(panel,node=>node.props?.['aria-label']==='Restore Rent expense');
- restore.props.onClick();await new Promise(resolve=>setImmediate(resolve));assert.deepEqual(restored,['Rent expense']);
+ // Nothing lists what was deleted.
+ assert.equal(find(panel,node=>typeof node.props?.['aria-label']==='string'&&node.props['aria-label'].startsWith('Restore')),undefined);
  // Other income is the only income category left: its bin stays disabled.
  const render=direction=>{const node=find(h.render(props),item=>item.type?.name==='CategoryGroup'&&item.props.direction===direction);return node.type(node.props);};
  const pill=(node,label)=>find(node,item=>item.props?.className==='category-edit-button'&&item.props['aria-label']===label);
@@ -141,4 +143,33 @@ test('the category API reads and deletes a built-in category by its kind',async(
  assert.equal((await app.DELETE(request({id:'Rent expense',replacement_id:id(2)}))).status,200);
  assert.deepEqual(app.calls[1],{path:'/rest/v1/rpc/delete_built_in_category',body:{p_kind:'Rent expense',p_replacement:id(2),p_new_name:null},token:'owner-token'});
  assert.equal((await app.DELETE(request({id:'Groceries'}))).status,400);
+});
+test('records of a deleted category can move to a built-in category by its kind, and only one destination is accepted',async()=>{
+ const app=api();
+ assert.equal((await app.DELETE(request({id:id(1),replacement_kind:'Charity'}))).status,200);
+ assert.deepEqual(app.calls[0],{path:'/rest/v1/rpc/delete_category_into_kind',body:{p_from:id(1),p_kind:'Charity'},token:'owner-token'});
+ assert.equal((await app.DELETE(request({id:'Rent expense',replacement_kind:'Charity'}))).status,200,'a built-in category moves into another built-in one the same way');
+ assert.deepEqual(app.calls[1],{path:'/rest/v1/rpc/delete_category_into_kind',body:{p_from:'Rent expense',p_kind:'Charity'},token:'owner-token'});
+ for(const body of [{id:id(1),replacement_id:id(2),replacement_kind:'Charity'},{id:id(1),new_name:'New',replacement_kind:'Charity'},{id:id(1),replacement_kind:'Groceries'}]){const refused=api();assert.equal((await refused.DELETE(request(body))).status,400,JSON.stringify(body));assert.equal(refused.calls.length,0);}
+});
+test('the delete dialog offers the other built-in kinds of the same type, minus the deleted ones and its own, and sends the chosen kind',async()=>{
+ const h=harness('components/delete-category-dialog.tsx','DeleteCategoryDialog');let closed=0,deleted=0;
+ const category={id:id(1),name:'Leisure',direction:'expense'};
+ const props={category,categories:[category,{id:id(2),name:'Travel',direction:'expense'}],removed:['Rent expense'],onClose:()=>closed++,onDeleted:()=>deleted++};
+ const original=globalThis.fetch,calls=[];
+ globalThis.fetch=async(url,options)=>{calls.push({url,options});return options?.method==='DELETE'?Response.json({ok:true}):Response.json({records:2,deleted:0,watchlists:0});};
+ try{
+  h.render(props);const cleanup=h.effects[0]();await new Promise(resolve=>setImmediate(resolve));let tree=h.render(props);
+  const options=[];(function walk(node){if(!node||typeof node!=='object')return;if(node.type==='option')options.push(node.props.value);for(const child of React.Children.toArray(node.props?.children))walk(child);})(find(tree,node=>node.type?.name==='NativeSelect'));
+  assert.deepEqual(options,['','Living expense','Charity','Other expense',id(2),'new'],'built-in kinds first, without the deleted Rent expense, then added categories');
+  find(tree,node=>node.type?.name==='NativeSelect').props.onChange({target:{value:'Charity'}});tree=h.render(props);
+  const submit=find(tree,node=>node.props?.variant==='destructive');assert.equal(submit.props.disabled,false);
+  submit.props.onClick();await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(JSON.parse(calls.at(-1).options.body),{id:category.id,replacement_kind:'Charity'});assert.equal(closed,1);assert.equal(deleted,1);cleanup();
+  // A built-in category being deleted never offers itself.
+  const own=harness('components/delete-category-dialog.tsx','DeleteCategoryDialog');const charity={id:'Charity',name:'Charity',direction:'expense'};
+  own.render({...props,category:charity});const stop=own.effects[0]();await new Promise(resolve=>setImmediate(resolve));
+  const kinds=[];(function walk(node){if(!node||typeof node!=='object')return;if(node.type==='option')kinds.push(node.props.value);for(const child of React.Children.toArray(node.props?.children))walk(child);})(find(own.render({...props,category:charity}),node=>node.type?.name==='NativeSelect'));
+  assert.ok(!kinds.includes('Charity'));assert.ok(kinds.includes('Living expense'));stop();
+ }finally{globalThis.fetch=original;}
 });

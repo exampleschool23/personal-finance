@@ -2576,7 +2576,6 @@
   "Recurring income": "Düzenli gelir",
   "Recurring bill": "Düzenli fatura",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Net gelir, bu dönemdeki gelirden harcamaların düşülmesidir: hesaplarınızda kalan ya da birikime, yatırıma veya kredi anaparasına giden para.",
-  "Deleted categories": "Silinen kategoriler",
   "Restore {name}": "{name} geri yükle",
   "Keep at least one category of this type.": "Bu türden en az bir kategori bırakın.",
   "Rules and templates: {count}": "Kurallar ve şablonlar: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Kayıt bulunamadı.",
   "Asset pages": "Varlık sayfaları",
   "{date} – pick the last day": "{date} – son günü seçin",
-  "Pick the first and last day": "İlk ve son günü seçin"
+  "Pick the first and last day": "İlk ve son günü seçin",
+  "Make recurring": "Yinelenen yap",
+  "{amount} recurring": "{amount} yinelenen",
+  "This category already has a recurring bill.": "Bu kategorinin zaten yinelenen bir faturası var.",
+  "Split allocations can only move to an added category.": "Bölüştürmeler yalnızca eklenen bir kategoriye taşınabilir.",
+  "Both categories have a recurring bill. Archive one of them first.": "Her iki kategorinin de yinelenen bir faturası var. Önce birini arşivleyin.",
+  "Stop recurring": "Yinelemeyi durdur",
+  "Where the money went": "Para nereye gitti",
+  "Where the money came from": "Para nereden geldi",
+  "Spent this month": "Bu ay harcanan",
+  "Personal": "Kişisel"
 }

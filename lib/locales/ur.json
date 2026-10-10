@@ -2576,7 +2576,6 @@
   "Recurring income": "باقاعدہ آمدنی",
   "Recurring bill": "باقاعدہ بل",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "خالص آمدنی اس مدت کی آمدنی میں سے خرچ نکال کر ہے: جو آپ کے اکاؤنٹس میں رہا یا بچت، سرمایہ کاری یا قرض کی اصل رقم میں گیا۔",
-  "Deleted categories": "حذف شدہ زمرے",
   "Restore {name}": "{name} بحال کریں",
   "Keep at least one category of this type.": "اس قسم کا کم از کم ایک زمرہ رکھیں۔",
   "Rules and templates: {count}": "اصول اور سانچے: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "ریکارڈ نہیں ملا۔",
   "Asset pages": "اثاثوں کے صفحات",
   "{date} – pick the last day": "{date} – آخری دن منتخب کریں",
-  "Pick the first and last day": "پہلا اور آخری دن منتخب کریں"
+  "Pick the first and last day": "پہلا اور آخری دن منتخب کریں",
+  "Make recurring": "بار بار ہونے والا بنائیں",
+  "{amount} recurring": "{amount} بار بار",
+  "This category already has a recurring bill.": "اس زمرے کا پہلے سے ایک بار بار آنے والا بل ہے۔",
+  "Split allocations can only move to an added category.": "تقسیم شدہ رقوم صرف شامل کردہ زمرے میں منتقل ہو سکتی ہیں۔",
+  "Both categories have a recurring bill. Archive one of them first.": "دونوں زمروں میں ایک بار بار آنے والا بل ہے۔ پہلے ان میں سے ایک کو آرکائیو کریں۔",
+  "Stop recurring": "دہرانا بند کریں",
+  "Where the money went": "پیسہ کہاں گیا",
+  "Where the money came from": "پیسہ کہاں سے آیا",
+  "Spent this month": "اس مہینے خرچ",
+  "Personal": "ذاتی"
 }

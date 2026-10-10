@@ -1,4 +1,5 @@
 import type { LedgerLine } from './business-report';
+import { monthEnd } from './calendar-days';
 import { expenses, income } from './finance';
 
 // A prep sheet that sorts one business's categories into the lines of a sole
@@ -115,8 +116,7 @@ export type TaxPeriod = typeof taxPeriods[number];
 export function taxPeriodRange(year: number, period: TaxPeriod) {
  if (period === 'year') return { from: `${year}-01-01`, to: `${year}-12-31` };
  const quarter = Number(period.slice(1)), first = (quarter - 1) * 3 + 1;
- const last = new Date(Date.UTC(year, first + 2, 0)).toISOString().slice(0, 10);
- return { from: `${year}-${String(first).padStart(2, '0')}-01`, to: last };
+ return { from: `${year}-${String(first).padStart(2, '0')}-01`, to: monthEnd(`${year}-${String(first + 2).padStart(2, '0')}`) };
 }
 
 export type TaxExportDetail = 'lines' | 'categories' | 'transactions';

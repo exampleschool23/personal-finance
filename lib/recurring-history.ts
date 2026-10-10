@@ -1,3 +1,4 @@
+import { monthsBetween } from './budget';
 import { monthEnd, shiftMonth } from './calendar-days';
 import { installmentAnchor, installmentDates, paidInstallmentAmounts, type PlanningData } from './planning';
 import { occurrencesBetween, type RecurringItem } from './recurring';
@@ -23,8 +24,7 @@ export function scheduleTrack(schedule: RecurringItem, data: ScheduleData, today
  // The occurrences up to the end of the window, then only this schedule's (or this loan's monthly payments).
  const items = [...sameSchedule(schedule, data, [start + '-01', monthEnd(end)], today), ...unscheduledPayments(schedule, data, start, current)]
   .sort((a, b) => a.date.localeCompare(b.date));
- const points: ScheduleMonth[] = [];
- for (let month = start; month <= end; month = shiftMonth(month, 1)) points.push({ month, scheduled: 0, recorded: 0 });
+ const points: ScheduleMonth[] = monthsBetween(start, end).map(month => ({ month, scheduled: 0, recorded: 0 }));
  const byMonth = new Map(points.map(point => [point.month, point]));
  let recorded = 0, scheduled = 0;
  for (const item of items) {

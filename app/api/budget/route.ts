@@ -35,6 +35,10 @@ export async function POST(req: Request) {
   if (input.action === 'amount') {
    const { data } = input;
    response = await supa('/rest/v1/rpc/set_budget_amount', { method: 'POST', body: JSON.stringify({ p_key: data.category_key, p_month: data.month + '-01', p_amount: data.amount, p_currency: data.currency, p_forward: data.applies_forward }) }, auth.token);
+  } else if (input.action === 'amount_once') {
+   // This month only, and nothing planned after: both steps in one transaction (migration 139).
+   const { data } = input;
+   response = await supa('/rest/v1/rpc/set_budget_amount_once', { method: 'POST', body: JSON.stringify({ p_key: data.category_key, p_month: data.month + '-01', p_amount: data.amount, p_currency: data.currency }) }, auth.token);
   } else if (input.action === 'amounts') {
    // Every item is saved in one transaction: a refused one leaves the budget as it was.
    const { data } = input;

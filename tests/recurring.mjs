@@ -186,6 +186,12 @@ test('a one-time payment is offered the active schedules of its kind, business a
  assert.deepEqual(ids({ kind: 'Rent income', income_source_id: 'p1', currency: 'UZS' }), ['flat', 'eur'], 'a payment in any currency may settle its schedule');
  assert.deepEqual(ids({ kind: 'Other expense', custom_category_id: 'sport' }), ['gym']);
  assert.deepEqual(ids({ kind: 'Other expense' }), [], 'a category of its own is a different category');
+ // A schedule and a payment are the same item by `budgetKey`: the custom category when there is one, else the kind.
+ assert.deepEqual(ids({ kind: 'Living expense', custom_category_id: 'sport' }), ['gym'], 'a payment in the same custom category matches whatever kind either carries');
+ assert.deepEqual(ids({ kind: 'Other income', custom_category_id: 'sport' }), [], 'an income payment never matches an expense schedule of the same category');
+ assert.deepEqual(ids({ custom_category_id: 'sport' }), [], 'a payment without a kind matches nothing');
+ assert.deepEqual(ids({}), []);
+ assert.deepEqual(chooseSchedule({ ...base, id: 'fee', name: '', kind: 'Living expense', amount: 0, frequency: 'Once', custom_category_id: 'sport' }, records[5]), { occurrence_record_id: 'gym', name: 'Gym', amount: 30 }, 'a cross-kind match is named like any other');
  const payment = { ...base, id: 'p', name: '', kind: 'Rent income', amount: 0, frequency: 'Once' };
  assert.deepEqual(chooseSchedule(payment, records[2]), { occurrence_record_id: 'flat', name: 'Flat rent', amount: 450, income_source_id: 'p1' });
  assert.deepEqual(chooseSchedule(payment, records[3]), { occurrence_record_id: 'eur', name: 'Euro rent', income_source_id: 'p1' }, 'an amount in another currency is never copied');

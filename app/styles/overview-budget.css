@@ -113,7 +113,7 @@
  .workspace .content .overview-hero,.workspace .content .income-history-chart{padding:20px 16px}
  .workspace .content .overview-panel{padding:20px 16px}
  .workspace .content.overview-content .portfolio-headline{grid-template-columns:1fr}
- .workspace .content.overview-content .portfolio-headline>div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:10px 0;border-inline-start:0;border-top:1px solid color-mix(in srgb,var(--border) 60%,transparent)}
+ .workspace .content.overview-content .portfolio-headline>div{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 12px;padding:10px 0;border-inline-start:0;border-top:1px solid color-mix(in srgb,var(--border) 60%,transparent)}
  .workspace .content.overview-content .portfolio-headline>div:first-child{border-top:0}
  .workspace .content .overview-hero .portfolio-headline{padding-top:6px}
  .overview-content .comparison-legend button{min-height:40px}
@@ -126,7 +126,7 @@
 .budget-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start;width:100%}
 .budget-table{display:flex;flex-direction:column;gap:8px;min-width:0}
 /* The name keeps 9rem before Planned, Actual and Remaining grow past 92px; a `minmax(0,1fr)` name got only what the figures left. */
-.budget-row{display:grid;grid-template-columns:minmax(9rem,1fr) repeat(3,minmax(92px,128px));align-items:center;gap:8px;padding:10px 16px;position:relative}
+.budget-row{display:grid;grid-template-columns:minmax(9rem,1fr) repeat(3,minmax(92px,128px)) 28px;align-items:center;gap:8px;padding:10px 16px;position:relative}
 .budget-cell{text-align:end;font-variant-numeric:tabular-nums;font-size:var(--type-small)}
 .budget-section-header{margin-top:8px;padding-block:8px;border-radius:var(--radius-control);background:var(--muted);color:var(--muted-foreground);font-size:var(--type-caption);font-weight:500}
 .budget-section-header .budget-cell{font-size:var(--type-caption)}
@@ -142,6 +142,14 @@
 .budget-group-toggle{display:inline-flex;align-items:center;gap:8px;min-width:0;font-size:var(--type-compact);font-weight:600;text-align:start}
 .budget-group-toggle:focus-visible,.budget-category-name:focus-visible,.budget-unbudgeted:focus-visible{outline:2px solid var(--ring);outline-offset:2px;border-radius:6px}
 .budget-category-row+.budget-category-row{border-top:1px solid var(--hairline)}
+/* A spending category drags into another group by the handle in its leading padding: shown on hover with a mouse, always on touch. */
+.budget-category-row[data-movable]>.drag-handle{position:absolute;inset-inline-start:0;top:50%;translate:0 -50%;width:16px;opacity:0}
+.budget-category-row[data-movable]:is(:hover,:focus-within)>.drag-handle{opacity:1}
+@media(pointer:coarse){.budget-category-row[data-movable]{padding-inline-start:34px}.budget-category-row[data-movable]>.drag-handle{width:32px;opacity:1}}
+.budget-category-row[data-dragging]{opacity:.4}
+.budget-group[data-drop-target]{outline:2px solid var(--ring);outline-offset:-1px}
+.budget-drag-copy{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius-control);background:var(--card);box-shadow:var(--shadow-card);font-size:var(--type-small);cursor:grabbing}
+.budget-row-end{display:flex;justify-content:flex-end}
 .budget-category-name{display:inline-flex;align-items:center;gap:10px;min-width:0;font-size:var(--type-small);text-align:start}
 /* Category names wrap at spaces, never between letters and never behind an ellipsis. */
 .budget-category-name>span:not(.category-icon){overflow-wrap:break-word}
@@ -251,4 +259,7 @@ button.budget-category-name:hover>span:not(.category-icon){text-decoration:under
 @container content (max-width:980px){.budget-layout{grid-template-columns:minmax(0,1fr)}.budget-side{position:static;order:-1}}
 /* Planned, Actual and Remaining stay beside the name until a 9rem name and three 92px figures no longer fit (about 540px of content). Below that,
  * Actual moves under the name with its label instead of disappearing: no figure is ever hidden for lack of room. */
-@container content (max-width:540px){.budget-row{grid-template-columns:minmax(0,1fr) minmax(84px,auto) minmax(72px,auto);padding-inline:12px}.budget-row:has(>.budget-actual[data-label])>:first-child{grid-column:1;grid-row:1}.budget-row:has(>.budget-actual[data-label])>.budget-cell:not(.budget-actual){grid-row:1/3}.budget-row>.budget-actual{grid-column:1;grid-row:2;justify-self:start;color:var(--muted-foreground);font-size:var(--type-caption);text-align:start;white-space:nowrap}.budget-row>.budget-actual::before{content:attr(data-label) " "}.budget-section-header>.budget-actual,.budget-row>.budget-empty-cell.budget-actual{display:none}.budget-category-row .budget-progress{inset-inline:12px}.budget-pill{min-width:0}}
+@container content (max-width:540px){.budget-row{grid-template-columns:minmax(0,1fr) minmax(84px,auto) minmax(72px,auto) 28px;padding-inline:12px}.budget-row>.budget-row-end{grid-row:1/3}.budget-row:has(>.budget-actual[data-label])>:first-child{grid-column:1;grid-row:1}.budget-row:has(>.budget-actual[data-label])>.budget-cell:not(.budget-actual){grid-row:1/3}.budget-row>.budget-actual{grid-column:1;grid-row:2;justify-self:start;color:var(--muted-foreground);font-size:var(--type-caption);text-align:start;white-space:nowrap}.budget-row>.budget-actual::before{content:attr(data-label) " "}.budget-section-header>.budget-actual,.budget-row>.budget-empty-cell.budget-actual{display:none}.budget-category-row .budget-progress{inset-inline:12px}.budget-pill{min-width:0}}
+/* A phone leaves the name no room beside a 120px Planned field and Remaining (it was covered at 320 px):
+ * the name and Remaining share the first line, Actual and the Planned field the second; the ⋯ stays last, beside both. */
+@container content (max-width:420px){.budget-row:has(>.budget-actual[data-label]){grid-template-columns:minmax(0,1fr) auto 28px}.budget-row:has(>.budget-actual[data-label])>.budget-row-end{grid-area:1/3/3/4}.budget-row:has(>.budget-actual[data-label])>:first-child{grid-area:1/1}.budget-row:has(>.budget-actual[data-label])>.budget-cell:not(.budget-actual):nth-child(4){grid-area:1/2}.budget-row:has(>.budget-actual[data-label])>.budget-cell:not(.budget-actual):nth-child(2){grid-area:2/2}.budget-row>.budget-actual{grid-area:2/1;align-self:center;white-space:normal}}

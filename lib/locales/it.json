@@ -2576,7 +2576,6 @@
   "Recurring income": "Entrata ricorrente",
   "Recurring bill": "Bolletta ricorrente",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Il reddito netto è il reddito meno le spese del periodo: ciò che è rimasto sui tuoi conti o è andato in risparmi, investimenti o nel rimborso del capitale dei prestiti.",
-  "Deleted categories": "Categorie eliminate",
   "Restore {name}": "Ripristina {name}",
   "Keep at least one category of this type.": "Mantieni almeno una categoria di questo tipo.",
   "Rules and templates: {count}": "Regole e modelli: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Record non trovato.",
   "Asset pages": "Pagine delle attività",
   "{date} – pick the last day": "{date} – scegli l'ultimo giorno",
-  "Pick the first and last day": "Scegli il primo e l'ultimo giorno"
+  "Pick the first and last day": "Scegli il primo e l'ultimo giorno",
+  "Make recurring": "Rendi ricorrente",
+  "{amount} recurring": "{amount} ricorrente",
+  "This category already has a recurring bill.": "Questa categoria ha già una bolletta ricorrente.",
+  "Split allocations can only move to an added category.": "Le suddivisioni possono passare solo a una categoria aggiunta.",
+  "Both categories have a recurring bill. Archive one of them first.": "Entrambe le categorie hanno una bolletta ricorrente. Archivia prima una delle due.",
+  "Stop recurring": "Interrompi ricorrenza",
+  "Where the money went": "Dove sono andati i soldi",
+  "Where the money came from": "Da dove sono arrivati i soldi",
+  "Spent this month": "Speso questo mese",
+  "Personal": "Personale"
 }

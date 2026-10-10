@@ -2576,7 +2576,6 @@
   "Recurring income": "Wiederkehrendes Einkommen",
   "Recurring bill": "Wiederkehrende Rechnung",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Das Nettoeinkommen ist das Einkommen abzüglich der Ausgaben in diesem Zeitraum: was auf Ihren Konten blieb oder in Ersparnisse, Anlagen oder die Tilgung von Krediten floss.",
-  "Deleted categories": "Gelöschte Kategorien",
   "Restore {name}": "{name} wiederherstellen",
   "Keep at least one category of this type.": "Behalte mindestens eine Kategorie dieser Art.",
   "Rules and templates: {count}": "Regeln und Vorlagen: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Eintrag nicht gefunden.",
   "Asset pages": "Vermögensseiten",
   "{date} – pick the last day": "{date} – letzten Tag wählen",
-  "Pick the first and last day": "Ersten und letzten Tag wählen"
+  "Pick the first and last day": "Ersten und letzten Tag wählen",
+  "Make recurring": "Wiederkehrend machen",
+  "{amount} recurring": "{amount} wiederkehrend",
+  "This category already has a recurring bill.": "Diese Kategorie hat bereits eine wiederkehrende Rechnung.",
+  "Split allocations can only move to an added category.": "Aufteilungen können nur in eine hinzugefügte Kategorie verschoben werden.",
+  "Both categories have a recurring bill. Archive one of them first.": "Beide Kategorien haben eine wiederkehrende Rechnung. Archivieren Sie zuerst eine davon.",
+  "Stop recurring": "Wiederholung beenden",
+  "Where the money went": "Wohin das Geld ging",
+  "Where the money came from": "Woher das Geld kam",
+  "Spent this month": "Diesen Monat ausgegeben",
+  "Personal": "Persönlich"
 }

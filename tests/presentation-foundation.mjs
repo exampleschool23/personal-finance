@@ -440,3 +440,20 @@ test('interval labels name a month, quarter or year through the shared formatter
  assert.match(uzLong,/^iyul 2026$/i);assert.equal(uzQuarter,'2026, 3-chorak');assert.equal(uzYear,'2026');
  assert.ok(labels('en').every(label=>!/^\d{4}-\d{2}$/.test(label)),'never the stored key');
 });
+
+test('the history chart draws what was recorded inside an outline named by its caller, and hides a series from its legend',()=>{
+ const h=React.createElement,pass=name=>Object.assign(({children})=>h('div',{'data-part':name},children),{displayName:name});
+ const Bar=Object.assign(({dataKey})=>h('span',{'data-bar':dataKey}),{displayName:'Bar'});
+ const recharts={...Object.fromEntries(['ResponsiveContainer','BarChart','CartesianGrid','XAxis','YAxis','Tooltip'].map(name=>[name,pass(name)])),Bar};
+ const r=createRenderer();
+ const {HistoryChart}=r.load(`${dir}/history-chart.tsx`,{...overrides,recharts});
+ const points=[{month:'2026-09',scheduled:700,recorded:70},{month:'2026-10',scheduled:700,recorded:630}];
+ r.mount(h(HistoryChart,{points,currency:'USD',fill:'var(--foreground)',done:'Spent',outline:'Planned'}));
+ assert.deepEqual(r.all(byType(Bar)).map(bar=>bar.props.dataKey),['scheduled','recorded']);
+ const legend=r.find(node=>Array.isArray(node.props?.items)&&node.props.onToggle);
+ assert.deepEqual(legend.props.items.map(item=>item.label),['Spent','Planned']);
+ legend.props.onToggle('scheduled');r.update();
+ assert.deepEqual(r.all(byType(Bar)).map(bar=>bar.props.dataKey),['recorded']);
+ r.mount(h(HistoryChart,{points,currency:'USD',fill:'red',done:'Paid'}));
+ assert.equal(r.find(node=>Array.isArray(node.props?.items)&&node.props.onToggle).props.items[1].label,'Scheduled payment','a schedule is the outline by default');
+});

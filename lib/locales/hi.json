@@ -2576,7 +2576,6 @@
   "Recurring income": "आवर्ती आय",
   "Recurring bill": "आवर्ती बिल",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "शुद्ध आय इस अवधि की आय में से खर्च घटाकर है: जो आपके खातों में रहा या बचत, निवेश या ऋण के मूलधन में गया।",
-  "Deleted categories": "हटाई गई श्रेणियाँ",
   "Restore {name}": "{name} वापस लाएँ",
   "Keep at least one category of this type.": "इस प्रकार की कम से कम एक श्रेणी रखें।",
   "Rules and templates: {count}": "नियम और टेम्पलेट: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "रिकॉर्ड नहीं मिला।",
   "Asset pages": "संपत्ति पृष्ठ",
   "{date} – pick the last day": "{date} – अंतिम दिन चुनें",
-  "Pick the first and last day": "पहला और अंतिम दिन चुनें"
+  "Pick the first and last day": "पहला और अंतिम दिन चुनें",
+  "Make recurring": "आवर्ती बनाएँ",
+  "{amount} recurring": "{amount} आवर्ती",
+  "This category already has a recurring bill.": "इस श्रेणी में पहले से एक आवर्ती बिल है।",
+  "Split allocations can only move to an added category.": "विभाजन केवल जोड़ी गई श्रेणी में ले जाए जा सकते हैं।",
+  "Both categories have a recurring bill. Archive one of them first.": "दोनों श्रेणियों में एक आवर्ती बिल है। पहले उनमें से एक को संग्रहित करें।",
+  "Stop recurring": "आवर्तन रोकें",
+  "Where the money went": "पैसा कहाँ गया",
+  "Where the money came from": "पैसा कहाँ से आया",
+  "Spent this month": "इस महीने खर्च",
+  "Personal": "व्यक्तिगत"
 }

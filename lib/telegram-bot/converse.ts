@@ -27,8 +27,10 @@ async function loadContext(db:ServiceDatabase,owner:string,language:Language,clo
   db.read<Array<{currencies?:string[]}>>('/rest/v1/user_preferences?select=currencies&user_id=eq.'+owner),
   // Typed text may be an entry, which the owner's rules help categorise. Without the rules table it is guessed from history alone.
   typed?db.read<TransactionRule[]>(`/rest/v1/transaction_rules?select=*&user_id=eq.${owner}&order=created_at.desc`).catch(()=>[]):Promise.resolve([] as TransactionRule[]),
-  // Built-in categories the workspace deleted (migration 122); before it, none.
-  db.read<Array<{data?:{kinds?:string[]}}>>(`/rest/v1/workspace_preferences?select=data&key=eq.removed_categories&user_id=eq.${owner}`).then(rows=>rows[0]?.data?.kinds??[]).catch(()=>[] as string[]),
+  // Built-in categories the workspace deleted (migration 122). A workspace that deleted none has no row, which reads as
+  // []; a failed read throws like the others, so the webhook answers 503 and Telegram retries instead of the bot
+  // offering categories the workspace removed.
+  db.read<Array<{data?:{kinds?:string[]}}>>(`/rest/v1/workspace_preferences?select=data&key=eq.removed_categories&user_id=eq.${owner}`).then(rows=>rows[0]?.data?.kinds??[]),
  ]);
  return {language,currencies:preferences[0]?.currencies??[],today:clock.today,newId:clock.newId(),categories,records,rules,removed,accounts:records.filter(record=>record.kind==='Cash'),businesses:records.filter(record=>record.kind==='Business'),liabilities:records.filter(record=>['Loan','Debt','Mortgage'].includes(record.kind))};
 }
@@ -40,7 +42,10 @@ async function withDatedRate({env,chatId}:Turn,result:FlowResult,ctx:Context){
  result.draft=withRate(result.draft,quote);result.reply=prompt(result.draft,ctx,chatId);
 }
 /** Saves what the flow produced and says how it went. A new account made from a dead end hands the conversation back
- * to the question that needed it; a refused save keeps the answers, so Back can correct the one that was wrong. */
+ * to the question that needed it; a refused save keeps the answers, so Back can correct the one that was wrong.
+ * The draft stays stored until the database has answered: a write that times out or breaks off throws before this
+ * returns, the webhook answers 503 and Telegram redelivers the Save, which must still find the draft (and its id, so a
+ * write that did reach the database is recognised as saved rather than entered twice). */
 async function save(turn:Turn,owner:string,result:FlowResult&{commit:NonNullable<FlowResult['commit']>},draft:Draft|null,ctx:Context):Promise<TelegramMessage[]>{
  const {db,chatId,clock}=turn,language=ctx.language;
  const outcome=await commitDraft(db,owner,result.commit,ctx);
@@ -54,6 +59,7 @@ async function save(turn:Turn,owner:string,result:FlowResult&{commit:NonNullable
   await storeDraft(db,owner,draft,clock.now);
   return [{chat_id:chatId,text:outcome.text,keyboard:retryKeyboard(draft,ctx)}];
  }
+ if(outcome.saved&&draft)await storeDraft(db,owner,null,clock.now);
  return [{chat_id:chatId,text:outcome.text,keyboard:mainMenu(language)}];
 }
 /** One message or button in a linked chat. */
@@ -66,7 +72,8 @@ export async function converse(turn:Turn,subscription:TelegramSubscription,input
  const result=advance(draft,input,ctx,chatId);
  await withDatedRate(turn,result,ctx);
  if(result.menu==='upcoming')return [{chat_id:chatId,text:await upcomingReply(db,owner,language,clock.today),keyboard:mainMenu(language)}];
- if(result.draft!==draft)await storeDraft(db,owner,result.draft,clock.now);
+ // A save keeps its draft until the database has answered (see save); any other step stores the next question now.
  if(result.commit)return save(turn,owner,{...result,commit:result.commit},draft,ctx);
+ if(result.draft!==draft)await storeDraft(db,owner,result.draft,clock.now);
  return result.reply?[result.reply]:[];
 }

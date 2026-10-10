@@ -42,21 +42,15 @@ test('pickers, the budget and the bot leave deleted categories out', () => {
  assert.deepEqual(guessCategory({ name: 'xyz', amount: 5 }, { records: [], categories: custom, removed: ['Rent expense', 'Living expense', 'Charity', 'Other expense'] }), { direction: 'expense', kind: 'Other expense', custom_category_id: 'c1', source: 'default' });
 });
 
-test('restoring a deleted category saves the preference; a failed save puts it back; the sample workspace keeps it for the visit', async () => {
+test('a deletion shows at once; the sample workspace hides a category for the visit', () => {
  const r = createRenderer();
  const { useRemovedCategories } = r.load('hooks/use-removed-categories.ts');
- const saved = [];
- let fail = false, controller;
- const preferences = { data: { preferences: [{ key: 'removed_categories', data: { kinds: ['Rent expense', 'Charity'] } }] }, initialLoading: false, error: '', save: async preference => { if (fail) throw Error('Could not save.'); saved.push(preference); } };
+ let controller;
+ const preferences = { data: { preferences: [{ key: 'removed_categories', data: { kinds: ['Rent expense'] } }] }, initialLoading: false, error: '', save: async () => {} };
  const Host = props => { controller = useRemovedCategories(preferences, props.owner, props.demo); return null; };
  r.mount(React.createElement(Host, { owner: 'me', demo: false }));
- assert.deepEqual(controller.kinds, ['Rent expense', 'Charity']);
- await controller.restore('Charity'); r.update();
- assert.deepEqual(saved, [{ key: 'removed_categories', data: { kinds: ['Rent expense'] } }]);
  assert.deepEqual(controller.kinds, ['Rent expense']);
- fail = true;
- await assert.rejects(controller.restore('Rent expense'), /Could not save/); r.update();
- assert.deepEqual(controller.kinds, ['Rent expense'], 'the deleted category stays deleted');
+ assert.equal('restore' in controller, false, 'deleted categories are never offered back');
  controller.deleted('Salary'); r.update();
  assert.deepEqual(controller.kinds, ['Rent expense', 'Salary'], 'a saved deletion shows at once');
  const demo = createRenderer();
@@ -65,6 +59,4 @@ test('restoring a deleted category saves the preference; a failed save puts it b
  demo.mount(React.createElement(DemoHost));
  controller.hideForVisit('Other income'); demo.update();
  assert.deepEqual(controller.kinds, ['Other income']);
- await controller.restore('Other income'); demo.update();
- assert.deepEqual(controller.kinds, []);
 });

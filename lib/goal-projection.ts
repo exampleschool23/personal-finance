@@ -2,6 +2,8 @@ import { addMonths, dayMs, dayTime, daysBetween } from './calendar-days';
 import { assets, liabilities, estimatedCashFlow, financialTotals, type Entry } from './finance';
 import type { ForecastBudget } from './budget-forecast';
 import { marketEntry, marketRates, type MarketData } from './market';
+import { approximateIncome } from './monthly-income-cards';
+import type { EarningSource } from './earning-sources';
 
 // Hold existing wealth constant. Only new monthly investments earn the assumed
 // effective annual return; homes, cash and outstanding debts do not all compound.
@@ -23,14 +25,17 @@ export function projectGoal(starting: number, target: number, today: string, dea
 }
 
 /** Net worth and the monthly surplus in `currency`. With `budget`, the surplus counts the month's Budget as the
- * monthly estimate does (`estimatedCashFlow`); a budget no rate converts leaves the surplus unknown. */
-export function goalFinancials(records: Entry[], month: string, currency: string, market: MarketData|null, budget?: ForecastBudget) {
+ * monthly estimate does (`estimatedCashFlow`); a budget no rate converts leaves the surplus unknown. `sources` adds the
+ * variable sources' approximate income, as the monthly estimate on Cash flow and Overview does; a source no rate
+ * converts leaves the surplus unknown too. */
+export function goalFinancials(records: Entry[], month: string, currency: string, market: MarketData|null, { budget, sources = [] }: { budget?: ForecastBudget; sources?: readonly EarningSource[] } = {}) {
  const converted=records.map(record=>marketEntry(record,currency,market));
  const missingWealth=records.some((record,i)=>(assets.includes(record.kind)||liabilities.includes(record.kind))&&!converted[i]);
  const entries=converted.filter((entry):entry is Entry=>entry!==null);
  const netWorth=missingWealth?null:financialTotals(entries).netWorth;
  const lines=budget?.linesIn(month,currency,marketRates(market));
- const surplus=converted.some(entry=>entry===null)||lines?.missing?null:estimatedCashFlow(entries,month,lines?.lines).forecast;
+ const variable=approximateIncome(sources,currency,marketRates(market));
+ const surplus=converted.some(entry=>entry===null)||lines?.missing||variable.missing?null:estimatedCashFlow(entries,month,lines?.lines,variable.amount).forecast;
  return {netWorth,surplus};
 }
 

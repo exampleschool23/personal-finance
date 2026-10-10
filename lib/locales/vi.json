@@ -2576,7 +2576,6 @@
   "Recurring income": "Thu nhập định kỳ",
   "Recurring bill": "Hóa đơn định kỳ",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Thu nhập ròng là thu nhập trừ chi tiêu trong kỳ này: số tiền còn lại trong tài khoản hoặc được đưa vào tiết kiệm, đầu tư hay trả nợ gốc.",
-  "Deleted categories": "Danh mục đã xóa",
   "Restore {name}": "Khôi phục {name}",
   "Keep at least one category of this type.": "Hãy giữ lại ít nhất một danh mục thuộc loại này.",
   "Rules and templates: {count}": "Quy tắc và mẫu: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Không tìm thấy bản ghi.",
   "Asset pages": "Trang tài sản",
   "{date} – pick the last day": "{date} – chọn ngày cuối",
-  "Pick the first and last day": "Chọn ngày đầu và ngày cuối"
+  "Pick the first and last day": "Chọn ngày đầu và ngày cuối",
+  "Make recurring": "Đặt định kỳ",
+  "{amount} recurring": "{amount} định kỳ",
+  "This category already has a recurring bill.": "Danh mục này đã có một hóa đơn định kỳ.",
+  "Split allocations can only move to an added category.": "Các phần chia chỉ có thể chuyển sang danh mục đã thêm.",
+  "Both categories have a recurring bill. Archive one of them first.": "Cả hai danh mục đều có một hóa đơn định kỳ. Hãy lưu trữ một trong hai trước.",
+  "Stop recurring": "Dừng định kỳ",
+  "Where the money went": "Tiền đã đi đâu",
+  "Where the money came from": "Tiền đến từ đâu",
+  "Spent this month": "Đã chi tháng này",
+  "Personal": "Cá nhân"
 }

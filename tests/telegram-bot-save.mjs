@@ -53,3 +53,24 @@ test('a refused save says why in the app’s words: the account that is short, a
  const unreadable=await commitDraft({read:async()=>[],write:async()=>({ok:false,json:async()=>{throw Error('no body');}})},'owner',{type:'record',record:record()},ctx);
  assert.equal(unreadable.text,'Could not save. Please try again.');
 });
+
+test('a duplicate of the commit’s own id whose row is in the database counts as saved: the redelivered Save confirms',async()=>{
+ /** A database that refuses the write as a duplicate key and holds `rows` under the path they are looked up by. */
+ const duplicate=(failure,rows)=>{const reads=[];return {reads,read:async path=>{reads.push(path);return rows[path]??[];},write:async()=>({ok:false,json:async()=>failure})};};
+ const pkey=(table,id)=>({code:'23505',message:`duplicate key value violates unique constraint "${table}_pkey"`,details:`Key (id)=(${id}) already exists.`});
+ const recordDb=duplicate(pkey('finance_records',id(9)),{[`/rest/v1/finance_records?select=id&id=eq.${id(9)}&user_id=eq.owner`]:[{id:id(9)}]});
+ const saved=await commitDraft(recordDb,'owner',{type:'record',record:record()},ctx);
+ assert.equal(saved.saved,true);assert.match(saved.text,/^Saved\.\n/);
+ assert.deepEqual(recordDb.reads,[`/rest/v1/finance_records?select=id&id=eq.${id(9)}&user_id=eq.owner`],'looked up by its own id and owner only');
+ // A payment lives in account_activity under the id the draft chose.
+ const paymentDb=duplicate(pkey('account_activity',id(8)),{[`/rest/v1/account_activity?select=id&id=eq.${id(8)}&user_id=eq.owner`]:[{id:id(8)}]});
+ assert.equal((await commitDraft(paymentDb,'owner',{type:'planning',action:'repayment',data:payment()},ctx)).saved,true);
+ assert.equal((await commitDraft(paymentDb,'owner',{type:'fxpayment',action:'repayment',data:payment(),rate:1.1,rate_date:'2026-09-30',account_currency:'USD',record_currency:'EUR'},ctx)).saved,true);
+ // The primary key named without the row being there (another owner's, say) is still a refusal.
+ const missing=duplicate(pkey('finance_records',id(9)),{});
+ assert.deepEqual(await commitDraft(missing,'owner',{type:'record',record:record()},ctx),{text:'Could not save. This name or payment already exists.',saved:false});
+ // A duplicate of a name or a payment date is not about the id: no lookup, the refusal stands.
+ const clash=duplicate({code:'23505',message:'duplicate key value violates unique constraint "custom_categories_user_id_name_key"'},{[`/rest/v1/finance_records?select=id&id=eq.${id(9)}&user_id=eq.owner`]:[{id:id(9)}]});
+ assert.equal((await commitDraft(clash,'owner',{type:'record',record:record()},ctx)).saved,false);
+ assert.equal(clash.reads.length,0);
+});

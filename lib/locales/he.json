@@ -2576,7 +2576,6 @@
   "Recurring income": "הכנסה קבועה",
   "Recurring bill": "חשבון קבוע",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "הכנסה נטו היא ההכנסה פחות ההוצאות בתקופה זו: מה שנשאר בחשבונות שלך או הופנה לחיסכון, להשקעות או לקרן ההלוואות.",
-  "Deleted categories": "קטגוריות שנמחקו",
   "Restore {name}": "שחזור {name}",
   "Keep at least one category of this type.": "יש להשאיר לפחות קטגוריה אחת מסוג זה.",
   "Rules and templates: {count}": "כללים ותבניות: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "הרשומה לא נמצאה.",
   "Asset pages": "דפי נכסים",
   "{date} – pick the last day": "{date} – בחרו את היום האחרון",
-  "Pick the first and last day": "בחרו את היום הראשון והאחרון"
+  "Pick the first and last day": "בחרו את היום הראשון והאחרון",
+  "Make recurring": "הפוך לחוזר",
+  "{amount} recurring": "{amount} חוזר",
+  "This category already has a recurring bill.": "לקטגוריה הזו כבר יש חשבון חוזר.",
+  "Split allocations can only move to an added category.": "אפשר להעביר חלוקות רק לקטגוריה שנוספה.",
+  "Both categories have a recurring bill. Archive one of them first.": "לשתי הקטגוריות יש חשבון חוזר. יש לארכב קודם אחד מהם.",
+  "Stop recurring": "הפסק חזרה",
+  "Where the money went": "לאן הלך הכסף",
+  "Where the money came from": "מאיפה הגיע הכסף",
+  "Spent this month": "הוצאות החודש",
+  "Personal": "אישי"
 }

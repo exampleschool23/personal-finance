@@ -36,7 +36,8 @@ export function SettingsScreen() {
   {/* Signing out (or leaving the sample workspace) lives here, beside the account's other settings. */}
   <SettingsLayout
    actions={<Button variant="outline" onClick={logout}><LogOut size={16} aria-hidden="true"/>{demo ? t('Exit demo') : t('Sign out')}</Button>}
-   preferences={<><SettingsPanel key={String(user) + settingsLoading} ratesDate={market?.ratesDate} initial={preferencesData} demo={demo} onSaved={applyPreferences} loading={!demo && settingsLoading} loadError={settingsError} onRetry={retrySettings} onRestartSetup={demo?undefined:restartOnboarding}/><TelegramPanel demo={demo}/><PlanningError/></>}
+   preferences={<><SettingsPanel key={String(user) + settingsLoading} ratesDate={market?.ratesDate} initial={preferencesData} demo={demo} onSaved={applyPreferences} loading={!demo && settingsLoading} loadError={settingsError} onRetry={retrySettings} onRestartSetup={demo?undefined:restartOnboarding}/><PlanningError/></>}
+   telegram={<TelegramPanel demo={demo}/>}
    household={<HouseholdPanel household={household} demo={demo}/>}
    benchmarks={<InvestmentComparisonSettings demo={demo} currencies={preferencesData.currencies}/>}
    security={<AccountAccessPanel settings onSignedOut={clearLocalSession}/>}
@@ -45,7 +46,7 @@ export function SettingsScreen() {
    tags={<TagSettings tags={tags} preferences={workspacePreferences} owner={demo?null:user} demo={demo}/>}
    rules={<><RulesPanel rules={rules.rules} categories={planning.data.categories} businesses={businessList} tags={tags.data.tags} onEdit={setRule} onAdd={() => setRule(newRule())} onRemove={item => rules.remove(item.id)}/>
     {rule && <RuleDialog key={rule.id} rule={rule} records={demo ? planning.data.records : undefined} categories={planning.data.categories} businesses={businessList} accounts={planning.data.records.filter(record => record.kind === 'Cash').map(record => ({ id: record.id, name: record.name }))} tags={tags.data.tags} tagsOf={tagsOf} onCreateTag={createTag} splits={transactionTools.data.splits} onSave={async (next, apply) => { const changed = await rules.save(next, apply); if (apply) showNotice(t('{changed} updated', { changed })); return changed; }} onClose={() => setRule(null)}/>}</>}
-   data={<><DataTools owner={user} currency={currency} market={market} preferences={workspacePreferences} records={planning.data.records} onSaved={refreshRecords} demo={demo}/><ImportHistory owner={user} demo={demo} revision={reload} onSaved={refreshRecords}/></>}
+   data-tools={<><DataTools owner={user} currency={currency} market={market} preferences={workspacePreferences} records={planning.data.records} onSaved={refreshRecords} demo={demo}/><ImportHistory owner={user} demo={demo} revision={reload} onSaved={refreshRecords}/></>}
   />
  </div>;
 }

@@ -1,4 +1,4 @@
-import { archivedIn, scheduleDates, income, expenses, interestKinds, type Entry } from './finance';
+import { archivedIn, budgetKey, scheduleDates, income, expenses, interestKinds, type Entry } from './finance';
 import type { AssetMovement } from './asset-movements';
 import type { HoldingAccount } from './holding-accounts';
 import { shiftDay } from './calendar-days';
@@ -103,11 +103,12 @@ export function settledOccurrences(records:Entry[],occurrences:Occurrence[]){
 export const isRecurringCashFlow=(record:Entry)=>[...income,...expenses].includes(record.kind)&&record.frequency!=='Once';
 /** What a one-time payment is: its kind and category, and its business or property. */
 export type SchedulePayment={kind?:string;custom_category_id?:string|null;business_id?:string|null;income_source_id?:string|null};
-/** The active schedules a one-time payment may name by id: the same kind and category, and the same business for
- * business income or property for rent, in any currency (migration 120). The bot and the record forms offer these. */
+/** The active schedules a one-time payment may name by id: the same item (its custom category, else its kind; `budgetKey`,
+ * as Budget counts it), and the same business for business income or property for rent, in any currency (migration 120).
+ * The bot and the record forms offer these. */
 export function paymentSchedules(records:Entry[],payment:SchedulePayment):Entry[]{
- return records.filter(record=>isRecurringCashFlow(record)&&!record.archived&&!record.source_paused&&record.kind===payment.kind
-  &&(record.custom_category_id??null)===(payment.custom_category_id??null)
+ return records.filter(record=>isRecurringCashFlow(record)&&!record.archived&&!record.source_paused&&!!payment.kind
+  &&budgetKey(record)===budgetKey({kind:payment.kind,custom_category_id:payment.custom_category_id})&&income.includes(record.kind)===income.includes(payment.kind)
   &&(record.kind!=='Business income'||!payment.business_id||record.business_id===payment.business_id)
   &&(record.kind!=='Rent income'||!payment.income_source_id||record.income_source_id===payment.income_source_id));
 }

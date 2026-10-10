@@ -2576,7 +2576,6 @@
   "Recurring income": "Venit recurent",
   "Recurring bill": "Factură recurentă",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Venitul net este venitul minus cheltuielile din această perioadă: ce a rămas în conturile tale sau a mers la economii, investiții ori la principalul împrumuturilor.",
-  "Deleted categories": "Categorii șterse",
   "Restore {name}": "Restaurează {name}",
   "Keep at least one category of this type.": "Păstrează cel puțin o categorie de acest tip.",
   "Rules and templates: {count}": "Reguli și șabloane: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Înregistrarea nu a fost găsită.",
   "Asset pages": "Pagini de active",
   "{date} – pick the last day": "{date} – alegeți ultima zi",
-  "Pick the first and last day": "Alegeți prima și ultima zi"
+  "Pick the first and last day": "Alegeți prima și ultima zi",
+  "Make recurring": "Fă-l recurent",
+  "{amount} recurring": "{amount} recurent",
+  "This category already has a recurring bill.": "Această categorie are deja o factură recurentă.",
+  "Split allocations can only move to an added category.": "Împărțirile pot fi mutate doar într-o categorie adăugată.",
+  "Both categories have a recurring bill. Archive one of them first.": "Ambele categorii au o factură recurentă. Arhivați mai întâi una dintre ele.",
+  "Stop recurring": "Oprește recurența",
+  "Where the money went": "Unde s-au dus banii",
+  "Where the money came from": "De unde au venit banii",
+  "Spent this month": "Cheltuit luna aceasta",
+  "Personal": "Personal"
 }

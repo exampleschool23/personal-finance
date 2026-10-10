@@ -26,8 +26,9 @@ export type RecordFormsInput = {
  * was opened from, and starts in the workspace currency. */
 export function recordForms({ editable, setError, setRecordKinds, setEditing, setDeleting, setEditingIncomeSource, currency, section, cashFlowSection, holdingAccounts, preferredCurrencies, sources, storedRecord, categories, removedKinds }: RecordFormsInput) {
     const start = (kind: Entry['kind']) => offeredChoice(kind, categories, removedKinds);
-    /** Opens the income or expense form; Recurring's Add recurring › Bill opens it already repeating, as a schedule. */
-    const addCashFlow = (kind: Entry['kind'], frequency: Entry['frequency'] = 'Once') => { if (!editable()) return; setError(''); setRecordKinds(income.includes(kind) ? income : expenses); setEditing({ ...fresh(), currency, frequency, ...start(kind) }); };
+    /** Opens the income or expense form; Recurring's Add recurring › Bill opens it already repeating, as a schedule.
+     * `preset` fills in fields the caller already knows, such as Budget's Make recurring (name, category and amount). */
+    const addCashFlow = (kind: Entry['kind'], frequency: Entry['frequency'] = 'Once', preset: Partial<Entry> = {}) => { if (!editable()) return; setError(''); setRecordKinds(income.includes(kind) ? income : expenses); setEditing({ ...fresh(), currency, frequency, ...start(kind), ...preset }); };
     const addRecord = () => {
         if (!editable()) return;
         if (cashFlowSection) { addCashFlow('Other expense'); return; }

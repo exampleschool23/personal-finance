@@ -2576,7 +2576,6 @@
   "Recurring income": "Receita recorrente",
   "Recurring bill": "Conta recorrente",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "A renda líquida é a renda menos os gastos neste período: o que ficou nas suas contas ou foi para poupança, investimentos ou amortização de empréstimos.",
-  "Deleted categories": "Categorias excluídas",
   "Restore {name}": "Restaurar {name}",
   "Keep at least one category of this type.": "Mantenha pelo menos uma categoria deste tipo.",
   "Rules and templates: {count}": "Regras e modelos: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Registro não encontrado.",
   "Asset pages": "Páginas de ativos",
   "{date} – pick the last day": "{date} – escolha o último dia",
-  "Pick the first and last day": "Escolha o primeiro e o último dia"
+  "Pick the first and last day": "Escolha o primeiro e o último dia",
+  "Make recurring": "Tornar recorrente",
+  "{amount} recurring": "{amount} recorrente",
+  "This category already has a recurring bill.": "Esta categoria já tem uma conta recorrente.",
+  "Split allocations can only move to an added category.": "As divisões só podem ir para uma categoria adicionada.",
+  "Both categories have a recurring bill. Archive one of them first.": "Ambas as categorias têm uma conta recorrente. Arquive uma delas primeiro.",
+  "Stop recurring": "Parar recorrência",
+  "Where the money went": "Para onde foi o dinheiro",
+  "Where the money came from": "De onde veio o dinheiro",
+  "Spent this month": "Gasto este mês",
+  "Personal": "Pessoal"
 }

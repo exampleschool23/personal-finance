@@ -8480,3 +8480,395 @@ $$;
 
 NOTIFY pgrst,'reload schema';
 COMMIT;
+
+-- A new recurring bill takes the payments already made for it. Apply after 134.
+-- Budget's Make recurring (and Recurring's Add recurring) can start a bill in an
+-- earlier month. Payments in the bill's category from its start date up to today
+-- that name no schedule then settle its due dates, oldest first, as if they had
+-- been recorded against it:
+-- * a payment settles the open due date of its own month, else last month's
+--   (scheduled_payment_due, migration 119);
+-- * only the first payment of a due date is linked; others in that month stay as
+--   they are, so a busy category never piles many payments onto one bill;
+-- * transfers, account operations, mortgage payments, asset updates and income
+--   source receipts are never linked.
+-- A payment keeps its own amount, currency, account and owner. Returns how many
+-- payments were linked.
+BEGIN;
+
+CREATE OR REPLACE FUNCTION public.link_schedule_payments(p_schedule uuid) RETURNS integer
+LANGUAGE plpgsql SECURITY INVOKER SET search_path=public AS $$
+DECLARE owner uuid:=public.active_owner(); schedule public.finance_records; payment public.finance_records; due date;
+ incomes text[]:=ARRAY['Salary','Rent income','Business income','Other income']; previous_restore text; linked integer:=0;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ SELECT * INTO schedule FROM public.finance_records WHERE id=p_schedule AND user_id=owner AND frequency<>'Once' AND NOT archived FOR UPDATE;
+ IF NOT FOUND OR schedule.kind=ANY(incomes) THEN RAISE EXCEPTION 'Choose a scheduled payment.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ previous_restore:=coalesce(current_setting('finance.restore_transaction',true),'0');
+ FOR payment IN SELECT * FROM public.finance_records r
+  WHERE r.user_id=owner AND r.frequency='Once' AND r.kind=schedule.kind AND r.custom_category_id IS NOT DISTINCT FROM schedule.custom_category_id
+   AND r.occurrence_record_id IS NULL AND r.earning_source_id IS NULL
+   AND r.movement_id IS NULL AND r.operation_id IS NULL AND r.mortgage_payment_id IS NULL AND r.history_event_id IS NULL
+   AND r.date>=schedule.date AND r.date<=(now() AT TIME ZONE 'Asia/Tashkent')::date
+   AND NOT EXISTS(SELECT 1 FROM public.payment_occurrences o WHERE o.user_id=owner AND o.transaction_id=r.id)
+  ORDER BY r.date,r.created_at,r.id LOOP
+  due:=public.scheduled_payment_due(payment,schedule);
+  CONTINUE WHEN due IS NULL OR EXISTS(SELECT 1 FROM public.payment_occurrences WHERE user_id=owner AND record_id=schedule.id AND due_on=due);
+  -- A saved payment keeps its schedule (name_scheduled_payment); naming one for the first time here is allowed.
+  PERFORM set_config('finance.restore_transaction','1',true);
+  UPDATE public.finance_records SET occurrence_record_id=schedule.id,occurrence_due_on=due WHERE id=payment.id AND user_id=owner;
+  PERFORM set_config('finance.restore_transaction',previous_restore,true);
+  INSERT INTO public.payment_occurrences(id,user_id,record_id,due_on,status,transaction_id) VALUES(payment.id,owner,schedule.id,due,'paid',payment.id);
+  linked:=linked+1;
+ END LOOP;
+ RETURN linked;
+END $$;
+REVOKE ALL ON FUNCTION public.link_schedule_payments(uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.link_schedule_payments(uuid) TO authenticated;
+
+-- The capability version moves to 135, so the app can ask for this migration.
+CREATE OR REPLACE FUNCTION public.finance_capabilities() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
+ SELECT jsonb_build_object('schema_version',135,'record_revisions',true,'verified_restore',true)
+$$;
+
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+-- Linking a new bill's earlier payments works for signed-in people. Apply after 135.
+-- link_schedule_payments (135) ran with the caller's rights, so it could not call the
+-- due-date rule (scheduled_payment_due), which only the database's own functions may
+-- use, and every call failed. It now runs as the database, as the other scheduled
+-- payment functions do: it reads and writes only the active workspace's rows, and a
+-- household member who may only view is refused first.
+BEGIN;
+
+CREATE OR REPLACE FUNCTION public.link_schedule_payments(p_schedule uuid) RETURNS integer
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE owner uuid:=public.active_owner(); schedule public.finance_records; payment public.finance_records; due date;
+ incomes text[]:=ARRAY['Salary','Rent income','Business income','Other income']; previous_restore text; linked integer:=0;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ IF NOT public.can_write_owner(owner) THEN RAISE EXCEPTION 'This shared workspace is view-only.' USING ERRCODE='42501'; END IF;
+ SELECT * INTO schedule FROM public.finance_records WHERE id=p_schedule AND user_id=owner AND frequency<>'Once' AND NOT archived FOR UPDATE;
+ IF NOT FOUND OR schedule.kind=ANY(incomes) THEN RAISE EXCEPTION 'Choose a scheduled payment.'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ previous_restore:=coalesce(current_setting('finance.restore_transaction',true),'0');
+ FOR payment IN SELECT * FROM public.finance_records r
+  WHERE r.user_id=owner AND r.frequency='Once' AND r.kind=schedule.kind AND r.custom_category_id IS NOT DISTINCT FROM schedule.custom_category_id
+   AND r.occurrence_record_id IS NULL AND r.earning_source_id IS NULL
+   AND r.movement_id IS NULL AND r.operation_id IS NULL AND r.mortgage_payment_id IS NULL AND r.history_event_id IS NULL
+   AND r.date>=schedule.date AND r.date<=(now() AT TIME ZONE 'Asia/Tashkent')::date
+   AND NOT EXISTS(SELECT 1 FROM public.payment_occurrences o WHERE o.user_id=owner AND o.transaction_id=r.id)
+  ORDER BY r.date,r.created_at,r.id LOOP
+  due:=public.scheduled_payment_due(payment,schedule);
+  CONTINUE WHEN due IS NULL OR EXISTS(SELECT 1 FROM public.payment_occurrences WHERE user_id=owner AND record_id=schedule.id AND due_on=due);
+  -- A saved payment keeps its schedule (name_scheduled_payment); naming one for the first time here is allowed.
+  PERFORM set_config('finance.restore_transaction','1',true);
+  UPDATE public.finance_records SET occurrence_record_id=schedule.id,occurrence_due_on=due WHERE id=payment.id AND user_id=owner;
+  PERFORM set_config('finance.restore_transaction',previous_restore,true);
+  INSERT INTO public.payment_occurrences(id,user_id,record_id,due_on,status,transaction_id) VALUES(payment.id,owner,schedule.id,due,'paid',payment.id);
+  linked:=linked+1;
+ END LOOP;
+ RETURN linked;
+END $$;
+REVOKE ALL ON FUNCTION public.link_schedule_payments(uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.link_schedule_payments(uuid) TO authenticated;
+
+-- The capability version moves to 136, so the app can ask for this migration.
+CREATE OR REPLACE FUNCTION public.finance_capabilities() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
+ SELECT jsonb_build_object('schema_version',136,'record_revisions',true,'verified_restore',true)
+$$;
+
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+-- A spending category and its recurring bill are one item with one history. Apply after 136.
+-- Budget counted a payment by its category while Recurring counted it only when it
+-- named the bill, so "Dildora Wife" could read $252 spent on Budget and unpaid on
+-- Recurring. Now, for a custom spending category:
+-- * it has at most one active recurring bill (archive one to start another);
+-- * every payment in it settles that bill, whatever its spending kind: one that names
+--   no schedule takes the bill's id (as business and rent income already take theirs,
+--   migration 120), and the database picks the due date as before; a payment edited or
+--   recategorised into the category takes the bill the same way, and settles it;
+-- * when the bill is saved, restored from the archive or moved to the category, the payments
+--   already made in the category from its start date settle it too: the first of a
+--   due date settles it and the others add to it, as later payments do. This happens
+--   in the same transaction as the save, so a bill is never saved without its history.
+-- Built-in kinds (Living expense, Charity, ...) are too broad to be one bill and keep
+-- naming a schedule by hand. Replaces link_schedule_payments (135, 136), which the app
+-- called after the save and which matched the spending kind as well as the category.
+BEGIN;
+
+-- Two active bills in one category would split its history; name them so one can be archived.
+DO $$ DECLARE clash text; BEGIN
+ SELECT string_agg(DISTINCT r.name,', ') INTO clash FROM public.finance_records r
+  WHERE r.frequency<>'Once' AND NOT r.archived AND r.custom_category_id IS NOT NULL AND r.kind IN ('Rent expense','Living expense','Charity','Other expense')
+  AND EXISTS(SELECT 1 FROM public.finance_records o WHERE o.user_id=r.user_id AND o.id<>r.id AND o.custom_category_id=r.custom_category_id
+   AND o.frequency<>'Once' AND NOT o.archived AND o.kind IN ('Rent expense','Living expense','Charity','Other expense'));
+ IF clash IS NOT NULL THEN RAISE EXCEPTION 'These recurring bills share a category: %. Archive or delete the extra ones, then apply this migration again.',clash; END IF;
+END $$;
+CREATE UNIQUE INDEX IF NOT EXISTS finance_records_one_bill_per_category ON public.finance_records(user_id,custom_category_id)
+ WHERE frequency<>'Once' AND NOT archived AND custom_category_id IS NOT NULL AND kind IN ('Rent expense','Living expense','Charity','Other expense');
+
+-- The one active bill of a payment's custom spending category, or null.
+CREATE OR REPLACE FUNCTION public.category_bill_of(payment public.finance_records) RETURNS uuid
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$
+ SELECT bill.id FROM public.finance_records bill
+ WHERE payment.custom_category_id IS NOT NULL AND payment.kind IN ('Rent expense','Living expense','Charity','Other expense')
+  AND payment.earning_source_id IS NULL AND payment.movement_id IS NULL AND payment.operation_id IS NULL
+  AND payment.mortgage_payment_id IS NULL AND payment.history_event_id IS NULL
+  AND bill.user_id=payment.user_id AND bill.custom_category_id=payment.custom_category_id AND bill.frequency<>'Once'
+  AND NOT bill.archived AND NOT bill.source_paused AND bill.kind IN ('Rent expense','Living expense','Charity','Other expense')
+$$;
+REVOKE ALL ON FUNCTION public.category_bill_of(public.finance_records) FROM PUBLIC,anon,authenticated;
+
+-- As in 120, with a spending payment taking its category's bill.
+CREATE OR REPLACE FUNCTION public.name_scheduled_payment() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE schedule public.finance_records; incomes text[]:=ARRAY['Salary','Rent income','Business income','Other income'];
+BEGIN
+ -- Rows written by a verified restore or an undo keep exactly what they were saved with.
+ IF public.finance_restore_active() OR coalesce(current_setting('finance.restore_transaction',true),'0')='1' THEN RETURN NEW; END IF;
+ IF TG_OP='UPDATE' THEN
+  IF (NEW.occurrence_record_id,NEW.occurrence_due_on) IS DISTINCT FROM (OLD.occurrence_record_id,OLD.occurrence_due_on) THEN RAISE EXCEPTION 'A scheduled payment keeps its schedule.'; END IF;
+  -- A payment that named no schedule and now moves into a bill's category (an edit, a bulk recategorisation) takes the bill.
+  IF NEW.occurrence_record_id IS NOT NULL OR NEW.frequency<>'Once' OR NEW.date IS NULL
+   OR (NEW.custom_category_id,NEW.kind,NEW.date) IS NOT DISTINCT FROM (OLD.custom_category_id,OLD.kind,OLD.date) THEN RETURN NEW; END IF;
+ ELSIF NEW.frequency<>'Once' OR NEW.date IS NULL THEN
+  IF NEW.occurrence_record_id IS NOT NULL THEN RAISE EXCEPTION 'Choose a scheduled payment.'; END IF;
+  RETURN NEW;
+ END IF;
+ -- The owner's lock, shared with link_category_bill and the category moves, so a payment and its bill saved at the same instant still meet.
+ PERFORM pg_advisory_xact_lock(hashtextextended(NEW.user_id::text,0));
+ NEW.occurrence_record_id:=coalesce(NEW.occurrence_record_id,public.income_schedule_of(NEW),public.category_bill_of(NEW));
+ IF NEW.occurrence_record_id IS NULL THEN NEW.occurrence_due_on:=NULL; RETURN NEW; END IF;
+ SELECT * INTO schedule FROM public.finance_records WHERE id=NEW.occurrence_record_id AND user_id=NEW.user_id AND frequency<>'Once';
+ IF NOT FOUND OR (NEW.kind=ANY(incomes))<>(schedule.kind=ANY(incomes)) THEN RAISE EXCEPTION 'Choose a scheduled payment.'; END IF;
+ IF NEW.occurrence_due_on IS NULL THEN
+  NEW.occurrence_due_on:=public.scheduled_payment_due(NEW,schedule);
+  IF NEW.occurrence_due_on IS NULL THEN NEW.occurrence_record_id:=NULL; END IF;
+ ELSIF NOT public.is_schedule_date(schedule.frequency,schedule.date,schedule.end_date,NEW.occurrence_due_on,schedule.recurrence_days) THEN
+  RAISE EXCEPTION 'Choose a scheduled payment date.';
+ END IF;
+ RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public.name_scheduled_payment() FROM PUBLIC,anon,authenticated;
+-- A change of category, kind or date can name a schedule now, so the trigger watches those columns too.
+DROP TRIGGER IF EXISTS y_name_scheduled_payment ON public.finance_records;
+CREATE TRIGGER y_name_scheduled_payment BEFORE INSERT OR UPDATE OF occurrence_record_id,occurrence_due_on,custom_category_id,kind,date ON public.finance_records
+ FOR EACH ROW EXECUTE FUNCTION public.name_scheduled_payment();
+
+-- As in 120, and also after an edit that named a schedule for the first time. A row that already named
+-- one was settled when it did; a restore or an undo writes its own occurrences.
+CREATE OR REPLACE FUNCTION public.settle_scheduled_payment() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ IF TG_OP='UPDATE' AND OLD.occurrence_record_id IS NOT NULL THEN RETURN NULL; END IF;
+ IF NOT public.finance_restore_active() AND coalesce(current_setting('finance.restore_transaction',true),'0')<>'1' THEN
+  INSERT INTO public.payment_occurrences(id,user_id,record_id,due_on,status,transaction_id)
+  VALUES(NEW.id,NEW.user_id,NEW.occurrence_record_id,NEW.occurrence_due_on,'paid',NEW.id) ON CONFLICT DO NOTHING;
+ END IF;
+ RETURN NULL;
+END $$;
+REVOKE ALL ON FUNCTION public.settle_scheduled_payment() FROM PUBLIC,anon,authenticated;
+-- The columns an edit sets; name_scheduled_payment fills the occurrence columns before this fires.
+DROP TRIGGER IF EXISTS settle_scheduled_payment ON public.finance_records;
+CREATE TRIGGER settle_scheduled_payment AFTER INSERT OR UPDATE OF occurrence_record_id,occurrence_due_on,custom_category_id,kind,date ON public.finance_records
+ FOR EACH ROW WHEN (NEW.occurrence_record_id IS NOT NULL AND NEW.occurrence_due_on IS NOT NULL) EXECUTE FUNCTION public.settle_scheduled_payment();
+
+-- The payments already made in a bill's category, from its start date up to today, settle it, oldest first.
+CREATE OR REPLACE FUNCTION public.link_category_bill(p_bill uuid) RETURNS integer
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE bill public.finance_records; payment public.finance_records; due date; previous_restore text; linked integer:=0;
+BEGIN
+ SELECT * INTO bill FROM public.finance_records WHERE id=p_bill AND frequency<>'Once' AND NOT archived AND NOT source_paused
+  AND custom_category_id IS NOT NULL AND kind IN ('Rent expense','Living expense','Charity','Other expense');
+ IF NOT FOUND THEN RETURN 0; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(bill.user_id::text,0));
+ previous_restore:=coalesce(current_setting('finance.restore_transaction',true),'0');
+ FOR payment IN SELECT * FROM public.finance_records r
+  WHERE r.user_id=bill.user_id AND r.frequency='Once' AND r.custom_category_id=bill.custom_category_id AND r.occurrence_record_id IS NULL
+   AND public.category_bill_of(r)=bill.id
+   AND r.date>=bill.date AND r.date<=(now() AT TIME ZONE 'Asia/Tashkent')::date
+   AND NOT EXISTS(SELECT 1 FROM public.payment_occurrences o WHERE o.user_id=bill.user_id AND o.transaction_id=r.id)
+  ORDER BY r.date,r.created_at,r.id LOOP
+  due:=public.scheduled_payment_due(payment,bill);
+  CONTINUE WHEN due IS NULL;
+  -- A saved payment keeps its schedule (name_scheduled_payment); naming one for the first time here is allowed.
+  PERFORM set_config('finance.restore_transaction','1',true);
+  UPDATE public.finance_records SET occurrence_record_id=bill.id,occurrence_due_on=due WHERE id=payment.id AND user_id=bill.user_id;
+  PERFORM set_config('finance.restore_transaction',previous_restore,true);
+  -- The first payment of a due date settles it; later ones add to it (laterPayments).
+  INSERT INTO public.payment_occurrences(id,user_id,record_id,due_on,status,transaction_id)
+   VALUES(payment.id,bill.user_id,bill.id,due,'paid',payment.id) ON CONFLICT (user_id,record_id,due_on) DO NOTHING;
+  linked:=linked+1;
+ END LOOP;
+ RETURN linked;
+END $$;
+REVOKE ALL ON FUNCTION public.link_category_bill(uuid) FROM PUBLIC,anon,authenticated;
+
+CREATE OR REPLACE FUNCTION public.link_saved_category_bill() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ IF public.finance_restore_active() OR coalesce(current_setting('finance.restore_transaction',true),'0')='1' THEN RETURN NULL; END IF;
+ PERFORM public.link_category_bill(NEW.id);
+ RETURN NULL;
+END $$;
+REVOKE ALL ON FUNCTION public.link_saved_category_bill() FROM PUBLIC,anon,authenticated;
+DROP TRIGGER IF EXISTS link_saved_category_bill ON public.finance_records;
+CREATE TRIGGER link_saved_category_bill AFTER INSERT OR UPDATE OF date,custom_category_id,kind,frequency,archived,source_paused ON public.finance_records
+ FOR EACH ROW WHEN (NEW.frequency<>'Once' AND NEW.custom_category_id IS NOT NULL) EXECUTE FUNCTION public.link_saved_category_bill();
+
+DROP FUNCTION IF EXISTS public.link_schedule_payments(uuid);
+
+-- Bills saved before this take their category's history once.
+DO $$ DECLARE bill uuid; BEGIN
+ FOR bill IN SELECT id FROM public.finance_records WHERE frequency<>'Once' AND NOT archived AND custom_category_id IS NOT NULL
+  AND kind IN ('Rent expense','Living expense','Charity','Other expense') LOOP
+  PERFORM public.link_category_bill(bill);
+ END LOOP;
+END $$;
+
+-- The capability version moves to 137, so the app can ask for this migration.
+CREATE OR REPLACE FUNCTION public.finance_capabilities() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
+ SELECT jsonb_build_object('schema_version',137,'record_revisions',true,'verified_restore',true)
+$$;
+
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+-- Deleting a category can move its records into a built-in one. Apply after 137.
+-- Settings lists built-in categories (Living expense, Charity, ...) beside added ones,
+-- but a deleted category's records could only move to an added category or a new one.
+-- delete_category_into_kind moves everything a category holds into a kept built-in
+-- category of the same type, then deletes it as before, in one transaction:
+-- * transactions and schedules take the built-in kind and leave the added category;
+--   a record that may not change its kind (an income source payment, a tracked
+--   movement) refuses the whole move with its own reason, and nothing changes;
+-- * Recently deleted records, rules, entry templates and spending watchlists follow;
+-- * the budget adds to the built-in category's (merge_budget_category, migration 127).
+-- Split allocations name an added category only, so a category used in splits still
+-- needs an added replacement. A bill may not move into a category that already has an
+-- active bill (137); the move is refused with the reason, not a duplicate error, and nothing
+-- changes. A recurring bill with paid months keeps its cadence and
+-- currency (protect_settled_schedule, migration 065); during this move only, its kind
+-- may change within the same type, since the kind is then only its category.
+BEGIN;
+
+DO $$ DECLARE definition text:=pg_get_functiondef('public.protect_settled_schedule()'::regprocedure); BEGIN
+ IF position('finance.category_move' in definition)>0 THEN RETURN; END IF;
+ IF position('IF (NEW.kind,NEW.currency,NEW.frequency,NEW.recurrence_days) IS DISTINCT FROM' in definition)=0 THEN RAISE EXCEPTION 'Could not update protect_settled_schedule; apply the earlier migrations first.'; END IF;
+ EXECUTE replace(definition,'IF (NEW.kind,NEW.currency,NEW.frequency,NEW.recurrence_days) IS DISTINCT FROM',
+  'IF (CASE WHEN coalesce(current_setting(''finance.category_move'',true),''0'')=''1'' AND (NEW.kind IN (''Salary'',''Rent income'',''Business income'',''Other income''))=(OLD.kind IN (''Salary'',''Rent income'',''Business income'',''Other income'')) THEN OLD.kind ELSE NEW.kind END,NEW.currency,NEW.frequency,NEW.recurrence_days) IS DISTINCT FROM');
+END $$;
+
+-- A category has one active bill (137). Moving a bill into a category that has one, whether a deleted
+-- category's records move there (delete_transaction_category, delete_built_in_category) or the bill is
+-- edited into it, used to fail on the unique index with a bare duplicate message after everything was
+-- rolled back. The reason is named before the row is written; the whole move stops and nothing changes.
+CREATE OR REPLACE FUNCTION public.guard_category_bill_move() RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+BEGIN
+ IF public.finance_restore_active() THEN RETURN NEW; END IF;
+ IF EXISTS(SELECT 1 FROM public.finance_records other WHERE other.user_id=NEW.user_id AND other.id<>NEW.id AND other.custom_category_id=NEW.custom_category_id
+  AND other.frequency<>'Once' AND NOT other.archived AND other.kind IN ('Rent expense','Living expense','Charity','Other expense')) THEN
+  RAISE EXCEPTION 'Both categories have a recurring bill. Archive one of them first.';
+ END IF;
+ RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public.guard_category_bill_move() FROM PUBLIC,anon,authenticated;
+DROP TRIGGER IF EXISTS guard_category_bill_move ON public.finance_records;
+CREATE TRIGGER guard_category_bill_move BEFORE UPDATE OF custom_category_id ON public.finance_records
+ FOR EACH ROW WHEN (NEW.custom_category_id IS NOT NULL AND NEW.custom_category_id IS DISTINCT FROM OLD.custom_category_id AND NEW.frequency<>'Once' AND NOT NEW.archived
+  AND NEW.kind IN ('Rent expense','Living expense','Charity','Other expense')) EXECUTE FUNCTION public.guard_category_bill_move();
+
+CREATE OR REPLACE FUNCTION public.delete_category_into_kind(p_from text,p_kind text) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
+DECLARE owner uuid:=public.active_owner(); incomes text[]:=ARRAY['Salary','Rent income','Business income','Other income'];
+ spending text[]:=ARRAY['Rent expense','Living expense','Charity','Other expense']; side text; removed text[]; category uuid; built_in boolean;
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ IF NOT public.can_write_owner(owner) THEN RAISE EXCEPTION 'This shared workspace is view-only.' USING ERRCODE='42501'; END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended(owner::text,0));
+ built_in:=p_from=ANY(incomes||spending);
+ IF built_in THEN side:=CASE WHEN p_from=ANY(incomes) THEN 'income' ELSE 'expense' END;
+ ELSE
+  BEGIN category:=p_from::uuid; EXCEPTION WHEN invalid_text_representation THEN RAISE EXCEPTION 'Category not found.'; END;
+  SELECT direction INTO side FROM public.transaction_categories WHERE id=category AND user_id=owner FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Category not found.'; END IF;
+ END IF;
+ SELECT coalesce(array_agg(value),'{}') INTO removed FROM public.workspace_preferences w CROSS JOIN LATERAL jsonb_array_elements_text(w.data->'kinds') value WHERE w.user_id=owner AND w.key='removed_categories';
+ IF p_kind IS NULL OR p_kind=p_from OR p_kind=ANY(removed) OR NOT p_kind=ANY(CASE WHEN side='income' THEN incomes ELSE spending END) THEN
+  RAISE EXCEPTION 'Choose a different category of the same type.';
+ END IF;
+ IF NOT built_in AND (EXISTS(SELECT 1 FROM public.transaction_splits WHERE user_id=owner AND category_id=category)
+  OR EXISTS(SELECT 1 FROM public.deleted_items d CROSS JOIN LATERAL jsonb_array_elements(coalesce(d.splits,'[]')) part WHERE d.user_id=owner AND d.source='finance_records' AND part->>'category_id'=p_from)) THEN
+  RAISE EXCEPTION 'Split allocations can only move to an added category.';
+ END IF;
+
+ -- Transactions and schedules, then the same in Recently deleted.
+ PERFORM set_config('finance.category_move','1',true);
+ UPDATE public.finance_records SET kind=p_kind,custom_category_id=NULL
+  WHERE user_id=owner AND (CASE WHEN built_in THEN kind=p_from AND custom_category_id IS NULL ELSE custom_category_id=category END);
+ PERFORM set_config('finance.category_move','0',true);
+ UPDATE public.deleted_items SET data=data||jsonb_build_object('kind',p_kind,'custom_category_id',NULL)
+  WHERE user_id=owner AND source='finance_records' AND (CASE WHEN built_in THEN data->>'kind'=p_from AND coalesce(data->>'custom_category_id','')='' ELSE data->>'custom_category_id'=p_from END);
+ -- Rules and templates name a built-in category by its kind alone.
+ UPDATE public.transaction_rules SET kind=p_kind,category_id=NULL
+  WHERE user_id=owner AND (CASE WHEN built_in THEN kind=p_from AND category_id IS NULL ELSE category_id=category END);
+ UPDATE public.transaction_rules SET match_kind=p_kind,match_category_id=NULL
+  WHERE user_id=owner AND (CASE WHEN built_in THEN match_kind=p_from AND match_category_id IS NULL ELSE match_category_id=category END);
+ UPDATE public.workspace_preferences w SET data=jsonb_set(data,'{items}',(SELECT jsonb_agg(CASE WHEN item->>'category'=p_from THEN jsonb_set(item,'{category}',to_jsonb(p_kind)) ELSE item END ORDER BY ord) FROM jsonb_array_elements(w.data->'items') WITH ORDINALITY p(item,ord)))
+  WHERE w.user_id=owner AND w.key='watchlists' AND EXISTS(SELECT 1 FROM jsonb_array_elements(w.data->'items') item WHERE item->>'category'=p_from);
+ UPDATE public.workspace_preferences w SET data=jsonb_set(data,'{items}',(SELECT jsonb_agg(CASE WHEN (CASE WHEN built_in THEN item->>'kind'=p_from AND coalesce(item->>'custom_category_id','')='' ELSE item->>'custom_category_id'=p_from END)
+   THEN item||jsonb_build_object('kind',p_kind,'custom_category_id',NULL) ELSE item END ORDER BY ord) FROM jsonb_array_elements(w.data->'items') WITH ORDINALITY p(item,ord)))
+  WHERE w.user_id=owner AND w.key='entry_templates' AND EXISTS(SELECT 1 FROM jsonb_array_elements(w.data->'items') item
+   WHERE CASE WHEN built_in THEN item->>'kind'=p_from AND coalesce(item->>'custom_category_id','')='' ELSE item->>'custom_category_id'=p_from END);
+ -- The budget joins the built-in category's; then the emptied category is deleted as before.
+ PERFORM public.merge_budget_category(owner,p_from,p_kind);
+ IF built_in THEN PERFORM public.delete_built_in_category(p_from); ELSE PERFORM public.delete_transaction_category(category); END IF;
+ RETURN jsonb_build_object('ok',true,'replacement',p_kind);
+END $$;
+REVOKE ALL ON FUNCTION public.delete_category_into_kind(text,text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.delete_category_into_kind(text,text) TO authenticated;
+
+-- The capability version moves to 138, so the app can ask for this migration.
+CREATE OR REPLACE FUNCTION public.finance_capabilities() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
+ SELECT jsonb_build_object('schema_version',138,'record_revisions',true,'verified_restore',true)
+$$;
+
+NOTIFY pgrst,'reload schema';
+COMMIT;
+
+-- The "Apply to all future months" tick comes off in one transaction. Apply after 138.
+-- Taking the tick off on Budget sent two requests: this month's amount for this month
+-- only, then an amount of 0 applying forward from next month, so later months plan
+-- nothing. When the second request failed, the budget was left half-changed: this
+-- month's amount no longer applied forward, yet every later month still planned the
+-- old amount. set_budget_amount_once does both steps in one call, all or nothing:
+-- it saves this month's amount for this month only (set_budget_amount, keeping a
+-- forward amount of the same month by moving it on), then plans nothing from next
+-- month on (0 applying forward, replacing the months after). Mirrors
+-- repeatBudgetAmount in lib/budget-schedules.ts. No existing rows are changed.
+BEGIN;
+
+CREATE OR REPLACE FUNCTION public.set_budget_amount_once(p_key text,p_month date,p_amount numeric,p_currency text) RETURNS void
+LANGUAGE plpgsql SECURITY INVOKER SET search_path=public AS $$
+DECLARE owner uuid:=public.active_owner();
+BEGIN
+ IF owner IS NULL THEN RAISE EXCEPTION 'Please sign in again.'; END IF;
+ PERFORM public.set_budget_amount(p_key,p_month,p_amount,p_currency,false);
+ PERFORM public.set_budget_amount(p_key,(p_month+interval '1 month')::date,0,p_currency,true);
+END $$;
+REVOKE ALL ON FUNCTION public.set_budget_amount_once(text,date,numeric,text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.set_budget_amount_once(text,date,numeric,text) TO authenticated;
+
+-- The capability version moves to 139, so the app can ask for this migration.
+CREATE OR REPLACE FUNCTION public.finance_capabilities() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path=public AS $$
+ SELECT jsonb_build_object('schema_version',139,'record_revisions',true,'verified_restore',true)
+$$;
+
+NOTIFY pgrst,'reload schema';
+COMMIT;

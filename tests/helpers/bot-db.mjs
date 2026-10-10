@@ -1,7 +1,7 @@
 // A small in-memory stand-in for the REST tables the Telegram bot touches. It
 // understands the filters the bot uses (eq, is.null, gt, lt) and upserts by user.
 export function botDb(seed = {}) {
-  const tables = { telegram_subscriptions: [], user_preferences: [], telegram_drafts: [], telegram_login_tokens: [], telegram_connect_requests: [], finance_records: [], transaction_categories: [], payment_occurrences: [], account_activity: [], mortgage_payments: [], portfolio_snapshots: [], ...structuredClone(seed) };
+  const tables = { telegram_subscriptions: [], user_preferences: [], telegram_drafts: [], telegram_login_tokens: [], telegram_connect_requests: [], finance_records: [], transaction_categories: [], payment_occurrences: [], account_activity: [], mortgage_payments: [], portfolio_snapshots: [], workspace_preferences: [], ...structuredClone(seed) };
   const writes = [], rpcs = [];
   const failures = new Set(seed.__fail ?? []);
   const filters = path => [...new URLSearchParams(path.split('?')[1] ?? '').entries()].filter(([key]) => !['select', 'on_conflict', 'order', 'limit', 'offset'].includes(key));

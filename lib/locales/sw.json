@@ -2576,7 +2576,6 @@
   "Recurring income": "Mapato yanayojirudia",
   "Recurring bill": "Bili inayojirudia",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Mapato halisi ni mapato ukiondoa matumizi katika kipindi hiki: kilichobaki kwenye akaunti zako au kilichokwenda kwenye akiba, uwekezaji au kulipa mtaji wa mikopo.",
-  "Deleted categories": "Kategoria zilizofutwa",
   "Restore {name}": "Rejesha {name}",
   "Keep at least one category of this type.": "Acha angalau kategoria moja ya aina hii.",
   "Rules and templates: {count}": "Kanuni na violezo: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Rekodi haikupatikana.",
   "Asset pages": "Kurasa za mali",
   "{date} – pick the last day": "{date} – chagua siku ya mwisho",
-  "Pick the first and last day": "Chagua siku ya kwanza na ya mwisho"
+  "Pick the first and last day": "Chagua siku ya kwanza na ya mwisho",
+  "Make recurring": "Fanya kujirudia",
+  "{amount} recurring": "{amount} kujirudia",
+  "This category already has a recurring bill.": "Aina hii tayari ina bili inayojirudia.",
+  "Split allocations can only move to an added category.": "Migawanyo inaweza kuhamishiwa tu kwenye aina iliyoongezwa.",
+  "Both categories have a recurring bill. Archive one of them first.": "Aina zote mbili zina bili inayojirudia. Weka mojawapo kwenye kumbukumbu kwanza.",
+  "Stop recurring": "Acha kujirudia",
+  "Where the money went": "Pesa zilikoenda",
+  "Where the money came from": "Pesa zilikotoka",
+  "Spent this month": "Zilizotumika mwezi huu",
+  "Personal": "Binafsi"
 }

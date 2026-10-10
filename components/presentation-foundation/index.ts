@@ -19,6 +19,7 @@ export { ResourceState } from './resource-state';
 export { LoadingPlaceholder, PageSkeleton, WorkspaceSkeleton, ChartSkeleton, NetWorthBodySkeleton, StatTilesSkeleton, PanelSkeleton, CashflowPreviewSkeleton, AccountsSkeleton } from './loading-placeholder';
 export { Segmented, type SegmentedOption } from './segmented';
 export { SeriesLegend, toggleKey, type SeriesLegendItem } from './series-legend';
+export { HistoryChart, type HistoryPoint } from './history-chart';
 export { ChartGradient, chartAxis, chartBar, chartColors, chartDonut, chartDot, chartGrid, chartHeight, chartLegend, chartLine, chartMargin, chartSankey, chartTooltip, chartValueAxis, groupedBar, guideLine, intervalLabel, leadArea, leadLine, moneyTick, monthLabel, monthTick, plannedBar, recordedBar, referenceLine, sankeyLink, sankeyNodeRadius, stackTop } from './chart';
 export { RowMenu, type RowMenuItem } from './row-menu';
 export { DeleteButton } from './delete-button';

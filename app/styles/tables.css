@@ -53,7 +53,7 @@ roll-strip>roll-char{display:block;height:1lh}
 /* Touch screens: every control the thumb aims at is at least 44px; small icons grow an invisible hit area instead of a bigger glyph. */
 @media(pointer:coarse){
  /* One floor for every tappable control; screen-specific sizes above it only ever make controls larger. */
- :is(button,[role=button],[role=tab],summary,.date-picker-trigger,a[data-slot=button],input[type=range]):not(.pos-day,.drag-handle,.info-hint,.recurring-chip,.switch,.pnl-toggle,.pnl-drill,.report-drill>button){min-height:44px!important}
+ :is(button,[role=button],[role=tab],[role^=menuitem],summary,.date-picker-trigger,a[data-slot=button],input[type=range]):not(.pos-day,.drag-handle,.info-hint,.recurring-chip,.switch,.pnl-toggle,.pnl-drill,.report-drill>button){min-height:44px!important}
  :is(button,a)[data-size^=icon]:not(.drag-handle,.info-hint){min-width:44px!important}
  .topbar-actions :is(button,a),.theme-toggle,[data-sidebar=trigger]{min-width:44px}
  .nav-item,.user-link,.brand-compact{min-height:44px!important}
@@ -82,8 +82,10 @@ roll-strip>roll-char{display:block;height:1lh}
  .records table tbody tr:last-child{border-bottom:0}
  .records table tbody td{display:block;width:auto;max-width:none;padding:0;border:0}
  /* The name takes the first line beside the value (moved up with `order`). The table's 24px first and last cell padding stays out
-  * of the card, so every line starts at the card's own 16px. */
- .records table td:first-child{position:static;flex:1 1 calc(100% - 10rem);min-width:0;padding:0;background:none}
+  * of the card, so every line starts at the card's own 16px.
+  * A name never gets less than 12rem (icon and about 8rem of text): on the narrowest phones the value moves to its own line instead
+  * (Loans at 280 px broke "$1,480/month" between letters beside "$182,000"). */
+ .records table td:first-child{position:static;flex:1 1 max(12rem,calc(100% - 10rem));min-width:0;padding:0;background:none}
  .records table td.amount{order:1;flex:none;margin-inline-start:auto;text-align:end}
  /* The second line starts under the name text: the 44px record icon plus its 12px gap. */
  .records table td:nth-child(2){order:2;display:flex;flex-wrap:wrap;flex:0 1 auto;min-width:0;gap:6px;margin-inline-start:56px}
@@ -122,6 +124,13 @@ roll-strip>roll-char{display:block;height:1lh}
  .upcoming-section tbody tr.table-group-row{display:block;padding:16px 0 4px;border-bottom:0}
  .upcoming-section tbody:has(>.table-group-row) tr:not(.table-group-row){padding-inline:16px}
  .upcoming-section .table-group-row th{display:block;padding:0;border:0}
+}
+/* A phone-wide summary table has no room for the name beside the figures: the name takes the first line, the figures the second
+ * (Cash flow income sources were squeezed to one letter a line at 280–375 px). */
+@container content (max-width:420px){
+ .stack-table tbody td:first-child{grid-row:1;grid-column:1/-1}
+ .stack-table tbody td:nth-child(2){grid-row:2;grid-column:1;justify-self:start;text-align:start}
+ .stack-table .progress-line{min-width:0}
 }
 /* Small figure tables on a phone: each row is a card, the name first and every figure on its own line beside its column label (`data-label`). */
 @container content (max-width:560px){

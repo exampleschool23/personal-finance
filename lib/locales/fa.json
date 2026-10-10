@@ -2576,7 +2576,6 @@
   "Recurring income": "درآمد تکرارشونده",
   "Recurring bill": "قبض تکرارشونده",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "درآمد خالص، درآمد این دوره منهای هزینه‌هاست: آنچه در حساب‌های شما ماند یا به پس‌انداز، سرمایه‌گذاری یا اصل وام رفت.",
-  "Deleted categories": "دسته‌های حذف‌شده",
   "Restore {name}": "بازگرداندن {name}",
   "Keep at least one category of this type.": "دست‌کم یک دسته از این نوع را نگه دارید.",
   "Rules and templates: {count}": "قوانین و الگوها: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "سابقه پیدا نشد.",
   "Asset pages": "صفحه‌های دارایی",
   "{date} – pick the last day": "{date} – روز آخر را انتخاب کنید",
-  "Pick the first and last day": "روز اول و آخر را انتخاب کنید"
+  "Pick the first and last day": "روز اول و آخر را انتخاب کنید",
+  "Make recurring": "تکرارشونده کن",
+  "{amount} recurring": "{amount} تکرارشونده",
+  "This category already has a recurring bill.": "این دسته از قبل یک صورت‌حساب تکرارشونده دارد.",
+  "Split allocations can only move to an added category.": "تقسیم‌ها فقط به دسته‌ای افزوده‌شده منتقل می‌شوند.",
+  "Both categories have a recurring bill. Archive one of them first.": "هر دو دسته یک قبض تکرارشونده دارند. ابتدا یکی از آن‌ها را بایگانی کنید.",
+  "Stop recurring": "توقف تکرار",
+  "Where the money went": "پول کجا رفت",
+  "Where the money came from": "پول از کجا آمد",
+  "Spent this month": "خرج این ماه",
+  "Personal": "شخصی"
 }

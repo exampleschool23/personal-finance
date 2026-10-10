@@ -2576,7 +2576,6 @@
   "Recurring income": "Revenu récurrent",
   "Recurring bill": "Facture récurrente",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Le revenu net correspond aux revenus moins les dépenses de la période : ce qui est resté sur vos comptes ou est allé à l'épargne, aux placements ou au remboursement du capital des prêts.",
-  "Deleted categories": "Catégories supprimées",
   "Restore {name}": "Restaurer {name}",
   "Keep at least one category of this type.": "Gardez au moins une catégorie de ce type.",
   "Rules and templates: {count}": "Règles et modèles : {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Enregistrement introuvable.",
   "Asset pages": "Pages d'actifs",
   "{date} – pick the last day": "{date} – choisissez le dernier jour",
-  "Pick the first and last day": "Choisissez le premier et le dernier jour"
+  "Pick the first and last day": "Choisissez le premier et le dernier jour",
+  "Make recurring": "Rendre récurrent",
+  "{amount} recurring": "{amount} récurrent",
+  "This category already has a recurring bill.": "Cette catégorie a déjà une facture récurrente.",
+  "Split allocations can only move to an added category.": "Les répartitions ne peuvent aller que vers une catégorie ajoutée.",
+  "Both categories have a recurring bill. Archive one of them first.": "Les deux catégories ont une facture récurrente. Archivez d’abord l’une d’elles.",
+  "Stop recurring": "Arrêter la récurrence",
+  "Where the money went": "Où est passé l’argent",
+  "Where the money came from": "D’où vient l’argent",
+  "Spent this month": "Dépensé ce mois-ci",
+  "Personal": "Personnel"
 }

@@ -1,3 +1,4 @@
+import {monthDays} from './calendar-days';
 import {expenses,type Entry} from './finance';
 import {spendingAmount} from './spending';
 import type {Watchlist} from './workspace-preferences';
@@ -30,6 +31,6 @@ export function watchlistSpending(watchlist:Watchlist,records:Entry[],splits:Tra
   spent+=value;count++;
  }
  const target=into(watchlist.target,watchlist.currency);
- const days=new Date(Date.UTC(Number(today.slice(0,4)),Number(today.slice(5,7)),0)).getUTCDate(),elapsed=Number(today.slice(8));
+ const days=monthDays(today.slice(0,7)),elapsed=Number(today.slice(8));
  return {spent,count,missing,target,remaining:target===null?null:target-spent,projected:elapsed>0?spent/elapsed*days:null,over:target!==null&&spent>target};
 }

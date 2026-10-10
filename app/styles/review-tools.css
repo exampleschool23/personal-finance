@@ -32,7 +32,7 @@
 .partial-total{display:block;font-size:var(--type-small);font-weight:500;line-height:1.6;color:var(--foreground);background:var(--accent);border:1px solid var(--border);padding:8px 12px;border-radius:8px;margin-block:8px;overflow-wrap:anywhere}
 /* Category, dates and sort wrap onto another line rather than shrink until "Select date" reads "Select…" (RESP-023). */
 .record-filter-options{min-width:0;display:flex;flex-wrap:wrap;gap:12px;align-items:end}
-.record-filter-options>label{flex:1 1 9.5rem;max-width:16rem}
+.record-filter-options>label{flex:1 1 11rem;max-width:16rem}
 .record-filters .mobile-filter-toggle{display:none}
 /* Narrow pages (a phone, or a tablet beside the drawer) keep only search visible; the other filters open from Filters. */
 @container content (max-width:720px){

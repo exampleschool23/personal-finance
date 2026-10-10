@@ -15,5 +15,3 @@ export async function readOwnerRows<T>(table:string,token:string,extra:Record<st
  const rows=await readIdPages<T&{id:string}>(range=>supa(pagePath('/rest/v1/'+table+'?'+params,range),{},token),readError);
  return added?rows.map(row=>{const copy:Partial<typeof row>={...row};delete copy.id;return copy as T;}):rows;
 }
-/** Every row of a ready-made query path, read with the caller's token. */
-export function readPathRows<T>(path:string,token:string,error?:string){return readAllPages<T>(range=>supa(pagePath(path,range),{},token),error);}

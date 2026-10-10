@@ -2576,7 +2576,6 @@
   "Recurring income": "Terugkerend inkomen",
   "Recurring bill": "Terugkerende rekening",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "Netto-inkomen is het inkomen min de uitgaven in deze periode: wat op je rekeningen bleef of naar sparen, beleggingen of aflossing van leningen ging.",
-  "Deleted categories": "Verwijderde categorieën",
   "Restore {name}": "{name} herstellen",
   "Keep at least one category of this type.": "Houd minstens één categorie van dit type.",
   "Rules and templates: {count}": "Regels en sjablonen: {count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "Record niet gevonden.",
   "Asset pages": "Pagina's met bezittingen",
   "{date} – pick the last day": "{date} – kies de laatste dag",
-  "Pick the first and last day": "Kies de eerste en laatste dag"
+  "Pick the first and last day": "Kies de eerste en laatste dag",
+  "Make recurring": "Terugkerend maken",
+  "{amount} recurring": "{amount} terugkerend",
+  "This category already has a recurring bill.": "Deze categorie heeft al een terugkerende rekening.",
+  "Split allocations can only move to an added category.": "Verdelingen kunnen alleen naar een toegevoegde categorie.",
+  "Both categories have a recurring bill. Archive one of them first.": "Beide categorieën hebben een terugkerende rekening. Archiveer er eerst een.",
+  "Stop recurring": "Herhaling stoppen",
+  "Where the money went": "Waar het geld naartoe ging",
+  "Where the money came from": "Waar het geld vandaan kwam",
+  "Spent this month": "Deze maand uitgegeven",
+  "Personal": "Persoonlijk"
 }

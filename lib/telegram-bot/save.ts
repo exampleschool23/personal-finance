@@ -45,6 +45,19 @@ function refusalReason(failure:{code?:string;message?:string},commit:Commit,acco
  if(failure.code==='23514')return t(language,'Insufficient balance or invalid amount.');
  return failure.code==='23505'?t(language,'This name or payment already exists.'):t(language,'Please try again.');
 }
+type Failure={code?:string;message?:string;details?:string};
+/** Whether a duplicate refusal is about the commit's own id (its primary key), not a name or payment that clashes. */
+const duplicateId=(failure:Failure,id:string)=>failure.code==='23505'&&[failure.message,failure.details].some(text=>text?.includes(id)||/_pkey"/.test(text??''));
+/** The row a commit becomes, by the id the draft chose: a record in finance_records, a payment in account_activity. */
+const committedRow=(commit:Commit)=>commit.type==='record'?{table:'finance_records',id:commit.record.id}:{table:'account_activity',id:commit.data.id};
+/** Whether the commit is already in the database under its own id. Telegram redelivers an update whose handling
+ * failed after the write reached the database (a timeout, a lost connection), so the same Save arrives again with
+ * the same id; the database refuses it as a duplicate, which here means it was saved. */
+async function alreadySaved(db:ServiceDatabase,owner:string,commit:Commit,failure:Failure){
+ const {table,id}=committedRow(commit);
+ if(!duplicateId(failure,id))return false;
+ return (await db.read<unknown[]>(`/rest/v1/${table}?select=id&id=eq.${id}&user_id=eq.${owner}`)).length>0;
+}
 /** Save what the flow produced. Returns the reply text and whether it was saved. */
 export async function commitDraft(db:ServiceDatabase,owner:string,commit:Commit,ctx:FlowContext&{records:Entry[]}):Promise<{text:string;saved:boolean}>{
  const language=ctx.language;
@@ -52,8 +65,8 @@ export async function commitDraft(db:ServiceDatabase,owner:string,commit:Commit,
  if(!request)return {text:t(language,'Could not save. {reason}',{reason:t(language,'Check the record fields.')}),saved:false};
  const response=await db.write('/rest/v1/rpc/'+request.path,{method:'POST',body:JSON.stringify(request.body)});
  if(!response.ok){
-  const failure=await response.json().catch(()=>({})) as {code?:string;message?:string};
-  return {text:t(language,'Could not save. {reason}',{reason:refusalReason(failure,commit,ctx.accounts,language)}),saved:false};
+  const failure=await response.json().catch(()=>({})) as Failure;
+  if(!await alreadySaved(db,owner,commit,failure))return {text:t(language,'Could not save. {reason}',{reason:refusalReason(failure,commit,ctx.accounts,language)}),saved:false};
  }
  const lookup:ActionLookup={records:Object.fromEntries(ctx.records.map(record=>[record.id,{name:record.name,kind:record.kind,currency:record.currency}])),goals:{},deleted:{},categories:Object.fromEntries(ctx.categories.map(category=>[category.id,category.name]))};
  return {text:`${t(language,'Saved.')}\n${actionMessage(commitEvent(commit),lookup,language)}`,saved:true};

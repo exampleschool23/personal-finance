@@ -9,7 +9,7 @@ import * as market from '../lib/market.ts';
 import {stylesheet} from './helpers/stylesheet.mjs';
 import {workspaceSource} from './helpers/workspace-source.mjs';
 const compile=path=>ts.transpileModule(fs.readFileSync(path,'utf8').replace(/^import .*;\n/gm,'').replace(/export /g,''),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-const dependencies={...finance,...market,...days};
+const dependencies={...finance,...market,...days,approximateIncome:loadTS('lib/monthly-income-cards.ts').approximateIncome};
 const {projectGoal,goalFinancials}=new Function(...Object.keys(dependencies),compile('lib/goal-projection.ts')+';return {projectGoal,goalFinancials};')(...Object.values(dependencies));
 
 test('million-dollar goal compounds new monthly surplus and required path hits exact deadline',()=>{
@@ -58,7 +58,9 @@ test('a deadline today has not passed; the required amount shown is a whole amou
 test('only Cash flow follows its month picker; other screens plan for the current month',()=>{
  const provider=workspaceSource();
  assert.match(provider,/const planningMonth = section === 'Income & expenses' \? forecastMonth : depositMonth\(\);/);
- assert.match(provider,/estimatedCashFlow\(monthlyIncomeEntries, planningMonth, monthBudget\.lines\)/);
+ assert.match(provider,/const variableIncome = approximateIncome\(earningSources\.sources, currency, marketRates\(market\)\);/);
+ assert.match(provider,/estimatedCashFlow\(monthlyIncomeEntries, planningMonth, monthBudget\.lines, variableIncome\.amount\)/);
+ assert.match(provider,/const forecastReady = [^\n]*estimateConverted\([^\n]*variableIncome\.missing\);/,'MONEY-008: a variable source no rate converts leaves the estimate unknown');
 });
 
 test('milestones mark the months that receive an investment and show both monthly amounts',()=>{
@@ -96,4 +98,13 @@ test('the Goals page switches Overview, Goal planner and History from the top ba
  assert.match(panel,/part !== 'activity' && activeGoals\.length > 0/);assert.match(panel,/part !== 'funding' && savingsGoals\.length > 0/);
  assert.match(css,/\.goals-split\{[^}]*align-items:stretch/);
  assert.match(css,/\.segmented\.page-tabs>button\[aria-pressed=true\]\{[^}]*border-block-end-color:var\(--primary\)/);
+});
+
+test('CF-048: the goals surplus counts variable income sources like the monthly estimate',()=>{
+ const records=[{id:'s',kind:'Salary',amount:1000,currency:'USD',frequency:'Monthly',date:'2026-01-01'}];
+ const sources=[{id:'v',name:'QA Freelance',kind:'Other income',currency:'USD',mode:'variable',archived:false,approx_monthly:600}];
+ assert.equal(goalFinancials(records,'2026-09','USD',null).surplus,1000);
+ assert.equal(goalFinancials(records,'2026-09','USD',null,{sources}).surplus,1600);
+ assert.equal(goalFinancials(records,'2026-09','USD',null,{sources:[{...sources[0],currency:'EUR'}]}).surplus,null,'MONEY-008: a source no rate converts leaves the surplus unknown, never too low');
+ assert.equal(goalFinancials(records,'2026-09','USD',null,{sources:[{...sources[0],currency:'EUR',archived:true}]}).surplus,1000,'an archived source is neither counted nor missing');
 });

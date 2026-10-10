@@ -273,6 +273,10 @@ name, amount or date that happens to match (migration 119).
   open payment of the payment's own month, else last month's, else it adds to this
   month's recorded one. The first payment settles the due date
   (`payment_occurrences.transaction_id`); a schedule id never changes afterwards.
+  A payment of a custom spending category takes that category's one active bill
+  (migration 137), when it is saved and when an edit or a bulk recategorisation
+  moves it into the category; a category's bill may not move into a category that
+  already has one (`guard_category_bill_move`, migration 138).
 - Every screen totals a due date the same way: its first payment plus the other
   payments naming it, through `laterPayments` in `lib/planning.ts` (Recurring and
   the planning read). Cash flow joins a payment to its schedule's card by the same
@@ -285,7 +289,9 @@ Reuse shared components, hooks, validators, and calculation helpers instead of d
 Size limits (`eslint.config.mjs`, the SwiftLint equivalent here): a file stays under 24 KB, a
 function under 150 lines, 40 statements, complexity 20, nesting depth 4, 5 parameters and 4 nested
 callbacks. Older breaches are listed in `eslint-suppressions.json`, which only shrinks: never add to
-it by hand; after fixing a listed spot run `npm run lint:prune`. Split a large screen into a folder of
+it by hand; after fixing a listed spot run `npm run lint:prune`. The pre-commit hook
+(`.githooks/pre-commit`, enabled by `npm install` through the `prepare` script) runs `npm run lint`
+and refuses the commit when it fails; fix the code rather than skipping it with `--no-verify`. Split a large screen into a folder of
 parts (`components/transactions/`, `components/budget/`) and styles into `app/styles/`.
 
 Shared modules to reach for first:

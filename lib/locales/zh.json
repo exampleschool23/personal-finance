@@ -2576,7 +2576,6 @@
   "Recurring income": "定期收入",
   "Recurring bill": "定期账单",
   "Net income is income less spending in this period: what stayed in your accounts or went to savings, investments or loan principal.": "净收入是本期收入减去支出：留在账户中，或转入储蓄、投资或用于偿还贷款本金的金额。",
-  "Deleted categories": "已删除的类别",
   "Restore {name}": "恢复{name}",
   "Keep at least one category of this type.": "请至少保留一个此类型的类别。",
   "Rules and templates: {count}": "规则和模板：{count}",
@@ -2595,5 +2594,15 @@
   "Record not found.": "未找到记录。",
   "Asset pages": "资产分页",
   "{date} – pick the last day": "{date} – 选择最后一天",
-  "Pick the first and last day": "选择第一天和最后一天"
+  "Pick the first and last day": "选择第一天和最后一天",
+  "Make recurring": "设为定期",
+  "{amount} recurring": "定期 {amount}",
+  "This category already has a recurring bill.": "此类别已有定期账单。",
+  "Split allocations can only move to an added category.": "拆分只能移到你添加的类别。",
+  "Both categories have a recurring bill. Archive one of them first.": "两个类别都有定期账单。请先归档其中一个。",
+  "Stop recurring": "停止定期",
+  "Where the money went": "钱花到了哪里",
+  "Where the money came from": "钱从哪里来",
+  "Spent this month": "本月支出",
+  "Personal": "个人"
 }

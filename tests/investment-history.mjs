@@ -23,8 +23,8 @@ test('mortgage payments show principal and interest without inventing a historic
 });
 const source=fs.readFileSync('app/api/investment-history/route.ts','utf8').replace(/^import .*;\n/gm,'').replace(/export async function/g,'async function');
 const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-let signedIn=true,calls=[],rpcError=null;
-const api=apiFunction('z','session','supa','sameOrigin',js+';return {GET,POST};')(z,async()=>signedIn?{token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return rpcError&&path.includes('/rpc/')?Response.json({message:rpcError},{status:400}):Response.json(path.includes('/rpc/')?{ok:true}:[]);},req=>req.headers.get('origin')==='https://local');
+let signedIn=true,calls=[],rpcError=null,rpcCode='P0001';
+const api=apiFunction('z','session','supa','sameOrigin',js+';return {GET,POST};')(z,async()=>signedIn?{token:'owner-token'}:null,async(path,init,token)=>{calls.push({path,init,token});return rpcError&&path.includes('/rpc/')?Response.json({code:rpcCode,message:rpcError},{status:400}):Response.json(path.includes('/rpc/')?{ok:true}:[]);},req=>req.headers.get('origin')==='https://local');
 const body={id:'10000000-0000-4000-8000-000000000001',record_id:'10000000-0000-4000-8000-000000000002',type:'income',date:'2026-01-01',amount:400,balance:null,notes:'Rent'};
 const request=patch=>new Request('https://local/api/investment-history',{method:'POST',headers:{origin:'https://local','Content-Type':'application/json'},body:JSON.stringify({...body,...patch})});
 test('saves a cash receipt through the owner-scoped atomic RPC with a stable request id',async()=>{
@@ -54,11 +54,15 @@ test('migration keeps owner RLS, atomic locks, idempotency and newer balances in
  assert.ok(fs.readFileSync('database/setup.sql','utf8').includes(sql));
 });
 
-test('account failures are confirmed validation errors so the user can correct the selection',async()=>{
+test('database refusals are shown in their own words as 409, like every other route; unknown failures and a missing function are not',async()=>{
  try{
   for(const error of ['Choose a cash account in the record currency.','Not enough money in the selected cash account.','Enter transactions on or after the latest cash balance date.','This update was already saved without an account.']){
    rpcError=error;const result=await api.POST(request({account_id:'10000000-0000-4000-8000-000000000003'}));
-   assert.equal(result.status,400);assert.equal((await result.json()).error,error);
+   assert.equal(result.status,409);assert.equal((await result.json()).error,error);
   }
- }finally{rpcError=null;}
+  rpcCode='23514';rpcError='secret row detail';let result=await api.POST(request({account_id:'10000000-0000-4000-8000-000000000003'}));
+  assert.equal(result.status,409);assert.ok(!JSON.stringify(await result.json()).includes('secret'),'only the database\'s P0001 words travel');
+  rpcCode='PGRST202';result=await api.POST(request({account_id:'10000000-0000-4000-8000-000000000003'}));
+  assert.equal(result.status,503);assert.match((await result.json()).error,/needs an update/);
+ }finally{rpcError=null;rpcCode='P0001';}
 });
