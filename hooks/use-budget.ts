@@ -39,6 +39,9 @@ export function useBudget(owner: string | null, demo: boolean, revision: number)
    change(current => ({ ...current, amounts: items.reduce((amounts, item) => setBudgetAmount(amounts, item.category_key, month, item.amount, currency, item.applies_forward), current.amounts) }), ['amounts', { month, currency, items }]),
   saveCategory: (setting: BudgetCategorySetting) =>
    change(current => ({ ...current, categories: [...current.categories.filter(item => item.category_key !== setting.category_key), setting] }), ['category', setting]),
+  /** Several category settings at once, such as every category of a renamed group. */
+  saveCategories: (settings: readonly BudgetCategorySetting[]) =>
+   change(current => ({ ...current, categories: [...current.categories.filter(item => !settings.some(setting => setting.category_key === item.category_key)), ...settings] }), ...settings.map(setting => ['category', setting] as [string, unknown])),
   saveSettings: (mode: BudgetMode, applyForward: boolean) =>
    change(current => ({ ...current, mode, applyForward }), ['settings', { mode, apply_forward: applyForward }]),
  };

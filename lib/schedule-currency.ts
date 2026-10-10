@@ -16,7 +16,8 @@ export async function inScheduleCurrency(occurrences: Occurrence[], payments: Ex
   if (!to || !from || from === to || !payment.date || payment.amount === null) return payment;
   const value = await quote(from, to, payment.date);
   const money = convertMoney({ amount: payment.amount, currency: from }, to, () => value);
-  return money ? { ...payment, ...money } : payment;
+  // Counted in the schedule's currency; what was entered travels beside it, for the screens that show the payment itself.
+  return money ? { ...payment, ...money, entered: { amount: payment.amount, currency: from } } : payment;
  };
  const [converted, later] = await Promise.all([
   Promise.all(occurrences.map(async item => item.transaction ? { ...item, transaction: await counted(item.transaction, item.record_id) } : item)),

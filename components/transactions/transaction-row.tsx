@@ -25,14 +25,14 @@ export function DayGroup({ date, total, currency, today, children }: { date: str
 /** A mortgage payment's split: the principal is a transfer to the debt, the interest is spending. */
 export function MortgageSplit({ record }: { record: Entry }) {
  const { t } = useLanguage();
- const { show } = useDisplayMoney();
+ const { entered } = useDisplayMoney();
  if (!isMortgagePayment(record)) return null;
- return <small>{t('Mortgage payment · Principal: {principal} · Interest: {interest}', { principal: show(transferAmount(record), record.currency), interest: show(spendingAmount(record), record.currency) })}</small>;
+ return <small>{t('Mortgage payment · Principal: {principal} · Interest: {interest}', { principal: entered(transferAmount(record), record.currency), interest: entered(spendingAmount(record), record.currency) })}</small>;
 }
 
 /** The row's signed amount by the shared spending definition (`lib/spending.ts`): a mortgage payment shows its interest. */
 export function TransactionAmount({ record }: { record: Entry }) {
- const { showSigned } = useDisplayMoney();
+ const { enteredSigned } = useDisplayMoney();
  const incoming = income.includes(record.kind);
- return <strong className={incoming ? 'transaction-amount positive' : 'transaction-amount'}>{showSigned(signedAmount(record), record.currency)}</strong>;
+ return <strong className={incoming ? 'transaction-amount positive' : 'transaction-amount'}>{enteredSigned(signedAmount(record), record.currency)}</strong>;
 }

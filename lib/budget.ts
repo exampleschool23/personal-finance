@@ -246,6 +246,16 @@ export function groupRows(rows: readonly BudgetRow[], byType: boolean): BudgetGr
  return [...groups.values()].sort((a, b) => typeOrder(a) - typeOrder(b));
 }
 
+/** Budget's sections as the page lists them: each side's categories in one list, with no group headings. In flex mode
+ * the Flexible bucket keeps its own card, because it holds the plan its categories share. */
+export function sectionGroups(rows: readonly BudgetRow[], flex: boolean): BudgetGroup[] {
+ const groups = groupRows(rows, flex);
+ const merge = (list: BudgetGroup[], direction: BudgetDirection): BudgetGroup[] => list.length ? [{ name: direction === 'income' ? defaultGroups.income : 'Expenses', direction, type: null, rows: list.flatMap(group => group.rows),
+  budget: list.reduce((total, group) => total + group.budget, 0), actual: list.reduce((total, group) => total + group.actual, 0), remaining: list.reduce((total, group) => total + group.remaining, 0), missing: list.reduce((total, group) => total + group.missing, 0) }] : [];
+ const bucket = flex ? groups.filter(group => group.type === 'flexible') : [];
+ return [...merge(groups.filter(group => group.direction === 'income'), 'income'), ...merge(groups.filter(group => group.direction === 'expense' && !bucket.includes(group)), 'expense'), ...bucket];
+}
+
 /** A goal's planned monthly saving: the Contributions section. It is what Goals › Available for goals funds, so the
  * two pages never disagree: only goals included in monthly funding count. */
 export const goalContribution = (goal: Goal, today: string) => inFundingPlan(goal, today) ? Math.max(0, Number(fundingBudget(goal) ?? 0)) : 0;

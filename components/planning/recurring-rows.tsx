@@ -7,11 +7,10 @@ import { Count } from '@/components/presentation-foundation/count';
 import { RowMenu, type RowMenuItem } from '@/components/presentation-foundation/row-menu';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/components/language-provider';
-import { useDisplayMoney } from '@/components/display-money';
 import type { Category } from '@/lib/planning';
 import { shownName } from '@/lib/record-names';
 import { frequencyLabels, income, type Entry } from '@/lib/finance';
-import { formatDate, formatNumber } from '@/lib/format';
+import { formatDate, formatMoney, formatNumber } from '@/lib/format';
 import { daysFrom, type ArchiveTarget, type RecurringItem } from '@/lib/recurring';
 
 /** "in 3 days", "today", "yesterday", "2 days ago": how far a due date is from today. */
@@ -61,7 +60,6 @@ const occurrenceDetail = (t: (key: string) => string, locale: string, item: Recu
 /** One scheduled income or bill on its day: its status, the scheduled amount, and recording, skipping or archiving it. */
 export function OccurrenceRow({ item, dated, today, busy, categories = [], onEdit, onOpen, onPay, onSkip, onRestore, onArchive, onDelete }: OccurrenceProps) {
  const { t, locale } = useLanguage();
- const { show } = useDisplayMoney();
  // A payment is recorded once it happens: before its date the button waits and says when. A recorded one takes further payments; a skipped one none.
  const early = !item.installment && item.date > today, pending = item.status === 'due' || item.status === 'overdue';
  const { edit, open, openLabel } = rowActions(t, item, onEdit, onOpen);
@@ -72,33 +70,32 @@ export function OccurrenceRow({ item, dated, today, busy, categories = [], onEdi
  return <li className="recurring-row" data-status={item.status} data-editable={open ? '' : undefined} onClick={rowTap(open)}>
   <span className="transaction-merchant"><DoneTick done={paid}/><CategoryIcon kind={category ?? item.record.kind}/><RowName name={shownName(item.record, t)} label={openLabel} onOpen={open} detail={occurrenceDetail(t, locale, item, category, dated)}/></span>
   {status}
-  <strong className={income.includes(item.record.kind) ? 'transaction-amount positive' : 'transaction-amount'}>{show(item.amount, item.record.currency)}</strong>
+  <strong className={income.includes(item.record.kind) ? 'transaction-amount positive' : 'transaction-amount'}>{formatMoney(item.amount, item.record.currency, locale)}</strong>
   <div className="row-actions"><span title={early ? t('You can record it from {date}.', { date: formatDate(item.date, locale) }) : undefined}><Button size="sm" variant="outline" disabled={busy || early || item.status === 'skipped'} onClick={() => onPay(item)}>{t('Record payment')}</Button></span>
    {menu.length > 0 && <RowMenu label={t('Actions for {name}', { name: item.record.name })} items={menu}/>}
   </div>
  </li>;
 }
 
-/** What a settled payment brought in or paid out against its schedule, beside the scheduled amount; one in another
- * currency that could not be converted says so rather than showing a figure in the wrong currency. Open ones say when. */
+/** What a settled payment brought in or paid out against its schedule, as it was entered (its own currency), beside the
+ * scheduled amount in the schedule's currency; one in another currency that could not be converted says so rather
+ * than showing a figure in the wrong currency. Open ones say when. Recurring shows entered amounts (AGENTS.md). */
 function OccurrenceStatus({ item, today }: { item: RecurringItem; today: string }) {
- const { t } = useLanguage();
- const { show } = useDisplayMoney();
+ const { t, locale } = useLanguage();
  const dueLabel = useDueLabel();
  const label = t(item.direction === 'income' ? 'Received' : 'Paid');
  if (item.status === 'paid' && item.recorded === null) return <span className="status-badge">{label} · {t('Exchange rate unavailable.')}</span>;
- if (item.status === 'paid') { const recorded = item.recorded ?? item.amount; return <ProgressLine value={recorded} target={item.amount} tone={item.direction} label={label + ' · ' + show(recorded, item.record.currency)}/>; }
+ if (item.status === 'paid') { const recorded = item.recorded ?? item.amount, shown = item.entered ?? { amount: recorded, currency: item.record.currency }; return <ProgressLine value={recorded} target={item.amount} tone={item.direction} label={label + ' · ' + formatMoney(shown.amount, shown.currency, locale)}/>; }
  if (item.status === 'skipped') return <span className="status-badge">{t('Skipped')}</span>;
  return <span className={item.status === 'overdue' ? 'status-badge is-overdue' : 'status-badge'}>{dueLabel(today, item.date)}</span>;
 }
 
 /** Archived incomes and bills, folded at the foot of the page, each with Restore. Only when there are some: an empty fold is just noise. */
 export function ArchivedFold({ records, busy, onRestore }: { records: Entry[]; busy: boolean; onRestore: (target: ArchiveTarget) => void }) {
- const { t } = useLanguage();
- const { show } = useDisplayMoney();
+ const { t, locale } = useLanguage();
  if (!records.length) return null;
  const restore = (target: ArchiveTarget, name: string, detail: string, amount: string) => <li key={target.record.id}><span>{[name, detail, amount].join(' · ')}</span><Button size="sm" variant="outline" disabled={busy} onClick={() => onRestore(target)}>{t('Restore')}</Button></li>;
  return <details className="panel tools-panel"><summary>{t('Archived')}<Count value={records.length}/></summary><ul className="tool-list">
-  {records.map(record => restore({ source: 'record', record }, record.name, t(record.kind), show(record.amount, record.currency)))}
+  {records.map(record => restore({ source: 'record', record }, record.name, t(record.kind), formatMoney(record.amount, record.currency, locale)))}
  </ul></details>;
 }

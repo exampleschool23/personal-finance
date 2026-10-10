@@ -117,12 +117,12 @@ export function CashForecastView({ owner, data, budget, currency, rates, loading
 
 function EventRow({ event, account }: { event: ForecastEvent; account?: string }) {
  const { t, locale } = useLanguage();
- const { showSigned } = useDisplayMoney();
+ const { enteredSigned } = useDisplayMoney();
  const source = event.source === 'installment' ? t('Monthly payment') : event.source === 'repayment' ? t('Repayment') : event.source === 'adjustment' ? t('What-if change') : event.source === 'budget' ? t('Budget') : t(event.kind);
  return <tr>
   <td><div className="record-name"><CategoryIcon kind={event.source === 'budget' ? event.name : event.kind}/><div><strong>{event.source === 'budget' ? t(event.name) : event.name || t('What-if change')}</strong><small>{account ? source + ' · ' + account : source}</small></div></div></td>
   <td className="muted">{formatDate(event.date, locale)}</td>
-  <td className={event.amount > 0 ? 'amount positive' : 'amount'}>{showSigned(event.amount, event.currency)}</td>
+  <td className={event.amount > 0 ? 'amount positive' : 'amount'}>{enteredSigned(event.amount, event.currency)}</td>
  </tr>;
 }
 

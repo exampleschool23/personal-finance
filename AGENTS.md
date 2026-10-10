@@ -193,7 +193,7 @@ hard-code a USD/UZS-only selector or validation rule. `formatMoney` displays who
 amounts by default; unit quotes retain up to eight decimals without trailing zeros.
 Stored values and inputs retain their precision. Conversions require explicit
 positive rates; never infer a rate.
-**Show every amount in the selected display currency, always.** Every amount on every surface (balances, income, spending plans, progress totals, tiles, charts, lists, reports, Telegram and the assistant) is converted into the display currency chosen in the top bar. Never show a mix of currencies on one screen, for example "$5,700" beside "UZS 9,000,000". Convert with `convertMoney` / `amountIn` and explicit rates; where no positive rate exists, show the amount as missing (—) with an "Exchange rate unavailable" note, never under the wrong currency label. Stored values keep their own currency.
+**Entered or converted (the user's rule, 10 October 2026).** One transaction or one schedule always reads as it was entered, in its own amount and currency, whatever the top-bar display currency: transaction rows and their mortgage split, recent and duplicate transactions, Recently deleted, Recurring rows, calendar chips and details, upcoming payments and reminders, subscriptions, income sources and the income cards on Cash flow, the mortgage table, forecast events, the Budget dialog's bills and payments, a payee whose payments share one currency, the largest expense, and the Telegram upcoming-payments list. Use `entered` / `enteredSigned` from `useDisplayMoney` (or `formatMoney(amount, record.currency)`). **A figure that adds several of them is in the display currency picked in the top bar:** totals, day and group totals, balances, net worth, tiles, progress headlines, budgets, charts, reports, digests and the assistant (`show`, `showSigned`, `showSum`, `convertMoney` / `amountIn`). Never add amounts in different currencies without converting; where no positive rate exists, show the total as missing (—) with an "Exchange rate unavailable" note, never under the wrong currency label. Stored values keep their own currency.
 Account defaults live in `user_preferences` with owner RLS. The top-right
 language selector changes only the current visit; saving Settings changes the
 default. Keep one or two preferred currencies (`maxPreferredCurrencies` in
@@ -285,6 +285,23 @@ name, amount or date that happens to match (migration 119).
   payments naming it, through `laterPayments` in `lib/planning.ts` (Recurring and
   the planning read). Cash flow joins a payment to its schedule's card by the same
   id. Do not add another matching rule; extend this one.
+- The older income fields are inputs to this one link, never a second one (migration
+  140): a receipt of a fixed income source (`earning_source_id`, `earning_due_on`)
+  and a salary recorded against a salary plan (`income_source_id`, `income_due_on`)
+  get `occurrence_record_id` and `occurrence_due_on` from `name_scheduled_payment`
+  as they are saved, and only the occurrence rows say what is settled
+  (`settledOccurrences`). A saved payment that named no schedule may name one when
+  it is edited (the forms offer the field then); a named schedule and its due date
+  never change afterwards. In the sample workspace `demoScheduleLink` does the same
+  on save. `tests/income-payments-one-link-sql.mjs` covers this.
+- A schedule keeps its start date once saved: the forms show it locked. An "Every
+  month" schedule picks its day with `MonthDayField` (the start month's days; a
+  shorter month falls on its last day). Changing the day moves the start date within
+  its month, and `move_schedule_day` (migration 141) moves every recorded or skipped
+  occurrence, and the payments naming it, to that day of its own month; the sample
+  workspace does the same through `onScheduleDays`. The amount and the currency may
+  change after payments (they count at the day's rate, migration 120); the kind and
+  the cadence may not. `tests/schedule-day-sql.mjs` covers this.
 
 # DRY and regression coverage
 

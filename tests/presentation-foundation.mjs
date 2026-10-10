@@ -414,6 +414,19 @@ test('the scheduled payment field offers each schedule by id, with its amount an
  assert.equal(render(ScheduledPaymentField,{schedules:[],value:null,onChange(){}}),'');
 });
 
+test('the day-of-month field offers the start month\'s days and moves the date within that month',()=>{
+ const {MonthDayField}=load('month-day-field.tsx',{'@/components/ui/native-select':{NativeSelect:element('select')}});
+ const html=render(MonthDayField,{date:'2026-09-05',onChange(){}});
+ assert.match(html,/^<label>Day of the month<select><option value="1">1<\/option>/);
+ assert.match(html,/<option value="5" selected="">5<\/option>/);
+ assert.match(html,/<option value="30">30<\/option><\/select><\/label>$/,'September has 30 days');
+ const moved=[];
+ const tree=MonthDayField({date:'2026-09-05',onChange:date=>moved.push(date)});
+ tree.props.children[1].props.onChange({target:{value:'20'}});
+ assert.deepEqual(moved,['2026-09-20']);
+ assert.equal(render(MonthDayField,{date:'',onChange(){}}),'','no date, no field');
+});
+
 test('every chart takes its look from the shared chart kit, never inline styles', () => {
  const charts = fs.globSync('components/**/*.tsx').filter(file => /from 'recharts'/.test(fs.readFileSync(file, 'utf8')));
  assert.ok(charts.length >= 10, 'finds the charts');

@@ -168,7 +168,7 @@ test('names, chips and filters show their text instead of an ellipsis (LIST-018,
 test('budget rows never hide Actual: it moves under the name with its label when the row is narrow (LIST-020)',()=>{
  const css=stylesheet();
  assert.doesNotMatch(css,/\.budget-row>\.budget-cell:nth-child\(3\)\{display:none\}/);
- assert.match(css,/\.budget-row\{display:grid;grid-template-columns:minmax\(9rem,1fr\) repeat\(3,minmax\(92px,128px\)\)/,'the name keeps 9rem before the figures grow');
+ assert.match(css,/\.budget-row\{--budget-actions:28px;display:grid;grid-template-columns:minmax\(9rem,1fr\) repeat\(3,minmax\(92px,128px\)\)/,'the name keeps 9rem before the figures grow');
  assert.doesNotMatch(css,/budget-category-name[^{]*\{[^}]*(?:overflow-wrap:anywhere|text-overflow:ellipsis)/,'names wrap at spaces');
  assert.match(css,/@container content \(max-width:540px\)\{[^\n]*\.budget-row>\.budget-actual\{grid-column:1;grid-row:2;[^}]*text-align:start;white-space:nowrap\}\.budget-row>\.budget-actual::before\{content:attr\(data-label\) " "\}/);
  const rows=fs.readFileSync('components/budget/budget-rows.tsx','utf8');
@@ -347,9 +347,11 @@ test('narrow rows keep names whole and never stack controls on them (RESP-030, R
  assert.match(rule(' .records table td:first-child'),/flex:1 1 max\(12rem/);
  // Phone layouts: summary-table names, budget rows, business cards and recurring actions each take their own line.
  assert.match(css,/@container content \(max-width:420px\)\{\s*\.stack-table tbody td:first-child\{grid-row:1;grid-column:1\/-1\}/);
- assert.match(css,/@container content \(max-width:420px\)\{\.budget-row:has\(>\.budget-actual\[data-label\]\)\{grid-template-columns:minmax\(0,1fr\) auto 28px\}\.budget-row:has\(>\.budget-actual\[data-label\]\)>\.budget-row-end\{grid-area:1\/3\/3\/4\}/);
+ assert.match(css,/@container content \(max-width:420px\)\{[^\n]*\.budget-row:has\(>\.budget-actual\[data-label\]\)\{grid-template-columns:minmax\(0,1fr\) auto var\(--budget-actions\)\}\.budget-row:has\(>\.budget-actual\[data-label\]\)>\.budget-row-end\{grid-area:1\/3\}/);
  // The row menu has its own last column on every width, after Remaining.
- assert.match(css,/\.budget-row\{display:grid;grid-template-columns:minmax\(9rem,1fr\) repeat\(3,minmax\(92px,128px\)\) 28px;/);
+ assert.match(css,/\.budget-row\{--budget-actions:28px;display:grid;grid-template-columns:minmax\(9rem,1fr\) repeat\(3,minmax\(92px,128px\)\) var\(--budget-actions\);/);
+ // On touch the ⋯ column is as wide as the 44px ⋯ button, so it never covers Remaining.
+ assert.match(css,/@media\(pointer:coarse\)\{\.budget-row\{--budget-actions:44px\}\}/);
  assert.match(css,/\.business-card-list\{container:business-list\/inline-size\}/);
  assert.match(css,/@container recurring \(max-width:340px\)\{[^\n]*\.row-actions\{grid-area:3\/1\/4\/4\}/);
  // Long compound words in other languages hyphenate instead of overflowing a phone column (German budget and recurring rows).

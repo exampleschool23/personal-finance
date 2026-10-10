@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadTS } from './helpers/load-ts.mjs';
 const { scheduledByCategory, firstRecentPayment, plannedIn, flexPlan, categoryBills, repeatBudgetAmount } = loadTS('lib/budget-schedules.ts');
-const { appliesToFutureMonths, budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, leftToBudget, flexBucketPlan: bucketPlan, budgetOverall, budgetRowsForMode, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, knownPlan } = loadTS('lib/budget.ts');
+const { appliesToFutureMonths, budgetAmountFor, setBudgetAmount, budgetCategories, monthActuals, budgetRows, budgetHistory, suggestedBudget, groupRows, sectionGroups, leftToBudget, flexBucketPlan: bucketPlan, budgetOverall, budgetRowsForMode, remainingTone, rolloverBalance, budgetReadRange, flexBucketKey, isUnbudgeted, knownPlan } = loadTS('lib/budget.ts');
 const { demoBudget } = loadTS('lib/budget-demo.ts');
 const { shiftMonth } = loadTS('lib/calendar-days.ts');
 const { demoRecords } = loadTS('lib/demo-finance.ts');
@@ -126,6 +126,15 @@ test('left to budget: income minus spending and contributions; flex replaces fle
  assert.deepEqual(groups.map(group => group.name), ['Income', 'Fixed', 'Flexible', 'Non-monthly']);
  assert.ok(!groups.some(group => group.rows.some(row => row.key === 'Charity')), 'excluded categories leave the totals');
  assert.deepEqual(groupRows(rows, false).map(group => group.name), ['Income', 'Bills & recurring', 'Everyday spending', 'Future spending']);
+ // The page lists each side's categories in one card without group headings; in flex mode the bucket keeps its own.
+ const sections = sectionGroups(rows, false);
+ assert.deepEqual(sections.map(group => [group.direction, group.type]), [['income', null], ['expense', null]]);
+ const spending = groupRows(rows, false).filter(group => group.direction === 'expense');
+ assert.equal(sections[1].rows.length, spending.reduce((total, group) => total + group.rows.length, 0));
+ assert.equal(sections[1].budget, spending.reduce((total, group) => total + group.budget, 0));
+ assert.equal(sections[1].actual, spending.reduce((total, group) => total + group.actual, 0));
+ assert.deepEqual(sectionGroups(rows, true).map(group => group.type), [null, null, 'flexible']);
+ assert.deepEqual(sectionGroups([], true), []);
 });
 
 test('reads cover the history window, the year, and earlier rollover starts, at most two years', () => {

@@ -4,7 +4,7 @@ import React from 'react';
 import { loadTS } from './helpers/load-ts.mjs';
 import { createRenderer, hostModule, language, stubs, text } from './helpers/component-tree.mjs';
 
-const { formatMoney } = loadTS('lib/format.ts');
+const { formatMoney, formatSignedMoney } = loadTS('lib/format.ts');
 const usd = value => formatMoney(value, 'USD', 'en');
 // The display currency as the workspace provides it: USD, with the market table 1 USD = 0.9 EUR and no GBP rate.
 const displayMoney = context => loadTS('components/display-money.tsx', { react: { ...React, useContext: () => context }, '@/components/language-provider': language('en') }).useDisplayMoney();
@@ -22,6 +22,9 @@ test('listed amounts convert into the display currency, and one without a rate r
  assert.equal(money.showSum([{ amount: 146, currency: 'USD' }, { amount: 90, currency: 'EUR' }]), usd(246));
  assert.equal(money.sum([{ amount: 10, currency: 'USD' }, { amount: 10, currency: 'GBP' }]), null);
  assert.equal(money.showSum([{ amount: 10, currency: 'USD' }, { amount: 10, currency: 'GBP' }]), '—');
+ // One transaction or schedule keeps what was entered: no conversion, no missing rate.
+ assert.equal(money.entered(1000, 'GBP'), formatMoney(1000, 'GBP', 'en'));
+ assert.equal(money.enteredSigned(-90, 'EUR'), formatSignedMoney(-90, 'EUR', 'en'));
 });
 
 test('outside a workspace amounts keep their own currency and different currencies are never added', () => {
@@ -111,20 +114,22 @@ const missingRate = shown => { assert.ok(shown.includes('—'), shown); assert.o
 const mountScreen = (file, name, props, modules = {}) => { const r = createRenderer(), ui = stubs(); const Component = r.load(file, { ...ui.modules, ...inEuros, ...modules })[name]; r.mount(React.createElement(Component, props)); return text(r.tree); };
 const foundation = (...names) => Object.fromEntries(names.map(name => ['@/components/presentation-foundation/' + name, hostModule()]));
 
-test('Recurring › Reminders lists each reminder in the display currency (MONEY-008)', () => {
+// One transaction or schedule reads as it was entered, whatever the display currency (the user's rule, 10 October 2026).
+const usdEn = value => formatMoney(value, 'USD', 'en'), gbpEn = value => formatMoney(value, 'GBP', 'en');
+const asEntered = shown => { assert.doesNotMatch(shown, /€|Exchange rate unavailable/, shown); };
+
+test('Recurring › Reminders lists each reminder as entered, in its own currency, with euros on display', () => {
  const reminders = [{ key: 'rent', record: entry('Rent', 'Rent expense', 'USD', 1000), amount: 1000, date: '2026-10-10', overdue: false }, { key: 'tv', record: entry('Licence', 'Other expense', 'GBP', 50), amount: 50, date: '2026-10-12', overdue: true }];
- const panel = list => mountScreen('components/reminder-panel.tsx', 'ReminderPanel', { data: {}, preferences: { data: { preferences: [] }, save: async () => {} } }, { '@/lib/daily-finance': { dueReminders: () => list }, ...foundation('panel-title') });
- const shown = panel(reminders);
- assert.ok(shown.includes(eur(900)), shown);
- missingRate(shown);
- assert.ok(!panel(reminders.slice(0, 1)).includes('Exchange rate unavailable.'), 'the note only when a rate is missing');
+ const shown = mountScreen('components/reminder-panel.tsx', 'ReminderPanel', { data: {}, preferences: { data: { preferences: [] }, save: async () => {} } }, { '@/lib/daily-finance': { dueReminders: () => reminders }, ...foundation('panel-title') });
+ assert.ok(shown.includes(usdEn(1000)) && shown.includes(gbpEn(50)), shown);
+ asEntered(shown);
 });
 
-test('Transactions suggestions and duplicates show amounts in the display currency (MONEY-008)', () => {
+test('Transactions suggestions and duplicates show each transaction as entered, in its own currency', () => {
  const insights = { cadenceLabels: { monthly: 'Monthly' }, recurringPlanDraft: () => ({}), recurringSuggestions: () => [{ id: 's', record: entry('Gym', 'Other expense', 'USD', 50), cadence: 'monthly', next: '2026-11-01', changed: true, previous: 40 }], suspectedDuplicates: () => [[entry('Coffee', 'Other expense', 'GBP', 10), entry('Coffee', 'Other expense', 'GBP', 10)]] };
  const shown = mountScreen('components/transaction-insights.tsx', 'TransactionInsights', { owner: null, records: [], today: '2026-10-09', onReview() {} }, { '@/lib/recurring-insights': insights, '@/hooks/use-owner-resource': { useOwnerResource: () => ({}) }, '@/lib/planning': { emptyPlanning: {} }, ...foundation('resource-state') });
- assert.ok(shown.includes(eur(45)) && shown.includes('Last amount changed from ' + eur(36) + '.'), shown);
- missingRate(shown);
+ assert.ok(shown.includes(usdEn(50)) && shown.includes('Last amount changed from ' + usdEn(40) + '.'), shown);
+ asEntered(shown);
 });
 
 test('a business’s other assets and debts read in the display currency, a debt with its minus (MONEY-008)', () => {
@@ -134,11 +139,11 @@ test('a business’s other assets and debts read in the display currency, a debt
  missingRate(shown);
 });
 
-test('monthly mortgage payments convert, and without a rate read as missing (MONEY-008)', () => {
+test('monthly mortgage payments show each loan as entered, in its own currency', () => {
  const props = { records: [entry('Home', 'Mortgage', 'USD', 100000, { estimated_monthly_payment: 1000 }), entry('Flat', 'Mortgage', 'GBP', 80000, { estimated_monthly_payment: 700 })], currency: 'EUR', market, loading: false, error: '', onPay() {}, onEdit() {} };
  const shown = mountScreen('components/monthly-mortgage-payments.tsx', 'MonthlyMortgagePayments', props, foundation('category-icon', 'inline-error', 'panel-title', 'row-menu', 'loading-placeholder'));
- assert.ok(shown.includes(eur(900)) && shown.includes(eur(90000)), shown);
- missingRate(shown);
+ assert.ok(shown.includes(usdEn(1000)) && shown.includes(usdEn(100000)) && shown.includes(gbpEn(700)) && shown.includes(gbpEn(80000)), shown);
+ asEntered(shown);
 });
 
 const AssetCard = Object.assign(({ record, worth, fact, note, details }) => React.createElement('article', { 'data-id': record.id }, worth, ' ', fact?.value, note, details), { displayName: 'AssetCard' });
@@ -171,7 +176,7 @@ test('a holding card converts, its converted price per unit reads to the cent, a
  missingRate(dashboard([entry('CCC', 'Stock', 'GBP', 10, { cost: 5 })]).replace(/Saved value.*/, ''));
 });
 
-test('a schedule’s details convert its totals, payments and chart, and without a rate the chart gives way to a note (MONEY-008)', () => {
+test('a schedule’s details show its totals, payments and chart in the currency it was entered in, even with another display currency', () => {
  const pay = entry('Pay', 'Salary', 'USD', 1000, { date: '2026-08-15', frequency: 'Monthly' });
  const data = currency => ({ records: [{ ...pay, currency }, entry('a', 'Salary', currency, 800, { date: '2026-08-15' })], occurrences: [{ id: 'o', record_id: 'Pay', due_on: '2026-08-15', status: 'paid', transaction_id: 'a' }], debtPayments: [] });
  const item = currency => ({ key: 'Pay:2026-10-15', record: { ...pay, currency }, date: '2026-10-15', status: 'due', direction: 'income', amount: 1000 });
@@ -179,12 +184,28 @@ test('a schedule’s details convert its totals, payments and chart, and without
  const recharts = { ...Object.fromEntries(['ResponsiveContainer', 'BarChart', 'CartesianGrid', 'XAxis', 'YAxis', 'Tooltip'].map(name => [name, pass(name)])), Bar: () => h('span', { 'data-bar': true }) };
  const r = createRenderer();
  const { RecurringDetails } = r.load('components/planning/recurring-details.tsx', { ...stubs().modules, ...inEuros, recharts, '@/components/presentation-foundation/rolling-text': { RollingText: ({ text: value }) => value } });
+ const usd = value => formatMoney(value, 'USD', 'en');
  r.mount(React.createElement(RecurringDetails, { item: item('USD'), data: data('USD'), today: '2026-10-20', onClose() {} }));
  const shown = text(r.tree);
- assert.ok(shown.includes(eur(900)) && shown.includes(eur(720)) && !shown.includes('$'), shown);
+ assert.ok(shown.includes(usd(1000)) && shown.includes(usd(800)) && !shown.includes('€'), shown);
  const points = JSON.parse(r.find(node => node.props?.['data-part'] === 'BarChart').props['data-points']);
- assert.deepEqual(points.find(point => point.month === '2026-08'), { month: '2026-08', scheduled: 900, recorded: 720 });
+ assert.deepEqual(points.find(point => point.month === '2026-08'), { month: '2026-08', scheduled: 1000, recorded: 800 });
+ // A schedule in a currency no rate converts still shows its own figures and chart.
  r.mount(React.createElement(RecurringDetails, { item: item('GBP'), data: data('GBP'), today: '2026-10-20', onClose() {} }));
- missingRate(text(r.tree));
- assert.equal(r.all(node => node.props?.['data-bar']).length, 0);
+ assert.ok(text(r.tree).includes(formatMoney(800, 'GBP', 'en')));
+ assert.ok(r.all(node => node.props?.['data-bar']).length > 0);
+});
+
+test('a business card offers Add investment, which opens the Tracker on Money invested; other assets and the sample workspace do not', () => {
+ const invested = [];
+ const WithActions = Object.assign(({ record, children }) => React.createElement('article', { 'data-id': record.id }, children), { displayName: 'AssetCard' });
+ const props = { accounts: [], accountsLoading: false, accountsError: '', onRetryAccounts() {}, onAddHolding() {}, currency: 'USD', market, netWorth: 0, debt: 0, loading: false, onAdd() {}, onEdit() {}, onTrack() {}, onDelete() {}, quoteLabel: () => '', onInvest: record => invested.push(record.id) };
+ const records = [entry('Club', 'Business', 'USD', 33000), entry('Flat', 'Property', 'USD', 60000)];
+ const mount = demo => { const r = createRenderer(), ui = stubs(); const { AssetDashboard } = r.load('components/asset-dashboard.tsx', { ...ui.modules, ...inEuros, ...assetModules, '@/components/presentation-foundation/asset-card': { AssetCard: WithActions }, '@/components/asset-accounts': hostModule() }); r.mount(React.createElement(AssetDashboard, { ...props, records, demo })); return r; };
+ const r = mount(false);
+ const buttons = r.all(node => node.type === 'article').map(card => [card.props['data-id'], text(card)]);
+ assert.deepEqual(buttons, [['Flat', ''], ['Club', 'Add investment']], 'only the business has the button (cards sorted by worth)');
+ r.find(node => node.type?.displayName === 'Button' && text(node) === 'Add investment').props.onClick();
+ assert.deepEqual(invested, ['Club']);
+ assert.ok(!text(mount(true).tree).includes('Add investment'), 'the sample workspace has no Tracker');
 });

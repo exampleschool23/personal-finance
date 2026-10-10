@@ -110,7 +110,7 @@ test('the list keeps the period, search and filters, newest first, grouped by da
  assert.deepEqual(days.map(day => [day.date, day.total]), [['2026-10-02', null], ['2026-10-01', 996]]);
  assert.deepEqual(groupByDay(list.filter(row => row.id !== 'h'), convert)[0].total, -1000);
  const summary = summarizeTransactions(list, convert);
- assert.deepEqual(summary, { count: 4, received: 1000, spent: 1004, largest: { name: 'Rent', amount: 1000 }, missing: 1 });
+ assert.deepEqual(summary, { count: 4, received: 1000, spent: 1004, largest: { name: 'Rent', amount: 1000, entered: { amount: 12500000, currency: 'UZS' } }, missing: 1 }, 'the largest expense is picked by its converted size and keeps what was entered');
 });
 
 test('rule criteria: an exact name, an account, a business, a category and an amount range narrow a rule', () => {

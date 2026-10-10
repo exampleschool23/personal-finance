@@ -60,3 +60,23 @@ test('UZS 5,000,000 on a USD schedule is never shown or totalled as $5,000,000',
  assert.equal((await inScheduleCurrency([{ ...paid, transaction: { ...paid.transaction, date: '' } }], [], currencyOf, async () => 1)).occurrences[0].transaction.currency, 'UZS');
  assert.equal((await inScheduleCurrency([paid], [], currencyOf, async () => 0)).occurrences[0].transaction.currency, 'UZS');
 });
+
+test('Recurring counts a converted payment against its schedule but shows it as entered, through the planning read', async () => {
+ // EPAM pays a USD 3,450 salary; October's payment was entered in UZS (the user's report, 10 October 2026).
+ const rate = async (from, to, date) => usdPerUzs[date];
+ const counted = await inScheduleCurrency([paid], [], currencyOf, rate);
+ assert.deepEqual(counted.occurrences[0].transaction.entered, { amount: 5000000, currency: 'UZS' }, 'the read keeps what was entered beside the converted figure');
+ const [october] = monthOccurrences([pixel], withExtraPayments(counted.occurrences, [], currencyOf), '2026-10', '2026-10-08');
+ assert.equal(Math.round(october.recorded), 400, 'progress counts it in the schedule currency');
+ assert.deepEqual(october.entered, { amount: 5000000, currency: 'UZS' }, 'the row shows it as entered');
+ // Later payments in the same currency add up as entered; a second currency leaves no single entered figure.
+ const later = { id: 't2', occurrence_record_id: 'pixel', occurrence_due_on: '2026-10-01', amount: 2560000, currency: 'UZS', date: '2026-10-07' };
+ const withLater = await inScheduleCurrency([paid], [later], currencyOf, rate);
+ const [both] = monthOccurrences([pixel], withExtraPayments(withLater.occurrences, withLater.payments, currencyOf), '2026-10', '2026-10-08');
+ assert.deepEqual(both.entered, { amount: 7560000, currency: 'UZS' });
+ const dollars = { id: 't3', occurrence_record_id: 'pixel', occurrence_due_on: '2026-10-01', amount: 100, currency: 'USD', date: '2026-10-07' };
+ const mixed = await inScheduleCurrency([paid], [later, dollars], currencyOf, rate);
+ const [mix] = monthOccurrences([pixel], withExtraPayments(mixed.occurrences, mixed.payments, currencyOf), '2026-10', '2026-10-08');
+ assert.equal(mix.entered, undefined);
+ assert.equal(Math.round(mix.recorded), 700);
+});

@@ -7,7 +7,7 @@ import { liabilities, type Entry } from '@/lib/finance';
 import { resolveIncomeSource } from '@/lib/income-sources';
 import type { Category } from '@/lib/planning';
 import { applyRecordChange, lendFromAccount, withSavedRecord } from '@/lib/record-balance';
-import { businessMoveFrom, cashAccountProblem, debtDatesProblem, duplicateSalaryPayment, duplicateScheduledPayment, expenseName, recordSaveProblem } from '@/lib/record-save';
+import { businessMoveFrom, cashAccountProblem, debtDatesProblem, demoScheduleLink, duplicateSalaryPayment, duplicateScheduledPayment, expenseName, recordSaveProblem } from '@/lib/record-save';
 import { depositToday } from '@/lib/deposit-interest';
 import { savedRecord } from '@/lib/record-table';
 import { isLinkedTransaction } from '@/lib/linked-transactions';
@@ -44,7 +44,9 @@ export function useRecordSave(input: RecordSaveInput) {
         const opened=liabilities.includes(editing.kind)&&!stored?{opened_on:editing.opened_on??today()}:{};
         // Only new money lent leaves a cash account.
         const lentFrom=editing.kind==='Money lent'&&!stored?editing.lent_from??null:null;
-        return {...editing,name,lent_from:lentFrom||undefined,account_exchange_rate:converted?rate:undefined,...opened,...incomeSourcePatch,...earningPatch};
+        // Signed in, the database names the schedule a source receipt or a salary pays; the sample workspace does it here.
+        const link=demo?demoScheduleLink(editing,{...incomeSourcePatch,...earningPatch},input.sources):{};
+        return {...editing,name,lent_from:lentFrom||undefined,account_exchange_rate:converted?rate:undefined,...opened,...incomeSourcePatch,...earningPatch,...link};
     }
     async function save(e: React.FormEvent) {
         e.preventDefault(); if (!editing) return;

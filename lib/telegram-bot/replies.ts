@@ -11,7 +11,7 @@ import {createLoginToken} from '../telegram-account';
 import {connectMinutes,connectStartPath,createConnectRequest,unlinkChat} from '../telegram-connect';
 import {t} from '../telegram-kit';
 import {createdInTelegram,type TelegramSubscription} from '../telegram-link';
-import {ownerDebtPayments,ownerProfile,ownerRecordsSince,recentSnapshots} from '../telegram-owner';
+import {ownerDebtPayments,ownerRecordsSince} from '../telegram-owner';
 import type {TelegramMessage} from '../telegram';
 import {ownerLanguage,stranger} from './owner';
 import type {BotEnv,TelegramFrom,Turn} from './types';
@@ -31,15 +31,14 @@ export async function signOut(db:ServiceDatabase,subscription:TelegramSubscripti
 }
 /** Payments due in the next 31 days, as the morning digest lists them, in the owner's primary currency at the latest snapshot's rates. */
 export async function upcomingReply(db:ServiceDatabase,owner:string,language:Language,today:string){
- const [records,occurrences,[repayments,mortgagePayments],profile,[snapshot]]=await Promise.all([
+ // Each payment is shown as entered, so neither the display currency nor the day's rates are read.
+ const [records,occurrences,[repayments,mortgagePayments]]=await Promise.all([
   // Schedules and debts in full; no cash-flow history, which the payments due never read.
   ownerRecordsSince(db,owner,today),
   ownerRows<Occurrence>(db,'payment_occurrences',owner,'id,record_id,due_on,status'),
   ownerDebtPayments(db,owner),
-  ownerProfile(db,owner),
-  recentSnapshots(db,owner,1),
  ]);
- return paymentsSection(upcomingPayments(records,occurrences,today,undefined,debtPaymentsFrom(repayments,mortgagePayments)),language,today,{currency:profile.currency,rates:snapshot?.rates})??t(language,'No payments due in the next 31 days.');
+ return paymentsSection(upcomingPayments(records,occurrences,today,undefined,debtPaymentsFrom(repayments,mortgagePayments)),language,today)??t(language,'No payments due in the next 31 days.');
 }
 /** The "your account also works on the web" message. Accounts created in Telegram get one-tap buttons; other accounts get a plain link. */
 export async function openAppReply({db,chatId,clock,env}:Turn,subscription:TelegramSubscription,language:Language):Promise<TelegramMessage|null>{

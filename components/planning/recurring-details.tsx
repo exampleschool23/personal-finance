@@ -7,9 +7,8 @@ import { HistoryChart } from '@/components/presentation-foundation/history-chart
 import { StatTile, StatTiles } from '@/components/presentation-foundation/stat-tile';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/components/language-provider';
-import { useDisplayMoney } from '@/components/display-money';
 import { frequencyLabels } from '@/lib/finance';
-import { formatDate, formatNumber, formatPercent } from '@/lib/format';
+import { formatDate, formatMoney, formatNumber, formatPercent } from '@/lib/format';
 import type { PlanningData } from '@/lib/planning';
 import type { RecurringItem } from '@/lib/recurring';
 import { nextOccurrence, scheduleTrack } from '@/lib/recurring-history';
@@ -35,7 +34,7 @@ function PaymentList({ items, money, today, done, income }: { items: RecurringIt
   <h3>{t('Payments')}</h3>
   <ul>{items.slice(0, 12).map(entry => <li key={entry.key} data-status={entry.status}>
    <span>{formatDate(entry.date, locale)}<span className={entry.status === 'overdue' ? 'status-badge is-overdue' : 'status-badge'}>{label(entry)}</span></span>
-   <strong className={entry.status === 'paid' && income ? 'positive' : undefined}>{entry.status === 'paid' ? money(entry.recorded ?? entry.amount) : '—'}<small>{t('of {amount}', { amount: money(entry.amount) })}</small></strong>
+   <strong className={entry.status === 'paid' && income ? 'positive' : undefined}>{entry.status === 'paid' ? entry.entered ? formatMoney(entry.entered.amount, entry.entered.currency, locale) : money(entry.recorded ?? entry.amount) : '—'}<small>{t('of {amount}', { amount: money(entry.amount) })}</small></strong>
   </li>)}</ul>
  </section>;
 }
@@ -48,10 +47,9 @@ export function RecurringDetails({ item, data, today, onClose }: Props) {
  const { record, direction } = item;
  const track = useMemo(() => scheduleTrack(item, data, today, months), [item, data, today, months]);
  const next = useMemo(() => nextOccurrence(item, data, today), [item, data, today]);
- // Every figure in the display currency; without a rate they read "—" and the chart gives way to a note.
- const { convert, show, currency = record.currency } = useDisplayMoney();
- const money = (value: number) => show(value, record.currency);
- const points = convert(1, record.currency) === null ? null : track.points.map(point => ({ ...point, scheduled: convert(point.scheduled, record.currency)!, recorded: convert(point.recorded, record.currency)! }));
+ // Every figure in the schedule's own currency, as it was entered (AGENTS.md: Recurring shows entered amounts).
+ const money = (value: number) => formatMoney(value, record.currency, locale);
+ const points = track.points;
  const income = direction === 'income';
  const done = t(income ? 'Received' : 'Paid'), fill = income ? 'var(--positive)' : 'var(--foreground)';
  return <Dialog open onOpenChange={open => { if (!open) onClose(); }}><DialogContent className="recurring-details sm:max-w-2xl">
@@ -63,7 +61,7 @@ export function RecurringDetails({ item, data, today, onClose }: Props) {
   </StatTiles>
   <section className="recurring-details-chart" aria-label={t('History')}>
    <div className="recurring-details-bar"><h3>{t('History')}</h3><Segmented label={t('History period')} options={[6, 12, 24].map(value => ({ value, label: t('{count} months', { count: formatNumber(value, locale, 0) }) }))} value={months} onChange={setMonths}/></div>
-   {track.scheduled <= 0 ? <EmptyState icon={<BarChart3 aria-hidden="true"/>} description={t('Nothing recorded in this period.')}/> : points ? <HistoryChart points={points} currency={currency} fill={fill} done={done}/> : <p role="status" className="muted">{t('Exchange rate unavailable.')}</p>}
+   {track.scheduled <= 0 ? <EmptyState icon={<BarChart3 aria-hidden="true"/>} description={t('Nothing recorded in this period.')}/> : <HistoryChart points={points} currency={record.currency} fill={fill} done={done}/>}
   </section>
   <PaymentList items={track.history} money={money} today={today} done={done} income={income}/>
  </DialogContent></Dialog>;

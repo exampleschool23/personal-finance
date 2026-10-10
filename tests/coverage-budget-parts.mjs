@@ -32,17 +32,11 @@ const overrides={
  // Rolling digits are covered in presentation-foundation; here a figure is its formatted text.
  '@/components/presentation-foundation/rolling-text':{RollingText:({text})=>text},
  '@/components/ui/button':{Button:host('button')},
+ 'next/link':{__esModule:true,default:host('link')},
  '@/components/ui/dialog':{Dialog:host('dialog'),DialogContent:host('dialog-content'),DialogTitle:host('dialog-title')},
  '@/components/ui/popover':{Popover:host('popover'),PopoverAnchor:host('popover-anchor'),PopoverContent:host('popover-content')},
  '@/lib/feedback':{showError:message=>errors.push(message)},
- // Drag and drop: the hooks report `dnd` (what is over a group, what is dragged); the context is a host element whose handlers the tests call.
- '@dnd-kit/core':{DndContext:host('dnd-context'),DragOverlay:host('drag-overlay'),closestCorners:()=>['closest'],pointerWithin:args=>args.hits,
-  useDroppable:({id,disabled})=>({setNodeRef:'drop:'+id,isOver:!disabled&&dnd.over===id,active:dnd.active?{id:dnd.active}:null}),
-  useDraggable:({id,disabled})=>({attributes:{'aria-roledescription':'draggable'},listeners:{onPointerDown:'pd'},setNodeRef:'drag:'+id,setActivatorNodeRef:'handle:'+id,isDragging:!disabled&&dnd.active===id})},
- '@/components/presentation-foundation/sortable':{useSortableSensors:()=>'sensors',sortableAccessibility:(t,nameOf)=>({nameOf})},
- '@/lib/budget-groups':loadTS('lib/budget-groups.ts'),
 };
-const dnd={over:null,active:null};
 // The budget screen's parts, loaded together as one module would be.
 const cache=new Map();
 const page=Object.assign({},...['budget-rows','planned-input','left-to-budget-card','settings-dialogs'].map(name=>loadTS(`components/budget/${name}.tsx`,overrides,cache)));
@@ -183,53 +177,13 @@ test('BudgetGroupCard: no unbudgeted toggle when every row has a budget',()=>{
  assert.deepEqual(byClass(view,'budget-pill').map(pill=>pill.props['data-tone']),['positive','positive'],'income above plan is green');
 });
 
-test('BudgetGroupCard: a movable card has drag handles and is outlined while another group\'s category is over it',()=>{
- const group={name:'Household',direction:'expense',type:null,rows:[row()],budget:500,actual:200,remaining:300};
- const props={group,currency:'USD',open:true,onToggle(){},showUnbudgeted:false,onShowUnbudgeted(){},renderPlanned:()=>'P',onOpen(){}};
- let view=mount(React.createElement(page.BudgetGroupCard,props));
- assert.equal(byClass(view,'drag-handle').length,0,'only inside GroupMoves');
- view=mount(React.createElement(page.BudgetGroupCard,{...props,movable:true}));
- const handle=one(view,'button',node=>node.props.className==='drag-handle');
- assert.equal(handle.props['aria-label'],'T:Move T:Groceries');
- assert.equal(handle.props.ref,'handle:groceries');
- assert.equal(byClass(view,'budget-row budget-category-row')[0].props['data-movable'],true);
- assert.equal(view.tree.props.ref,'drop:expense:Household');
- Object.assign(dnd,{over:'expense:Household',active:'other'});
- assert.equal(mount(React.createElement(page.BudgetGroupCard,{...props,movable:true})).tree.props['data-drop-target'],true);
- Object.assign(dnd,{active:'groceries'});
- view=mount(React.createElement(page.BudgetGroupCard,{...props,movable:true}));
- assert.equal(view.tree.props['data-drop-target'],undefined,'its own group is no target');
- assert.equal(byClass(view,'budget-row budget-category-row')[0].props['data-dragging'],true);
- Object.assign(dnd,{over:null,active:null});
-});
-
-test('GroupMoves saves a dropped category\'s new group, shows the dragged copy and reports a failed save',async()=>{
- const saved=[];errors.length=0;
- const household={name:'Household',direction:'expense',type:null,rows:[row({type:'flexible',group:'Household',rollover:false,excluded:false})],budget:0,actual:0,remaining:0};
- const everyday={name:'Everyday spending',direction:'expense',type:null,rows:[row({key:'leisure',name:'Leisure',type:'flexible',group:'Everyday spending',rollover:false,excluded:false})],budget:0,actual:0,remaining:0};
- let fail=false;
- const onSave=async setting=>{if(fail)throw new Error('Could not save changes.');saved.push(setting);};
- const view=mount(React.createElement(page.GroupMoves,{groups:[household,everyday],onSave},'CARDS'));
- const context=one(view,'x-dnd-context');
- assert.equal(context.props.collisionDetection({hits:['g']})[0],'g','the group under the pointer');
- assert.deepEqual(context.props.collisionDetection({hits:[]}),['closest'],'else the nearest, for the keyboard');
- assert.equal(context.props.accessibility.nameOf('leisure'),'T:Leisure');
- assert.equal(context.props.accessibility.nameOf('gone'),'');
- context.props.onDragStart({active:{id:'groceries'}});
- view.render();
- assert.equal(text(one(view,'x-drag-overlay')),'T:Groceries');
- context.props.onDragEnd({active:{id:'groceries'},over:{id:'expense:Everyday spending'}});
- await new Promise(resolve=>setImmediate(resolve));
- assert.deepEqual(saved.map(item=>[item.category_key,item.group_name]),[['groceries',null]],'the type\'s own group is stored as no group');
- view.render();assert.equal(text(one(view,'x-drag-overlay')),'');
- context.props.onDragEnd({active:{id:'groceries'},over:{id:'expense:Household'}});
- context.props.onDragEnd({active:{id:'groceries'},over:null});
- assert.equal(saved.length,1,'the same group or no group saves nothing');
- fail=true;
- context.props.onDragEnd({active:{id:'leisure'},over:{id:'expense:Household'}});
- await new Promise(resolve=>setImmediate(resolve));
- assert.deepEqual(errors,['T:Could not save changes.']);
- context.props.onDragStart({active:{id:'gone'}});context.props.onDragCancel();
+test('BudgetGroupCard: a bare card lists only its categories, always open',()=>{
+ const group={name:'Expenses',direction:'expense',type:null,rows:[row()],budget:500,actual:200,remaining:300};
+ const view=mount(React.createElement(page.BudgetGroupCard,{group,currency:'USD',open:true,bare:true,onToggle(){},showUnbudgeted:false,onShowUnbudgeted(){},renderPlanned:()=>'P',onOpen(){}}));
+ assert.equal(byClass(view,'budget-row budget-group-row').length,0,'no group heading');
+ assert.equal(byClass(view,'budget-group-toggle').length,0);
+ assert.equal(byClass(view,'budget-row budget-category-row').length,1);
+ assert.equal(byClass(view,'drag-handle').length,0,'categories no longer move between groups');
 });
 
 test('ContributionRows lists goals with their monthly amount or a dash and links to Goals',()=>{
@@ -408,12 +362,12 @@ const category=(overrides={})=>({key:'groceries',name:'Groceries',custom:false,d
 
 function settingsDialog(props){
  const saved=[],closed=[];
- const view=mount(React.createElement(page.CategorySettingsDialog,{groups:['Everyday spending','Income','Pets'],month:'2026-10',currency:'USD',onSave:async setting=>{saved.push(setting);},onClose:()=>closed.push(true),...props}));
+ const view=mount(React.createElement(page.CategorySettingsDialog,{month:'2026-10',currency:'USD',onSave:async setting=>{saved.push(setting);},onClose:()=>closed.push(true),...props}));
  const submit=async()=>{one(view,'form').props.onSubmit({preventDefault(){}});await flush();view.render();};
  return {view,saved,closed,submit};
 }
 
-test('CategorySettingsDialog: expense category shows figures, types, groups and saves defaults',async()=>{
+test('CategorySettingsDialog: expense category shows figures and types, no group field, and saves defaults',async()=>{
  const {view,saved,closed,submit}=settingsDialog({category:category(),figures:{budget:400,rolloverIn:-25,actual:150,remaining:225}});
  assert.equal(text(one(view,'x-dialog-title')),'T:Groceries');
  assert.equal(one(view,'x-category-icon').props.kind,'groceries');
@@ -422,8 +376,8 @@ test('CategorySettingsDialog: expense category shows figures, types, groups and 
  const radios=all(view,'input',node=>node.props.type==='radio');
  assert.deepEqual(radios.map(radio=>radio.props.checked),[false,true,false]);
  assert.match(text(byClass(view,'budget-choice-list')[0]),/T:FixedT:The same every month/);
- const options=all(view,'option').map(option=>option.props.value);
- assert.deepEqual(options,['Bills & recurring','Everyday spending','Future spending','Pets','__new'],'Income is never a group choice');
+ assert.equal(all(view,'select').length,0,'categories have no group');
+ assert.equal(nodes(view.tree,node=>node.type==='x-link').length,0,'no link to manage groups');
  assert.equal(byClass(view,'budget-rollover-fields').length,0);
  assert.equal(all(view,'input',node=>node.props.type==='checkbox').length,2);
  await submit();
@@ -431,33 +385,11 @@ test('CategorySettingsDialog: expense category shows figures, types, groups and 
  assert.equal(closed.length,1);
 });
 
-test('CategorySettingsDialog: changing type moves a default group along, a custom group stays',async()=>{
- const {view,saved,submit}=settingsDialog({category:category()});
- const radio=index=>all(view,'input',node=>node.props.type==='radio')[index];
- radio(0).props.onChange();view.render();
- assert.equal(one(view,'select').props.value,'Bills & recurring');
+test('CategorySettingsDialog: changing type saves it, and a group saved before is cleared',async()=>{
+ const {view,saved,submit}=settingsDialog({category:category({group:'Pets'})});
+ all(view,'input',node=>node.props.type==='radio')[0].props.onChange();view.render();
  await submit();
  assert.equal(saved[0].budget_type,'fixed');assert.equal(saved[0].group_name,null);
- one(view,'select').props.onChange({currentTarget:{value:'Pets'}});view.render();
- radio(2).props.onChange();view.render();
- assert.equal(one(view,'select').props.value,'Pets','custom group stays when type changes');
- await submit();
- assert.equal(saved[1].budget_type,'non_monthly');assert.equal(saved[1].group_name,'Pets');
-});
-
-test('CategorySettingsDialog: a new group needs a name before Save is enabled',async()=>{
- const {view,saved,submit}=settingsDialog({category:category()});
- one(view,'select').props.onChange({currentTarget:{value:'__new'}});view.render();
- const save=()=>one(view,'x-button');
- assert.equal(save().props.disabled,true);
- const name=one(view,'input',node=>node.props.className==='budget-text');
- assert.equal(name.props.placeholder,'T:Group name');assert.equal(name.props.maxLength,60);
- name.props.onChange({currentTarget:{value:'   '}});view.render();
- assert.equal(save().props.disabled,true);
- one(view,'input',node=>node.props.className==='budget-text').props.onChange({currentTarget:{value:'  Hobbies '}});view.render();
- assert.equal(save().props.disabled,false);assert.equal(text(save()),'T:Save');
- await submit();
- assert.equal(saved[0].group_name,'Hobbies');
 });
 
 test('CategorySettingsDialog: rollover fund fields, starting balance currency and exclusion',async()=>{
@@ -525,7 +457,7 @@ test('CategorySettingsDialog: income categories are fixed, without fund or figur
 test('CategorySettingsDialog: busy state, failed save and dialog close rules',async()=>{
  errors.length=0;
  let release;const closed=[];
- const view=mount(React.createElement(page.CategorySettingsDialog,{category:category(),groups:[],month:'2026-10',currency:'USD',onSave:()=>new Promise((resolve,reject)=>{release={resolve,reject};}),onClose:()=>closed.push(true)}));
+ const view=mount(React.createElement(page.CategorySettingsDialog,{category:category(),month:'2026-10',currency:'USD',onSave:()=>new Promise((resolve,reject)=>{release={resolve,reject};}),onClose:()=>closed.push(true)}));
  one(view,'form').props.onSubmit({preventDefault(){}});view.render();
  assert.equal(one(view,'fieldset').props.disabled,true);
  assert.equal(text(one(view,'x-button')),'T:Saving…');assert.equal(one(view,'x-button').props.disabled,true);

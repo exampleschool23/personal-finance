@@ -28,7 +28,7 @@ type Props = {
 /** Subscriptions found in recorded spending, with their monthly and yearly cost per currency. */
 export function SubscriptionsPanel({ records, decisions, loading, error, onRetry, decide, restore, onTrack }: Props) {
  const { t, locale } = useLanguage(), today = depositToday();
- const { show, showSum } = useDisplayMoney();
+ const { entered, showSum } = useDisplayMoney();
  const [failure, setFailure] = useState(''), [busy, setBusy] = useState(false);
  const { active, hidden } = applySubscriptionDecisions(detectSubscriptions(records, today), decisions);
  const totals = subscriptionTotals(active);
@@ -46,9 +46,9 @@ export function SubscriptionsPanel({ records, decisions, loading, error, onRetry
   </PanelTitle>
   <ResourceState loading={loading} error={error} onRetry={onRetry}>
    {active.length ? <ul className="subscription-list" ref={rows}>{active.map(item => <li key={item.id} className="recurring-row" data-status={item.missed ? 'missed' : undefined}>
-    <span className="transaction-merchant"><CategoryIcon kind={item.record.kind}/><span><strong>{item.record.name}</strong><small>{t(cadenceLabels[item.cadence])} · {item.priceIncrease ? t('Up from {amount}', { amount: show(item.priceIncrease.from, item.currency) }) : t('Last charged {date}', { date: formatDate(item.lastCharge, locale) })}</small></span></span>
+    <span className="transaction-merchant"><CategoryIcon kind={item.record.kind}/><span><strong>{item.record.name}</strong><small>{t(cadenceLabels[item.cadence])} · {item.priceIncrease ? t('Up from {amount}', { amount: entered(item.priceIncrease.from, item.currency) }) : t('Last charged {date}', { date: formatDate(item.lastCharge, locale) })}</small></span></span>
     {status(item)}
-    <span className="transaction-amount"><strong>{show(item.amount, item.currency)}</strong><small className="block muted">{t('{amount} a year', { amount: show(item.yearly, item.currency) })}</small></span>
+    <span className="transaction-amount"><strong>{entered(item.amount, item.currency)}</strong><small className="block muted">{t('{amount} a year', { amount: entered(item.yearly, item.currency) })}</small></span>
     <div className="row-actions"><RowMenu label={t('Actions for {name}', { name: item.record.name })} items={[
      { label: t('Track as recurring'), disabled: busy, onSelect: () => onTrack(recurringPlanDraft(item.record, item.cadence, item.next, crypto.randomUUID())) },
      { label: t('Mark cancelled'), disabled: busy, onSelect: () => run(() => decide({ ...key(item), status: 'cancelled', decided_on: today })) },

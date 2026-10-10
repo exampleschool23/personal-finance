@@ -1,13 +1,15 @@
 import { daysBetween, monthDays, monthEnd, shiftDay } from './calendar-days';
 import { archivedIn, scheduleDates, income, type Entry } from './finance';
-import { amountIn } from './money';
+import { amountIn, type Money } from './money';
 import { installmentDates, installmentsFrom, isRecurringCashFlow, laterPayments, paidInstallmentAmounts, paidInstallmentMonths, scheduleAssets, scheduleStart, settledOccurrences, type DebtPayment, type Occurrence } from './planning';
 
 export type RecurringStatus = 'paid' | 'skipped' | 'due' | 'overdue';
 /** `installment` is a loan's monthly payment; it is paid by a repayment or mortgage payment in its month. */
 /** `amount` is what was scheduled; `recorded` is what was actually received or paid (0 when nothing came), when known;
  * null when a payment in another currency could not be converted into the schedule's. */
-export type RecurringItem = { key: string; record: Entry; date: string; status: RecurringStatus; direction: 'income' | 'expense'; amount: number; recorded?: number | null; installment?: boolean };
+/** `entered` is what was recorded as it was entered, in its own currency, when every payment of the due date shares one
+ * currency and all of them are loaded; otherwise undefined and `recorded` (in the schedule's currency) is shown. */
+export type RecurringItem = { key: string; record: Entry; date: string; status: RecurringStatus; direction: 'income' | 'expense'; amount: number; recorded?: number | null; entered?: Money; installment?: boolean };
 
 /** Every scheduled income and expense in a month and, when the loan payments are known, each loan's monthly payment, with whether it was paid, skipped, is still due or is overdue. */
 export function monthOccurrences(records: Entry[], occurrences: Occurrence[], month: string, today: string, debtPayments?: DebtPayment[]): RecurringItem[] {
@@ -34,9 +36,9 @@ export function occurrencesBetween(records: Entry[], occurrences: Occurrence[], 
   recorded.set(key, payment.amount === null ? null : currency && payment.currency ? amountIn({ amount: payment.amount, currency: payment.currency }, currency) : Number(payment.amount));
  };
  for (const item of occurrences) { const transaction = item.status !== 'paid' ? undefined : item.transaction ?? (item.transaction_id ? byId.get(item.transaction_id) : undefined); if (transaction) record(item.record_id + ':' + item.due_on, item.record_id, transaction); }
- for (const entry of records) if (entry.kind === 'Salary' && entry.frequency === 'Once' && entry.income_source_id) record(entry.income_source_id + ':' + (entry.income_due_on ?? entry.date), entry.income_source_id, entry);
  // Later payments add to what the first one recorded: totalled by the read, or found among the loaded records.
  const extras = laterPayments(occurrences, records.flatMap(entry => entry.occurrence_record_id && entry.occurrence_due_on ? [{ id: entry.id, occurrence_record_id: entry.occurrence_record_id, occurrence_due_on: entry.occurrence_due_on, amount: entry.amount, currency: entry.currency }] : []), currencyOf);
+ const entered = enteredPayments(records, occurrences, byId, extras);
  for (const item of occurrences) { const key = item.record_id + ':' + item.due_on; if (item.extra !== undefined) extras.set(key, item.extra); }
  for (const [key, extra] of extras) if (recorded.has(key)) { const first = recorded.get(key)!; recorded.set(key, first === null || extra === null ? null : first + extra); }
  const items: RecurringItem[] = [];
@@ -48,7 +50,7 @@ export function occurrencesBetween(records: Entry[], occurrences: Occurrence[], 
    if (archivedIn(record, date.slice(0, 7))) continue;
    const key = record.id + ':' + date;
    const done = status.get(key) === 'dismissed' ? 'skipped' : settled.has(key) ? 'paid' : null;
-   items.push({ key, record, date, status: done ?? (date < today && date >= installmentsFrom(record) ? 'overdue' : 'due'), direction: income.includes(record.kind) ? 'income' : 'expense', amount: Number(record.amount), recorded: done === 'paid' ? recorded.get(key) : undefined });
+   items.push({ key, record, date, status: done ?? (date < today && date >= installmentsFrom(record) ? 'overdue' : 'due'), direction: income.includes(record.kind) ? 'income' : 'expense', amount: Number(record.amount), recorded: done === 'paid' ? recorded.get(key) : undefined, entered: done === 'paid' ? entered.get(key) ?? undefined : undefined });
   }
  }
  // A loan month counts what its payments actually paid: a $450 payment does not settle a $1,600 installment in full.
@@ -62,6 +64,39 @@ export function occurrencesBetween(records: Entry[], occurrences: Occurrence[], 
   }
  }
  return items.sort((a, b) => a.date.localeCompare(b.date) || a.record.name.localeCompare(b.record.name));
+}
+
+/** Each settled due date's payments as they were entered, in their own currency: the first payment and the later ones
+ * among the loaded records. Null when they mix currencies, one has no amount, or the read totalled later payments it did
+ * not load (those are known only in the schedule's currency, so `recorded` is shown instead). */
+function enteredPayments(records: readonly Entry[], occurrences: readonly Occurrence[], byId: ReadonlyMap<string, Entry>, loadedExtras: ReadonlyMap<string, number | null>) {
+ const entered = new Map<string, Money | null>();
+ const enter = (key: string, payment: { amount: number | null; currency?: string }) => entered.set(key, addEntered(entered.get(key), payment));
+ const firsts = new Set<string>();
+ for (const item of occurrences) {
+  const transaction = item.status !== 'paid' ? undefined : item.transaction ?? (item.transaction_id ? byId.get(item.transaction_id) : undefined);
+  if (item.transaction_id) firsts.add(item.transaction_id);
+  // The read hands on a payment converted into its schedule's currency with what was entered beside it.
+  if (transaction) enter(item.record_id + ':' + item.due_on, ('entered' in transaction && transaction.entered) || transaction);
+ }
+ laterEntered({ records, occurrences, firsts, loadedExtras }, enter, key => entered.set(key, null));
+ return entered;
+}
+
+/** Later payments as entered: as the read handed them on (`extraEntered`), else as found among the loaded records. A due
+ * date whose later payments the read totalled but did not load is unknown as entered (`unknown`). */
+function laterEntered({ records, occurrences, firsts, loadedExtras }: { records: readonly Entry[]; occurrences: readonly Occurrence[]; firsts: ReadonlySet<string>; loadedExtras: ReadonlyMap<string, number | null> },
+ enter: (key: string, payment: { amount: number | null; currency?: string }) => void, unknown: (key: string) => void) {
+ const fromRead = new Set<string>();
+ for (const item of occurrences) if (item.extraEntered !== undefined) { const key = item.record_id + ':' + item.due_on; fromRead.add(key); enter(key, item.extraEntered ?? { amount: null }); }
+ for (const entry of records) { const key = entry.occurrence_record_id + ':' + entry.occurrence_due_on; if (entry.occurrence_record_id && entry.occurrence_due_on && !firsts.has(entry.id) && !fromRead.has(key)) enter(key, entry); }
+ for (const item of occurrences) { const key = item.record_id + ':' + item.due_on; if (!fromRead.has(key) && item.extra !== undefined && item.extra !== (loadedExtras.get(key) ?? 0)) unknown(key); }
+}
+
+/** One more payment added to what was entered so far: one currency adds up; a second currency, or no amount, ends it (null). */
+function addEntered(before: Money | null | undefined, payment: { amount: number | null; currency?: string }): Money | null {
+ if (before === null || payment.amount === null || !payment.currency || (before && before.currency !== payment.currency)) return null;
+ return { amount: (before?.amount ?? 0) + Number(payment.amount), currency: payment.currency };
 }
 
 /** A repeating income or bill to archive or restore. */

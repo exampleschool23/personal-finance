@@ -41,6 +41,16 @@ export const duplicateScheduledPayment = (editing: Entry, rows: readonly Entry[]
 export const duplicateSalaryPayment = (editing: Entry, rows: readonly Entry[], dueOn: string | null | undefined) =>
  editing.kind === 'Salary' && !!editing.income_source_id && rows.some(row => row.id !== editing.id && row.income_source_id === editing.income_source_id && row.income_due_on === dueOn);
 
+/** The sample workspace's copy of name_scheduled_payment for a source receipt or a salary with a plan (migration 140):
+ * the row names the schedule it pays and the due date it chose, so the income cards and Recurring join it by that one id. */
+export function demoScheduleLink(editing: Entry, patch: Pick<Entry, 'earning_due_on' | 'income_due_on'>, sources: readonly { id: string; schedule_id?: string | null }[]): Partial<Entry> {
+ if (editing.frequency !== 'Once' || editing.occurrence_record_id) return {};
+ const source = sources.find(source => source.id === editing.earning_source_id);
+ if (source && patch.earning_due_on) return { occurrence_record_id: source.schedule_id ?? source.id, occurrence_due_on: patch.earning_due_on };
+ if (editing.kind === 'Salary' && editing.income_source_id && patch.income_due_on) return { occurrence_record_id: editing.income_source_id, occurrence_due_on: patch.income_due_on };
+ return {};
+}
+
 /** A debt starts when it is first saved, never in the future and never after it is due. */
 export const debtDatesProblem = (record: Entry) => liabilities.includes(record.kind) && record.opened_on && (record.opened_on > today() || record.date < record.opened_on) ? 'Check the start and due dates.' : '';
 

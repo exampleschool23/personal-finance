@@ -33,6 +33,10 @@ test('a settled row keeps only Archive; a loan payment and a read-only row have 
  assert.match(text(paid.tree), new RegExp('Paid · ' + usd(850).replace('$', '\\$') + ' · 94%'));
  assert.equal(paid.all(node => node.props?.className === 'done-tick')[0].props['data-done'], true, 'a settled row is ticked before its icon');
  assert.deepEqual(paid.find(byType(RowMenu)).props.items.map(entry => entry.label), ['Archive']);
+ // A payment entered in another currency is shown as entered; the progress still counts it in the schedule's currency.
+ const uzs = mount(OccurrenceRow, { item: item('paid', { recorded: 850, entered: { amount: 10625000, currency: 'UZS' } }), dated: false, today: '2026-10-05', busy: false, onPay() {}, onSkip() {} });
+ assert.ok(text(uzs.tree).includes('Paid · ' + formatMoney(10625000, 'UZS', 'en-US') + ' · 94%'), text(uzs.tree));
+ assert.ok(text(uzs.tree).includes(usd(900)), 'the scheduled amount stays in the schedule currency');
  const another = paid.find(byType(ui.Button));
  assert.equal(another.props.disabled, false, 'a recorded payment takes another one');
  const skipped = mount(OccurrenceRow, { item: item('skipped'), dated: false, today: '2026-10-05', busy: false, onPay() {}, onSkip() {} });

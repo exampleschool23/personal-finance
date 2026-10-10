@@ -8,7 +8,7 @@ import { FormFooter } from '@/components/presentation-foundation/form-footer';
 import { FormattedNumberInput } from '@/components/presentation-foundation/formatted-number-input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { budgetTypeLabels, budgetTypes, defaultGroups, flexBucketKey, remainingTone, type BudgetCategory, type BudgetCategorySetting, type BudgetMode, type BudgetRow, type BudgetType } from '@/lib/budget';
+import { budgetTypeLabels, budgetTypes, flexBucketKey, remainingTone, type BudgetCategory, type BudgetCategorySetting, type BudgetMode, type BudgetRow, type BudgetType } from '@/lib/budget';
 import { showError } from '@/lib/feedback';
 import { formatMoney, formatSignedMoney } from '@/lib/format';
 import { useCategoryName } from './budget-rows';
@@ -32,15 +32,12 @@ function FundFigures({ figures, currency }: { figures: BudgetFigures; currency: 
  </dl>;
 }
 
-/** Category settings: type, group, rollover and whether the category counts in the budget.
+/** Category settings: type, rollover and whether the category counts in the budget.
  * The Flexible bucket (flex mode) has only its rollover. `figures` is this month's line: planned, rolled over, spent and available. */
-export function CategorySettingsDialog({ category, groups, month, currency, figures, onSave, onClose }: { category: BudgetCategory; groups: string[]; month: string; currency: string; figures?: BudgetFigures; onSave: (setting: BudgetCategorySetting) => Promise<void>; onClose: () => void }) {
+export function CategorySettingsDialog({ category, month, currency, figures, onSave, onClose }: { category: BudgetCategory; month: string; currency: string; figures?: BudgetFigures; onSave: (setting: BudgetCategorySetting) => Promise<void>; onClose: () => void }) {
  const { t } = useLanguage();
  const name = useCategoryName();
  const [type, setType] = useState(category.type);
- const typeGroup = (value: BudgetType) => defaultGroups[value];
- const [group, setGroup] = useState(category.group);
- const [newGroup, setNewGroup] = useState('');
  const [rollover, setRollover] = useState(category.rollover);
  const [start, setStart] = useState(category.rolloverStart ?? month);
  const [balance, setBalance] = useState(category.rolloverBalance);
@@ -52,15 +49,11 @@ export function CategorySettingsDialog({ category, groups, month, currency, figu
  const bucket = category.key === flexBucketKey;
  const expense = category.direction === 'expense' && !bucket;
  const fund = category.direction === 'expense';
- const choices = [...new Set([...budgetTypes.map(typeGroup), ...groups])].filter(item => item !== defaultGroups.income);
  async function submit() {
   setBusy(true);
-  const chosen = group === '__new' ? newGroup.trim() : group;
-  // A group that only follows the type is not stored, so changing the type moves the category along.
-  const custom = expense && chosen && chosen !== typeGroup(type) ? chosen : null;
   try {
    const on = fund && rollover;
-   await onSave({ category_key: category.key, budget_type: bucket ? 'flexible' : expense ? type : 'fixed', group_name: custom, rollover: on, rollover_start: on ? start : null, excluded: !bucket && excluded,
+   await onSave({ category_key: category.key, budget_type: bucket ? 'flexible' : expense ? type : 'fixed', group_name: null, rollover: on, rollover_start: on ? start : null, excluded: !bucket && excluded,
     rollover_balance: on ? balance : 0, rollover_currency: on && balance ? balanceCurrency : null, rollover_negative: negative });
    onClose();
   } catch (error) { showError(t((error as Error).message)); }
@@ -74,15 +67,8 @@ export function CategorySettingsDialog({ category, groups, month, currency, figu
     <fieldset disabled={busy} className="budget-dialog-fields">
      {expense && <div className="budget-choice-list" role="radiogroup" aria-label={t('Budget type')}>
       <p className="budget-dialog-label">{t('Budget type')}</p>
-      {budgetTypes.map(value => <label key={value} className="budget-choice"><input type="radio" name="budget-type" checked={type === value} onChange={() => { if (group === typeGroup(type)) setGroup(typeGroup(value)); setType(value); }}/><span><strong>{t(budgetTypeLabels[value])}</strong><small>{t(typeHints[value])}</small></span></label>)}
+      {budgetTypes.map(value => <label key={value} className="budget-choice"><input type="radio" name="budget-type" checked={type === value} onChange={() => setType(value)}/><span><strong>{t(budgetTypeLabels[value])}</strong><small>{t(typeHints[value])}</small></span></label>)}
      </div>}
-     {expense && <label className="budget-dialog-label">{t('Group')}
-      <select className="budget-select" value={group} onChange={event => setGroup(event.currentTarget.value)}>
-       {choices.map(item => <option key={item} value={item}>{t(item)}</option>)}
-       <option value="__new">{t('New group…')}</option>
-      </select>
-      {group === '__new' && <input className="budget-text" value={newGroup} maxLength={60} placeholder={t('Group name')} onChange={event => setNewGroup(event.currentTarget.value)} required/>}
-     </label>}
      {fund && <label className="budget-check"><input type="checkbox" checked={rollover} onChange={event => setRollover(event.currentTarget.checked)}/><span><strong>{t('Make this category a rollover fund')}</strong><small>{t('Money left at the end of a month carries into the next one, and overspending is taken from it. Best for non-monthly costs.')}</small></span></label>}
      {fund && rollover && <div className="budget-rollover-fields">
       <label className="budget-dialog-label">{t('Start month')}<DatePicker mode="month" value={start} onChange={setStart}/></label>
@@ -91,7 +77,7 @@ export function CategorySettingsDialog({ category, groups, month, currency, figu
      </div>}
      {!bucket && <label className="budget-check"><input type="checkbox" checked={excluded} onChange={event => setExcluded(event.currentTarget.checked)}/><span><strong>{t('Exclude this category from the budget')}</strong><small>{t('Its transactions stay recorded, but it is left out of budget totals.')}</small></span></label>}
     </fieldset>
-    <FormFooter busy={busy} onCancel={onClose}><Button disabled={busy || (group === '__new' && !newGroup.trim())}>{t(busy ? 'Saving…' : 'Save')}</Button></FormFooter>
+    <FormFooter busy={busy} onCancel={onClose}><Button disabled={busy}>{t(busy ? 'Saving…' : 'Save')}</Button></FormFooter>
    </form>
   </DialogContent>
  </Dialog>;

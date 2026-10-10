@@ -27,14 +27,18 @@ const splits = [{ record_id: 'split', category_id: 'Living expense', amount: 30 
 test('a category\'s month lists its payments newest first and groups them by name, adding up to the Budget actual', () => {
  const month = categoryMonth({ records }, 'Living expense', '2026-10', { ...view, splits });
  assert.deepEqual(month.payments.map(payment => [payment.id, payment.amount]), [['b', 60], ['split', 30], ['c', 500], ['peso', null], ['a', 40]], 'a split counts only its part; later days, last month, other categories and schedules are left out');
- assert.deepEqual(month.payees, [{ name: 'Rent', amount: 500, count: 1 }, { name: 'korzinka', amount: 100, count: 2 }, { name: 'Mixed shop', amount: 30, count: 1 }], 'names differing in letter case are one payee, largest first');
+ assert.deepEqual(month.payees, [{ name: 'Rent', amount: 500, count: 1, entered: { amount: 500, currency: 'USD' } }, { name: 'korzinka', amount: 100, count: 2, entered: { amount: 100, currency: 'USD' } }, { name: 'Mixed shop', amount: 30, count: 1, entered: { amount: 30, currency: 'USD' } }], 'names differing in letter case are one payee, largest first');
  assert.equal(month.total, 630, 'the same as the Budget row Actual');
  assert.equal(month.missing, 1, 'an amount no rate converts is counted as missing, never added under the wrong currency');
+ assert.deepEqual(month.payments.map(payment => payment.entered), [{ amount: 60, currency: 'USD' }, { amount: 30, currency: 'USD' }, { amount: 500, currency: 'USD' }, { amount: 10, currency: 'MXN' }, { amount: 40, currency: 'USD' }], 'each payment keeps what was entered, in its own currency');
  assert.equal(categoryMonth({ records }, 'Living expense', '2026-10', { ...view, currency: 'EUR' }).total, (40 + 60 + 500 + 100) * 0.5, 'amounts are in the display currency');
 });
 
 test('an income category lists what came in by its own category; an empty month has nothing', () => {
- assert.deepEqual(categoryMonth({ records }, 'Salary', '2026-10', view).payees, [{ name: 'Acme', amount: 2000, count: 1 }]);
+ assert.deepEqual(categoryMonth({ records }, 'Salary', '2026-10', view).payees, [{ name: 'Acme', amount: 2000, count: 1, entered: { amount: 2000, currency: 'USD' } }]);
+ // A payee paid in two currencies has no single entered figure: the converted total is shown.
+ const mixed = categoryMonth({ records: [record('u', 'Shop', 'Living expense', 10, '2026-10-02'), record('e', 'Shop', 'Living expense', 20, '2026-10-03', { currency: 'EUR' })] }, 'Living expense', '2026-10', view).payees;
+ assert.equal(mixed[0].entered, null);
  assert.deepEqual(categoryMonth({ records }, 'side', '2026-10', view).payments.map(payment => payment.id), ['gig'], 'a custom income category by its id');
  assert.deepEqual(categoryMonth({ records }, 'Other income', '2026-10', view).payments, [], 'never under the kind it was saved with');
  assert.deepEqual(categoryMonth({ records }, 'Living expense', '2026-11', view), { payments: [], payees: [], total: 0, missing: 0 });
@@ -57,6 +61,8 @@ test('tapping a category shows this month against the plan, where the money went
  r.mount(h(CategoryDetailsDialog, { ...props, onEditBill: item => calls.push(item.id), onClose: () => calls.push('close') }));
  const shown = text(r.tree);
  for (const part of ['Living expense', 'October 2026 · Household', 'Spent this month', usd(630), 'of ' + usd(700), 'Remaining', usd(70), 'Average a month', usd(350), 'Where the money went', 'Rent', usd(500), '79%', 'korzinka', 'Recurring', 'Groceries', usd(300), 'History', 'Transactions', '2 October 2026 · Wallet', 'Some currencies could not be converted and are excluded from totals.']) assert.ok(shown.includes(part), part);
+ // The transaction list shows each payment as entered, in its own currency (the one exception to the display-currency rule).
+ assert.ok(shown.includes(formatMoney(10, 'MXN', 'en-US')), 'the MXN payment is listed as entered');
  assert.deepEqual(r.all(byType(Bar)).map(bar => bar.props.dataKey), ['scheduled', 'recorded']);
  r.find(byType(ui.Button, 'Groceries')).props.onClick();
  assert.deepEqual(calls, ['bill']);

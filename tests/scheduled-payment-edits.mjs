@@ -24,14 +24,16 @@ test('a new payment names its schedule, and editing a saved one never sends a li
  const { save, saves } = recordsRoute();
  assert.equal((await save(paid)).status, 200);
  assert.equal(saves[0].p_record.occurrence_record_id, bill, 'Record payment names the schedule');
- // The edit form used to clear the link; whatever it sends, an update leaves the stored link alone (migration 119
- // refuses a change with "A scheduled payment keeps its schedule.").
+ // An update sends the link it has: an empty one is left out, so the stored link stays as it is (migration 119 refuses
+ // a change with "A scheduled payment keeps its schedule."); a set one reaches the database, which links a payment that
+ // named none and refuses to move a named one (migration 140).
  for (const occurrence_record_id of [null, bill, id(9)]) {
   assert.equal((await save({ ...paid, amount: 120, notes: 'QA note', revision: 1, occurrence_record_id })).status, 200);
   const sent = saves.at(-1);
   assert.equal(sent.p_expected_revision, 1);
   assert.equal(sent.p_record.amount, 120);
-  assert.ok(!('occurrence_record_id' in sent.p_record), 'an update leaves the schedule link out');
+  if (occurrence_record_id === null) assert.ok(!('occurrence_record_id' in sent.p_record), 'an update leaves an empty schedule link out');
+  else assert.equal(sent.p_record.occurrence_record_id, occurrence_record_id, 'a set link is sent for the database to check');
  }
 });
 

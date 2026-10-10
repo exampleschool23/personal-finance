@@ -14,8 +14,10 @@ export function DisplayCurrencyProvider({ currency, rates, children }: DisplayCu
  return <DisplayCurrencyContext.Provider value={{ currency, rates }}>{children}</DisplayCurrencyContext.Provider>;
 }
 
-/** Every listed amount in the display currency (AGENTS: never a mix of currencies on one screen). `convert` returns
- * null without a usable rate; `show` then reads "—", never the figure under the wrong label. Outside a workspace
+/** Two kinds of amount (AGENTS.md, "entered or converted"). One transaction or one schedule reads as it was entered,
+ * in its own currency: `entered` / `enteredSigned`. A figure that adds several of them (a total, a balance, a share, a
+ * chart) is in the display currency picked in the top bar: `show`, `showSigned`, `showSum`. `convert` returns null
+ * without a usable rate; `show` then reads "—", never the figure under the wrong label. Outside a workspace
  * (component tests, public pages) there is no display currency, so amounts keep their own. */
 export function useDisplayMoney() {
  const { locale } = useLanguage();
@@ -41,5 +43,8 @@ export function useDisplayMoney() {
   const value = sum(amounts);
   return value === null ? '—' : formatMoney(value, currency ?? amounts[0]?.currency ?? 'USD', locale);
  };
- return { currency, convert, show, showSigned, sum, showSum };
+ /** One transaction or schedule as it was entered: its own amount in its own currency, never converted. */
+ const entered = (amount: number, from: string, unitPrice = false): string => formatMoney(amount, from, locale, unitPrice);
+ const enteredSigned = (amount: number, from: string): string => formatSignedMoney(amount, from, locale);
+ return { currency, convert, show, showSigned, sum, showSum, entered, enteredSigned };
 }

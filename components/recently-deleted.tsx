@@ -21,7 +21,7 @@ import { unitPricedKinds } from '@/lib/finance';
 export function RecentlyDeleted({demo,demoItems,onRestore,onDelete,onSaved}:{demo:boolean;demoItems:DeletedItem[];onRestore:(item:DeletedItem)=>void;onDelete:(item:DeletedItem)=>void;onSaved:()=>void}) {
  const {t,locale}=useLanguage();
  // Deleted items keep their own currency; the list shows them in the display currency like every other list.
- const {show}=useDisplayMoney();
+ const {entered}=useDisplayMoney();
  const [items,setItems]=useState<DeletedItem[]>([]),[page,setPage]=useState(1),[hasMore,setHasMore]=useState(false),[loadedKey,setLoadedKey]=useState(''),[reload,setReload]=useState(0);
  const [permanent,setPermanent]=useState(false);
  const [restoring,setRestoring]=useState<DeletedItem|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -42,7 +42,7 @@ export function RecentlyDeleted({demo,demoItems,onRestore,onDelete,onSaved}:{dem
  {loading?<LoadingPlaceholder label={t('Loading records…')}/>:!visible.length?<EmptyState icon={<ArchiveRestore aria-hidden="true"/>} title={t('No deleted items')} description={t('Your deleted records will appear here for recovery.')}/>:<ul className="recovery-list">{visible.map(item=><li className="recovery-row" key={item.id} style={{'--recovery-color':categoryColor(deletedItemColorKind(item))} as CSSProperties}>
   <span className="recovery-icon"><ArchiveRestore size={20} aria-hidden="true"/></span>
   <div className="recovery-info"><strong>{item.data.name}</strong><p><CategoryBadge kind={deletedItemColorKind(item)} label={t(deletedItemLabel(item))}/>{item.source==='finance_records'&&item.data.date&&<span>{formatDate(item.data.date,locale)}</span>}</p></div>
-  <div className="recovery-value">{item.source==='finance_records'&&<strong>{show(Number(item.data.amount)*(unitPricedKinds.includes(String(item.data.kind))?Number(item.data.quantity||1):1),String(item.data.currency))}</strong>}{item.source==='savings_goals'&&<strong>{t('Target amount')}: {show(Number(item.data.target),String(item.data.currency??'USD'))}</strong>}<small>{t('Deleted on')} · {formatDateTime(item.deleted_at,locale)}</small></div>
+  <div className="recovery-value">{item.source==='finance_records'&&<strong>{entered(Number(item.data.amount)*(unitPricedKinds.includes(String(item.data.kind))?Number(item.data.quantity||1):1),String(item.data.currency))}</strong>}{item.source==='savings_goals'&&<strong>{t('Target amount')}: {entered(Number(item.data.target),String(item.data.currency??'USD'))}</strong>}<small>{t('Deleted on')} · {formatDateTime(item.deleted_at,locale)}</small></div>
   <div className="row-actions"><Button size="sm" variant="outline" disabled={busy} onClick={()=>{setError('');setPermanent(false);setRestoring(item);}}><RotateCcw size={15} aria-hidden="true"/>{t('Restore')}</Button><Button size="sm" variant="ghost" className="recovery-delete" disabled={busy} onClick={()=>{setError('');setPermanent(true);setRestoring(item);}}><Trash2 size={15} aria-hidden="true"/>{t('Delete permanently')}</Button></div>
  </li>)}</ul>}
 

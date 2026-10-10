@@ -4,10 +4,10 @@
 import { unwrapSignedBackup } from './backup-envelope';
 import { isCurrency } from './currencies';
 import type { EarningSource } from './earning-sources';
-import { sourceSchedule } from './earning-sources';
 import { budgetAmountFor, monthActuals, type BudgetAmount } from './budget';
-import { assets, expenses, financialTotals, income, liabilities, monthly, normalizeEntry, unitPricedKinds, value, type Entry } from './finance';
+import { assets, expenses, financialTotals, income, liabilities, normalizeEntry, unitPricedKinds, value, type Entry } from './finance';
 import { convertAmount, instrumentFor, instrumentKey, marketEntry, marketRates, quotedUnitPrice, type MarketData, type Quote } from './market';
+import { incomeCardTotals, monthlyIncomeCards } from './monthly-income-cards';
 import type { Activity, PlanningData } from './planning';
 import { transferAmount } from './spending';
 import { monthlyReview, normalizeSplits, type TransactionSplit } from './transaction-tools';
@@ -133,9 +133,11 @@ export function budgetFigures(budget: BudgetAmount, ledger: ReportLedger, { mont
  return { planned: budget.amount, actual, remaining: actual === null ? null : budget.amount - actual };
 }
 
-/** The monthly equivalent of the income sources active in `month` in one currency; null when one is variable or unknown. */
-export function expectedMonthlyIncome(sources: readonly EarningSource[], currency: string, month: string, start: string, end: string) {
- const current = sources.filter(s => s.currency === currency && !s.archived && (!s.start_date || s.start_date <= end) && (!s.end_date || s.end_date >= start));
- const amounts = current.map(s => s.mode === 'variable' || reportNumber(s.amount) === null ? null : sourceSchedule(s));
- return amounts.some(s => s === null) ? null : amounts.reduce((n, s) => n + monthly(s!, month), 0);
+/** The month's expected income in one currency, as the Cash flow income cards count it (`monthlyIncomeCards`: the
+ * schedules and asset estimates in that currency, a variable source's approximate amount, nothing twice). Null when an
+ * active variable source in that currency has no approximate amount or a fixed one no amount: unknown, not zero. */
+export function expectedMonthlyIncome(sources: readonly EarningSource[], records: readonly Entry[], currency: string, month: string, period: { start: string; end: string }) {
+ const current = sources.filter(s => s.currency === currency && !s.archived && (!s.start_date || s.start_date <= period.end) && (!s.end_date || s.end_date >= period.start));
+ if (current.some(s => s.mode === 'variable' ? !((s.approx_monthly ?? 0) > 0) : reportNumber(s.amount) === null)) return null;
+ return incomeCardTotals(monthlyIncomeCards(records.filter(r => r.currency === currency), month, current)).estimate;
 }

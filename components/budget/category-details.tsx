@@ -25,7 +25,7 @@ type Props = { row: BudgetRow; history: BudgetHistory; data: Pick<PlanningData, 
 export function CategoryDetailsDialog({ row, history, data, splits, bills, month, today, currency, rates, onEditBill, onClose }: Props) {
  const { t, locale } = useLanguage();
  const name = useCategoryName();
- const { show } = useDisplayMoney();
+ const { entered } = useDisplayMoney();
  const details = useMemo(() => categoryMonth(data, row.key, month, { splits, today, currency, rates }), [data, splits, row.key, month, today, currency, rates]);
  const money = (value: number) => formatMoney(value, currency, locale);
  const income = row.direction === 'income';
@@ -39,25 +39,26 @@ export function CategoryDetailsDialog({ row, history, data, splits, bills, month
    <h3>{t(income ? 'Where the money came from' : 'Where the money went')}</h3>
    <ul>{details.payees.slice(0, 8).map(payee => <li key={payee.name.toLocaleLowerCase()}>
     <span>{label(payee.name)}</span>
-    <strong className={income ? 'positive' : undefined}>{money(payee.amount)}{details.total > 0 && <small>{formatPercent(payee.amount / details.total * 100, locale, 0)}</small>}</strong>
+    <strong className={income ? 'positive' : undefined}>{payee.entered ? entered(payee.entered.amount, payee.entered.currency) : money(payee.amount)}{details.total > 0 && <small>{formatPercent(payee.amount / details.total * 100, locale, 0)}</small>}</strong>
    </li>)}</ul>
   </section>}
   {bills.length > 0 && <section className="recurring-details-history" aria-label={t('Recurring')}>
    <h3>{t('Recurring')}</h3>
    <ul>{bills.map(bill => <li key={bill.id}>
-    <span>{onEditBill ? <Button type="button" variant="link" size="sm" onClick={() => onEditBill(bill)}>{bill.name}</Button> : bill.name}</span>
-    <strong>{show(bill.amount, bill.currency)}</strong>
+    <span>{onEditBill ? <Button type="button" variant="link" onClick={() => onEditBill(bill)}>{bill.name}</Button> : bill.name}</span>
+    <strong>{entered(bill.amount, bill.currency)}</strong>
    </li>)}</ul>
   </section>}
   <section className="recurring-details-chart" aria-label={t('History')}>
    <div className="recurring-details-bar"><h3>{t('History')}</h3></div>
    {points.some(point => point.recorded || point.scheduled) ? <HistoryChart points={points} currency={currency} fill={income ? 'var(--positive)' : 'var(--foreground)'} done={t(income ? 'Received' : 'Spent')} outline={t('Planned')}/> : <EmptyState icon={<BarChart3 aria-hidden="true"/>} description={t('Nothing recorded in this period.')}/>}
   </section>
+  {/* Each payment as it was entered, in its own currency (the one exception to the display-currency rule, AGENTS.md); the tiles and payees above are converted totals. */}
   {details.payments.length > 0 && <section className="recurring-details-history" aria-label={t('Transactions')}>
    <h3>{t('Transactions')}</h3>
    <ul>{details.payments.slice(0, 30).map(payment => <li key={payment.id}>
     <span>{label(payment.name)}<small className="muted">{[formatDate(payment.date, locale), payment.record?.account_id && accounts.get(payment.record.account_id)].filter(Boolean).join(' · ')}</small></span>
-    <strong className={income ? 'positive' : undefined}>{payment.amount === null ? '—' : money(payment.amount)}</strong>
+    <strong className={income ? 'positive' : undefined}>{payment.entered === null ? '—' : entered(payment.entered.amount, payment.entered.currency)}</strong>
    </li>)}</ul>
    {details.missing > 0 && <p role="status" className="muted">{t('Some currencies could not be converted and are excluded from totals.')}</p>}
   </section>}

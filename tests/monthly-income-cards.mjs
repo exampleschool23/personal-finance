@@ -18,8 +18,10 @@ test('distinct explicit sources and unmatched inactive schedules are preserved',
  const cards = monthlyIncomeCards([entry('s1', 'Salary', { earning_source_id: 'one' }), entry('s2', 'Salary', { earning_source_id: 'two', frequency: 'Once' }), entry('later', 'Other income', { name: 'Later', date: '2027-01-01' })], '2026-09');
  assert.equal(cards.length, 3); assert.equal(cards.filter(card => card.excluded).length, 2);
 });
-test('explicit source receipts match schedule IDs even after a rename', () => {
- const cards = monthlyIncomeCards([entry('schedule', 'Salary'), entry('receipt', 'Salary', { name: 'Old name', frequency: 'Once', earning_source_id: 'source' })], '2026-09', [{ id: 'source', schedule_id: 'schedule' }]);
+test('source receipts match their schedule by the one link (occurrence_record_id, migration 140) even after a rename', () => {
+ const cards = monthlyIncomeCards([entry('schedule', 'Salary'), entry('receipt', 'Salary', { name: 'Old name', frequency: 'Once', earning_source_id: 'source', occurrence_record_id: 'schedule' })], '2026-09', [{ id: 'source', schedule_id: 'schedule' }]);
+ assert.equal(cards.length, 1); assert.equal(cards[0].amount, 5700); assert.equal(cards[0].notes.length, 1);
+ assert.equal(monthlyIncomeCards([entry('schedule', 'Salary'), entry('receipt', 'Salary', { frequency: 'Once', earning_source_id: 'source' })], '2026-09', [{ id: 'source', schedule_id: 'schedule' }]).length, 2, 'a source id alone is not the link');
  assert.equal(cards.length, 1); assert.equal(cards[0].amount, 5700); assert.equal(cards[0].notes.length, 1);
 });
 test('rental source receipts resolve through the source to each existing property card', () => {
@@ -106,7 +108,7 @@ test('linked payments without an asset estimate group within the month', () => {
 });
 
 test('a payment in another currency joins its schedule by id; without a rate its amount is missing, never added raw', () => {
- const cards=monthlyIncomeCards([entry('schedule','Salary'),entry('receipt','Salary',{frequency:'Once',currency:'UZS',amount:12500000,earning_source_id:'source'})],'2026-09',[{id:'source',schedule_id:'schedule'}],'2026-09-25');
+ const cards=monthlyIncomeCards([entry('schedule','Salary'),entry('receipt','Salary',{frequency:'Once',currency:'UZS',amount:12500000,occurrence_record_id:'schedule'})],'2026-09',[],'2026-09-25');
  assert.equal(cards.length,1);
  assert.deepEqual([cards[0].received,cards[0].receivedAmount,cards[0].missing],[true,0,1]);
  const { incomeCardTotals } = loadTS('lib/monthly-income-cards.ts');
@@ -122,8 +124,8 @@ test('a EUR payment linked to a USD schedule counts converted into the schedule 
 });
 
 test('receipt totals retain precision separately from estimates and exclude future and other-month payments',()=>{
- const rows=[entry('schedule','Salary',{earning_source_id:'source'}),entry('a','Salary',{frequency:'Once',earning_source_id:'source',amount:12.345,date:'2026-09-01'}),entry('b','Salary',{frequency:'Once',earning_source_id:'source',amount:7.125,date:'2026-09-02'}),entry('future','Salary',{frequency:'Once',earning_source_id:'source',amount:100,date:'2026-09-30'}),entry('prior','Salary',{frequency:'Once',earning_source_id:'source',amount:200,date:'2026-08-01'})];
- const cards=monthlyIncomeCards(rows,'2026-09',[{id:'source',schedule_id:'schedule'}],'2026-09-25');
+ const rows=[entry('schedule','Salary'),entry('a','Salary',{frequency:'Once',occurrence_record_id:'schedule',amount:12.345,date:'2026-09-01'}),entry('b','Salary',{frequency:'Once',occurrence_record_id:'schedule',amount:7.125,date:'2026-09-02'}),entry('future','Salary',{frequency:'Once',occurrence_record_id:'schedule',amount:100,date:'2026-09-30'}),entry('prior','Salary',{frequency:'Once',occurrence_record_id:'schedule',amount:200,date:'2026-08-01'})];
+ const cards=monthlyIncomeCards(rows,'2026-09',[],'2026-09-25');
  assert.equal(cards.length,1);assert.equal(cards[0].amount,5700);assert.equal(cards[0].receivedAmount,19.47);
 });
 
@@ -167,4 +169,22 @@ test('CF-048: the monthly estimate counts the variable sources\' approximate inc
  assert.equal(estimate.forecast, 2000 + 1925);
  assert.deepEqual(approximateIncome([{ ...sources[3] }], 'USD', {}), { amount: 0, missing: 1 }, 'MONEY-008: no rate: left out and counted missing, so the estimate reads —, never too low');
  assert.deepEqual(approximateIncome([sources[0], sources[3], sources[2], { ...sources[3], mode: 'fixed' }], 'USD', {}), { amount: 1200, missing: 1 }, 'an archived or fixed source is neither counted nor missing');
+});
+
+test('each income card stays in its source\'s own currency, a payment shows as entered, and only the headline converts', () => {
+ const { incomeCardTotals } = loadTS('lib/monthly-income-cards.ts');
+ const rates = { USD: 1, UZS: 12000 };
+ const rows = [
+  entry('epam', 'Salary', { amount: 3450 }),
+  entry('rent', 'Rent income', { currency: 'UZS', amount: 6000000 }),
+  entry('paid', 'Salary', { frequency: 'Once', currency: 'UZS', amount: 30000000, date: '2026-09-05', occurrence_record_id: 'epam' }),
+ ];
+ const cards = monthlyIncomeCards(rows, '2026-09', [], '2026-09-25', rates);
+ const epam = cards.find(card => card.entry.id === 'epam'), rent = cards.find(card => card.entry.id === 'rent');
+ assert.deepEqual([epam.entry.currency, epam.amount, epam.receivedAmount, epam.entered], ['USD', 3450, 2500, { amount: 30000000, currency: 'UZS' }], 'the UZS payment is shown as entered and counted in dollars against the plan');
+ assert.deepEqual([rent.entry.currency, rent.amount], ['UZS', 6000000]);
+ assert.deepEqual(cards.map(card => card.entry.id), ['epam', 'rent'], 'salary first, then by size in one currency (UZS 6,000,000 is $500)');
+ const usd = (amount, currency) => currency === 'USD' ? amount : currency === 'UZS' ? amount / 12000 : null;
+ assert.deepEqual(incomeCardTotals(cards, usd), { estimate: 3950, received: 2500, missing: 0 });
+ assert.equal(incomeCardTotals(cards, (amount, currency) => currency === 'USD' ? amount : null).missing, 2, 'a card no rate converts leaves the headline unknown');
 });

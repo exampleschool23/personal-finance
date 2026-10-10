@@ -28,9 +28,16 @@ test('the shared schedule helpers keep upcoming payments unchanged, including in
  const records = [record('shop', 'Shop', 'Business', 1000, '2026-10-20', { frequency: 'Once' }), record('dividend', 'Dividend', 'Business income', 100, '2026-01-05', { business_id: 'shop' })];
  assert.deepEqual(upcomingPayments(records, [], '2026-10-01', '2026-12-31').map(item => item.date), ['2026-11-05', '2026-12-05']);
  assert.deepEqual(monthOccurrences(records, [], '2026-10', '2026-10-01'), [], 'income starts no earlier than its business');
- const salary = [record('pay', 'Pay', 'Salary', 10, '2026-01-31'), { ...record('receipt', 'Pay', 'Salary', 10, '2026-10-30', { frequency: 'Once', income_source_id: 'pay', income_due_on: '2026-10-31' }) }];
- assert.equal(monthOccurrences(salary, [], '2026-10', '2026-11-02')[0].status, 'paid', 'a recorded salary receipt settles its occurrence');
- assert.equal(monthOccurrences(salary, [], '2026-02', '2026-11-02')[0].date, '2026-02-28');
+ // A salary receipt settles its occurrence through the occurrence row alone (migration 140), never through the fields it was saved with.
+ const salary = [record('pay', 'Pay', 'Salary', 10, '2026-01-31'), { ...record('receipt', 'Pay', 'Salary', 10, '2026-10-30', { frequency: 'Once', income_source_id: 'pay', income_due_on: '2026-10-31', occurrence_record_id: 'pay', occurrence_due_on: '2026-10-31' }) }];
+ const paid = [{ id: 'o', record_id: 'pay', due_on: '2026-10-31', status: 'paid', transaction_id: 'receipt' }];
+ assert.equal(monthOccurrences(salary, paid, '2026-10', '2026-11-02')[0].status, 'paid', 'a recorded salary receipt settles its occurrence');
+ assert.equal(monthOccurrences(salary, paid, '2026-10', '2026-11-02')[0].recorded, 10);
+ assert.deepEqual(monthOccurrences(salary, paid, '2026-10', '2026-11-02')[0].entered, { amount: 10, currency: 'USD' }, 'what was entered, in its own currency');
+ const mixed = [...salary, { ...record('later', 'Pay', 'Salary', 120000, '2026-10-31', { frequency: 'Once', currency: 'UZS', occurrence_record_id: 'pay', occurrence_due_on: '2026-10-31' }) }];
+ assert.equal(monthOccurrences(mixed, paid, '2026-10', '2026-11-02')[0].entered, undefined, 'payments in two currencies have no single entered figure');
+ assert.equal(monthOccurrences(salary, [], '2026-10', '2026-11-02')[0].status, 'overdue', 'the payment fields alone settle nothing');
+ assert.equal(monthOccurrences(salary, paid, '2026-02', '2026-11-02')[0].date, '2026-02-28');
 });
 
 test('a loan with a monthly payment is due on its start day each month until the due date, and a payment that month marks it paid', () => {
@@ -198,3 +205,13 @@ test('a one-time payment is offered the active schedules of its kind, business a
  assert.deepEqual(chooseSchedule({ ...payment, name: 'May rent', amount: 400, currency: 'UZS' }, records[2]), { occurrence_record_id: 'flat', income_source_id: 'p1' }, 'typed values and their currency stay');
  assert.deepEqual(chooseSchedule(payment, null), { occurrence_record_id: null });
 });
+
+test('the sample workspace moves an every-month schedule\'s occurrences to its day, each in its own month (migration 141)', () => {
+ const { onScheduleDays } = loadTS('lib/planning.ts');
+ const { withMonthDay } = loadTS('lib/calendar-days.ts');
+ assert.deepEqual([withMonthDay('2026-02-10', 31), withMonthDay('2026-09-05', 20), withMonthDay('2026-09-05', 0)], ['2026-02-28', '2026-09-20', '2026-09-01']);
+ const records = [{ id: 'bill', frequency: 'Monthly', date: '2026-01-30' }, { id: 'weekly', frequency: 'Weekly', date: '2026-01-07' }];
+ const occurrences = [{ record_id: 'bill', due_on: '2026-02-05', status: 'paid' }, { record_id: 'bill', due_on: '2026-03-05', status: 'dismissed' }, { record_id: 'weekly', due_on: '2026-02-04', status: 'paid' }];
+ assert.deepEqual(onScheduleDays(occurrences, records).map(item => item.due_on), ['2026-02-28', '2026-03-30', '2026-02-04']);
+});
+

@@ -33,7 +33,7 @@ export function recentTransactions(records: Entry[], today: string, limit = 5) {
 
 export function RecentTransactionsCard({ owner = null, demo = false, revision = 0, data: provided }: { owner?: string | null; demo?: boolean; revision?: number; data: PlanningData }) {
  const { t, locale } = useLanguage();
- const { show } = useDisplayMoney();
+ const { entered } = useDisplayMoney();
  const today = depositToday();
  const remote = useOwnerResource('/api/planning?scope=review&month=' + today.slice(0, 7), owner, !!owner && !demo, revision, emptyPlanning);
  const records = owner && !demo ? remote.data.records.map(normalizeEntry) : provided.records;
@@ -42,7 +42,7 @@ export function RecentTransactionsCard({ owner = null, demo = false, revision = 
   <PanelTitle title={t('Transactions')}><DrawerLink href="/transactions">{t('View all')}</DrawerLink></PanelTitle>
   {owner && !demo && remote.loading ? <LoadingPlaceholder label={t('Loading records…')} rows={4}/> : recent.length ? <ul className="overview-list overview-due">{recent.map(record => {
    const incoming = income.includes(record.kind);
-   return <li key={record.id}><CategoryIcon kind={record.kind}/><span>{shownName(record, t)}<small>{t(record.kind)} · {formatDate(record.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{show(Math.abs(signedAmount(record)), record.currency)}</strong></li>;
+   return <li key={record.id}><CategoryIcon kind={record.kind}/><span>{shownName(record, t)}<small>{t(record.kind)} · {formatDate(record.date, locale)}</small></span><strong className={incoming ? 'positive' : undefined}>{incoming ? '+' : ''}{entered(Math.abs(signedAmount(record)), record.currency)}</strong></li>;
   })}</ul> : <EmptyState icon={<ReceiptText/>} description={t('No transactions recorded this month or last.')}/>}
  </section>;
 }

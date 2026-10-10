@@ -29,3 +29,5 @@ export function addMonths(day: string, months: number) {
 export const monthEnd = (month: string) => isoDay(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0));
 /** How many days an ISO month has. */
 export const monthDays = (month: string) => Number(monthEnd(month).slice(8));
+/** The same month on another day: a monthly schedule's start date moved to the day it falls on (1 to the month's length). */
+export const withMonthDay = (day: string, date: number) => day.slice(0, 8) + String(Math.min(Math.max(1, Math.trunc(date)), monthDays(day.slice(0, 7)))).padStart(2, '0');

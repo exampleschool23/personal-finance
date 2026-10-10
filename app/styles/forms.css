@@ -26,6 +26,7 @@
 .session-loading{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px}
 
 .date-picker-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--input);border-radius:var(--radius-control);background:var(--field);color:var(--foreground);text-align:start;font-size:var(--type-small)}
+.date-picker-trigger:disabled{color:var(--muted-foreground);cursor:default;opacity:.7}
 .finance-date-picker{width:min(560px,calc(100vw - 24px));padding:20px;max-height:var(--radix-popover-content-available-height);overflow:auto;border-radius:18px;background:var(--background);color:var(--foreground);z-index:70}
 .date-picker-body{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:20px}
 .date-picker-presets{display:flex;flex-direction:column;gap:6px;border-inline-start:1px solid var(--border);padding-inline-start:16px;min-width:130px}

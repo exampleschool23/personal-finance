@@ -10,18 +10,19 @@ import { formatMoney } from '@/lib/format';
 import type { Entry } from '@/lib/finance';
 import { monthlyIncomeCards } from '@/lib/monthly-income-cards';
 import type { EarningSource } from '@/lib/earning-sources';
+import type { RateTable } from '@/lib/money';
 import type { CSSProperties } from 'react';
 
-export function EstimatedIncomeSources({ entries, currency, month, earningSources = [] }: { entries: Entry[]; currency: string; month: string; earningSources?: EarningSource[] }) {
+export function EstimatedIncomeSources({ entries, month, earningSources = [], rates }: { entries: Entry[]; currency: string; month: string; earningSources?: EarningSource[]; rates?: RateTable | null }) {
  const { t, locale } = useLanguage();
- const sources = monthlyIncomeCards(entries, month, earningSources);
+ const sources = monthlyIncomeCards(entries, month, earningSources, undefined, rates);
  return <section className="panel income-estimates">
   <PanelTitle title={t('Your monthly income sources')}><Link href="/assets">{t('Assets & investments')}</Link></PanelTitle>
   {sources.length ? <ul className="income-source-grid">{sources.map(({ entry, amount, excluded: isExcluded, received }) => {
    return <li key={entry.id} className={isExcluded ? 'income-source-card is-excluded' : 'income-source-card'} style={{ '--source-color': categoryColor(entry.kind) } as CSSProperties}>
     <span className={`income-receipt-indicator${received ? ' is-received' : ''}`} role="img" aria-label={t(received ? 'Income received this month' : 'No income received this month')} title={t(received ? 'Income received this month' : 'No income received this month')}>{received ? <Check size={16} strokeWidth={2.5} aria-hidden="true"/> : <Clock3 size={16} aria-hidden="true"/>}</span>
     <div className="income-source-heading"><span className="income-source-icon">{entry.kind === 'Salary' ? <BriefcaseBusiness size={20}/> : <ArrowDownLeft size={20}/>}</span><strong>{entry.name || t(entry.kind)}</strong><CategoryBadge kind={entry.kind} label={t(entry.kind)}/></div>
-    <span className="income-source-amount">{formatMoney(amount, currency, locale)}</span>
+    <span className="income-source-amount">{formatMoney(amount, entry.currency, locale)}</span>
    </li>;
   })}</ul> : <p className="muted">{t('No income is included for this month. Add a monthly salary or another income source below.')}</p>}
  </section>;

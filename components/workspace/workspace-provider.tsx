@@ -6,7 +6,7 @@ import { demoMarket, type DemoWorkspace } from '@/lib/demo-finance';
 import { useWorkspacePreferences } from '@/hooks/use-workspace-preferences';
 import { useTransactionTools } from '@/hooks/use-transaction-tools';
 import { usePlanning } from '@/hooks/use-planning';
-import { upcomingPayments } from '@/lib/planning';
+import { onScheduleDays, upcomingPayments } from '@/lib/planning';
 import { useLanguage } from '@/components/language-provider';
 import { formatMoney } from '@/lib/format';
 import { useRemovedCategories } from '@/hooks/use-removed-categories';
@@ -97,7 +97,7 @@ function useWorkspaceState() {
     const workspacePreferences=useWorkspacePreferences(user,demo,reload);
     const removedCategories=useRemovedCategories(workspacePreferences,user,demo);
     // Accounts in the person's own order (Accounts page), wherever an account is picked.
-    const planning={...basePlanning,data:{...basePlanning.data,removedKinds:removedCategories.kinds,records:inAccountOrder(basePlanning.data.records,savedOrder(workspacePreferences.data.preferences,'account_order')),occurrences:demo?[...basePlanning.data.occurrences,...rows.filter(row=>row.earning_source_id&&row.earning_due_on).flatMap(row=>{const source=earningSources.sources.find(source=>source.id===row.earning_source_id);return source?.schedule_id?[{id:row.id,record_id:source.schedule_id,due_on:row.earning_due_on!,status:'paid' as const}]:[];})]:basePlanning.data.occurrences}};
+    const planning={...basePlanning,data:{...basePlanning.data,removedKinds:removedCategories.kinds,records:inAccountOrder(basePlanning.data.records,savedOrder(workspacePreferences.data.preferences,'account_order')),occurrences:demo?onScheduleDays([...basePlanning.data.occurrences,...rows.filter(row=>row.occurrence_record_id&&row.occurrence_due_on&&!basePlanning.data.occurrences.some(item=>item.record_id===row.occurrence_record_id&&item.due_on===row.occurrence_due_on)).map(row=>({id:row.id,record_id:row.occurrence_record_id!,due_on:row.occurrence_due_on!,status:'paid' as const,transaction_id:row.id}))],basePlanning.data.records):basePlanning.data.occurrences}};
     const transactionTools=useTransactionTools(user,demo,reload,refreshRecords);
     const categoryIcons=useCategoryIcons(workspacePreferences,user,demo,planning.data.categories);
     const tagResource=useTags(user,demo,reload,planning.data.records,sample.demoTags);

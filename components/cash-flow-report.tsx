@@ -63,7 +63,7 @@ export function CashFlowReport({ owner, demo, revision, data: provided, splits, 
  const today = depositToday();
  const [period, setPeriod] = useState<ReportPeriod>('month');
  const [grouping, setGrouping] = useState<'category' | 'merchant'>('category');
- const [view, setView] = useState<'bars' | 'sankey'>('bars');
+ const [view, setView] = useState<'bars' | 'sankey'>('sankey');
  const live = !!owner && !demo;
  const remote = useOwnerResource(`/api/planning?scope=budget&month=${month}&from=${trendMonths(month, 'year')[0]}`, owner, live, revision, emptyPlanning);
  const data = useMemo(() => live ? { ...remote.data, records: remote.data.records.map(normalizeEntry) } : provided, [live, remote.data, provided]);

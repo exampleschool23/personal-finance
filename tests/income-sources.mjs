@@ -18,7 +18,9 @@ test('source types, category changes, salary periods and rental forecast dedupli
  const selected={...payment,...selectIncomeSource(payment,plan)};assert.equal(selected.name,'Employer');assert.equal(selected.income_source_id,plan.id);assert.equal(selected.amount,12.125);assert.equal(selected.frequency,'Once');
  assert.throws(()=>resolveIncomeSource({...selected,income_due_on:'2024-02-28'},[plan]),/scheduled salary/);
  assert.equal(resolveIncomeSource({...selected,date:'2024-03-03',income_due_on:'2024-02-29'},[plan]).income_due_on,'2024-02-29');
- assert.equal(upcomingPayments([plan,selected],[],'2024-02-29','2024-02-29').some(row=>row.date==='2024-02-29'),false);
+ // Only the occurrence row settles a pay day (migration 140); the fields the salary was saved with never do.
+ assert.equal(upcomingPayments([plan,selected],[{id:'o',record_id:plan.id,due_on:'2024-02-29',status:'paid',transaction_id:selected.id}],'2024-02-29','2024-02-29').some(row=>row.date==='2024-02-29'),false);
+ assert.equal(upcomingPayments([plan,selected],[],'2024-02-29','2024-02-29').some(row=>row.date==='2024-02-29'),true);
  const changed=changeIncomeKind(selected,'Other income');assert.equal(changed.income_source_id,null);assert.equal(changed.name,'');assert.equal(changed.amount,12.125);assert.equal(changed.income_due_on,null);
  const rent={id:id(4),kind:'Rent income',income_source_id:property.id,frequency:'Monthly',amount:1000};
  assert.equal(estimatedCashFlow([property,rent]).plannedIncome,1000);

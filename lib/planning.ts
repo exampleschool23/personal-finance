@@ -1,16 +1,16 @@
 import { archivedIn, budgetKey, scheduleDates, income, expenses, interestKinds, type Entry } from './finance';
 import type { AssetMovement } from './asset-movements';
 import type { HoldingAccount } from './holding-accounts';
-import { shiftDay } from './calendar-days';
+import { shiftDay, withMonthDay } from './calendar-days';
 import { depositToday } from './deposit-interest';
-import { amountIn } from './money';
+import { amountIn, type Money } from './money';
 import { sharedDayRate, type DayRate } from './day-rates';
 export type Category = {id:string;name:string;direction:'income'|'expense'};
 export type InvestmentTarget = {holding_account_id:string;asset_kind:'Stock'|'Crypto';asset_symbol:string;target:number;monthly_contribution?:number|null};
 export type Goal = {completed_on?:string|null;funding_priority?:number;funding_monthly?:number|null;funding_enabled?:boolean;paused_until?:string|null;funding_mode?:'one_time'|'refill';investment_targets?:InvestmentTarget[];id:string;name:string;account_id:string|null;target:number;allocated:number;target_date:string|null;archived:boolean;kind?:'savings'|'net_worth'|'investment';holding_account_id?:string|null;asset_kind?:'Stock'|'Crypto'|null;asset_symbol?:string|null;currency?:string;monthly_contribution?:number|null;annual_return?:number};
-export type Occurrence = {id:string;record_id:string;due_on:string;status:'paid'|'dismissed';notes?:string|null;transaction_id?:string|null;transaction?:{amount:number|null;date:string;currency?:string}|null;/** What later payments added, when the read attached them; null when one was in a currency it could not count. */extra?:number|null};
+export type Occurrence = {id:string;record_id:string;due_on:string;status:'paid'|'dismissed';notes?:string|null;transaction_id?:string|null;transaction?:{amount:number|null;date:string;currency?:string;/** As it was entered, when the read converted it into the schedule's currency. */entered?:Money}|null;/** What later payments added, when the read attached them; null when one was in a currency it could not count. */extra?:number|null;/** The same later payments as entered: one currency added up, null when they mix currencies, absent when there are none. */extraEntered?:Money|null};
 /** A payment that names its schedule by id: the schedule (`occurrence_record_id`) and the due date it pays. */
-export type ExtraPayment = {id?:string;occurrence_record_id:string;occurrence_due_on:string;amount:number;currency?:string;date?:string};
+export type ExtraPayment = {id?:string;occurrence_record_id:string;occurrence_due_on:string;amount:number;currency?:string;date?:string;/** As it was entered, when the read converted it into the schedule's currency. */entered?:Money};
 /** What the payments naming each paid due date added after its first one. The first payment settles the due date
  * (`transaction_id`) and may name it too, so it is left out here; every payment is counted once. Given the schedules'
  * currencies, a payment in another currency makes its due date's total unknown (null) rather than adding a wrong figure. */
@@ -26,10 +26,22 @@ export function laterPayments(occurrences:Occurrence[],payments:ExtraPayment[],c
  }
  return totals;
 }
-/** Each paid occurrence with the total of the later payments made for it (null when one could not be counted). */
+/** Each paid occurrence with the total of the later payments made for it (null when one could not be counted), and the
+ * same payments as they were entered (`extraEntered`), so a screen can show what was typed rather than the converted total. */
 export function withExtraPayments(occurrences:Occurrence[],payments:ExtraPayment[],currencyOf?:Map<string,string>):Occurrence[] {
  const totals=laterPayments(occurrences,payments,currencyOf);
- return occurrences.map(item=>item.status==='paid'?{...item,extra:totals.has(item.record_id+':'+item.due_on)?totals.get(item.record_id+':'+item.due_on)!:0}:item);
+ const first=new Set(occurrences.flatMap(item=>item.transaction_id?[item.transaction_id]:[]));
+ const entered=new Map<string,Money|null>();
+ for(const payment of payments){
+  if(!payment.occurrence_record_id||!payment.occurrence_due_on||(payment.id&&first.has(payment.id)))continue;
+  const key=payment.occurrence_record_id+':'+payment.occurrence_due_on,own=payment.entered??(payment.currency?{amount:Number(payment.amount),currency:payment.currency}:null),before=entered.get(key);
+  entered.set(key,before===null||!own||(before&&before.currency!==own.currency)?null:{amount:(before?.amount??0)+own.amount,currency:own.currency});
+ }
+ return occurrences.map(item=>{
+  if(item.status!=='paid')return item;
+  const key=item.record_id+':'+item.due_on;
+  return {...item,extra:totals.has(key)?totals.get(key)!:0,...(entered.has(key)?{extraEntered:entered.get(key)!}:{})};
+ });
 }
 export type Activity = {id:string;action:string;account_id:string;target_id:string|null;amount:number;received:number;fee:number;occurred_on:string;notes:string;before_balance:number;after_balance:number};
 export type PlanningData = {/** Built-in categories this workspace deleted (migration 122): set by the workspace, never by the planning read. */removedKinds?:string[];debtPayments?:DebtPayment[];movements?:Array<Omit<AssetMovement,'date'> & {occurred_on:string;realized_gain:number|null}>;holdingAccounts?:HoldingAccount[];records:Entry[];categories:Category[];goals:Goal[];occurrences:Occurrence[];activity:Activity[];investmentLinks?:Array<{id:string;account_id:string;account_currency?:string|null;amount:number;investment_history:{occurred_on:string;record_id:string;event_type:string}}>};
@@ -97,8 +109,16 @@ export const installmentsFrom=(record:Entry&{created_at?:string|null})=>(record.
 /** Loan months already paid: a repayment or mortgage payment for the loan in that month settles that month's installment. */
 export const paidInstallmentMonths=(payments:DebtPayment[])=>new Set(payments.map(payment=>payment.record_id+':'+payment.date.slice(0,7)));
 /** Schedule occurrences already settled: paid or skipped occurrences, and salary receipts recorded against an income source. */
-export function settledOccurrences(records:Entry[],occurrences:Occurrence[]){
- return new Set([...occurrences.map(o=>o.record_id+':'+o.due_on),...records.filter(r=>r.kind==='Salary'&&r.frequency==='Once'&&r.income_source_id).map(r=>r.income_source_id+':'+(r.income_due_on??r.date))]);
+/** The due dates settled or skipped: the occurrence rows alone. Every payment, whichever field named its schedule,
+ * has one (migration 140); nothing is inferred from the payments themselves. */
+export function settledOccurrences(_records:Entry[],occurrences:Occurrence[]){
+ return new Set(occurrences.map(o=>o.record_id+':'+o.due_on));
+}
+/** The sample workspace's copy of move_schedule_day (migration 141): an occurrence of an every-month schedule sits on the
+ * schedule's day in its own month (the last day of a shorter month), so moving the day moves the paid months with it. */
+export function onScheduleDays<T extends {record_id:string;due_on:string}>(occurrences:readonly T[],records:readonly Entry[]):T[]{
+ const days=new Map(records.filter(record=>record.frequency==='Monthly'&&/^\d{4}-\d{2}-\d{2}$/.test(record.date??'')).map(record=>[record.id,Number(record.date.slice(8))]));
+ return occurrences.map(item=>{const day=days.get(item.record_id);if(!day)return item;const due=withMonthDay(item.due_on,day);return due===item.due_on?item:{...item,due_on:due};});
 }
 export const isRecurringCashFlow=(record:Entry)=>[...income,...expenses].includes(record.kind)&&record.frequency!=='Once';
 /** What a one-time payment is: its kind and category, and its business or property. */

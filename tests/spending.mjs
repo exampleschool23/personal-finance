@@ -61,7 +61,7 @@ test('Cash flow, Transactions, Dashboard, Budget and the Telegram digest agree o
  const summary = summarizeTransactions(listed, convert);
  assert.equal(summary.spent, spending);
  assert.equal(summary.received, 1500);
- assert.deepEqual(summary.largest, { name: 'Home', amount: 200 });
+ assert.deepEqual(summary.largest, { name: 'Home', amount: 200, entered: { amount: 200, currency: 'USD' } });
  assert.equal(signedAmount(records[3]), -900, 'the mortgage row shows the whole payment, principal plus interest');
  assert.equal(groupByDay(listed, convert).find(day => day.date === '2026-10-05').total, -900, 'day totals add up the rows shown');
 

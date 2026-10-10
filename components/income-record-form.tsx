@@ -1,5 +1,6 @@
 "use client";
 import {ScheduleFields} from '@/components/presentation-foundation/schedule-fields';
+import {MonthDayField} from '@/components/presentation-foundation/month-day-field';
 import { ErrorPopup } from '@/components/presentation-foundation/error-popup';
 import { ScheduledPaymentField } from '@/components/presentation-foundation/scheduled-payment-field';
 import { chooseSchedule, paymentSchedules } from '@/lib/planning';
@@ -66,7 +67,8 @@ export function IncomeRecordForm({editing,setEditing,busy,save,currencies,planni
  const actual=editing.frequency==='Once'&&!salaryPlan;
  const latestDate=[actual?depositToday():undefined,editing.kind==='Salary'&&source?source.end_date??undefined:undefined].filter((date):date is string=>!!date).sort()[0];
  // A new one-time income may pay a recurring income by id; schedules of income sources and salary plans are offered by their own pickers instead.
- const schedules=!original&&actual&&!reusable&&!(editing.kind==='Salary'&&editing.income_source_id)?paymentSchedules(planning.data.records,editing).filter(schedule=>!earningSources?.sources.some(item=>item.schedule_id===schedule.id)):[];
+ // A one-time income may name the schedule it pays, a saved one too while it names none; a source receipt or a salary with a plan already does.
+ const schedules=actual&&!reusable&&!(editing.kind==='Salary'&&editing.income_source_id)&&!original?.occurrence_record_id?paymentSchedules(planning.data.records,editing):[];
  const sourceLabel=editing.kind==='Salary'?'Linked salary':editing.kind==='Rent income'?'Linked rental':'Linked business';
  const sourcePlaceholder=editing.kind==='Salary'?'Choose a salary plan':editing.kind==='Rent income'?'Choose a rental':'Choose a business';
  return <form className="record-form" onSubmit={save}>
@@ -98,10 +100,11 @@ export function IncomeRecordForm({editing,setEditing,busy,save,currencies,planni
    {editing.kind==='Salary'?<Link href="/income-expenses#income-sources">{t('Add income source')}</Link>:<Link href="/assets">{t('Assets & investments')}</Link>}
   </div>)}
   {editing.kind==='Salary'&&source&&<ScheduledPaymentSummary label={t('Salary due date')} date={editing.income_due_on??''}/>}
-  <ScheduledPaymentField schedules={schedules} value={editing.occurrence_record_id} saved={!!original} disabled={busy||planning.loading} onChange={schedule=>update(chooseSchedule(editing,schedule))}/>
+  <ScheduledPaymentField schedules={schedules} value={editing.occurrence_record_id} saved={!!original?.occurrence_record_id} disabled={busy||planning.loading} onChange={schedule=>update(chooseSchedule(editing,schedule))}/>
   <AmountCurrencyFields amountPlaceholder={reusable?.mode==='fixed'&&editing.payment_type!=='bonus'&&reusable.currency===editing.currency&&reusable.amount!==null?formatNumber(reusable.amount,locale,0):undefined} amount={editing.amount} currency={editing.currency} currencies={currencies} savedCurrency={original?.currency} disabled={busy} label={t(salaryPlan?'Amount per occurrence':'Amount')} onAmountChange={amount=>update({amount})} onCurrencyChange={currency=>update({currency,account_exchange_rate:null,account_rate_date:null,account_currency:null})}/>
-  <div className="form-grid"><label>{t(editing.frequency==='Once'?'Record date':'Start date')}<DatePicker value={editing.date} min={editing.kind==='Salary'&&source?source.date:undefined} max={latestDate} onChange={changeDate}/></label>
-  {schedule&&!reusable&&<ScheduleFields frequency={editing.frequency} days={editing.recurrence_days} disabled={busy} onChange={(frequency,recurrence_days)=>update({frequency,recurrence_days,account_id:null,end_date:frequency==='Once'?null:editing.end_date})}/>}</div>
+  <div className="form-grid"><label>{t(editing.frequency==='Once'?'Record date':'Start date')}<DatePicker value={editing.date} disabled={!!original&&original.frequency!=='Once'&&editing.frequency!=='Once'} min={editing.kind==='Salary'&&source?source.date:undefined} max={latestDate} onChange={changeDate}/></label>
+  {schedule&&!reusable&&<ScheduleFields frequency={editing.frequency} days={editing.recurrence_days} disabled={busy} onChange={(frequency,recurrence_days)=>update({frequency,recurrence_days,account_id:null,end_date:frequency==='Once'?null:editing.end_date})}/>}
+  {schedule&&!reusable&&editing.frequency==='Monthly'&&<MonthDayField date={editing.date} disabled={busy} onChange={date=>update({date})}/>}</div>
   {editing.frequency!=='Once'&&<><label>{t('End date (optional)')}<DatePicker value={editing.end_date??''} required={false} min={editing.date} onChange={date=>update({end_date:date||null})}/></label><p className="muted">{t('{amount} {frequency} from {date}. This is a recurring plan; it does not automatically create transactions or change account balances.',{amount:formatMoney(editing.amount,editing.currency,locale),frequency:t(frequencyLabels[editing.frequency]),date:formatDate(editing.date,locale)})}</p></>}
   {!salaryPlan&&<CashAccountField entry={editing} records={planning.data.records} loading={planning.loading} error={planning.error} busy={busy} onChange={account_id=>setEditing(withAccount(editing,account_id,planning.data.records))}/>}
   {planning.error&&<InlineError message={t(planning.error)}/>}

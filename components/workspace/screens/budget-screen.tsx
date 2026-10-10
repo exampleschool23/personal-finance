@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
-import { BudgetGroupCard, BudgetProgress, BudgetRateNotice, BudgetSectionHeader, BudgetTotalRow, ContributionRows, GroupMoves, useCategoryName } from '@/components/budget/budget-rows';
+import { BudgetGroupCard, BudgetProgress, BudgetRateNotice, BudgetSectionHeader, BudgetTotalRow, ContributionRows, useCategoryName } from '@/components/budget/budget-rows';
 import { LeftToBudgetCard, type BudgetFocus } from '@/components/budget/left-to-budget-card';
 import { PlannedInput } from '@/components/budget/planned-input';
 import { CategoryDetailsDialog } from '@/components/budget/category-details';
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/components/workspace/workspace-provider';
 import { useOwnerResource } from '@/hooks/use-owner-resource';
 import { ageOfMoneyTrend } from '@/lib/age-of-money';
-import { appliesToFutureMonths, budgetCategories, budgetHistory, budgetOverall, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketCategory, flexBucketKey, flexBucketRollover, goalContribution, groupRows, isFlexibleCategory, knownPlan, leftToBudget, monthActuals, monthsBetween, suggestedBudget, type BudgetAmount, type BudgetCategory, type BudgetOverall, type BudgetRow, type MonthActuals } from '@/lib/budget';
+import { appliesToFutureMonths, budgetCategories, budgetHistory, budgetOverall, budgetReadRange, budgetRows, budgetRowsForMode, flexBucketCategory, flexBucketKey, flexBucketRollover, goalContribution, isFlexibleCategory, knownPlan, leftToBudget, monthActuals, monthsBetween, sectionGroups, suggestedBudget, type BudgetAmount, type BudgetCategory, type BudgetOverall, type BudgetRow, type MonthActuals } from '@/lib/budget';
 import { categoryBills, firstRecentPayment, flexPlan, plannedIn, type PlanSource } from '@/lib/budget-schedules';
 import { shiftMonth } from '@/lib/calendar-days';
 import { depositMonth, depositToday } from '@/lib/deposit-interest';
@@ -63,14 +63,13 @@ export function BudgetScreen() {
  const bucketRollover = flex ? flexBucketRollover(bucket, categories, plan, history, month, currency, rates) : 0;
  const bucketMissing = flex && (flexBudget === null || bucketRollover === null);
  const rows = budgetRowsForMode(categoryRows, budget.state.mode);
- const groups = groupRows(rows, flex);
+ const groups = sectionGroups(rows, flex);
  const goals = data.goals.filter(goal => goalContribution(goal, today) > 0);
  const contributionOf = (goal: (typeof goals)[number]) => convertAmount(goalContribution(goal, today), goal.currency ?? currency, currency, rates);
  // A contribution no rate converts leaves the total unknown, never counted as zero.
  const missingContributions = goals.filter(goal => contributionOf(goal) === null).length;
  const contributions = missingContributions ? null : goals.reduce((sum, goal) => sum + (contributionOf(goal) ?? 0), 0);
  const left = leftToBudget(rows, budget.state.mode, flexBudget, contributions, missingContributions);
- const customGroups = [...new Set(budget.state.categories.map(item => item.group_name).filter((item): item is string => !!item))];
 
  const save = (key: string) => (amount: number, forward: boolean) => budget.saveAmount(key, month, amount, currency, forward);
  const repeat = (key: string) => (amount: number, forward: boolean) => budget.saveRepeat(key, month, amount, currency, forward);
@@ -111,9 +110,10 @@ export function BudgetScreen() {
   const id = group.direction + ':' + group.name;
   const isBucket = flex && group.type === 'flexible';
   const bucketRow = isBucket ? { budget: flexBudget, rolloverIn: bucketRollover ?? 0, rolloverMissing: bucketRollover === null, actual: group.actual, remaining: bucketMissing ? null : (flexBudget ?? 0) + (bucketRollover ?? 0) - group.actual } : null;
-  return <BudgetGroupCard key={id} group={bucketRow ? { ...group, budget: bucketRow.budget ?? 0, remaining: bucketRow.remaining ?? 0, missing: group.missing + (bucketMissing ? 1 : 0) } : group} currency={currency}
-   open={!closed.has(id)} onToggle={() => toggle(closed, setClosed, id)} showUnbudgeted={unbudgeted.has(id)} onShowUnbudgeted={() => toggle(unbudgeted, setUnbudgeted, id)}
-   renderPlanned={planned} rowMenu={rowMenu} onOpen={setViewing} movable={group.direction === 'expense' && !readOnly}
+  // Only the Flexible bucket keeps a heading row: it carries the plan its categories share.
+  return <BudgetGroupCard key={id} bare={!isBucket} group={bucketRow ? { ...group, budget: bucketRow.budget ?? 0, remaining: bucketRow.remaining ?? 0, missing: group.missing + (bucketMissing ? 1 : 0) } : group} currency={currency}
+   open={!isBucket || !closed.has(id)} onToggle={() => toggle(closed, setClosed, id)} showUnbudgeted={unbudgeted.has(id)} onShowUnbudgeted={() => toggle(unbudgeted, setUnbudgeted, id)}
+   renderPlanned={planned} rowMenu={rowMenu} onOpen={setViewing}
    rolloverIn={bucketRow?.rolloverIn} onGroupSettings={bucketRow ? () => setEditing({ category: bucket, figures: bucketRow }) : undefined}
    header={bucketRow ? <PlannedInput key={'flex' + month + (flexBudget ?? 0)} label={t('Planned for {name}', { name: t('Flexible') })} value={flexBudget} history={historyOf(flexBucketKey)} direction="expense" currency={currency} defaultForward={budget.state.applyForward} appliesForward={appliesToFutureMonths(budget.state.amounts, flexBucketKey, month)} onSave={save(flexBucketKey)} onRepeat={repeat(flexBucketKey)}/> : undefined}/>;
  };
@@ -150,7 +150,7 @@ export function BudgetScreen() {
     </div>
     <div className="budget-section" data-section="expenses">
     <BudgetSectionHeader title={t('Expenses')}/>
-    <GroupMoves groups={spending} onSave={budget.saveCategory}>{spending.map(card)}</GroupMoves>
+    {spending.map(card)}
     <BudgetTotalRow label={t('Total expenses')} planned={spendingPlanned} actual={sum(spending, 'actual')} remaining={spendingPlanned === null ? null : spendingPlanned - sum(spending, 'actual')} direction="expense" currency={currency}/>
     {goals.length > 0 && <>
      <BudgetSectionHeader title={t('Contributions')}/>
@@ -164,7 +164,7 @@ export function BudgetScreen() {
     <AgeOfMoneyTile records={data.records} currency={currency} today={today} rates={rates}/>
    </div>
   </div>}
-  {editing && <CategorySettingsDialog category={editing.category} figures={editing.figures} groups={customGroups} month={month} currency={currency} onSave={budget.saveCategory} onClose={() => setEditing(null)}/>}
+  {editing && <CategorySettingsDialog category={editing.category} figures={editing.figures} month={month} currency={currency} onSave={budget.saveCategory} onClose={() => setEditing(null)}/>}
   {viewing && <CategoryDetailsDialog row={rows.find(row => row.key === viewing.key) ?? viewing} history={historyOf(viewing.key)} data={data} splits={splits} bills={viewing.direction === 'expense' ? billsOf(viewing) : []} month={month} today={today} currency={currency} rates={rates} onEditBill={readOnly ? undefined : bill => { setViewing(null); editRecord(bill); }} onClose={() => setViewing(null)}/>}
   {settingsOpen && <BudgetSettingsDialog mode={budget.state.mode} applyForward={budget.state.applyForward} onSave={budget.saveSettings} onRecalculate={recalculate} onClose={() => setSettingsOpen(false)}/>}
  </div>;

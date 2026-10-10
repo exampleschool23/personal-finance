@@ -138,7 +138,7 @@ function incomeSection(r:Report){
  const savedSources=(tables.income_sources??[]) as EarningSource[];
  const sources=[...savedSources,...legacyEarningSources(records).filter(s=>!savedSources.some(x=>x.id===s.id||x.schedule_id===s.id))];
  table(['Income source','Currency','Expected amount','Frequency / status'],sources.map(s=>[s.name,s.currency,money(number(s.amount),s.currency),`${s.frequency?t(s.frequency):t('Variable')} · ${t(s.archived?'Archived':'Planned')}`]),[.34,.12,.25,.29],[2]);
- table(['Currency','Expected monthly equivalent','Actually received'],currencies.map(c=>[c,money(expectedMonthlyIncome(sources,c,month,start,end),c),money(r.flows.get(c)!.received,c)]),[.16,.44,.4],[1,2]);
+ table(['Currency','Expected monthly equivalent','Actually received'],currencies.map(c=>[c,money(expectedMonthlyIncome(sources,records,c,month,{start,end}),c),money(r.flows.get(c)!.received,c)]),[.16,.44,.4],[1,2]);
  add('text',t('Expected income is a monthly equivalent (annual ÷ 12). Variable income is unknown, not zero.'));
  const forecasts=records.filter(rec=>assets.includes(rec.kind)&&Number(rec.estimated_monthly_income)>0);
  if(forecasts.length)add('subheading',t('Asset income forecasts'));

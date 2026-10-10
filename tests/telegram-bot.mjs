@@ -161,7 +161,7 @@ test('a loan with a monthly payment is due every month on its start day, until a
  // A mortgage is settled by a mortgage payment; without a start date the creation day in Tashkent is used.
  const flat={...entry(11,'Flat','Mortgage',50000000),date:'2040-01-01',estimated_monthly_payment:900000,created_at:'2026-09-03T20:00:00Z'};
  const mortgage=await handleTelegramUpdate(message(500,'Upcoming payments'),fakeDb({...workspace(),records:[flat]}),clock);
- assert.match(mortgage.replies[0].text,/<b>4 October 2026<\/b>\n• Flat · \$75 · repayment/,'in the primary currency at the latest snapshot rate');
+ assert.match(mortgage.replies[0].text,/<b>4 October 2026<\/b>\n• Flat · UZS\u00a0900,000 · repayment/,'each payment as entered, in its own currency');
  const settled=await handleTelegramUpdate(message(500,'Upcoming payments'),fakeDb({...workspace(),records:[flat],mortgagePayments:[{mortgage_id:flat.id,paid_on:'2026-10-01'}]}),clock);
  assert.equal(settled.replies[0].text,'No payments due in the next 31 days.');
 });

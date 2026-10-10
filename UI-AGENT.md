@@ -38,7 +38,7 @@ Any list whose order the person decides must be reorderable by drag and drop.
 This is not optional and not left for later.
 
 - Reorder: goals, accounts and account groups, categories and category groups,
-  budget groups, dashboard cards, watchlists, saved templates, rules, import
+  dashboard cards, watchlists, saved templates, rules, import
   profiles, scenarios, and any new list of things the person creates.
 - Do not reorder lists with a natural order: transactions, history, activity
   logs, upcoming payments by date, search results, or sorted tables. Offer sort

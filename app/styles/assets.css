@@ -31,7 +31,8 @@
 .asset-holdings-heading h2{font-size:var(--type-heading);font-weight:650;letter-spacing:-.02em}
 .asset-holdings-heading a{font-size:var(--type-small);font-weight:500;color:var(--primary);white-space:nowrap}
 .asset-holdings-heading a:hover{text-decoration:underline;text-underline-offset:3px}
-.asset-layout-switch{display:flex;gap:2px;flex-shrink:0;padding:3px;border:1px solid var(--border);border-radius:12px;background:var(--muted)}
+/* The switch (42px) overhangs the 32px heading row equally above and below, so Other assets keeps the same space under its title as Accounts. */
+.asset-layout-switch{display:flex;gap:2px;flex-shrink:0;padding:3px;border:1px solid var(--border);border-radius:12px;background:var(--muted);margin-block:-5px}
 .asset-layout-switch button{width:34px;height:34px;min-height:34px;border-radius:9px;color:var(--muted-foreground)}
 .asset-layout-switch button[aria-pressed=true]{background:var(--card);color:var(--foreground);box-shadow:0 1px 2px rgb(0 0 0 / 20%)}
 /* The category filter is a segmented switch; each option carries its colour dot and count. */

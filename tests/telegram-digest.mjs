@@ -24,7 +24,7 @@ test('the digest greets the owner by name, then lists overdue items first and ea
   '<b>Upcoming payments</b> · 30 September 2026',
   '',
   '<b>Overdue</b>',
-  '• Rent · $250 · 28 September 2026',
+  '• Rent · UZS\u00a03,000,000 · 28 September 2026',
   '',
   '<b>Today</b>',
   '• Salary &lt;sept&gt; · +$1,200 · income',
@@ -76,17 +76,14 @@ test('the bot\'s Upcoming answer is the payments block alone, with no greeting',
  assert.match(paymentsSection(items,'en',today,{currency:'USD',rates}),/^<b>Upcoming payments<\/b> · 30 September 2026\n\n<b>Overdue<\/b>/);
 });
 
-test('every payment is shown in the display currency, and one no rate converts is a dash with the reason, never another currency',()=>{
- // Review BOT-004: bills showed in their own currency beside net worth in the primary one.
- const uzs=paymentsSection(items,'en',today,{currency:'UZS',rates});
- assert.match(uzs,/• Salary &lt;sept&gt; · \+UZS\u00a014,400,000 · income/);assert.match(uzs,/• Rent · UZS\u00a03,000,000/);
- assert.doesNotMatch(uzs,/\$/);assert.doesNotMatch(uzs,/Exchange rate unavailable/);
- const eur=paymentsSection(items,'en',today,{currency:'EUR',rates});
- assert.match(eur,/• Rent · — · 28 September 2026/);assert.match(eur,/• Car loan · — · repayment/);
- assert.doesNotMatch(eur,/UZS|\$/);assert.match(eur,/<i>Exchange rate unavailable\.<\/i>$/);
- // Without any rates only payments already in the display currency show a figure.
- const bare=digestMessage(items,'ru',today,{currency:'USD'});
- assert.match(bare,/• Rent · — · /);assert.match(bare,/1\s200\s\$/);assert.match(bare,/<i>Курс валют недоступен\.<\/i>$/);
+test('every payment is shown as entered, in its own currency, whatever the display currency, and needs no rate',()=>{
+ // The user's rule (10 October 2026): one payment reads as it was entered; only totals convert.
+ for(const display of [{currency:'UZS',rates},{currency:'EUR',rates},{currency:'USD'}]){
+  const text=paymentsSection(items,'en',today,display);
+  assert.match(text,/• Salary &lt;sept&gt; · \+\$1,200 · income/);assert.match(text,/• Rent · UZS\u00a03,000,000/);
+  assert.doesNotMatch(text,/Exchange rate unavailable|—/);
+ }
+ assert.match(digestMessage(items,'ru',today,{currency:'USD'}),/1\s200\s\$/);
 });
 
 test('the digest cron is scheduled in the morning and documented',()=>{
@@ -249,26 +246,24 @@ test('background work over many owners runs a few at a time, finishes every item
  assert.deepEqual(started,[1,2],'no new item starts after a failure');
 });
 
-test('the bot\'s Upcoming payments answer shows bills in the primary currency at the latest snapshot rates, reading paid debts in pages',async()=>{
+test('the bot\'s Upcoming payments answer shows each bill as entered, in its own currency, reading paid debts in pages',async()=>{
  const {upcomingReply}=loadTS('lib/telegram-bot/replies.ts');
  const reads=[];
- const db=(snapshots,activity=[])=>({async read(path){
+ const db=(activity=[])=>({async read(path){
   reads.push(path);
   if(path.startsWith('/rest/v1/finance_records'))return recordsFor([{...rent,currency:'USD',amount:500,date:'2026-09-02'}],path);
-  if(path.startsWith('/rest/v1/user_preferences'))return [{language:'en',currencies:['UZS']}];
-  if(path.startsWith('/rest/v1/portfolio_snapshots'))return snapshots;
   if(path.startsWith('/rest/v1/account_activity'))return path.includes('offset=0')?activity:[];
   if(path.startsWith('/rest/v1/payment_occurrences')||path.startsWith('/rest/v1/mortgage_payments'))return [];
   throw Error('unexpected '+path);
  }});
- const text=await upcomingReply(db([{occurred_on:'2026-09-29',assets:0,debt:0,rates:{UZS:12000},updated_at:''}]),'anna','en',today);
- assert.match(text,/• Rent · UZS 6,000,000/);assert.doesNotMatch(text,/\$/);
- const missing=await upcomingReply(db([]),'anna','en',today);
- assert.match(missing,/• Rent · —/);assert.match(missing,/Exchange rate unavailable\./);
+ // A USD bill reads in dollars although the primary currency is UZS: no rate is needed, so neither preferences nor snapshots are read.
+ const text=await upcomingReply(db(),'anna','en',today);
+ assert.match(text,/• Rent · \$500/);assert.doesNotMatch(text,/Exchange rate unavailable/);
+ assert.ok(!reads.some(path=>path.startsWith('/rest/v1/user_preferences')||path.startsWith('/rest/v1/portfolio_snapshots')));
  for(const table of ['account_activity','mortgage_payments'])assert.ok(reads.some(path=>path.startsWith('/rest/v1/'+table)&&path.includes('limit=500&offset=0')),table+' is paged');
  // A full page of repayments asks for the next one.
  reads.length=0;
- await upcomingReply(db([],Array.from({length:500},()=>({action:'repayment',target_id:null,occurred_on:'2026-09-01'}))),'anna','en',today);
+ await upcomingReply(db(Array.from({length:500},()=>({action:'repayment',target_id:null,occurred_on:'2026-09-01'}))),'anna','en',today);
  assert.ok(reads.some(path=>path.startsWith('/rest/v1/account_activity')&&path.includes('offset=500')));
 });
 

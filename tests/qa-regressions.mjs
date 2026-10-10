@@ -170,7 +170,7 @@ test('QA 2026-10-02: dialogs explain limits, prefill scheduled amounts and offer
 test('dashboard payments show each instalment, and the comparison line is labelled as investments',()=>{
  const read=path=>fs.readFileSync(path,'utf8');
  const overview=read('components/overview-page.tsx');
- assert.match(overview,/show\(item\.amount, item\.record\.currency\)/,'a loan shows its monthly payment, not the outstanding balance');
+ assert.match(overview,/entered\(item\.amount, item\.record\.currency\)/,'a loan shows its monthly payment as entered, not the outstanding balance');
  assert.doesNotMatch(overview,/money\(item\.record\.amount, item\.record\.currency\)/);
  assert.match(overview,/upcomingPayments\(planning\.records, planning\.occurrences, undefined, undefined, planning\.debtPayments\)/);
  const comparison=read('components/investment-comparison.tsx');

@@ -70,12 +70,14 @@ export function groupPageByDay(records: readonly Entry[], from: number, to: numb
 /** Summary card: how many, money in and out, and the largest single expense. Spending follows `lib/spending.ts`, so a mortgage payment counts only its interest. */
 export function summarizeTransactions(records: readonly Entry[], convert: Convert) {
  let received = 0, spent = 0, missing = 0;
- let largest: { name: string; amount: number } | null = null;
+ // The largest expense is picked by its converted size and shown as entered (`entered`, its own amount and currency).
+ let largest: { name: string; amount: number; entered: { amount: number; currency: string } } | null = null;
  for (const record of records) {
-  const value = convert(income.includes(record.kind) ? Number(record.amount) : spendingAmount(record), record.currency);
+  const own = income.includes(record.kind) ? Number(record.amount) : spendingAmount(record);
+  const value = convert(own, record.currency);
   if (value === null) { missing++; continue; }
   if (income.includes(record.kind)) received += value;
-  else { spent += value; if (!largest || value > largest.amount) largest = { name: record.name, amount: value }; }
+  else { spent += value; if (!largest || value > largest.amount) largest = { name: record.name, amount: value, entered: { amount: own, currency: record.currency } }; }
  }
  return { count: records.length, received, spent, largest, missing };
 }
